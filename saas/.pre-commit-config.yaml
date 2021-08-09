@@ -17,7 +17,7 @@ repos:
         name: flak8
         language: python
         pass_filenames: false
-        entry: pflake8 --config=saas/pyproject.toml
+        entry: pflake8 --config=saas/pyproject.toml saas
       - id: mypy
         name: mypy
         language: python
