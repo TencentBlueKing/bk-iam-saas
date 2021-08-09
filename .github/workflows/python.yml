@@ -36,4 +36,4 @@ jobs:
     - name: Lint with mypy
       run:  mypy --config-file=saas/pyproject.toml saas
     - name: Test with pytest
-        run: pytest -c saas/pyproject.toml saas
+      run: pytest -c saas/pyproject.toml saas
