@@ -1,0 +1,25 @@
+.my-perm-custom-perm {
+    height: 100%;
+    .iam-perm-ext-cls {
+        margin-top: 10px;
+    }
+    .iam-perm-ext-reset-cls {
+        margin-bottom: 20px;
+    }
+    .my-perm-custom-perm-empty-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        img {
+            width: 120px;
+        }
+        .empty-tips {
+            position: relative;
+            top: -25px;
+            font-size: 12px;
+            color: #c4c6cc;
+            text-align: center;
+        }
+    }
+}

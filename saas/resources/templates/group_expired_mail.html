@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>蓝鲸权限中心用户组成员续期</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            font-family: 'Microsoft YaHei';
+            font-size: 13px;
+        }
+
+        body {
+            background: #fff;
+            color: #63656e;
+        }
+
+        img {
+            outline: none;
+            border: none;
+            text-decoration: none;
+        }
+
+        a {
+            border: none;
+            text-decoration: none !important;
+            color: #fff;
+        }
+
+        a:hover {
+            color: #fff;
+            text-decoration: none !important;
+        }
+
+        .table {
+            border-collapse: collapse;
+            border-spacing: 0px;
+            table-layout: auto;
+        }
+
+        .data-table {
+            border-left: none !important;
+            border-right: none !important;
+        }
+
+        .data-table thead tr th {
+            padding: 13px;
+            border-bottom: 1px solid #eee;
+            color: #000;
+            font-weight: normal;
+            background: #f5f6fa;
+            text-align: left;
+        }
+
+        .data-table tbody tr td {
+            padding: 13px;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            color: #555;
+            max-width: 180px;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .blank {
+            height: 25px;
+            font-style: normal;
+            font-variant: normal;
+            font-size: 12px;
+            line-height: 22px;
+            font-weight: normal;
+            padding: 0px;
+            margin: 0px;
+            border: 0px;
+        }
+
+        .content {
+            width: 1000px;
+            margin: 0 auto;
+            background: #f0f1f5;
+        }
+
+        .header {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(180deg,#2e3959, #5b6b92);
+        }
+
+        .header .header-info {
+            position: relative;
+            top: 30px;
+            left: 32px;
+            line-height: 32px;
+        }
+
+        .user-info {
+            font-size: 14px;
+        }
+
+        .user-info p {
+            line-height: 24px;
+        }
+
+        .header .header-info .logo {
+            width: 32px;
+            vertical-align: top;
+        }
+
+        .header .header-info .text {
+            position: relative;
+            left: 5px;
+            font-size: 22px;
+            color: #fff;
+        }
+
+        .table-item-lable {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+            font-family: MicrosoftYaHei, MicrosoftYaHei-Bold;
+            font-weight: 700;
+            text-align: left;
+            color: #63656e;
+            line-height: 20px;
+        }
+        
+        .table-item-lable span {
+            display: inline-block;
+            position: relative;
+            top: 2px;
+            width: 4px;
+            height: 16px;
+            background: #699df4;
+            border-radius: 1px;
+        }
+
+        .current-content {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .current-info {
+            position: relative;
+            top: 30px;
+            text-align: left;
+            color: #c4c6cc; 
+        }
+
+        .current-date {
+            position: relative;
+            top: 30px;
+            text-align: right;
+            color: #c4c6cc;
+        }
+
+        .renewal-action {
+            position: relative;
+            top: 75px;
+            margin: 0 auto;
+            width: 144px;
+            height: 32px;
+            line-height: 32px;
+            background: #3a84ff;
+            border-radius: 16px;
+            color: #fff;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <div class="header">
+            <div class="header-info">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6dXJsKCPmnKrlkb3lkI3nmoTmuJDlj5hfNCk7fS5jbHMtMiwuY2xzLTN7ZmlsbDojZmZmO30uY2xzLTJ7aXNvbGF0aW9uOmlzb2xhdGU7fTwvc3R5bGU+PGxpbmVhckdyYWRpZW50IGlkPSLmnKrlkb3lkI3nmoTmuJDlj5hfNCIgeDE9IjUxNC4xMSIgeTE9Ijk2MC42OSIgeDI9IjUxNC4xMSIgeTI9IjYzLjUzIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjNmRiZGY1Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNTk5NmYzIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHRpdGxlPuiTnemyuOezu+WIl2xvZ288L3RpdGxlPjxnIGlkPSLlm77lsYJfNSIgZGF0YS1uYW1lPSLlm77lsYIgNSI+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNOTE5LDY4Ny41OHYtMzQ3YTEwNC4zNSwxMDQuMzUsMCwwLDAtNTIuMTgtOTAuMzhMNTY2LjI5LDc2LjY3YTEwNC4zNywxMDQuMzcsMCwwLDAtMTA0LjM2LDBMMTYxLjQsMjUwLjE4YTEwNC4zNSwxMDQuMzUsMCwwLDAtNTIuMTgsOTAuMzh2MzQ3QTEwNC4zNSwxMDQuMzUsMCwwLDAsMTYxLjQsNzc4TDQ2MS45Myw5NTEuNDdhMTA0LjM3LDEwNC4zNywwLDAsMCwxMDQuMzYsMEw4NjYuODIsNzc4QTEwNC4zNSwxMDQuMzUsMCwwLDAsOTE5LDY4Ny41OFoiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik01MjAuMjIsMzU3YzkzLjUxLDAsMTU0LjkyLDI3LjcxLDE4NS44NSw0Ni41NEE0NDYsNDQ2LDAsMCwxLDY0MC4yLDU5My44OUM2MDAuMTUsNjU3LjMsNTQ4LjQ3LDcwNi43Myw1MTQsNzM1Ljc5Yy0zNC4zMS0yOC44OS04NS42Ni03OC0xMjYtMTQxLjlhNDQ1Ljg4LDQ0NS44OCwwLDAsMS02NS44OC0xOTAuMzhDMzUzLjA4LDM4NC42OCw0MTQuNDksMzU3LDUwOCwzNTdjLjc3LDAsMS41MywwLDIuMjgsMGwyLjkyLjA1SDUxNWwyLjkxLS4wNWMuNzUsMCwxLjUxLDAsMi4yOCwwbTAtNzAuMzljLTIuMDYsMC00LjA3LjA3LTYuMTEuMXMtNC4wNS0uMS02LjExLS4xYy0xNzIuNDUsMC0yNTcuNzksODIuNjUtMjU3Ljc5LDgyLjY1cy02LjE2LDEyOC41MSw3OC4zLDI2Mi4yNUM0MDMuNjIsNzUwLjM5LDUxMi40LDgyMy4zNiw1MTIuNCw4MjMuMzZsMS42OSwxLjY4LDEuNzMtMS42OHMxMDguNzgtNzMsMTgzLjg5LTE5MS44OEM3ODQuMTcsNDk3Ljc0LDc3OCwzNjkuMjMsNzc4LDM2OS4yM3MtODUuMzQtODIuNjUtMjU3Ljc5LTgyLjY1WiIvPjxwYXRoIGNsYXNzPSJjbHMtMyIgZD0iTTU1Ny45NCw0ODQuODVhNDMuODMsNDMuODMsMCwxLDAtNjMuNzEsMzl2MzVhMTkuODgsMTkuODgsMCwwLDAsMzkuNzYsMHYtMzVBNDMuODEsNDMuODEsMCwwLDAsNTU3Ljk0LDQ4NC44NVoiLz48L2c+PC9zdmc+" alt="" class="logo">
+                <span class="text">蓝鲸权限中心</span>
+            </div>
+        </div>
+        <table
+            border="0"
+            cellpadding="0"
+            cellspacing="0"
+            width="928"
+            style="background:#fff;
+                border-collapse: collapse;
+                border-spacing: 0px;
+                table-layout: auto;
+                border-radius: 2px;
+                box-shadow: 0px 2px 10px 2px rgba(151, 155, 165, 0.3);
+                margin: 0 auto;
+                position: relative;
+                top: -55px;">
+            <tr>
+                <td style="font-family: '微软雅黑', Arial, '宋体'; padding: 32px;">
+                    <div>你管理的用户组有成员<span style="color: #ff9c01;"> 即将过期/已过期</span>，如有需要请及时续期：</div>
+                    <label class="table-item-lable" style="margin-top: 50px;">
+                        <span></span>
+                        用户组({{ groups|length }})
+                    </label>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="864" style="background:#fff;">
+                        <tr class="blank">
+                            <td height="20">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%" class="table data-table" style="width:100%;">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding:15px 15px 15px 30px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 250px;">
+                                                用户组
+                                            </th>
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 360px;">
+                                                描述
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for group in groups %}
+                                        <tr>
+                                            <td style="padding:15px 15px 15px 30px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                                {{ group.name }}
+                                            </td>
+                                            <td style="padding:13px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                                {{ group.description }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <section class="current-content">
+                        <p class="current-info">你收到此邮件，是因为你是 [ {{ role.name }} ] {{ role.get_type_display }}。</p>
+                        <div class="current-date">{% now "Y-m-d H:i:s" %}</div>
+                    </section>
+                    <div class="renewal-action" id="renewal-button"><a href="{{ url }}">马上续期</a></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

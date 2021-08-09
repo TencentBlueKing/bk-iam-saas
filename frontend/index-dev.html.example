@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
+        <meta charset="utf-8">
+        <title>权限中心|蓝鲸智云</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script>
+            (function () {
+                // document domain，用于蓝鲸智云 PaaS 平台各个系统的 cookie 共享，例如 bking.com
+                document.domain = ''
+
+                const SITE_URL = '/'
+                // assetsPublicPath
+                const STATIC_URL = ''
+
+                // 蓝鲸智云 PaaS 平台，例如 http://paasee-test.bking.com
+                const BK_PAAS_HOST = ''
+
+                // 蓝鲸智云 PaaS 平台的登录地址，例如 http://paasee-test.bking.com/login
+                const LOGIN_SERVICE_URL = ''
+
+                // 权限中心后端接口地址，例如 http://iam.bking.com/api/v1
+                const AJAX_URL_PREFIX = ''
+
+                const BK_USER_API = BK_PAAS_HOST + '/api/c/compapi/v2/usermanage/fs_list_users/'
+
+                const CSRF_COOKIE_NAME = 'bkiam_csrftoken_e42f8f9ecfeca7b7'
+
+                const PRODUCT_DOC_URL = 'https://bk.tencent.com/docs/markdown/权限中心/产品白皮书/产品介绍/WhatisIAM.md'
+
+                const CE_URL = 'https://bk.tencent.com/s-mart/community'
+
+                const ENABLE_MODEL_BUILD = 'True' || ''
+
+                const CUR_LANGUAGE = handleLanguage()
+                window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
+                window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
+                window.SITE_URL = SITE_URL
+                window.STATIC_URL = STATIC_URL
+                window.BK_PAAS_HOST = BK_PAAS_HOST
+                window.BK_USER_API = BK_USER_API
+                window.CUR_LANGUAGE = CUR_LANGUAGE
+                window.CSRF_COOKIE_NAME = CSRF_COOKIE_NAME
+                window.PRODUCT_DOC_URL = PRODUCT_DOC_URL
+                window.CE_URL = CE_URL
+                window.ENABLE_MODEL_BUILD = ENABLE_MODEL_BUILD
+            })()
+
+            function handleLanguage () {
+                const cookieList = document.cookie.split(';')
+                const CUR_LANGUAGE_DATA = cookieList.find(item => item.includes('blueking_language'))
+                let CUR_LANGUAGE = 'zh-cn'
+                if (CUR_LANGUAGE_DATA) {
+                    CUR_LANGUAGE = CUR_LANGUAGE_DATA.split('=')[1] || 'zh-cn'
+                }
+                // 英文 兼容处理
+                if (['en', 'en-US', 'en-us'].includes(CUR_LANGUAGE)) {
+                    CUR_LANGUAGE = 'en'
+                }
+                // 中文 兼容处理
+                if (['zh-cn', 'zh-CN'].includes(CUR_LANGUAGE)) {
+                    CUR_LANGUAGE = 'zh-cn'
+                }
+                if (CUR_LANGUAGE === 'en') {
+                    document.title = 'BKIAM|Blueking'
+                } else {
+                    document.title = '权限中心|蓝鲸智云'
+                }
+
+                return CUR_LANGUAGE
+            }
+
+            window.onload = function () {
+                let ta = document.createElement('script')
+                ta.src = '//tajs.qq.com/stats?sId=64878578'
+                ta.defer = 'defer'
+                let s = document.getElementsByTagName('script')[0]
+                s.parentNode.insertBefore(ta, s)
+            }
+        </script>
+        <script src="<%= htmlWebpackPlugin.options.staticUrl %>/lib.bundle.js"></script>
+    </body>
+</html>

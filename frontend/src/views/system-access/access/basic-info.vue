@@ -1,0 +1,165 @@
+<template>
+    <div class="iam-access-base-info-wrapper">
+        <bk-form :model="formData" :rules="rules" form-type="vertical" ref="basicInfoForm">
+            <iam-form-item :label="$t(`m.access['系统ID']`)" :property="'id'" required>
+                <bk-input class="input" v-if="isEdit" disabled v-model="formData.id"
+                    :placeholder="$t(`m.access['请输入app_code']`)" />
+                <bk-input class="input" v-else v-model="formData.id" :placeholder="$t(`m.access['请输入app_code']`)" />
+            </iam-form-item>
+            <iam-form-item :label="$t(`m.access['系统中文名称']`)" :property="'name'" required>
+                <bk-input class="input" v-model="formData.name" :placeholder="$t(`m.access['请输入接入的系统中文名称']`)" />
+            </iam-form-item>
+            <iam-form-item :label="$t(`m.access['系统英文名称']`)" :property="'name_en'" required>
+                <bk-input class="input" v-model="formData.name_en" :placeholder="$t(`m.access['请输入接入的系统英文名称']`)" />
+            </iam-form-item>
+            <iam-form-item :label="$t(`m.access['系统回调地址']`)" :property="'host'" required>
+                <bk-input class="input" v-model="formData.host" :placeholder="$t(`m.access['请输入接入的系统回调地址']`)" />
+                <bk-checkbox class="basic-auth" :true-value="'basic'" :false-value="'none'" v-model="formData.auth">
+                    {{$t(`m.access['Basic认证']`)}}
+                </bk-checkbox>
+            </iam-form-item>
+            <iam-form-item :label="$t(`m.access['系统健康检查地址']`)" :property="'healthz'" required>
+                <bk-input class="input" v-model="formData.healthz" :placeholder="$t(`m.access['请输入接入的系统健康检查地址']`)" />
+            </iam-form-item>
+            <iam-form-item :label="$t(`m.access['系统中文描述']`)" :property="'description'" required>
+                <bk-input
+                    type="textarea"
+                    v-model="formData.description"
+                    :maxlength="100"
+                    :placeholder="$t(`m.verify['请输入系统中文描述']`)">
+                </bk-input>
+            </iam-form-item>
+            <iam-form-item :label="$t(`m.access['系统英文描述']`)" :property="'description_en'" required>
+                <!-- eslint-disable vue/camelcase -->
+                <bk-input
+                    type="textarea"
+                    v-model="formData.description_en"
+                    :maxlength="100"
+                    :placeholder="$t(`m.verify['请输入系统英文描述']`)">
+                </bk-input>
+            </iam-form-item>
+        </bk-form>
+    </div>
+</template>
+<script>
+    export default {
+        props: {
+            infoData: {
+                type: Object,
+                default: () => {
+                    return {}
+                }
+            }
+        },
+        data () {
+            return {
+                formData: {
+                    id: '',
+                    name: '',
+                    name_en: '',
+                    host: '',
+                    auth: 'basic',
+                    healthz: '',
+                    description: '',
+                    description_en: ''
+                },
+                isEdit: false
+            }
+        },
+        watch: {
+            infoData: {
+                handler (value) {
+                    this.rules = {
+                        id: [
+                            { required: true, message: this.$t(`m.verify['系统ID必填']`), trigger: 'change' },
+                            {
+                                max: 32,
+                                message: '不能多于32个字符',
+                                trigger: 'change'
+                            },
+                            { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'change' }
+                        ],
+                        name: [
+                            { required: true, message: this.$t(`m.verify['系统中文名称必填']`), trigger: 'change' }
+                        ],
+                        name_en: [
+                            { required: true, message: this.$t(`m.verify['系统英文名称必填']`), trigger: 'change' }
+                        ],
+                        host: [
+                            { required: true, message: this.$t(`m.verify['系统回调地址必填']`), trigger: 'change' },
+                            { regex: /^(https|http)?:\/\//, message: this.$t(`m.verify['请输入正确的系统回调地址']`), trigger: 'change' }
+                        ],
+                        healthz: [
+                            { required: true, message: this.$t(`m.verify['系统健康检查地址必填']`), trigger: 'change' }
+                        ],
+                        description: [
+                            { required: true, message: this.$t(`m.verify['系统中文描述必填']`), trigger: 'change' }
+                        ],
+                        description_en: [
+                            { required: true, message: this.$t(`m.verify['系统英文描述必填']`), trigger: 'change' }
+                        ]
+                    }
+                    if (value && Object.keys(value).length) {
+                        this.formData.id = value.id
+                        this.formData.name = value.name
+                        this.formData.name_en = value.name_en
+                        this.formData.host = value.provider_config.host
+                        this.formData.auth = value.provider_config.auth
+                        this.formData.healthz = value.provider_config.healthz
+                        this.formData.description = value.description
+                        this.formData.description_en = value.description_en
+                        this.isEdit = true
+                    }
+                    if (!this.isEdit) {
+                        this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['系统ID已被占用']`), trigger: 'change' })
+                    }
+                },
+                deep: true,
+                immediate: true
+            }
+        },
+        methods: {
+            async checkName (val) {
+                try {
+                    const res = await this.$store.dispatch('access/checkModelingId', {
+                        id: val.trim()
+                    })
+                    return !res.data.exists
+                } catch (e) {
+                    console.error(e)
+                    return false
+                }
+            },
+
+            handleValidator () {
+                return this.$refs.basicInfoForm.validate().then(validator => {
+                    this.$emit('on-change', this.formData)
+                }, validator => {
+                    console.warn(validator)
+                    return Promise.reject(validator.content)
+                })
+            },
+
+            reset () {
+                this.$refs.basicInfoForm.formItems.forEach(item => {
+                    item.validator.content = ''
+                    item.validator.state = ''
+                })
+            }
+        }
+    }
+</script>
+
+<style lang="postcss">
+    .iam-access-base-info-wrapper {
+        width: 600px;
+        position: relative;
+        top: -6px;
+        .input {
+            width: 450px;
+        }
+        .basic-auth {
+            margin-left: 10px;
+        }
+    }
+</style>

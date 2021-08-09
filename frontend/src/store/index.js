@@ -1,0 +1,593 @@
+/*
+ * Tencent is pleased to support the open source community by making
+ * 蓝鲸智云-权限中心(BlueKing-IAM) available.
+ *
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * 蓝鲸智云-权限中心(BlueKing-IAM) is licensed under the MIT License.
+ *
+ * License for 蓝鲸智云-权限中心(BlueKing-IAM):
+ *
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+ * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+*/
+
+import Vue from 'vue'
+import Vuex from 'vuex'
+import http from '@/api'
+import { unifyObjectStyle, json2Query } from '@/common/util'
+import { getRouterDiff } from '@/common/router-handle'
+import il8n from '@/language'
+
+// 系统模块
+import system from './modules/system'
+
+// 权限模块
+import perm from './modules/perm'
+
+// 权限模板 模块
+import permTemplate from './modules/permTemplate'
+
+// 组织架构 模块
+import organization from './modules/organization'
+
+// 权限申请 模块
+import permApply from './modules/permApply'
+
+// 我的审批 模块
+import approval from './modules/approval'
+
+// 我的申请 模块
+import myApply from './modules/myApply'
+
+// 用户组 模块
+import userGroup from './modules/userGroup'
+
+// 分级管理员模块
+import role from './modules/role'
+
+// 审批流程设置
+import approvalProcess from './modules/approval-process'
+
+// 操作聚合模块
+import aggregate from './modules/aggregate'
+
+// 续期模块
+import renewal from './modules/renewal'
+
+// 审计模块
+import audit from './modules/audit'
+
+// 系统接入模块
+import access from './modules/access'
+
+Vue.use(Vuex)
+
+const SITE_URL = window.SITE_URL
+
+const currentNav = [
+    {
+        icon: 'perm-apply',
+        name: il8n('nav', '权限申请'),
+        id: 'permApplyNav',
+        rkey: 'applyJoinUserGroup',
+        path: `${SITE_URL}apply-join-user-group`,
+        disabled: false
+    },
+    {
+        icon: 'my-apply',
+        id: 'applyNav',
+        rkey: 'apply',
+        name: il8n('nav', '我的申请'),
+        path: `${SITE_URL}apply`,
+        disabled: false
+    },
+    {
+        icon: 'my-approval',
+        id: 'approvalNav',
+        rkey: 'approval',
+        name: il8n('nav', '我的审批')
+    },
+    {
+        icon: 'my-perm',
+        id: 'myPermNav',
+        rkey: 'myPerm',
+        name: il8n('nav', '我的权限'),
+        path: `${SITE_URL}my-perm`,
+        disabled: false
+    },
+    {
+        icon: 'perm-manage',
+        name: il8n('nav', '权限管理'),
+        rkey: 'managePermission',
+        children: [
+            {
+                icon: 'user-group',
+                id: 'userGroupNav',
+                rkey: 'userGroup',
+                name: il8n('nav', '用户组'),
+                path: `${SITE_URL}user-group`,
+                disabled: false
+            },
+            {
+                icon: 'perm-template',
+                id: 'permTemplateNav',
+                rkey: 'permTemplate',
+                name: il8n('nav', '权限模板'),
+                path: `${SITE_URL}perm-template`,
+                disabled: false
+            },
+            {
+                icon: 'user-fill',
+                id: 'userNav',
+                rkey: 'user',
+                name: il8n('nav', '用户'),
+                path: `${SITE_URL}user`,
+                disabled: false
+            }
+        ]
+    },
+    {
+        icon: 'grade-admin',
+        id: 'gradingAdminNav',
+        rkey: 'ratingManager',
+        name: il8n('grading', '分级管理员'),
+        path: `${SITE_URL}rating-manager`,
+        disabled: false
+    },
+    {
+        icon: 'perm-manage',
+        name: il8n('common', '设置'),
+        rkey: 'set',
+        children: [
+            {
+                icon: 'perm-apply',
+                name: il8n('common', '管理员'),
+                id: 'settingNav',
+                rkey: 'administrator',
+                path: `${SITE_URL}administrator`,
+                disabled: false
+            },
+            {
+                icon: 'approval-process-manage',
+                name: il8n('myApply', '审批流程'),
+                id: 'approvalProcessNav',
+                rkey: 'approvalProcess',
+                path: `${SITE_URL}approval-process`,
+                disabled: false
+            },
+            {
+                icon: 'operate-audit',
+                name: il8n('nav', '审计'),
+                id: 'auditNav',
+                rkey: 'audit',
+                path: `${SITE_URL}audit`,
+                disabled: false
+            }
+        ]
+    }
+]
+
+if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
+    currentNav.push({
+        icon: 'system-access',
+        id: 'systemAccessNav',
+        rkey: 'systemAccess',
+        name: il8n('nav', '系统接入'),
+        path: `${SITE_URL}system-access`,
+        disabled: true
+    })
+}
+
+const store = new Vuex.Store({
+    modules: {
+        system,
+        perm,
+        approval,
+        permTemplate,
+        organization,
+        permApply,
+        myApply,
+        userGroup,
+        role,
+        approvalProcess,
+        aggregate,
+        renewal,
+        audit,
+        access
+    },
+    state: {
+        mainContentLoading: false,
+        nav: {
+            stick: window.localStorage.getItem('navStick') !== 'false',
+            fold: window.localStorage.getItem('navStick') === 'false'
+        },
+        group: {
+            hasPerm: false,
+            hasMember: false,
+            systems: []
+        },
+        header: {
+            title: '',
+            // 顶导的指示的索引，如果为空，即不显示指示
+            indicatorIndex: '',
+            // 返回的 router 名字，如果有，那么就显示返回
+            backRouter: ''
+        },
+        // 系统当前登录用户
+        user: {},
+        users: [],
+        versionLogs: [],
+        isSync: false,
+        routerDiff: [],
+        currentNav: currentNav,
+
+        roleList: [],
+        noviceGuide: {
+            'rating_manager_authorization_scope': true,
+            'rating_manager_subject_scope': true,
+            'rating_manager_merge_action': true,
+            'switch_role': true,
+            'create_perm_template': true,
+            'create_group': true,
+            'set_group_approval_process': true,
+            'add_group_member': true,
+            'add_group_perm_template': true
+        },
+        loadingConf: {
+            speed: 2,
+            primaryColor: '#f5f6fa',
+            secondaryColor: '#FAFAFC'
+        }
+    },
+    getters: {
+        mainContentLoading: state => state.mainContentLoading,
+        navStick: state => state.nav.stick,
+        navFold: state => state.nav.fold,
+        headerTitle: state => state.header.title,
+        indicatorIndex: state => state.header.indicatorIndex,
+        backRouter: state => state.header.backRouter,
+        user: state => state.user,
+        users: state => state.users,
+        versionLogs: state => state.versionLogs,
+        currentNav: state => state.currentNav,
+        group: state => state.group,
+        isSync: state => state.isSync,
+        roleList: state => state.roleList,
+        routerDiff: state => state.routerDiff,
+        noviceGuide: state => state.noviceGuide,
+        loadingConf: state => state.loadingConf
+    },
+    mutations: {
+        updateGroup (state, obj) {
+            if (obj.hasOwnProperty('hasPerm')) {
+                state.group.hasPerm = obj.hasPerm
+            }
+            if (obj.hasOwnProperty('hasMember')) {
+                state.group.hasMember = obj.hasMember
+            }
+            if (obj.hasOwnProperty('systems')) {
+                state.group.systems = [...obj.systems]
+            }
+        },
+
+        updateSync (state, flag) {
+            state.isSync = !!flag
+        },
+
+        setNoviceGuide (state, payload) {
+            payload.forEach(item => {
+                if (state.noviceGuide.hasOwnProperty(item.scene)) {
+                    state.noviceGuide[item.scene] = item.status
+                }
+            })
+        },
+
+        updateNoviceGuide (state, type, flag = true) {
+            state.noviceGuide[type] = flag
+        },
+
+        /**
+         * 设置 backRouter
+         *
+         * @param {Object} state store state
+         * @param {string} backRouter backRouter
+         */
+        setBackRouter (state, backRouter) {
+            state.header.backRouter = backRouter
+        },
+
+        /**
+         * 设置 header title
+         *
+         * @param {Object} state store state
+         * @param {string} title title
+         */
+        setHeaderTitle (state, title) {
+            state.header.title = title
+        },
+
+        /**
+         * 设置 indicator index
+         *
+         * @param {Object} state store state
+         * @param {number} index index
+         */
+        setHeaderIndicatorIndex (state, index) {
+            state.header.indicatorIndex = index
+        },
+
+        /**
+         * 设置内容区的 loading 是否显示
+         *
+         * @param {Object} state store state
+         * @param {boolean} loading 是否显示 loading
+         */
+        setMainContentLoading (state, loading) {
+            state.mainContentLoading = loading
+        },
+
+        /**
+         * 设置左侧导航的状态
+         *
+         * @param {Object} state store state
+         * @param {Object} status 左侧导航状态
+         */
+        setNavStatus (state, status) {
+            state.nav = Object.assign(state.nav, status)
+        },
+
+        /**
+         * 更新当前用户 user
+         *
+         * @param {Object} state store state
+         * @param {Object} user user 对象
+         */
+        updateUser (state, user) {
+            state.user = Object.assign({}, user)
+        },
+
+        /**
+         * 更新当前用户身份
+         *
+         * @param {Object} state store state
+         * @param {Object} data
+         */
+        updateIdentity (state, data) {
+            state.user.role = Object.assign({}, data)
+        },
+
+        /**
+         * 更新版本日志
+         *
+         * @param {Object} state store state
+         * @param {Object} version version 对象
+         */
+        updateVersion (state, version) {
+            state.versionLogs.splice(0, state.versionLogs.length, ...version)
+        },
+
+        /**
+         * 更新所有用户 users
+         *
+         * @param {Object} state store state
+         * @param {Array} users users 对象
+         */
+        updateUsers (state, users) {
+            state.users = []
+            if (users.length) {
+                for (let i = 0; i < users.length; i++) {
+                    state.users.push(users[i])
+                }
+            }
+        },
+
+        updataRouterDiff (state, role) {
+            state.routerDiff = [...getRouterDiff(role)]
+        },
+
+        updateRoleList (state, payload) {
+            state.roleList.splice(0, state.roleList.length, ...payload)
+        }
+    },
+    actions: {
+        /**
+         * 获取用户信息
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        userInfo ({ commit, state, dispatch }, config) {
+            // const data = {
+            //     'timestamp': 1623032422,
+            //     'username': 'admin',
+            //     'role': {
+            //         'type': 'staff',
+            //         'id': 0,
+            //         'name': 'STAFF'
+            //     }
+            // }
+            // if (data.role.type === 'system_manager') {
+            //     data.role.name = `${data.role.name}${il8n('nav', '系统管理员')}`
+            // }
+            // commit('updateUser', data)
+
+            // if (Object.keys(data).length > 0) {
+            //     const role = data.role.type
+            //     commit('updataRouterDiff', role)
+            // }
+            // return data
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then(response => {
+                const data = response ? response.data : {}
+                if (data.role.type === 'system_manager') {
+                    data.role.name = `${data.role.name}${il8n('nav', '系统管理员')}`
+                }
+                commit('updateUser', data)
+
+                if (Object.keys(data).length > 0) {
+                    const role = data.role.type
+                    commit('updataRouterDiff', role)
+                }
+                return data
+            })
+        },
+
+        /**
+         * 获取角色列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        roleList ({ commit, state, dispatch }, config) {
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            return http.get(`${AJAX_URL_PREFIX}/accounts/user/roles/`, config).then(response => {
+                const data = response ? response.data : []
+                data.forEach(item => {
+                    if (item.type === 'system_manager') {
+                        item.name = `${item.name}${il8n('nav', '系统管理员')}`
+                    }
+                })
+                commit('updateRoleList', data)
+                return data
+            })
+        },
+
+        /**
+         * 获取版本日志信息
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        versionLogInfo ({ commit, state, dispatch }, config) {
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            return http.get(`${AJAX_URL_PREFIX}/version_log/`, config).then(response => {
+                commit('updateVersion', response.data)
+                return response.data
+            })
+        },
+
+        /**
+         * 获取用户信息
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        allUserInfo ({ commit, state, dispatch }, config) {
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            return http.get(`${AJAX_URL_PREFIX}/accounts/users/`, config).then(response => {
+                commit('updateUsers', response.data)
+                return response.data
+            })
+        },
+
+        /**
+         * 获取新手指引
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getNoviceGuide ({ commit, state, dispatch }, config) {
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then(response => {
+                commit('setNoviceGuide', response.data)
+                return response.data
+            })
+        },
+
+        /**
+         * 新手指引的更改
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         * @param {Object} params
+         *
+         * @return {Promise} promise 对象
+         */
+        editNoviceGuide ({ commit, state, dispatch }, params, config) {
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            return http.post(`${AJAX_URL_PREFIX}/users/profile/newbie/`, params, config)
+        },
+
+        /**
+         * get 请求
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        get ({ commit, state, dispatch }, params, config) {
+            return http.get(`/app/index?invoke=get&${json2Query(params)}`, config)
+        }
+    }
+})
+
+/**
+ * hack vuex dispatch, add third parameter `config` to the dispatch method
+ *
+ * @param {Object|string} _type vuex type
+ * @param {Object} _payload vuex payload
+ * @param {Object} config config 参数，主要指 http 的参数，详见 src/api/index initConfig
+ *
+ * @return {Promise} 执行请求的 promise
+ */
+store.dispatch = function (_type, _payload, config = {}) {
+    const { type, payload } = unifyObjectStyle(_type, _payload)
+
+    const action = { type, payload, config }
+    const entry = store._actions[type]
+    if (!entry) {
+        if (NODE_ENV !== 'production') {
+            console.error(`[vuex] unknown action type: ${type}`)
+        }
+        return
+    }
+
+    store._actionSubscribers.forEach(sub => {
+        return sub(action, store.state)
+    })
+
+    return entry.length > 1
+        ? Promise.all(entry.map(handler => handler(payload, config)))
+        : entry[0](payload, config)
+}
+
+export default store

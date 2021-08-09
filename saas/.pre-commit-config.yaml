@@ -1,0 +1,30 @@
+# See https://pre-pre-commit --versioncommit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: local
+    hooks:
+      - id: isort
+        name: isort
+        language: python
+        pass_filenames: false
+        entry: isort --settings-path=saas/pyproject.toml saas
+      - id: black
+        name: black
+        language: python
+        pass_filenames: false
+        entry: black --config=saas/pyproject.toml saas
+      - id: flake8
+        name: flak8
+        language: python
+        pass_filenames: false
+        entry: pflake8 --config=saas/pyproject.toml
+      - id: mypy
+        name: mypy
+        language: python
+        pass_filenames: false
+        entry: mypy --config-file=saas/pyproject.toml saas
+      - id: pytest
+        name: pytest
+        language: python
+        pass_filenames: false
+        entry: pytest -c saas/pyproject.toml saas

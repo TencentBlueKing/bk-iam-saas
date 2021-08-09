@@ -1,0 +1,173 @@
+.iam-system-access-registry-wrapper {
+    .inner {
+        display: flex;
+    }
+    .system-access-step {
+        flex: 0 0 120px;
+        margin-right: 24px;
+        height: 300px;
+        .current {
+            .bk-step-content {
+                width: 100px;
+                background-color: #e1ecff;
+                border-radius: 0 16px 16px 0;
+                position: absolute;
+                left: 10px;
+                padding-left: 25px;
+            }
+        }
+        .bk-step-indicator {
+            z-index: 1;
+            position: absolute;
+        }
+    }
+    .content-wrapper {
+        flex: 1;
+        .registry-action-item {
+            margin-bottom: 20px;
+            position: relative;
+            background: #fff;
+            border-radius: 2px;
+            border: 1px solid #fff;
+            box-shadow: 0px 1px 2px 0px rgba(49, 50, 56, .1);
+            &:hover {
+                box-shadow: 0px 2px 4px 0px rgba(49, 50, 56, .15);
+            }
+            &.is-not-expanded:hover {
+                .header {
+                    cursor: pointer;
+                }
+            }
+            .header {
+                display: flex;
+                justify-content: flex-start;
+                padding: 0 30px;
+                height: 60px;
+                line-height: 60px;
+                font-size: 14px;
+                color: #63656e;
+                border-radius: 2px;
+                cursor: pointer;
+                .expanded-icon {
+                    position: absolute;
+                    top: 23px;
+                    left: 10px;
+                }
+                .title {
+                    font-weight: 600;
+                    cursor: pointer;
+                }
+                .sub-title {
+                    position: absolute;
+                    right: 18px;
+                    .bk-link {
+                        margin-left: 10px;
+                    }
+                }
+            }
+            .btn-wrapper {
+                position: absolute;
+                right: 20px;
+                top: 18px;
+                z-index: 1;
+                .bk-button {
+                    margin-left: 5px;
+                }
+            }
+            .content {
+                position: relative;
+                margin-top: 15px;
+                width: calc(100% - 100px);
+                left: 100px;
+                .expand-action {
+                    padding: 20px 0 5px 0;
+                    width: 100%;
+                    line-height: 16px;
+                    font-size: 12px;
+                    color: #979ba5;
+                    text-align: center;
+                    cursor: pointer;
+                    i {
+                        font-size: 16px;
+                    }
+                }
+                .slot-content {
+                    padding: 0 20px 0 30px;
+                }
+            }
+        }
+        .expand-advanced-settings {
+            font-size: 20px;
+            color: #63656e;
+            position: absolute;
+        }
+        .label-info {
+            font-size: 14px;
+            font-weight: 700;
+            color: #63656e;
+            margin-bottom: 8px;
+        }
+        .add-related-resource-wrapper {
+            margin-top: 8px;
+            color: #3a84ff;
+            margin-bottom: 20px;
+            cursor: pointer;
+            i {
+                font-size: 20px;
+                position: relative;
+                top: 1px;
+            }
+            span {
+                font-size: 14px;
+            }
+        }
+        /deep/ .registry-action-table-cell-cls {
+            .cell {
+                -webkit-line-clamp: unset !important;
+                margin: 15px 60px 15px 40px;
+                padding-right: 60px;
+            }
+            .related-instance-selections-wrapper {
+                display: flex;
+                margin-bottom: 10px;
+            }
+            .related-instance-selections-cascade-wrapper {
+                flex: 1;
+                position: relative;
+                .related-instance-selections-cascade {
+                    margin-bottom: 10px;
+                }
+                .reduce-icon,
+                .add-icon {
+                    font-size: 16px;
+                    color: #979ba5;
+                    position: absolute;
+                    top: 8px;
+                    cursor: pointer;
+                    &.disabled {
+                        color: #dcdee5;
+                        cursor: not-allowed;
+                    }
+                }
+                .reduce-icon {
+                    right: -46px;
+                }
+                .add-icon {
+                    right: -26px;
+                }
+            }
+        }
+        /deep/ .related-instance-selections-header-cell {
+            margin-left: 40px;
+        }
+    }
+}
+.system-access-cascade-dropdown-content {
+    .system-access-cascade-extension {
+        i {
+            display: inline-block;
+            font-size: 14px;
+            margin-right: 4px;
+        }
+    }
+}

@@ -1,0 +1,38 @@
+.filter-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 42px;
+    line-height: 42px;
+    border-bottom: 1px solid #dcdee5;
+    .title {
+        color: #63656e;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .trigger-wrapper {
+        font-size: 12px;
+        color: #63656e;
+        cursor: pointer;
+        .icon {
+            display: inline-block;
+            font-size: 16px;
+            &.rotate {
+                transform: rotate(180deg);
+            }
+        }
+    }
+    .bk-dropdown-content {
+        width: 120px;
+        li {
+            display: inline;
+            cursor: pointer;
+        }
+        li.active {
+            > a {
+                background-color: #eaf3ff;
+                color: #3a84ff;
+            }
+        }
+    }
+}

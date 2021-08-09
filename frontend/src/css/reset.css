@@ -1,0 +1,38 @@
+.mac {
+    font-family: pingFang-SC-Regular, Microsoft Yahei, Helvetica, Aria;
+}
+
+.win {
+    font-family: Microsoft Yahei, pingFang-SC-Regular, Helvetica, Aria;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    color: #63656e;
+}
+
+ul,
+li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+dl,
+dt,
+dd,
+p {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+button {
+    outline: none;
+}

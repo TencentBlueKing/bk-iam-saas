@@ -1,0 +1,26 @@
+.my-perm-org-perm {
+    height: 100%;
+    .iam-perm-ext-cls {
+        margin-top: 10px;
+    }
+    .bk-table {
+        border-right: none;
+        border-bottom: none;
+        .org-full-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
+            }
+        }
+    }
+    .my-perm-org-perm-empty-wrapper {
+        img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+        }
+    }
+}

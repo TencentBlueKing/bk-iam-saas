@@ -1,0 +1,1569 @@
+<template>
+    <div class="template-resource-instance-table-wrapper"
+        v-bkloading="{ isLoading, opacity: 1 }">
+        <bk-table
+            v-if="!isLoading"
+            :data="tableList"
+            :ext-cls="!isEdit ? 'is-detail-view' : ''"
+            border
+            :cell-class-name="getCellClass"
+            :span-method="handleSpanMethod"
+            @row-mouse-enter="handleRowMouseEnter"
+            @row-mouse-leave="handleRowMouseLeave">
+            <!-- eslint-disable max-len -->
+            <bk-table-column :resizable="false" :label="$t(`m.common['模板名称']`)" width="180" v-if="isCreateMode">
+                <template slot-scope="{ row }">
+                    <span>{{ !!row.isAggregate ? row.actions[0].detail.name || row.actions[0].displayName : row.displayName }}</span>
+                </template>
+            </bk-table-column>
+            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="180">
+                <template slot-scope="{ row }">
+                    <div v-if="!!row.isAggregate" style="padding: 10px 0;">
+                        <span class="action-name" :title="row.name">{{ row.name }}</span>
+                    </div>
+                    <div v-else>
+                        <span class="action-name" :title="row.name">{{ row.name }}</span>
+                    </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column :resizable="false" :label="$t(`m.common['所属系统']`)" width="180" v-if="isCreateMode">
+                <template slot-scope="{ row }">
+                    <span>{{ !!row.isAggregate ? row.system_name : row.detail.system.name }}</span>
+                </template>
+            </bk-table-column>
+            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
+                <template slot-scope="{ row, $index }">
+                    <template v-if="!isEdit">
+                        <template v-if="!row.isEmpty">
+                            <p class="related-resource-item"
+                                v-for="item in row.related_resource_types"
+                                :key="item.type">
+                                <render-resource-popover
+                                    :key="item.type"
+                                    :data="item.condition"
+                                    :value="`${item.name}：${item.value}`"
+                                    :max-width="380"
+                                    @on-view="handleViewResource(row)" />
+                            </p>
+                        </template>
+                        <template v-else>
+                            {{ $t(`m.common['无需关联实例']`) }}
+                        </template>
+                        <Icon
+                            type="detail-new"
+                            class="view-icon"
+                            :title="$t(`m.common['详情']`)"
+                            v-if="isShowView(row)"
+                            @click.stop="handleViewResource(row)" />
+                        <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
+                            <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
+                        </template>
+                    </template>
+                    <template v-else>
+                        <div class="relation-content-wrapper" v-if="!!row.isAggregate">
+                            <label class="resource-type-name">{{ row.aggregateResourceType.name }}</label>
+                            <render-condition
+                                :ref="`condition_${$index}_aggregateRef`"
+                                :value="row.value"
+                                :is-empty="row.empty"
+                                :can-view="false"
+                                :can-paste="row.canPaste"
+                                :is-error="row.isError"
+                                @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                @on-copy="handlerAggregateOnCopy(row, $index)"
+                                @on-paste="handlerAggregateOnPaste(row)"
+                                @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                @on-click="showAggregateResourceInstance(row, $index)" />
+                            <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                        </div>
+                        <div class="relation-content-wrapper" v-else>
+                            <template v-if="!row.isEmpty">
+                                <div class="relation-content-item"
+                                    v-for="(content, contentIndex) in row.related_resource_types"
+                                    :key="contentIndex">
+                                    <div class="content-name">
+                                        {{ content.name }}
+                                        <template v-if="row.isShowRelatedText">
+                                            <div style="display: inline-block; color: #979ba5;">
+                                                ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="content">
+                                        <render-condition
+                                            :ref="`condition_${$index}_${contentIndex}_ref`"
+                                            :value="content.value"
+                                            :is-empty="content.empty"
+                                            :can-view="row.canView"
+                                            :params="curCopyParams"
+                                            :can-paste="content.canPaste"
+                                            :is-error="content.isError"
+                                            @on-mouseover="handlerConditionMouseover(content)"
+                                            @on-mouseleave="handlerConditionMouseleave(content)"
+                                            @on-view="handlerOnView(row, content, contentIndex)"
+                                            @on-restore="handlerOnRestore(content)"
+                                            @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
+                                            @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
+                                            @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
+                                            @on-click="showResourceInstance(row, $index, content, contentIndex)" />
+                                        <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                                    </div>
+                                </div>
+                            </template>
+                            <template v-else>
+                                {{ $t(`m.common['无需关联实例']`) }}
+                            </template>
+                        </div>
+                        <!-- <div class="remove-icon">
+                            <Icon type="close-small" />
+                        </div> -->
+                    </template>
+                </template>
+            </bk-table-column>
+        </bk-table>
+        <bk-sideslider
+            :is-show="isShowResourceInstanceSideslider"
+            :title="resourceInstanceSidesliderTitle"
+            :width="720"
+            quick-close
+            transfer
+            :ext-cls="'relate-instance-sideslider'"
+            @update:isShow="handleResourceCancel">
+            <div slot="content" class="sideslider-content">
+                <render-resource
+                    ref="renderResourceRef"
+                    :data="condition"
+                    :original-data="originalCondition"
+                    :flag="curFlag"
+                    :selection-mode="curSelectionMode"
+                    :disabled="curDisabled"
+                    :params="params"
+                    :res-index="curResIndex"
+                    :cur-scope-action="curScopeAction"
+                    @on-limit-change="handleLimitChange"
+                    @on-init="handleOnInit" />
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :disabled="disabled" :loading="sliderLoading" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="disabled" v-if="isShowPreview" @click="handleResourcePreview">{{ $t(`m.common['预览']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            </div>
+        </bk-sideslider>
+
+        <preview-resource-dialog
+            :show="isShowPreviewDialog"
+            :title="previewDialogTitle"
+            :params="previewResourceParams"
+            @on-after-leave="handlePreviewDialogClose" />
+
+        <render-aggregate-sideslider
+            :show.sync="isShowAggregateSideslider"
+            :params="aggregateResourceParams"
+            :value="aggregateValue"
+            :default-list="defaultSelectList"
+            @on-selected="handlerSelectAggregateRes" />
+
+        <bk-sideslider
+            :is-show.sync="isShowSideslider"
+            :title="sidesliderTitle"
+            :width="sliderWidth"
+            :quick-close="true"
+            @animation-end="handleAnimationEnd">
+            <div slot="content">
+                <component :is="'RenderDetail'" :data="previewData" />
+            </div>
+        </bk-sideslider>
+        <bk-dialog
+            ext-cls="comfirmDialog"
+            v-model="isShowDeleteDialog"
+            :close-icon="showIcon"
+            :footer-position="footerPosition"
+            @confirm="handleDelete">
+            <h3 style="text-align:center">{{ $t(`m.common['是否删除该自定义权限']`) }}</h3>
+        </bk-dialog>
+
+    </div>
+</template>
+
+<script>
+    import _ from 'lodash'
+    import { mapGetters } from 'vuex'
+    import Condition from '@/model/condition'
+    import GroupPolicy from '@/model/group-policy'
+    import RenderAggregateSideslider from '@/components/choose-ip/sideslider'
+    import { leaveConfirm } from '@/common/leave-confirm'
+    import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP } from '@/common/constants'
+    import RenderResource from './render-resource'
+    import RenderCondition from './render-condition'
+    import PreviewResourceDialog from './preview-resource-dialog'
+    import RenderResourcePopover from '@/components/iam-view-resource-popover'
+    import RenderDetail from '../common/render-detail'
+    // import store from '@/store'
+
+    export default {
+        name: 'resource-instance-table',
+        components: {
+            RenderAggregateSideslider,
+            RenderResource,
+            RenderCondition,
+            PreviewResourceDialog,
+            RenderResourcePopover,
+            RenderDetail
+        },
+        props: {
+            list: {
+                type: Array,
+                default: () => []
+            },
+            originalList: {
+                type: Array,
+                default: () => []
+            },
+            remoteAction: {
+                type: Array,
+                default: () => []
+            },
+            systemId: {
+                type: String,
+                default: ''
+            },
+            templateId: {
+                type: [String, Number],
+                default: ''
+            },
+            isEdit: {
+                type: Boolean,
+                default: false
+            },
+            // create，detail
+            mode: {
+                type: String,
+                default: 'create'
+            },
+            isCustom: {
+                type: Boolean,
+                default: false
+            },
+            // type: action，view
+            type: {
+                type: String,
+                default: 'action'
+            },
+            groupId: {
+                type: String,
+                default: ''
+            },
+            authorization: {
+                type: Object,
+                default: () => {
+                    return {}
+                }
+            },
+            isShowErrorTips: {
+                type: Boolean,
+                default: false
+            },
+            isAllExpanded: {
+                type: Boolean,
+                default: false
+            }
+        },
+        data () {
+            return {
+                tableList: [],
+                isShowResourceInstanceSideslider: false,
+                resourceInstanceSidesliderTitle: '',
+                // 查询参数
+                params: {},
+                disabled: false,
+                curIndex: -1,
+                curResIndex: -1,
+                isShowPreviewDialog: false,
+                previewDialogTitle: '',
+                previewResourceParams: {},
+                curCopyData: ['none'],
+                curCopyType: '',
+
+                curId: '',
+                isLoading: false,
+                curScopeAction: {},
+
+                isShowAggregateSideslider: false,
+
+                aggregateResourceParams: {},
+                aggregateIndex: -1,
+                aggregateValue: [],
+                // 当前复制的数据形态: normal: 普通; aggregate: 聚合后
+                curCopyMode: 'normal',
+                curAggregateResourceType: {},
+                defaultSelectList: [],
+
+                sidesliderTitle: '',
+                isShowSideslider: false,
+                previewData: [],
+                curCopyParams: {},
+                sliderLoading: false,
+                isShowDeleteDialog: false,
+                showIcon: false,
+                footerPosition: 'center',
+                newRow: '',
+                role: ''
+            }
+        },
+        computed: {
+            ...mapGetters(['user']),
+            sliderWidth () {
+                return this.mode === 'detail' ? 890 : 725
+            },
+            condition () {
+                if (this.curIndex === -1 || this.curResIndex === -1) {
+                    return []
+                }
+                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                if (!curData) {
+                    return []
+                }
+                return _.cloneDeep(curData.condition)
+            },
+            originalCondition () {
+                if (this.curIndex === -1
+                    || this.curResIndex === -1
+                    || this.originalList.length < 1) {
+                    return []
+                }
+                const curId = this.tableList[this.curIndex].id
+                const curType = this.tableList[this.curIndex].related_resource_types[this.curResIndex].type
+                if (!this.originalList.some(item => item.id === curId)) {
+                    return []
+                }
+                const curResTypeData = this.originalList.find(item => item.id === curId)
+                if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
+                    return []
+                }
+                const curData = (curResTypeData.related_resource_types || []).find(item => item.type === curType)
+                if (!curData) {
+                    return []
+                }
+                return _.cloneDeep(curData.condition)
+            },
+            curDisabled () {
+                if (this.curIndex === -1 || this.curResIndex === -1) {
+                    return false
+                }
+                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                return curData.isDefaultLimit
+            },
+            curFlag () {
+                if (this.curIndex === -1 || this.curResIndex === -1) {
+                    return 'add'
+                }
+                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                return curData.flag
+            },
+            curSelectionMode () {
+                if (this.curIndex === -1 || this.curResIndex === -1) {
+                    return 'all'
+                }
+                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                return curData.selectionMode
+            },
+            isShowPreview () {
+                if (this.curIndex === -1) {
+                    return false
+                }
+                return this.tableList[this.curIndex].policy_id !== ''
+            },
+            isShowView () {
+                return (payload) => {
+                    return !payload.isEmpty
+                }
+            },
+            isCreateMode () {
+                return this.mode === 'create'
+            },
+            isUserGroupDetail () {
+                return this.$route.name === 'userGroupDetail'
+            }
+        },
+        watch: {
+            list: {
+                handler (value) {
+                    this.tableList.splice(0, this.tableList.length, ...value)
+                },
+                immediate: true
+            },
+            systemId: {
+                handler (value) {
+                    if (value !== '') {
+                        this.curCopyType = ''
+                        this.curCopyData = ['none']
+                        this.curIndex = -1
+                        this.curResIndex = -1
+                        this.aggregateResourceParams = {}
+                        this.aggregateIndex = -1
+                        this.aggregateValue = []
+                        this.curCopyMode = 'normal'
+                        this.curAggregateResourceType = {}
+                        this.defaultSelectList = []
+                    }
+                },
+                immediate: true
+            }
+            // tableList: {
+            //     handler (newVal, oldVal) {
+            //         debugger
+            //     },
+            //     deep: true
+            // }
+        },
+        methods: {
+            handleSpanMethod ({ row, column, rowIndex, columnIndex }) {
+                if (this.isCreateMode) {
+                    if (columnIndex === 0) {
+                        const rowsCount = this.tableList.filter(item => item.detail.id === row.detail.id).length
+                        const firstIndex = this.tableList.findIndex(item => item.detail.id === row.detail.id)
+                        const endIndex = firstIndex + rowsCount - 1
+                        if (rowIndex === firstIndex) {
+                            return {
+                                rowspan: rowsCount,
+                                colspan: 1
+                            }
+                        } else {
+                            if (rowIndex <= endIndex) {
+                                return {
+                                    rowspan: 0,
+                                    colspan: 0
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    return {
+                        rowspan: 1,
+                        colspan: 1
+                    }
+                }
+            },
+
+            handlerSelectAggregateRes (payload) {
+                // debugger
+                window.changeDialog = true
+                this.tableList[this.aggregateIndex].instances = payload.map(item => {
+                    return {
+                        id: item.id,
+                        name: item.display_name
+                    }
+                })
+                this.tableList[this.aggregateIndex].isError = false
+                this.$emit('on-select', this.tableList[this.aggregateIndex])
+            },
+
+            handleRowMouseEnter (index, event, row) {
+                if (this.mode === 'detail' && !this.isEdit && this.isCustom && this.type !== 'view') {
+                    this.$set(row, 'showDelete', true)
+                }
+            },
+
+            handleRowMouseLeave (index, event, row) {
+                if (this.mode === 'detail' && !this.isEdit && this.isCustom && this.type !== 'view') {
+                    this.$set(row, 'showDelete', false)
+                }
+            },
+            toHandleDelete (row) {
+                this.isShowDeleteDialog = true
+                this.newRow = row
+            },
+            handleDelete () {
+                this.$emit('on-delete', this.newRow)
+            },
+
+            handleViewResource (payload) {
+                this.curId = payload.id
+                const params = []
+                if (payload.related_resource_types.length > 0) {
+                    payload.related_resource_types.forEach(item => {
+                        const { name, type, condition } = item
+                        params.push({
+                            name: type,
+                            label: `${name} ${this.$t(`m.common['实例']`)}`,
+                            tabType: 'resource',
+                            data: condition
+                        })
+                    })
+                }
+                this.previewData = _.cloneDeep(params)
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
+                this.isShowSideslider = true
+            },
+
+            handleAnimationEnd () {
+                this.sidesliderTitle = ''
+                this.previewData = []
+                this.curId = ''
+            },
+
+            handlerAggregateConditionMouseover (payload) {
+                if (this.curCopyData[0] === 'none') {
+                    return
+                }
+                if (this.curCopyKey === `${payload.aggregateResourceType.system_id}${payload.aggregateResourceType.id}`) {
+                    payload.canPaste = true
+                }
+            },
+
+            getScopeActionResource (payload, id, systemId) {
+                const scopeAction = this.authorization[systemId]
+                const actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))
+
+                const conditions = actions.map(
+                    item => item.related_resource_types[0].condition
+                ).filter(_ => _.length > 0)
+
+                if (conditions.length < 1) {
+                    return []
+                }
+                const instances = actions.map(item =>
+                    (
+                        item.related_resource_types[0].condition[0]
+                        && item.related_resource_types[0].condition[0].instances
+                    ) || []
+                )
+                const tempData = []
+                const resources = instances.map(item => item[0].path).map(item => item.map(v => v.map(_ => _.id)))
+                const resourceList = instances
+                    .map(item => item[0].path)
+                    .map(item => item.map(v => v.map(({ id, name }) => ({ id, name }))))
+                    .flat(2)
+                resources.forEach(item => {
+                    item.forEach(subItem => {
+                        if (resources.every(v => v.some(vItem => vItem[0] === subItem[0]))) {
+                            tempData.push(subItem[0])
+                        }
+                    })
+                })
+                if (instances.length !== actions.length) {
+                    return []
+                }
+                const curResource = [...new Set(tempData)]
+                const isEqual = curResource.length > 0
+                if (isEqual) {
+                    const curResourceList = []
+                    resourceList.forEach(item => {
+                        if (!curResourceList.find(subItem => subItem.id === item.id)) {
+                            curResourceList.push({
+                                id: item.id,
+                                display_name: item.name
+                            })
+                        }
+                    })
+                    return curResourceList.filter(item => curResource.includes(item.id))
+                }
+                return []
+            },
+
+            handlerAggregateConditionMouseleave (payload) {
+                payload.canPaste = false
+            },
+
+            handlerAggregateOnCopy (payload, index) {
+                window.changeDialog = true
+                this.curCopyKey = `${payload.aggregateResourceType.system_id}${payload.aggregateResourceType.id}`
+                this.curAggregateResourceType = payload.aggregateResourceType
+                this.curCopyData = _.cloneDeep(payload.instances)
+                this.curCopyMode = 'aggregate'
+                this.showMessage(this.$t(`m.info['实例复制']`))
+                this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(true)
+            },
+
+            handlerAggregateOnPaste (payload) {
+                let tempInstances = []
+                if (this.curCopyMode === 'aggregate') {
+                    tempInstances = this.curCopyData
+                } else {
+                    if (this.curCopyData[0] !== 'none') {
+                        const instances = this.curCopyData.map(item => item.instance)
+                        const instanceData = instances[0][0]
+                        tempInstances = instanceData.path.map(pathItem => {
+                            return {
+                                id: pathItem[0].id,
+                                name: pathItem[0].name
+                            }
+                        })
+                    }
+                }
+                if (tempInstances.length < 1) {
+                    return
+                }
+                payload.instances = _.cloneDeep(tempInstances)
+                payload.isError = false
+                this.showMessage(this.$t(`m.info['粘贴成功']`))
+
+                this.$emit('on-select', payload)
+            },
+
+            handlerAggregateOnBatchPaste (payload, index) {
+                let tempCurData = ['none']
+                let tempArrgegateData = []
+                if (this.curCopyMode === 'normal') {
+                    if (this.curCopyData[0] !== 'none') {
+                        tempCurData = this.curCopyData.map(item => {
+                            delete item.id
+                            return item
+                        })
+                        const instances = this.curCopyData.map(item => item.instance)
+                        const instanceData = instances[0][0]
+                        tempArrgegateData = instanceData.path.map(pathItem => {
+                            return {
+                                id: pathItem[0].id,
+                                name: pathItem[0].name
+                            }
+                        })
+                    }
+                } else {
+                    tempArrgegateData = this.curCopyData
+                    const instances = (() => {
+                        const arr = []
+                        const { id, name, system_id } = this.curAggregateResourceType
+                        this.curCopyData.forEach(v => {
+                            const curItem = arr.find(_ => _.type === id)
+                            if (curItem) {
+                                curItem.path.push([{
+                                    id: v.id,
+                                    name: v.name,
+                                    system_id,
+                                    type: id,
+                                    type_name: name
+                                }])
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                })
+                            }
+                        })
+                        return arr
+                    })()
+                    if (instances.length > 0) {
+                        tempCurData = [new Condition({ instances }, '', 'add')]
+                    }
+                }
+                this.tableList.forEach(item => {
+                    if (!item.isAggregate) {
+                        item.related_resource_types.forEach((subItem, subItemIndex) => {
+                            if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                                subItem.condition = _.cloneDeep(tempCurData)
+                                subItem.isError = false
+                                this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
+                            }
+                        })
+                    } else {
+                        if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                            item.instances = _.cloneDeep(tempArrgegateData)
+                            item.isError = false
+
+                            this.$emit('on-select', item)
+                        }
+                    }
+                })
+                payload.isError = false
+                this.curCopyData = ['none']
+                this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(false)
+                this.showMessage(this.$t(`m.info['批量粘贴成功']`))
+            },
+
+            showAggregateResourceInstance (data, index) {
+                window.changeDialog = true
+                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType)
+                this.aggregateIndex = index
+                this.aggregateValue = _.cloneDeep(data.instances.map(item => {
+                    return {
+                        id: item.id,
+                        display_name: item.name
+                    }
+                }))
+                this.defaultSelectList = this.getScopeActionResource(
+                    data.actions,
+                    data.aggregateResourceType.id,
+                    data.system_id
+                )
+                this.isShowAggregateSideslider = true
+            },
+
+            showMessage (payload) {
+                this.bkMessageInstance = this.$bkMessage({
+                    limit: 1,
+                    theme: 'success',
+                    message: payload
+                })
+            },
+
+            getCellClass ({ row, column, rowIndex, columnIndex }) {
+                let judgeIndex = columnIndex
+                if (this.isCreateMode) {
+                    judgeIndex = 3
+                } else {
+                    judgeIndex = 1
+                }
+                if (columnIndex === judgeIndex) {
+                    return 'iam-perm-table-cell-cls'
+                }
+                return ''
+            },
+
+            handleLimitChange () {
+                window.changeDialog = true
+                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                curData.isChange = true
+            },
+
+            handleOnInit (payload) {
+                this.disabled = !payload
+            },
+
+            showResourceInstance (data, index, resItem, resIndex) {
+                window.changeDialog = true
+                this.params = {
+                    system_id: this.systemId,
+                    action_id: data.id,
+                    resource_type_system: resItem.system_id,
+                    resource_type_id: resItem.type
+                }
+                if (this.isCreateMode) {
+                    this.params.system_id = data.detail.system.id
+                }
+                const scopeAction = this.authorization[this.params.system_id] || []
+                this.curScopeAction = _.cloneDeep(scopeAction.find(item => item.id === data.id))
+                this.curIndex = index
+                this.curResIndex = resIndex
+
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
+                window.changeAlert = 'iamSidesider'
+                this.isShowResourceInstanceSideslider = true
+            },
+            // 请求资源实例数据
+            async handleMainActionSubmit (payload, relatedActions) {
+                // debugger
+                const curPayload = _.cloneDeep(payload)
+                this.sliderLoading = true
+                curPayload.forEach(item => {
+                    item.instances = item.instance || []
+                    item.attributes = item.attribute || []
+                    delete item.instance
+                    delete item.attribute
+                })
+                const curData = _.cloneDeep(this.tableList[this.curIndex])
+                curData.related_resource_types = [curData.related_resource_types[this.curResIndex]]
+                curData.related_resource_types[0].condition = curPayload
+                const relatedList = _.cloneDeep(this.tableList.filter(item => {
+                    return !item.isAggregate
+                        && relatedActions.includes(item.id)
+                        && !item.related_resource_types.every(sub => sub.empty)
+                }))
+                if (relatedList.length > 0) {
+                    relatedList.forEach(item => {
+                        delete item.policy_id
+                        item.related_resource_types.forEach(resItem => {
+                            resItem.condition.forEach(conditionItem => {
+                                conditionItem.instances = conditionItem.instance || []
+                                conditionItem.attributes = conditionItem.attribute || []
+                                delete conditionItem.instance
+                                delete conditionItem.attribute
+                            })
+                        })
+                        item.expired_at = PERMANENT_TIMESTAMP
+                    })
+                }
+                try {
+                    const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
+                        source_policy: curData,
+                        system_id: this.tableList[this.curIndex].detail.system.id,
+                        target_policies: relatedList
+                    })
+                    this.handleRelatedAction(res.data)
+                } catch (e) {
+                    console.error(e)
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText
+                    })
+                } finally {
+                    this.sliderLoading = false
+                }
+            },
+            handleRelatedAction (payload) {
+                if (payload.length < 1) {
+                    return
+                }
+
+                payload.forEach(item => {
+                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
+                    if (curIndex > -1) {
+                        const old = this.tableList[curIndex]
+                        this.tableList.splice(curIndex, 1, new GroupPolicy(
+                            {
+                                ...item,
+                                tag: 'add',
+                                isShowRelatedText: true
+                            },
+                            '',
+                            old.isTemplate ? 'template' : 'custom',
+                            // new GroupPolicy 最后一个参数是 detail 就是 this.tableList[curIndex].detail
+                            Object.assign({}, old.detail, {
+                                system: {
+                                    id: this.tableList[curIndex].detail.system.id,
+                                    name: this.tableList[curIndex].detail.system.name
+                                },
+                                // 此 id 会在 handleSpanMethod 方法中使用到，合并单元格的依据，使用 CUSTOM_PERM_TEMPLATE_ID 会导致问题
+                                // id: CUSTOM_PERM_TEMPLATE_ID
+                                id: old.isTemplate ? this.tableList[curIndex].detail.id : CUSTOM_PERM_TEMPLATE_ID
+                            }),
+                            true
+                        ))
+                    }
+                })
+            },
+            // 保存
+            async handleResourceSumit () {
+                // debugger
+                window.changeDialog = true
+                const conditionData = this.$refs.renderResourceRef.handleGetValue()
+                const { isEmpty, data } = conditionData
+                if (isEmpty) {
+                    this.curIndex = -1
+                    this.curResIndex = -1
+                    return
+                }
+                const resItem = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const isConditionEmpty = data.length === 1 && data[0] === 'none'
+                if (isConditionEmpty) {
+                    resItem.condition = ['none']
+                } else {
+                    const { isMainAction, related_actions } = this.tableList[this.curIndex]
+                    // 如果为主操作
+                    if (isMainAction) {
+                        await this.handleMainActionSubmit(data, related_actions)
+                    }
+                    resItem.condition = data
+                    resItem.isError = false
+                }
+                window.changeAlert = false
+                this.resourceInstanceSidesliderTitle = ''
+                this.isShowResourceInstanceSideslider = false
+
+                this.$emit('on-resource-select', this.curIndex, this.curResIndex, resItem.condition)
+                this.curIndex = -1
+                this.curResIndex = -1
+
+                // 这里触发 create/index.vue 里 handleAggregateAction 事件会导致 tableList 变化，导致 list 属性变化
+                // list 属性变化之后，isShowRelatedText 属性以及其他属性均会重置
+                // if (!this.isAllExpanded) {
+                //     // 调用合并展开的方法 重组tableList的排序
+                //     this.$emit('handleAggregateAction', false)
+                // }
+            },
+
+            handleResourcePreview () {
+                // debugger
+                window.changeDialog = true
+                const { system_id, type, name } = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const condition = []
+                const conditionData = this.$refs.renderResourceRef.handleGetPreviewValue()
+
+                conditionData.forEach(item => {
+                    const { id, attribute, instance } = item
+                    condition.push({
+                        id,
+                        attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+                        instances: instance ? instance.filter(item => item.path.length > 0) : []
+                    })
+                })
+                this.previewResourceParams = {
+                    id: this.templateId,
+                    action_id: this.tableList[this.curIndex].id,
+                    related_resource_type: {
+                        system_id,
+                        type,
+                        name,
+                        condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
+                    },
+                    reverse: true,
+                    groupId: this.groupId,
+                    policy_id: this.tableList[this.curIndex].policy_id,
+                    isTemplate: this.tableList[this.curIndex].isTemplate,
+                    isNotLimit: conditionData.length === 0
+                }
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${this.tableList[this.curIndex].name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`
+                this.isShowPreviewDialog = true
+            },
+
+            handlerConditionMouseover (payload) {
+                if (Object.keys(this.curCopyParams).length < 1 && this.curCopyMode === 'normal') {
+                    return
+                }
+                if (this.curCopyData[0] === 'none' && this.curCopyMode === 'aggregate') {
+                    return
+                }
+                if (this.curCopyKey === `${payload.system_id}${payload.type}`) {
+                    payload.canPaste = true
+                }
+            },
+
+            handlerConditionMouseleave (payload) {
+                payload.canPaste = false
+            },
+
+            handlerOnView (payload, item, itemIndex) {
+                const { system_id, type, name } = item
+                const condition = []
+                item.condition.forEach(item => {
+                    const { id, attribute, instance } = item
+                    condition.push({
+                        id,
+                        attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
+                        instances: instance ? instance.filter(item => item.path.length > 0) : []
+                    })
+                })
+                this.previewResourceParams = {
+                    id: this.templateId,
+                    action_id: payload.id,
+                    related_resource_type: {
+                        system_id,
+                        type,
+                        name,
+                        condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
+                    },
+                    reverse: true,
+                    groupId: this.groupId,
+                    policy_id: payload.policy_id,
+                    isTemplate: payload.isTemplate
+                }
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`
+                this.isShowPreviewDialog = true
+            },
+
+            handlerOnCopy (payload, index, subIndex, action) {
+                window.changeDialog = true
+                this.curCopyKey = `${payload.system_id}${payload.type}`
+                this.curCopyData = _.cloneDeep(payload.condition)
+                this.curCopyMode = 'normal'
+                this.curCopyParams = this.getBacthCopyParms(action, payload)
+                this.showMessage(this.$t(`m.info['实例复制']`))
+                this.$refs[`condition_${index}_${subIndex}_ref`][0] && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(true)
+            },
+
+            getBacthCopyParms (payload, content) {
+                const actions = []
+                this.tableList.forEach(item => {
+                    if (!item.isAggregate) {
+                        if (item.id !== payload.id) {
+                            actions.push({
+                                system_id: item.detail.system.id,
+                                id: item.id
+                            })
+                        }
+                    }
+                })
+                actions.unshift({
+                    system_id: payload.detail.system.id,
+                    id: payload.id
+                })
+                return {
+                    resource_type: {
+                        system_id: content.system_id,
+                        type: content.type,
+                        condition: content.condition.map(item => {
+                            return {
+                                id: item.id,
+                                instances: item.instance || [],
+                                attributes: item.attribute || []
+                            }
+                        })
+                    },
+                    actions
+                }
+            },
+
+            handlerOnPaste (payload, content, $index, contentIndex) {
+                let tempCurData = ['none']
+                if (this.curCopyMode === 'normal') {
+                    if (!payload.flag) {
+                        return
+                    }
+                    if (payload.data.length === 0) {
+                        content.condition = []
+                    } else {
+                        content.condition = payload.data.map(conditionItem => new Condition(conditionItem, '', 'add'))
+                    }
+                } else {
+                    const instances = (() => {
+                        const arr = []
+                        const { id, name, system_id } = this.curAggregateResourceType
+                        this.curCopyData.forEach(v => {
+                            const curItem = arr.find(_ => _.type === id)
+                            if (curItem) {
+                                curItem.path.push([{
+                                    id: v.id,
+                                    name: v.name,
+                                    system_id,
+                                    type: id,
+                                    type_name: name
+                                }])
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                })
+                            }
+                        })
+                        return arr
+                    })()
+                    if (instances.length > 0) {
+                        tempCurData = [new Condition({ instances }, '', 'add')]
+                    }
+                    if (tempCurData[0] === 'none') {
+                        return
+                    }
+                    content.condition = _.cloneDeep(tempCurData)
+                }
+
+                content.isError = false
+                this.showMessage(this.$t(`m.info['粘贴成功']`))
+                this.$emit('on-resource-select', $index, contentIndex, content.condition)
+            },
+
+            handlerOnBatchPaste (payload, content, index, subIndex) {
+                let tempCurData = ['none']
+                let tempArrgegateData = []
+                if (this.curCopyMode === 'normal') {
+                    if (!payload.flag) {
+                        return
+                    }
+                    // 预计算是否存在 聚合后的数据 可以粘贴
+                    const flag = this.tableList.some(item => !!item.isAggregate
+                        && `${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey)
+                    if (flag) {
+                        if (this.curCopyData.length < 1) {
+                            tempCurData = []
+                        } else {
+                            if (this.curCopyData[0] !== 'none') {
+                                tempCurData = this.curCopyData.map(item => {
+                                    delete item.id
+                                    return item
+                                })
+                                tempCurData.forEach((item, index) => {
+                                    if (content.condition[index]) {
+                                        if (content.condition[index].id) {
+                                            item.id = content.condition[index].id
+                                        } else {
+                                            item.id = ''
+                                        }
+                                    } else {
+                                        item.id = ''
+                                    }
+                                })
+                                const instances = this.curCopyData.map(item => item.instance)
+                                const instanceData = instances[0][0]
+                                tempArrgegateData = instanceData.path.map(pathItem => {
+                                    return {
+                                        id: pathItem[0].id,
+                                        name: pathItem[0].name
+                                    }
+                                })
+                            }
+                        }
+                    }
+                    if (payload.data.length === 0) {
+                        this.tableList.forEach(item => {
+                            if (!item.isAggregate) {
+                                item.related_resource_types.forEach(resItem => {
+                                    if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
+                                        resItem.condition = []
+                                        resItem.isError = false
+                                    }
+                                })
+                            } else {
+                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                                    item.instances = _.cloneDeep(tempArrgegateData)
+                                    item.isError = false
+                                    this.$emit('on-select', item)
+                                }
+                            }
+                        })
+                    } else {
+                        this.tableList.forEach(item => {
+                            if (!item.isAggregate) {
+                                const curPasteData = (payload.data || []).find(_ => _.id === item.id)
+                                if (curPasteData) {
+                                    item.related_resource_types.forEach(resItem => {
+                                        if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                            resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'))
+                                            resItem.isError = false
+                                        }
+                                    })
+                                }
+                            } else {
+                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                                    item.instances = _.cloneDeep(tempArrgegateData)
+                                    item.isError = false
+                                    this.$emit('on-select', item)
+                                }
+                            }
+                        })
+                    }
+                } else {
+                    tempArrgegateData = this.curCopyData
+                    const instances = (() => {
+                        const arr = []
+                        const { id, name, system_id } = this.curAggregateResourceType
+                        this.curCopyData.forEach(v => {
+                            const curItem = arr.find(_ => _.type === id)
+                            if (curItem) {
+                                curItem.path.push([{
+                                    id: v.id,
+                                    name: v.name,
+                                    system_id,
+                                    type: id,
+                                    type_name: name
+                                }])
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                })
+                            }
+                        })
+                        return arr
+                    })()
+                    if (instances.length > 0) {
+                        tempCurData = [new Condition({ instances }, '', 'add')]
+                    }
+                    this.tableList.forEach(item => {
+                        if (!item.isAggregate) {
+                            item.related_resource_types.forEach((subItem, subItemIndex) => {
+                                if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                                    subItem.condition = _.cloneDeep(tempCurData)
+                                    subItem.isError = false
+                                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
+                                }
+                            })
+                        } else {
+                            if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                                item.instances = _.cloneDeep(tempArrgegateData)
+                                item.isError = false
+                                this.$emit('on-select', item)
+                            }
+                        }
+                    })
+                }
+                content.isError = false
+                this.$refs[`condition_${index}_${subIndex}_ref`][0] && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(false)
+                this.curCopyData = ['none']
+                this.showMessage(this.$t(`m.info['批量粘贴成功']`))
+            },
+
+            handlePreviewDialogClose () {
+                this.previewDialogTitle = ''
+                this.previewResourceParams = {}
+                this.isShowPreviewDialog = false
+            },
+
+            resetDataAfterClose () {
+                this.curIndex = -1
+                this.curResIndex = -1
+                this.previewResourceParams = {}
+                this.params = {}
+                this.resourceInstanceSidesliderTitle = ''
+            },
+
+            handleResourceCancel () {
+                let cancelHandler = Promise.resolve()
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm()
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceSideslider = false
+                    this.resetDataAfterClose()
+                }, _ => _)
+            },
+
+            getData () {
+                let flag = false
+                const templates = []
+                // debugger
+                // 自定义时的模板id为0
+                if (this.tableList.length < 1) {
+                    flag = true
+                    return {
+                        flag,
+                        templates
+                    }
+                }
+                this.tableList.forEach(item => {
+                    let actionParam = {}
+                    let aggregationParam = {}
+                    let systemId = ''
+                    if (!item.isAggregate) {
+                        const { type, id, name, environment, description } = item
+                        systemId = item.detail.system.id
+                        const relatedResourceTypes = []
+                        if (item.related_resource_types.length > 0) {
+                            item.related_resource_types.forEach(resItem => {
+                                if (resItem.empty) {
+                                    resItem.isError = true
+                                    flag = true
+                                }
+                                const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                    ? resItem.condition.map(conItem => {
+                                        const { id, instance, attribute } = conItem
+                                        const attributeList = (attribute && attribute.length > 0)
+                                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                                            : []
+
+                                        const instanceList = (instance && instance.length > 0)
+                                            ? instance.map(({ name, type, paths }) => {
+                                                const tempPath = _.cloneDeep(paths)
+                                                tempPath.forEach(pathItem => {
+                                                    pathItem.forEach(pathSubItem => {
+                                                        delete pathSubItem.disabled
+                                                    })
+                                                })
+                                                return {
+                                                    name,
+                                                    type,
+                                                    path: tempPath
+                                                }
+                                            })
+                                            : []
+                                        return {
+                                            id,
+                                            instances: instanceList,
+                                            attributes: attributeList
+                                        }
+                                    })
+                                    : []
+                                relatedResourceTypes.push({
+                                    type: resItem.type,
+                                    system_id: resItem.system_id,
+                                    name: resItem.name,
+                                    condition: conditionList.filter(
+                                        item => item.instances.length > 0 || item.attributes.length > 0
+                                    )
+                                })
+                            })
+                            // 强制刷新下
+                            item.related_resource_types = _.cloneDeep(item.related_resource_types)
+                        }
+                        actionParam = {
+                            type,
+                            name,
+                            id,
+                            description,
+                            related_resource_types: relatedResourceTypes,
+                            environment
+                        }
+                    } else {
+                        systemId = item.system_id
+                        const { actions, aggregateResourceType, instances } = item
+                        if (instances.length < 1) {
+                            item.isError = true
+                            flag = true
+                        } else {
+                            const temps = _.cloneDeep(actions)
+                            temps.forEach(sub => {
+                                sub.system_id = sub.detail.system.id
+                            })
+                            aggregationParam = {
+                                actions: temps,
+                                aggregate_resource_type: {
+                                    id: aggregateResourceType.id,
+                                    system_id: aggregateResourceType.system_id,
+                                    instances
+                                },
+                                expired_at: PERMANENT_TIMESTAMP
+                            }
+                        }
+                    }
+                    // eslint-disable-next-line max-len
+                    const templateId = item.isTemplate ? item.isAggregate ? item.actions[0].detail.id : item.detail.id : CUSTOM_PERM_TEMPLATE_ID
+                    const compareId = `${templateId}&${systemId}`
+                    const isHasAggregation = Object.keys(aggregationParam).length > 0
+                    const isHasActions = Object.keys(actionParam).length > 0
+                    if (!templates.map(sub => `${sub.template_id}&${sub.system_id}`).includes(compareId)) {
+                        templates.push({
+                            system_id: systemId,
+                            template_id: templateId,
+                            actions: isHasActions ? [actionParam] : [],
+                            aggregations: isHasAggregation ? [aggregationParam] : []
+                        })
+                    } else {
+                        const tempActionData = templates.find(sub => `${sub.template_id}&${sub.system_id}` === compareId)
+                        if (tempActionData) {
+                            if (isHasActions) {
+                                if (!tempActionData.actions.map(_ => _.id).includes(actionParam.id)) {
+                                    tempActionData.actions.push(actionParam)
+                                }
+                            }
+                            if (isHasAggregation) {
+                                tempActionData.aggregations.push(aggregationParam)
+                            }
+                        }
+                    }
+                })
+                return {
+                    flag,
+                    templates
+                }
+            },
+
+            getDataByNormal () {
+                if (this.isCreateMode) {
+                    this.getData()
+                    return
+                }
+                let flag = false
+                if (this.tableList.length < 1) {
+                    flag = true
+                    return {
+                        flag,
+                        actions: [],
+                        aggregations: []
+                    }
+                }
+                const actionList = []
+                const aggregations = []
+                this.tableList.forEach(item => {
+                    if (!item.isAggregate) {
+                        const { type, id, name, environment, description } = item
+                        const relatedResourceTypes = []
+                        if (item.related_resource_types.length > 0) {
+                            item.related_resource_types.forEach(resItem => {
+                                if (resItem.empty) {
+                                    resItem.isError = true
+                                    flag = true
+                                }
+                                const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                    ? resItem.condition.map(conItem => {
+                                        const { id, instance, attribute } = conItem
+                                        const attributeList = (attribute && attribute.length > 0)
+                                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                                            : []
+
+                                        const instanceList = (instance && instance.length > 0)
+                                            ? instance.map(({ name, type, paths }) => {
+                                                const tempPath = _.cloneDeep(paths)
+                                                tempPath.forEach(pathItem => {
+                                                    pathItem.forEach(pathSubItem => {
+                                                        delete pathSubItem.disabled
+                                                    })
+                                                })
+                                                return {
+                                                    name,
+                                                    type,
+                                                    path: tempPath
+                                                }
+                                            })
+                                            : []
+                                        return {
+                                            id,
+                                            instances: instanceList,
+                                            attributes: attributeList
+                                        }
+                                    })
+                                    : []
+                                relatedResourceTypes.push({
+                                    type: resItem.type,
+                                    system_id: resItem.system_id,
+                                    name: resItem.name,
+                                    condition: conditionList.filter(
+                                        item => item.instances.length > 0 || item.attributes.length > 0
+                                    )
+                                })
+                            })
+                            // 强制刷新下
+                            item.related_resource_types = _.cloneDeep(item.related_resource_types)
+                        }
+                        const params = {
+                            type,
+                            name,
+                            id,
+                            description,
+                            related_resource_types: relatedResourceTypes,
+                            environment
+                        }
+                        actionList.push(_.cloneDeep(params))
+                    } else {
+                        const { actions, aggregateResourceType, instances } = item
+                        if (instances.length < 1) {
+                            item.isError = true
+                            flag = true
+                        } else {
+                            const params = {
+                                actions,
+                                aggregate_resource_type: {
+                                    id: aggregateResourceType.id,
+                                    system_id: aggregateResourceType.system_id,
+                                    instances
+                                }
+                            }
+                            aggregations.push(params)
+                        }
+                    }
+                })
+                return {
+                    flag,
+                    actions: actionList,
+                    aggregations
+                }
+            }
+        }
+    }
+</script>
+
+<style lang="postcss">
+    .template-resource-instance-table-wrapper {
+        min-height: 101px;
+        .bk-table {
+            width: 100%;
+            margin-top: 8px;
+            border-right: none;
+            border-bottom: none;
+            font-size: 12px;
+            &.is-detail-view {
+                .bk-table-body-wrapper {
+                    .cell {
+                        padding: 20px !important;
+                    }
+                }
+            }
+            .bk-table-header-wrapper {
+                th:first-child .cell {
+                    padding-left: 20px;
+                }
+            }
+            .bk-table-body-wrapper {
+                .cell {
+                    .view-icon {
+                        display: none;
+                        position: absolute;
+                        top: 50%;
+                        right: 30px;
+                        transform: translate(0, -50%);
+                        font-size: 18px;
+                        cursor: pointer;
+                    }
+                    &:hover {
+                        .view-icon {
+                            display: inline-block;
+                            color: #3a84ff;
+                        }
+                    }
+                }
+            }
+            .bk-table-body {
+                tr {
+                    &:hover {
+                        background-color: transparent;
+                        & > td {
+                            background-color: transparent;
+                        }
+                    }
+                }
+                td:first-child .cell,
+                th:first-child .cell {
+                    padding-left: 15px;
+                }
+                .iam-new-action {
+                    display: inline-block;
+                    position: relative;
+                    top: 3px;
+                    width: 24px;
+                    vertical-align: top;
+                }
+            }
+            .relation-content-wrapper,
+            .conditions-wrapper {
+                height: 100%;
+                padding: 17px 0;
+                color: #63656e;
+                .resource-type-name {
+                    display: block;
+                    margin-bottom: 9px;
+                }
+            }
+            .remove-icon {
+                position: absolute;
+                right: 2px;
+                top: 2px;
+                font-size: 20px;
+                cursor: pointer;
+                &:hover {
+                    color: #3a84ff;
+                }
+            }
+            .relation-content-item {
+                margin-top: 17px;
+                &:first-child {
+                    margin-top: 0;
+                }
+                &.reset-margin-top {
+                    margin-top: 10px;
+                }
+                .content-name {
+                    margin-bottom: 9px;
+                }
+            }
+            .action-name {
+                margin-left: 6px;
+                display: inline-block;
+                vertical-align: bottom;
+                word-wrap: break-word;
+                word-break: break-all;
+            }
+            .conditions-item {
+                margin-top: 7px;
+                &:first-child {
+                    margin-top: 0;
+                }
+            }
+        }
+
+    }
+    .relate-instance-sideslider {
+        .sideslider-content {
+            height: calc(100vh - 114px);
+        }
+        .bk-sideslider-footer {
+            background-color: #f5f6fa!important;
+            border-color: #dcdee5!important;
+        }
+    }
+     .error-tips {
+            position: absolute;
+            line-height: 16px;
+            font-size: 10px;
+            color: #ea3636;
+        }
+</style>

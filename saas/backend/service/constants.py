@@ -1,0 +1,207 @@
+# -*- coding: utf-8 -*-
+"""
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
+from aenum import LowerStrEnum, StrEnum, auto, skip
+from django.utils.translation import gettext as _
+
+from backend.util.enum import ChoicesEnum
+
+ANY_ID = "*"
+ADMIN_USER = "admin"
+SYSTEM_ALL = "*"
+ACTION_ALL = "*"
+SUBJECT_ALL = "*"
+SUBJECT_TYPE_ALL = "*"
+
+
+# TODO 被 service.models 应用, 删除service.models同时删除
+class PolicyTag(LowerStrEnum):
+    """
+    策略新增更新标签
+    """
+
+    ADD = auto()
+    UPDATE = auto()
+    UNCHANGED = auto()
+    DELETE = auto()
+    RELATED = auto()
+
+
+# TODO 被 service.models 应用, 删除service.models同时删除
+class ConditionTag(LowerStrEnum):
+    ADD = auto()
+    DELETE = auto()
+    UNCHANGED = auto()
+
+
+class SubjectType(ChoicesEnum, LowerStrEnum):
+    ALL = "*"
+    USER = auto()
+    DEPARTMENT = auto()
+    GROUP = auto()
+
+    _choices_labels = skip(((USER, _("用户")), (GROUP, _("用户组")), (DEPARTMENT, _("部门"))))
+
+
+class SelectionMode(ChoicesEnum, LowerStrEnum):
+    ALL = auto()
+    INSTANCE = auto()
+    ATTRIBUTE = auto()
+
+    _choices_labels = skip(((ALL, _("实例与属性")), (INSTANCE, _("实例")), (ATTRIBUTE, _("属性"))))
+
+
+class Operate(LowerStrEnum):
+    GRANT = auto()
+    REVOKE = auto()
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Role Constants
+# ---------------------------------------------------------------------------------------------- #
+class RoleType(ChoicesEnum, LowerStrEnum):
+    STAFF = auto()
+    SUPER_MANAGER = auto()
+    SYSTEM_MANAGER = auto()
+    RATING_MANAGER = auto()
+
+    _choices_labels = skip(
+        ((STAFF, "个人用户"), (SUPER_MANAGER, "超级管理员"), (SYSTEM_MANAGER, "系统管理员"), (RATING_MANAGER, "分级管理员"))
+    )
+
+
+class RoleScopeType(ChoicesEnum, LowerStrEnum):
+    AUTHORIZATION = auto()
+    SUBJECT = auto()
+
+    _choices_labels = skip(((AUTHORIZATION, "系统操作"), (SUBJECT, "授权对象")))
+
+
+class RoleRelatedObjectType(ChoicesEnum, LowerStrEnum):
+    TEMPLATE = auto()
+    GROUP = auto()
+
+    _choices_labels = skip(((TEMPLATE, "权限模板"), (GROUP, "用户组")))
+
+
+class RoleScopeSubjectType(ChoicesEnum, LowerStrEnum):
+    USER = auto()
+    DEPARTMENT = auto()
+    ANY = "*"
+
+    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门"), (ANY, "任意")))
+
+
+class RoleSourceTypeEnum(ChoicesEnum, LowerStrEnum):
+    """角色创建来源"""
+
+    API = auto()
+    WEB = auto()
+    DEFAULT_INIT = auto()
+
+    _choices_labels = skip(((API, "api"), (WEB, "web"), (DEFAULT_INIT, "default init")))
+
+
+class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
+    MANAGE_GROUP = auto()
+    MANAGE_TEMPLATE = auto()
+    MANAGE_RATING_MANAGER_MEMBER = auto()
+    MANAGE_SUPER_MANAGER_MEMBER = auto()
+    MANAGE_SYSTEM_MANAGER_MEMBER = auto()
+    CREATE_RATING_MANAGER = auto()
+    MANAGE_RATING_MANAGER = auto()
+    TRANSFER_GROUP = auto()
+    AUDIT = auto()
+    CONFIGURE_APPROVAL_PROCESS = auto()
+    CONFIGURE_MANAGER = auto()
+    MANAGE_SYSTEM_SETTING = auto()
+    MANAGE_GLOBAL_SETTING = auto()
+    MANAGE_ORGANIZATION = auto()
+    MANAGE_COMMON_ACTION = auto()
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Template Constants
+# ---------------------------------------------------------------------------------------------- #
+class TemplatePreUpdateStatus(ChoicesEnum, LowerStrEnum):
+    WAITING = auto()
+    RUNNING = auto()
+    FINISHED = auto()
+
+    _choices_labels = skip(((RUNNING, "运行中"), (WAITING, "等待中")))
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Application & Approval Constants
+# ---------------------------------------------------------------------------------------------- #
+class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
+    GRANT_ACTION = auto()
+    RENEW_ACTION = auto()
+    JOIN_GROUP = auto()
+    RENEW_GROUP = auto()
+    JOIN_RATING_MANAGER = auto()
+    CREATE_RATING_MANAGER = auto()
+    UPDATE_RATING_MANAGER = auto()
+
+    _choices_labels = skip(
+        (
+            (GRANT_ACTION, "自定义权限申请"),
+            (RENEW_ACTION, "自定义权限续期"),
+            (JOIN_GROUP, "加入用户组"),
+            (RENEW_GROUP, "用户组续期"),
+            (JOIN_RATING_MANAGER, "加入分级管理员"),
+            (CREATE_RATING_MANAGER, "创建分级管理员"),
+            (UPDATE_RATING_MANAGER, "修改分级管理员"),
+        )
+    )
+
+
+# 每一种申请单据，对应的审批流程节点可以支持的ROLE
+APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
+    ApplicationTypeEnum.GRANT_ACTION.value: (RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value),
+    ApplicationTypeEnum.JOIN_GROUP.value: (RoleType.SUPER_MANAGER.value, RoleType.RATING_MANAGER.value),
+    ApplicationTypeEnum.JOIN_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value, RoleType.RATING_MANAGER.value),
+    ApplicationTypeEnum.CREATE_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value,),
+    ApplicationTypeEnum.UPDATE_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value,),
+}
+
+
+class ProcessorSourceEnum(ChoicesEnum, StrEnum):
+    """审批流程节点里的处理者来源"""
+
+    IAM = auto()
+    OTHER = auto()
+
+
+# 对于IAM来源的处理者，IAM有固定支持的处理者类型
+IAM_SUPPORT_PROCESSOR_TYPES = [
+    RoleType.SUPER_MANAGER.value,
+    RoleType.SYSTEM_MANAGER.value,
+    RoleType.RATING_MANAGER.value,
+]
+
+
+# 支持配置默认流程的申请审批类型
+DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
+    ApplicationTypeEnum.GRANT_ACTION.value,
+    ApplicationTypeEnum.JOIN_GROUP.value,
+    ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
+]
+
+
+class ApplicationStatus(ChoicesEnum, LowerStrEnum):
+    """申请单状态"""
+
+    PENDING = auto()
+    PASS = auto()
+    REJECT = auto()
+    CANCELLED = auto()
+
+    _choices_labels = skip(((PENDING, _("审批中")), (PASS, _("通过")), (REJECT, _("拒绝")), (CANCELLED, _("已取消"))))

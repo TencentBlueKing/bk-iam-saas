@@ -1,0 +1,221 @@
+.iam-system-access-optimize-wrapper {
+    .inner {
+        display: flex;
+    }
+    .system-access-step {
+        flex: 0 0 120px;
+        margin-right: 24px;
+        height: 300px;
+        .current {
+            .bk-step-content {
+                width: 100px;
+                background-color: #e1ecff;
+                border-radius: 0 16px 16px 0;
+                position: absolute;
+                left: 10px;
+                padding-left: 25px;
+            }
+        }
+        .bk-step-indicator {
+            z-index: 1;
+            position: absolute;
+        }
+    }
+    .content-wrapper {
+        flex: 1;
+
+        .new-add-group,
+        .new-add-common {
+            color: #3a84ff;
+            cursor: pointer;
+            i {
+                font-size: 20px;
+                position: relative;
+                top: 1px;
+            }
+            span {
+                font-size: 14px;
+            }
+        }
+        .action-group-list-wrapper,
+        .action-no-group-list-wrapper,
+        .common-action-list-wrapper {
+            position: relative;
+            top: -4px;
+            .title-wrapper {
+                cursor: pointer;
+                font-size: 0;
+                border-bottom: 1px solid #dcdee5;
+                padding-bottom: 10px;
+            }
+            .action-item {
+                padding: 15px 0;
+                position: relative;
+                &.set-border {
+                    /* border-bottom: 1px solid #dcdee5; */
+                }
+                &.reset-padding-top {
+                    padding-top: 0;
+                }
+                .action-group-name {
+                    color: #313238;
+                    font-weight: bold;
+                    cursor: pointer;
+                    i {
+                        position: relative;
+                        top: 2px;
+                        font-size: 24px;
+                    }
+                    .name {
+                        font-size: 12px;
+                        display: inline-block;
+                        max-width: 400px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        height: 20px;
+                        line-height: 20px;
+                        vertical-align: bottom;
+                    }
+                }
+                .btn-wrapper {
+                    position: absolute;
+                    right: 0;
+                    top: 16px;
+                    z-index: 1;
+                    &.reset-top {
+                        top: 2px;
+                    }
+                    .bk-button-text.bk-button-small {
+                        padding: 0 6px;
+                    }
+                }
+            }
+        }
+        .action-content {
+            margin: 0;
+            min-height: 50px;
+            background-color: #f5f6fa;
+            border-radius: 2px;
+            &.no-bg {
+                background-color: #fff;
+            }
+            &.no-data {
+                line-height: 36px;
+                font-size: 12px;
+                display: inline-block;
+            }
+            .self-action-content {
+                position: relative;
+                padding: 6px 18px;
+                &.set-border-bottom {
+                    border-bottom: 1px solid #fff;
+                }
+            }
+            .iam-action-cls {
+                /* width: 130px; */
+                line-height: 36px;
+                position: relative;
+                display: inline-block;
+                vertical-align: middle;
+                font-size: 0;
+                overflow: hidden;
+            }
+            .bk-checkbox-text {
+                font-size: 12px;
+                .text {
+                    display: inline-block;
+                    max-width: 110px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    vertical-align: middle;
+                    outline: none;
+                    margin-right:15px;
+                }
+            }
+            .sub-group-action-content {
+                padding: 0 20px;
+                .sub-action-item {
+                    display: flex;
+                    justify-content: space-between;
+                    position: relative;
+                    padding: 5px 0;
+                    border-bottom: 1px solid #fff;
+                    .sub-action-wrapper {
+                        display: flex;
+                        justify-content: flex-start;
+                        width: 100%;
+                        .name {
+                            display: inline-block;
+                            flex: 0 0 130px;
+                            line-height: 36px;
+                            font-size: 12px;
+                            color: #313238;
+                            font-weight: 700;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                    }
+                    .text {
+                        width: 175px;
+                        line-height: 36px;
+                        font-size: 12px;
+                        display: inline-block;
+                        max-width: 99px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        vertical-align: middle;
+                        outline: none;
+                    }
+                }
+            }
+        }
+
+        .common-action-list-wrapper {
+            .title-wrapper {
+                padding-bottom: 0;
+                cursor: default;
+            }
+            .action-item {
+                .action-group-name {
+                    display: inline-block;
+                    height: 32px;
+                    opacity: 1;
+                    background-color: #f0f1f5;
+                    padding: 0 10px;
+                    cursor: default;
+                    .name {
+                        height: 32px;
+                        line-height: 32px;
+                        font-weight: 400;
+                        font-size: 12px;
+                    }
+                }
+            }
+            .action-content {
+                .self-action-content {
+                    padding: 6px;
+                }
+            }
+        }
+    }
+}
+
+.del-group-warn-info {
+    text-align: center;
+    p {
+        color: #63656e;
+        font-size: 14px;
+        text-align: center;
+        span {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+        }
+    }
+}

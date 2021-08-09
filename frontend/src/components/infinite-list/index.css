@@ -1,0 +1,32 @@
+.infinite-list {
+    height: 862px;
+    font-size: 14px;
+    overflow: auto;
+    position: relative;
+    overflow: scroll;
+    will-change: transform;
+    &::-webkit-scrollbar {
+        width: 4px;
+        background-color: lighten(transparent, 80%);
+    }
+    &::-webkit-scrollbar-thumb {
+        height: 5px;
+        border-radius: 2px;
+        background-color: #e6e9ea;
+    }
+
+    .ghost-wrapper {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        z-index: -1;
+    }
+
+    .render-wrapper {
+        left: 0;
+        right: 0;
+        top: 0;
+        position: absolute;
+    }
+}

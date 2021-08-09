@@ -1,0 +1,191 @@
+$cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
+$duration: 0.3s;
+.nav-layout {
+    position: relative;
+    width: 60px;
+    height: 100%;
+    transition: width $duration $cubic-bezier;
+    z-index: 1900;
+    &.sticked {
+        width: 260px;
+    }
+    .nav-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: #182132;
+        transition: width $duration $cubic-bezier;
+        overflow: hidden;
+        &.unfold {
+            width: 260px;
+        }
+        &.unfold.flexible:after {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 100%;
+            left: 100%;
+            top: 0;
+        }
+        &.dark-theme {
+            background: #1b1b1b;
+        }
+        .nav-slider-list {
+            flex: 1 1 auto;
+            overflow: auto;
+            padding: 12px 0 4px;
+            margin: 0;
+            max-height: calc(100vh - 120px);
+            &::-webkit-scrollbar {
+                display: none;
+                width: 4px;
+                background-color: lighten(transparent, 80%);
+            }
+            &::-webkit-scrollbar-thumb {
+                display: none;
+                height: 5px;
+                border-radius: 2px;
+                background-color: #e6e9ea;
+            }
+        }
+        .nav-stick-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 60px;
+            background: rgb(24, 33, 50);
+            cursor: pointer;
+            &:hover {
+                .nav-stick {
+                    background-color: #3a4156;
+                    color: #d3d9e4;
+                }
+            }
+            &.dark-theme {
+                background: #1b1b1b;
+            }
+        }
+        .nav-stick {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            text-align: center;
+            border-radius: 50%;
+            transition: transform $duration $cubic-bezier;
+            transform: scale(0.8333) rotate(180deg);
+            color: #96a2b9;
+            font-size: 20px;
+            &.sticked {
+                transform: scale(0.8333);
+            }
+            &.primary {
+                color: rgb(187, 138, 59);
+            }
+        }
+        .red-dot {
+            margin-left: 2px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #ff0000;
+            float: right;
+        }
+    }
+}
+.logo {
+    position: relative;
+    height: 60px;
+    padding: 12px 0 12px 15px;
+    background: #182132;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    &.dark-theme {
+        background: #1b1b1b;
+    }
+    img {
+        height: 32px;
+    }
+    .text {
+        position: absolute;
+        top: 17px;
+        left: 60px;
+        width: 180px;
+        font-family: Microsoft Yahei;
+        font-size: 16px;
+        font-weight: 700;
+        color: #96a2b9;
+    }
+}
+
+.iam-menu {
+    .iam-menu-parent-title {
+        height: 40px;
+        line-height: 40px;
+        padding-left: 22px;
+        font-size: 12px;
+        color: #66748f;
+        overflow: hidden;
+    }
+    .iam-menu-item {
+        display: flex;
+        flex: 0 0 38px;
+        align-items: center;
+        width: 100%;
+        color: #acb9d1;
+        font-size: 14px;
+        height: 38px;
+        margin: 4px 0;
+        padding-right: 12px;
+        padding-left: 22px;
+        overflow: hidden;
+        white-space: nowrap;
+        cursor: pointer;
+        &:hover {
+            background-color: #253047;
+        }
+        &.has-darkly-theme {
+            .iam-menu-text {
+                color: #c4c6cc;
+            }
+            .iam-menu-icon {
+                color: #bb8a3b;
+            }
+            &.active {
+                background-color: #000;
+                .iam-menu-text {
+                    color: #fff;
+                }
+                .iam-menu-icon {
+                    color: #ffb848;
+                }
+            }
+            &:hover {
+                background-color: #000;
+                .iam-menu-text {
+                    color: #fff;
+                }
+                .iam-menu-icon {
+                    color: #ffb848;
+                }
+            }
+        }
+        &.active {
+            background-color: #3a84ff;
+            color: #fff;
+        }
+        .iam-menu-icon {
+            font-size: 16px;
+            min-width: 38px;
+            text-align: left;
+        }
+        .iam-menu-text {
+            padding-right: 22px;
+            overflow: hidden;
+        }
+    }
+}

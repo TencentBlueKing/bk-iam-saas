@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+"""
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
+from typing import List
+
+from pydantic import BaseModel
+from pydantic.tools import parse_obj_as
+
+from backend.service.action import ActionList, ActionService
+from backend.service.aggregate_action import AggregateActionsService
+from backend.service.models.aggregation_action import AggregateAction, AggregateResourceType
+from backend.service.resource_type import ResourceTypeService
+
+
+# model for frontend
+class AggregateResourceTypeBean(AggregateResourceType):
+    name: str = ""
+    name_en: str = ""
+
+
+class AggregateActionBean(AggregateAction):
+    name: str = ""
+    name_en: str = ""
+
+
+class AggregateActionsBean(BaseModel):
+    system_id: str
+    actions: List[AggregateActionBean]
+    aggregate_resource_type: AggregateResourceTypeBean
+
+
+class AggregateActionsList:
+    def __init__(self, aggregate_action_list: List[AggregateActionsBean]) -> None:
+        self.aggregate_actions = aggregate_action_list
+
+    def _list_resource_type_system_id(self):
+        return list({one.aggregate_resource_type.system_id for one in self.aggregate_actions})
+
+    def fill_action_name(self):
+        action_svc = ActionService()
+        for one in self.aggregate_actions:
+            action_list = ActionList(action_svc.list(one.system_id))
+
+            for action in one.actions:
+                named_action = action_list.get(action.id)
+                action.name, action.name_en = (named_action.name, named_action.name_en) if named_action else ("", "")
+
+    def fill_resource_type_name(self):
+        system_ids = self._list_resource_type_system_id()
+        name_provider = ResourceTypeService().get_resource_type_dict(system_ids)
+
+        for one in self.aggregate_actions:
+            resource_type = one.aggregate_resource_type
+            resource_type.name, resource_type.name_en = name_provider.get_name(
+                resource_type.system_id, resource_type.id
+            )
+
+
+class AggregateActionsBiz:
+    svc = AggregateActionsService()
+
+    def list(self, system_ids: List[str]) -> List[AggregateActionsBean]:
+        """
+        获取业务的聚合操作列表
+        """
+        svc_aggregate_actions = self.svc.list(system_ids)
+
+        aggregate_action_list = AggregateActionsList(parse_obj_as(List[AggregateActionsBean], svc_aggregate_actions))
+        aggregate_action_list.fill_action_name()
+        aggregate_action_list.fill_resource_type_name()
+
+        return aggregate_action_list.aggregate_actions

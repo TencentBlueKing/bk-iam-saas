@@ -1,0 +1,62 @@
+.item {
+    position: relative;
+    padding: 15px 20px 18px 24px;
+    border-right: 1px solid #dcdee5;
+    cursor: pointer;
+    &:hover {
+        border-right-color: #f5f6fa;
+        background: #f5f6fa;
+    }
+    &.has-bottom-border {
+        border-bottom: 1px solid #dcdee5;
+    }
+    &.is-active {
+        background: #f5f6fa;
+        border-right-color: #f5f6fa;
+    }
+    .is-read {
+        position: absolute;
+        top: 21px;
+        left: 10px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid #3a84ff;
+        background: #a3c5fd;
+    }
+    .up-info {
+        .title {
+            display: inline-block;
+            font-size: 14px;
+            color: #313238;
+            max-width: 175px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: bottom;
+        }
+        .status {
+            display: inline-block;
+            float: right;
+            img {
+                position: relative;
+                top: 2px;
+                height: 16px;
+            }
+        }
+    }
+    .down-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 12px;
+        .value {
+            display: inline-block;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: bottom;
+        }
+    }
+}

@@ -1,0 +1,7 @@
+dist/
+static/
+webpack_cache/
+node_modules/
+file-saver.js
+src/language/lang/
+*.bak*
