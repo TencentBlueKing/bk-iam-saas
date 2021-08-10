@@ -7,7 +7,7 @@
 
 ## Overview
 
-蓝鲸权限中心 SaaS（bk-iam-app）对接[蓝鲸权限中心后台](https://github.com/TencentBlueKing/bk-iam), 为蓝鲸智云提供了统一的权限管控服务，支持细粒度的权限管理。
+蓝鲸权限中心 SaaS（bk-iam-saas）对接[蓝鲸权限中心后台](https://github.com/TencentBlueKing/bk-iam), 为蓝鲸智云提供了统一的权限管控服务，支持细粒度的权限管理。
 
 - [架构设计](./docs/overview/architecture.md)
 - [代码目录](./docs/overview/project_codes.md)
