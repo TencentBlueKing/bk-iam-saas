@@ -21,7 +21,7 @@ If this is a FEATURE REQUEST, please:
 **是`BUG反馈`还是`需求提交`(Is this a BUG REPORT or FEATURE REQUEST)?** (choose one):
 
 
-**bk-iam-saas SaaS/bk-iam后台版本(The versions used):**
+**bk-iam-saas SaaS版本/bk-iam后台版本(The versions used):**
 
 
 **发生了什么(What happened):**
