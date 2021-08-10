@@ -1,6 +1,6 @@
 # Contributing to bk-iam
 
-我们欢迎[report Issues](https://github.com/TencentBlueKing/bk-iam-app/issues) 或者 [pull requests](https://github.com/TencentBlueKing/bk-iam-app/pulls)。 在贡献代码之前请阅读以下指引。
+我们欢迎[report Issues](https://github.com/TencentBlueKing/bk-iam-saas/issues) 或者 [pull requests](https://github.com/TencentBlueKing/bk-iam-saas/pulls)。 在贡献代码之前请阅读以下指引。
 
 ## 问题管理
 
@@ -35,5 +35,5 @@
 
 ## 代码协议
 
-[MIT LICENSE](https://github.com/TencentBlueKing/bk-iam-app/blob/master/LICENSE) 为bk-iam的开源协议，您贡献的代码也会受此协议保护。
+[MIT LICENSE](https://github.com/TencentBlueKing/bk-iam-saas/blob/master/LICENSE) 为bk-iam的开源协议，您贡献的代码也会受此协议保护。
 
