@@ -334,7 +334,7 @@
              * 隐藏侧边栏
              */
             hideSideslider () {
-                const invalidItemList = this.resourceTypeList.filter(item => item.isEdit && !item.isNewAdd)
+                const invalidItemList = this.resourceTypeList.filter(item => item.isEdit || item.isNewAdd)
                 if (invalidItemList.length) {
                     this.$bkInfo({
                         title: this.$t(`m.access['请先保存下列资源类型']`),
