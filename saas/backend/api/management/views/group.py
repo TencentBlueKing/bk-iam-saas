@@ -42,7 +42,7 @@ from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
-from backend.biz.policy import PolicyBean, PolicyOperationBiz
+from backend.biz.policy import PolicyBean
 from backend.biz.role import RoleBiz
 from backend.biz.trans import ToPolicyRelatedResources
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
@@ -312,7 +312,6 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
     queryset = Group.objects.all()
 
     group_biz = GroupBiz()
-    policy_biz = PolicyOperationBiz()
     role_biz = RoleBiz()
 
     @swagger_auto_schema(
