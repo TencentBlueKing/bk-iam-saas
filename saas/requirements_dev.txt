@@ -8,14 +8,12 @@ billiard==3.3.0.23
 black==21.7b0; python_full_version >= "3.6.2"
 celery==3.1.25
 certifi==2020.12.5; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
-cffi==1.14.5; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
 chardet==3.0.4; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
 click==8.0.0; python_version >= "3.6" and python_full_version >= "3.6.2"
 colorama==0.4.4; sys_platform == "win32" and python_version >= "3.6" and python_full_version >= "3.6.2" and platform_system == "Windows"
 converge==0.9.8
 coreapi==2.3.3; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
 coreschema==0.0.4; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
-cryptography==2.9.2; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0")
 dataclasses==0.7; python_version >= "3.6" and python_version < "3.7"
 decorator==5.0.5; python_version >= "3.5"
 django-celery==3.2.1
@@ -26,13 +24,12 @@ django-js-asset==1.2.2; python_version >= "3.5"
 django-mptt==0.11.0; python_version >= "3.5"
 django-prometheus==2.0.0
 django-redis==4.12.1; python_version >= "3.5"
-django==2.2.14; python_version >= "3.5"
-djangorestframework==3.11.0; python_version >= "3.5"
+django==2.2.24; python_version >= "3.5"
+djangorestframework==3.11.0; python_version >= "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.5"
 dogpile.cache==0.9.2
 drf-yasg==1.17.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0")
 flake8-comprehensions==3.5.0; python_version >= "3.6"
 flake8==3.9.2; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6"
-httplib2==0.18.1
 idna==2.10; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
 importlib-metadata==3.10.0; python_version < "3.8" and python_version >= "3.6" and (python_version >= "3.6" and python_full_version < "3.0.0" and python_version < "3.8" or python_full_version >= "3.5.0" and python_version < "3.8" and python_version >= "3.6") and (python_version >= "3.6" and python_full_version < "3.0.0" and python_version < "3.8" or python_full_version >= "3.4.0" and python_version >= "3.6" and python_version < "3.8")
 inflection==0.5.1; python_version >= "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.5"
@@ -54,8 +51,6 @@ pluggy==0.13.1; python_version >= "3.6" and python_full_version < "3.0.0" or pyt
 prometheus-client==0.10.0; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.4.0"
 py==1.10.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6"
 pycodestyle==2.7.0; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
-pycparser==2.20; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
-pydantic==1.5.1; python_version >= "3.6"
 pyflakes==2.3.1; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
 pyinstrument-cext==0.2.4
 pyinstrument==3.1.3
