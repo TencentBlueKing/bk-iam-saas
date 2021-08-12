@@ -75,7 +75,7 @@
                                                     <div class="related-instance-selections-wrapper">
                                                         <bk-checkbox :disabled="!item.isEdit"
                                                             :checked="row.selection_mode === 'instance'"
-                                                            :true-value="'attribute'" :false-value="'instance'"
+                                                            :true-value="'instance'" :false-value="'attribute'"
                                                             v-model="row.selection_mode"
                                                             style="margin-right: 20px; margin-top: 7px;">
                                                             {{$t(`m.access['通过拓扑选择']`)}}
