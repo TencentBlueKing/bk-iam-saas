@@ -41,12 +41,12 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean
+from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyOperationBiz
 from backend.biz.role import RoleBiz
 from backend.biz.trans import ToPolicyRelatedResources
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
-from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleType
 from backend.service.group_saas_attribute import GroupAttributeService
 from backend.service.models import Subject
 
@@ -338,13 +338,13 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
 
         # 组装数据进行对用户组权限处理
         system_id = data["system"]
+        template = GroupTemplateGrantBean(
+            system_id=system_id,
+            template_id=0,  # 自定义权限template_id为0
+            policies=policies,
+        )
         role = self.role_biz.get_role_by_group_id(group.id)
-        # preprocess_group_policies 已包含：分级管理员授权范围鉴权、数据校验和部分默认用户组策略数据填充
-        policies = self.group_biz.preprocess_group_policies(role, system_id, policies)
-
-        # 用户组授权
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
-        self.policy_biz.alter(system_id, subject, policies)  # TODO 加上subject的授权锁
+        self.group_biz.grant(role, group, [template])
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policies)
