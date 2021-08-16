@@ -182,11 +182,11 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_user_group_policy_expire_remind": {
         "task": "backend.apps.user.tasks.user_group_policy_expire_remind",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
     },
     "periodic_role_group_expire_remind": {
         "task": "backend.apps.role.tasks.role_group_expire_remind",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
     },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
