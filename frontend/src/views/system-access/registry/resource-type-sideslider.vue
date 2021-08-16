@@ -43,7 +43,7 @@
                                 v-bkloading="{ isLoading: item.submitLoading, opacity: 1, color: '#f5f6fa' }">
                                 <iam-form-item :label="$t(`m.access['资源类型ID']`)" :property="'id'" required>
                                     <bk-input :disabled="!item.isNewAdd" v-model="item.id"
-                                        placeholder="$t(`m.access['请输入资源类型ID']`)" />
+                                        :placeholder="$t(`m.access['请输入资源类型ID']`)" />
                                 </iam-form-item>
                                 <iam-form-item :label="$t(`m.access['资源类型中文名']`)" :property="'name'" required>
                                     <bk-input :disabled="!item.isEdit" v-model="item.name"
