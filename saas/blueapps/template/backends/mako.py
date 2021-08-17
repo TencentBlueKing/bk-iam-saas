@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -12,8 +13,6 @@ specific language governing permissions and limitations under the License.
 Learn more at:
 https://gist.github.com/artscoop/0eba5033527f9e488ee17b346d16284d
 """
-from __future__ import absolute_import
-
 import tempfile
 
 from django.conf import settings
