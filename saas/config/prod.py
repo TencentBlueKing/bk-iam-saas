@@ -44,6 +44,10 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
         decoded_value = json.loads(base64.b64decode(value).decode("utf-8"))
         return decoded_value[app_code]
 
+    # 兼容component的APP_ID,APP_TOKEN
+    APP_CODE = APP_ID = os.environ.get("BKPAAS_APP_ID", APP_CODE)
+    SECRET_KEY = APP_TOKEN = os.environ.get("BKPAAS_APP_SECRET", SECRET_KEY)
+
     # 正式环境数据库可以在这里配置
     DATABASES.update(  # 需要兼容V3环境变量
         {

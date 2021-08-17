@@ -13,6 +13,8 @@ app:
       height: 600
 modules:
   default:
+    is_default: True
+    source_dir: ./
     language: Python
     services:
       - name: mysql
