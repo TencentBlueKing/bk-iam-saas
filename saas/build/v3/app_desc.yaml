@@ -15,9 +15,9 @@ modules:
   default:
     language: Python
     services:
-      - name: MySQL
-      - name: RabbitMQ
-      - name: Redis
+      - name: mysql
+      - name: rabbitmq
+      - name: redis
     processes:
       web:
         command: bash bin/start.sh
