@@ -47,14 +47,14 @@
       }
     },
     "build:ce": {
-      "command": "npm run clean:ce && npm run dll && babel-node build/build.js && babel-node build/replace-internal-info.js",
+      "command": "npm run clean:ce && npm run dll && babel-node build/build.js",
       "env": {
         "NODE_ENV": "production",
         "VERSION": "ce"
       }
     },
     "build:ee": {
-      "command": "npm run clean:ee && npm run dll && babel-node build/build.js && babel-node build/replace-internal-info.js",
+      "command": "npm run clean:ee && npm run dll && babel-node build/build.js",
       "env": {
         "NODE_ENV": "production",
         "VERSION": "ee"
