@@ -29,7 +29,7 @@ itypes==1.2.0; python_version >= "2.7" and python_full_version < "3.0.0" or pyth
 jinja2==2.11.3; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
 kombu==3.0.37
 mako==1.0.6
-markupsafe==1.0
+markupsafe==1.1.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
 mysqlclient==2.0.1; python_version >= "3.5"
 packaging==21.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6"
 prometheus-client==0.11.0; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.4.0"
