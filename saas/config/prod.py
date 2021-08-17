@@ -78,9 +78,6 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
     REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
     REDIS_DB = os.environ.get("REDIS_DB", 0)
 
-    # iam backend host
-    BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")  # TODO 环境变量待确定
-
     # itsm saas url
     BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
 
@@ -120,9 +117,6 @@ else:
     REDIS_PASSWORD = os.environ.get("BKAPP_REDIS_PASSWORD")
     REDIS_DB = os.environ.get("BKAPP_REDIS_DB", 0)
 
-    # iam backend host
-    BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
-
     # itsm saas url
     BK_ITSM_APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/bk_itsm"
 
@@ -159,3 +153,6 @@ CACHES = {
         },
     }
 }
+
+# iam backend host
+BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
