@@ -15,4 +15,4 @@ env:
   - key: BKAPP_CONTAINER_MEM
     value: 2048
 language: python
-version: xx.xx.xx
+version: __APP_VERSION__
