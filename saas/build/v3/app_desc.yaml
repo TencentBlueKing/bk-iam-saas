@@ -20,6 +20,9 @@ modules:
       - name: mysql
       - name: rabbitmq
       - name: redis
+    env_variables:
+      - key: DISABLE_COLLECTSTATIC
+        value: 1
     processes:
       web:
         command: bash bin/start.sh
