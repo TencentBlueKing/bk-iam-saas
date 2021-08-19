@@ -95,7 +95,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     action_permission = {
         "create": PermissionCodeEnum.CREATE_RATING_MANAGER.value,
         "update": PermissionCodeEnum.MANAGE_RATING_MANAGER.value,
-        "partial_update": PermissionCodeEnum.MANAGE_RATING_MANAGER.value,
     }
 
     lookup_field = "id"
@@ -214,6 +213,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         user_id = request.user.username
         data = serializer.validated_data
+
+        # 名称唯一性检查
+        self.role_check_biz.check_unique_name(data["name"], role.name)
 
         # 非超级管理员 且 并非分级管理员成员，则无法更新基本信息
         if (
