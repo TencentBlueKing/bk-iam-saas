@@ -220,7 +220,7 @@ class MockSystemModelViewSet(GenericViewSet):
 
         _type = body["type"]
         if _type == ModelSectionEnum.SYSTEM.value:
-            raise error_codes.VALIDATE_ERROR.format(_("system can't be delete"))
+            raise error_codes.VALIDATE_ERROR.format(_("系统不能被删除"))
 
         # 需要检查引用, 被引用不能删除
         validate_delete_part(kwargs["id"], _type, body.get("id"))
@@ -259,7 +259,7 @@ class MockSystemModelViewSet(GenericViewSet):
 
         _type = body["type"]
         if _type not in type_slzs:
-            raise error_codes.VALIDATE_ERROR.format(_("the type not supported yet"))
+            raise error_codes.VALIDATE_ERROR.format(_("暂时不支持这种type"))
 
         slz_class, many = type_slzs[_type]
         ds = slz_class(data=body["data"], many=many)
