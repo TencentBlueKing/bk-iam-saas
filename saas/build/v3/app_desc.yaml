@@ -14,7 +14,7 @@ app:
 modules:
   default:
     is_default: True
-    source_dir: ./
+    source_dir: ./src/
     language: Python
     services:
       - name: mysql
