@@ -23,9 +23,6 @@ urlpatterns = [
                     name="subject.group",
                 ),
                 path(
-                    "departments/", views.SubjectDepartmentViewSet.as_view({"get": "list"}), name="subject.department"
-                ),
-                path(
                     "systems/", views.SubjectSystemViewSet.as_view({"get": "list"}), name="subject.list_policy_system"
                 ),
                 path(

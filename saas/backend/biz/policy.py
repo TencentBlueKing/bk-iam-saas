@@ -8,11 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import functools
 import time
 from copy import deepcopy
 from itertools import chain, groupby
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from pydantic.tools import parse_obj_as
 
@@ -22,25 +25,22 @@ from backend.service.action import ActionService
 from backend.service.constants import ANY_ID
 from backend.service.models import (
     Action,
-    InstanceSelection,
-    PathResourceType,
-    RelatedResourceType,
-    ResourceTypeDict,
-    Subject,
-)
-from backend.service.models.resource_type import ResourceNode
-from backend.service.models.system import System
-from backend.service.policy.operation import PolicyOperationService
-from backend.service.policy.query import (
     BackendThinPolicy,
     Condition,
     Instance,
+    InstanceSelection,
     PathNode,
+    PathResourceType,
     Policy,
-    PolicyQueryService,
     RelatedResource,
+    RelatedResourceType,
+    ResourceTypeDict,
+    Subject,
+    System,
     SystemCounter,
 )
+from backend.service.policy.operation import PolicyOperationService
+from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
@@ -110,13 +110,6 @@ class PathNodeBeanList:
 
     def display(self) -> str:
         return "/".join(["{}:{}".format(node.type, node.name) for node in self.nodes])
-
-    def fill_node_name(self, resource_info_name_dict: Dict[ResourceNode, str]):
-        """
-        填充节点name
-        """
-        for node in self.nodes:
-            node.name = resource_info_name_dict[ResourceNode.parse_obj(node)]
 
 
 class InstanceBean(Instance):
@@ -761,29 +754,29 @@ class PolicyBeanList:
 
     def split_to_update_and_delete_for_revoke(
         self, delete_policy_list: "PolicyBeanList"
-    ) -> Tuple["PolicyBeanList", List[int]]:
+    ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
         """
         回收权限时, 分离出需要更新的策略与删除的策略ID
 
         self: 原来已有的policy list
         delete_policy_list: 需要回收的policy list
         """
-        update_policies, delete_policy_ids = [], []
+        update_policies, delete_policies = [], []
         for p in self.policies:
             delete_policy = delete_policy_list.get(p.action_id)
             if not delete_policy:
                 continue
 
             if p.is_unrelated():
-                delete_policy_ids.append(p.policy_id)
+                delete_policies.append(p)
                 continue
 
             try:
                 update_policies.append(p.remove_related_resource_types(delete_policy.related_resource_types))
             except PolicyEmptyException:
-                delete_policy_ids.append(p.policy_id)
+                delete_policies.append(p)
 
-        return PolicyBeanList(self.system_id, update_policies), delete_policy_ids
+        return PolicyBeanList(self.system_id, update_policies), PolicyBeanList(self.system_id, delete_policies)
 
     def add(self, policy_list: "PolicyBeanList") -> "PolicyBeanList":
         """
@@ -914,6 +907,13 @@ class PolicyQueryBiz:
         policy_list = self.new_policy_list(system_id, subject)
         return policy_list.policies
 
+    def list_by_subject_and_action(self, system_id: str, subject: Subject, action_ids: List[str]) -> List[PolicyBean]:
+        """
+        查询subject指定系统指定操作列表的策略
+        """
+        policies = self.list_by_subject(system_id, subject)
+        return [p for p in policies if p.action_id in action_ids]
+
     def new_policy_list(self, system_id: str, subject: Subject) -> PolicyBeanList:
         policies = self.svc.list_by_subject(system_id, subject)
         policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
@@ -991,31 +991,56 @@ class PolicyQueryBiz:
         return system_id, policy_list.policies[0]
 
 
+def policy_change_lock(func):
+    """装饰器：策略变更的分布式全局锁，避免并发导致数据错误
+    Note: 若被添加于类的方法上，需要使用method_decorator，主要是为了不关注类的self/cls参数
+    from django.utils.decorators import method_decorator
+    method_decorator(policy_change_lock)
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Note: 必须保证被装饰的函数有参数system_id和subject
+        system_id = kwargs["system_id"] if "system_id" in kwargs else args[1]
+        subject = kwargs["subject"] if "subject" in kwargs else args[2]
+        # TODO: 后面重构cache模块时统一定义前缀
+        lock_key = f"bk_iam:lock:{system_id}:{subject.type}:{subject.id}"
+        # 加 system + subject 锁
+        with cache.lock(lock_key, timeout=10):
+            func(*args, **kwargs)
+
+    return wrapper
+
+
 class PolicyOperationBiz:
     query_biz = PolicyQueryBiz()
 
     svc = PolicyOperationService()
 
+    @method_decorator(policy_change_lock)
     def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """
         删除policies
         """
         self.svc.delete_by_ids(system_id, subject, policy_ids)
 
+    @method_decorator(policy_change_lock)
     def delete_partial(
         self,
+        system_id: str,
         subject: Subject,
         policy_id: int,
         resource_system_id: str,
         resource_type_id: str,
         condition_ids: List[str],
         conditions: List[ConditionBean],
-    ) -> Tuple[str, PolicyBean]:
+    ) -> PolicyBean:
         """
         Policy条件部分删除
         返回更新后的Policy
         """
-        system_id, policy = self.query_biz.get_system_policy(subject, policy_id)
+        # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
+        __, policy = self.query_biz.get_system_policy(subject, policy_id)
         resource_type = policy.get_related_resource_type(resource_system_id, resource_type_id)
         if not resource_type:
             raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
@@ -1034,8 +1059,9 @@ class PolicyOperationBiz:
         policy.set_related_resource_type(resource_type)
         self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy)])
 
-        return system_id, policy
+        return policy
 
+    @method_decorator(policy_change_lock)
     def update(self, system_id: str, subject: Subject, policies: List[PolicyBean]) -> List[PolicyBean]:
         """
         更新subject的权限策略
@@ -1055,6 +1081,7 @@ class PolicyOperationBiz:
 
         return update_policy_list.policies
 
+    @method_decorator(policy_change_lock)
     def alter(self, system_id: str, subject: Subject, policies: List[PolicyBean]):
         """
         变更subject权限策略
@@ -1071,6 +1098,30 @@ class PolicyOperationBiz:
             create_policies=create_policy_list.to_svc_policies(),
             update_policies=update_policy_list.to_svc_policies(),
         )
+
+    @method_decorator(policy_change_lock)
+    def revoke(self, system_id: str, subject: Subject, delete_policies: List[PolicyBean]) -> List[PolicyBean]:
+        """
+        删除策略，这里diff可能进行部分删除，若完全一样，则整条策略删除
+        返回受影响的策略
+        """
+        old_policy_list = self.query_biz.new_policy_list(system_id, subject)
+        deleted_policy_list = PolicyBeanList(system_id, delete_policies)
+
+        # 获取需要更新和整条删除的策略
+        update_policy_list, whole_delete_policy_list = old_policy_list.split_to_update_and_delete_for_revoke(
+            deleted_policy_list
+        )
+        # 变更策略
+        self.svc.alter(
+            system_id=system_id,
+            subject=subject,
+            create_policies=[],
+            update_policies=update_policy_list.to_svc_policies(),
+            delete_policy_ids=[p.policy_id for p in whole_delete_policy_list.policies],
+        )
+
+        return update_policy_list.policies + whole_delete_policy_list.policies
 
 
 def group_paths(paths: List[List[Dict]]) -> List[InstanceBean]:

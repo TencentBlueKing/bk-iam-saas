@@ -44,9 +44,8 @@ from backend.service.constants import (
     RoleType,
     SubjectType,
 )
-from backend.service.models import Subject, System
-from backend.service.policy.query import Attribute
-from backend.service.role import AuthScopeSystem, RoleInfo, RoleService
+from backend.service.models import Attribute, Subject, System
+from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleInfo, RoleService
 from backend.service.system import SystemService
 
 logger = logging.getLogger("app")
@@ -182,6 +181,46 @@ class RoleBiz:
 
         return None
 
+    def inc_update_auth_scope(self, role_id: int, system_id: str, incr_policies: List[PolicyBean]):
+        """增量更新分级管理员的授权范围
+        Note: 这里没有判断是否已经包含了，而是直接合并添加，比如已有父资源，则增量里有子资源也会添加
+        需要去除包含的，则单独在外层调用RoleAuthorizationScopeChecker进行判断去除，然后提取增量数据后再调用
+        """
+        # 增量数据为空，无需更新
+        if len(incr_policies) == 0:
+            return
+        # 转为PolicyList，便于进行数据合并操作
+        incr_policy_list = PolicyBeanList(system_id=system_id, policies=incr_policies, need_fill_empty_fields=True)
+
+        # 查询已有的可授权范围
+        auth_scopes = self.svc.list_auth_scope(role_id)
+
+        # 遍历，查找需要修改的数据和对应位置
+        need_modified_policy_list = PolicyBeanList(system_id=system_id, policies=[])
+        index = -1
+        for idx, auth_scope in enumerate(auth_scopes):
+            if auth_scope.system_id == system_id:
+                index = idx
+                need_modified_policy_list = PolicyBeanList(
+                    system_id=system_id, policies=parse_obj_as(List[PolicyBean], auth_scope.actions)
+                )
+                break
+
+        # 合并增量数据
+        need_modified_policy_list.add(incr_policy_list)
+
+        # 修改已有的可授权范围
+        new_auth_scope = AuthScopeSystem(
+            system_id=system_id, actions=parse_obj_as(List[AuthScopeAction], need_modified_policy_list.policies)
+        )
+        if index == -1:
+            auth_scopes.append(new_auth_scope)
+        else:
+            auth_scopes[index] = new_auth_scope
+
+        # 变更可授权的权限范围
+        self.svc.update_role_auth_scope(role_id, auth_scopes)
+
 
 class RoleCheckBiz:
     def check_unique_name(self, new_name: str, old_name: str = ""):
@@ -264,8 +303,6 @@ class RoleListQuery:
         """
         查询用户组列表
         """
-        assert self.user
-
         group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value)
         return Group.objects.filter(id__in=group_ids)
 
@@ -277,6 +314,7 @@ class RoleListQuery:
                 )
             )
 
+        assert self.user
         mgr_ids = self._list_authorization_scope_include_user_role_ids()
         # 查询 所有这些管理员创建的 对象 ids
         return list(
@@ -437,6 +475,24 @@ class RoleAuthorizationScopeChecker:
         self._check_system_in_scope(system_id)
         for p in policies:
             self._check_policy_in_scope(system_id, p)
+
+    def list_not_match_policy(self, system_id: str, policies: List[PolicyBean]) -> List[PolicyBean]:
+        """与check_policies的检测逻辑一样，只是不直接抛异常，而是返回不满足的策略"""
+        try:
+            self._check_system_in_scope(system_id)
+        except APIException:
+            # 整个系统都不满足，则返回原有所有策略
+            return policies
+
+        # 遍历每条权限进行判断
+        not_match_policies = []
+        for p in policies:
+            try:
+                self._check_policy_in_scope(system_id, p)
+            except APIException:
+                not_match_policies.append(p)
+
+        return not_match_policies
 
     def _check_policy_in_scope(self, system_id, policy: PolicyBean):
         if self._check_action_in_scope(system_id, policy.action_id) == ACTION_ALL:

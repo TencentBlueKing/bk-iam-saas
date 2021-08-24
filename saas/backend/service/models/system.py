@@ -8,11 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
-
 from pydantic import BaseModel
-
-logger = logging.getLogger("app")
 
 
 class System(BaseModel):
@@ -21,14 +17,3 @@ class System(BaseModel):
     name_en: str
     description: str
     description_en: str
-
-
-class Subject(BaseModel):
-    type: str
-    id: str
-
-    def __hash__(self):
-        return hash((self.type, self.id))
-
-    def __eq__(self, other):
-        return self.type == other.type and self.id == other.id

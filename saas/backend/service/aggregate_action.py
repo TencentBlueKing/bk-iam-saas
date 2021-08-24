@@ -11,7 +11,8 @@ specific language governing permissions and limitations under the License.
 from typing import List
 
 from backend.apps.action.models import AggregateAction as AggregateActionModel
-from backend.service.models import AggregateActions
+
+from .models import AggregateActions
 
 
 class AggregateActionsService:

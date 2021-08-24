@@ -40,7 +40,7 @@ class ActionGroupView(views.APIView):
 
         system_id = slz.validated_data["system_id"]
 
-        actions = self.action_biz.list(system_id)
-        action_groups = self.biz.list_with_frontend_id_by_actions(system_id, actions)
+        action_list = self.action_biz.list(system_id)
+        action_groups = self.biz.list_with_frontend_id_by_actions(system_id, action_list.actions)
 
         return Response([one.dict() for one in action_groups])

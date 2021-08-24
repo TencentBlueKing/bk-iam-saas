@@ -21,8 +21,8 @@ from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.system import SystemBiz
 from backend.service.constants import SubjectType
-from backend.service.system import SystemService
 
 from .constants import TemplateTag
 
@@ -56,7 +56,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         self.authorized_template = kwargs.pop("authorized_template", set())
         super().__init__(*args, **kwargs)
-        self._system_list = SystemService().new_system_list()
+        self._system_list = SystemBiz().new_system_list()
 
         self._lock_ids = set()
         if isinstance(self.instance, (QuerySet, list)) and self.instance:

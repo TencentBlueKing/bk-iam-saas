@@ -71,6 +71,12 @@ class Action(BaseModel):
                 return i
         return -1
 
+    def is_unrelated(self) -> bool:
+        """
+        是否是非关联
+        """
+        return len(self.related_resource_types) == 0
+
 
 def _filter_error_instance_selection(
     system_id: str, resource_type_id: str, selections: List[InstanceSelection]
