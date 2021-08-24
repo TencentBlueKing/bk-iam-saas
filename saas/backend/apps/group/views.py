@@ -33,7 +33,6 @@ from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleListQuery, RoleObjectRelationChecker
 from backend.biz.template import TemplateBiz
-from backend.biz.trans.group import GroupTrans
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.serializers import SystemQuerySLZ
@@ -41,6 +40,7 @@ from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseS
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.trans.group import GroupTrans
 
 from .audit import (
     GroupCreateAuditProvider,

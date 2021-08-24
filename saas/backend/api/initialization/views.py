@@ -12,12 +12,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import views
 
-from backend.api.authentication import BasicAppCodeAuthentication
 from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.organization.tasks import sync_organization
 from backend.apps.role.tasks import sync_system_manager
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.role import RoleBiz
+from backend.common.authentication import BasicAppCodeAuthentication
 
 
 class InitializationView(ExceptionHandlerMixin, views.APIView):

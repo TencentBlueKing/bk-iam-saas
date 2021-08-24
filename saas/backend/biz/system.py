@@ -8,28 +8,18 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import LowerStrEnum, auto
+from typing import List
+
+from backend.service.system import SystemService
 
 
-class PolicyTag(LowerStrEnum):
-    """
-    策略新增更新标签
-    """
+class SystemBiz:
+    svc = SystemService()
 
-    ADD = auto()
-    UPDATE = auto()
-    UNCHANGED = auto()
-    DELETE = auto()
-    RELATED = auto()
+    get = SystemService.__dict__["get"]
+    list = SystemService.__dict__["list"]
+    new_system_list = SystemService.__dict__["new_system_list"]
 
-
-class ConditionTag(LowerStrEnum):
-    ADD = auto()
-    DELETE = auto()
-    UNCHANGED = auto()
-
-
-class ActionTag(LowerStrEnum):
-    READONLY = auto()
-    CHECKED = auto()
-    UNCHECKED = auto()
+    def list_client(self, system_id: str) -> List[str]:
+        """查询可访问系统的clients"""
+        return self.svc.list_client(system_id)

@@ -11,7 +11,8 @@ specific language governing permissions and limitations under the License.
 from typing import Any, Dict, List
 
 from backend.biz.group import GroupTemplateGrantBean
-from backend.biz.trans.policy import PolicyTrans
+
+from .policy import PolicyTrans
 
 
 class GroupTrans:

@@ -10,8 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.apps.group.constants import SubjectRelationType
 from backend.common.time import PERMANENT_SECONDS
+from backend.service.constants import SubjectRelationType
 
 
 class UserRelationSLZ(serializers.Serializer):
@@ -28,9 +28,3 @@ class SubjectGroupSLZ(serializers.Serializer):
     description = serializers.CharField(label="描述", allow_blank=True)
     department_id = serializers.IntegerField(label="部门ID", help_text="0则为个人，其他为继承的部门ID")
     department_name = serializers.CharField(label="部门名称")
-
-
-class SubjectDepartmentSLZ(serializers.Serializer):
-    id = serializers.CharField(label="部门ID")
-    name = serializers.CharField(label="部门名称")
-    full_name = serializers.CharField(label="部门路径名称")
