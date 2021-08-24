@@ -12,11 +12,11 @@ from typing import Any, Dict, List
 
 from pydantic import BaseModel
 
-from backend.biz.policy import PathNodeBeanList
 from backend.common.error_codes import error_codes
 from backend.component.engine import batch_query_subjects
-from backend.service.policy.query import Condition, PathNode, Policy, RelatedResource
-from backend.service.utils.translate import translate_path
+
+from .models import Condition, PathNode, Policy, RelatedResource
+from .utils.translate import translate_path
 
 MAX_ENGINE_SEARCH_RESOURCE_COUNT = 20
 
@@ -157,7 +157,7 @@ class EngineService:
         if last_node.type == rrt.type and last_node.system_id == rrt.system_id:
             resource["id"] = last_node.id
             if path[:-1]:
-                resource["attribute"]["_bk_iam_path_"] = translate_path(PathNodeBeanList(path[:-1]).dict())
+                resource["attribute"]["_bk_iam_path_"] = translate_path([n.dict() for n in path[:-1]])
         else:
-            resource["attribute"]["_bk_iam_path_"] = translate_path(PathNodeBeanList(path).dict())
+            resource["attribute"]["_bk_iam_path_"] = translate_path([n.dict() for n in path])
         return resource

@@ -103,7 +103,9 @@ class ResourceIDNameCache:
         try:
             with redis_region.backend.client.pipeline() as pipe:
                 for _id, name in id_name_map.items():
-                    pipe.set(self._generate_id_cache_key(_id), name, ex=5 * 60)  # 缓存5分钟
+                    # 只缓存name是字符串的，其他非法的不缓存
+                    if isinstance(name, str):
+                        pipe.set(self._generate_id_cache_key(_id), name, ex=5 * 60)  # 缓存5分钟
                 pipe.execute()
         except RedisError as error:
             logger.exception(f"set resource id name cache error: {error}")

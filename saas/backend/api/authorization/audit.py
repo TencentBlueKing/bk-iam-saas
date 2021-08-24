@@ -12,7 +12,7 @@ from backend.apps.subject.audit import BaseSubjectProvider
 from backend.audit.audit import NoNeedAuditException, audit_context_getter
 from backend.audit.constants import AuditType
 
-from .constants import Operate
+from .constants import OperateEnum
 
 
 class SubjectPolicyGrantOrRevokeAuditProvider(BaseSubjectProvider):
@@ -20,10 +20,10 @@ class SubjectPolicyGrantOrRevokeAuditProvider(BaseSubjectProvider):
     def type(self):
         operate = audit_context_getter(self.request, "operate")
 
-        if operate == Operate.REVOKE.value:
+        if operate == OperateEnum.REVOKE.value:
             return AuditType.USER_POLICY_UPDATE.value
 
-        if operate == Operate.GRANT.value:
+        if operate == OperateEnum.GRANT.value:
             return AuditType.USER_POLICY_CREATE.value
 
         return ""

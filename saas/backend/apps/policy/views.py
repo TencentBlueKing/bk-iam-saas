@@ -143,7 +143,10 @@ class PolicyViewSet(GenericViewSet):
 
         permission_logger.info("policy delete partial by user: %s", request.user.username)
 
-        system_id, update_policy = self.policy_operation_biz.delete_partial(
+        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
+        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        update_policy = self.policy_operation_biz.delete_partial(
+            system_id,
             subject,
             policy_id,
             resource_system_id,

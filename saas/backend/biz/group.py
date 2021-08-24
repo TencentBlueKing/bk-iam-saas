@@ -36,8 +36,8 @@ from backend.service.constants import RoleRelatedObjectType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
-from backend.service.models import Subject
-from backend.service.policy.query import Policy, PolicyQueryService
+from backend.service.models import Policy, Subject
+from backend.service.policy.query import PolicyQueryService
 from backend.service.role import RoleService, UserRole
 from backend.service.system import SystemService
 from backend.service.template import TemplateService
@@ -130,6 +130,7 @@ class GroupBiz:
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
+    batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
 
     def create_and_add_members(
         self, role_id: int, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int

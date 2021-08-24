@@ -8,9 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from collections import defaultdict
-from typing import Dict, List
-
+from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -34,12 +32,10 @@ from backend.apps.role.audit import (
 from backend.apps.role.models import Role, RoleSource, RoleUser
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionCheckBiz, ActionForCheck
-from backend.biz.policy import PolicyBean, PolicyBeanList
-from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
-from backend.biz.trans import ToPolicyRelatedResources
+from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import RoleSourceTypeEnum, RoleType
+from backend.trans.open_management import GradeManagerTrans
 
 
 class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, ExceptionHandlerMixin, GenericViewSet):
@@ -53,7 +49,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, Exception
 
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
-    action_check_biz = ActionCheckBiz()
+    trans = GradeManagerTrans()
 
     @swagger_auto_schema(
         operation_description="创建分级管理员",
@@ -79,36 +75,17 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, Exception
         # 名称唯一性检查
         self.role_check_biz.check_unique_name(data["name"])
 
-        # 将授权的权限范围数据转为List[Policy]，并按照系统分组
-        system_policies: Dict[str, List[PolicyBean]] = defaultdict(list)
-        for auth_scope in data["authorization_scopes"]:
-            # Resources转换为Policy的RelatedResourceTypes结构
-            related_resources = ToPolicyRelatedResources().from_resource_paths(auth_scope["resources"])
+        # 转换为RoleInfoBean，用于创建时使用
+        role_info = self.trans.to_role_info(data)
 
-            # 将Actions展开并给每个Action添加对应的Resources得到Policies
-            for ac in auth_scope["actions"]:
-                system_policies[auth_scope["system"]].append(
-                    PolicyBean(action_id=ac["id"], related_resource_types=related_resources)
-                )
+        with transaction.atomic():
+            # 创建角色
+            role = self.biz.create(role_info, request.user.username)
 
-        # 校验Policy，并填充资源类型等相关字段数据，最终组装出authorization_scopes
-        authorization_scopes = []
-        for system_id, policies in system_policies.items():
-            # 检查Resources与Action RelatedResourceTypes是否匹配
-            self.action_check_biz.check(system_id, [ActionForCheck.parse_obj(p.dict()) for p in policies])
-            policy_list = PolicyBeanList(system_id, policies, need_check_instance_selection=True)
-            # 组装出，create role的authorization_scope数据
-            authorization_scopes.append({"system_id": system_id, "actions": [p.dict() for p in policy_list.policies]})
-        # 使用创建角色所需的authorization_scopes替换掉参数里
-        data["authorization_scopes"] = authorization_scopes
-
-        # 创建角色
-        role = self.biz.create(RoleInfoBean.parse_obj(data), request.user.username)
-
-        # 记录role创建来源信息
-        RoleSource.objects.create(
-            role_id=role.id, source_type=RoleSourceTypeEnum.API.value, source_system_id=source_system_id
-        )
+            # 记录role创建来源信息
+            RoleSource.objects.create(
+                role_id=role.id, source_type=RoleSourceTypeEnum.API.value, source_system_id=source_system_id
+            )
 
         # 审计
         audit_context_setter(role=role)

@@ -23,7 +23,7 @@ from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, Gr
 from backend.biz.group import GroupCheckBiz
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import ApplicationTypeEnum, SubjectType
-from backend.service.models.system import Subject
+from backend.service.models import Subject
 
 
 class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, ExceptionHandlerMixin, GenericViewSet):

@@ -44,13 +44,13 @@ from backend.biz.role import (
     RoleSubjectScopeChecker,
 )
 from backend.biz.subject import SubjectInfoList
-from backend.biz.trans.role import RoleTrans
 from backend.common.error_codes import error_codes
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.common.time import get_soon_expire_ts
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.trans.role import RoleTrans
 
 from .audit import (
     CommonActionCreateAuditProvider,

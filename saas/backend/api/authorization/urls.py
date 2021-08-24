@@ -13,23 +13,32 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("instance/", views.AuthInstanceView.as_view(), name="open.auth_instance"),
-    path("path/", views.AuthPathView.as_view(), name="open.auth_path"),
-    path("batch_instance/", views.AuthBatchInstanceView.as_view(), name="open.auth_batch_instance"),
-    path("batch_path/", views.AuthBatchPathView.as_view(), name="open.auth_batch_path"),
+    # 授权
+    # 单Action单实例
+    path("instance/", views.resource.AuthInstanceView.as_view(), name="open.auth_instance"),
+    # 单Action单拓扑路径
+    path("path/", views.resource.AuthPathView.as_view(), name="open.auth_path"),
+    # 批量Action批量实例
+    path("batch_instance/", views.resource.AuthBatchInstanceView.as_view(), name="open.auth_batch_instance"),
+    # 批量Action批量拓扑
+    path("batch_path/", views.resource.AuthBatchPathView.as_view(), name="open.auth_batch_path"),
+    # 新建关联授权
+    # 新建关联授权 - 单一实例授权
     path(
         "resource_creator_action/",
-        views.ResourceCreatorActionView.as_view(),
+        views.resource_creator_action.ResourceCreatorActionView.as_view(),
         name="open.grant_resource_creator_action",
     ),
+    # 新建关联授权 - 批量实例授权
     path(
         "batch_resource_creator_action/",
-        views.BatchResourceCreatorActionView.as_view(),
+        views.resource_creator_action.BatchResourceCreatorActionView.as_view(),
         name="open.grant_batch_resource_creator_action",
     ),
+    # 新建关联授权 - 属性授权
     path(
         "resource_creator_action_attribute/",
-        views.ResourceCreatorActionAttributeView.as_view(),
+        views.resource_creator_action.ResourceCreatorActionAttributeView.as_view(),
         name="open.grant_resource_creator_action_attribute",
     ),
 ]

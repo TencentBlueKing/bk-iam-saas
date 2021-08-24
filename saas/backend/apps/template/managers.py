@@ -14,7 +14,7 @@ from django.db import models
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 
-from backend.service.models.system import Subject
+from backend.service.models import Subject
 
 
 class PermTemplateManager(models.Manager):
