@@ -39,8 +39,7 @@ from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.action import ActionList, ActionService
 from backend.service.constants import RoleRelatedObjectType, SubjectType, TemplatePreUpdateStatus
-from backend.service.models import Action, ChainNode, Subject
-from backend.service.policy.query import Policy
+from backend.service.models import Action, ChainNode, Policy, Subject
 from backend.service.template import TemplateGroupPreCommit, TemplateService
 
 

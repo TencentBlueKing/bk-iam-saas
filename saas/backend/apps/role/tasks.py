@@ -19,10 +19,10 @@ from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleInfoBean
+from backend.biz.system import SystemBiz
 from backend.common.time import get_soon_expire_ts
 from backend.component import esb
 from backend.service.constants import RoleRelatedObjectType, RoleType
-from backend.service.system import SystemService
 
 logger = logging.getLogger("celery")
 
@@ -33,8 +33,7 @@ def sync_system_manager():
     创建系统管理员
     """
     # 查询后端所有的系统信息
-    svc = SystemService()
-    systems = {system.id: system for system in svc.list()}
+    systems = {system.id: system for system in SystemBiz().list()}
 
     # 查询已创建的系统管理员的系统id
     exists_system_ids = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value).values_list("code", flat=True)

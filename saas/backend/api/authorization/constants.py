@@ -12,17 +12,11 @@ from aenum import LowerStrEnum, auto, skip
 
 from backend.util.enum import ChoicesEnum
 
-
-class AllowGrantSubjectTypeEnum(ChoicesEnum, LowerStrEnum):
-    """允许授权的Subject类型"""
-
-    USER = auto()
-    GROUP = auto()
-
-    _choices_labels = skip(((USER, "用户"), (GROUP, "用户组")))
+# 白名单控制时的任意
+ALLOW_ANY = "*"
 
 
-class Operate(ChoicesEnum, LowerStrEnum):
+class OperateEnum(ChoicesEnum, LowerStrEnum):
     GRANT = auto()
     REVOKE = auto()
 
@@ -38,5 +32,17 @@ class AuthorizationAPIEnum(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((AUTHORIZATION_INSTANCE, "实例授权"), (CREATOR_AUTHORIZATION_INSTANCE, "新建关联实例授权")))
 
 
-# 白名单控制时的任意
-ALLOW_ANY = "*"
+class VerifyAPIParamLocationEnum(ChoicesEnum, LowerStrEnum):
+    SYSTEM_IN_BODY = auto()
+    RESOURCE_TYPE_IN_BODY = auto()
+    ACTION_IN_BODY = auto()
+    ACTIONS_IN_BODY = auto()
+
+    _choices_labels = skip(
+        (
+            (SYSTEM_IN_BODY, "在body data里的system参数"),
+            (RESOURCE_TYPE_IN_BODY, "在body data里的type参数"),
+            (ACTION_IN_BODY, "在body data里的action参数"),
+            (ACTIONS_IN_BODY, "在body data里的actions参数"),
+        )
+    )

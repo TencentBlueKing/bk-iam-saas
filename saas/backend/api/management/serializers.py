@@ -12,8 +12,8 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
-from backend.apps.group.constants import GroupMemberType
 from backend.apps.role.serializers import RatingMangerBaseInfoSZL, RoleScopeSubjectSLZ
+from backend.service.constants import GroupMemberType
 
 
 class ManagementSourceSystemSLZ(serializers.Serializer):

@@ -19,11 +19,11 @@ from backend.apps.role.models import Role
 from backend.apps.template.models import PermTemplate
 from backend.audit.models import Event
 from backend.biz.subject import SubjectInfoList
+from backend.biz.system import SystemBiz
 from backend.service.action import ActionService
 from backend.service.approval import ApprovalProcessService
 from backend.service.constants import ApplicationTypeEnum
-from backend.service.models.system import Subject
-from backend.service.system import SystemService
+from backend.service.models import Subject
 from backend.util.time import timestamp_to_local
 
 from .constants import AuditObjectType, AuditType
@@ -53,7 +53,7 @@ class GroupTemplateProvider(BaseProvider):
         perm_templates = PermTemplate.objects.filter(id__in=[t["template_id"] for t in templates])
         data = [{"type": AuditObjectType.TEMPLATE.value, "id": t.id, "name": t.name} for t in perm_templates]
 
-        system_list = SystemService().new_system_list()
+        system_list = SystemBiz().new_system_list()
         for t in templates:
             if t["template_id"] != 0:
                 continue
@@ -111,13 +111,13 @@ class SubjectGroupProvider(BaseProvider):
 
 
 class SubjectPoliciesProvider(BaseProvider):
-    svc = SystemService()
+    biz = SystemBiz()
 
     @property
     def extra_info(self) -> Dict:
         extra = self.event.extra
         system_id = extra["system_id"]
-        system = self.svc.get(system_id)
+        system = self.biz.get(system_id)
         policies = extra["policies"]
         for p in policies:
             if "expired_at" in p and p["expired_at"]:
@@ -127,13 +127,13 @@ class SubjectPoliciesProvider(BaseProvider):
 
 
 class SubjectPoliciesUpdateProvider(BaseProvider):
-    svc = SystemService()
+    biz = SystemBiz()
 
     @property
     def extra_info(self) -> Dict:
         extra = self.event.extra
         system_id = extra["system_id"]
-        system = self.svc.get(system_id)
+        system = self.biz.get(system_id)
         policies = extra["policies"]
         for p in policies:
             if "expired_at" in p and p["expired_at"]:
@@ -275,13 +275,13 @@ class ApprovalGlobalProvider(ApprovalNameMixin, BaseProvider):
 
 
 class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
-    system_svc = SystemService()
+    system_biz = SystemBiz()
     action_svc = ActionService()
 
     @property
     def description(self) -> str:
         system_id = self.event.extra["system_id"]
-        system = self.system_svc.get(system_id)
+        system = self.system_biz.get(system_id)
         process_id = self.event.extra["process_id"]
         process_name = self.get_process_name(process_id)
         return f"设置 [{system.name}] 系统操作审批流程: {process_name}(#{process_id})"

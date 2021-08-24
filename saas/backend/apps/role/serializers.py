@@ -13,13 +13,20 @@ import time
 from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
-from backend.apps.group.constants import GroupMemberType, SubjectRelationType
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleCommonAction, RoleUser
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import ADMIN_USER, ANY_ID, SUBJECT_ALL, SUBJECT_TYPE_ALL, RoleScopeSubjectType
+from backend.service.constants import (
+    ADMIN_USER,
+    ANY_ID,
+    SUBJECT_ALL,
+    SUBJECT_TYPE_ALL,
+    GroupMemberType,
+    RoleScopeSubjectType,
+    SubjectType,
+)
 
 
 class RoleScopeSubjectSLZ(serializers.Serializer):
@@ -32,6 +39,10 @@ class RoleScopeSubjectSLZ(serializers.Serializer):
         # 当id为*时，type必须为*
         if _id == SUBJECT_ALL and _type != SUBJECT_TYPE_ALL:
             raise serializers.ValidationError("type must be * when id is *")
+        # 当type为部门时，id必须是数字字符串或*
+        if _type == RoleScopeSubjectType.DEPARTMENT.value and _id != SUBJECT_ALL:
+            if not _id.isdigit():
+                raise serializers.ValidationError("department id can only be a string consisting of numbers only")
 
         return attrs
 
@@ -262,7 +273,7 @@ class RoleCommonCreateSLZ(serializers.Serializer):
 class RoleGroupMemberRenewSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
     id = serializers.CharField(label="成员id")
-    parent_type = serializers.ChoiceField(label="父级类型", choices=[(SubjectRelationType.GROUP.value, "用户组")])
+    parent_type = serializers.ChoiceField(label="父级类型", choices=[(SubjectType.GROUP.value, "用户组")])
     parent_id = serializers.CharField(label="父级ID")
     expired_at = serializers.IntegerField(label="过期时间", required=True, max_value=PERMANENT_SECONDS)
 
