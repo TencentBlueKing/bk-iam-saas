@@ -536,6 +536,8 @@
                 checkRadio: 'userGroup',
                 tableLoading: false,
                 gradeMembers: [],
+
+                // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
                 newTableList: []
@@ -550,7 +552,7 @@
             },
             // 无权限组时
             isNoPermissionsSet () {
-                return this.routerQuery.tid
+                return this.routerQuery.cache_id
             },
             isShowGroupAction () {
                 return (item) => {
@@ -590,17 +592,17 @@
         watch: {
             '$route': {
                 handler (value) {
-                    if (value.query.system_id && value.query.tid) {
-                        const { system_id, tid } = value.query
+                    if (value.query.system_id && value.query.cache_id) {
+                        const { system_id, cache_id } = value.query
                         this.routerQuery = Object.assign({}, {
                             system_id,
-                            tid
+                            cache_id
                         })
                         this.sysAndtid = true
                     } else {
                         this.routerQuery = Object.assign({}, {
                             system_id: '',
-                            tid: ''
+                            cache_id: ''
                         })
                     }
                 },
@@ -650,7 +652,7 @@
             async fetchUserGroupList () {
                 this.tableLoading = true
                 const params = {
-                    tid: this.routerQuery.tid
+                    cache_id: this.routerQuery.cache_id
                 }
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupList', params)
@@ -1775,14 +1777,18 @@
                 const params = {
                     system_id: systemId
                 }
-                if (this.routerQuery.tid) {
-                    params.tid = this.routerQuery.tid
+                if (this.routerQuery.cache_id) {
+                    params.cache_id = this.routerQuery.cache_id
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
-                        return new Policy({ ...item, related_actions: relatedActions, tid: this.routerQuery.tid ? this.routerQuery.tid : '' })
+                        return new Policy({
+                            ...item,
+                            related_actions: relatedActions,
+                            tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
+                        })
                     })
                     this.tableData = data
                     this.tableData.forEach(item => {
@@ -1825,8 +1831,8 @@
                     system_id: systemId,
                     user_id: this.user.username
                 }
-                if (this.routerQuery.tid) {
-                    params.tid = this.routerQuery.tid
+                if (this.routerQuery.cache_id) {
+                    params.cache_id = this.routerQuery.cache_id
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getActions', params)
