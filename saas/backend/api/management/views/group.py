@@ -41,11 +41,10 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean
-from backend.biz.policy import PolicyOperationBiz
+from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import RoleType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
@@ -308,7 +307,6 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
     queryset = Group.objects.all()
 
     group_biz = GroupBiz()
-    policy_biz = PolicyOperationBiz()
     role_biz = RoleBiz()
     trans = ManagementCommonTrans()
 
@@ -335,15 +333,16 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
         policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
 
         # 组装数据进行对用户组权限处理
+        system_id = data["system"]
+        template = GroupTemplateGrantBean(
+            system_id=system_id,
+            template_id=0,  # 自定义权限template_id为0
+            policies=policy_list.policies,
+        )
         role = self.role_biz.get_role_by_group_id(group.id)
-        # preprocess_group_policies 已包含：分级管理员授权范围鉴权、数据校验和部分默认用户组策略数据填充
-        policies = self.group_biz.preprocess_group_policies(role, system_id, policy_list.policies)
-
-        # 用户组授权
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
-        self.policy_biz.alter(system_id, subject, policies)
+        self.group_biz.grant(role, group, [template])
 
         # 写入审计上下文
-        audit_context_setter(group=group, system_id=system_id, policies=policies)
+        audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
 
         return Response({})
