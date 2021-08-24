@@ -13,15 +13,15 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List
 
-from backend.apps.group.constants import (
+from backend.apps.group.models import GroupSaaSAttribute
+from backend.common.error_codes import error_codes
+
+from .constants import (
     GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP,
     GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP,
     GroupAttributeValueTypeEnum,
     GroupSaaSAttributeEnum,
 )
-from backend.apps.group.models import GroupSaaSAttribute
-from backend.common.error_codes import error_codes
-
 from .models import GroupAttributes
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class GroupAttributeService:
             # 初始化为每个属性默认值
             attrs = copy.deepcopy(GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP)
             # 遍历每个属性是否配置了，若配置了则使用配置的值
-            for attr_enum in GroupSaaSAttributeEnum:
+            for attr_enum in GroupSaaSAttributeEnum:  # type: ignore[attr-defined]
                 attr = attr_enum.value
                 value_str = group_attr_values[attr]
                 # 若value为空字符串，则说明没有配置

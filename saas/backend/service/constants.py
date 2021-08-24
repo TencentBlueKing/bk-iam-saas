@@ -21,26 +21,6 @@ SUBJECT_ALL = "*"
 SUBJECT_TYPE_ALL = "*"
 
 
-# TODO 被 service.models 应用, 删除service.models同时删除
-class PolicyTag(LowerStrEnum):
-    """
-    策略新增更新标签
-    """
-
-    ADD = auto()
-    UPDATE = auto()
-    UNCHANGED = auto()
-    DELETE = auto()
-    RELATED = auto()
-
-
-# TODO 被 service.models 应用, 删除service.models同时删除
-class ConditionTag(LowerStrEnum):
-    ADD = auto()
-    DELETE = auto()
-    UNCHANGED = auto()
-
-
 class SubjectType(ChoicesEnum, LowerStrEnum):
     ALL = "*"
     USER = auto()
@@ -50,17 +30,58 @@ class SubjectType(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((USER, _("用户")), (GROUP, _("用户组")), (DEPARTMENT, _("部门"))))
 
 
+class SubjectRelationType(ChoicesEnum, LowerStrEnum):
+    """用户的权限来源关系"""
+
+    DEPARTMENT = auto()
+    GROUP = auto()
+
+    _choices_labels = skip(((GROUP, "用户组"), (DEPARTMENT, "部门")))
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Group Constants
+# ---------------------------------------------------------------------------------------------- #
+class GroupMemberType(ChoicesEnum, LowerStrEnum):
+    USER = auto()
+    DEPARTMENT = auto()
+
+    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门")))
+
+
+class GroupSaaSAttributeEnum(ChoicesEnum, LowerStrEnum):
+    """用户组SaaS属性枚举"""
+
+    READONLY = auto()
+
+    _choices_labels = skip(((READONLY, "只读"),))
+
+
+class GroupAttributeValueTypeEnum(ChoicesEnum, LowerStrEnum):
+    """用户组SaaS属性值的数据类型"""
+
+    String = auto()
+    Boolean = auto()
+    Integer = auto()
+
+
+# 每个属性的值类型
+GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP = {
+    GroupSaaSAttributeEnum.READONLY.value: GroupAttributeValueTypeEnum.Boolean.value
+}
+# 每个属性的默认值
+GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP = {GroupSaaSAttributeEnum.READONLY.value: False}
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Policy Constants
+# ---------------------------------------------------------------------------------------------- #
 class SelectionMode(ChoicesEnum, LowerStrEnum):
     ALL = auto()
     INSTANCE = auto()
     ATTRIBUTE = auto()
 
     _choices_labels = skip(((ALL, _("实例与属性")), (INSTANCE, _("实例")), (ATTRIBUTE, _("属性"))))
-
-
-class Operate(LowerStrEnum):
-    GRANT = auto()
-    REVOKE = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #

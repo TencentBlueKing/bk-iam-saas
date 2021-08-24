@@ -13,7 +13,8 @@ from typing import List
 from pydantic import parse_obj_as
 
 from backend.component import iam
-from backend.service.models.action_group import ActionGroup
+
+from .models import ActionGroup
 
 
 class ActionGroupService:

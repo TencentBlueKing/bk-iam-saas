@@ -15,12 +15,12 @@ from typing import Dict
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from backend.biz.application import ActionApplicationDataBean
+from backend.biz.policy import PolicyBeanList, PolicyQueryBiz
 from backend.common.error_codes import error_codes
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
-from ..application import ActionApplicationDataBean
-from ..policy import PolicyBeanList, PolicyQueryBiz
 from .policy import PolicyTrans
 
 

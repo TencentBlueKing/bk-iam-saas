@@ -34,36 +34,99 @@ LOG_LEVEL = "ERROR"
 # import logging
 # logging.getLogger('app').setLevel('INFO')
 
-# 正式环境数据库可以在这里配置
+# V3 Smart 配置
+if "BKPAAS_ENVIRONMENT" in os.environ:
+    import base64
+    import json
 
-DATABASES.update(
-    {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": os.environ.get("DB_NAME"),
-            "USER": os.environ.get("DB_USERNAME"),
-            "PASSWORD": os.environ.get("DB_PASSWORD"),
-            "HOST": os.environ.get("DB_HOST"),
-            "PORT": os.environ.get("DB_PORT"),
-        },
-        "audit": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": os.environ.get("AUDIT_DB_NAME") or os.environ.get("DB_NAME"),
-            "USER": os.environ.get("AUDIT_DB_USERNAME") or os.environ.get("DB_USERNAME"),
-            "PASSWORD": os.environ.get("AUDIT_DB_PASSWORD") or os.environ.get("DB_PASSWORD"),
-            "HOST": os.environ.get("AUDIT_DB_HOST") or os.environ.get("DB_HOST"),
-            "PORT": os.environ.get("AUDIT_DB_PORT") or os.environ.get("DB_PORT"),
-        },
-    }
-)
+    def get_app_service_url(app_code: str) -> str:
+        value = os.environ["BKPAAS_SERVICE_ADDRESSES_BKSAAS"]
+        decoded_value = json.loads(base64.b64decode(value).decode("utf-8"))
+        return decoded_value[app_code]
 
-# for vue
-LOGIN_SERVICE_URL = BK_PAAS_HOST.rstrip("/") + "/login/"
-LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
-APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/" + APP_CODE
-APP_API_URL = BK_PAAS_INNER_HOST.rstrip("/") + "/o/" + APP_CODE
+    # 兼容component的APP_ID,APP_TOKEN
+    APP_CODE = APP_ID = os.environ.get("BKPAAS_APP_ID", APP_CODE)
+    SECRET_KEY = APP_TOKEN = os.environ.get("BKPAAS_APP_SECRET", SECRET_KEY)
+    BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS2_INNER_URL", BK_PAAS_INNER_HOST)
 
-BK_PAAS_HOST_PARSE_URL = urlparse(BK_PAAS_HOST)
+    # 正式环境数据库可以在这里配置
+    DATABASES.update(  # 需要兼容V3环境变量
+        {
+            "default": {
+                "ENGINE": "django.db.backends.mysql",
+                "NAME": os.environ.get("MYSQL_NAME"),
+                "USER": os.environ.get("MYSQL_USER"),
+                "PASSWORD": os.environ.get("MYSQL_PASSWORD"),
+                "HOST": os.environ.get("MYSQL_HOST"),
+                "PORT": os.environ.get("MYSQL_PORT"),
+            },
+            "audit": {
+                "ENGINE": "django.db.backends.mysql",
+                "NAME": os.environ.get("AUDIT_DB_NAME") or os.environ.get("MYSQL_NAME"),
+                "USER": os.environ.get("AUDIT_DB_USERNAME") or os.environ.get("MYSQL_USER"),
+                "PASSWORD": os.environ.get("AUDIT_DB_PASSWORD") or os.environ.get("MYSQL_PASSWORD"),
+                "HOST": os.environ.get("AUDIT_DB_HOST") or os.environ.get("MYSQL_HOST"),
+                "PORT": os.environ.get("AUDIT_DB_PORT") or os.environ.get("MYSQL_PORT"),
+            },
+        }
+    )
+
+    # for vue
+    LOGIN_SERVICE_URL = os.environ.get("BK_LOGIN_URL")
+    LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
+    APP_URL = get_app_service_url(APP_CODE)
+    APP_API_URL = APP_URL
+
+    # cache
+    REDIS_HOST = os.environ.get("REDIS_HOST")
+    REDIS_PORT = os.environ.get("REDIS_PORT")
+    REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+    REDIS_DB = os.environ.get("REDIS_DB", 0)
+
+    # itsm saas url
+    BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
+
+# V2 Smart 配置
+else:
+    # 正式环境数据库可以在这里配置
+    DATABASES.update(
+        {
+            "default": {
+                "ENGINE": "django.db.backends.mysql",
+                "NAME": os.environ.get("DB_NAME"),
+                "USER": os.environ.get("DB_USERNAME"),
+                "PASSWORD": os.environ.get("DB_PASSWORD"),
+                "HOST": os.environ.get("DB_HOST"),
+                "PORT": os.environ.get("DB_PORT"),
+            },
+            "audit": {
+                "ENGINE": "django.db.backends.mysql",
+                "NAME": os.environ.get("AUDIT_DB_NAME") or os.environ.get("DB_NAME"),
+                "USER": os.environ.get("AUDIT_DB_USERNAME") or os.environ.get("DB_USERNAME"),
+                "PASSWORD": os.environ.get("AUDIT_DB_PASSWORD") or os.environ.get("DB_PASSWORD"),
+                "HOST": os.environ.get("AUDIT_DB_HOST") or os.environ.get("DB_HOST"),
+                "PORT": os.environ.get("AUDIT_DB_PORT") or os.environ.get("DB_PORT"),
+            },
+        }
+    )
+
+    # for vue
+    LOGIN_SERVICE_URL = BK_PAAS_HOST.rstrip("/") + "/login/"
+    LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
+    APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/" + APP_CODE
+    APP_API_URL = BK_PAAS_INNER_HOST.rstrip("/") + "/o/" + APP_CODE
+
+    # cache
+    REDIS_HOST = os.environ.get("BKAPP_REDIS_HOST")
+    REDIS_PORT = os.environ.get("BKAPP_REDIS_PORT")
+    REDIS_PASSWORD = os.environ.get("BKAPP_REDIS_PASSWORD")
+    REDIS_DB = os.environ.get("BKAPP_REDIS_DB", 0)
+
+    # itsm saas url
+    BK_ITSM_APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/bk_itsm"
+
+
+BK_PAAS_HOST_PARSE_URL = urlparse(APP_URL)
 _BK_PAAS_HOSTNAME = BK_PAAS_HOST_PARSE_URL.hostname  # 去除端口的域名
 _BK_PAAS_NETLOC = BK_PAAS_HOST_PARSE_URL.netloc  # 若有端口，则会带上对应端口
 _BK_PAAS_IS_SPECIAL_PORT = BK_PAAS_HOST_PARSE_URL.port in [None, 80, 443]
@@ -81,12 +144,6 @@ CORS_ORIGIN_WHITELIST = (
     else [f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"]
 )
 
-# cache
-REDIS_HOST = os.environ.get("BKAPP_REDIS_HOST")
-REDIS_PORT = os.environ.get("BKAPP_REDIS_PORT")
-REDIS_PASSWORD = os.environ.get("BKAPP_REDIS_PASSWORD")
-REDIS_DB = os.environ.get("BKAPP_REDIS_DB", 0)
-
 CACHE_REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
 CACHES = {
@@ -102,4 +159,5 @@ CACHES = {
     }
 }
 
-BK_ITSM_APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/bk_itsm"
+# iam backend host
+BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")

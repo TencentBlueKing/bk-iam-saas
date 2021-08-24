@@ -25,19 +25,3 @@ class ResourceTypeDict(BaseModel):
     def get_name(self, system_id: str, resource_type_id: str) -> Tuple[str, str]:
         rt = self.data.get((system_id, resource_type_id), None)
         return (rt["name"], rt["name_en"]) if rt else ("", "")
-
-
-# TODO: [重构] 迁移ResourceNode => biz.resource
-class ResourceNode(BaseModel):
-    """资源实例"""
-
-    system_id: str
-    type: str
-    id: str
-    name: str = ""
-
-    def __hash__(self):
-        return hash((self.system_id, self.type, self.id))
-
-    def __eq__(self, other):
-        return self.system_id == other.system_id and self.type == other.type and self.id == other.id
