@@ -1,0 +1,42 @@
+spec_version: 2
+app_version: "__APP_VERSION__"
+app:
+  region: default
+  bk_app_code: "bk_iam"
+  bk_app_name: 权限中心
+  market:
+    category: 运维工具
+    introduction: 权限中心是蓝鲸智云提供的集中权限管理服务用于蓝鲸体系内各平台和SaaS的权限集中接入以及提供细化到具体资源实例的资源访问权限控制。
+    description: 权限中心是蓝鲸智云提供的集中权限管理服务用于蓝鲸体系内各平台和SaaS的权限集中接入以及提供细化到具体资源实例的资源访问权限控制。
+    display_options:
+      width: 1280
+      height: 720
+      is_win_maximize: True
+modules:
+  default:
+    is_default: True
+    source_dir: ./src/
+    language: Python
+    services:
+      - name: mysql
+      - name: rabbitmq
+      - name: redis
+    env_variables:
+      - key: DISABLE_COLLECTSTATIC
+        value: 1
+    processes:
+      web:
+        command: bash bin/start.sh
+        plan: 4C2G5R
+        replicas: 2
+      celery:
+        command: bash bin/start_celery.sh
+        plan: 4C2G5R
+        replicas: 2
+      beat:
+        command: bash bin/start_beat.sh
+        replicas: 1
+    svc_discovery:
+      bk_saas:
+        - 'bk_iam'
+        - 'bk_itsm'

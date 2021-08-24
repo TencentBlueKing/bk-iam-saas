@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import os
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.views.decorators.cache import never_cache
@@ -74,10 +72,8 @@ if settings.RUN_MODE == "DEVELOP":
         url(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     ]
 
-# 非前后端独立部署的，则需要静态文件输出
-if os.getenv("BKPAAS_ENVIRONMENT") is None:
-    # static file
-    urlpatterns += [
-        url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-        url(r"^.*$", never_cache(VueTemplateView.as_view())),
-    ]
+# static file
+urlpatterns += [
+    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
+    url(r"^.*$", never_cache(VueTemplateView.as_view())),
+]
