@@ -16,7 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.api.authentication import BasicAppCodeAuthentication
+from backend.common.authentication import BasicAppCodeAuthentication
 from backend.common.debug import RedisStorage
 from backend.common.swagger import ResponseSwaggerAutoSchema
 

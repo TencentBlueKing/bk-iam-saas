@@ -11,19 +11,13 @@ specific language governing permissions and limitations under the License.
 from typing import List, Optional
 
 from django.db import transaction
-from pydantic import BaseModel
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.component import iam
-from backend.service.models.system import Subject
 from backend.util.json import json_dumps
 
-from .query import Policy, PolicyList, new_backend_policy_list_by_subject
-
-
-class PolicyIDExpredAt(BaseModel):
-    id: int
-    expired_at: int
+from ..models import Policy, PolicyIDExpiredAt, Subject
+from .query import PolicyList, new_backend_policy_list_by_subject
 
 
 class PolicyOperationService:
@@ -139,7 +133,7 @@ class PolicyOperationService:
 
         PolicyModel.objects.bulk_update(db_policies, fields=["policy_id"], batch_size=100)
 
-    def renew(self, subject: Subject, thin_policies: List[PolicyIDExpredAt]):
+    def renew(self, subject: Subject, thin_policies: List[PolicyIDExpiredAt]):
         """
         权策续期
         """

@@ -28,10 +28,10 @@ from backend.apps.role.models import (
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
 from backend.common.error_codes import error_codes
 from backend.component import iam
-from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
-from backend.service.models import Subject
-from backend.service.policy.query import RelatedResource
 from backend.util.json import json_dumps
+
+from .constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
+from .models import RelatedResource, Subject
 
 logger = logging.getLogger("app")
 
@@ -212,18 +212,27 @@ class RoleService:
             )
 
     def _update_role_scope(self, role_id: int, subjects: List[Subject], systems: List[AuthScopeSystem]):
-        """创建Role的授权范围"""
+        """更新Role的授权范围"""
         # 1. 修改系统操作的限制范围
+        self.update_role_auth_scope(role_id, systems)
+
+        # 2. 修改授权对象的限制范围
+        self._update_role_subject_scope(role_id, subjects)
+
+    def update_role_auth_scope(self, role_id: int, systems: List[AuthScopeSystem]):
+        """更新Role可授权的权限范围"""
         RoleScope.objects.filter(role_id=role_id, type=RoleScopeType.AUTHORIZATION.value).update(
             content=json_dumps([system.dict() for system in systems])
         )
 
-        # 2. 修改授权对象的限制范围
+    def _update_role_subject_scope(self, role_id: int, subjects: List[Subject]):
+        """更新Role可授权的人员范围"""
+        # 1. 修改授权对象的限制范围
         RoleScope.objects.filter(role_id=role_id, type=RoleScopeType.SUBJECT.value).update(
             content=json_dumps([subject.dict() for subject in subjects])
         )
 
-        # 3. 更新role subject scope 关系
+        # 2. 更新role subject scope 关系
         self._update_scope_subject(role_id, subjects)
 
     def _update_scope_subject(self, role_id: int, subjects: List[Subject]):

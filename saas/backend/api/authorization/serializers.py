@@ -15,14 +15,25 @@ from rest_framework import serializers
 
 from backend.apps.policy.serializers import ValueFiled
 from backend.common.time import PERMANENT_SECONDS
+from backend.service.constants import SubjectType
 
-from .constants import AllowGrantSubjectTypeEnum, Operate
+from .constants import OperateEnum
 
 REVOKE_INSTANCE_LIMIT = 1000
 
 
+class AuthSystemSLZ(serializers.Serializer):
+    """授权的系统"""
+
+    system = serializers.CharField(label="系统ID")
+
+
 class SubjectSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="类型", choices=AllowGrantSubjectTypeEnum.get_choices())
+    type = serializers.ChoiceField(
+        label="类型",
+        # 允许授权的Subject类型
+        choices=[(SubjectType.USER.value, "用户"), (SubjectType.GROUP.value, "用户组")],
+    )
     id = serializers.CharField(label="id")
 
 
@@ -46,14 +57,21 @@ class ResourcePathSLZ(serializers.Serializer):
     path = serializers.ListField(label="拓扑层级", child=PathNodeSLZ(label="实例"), allow_empty=False)
 
 
-class AuthActionSLZ(serializers.Serializer):
+class AuthActionIDSLZ(serializers.Serializer):
     id = serializers.CharField(label="操作ID")
 
 
-class BaseAuthSLZ(serializers.Serializer):
+class AuthActionSLZ(serializers.Serializer):
+    action = AuthActionIDSLZ(label="操作")
+
+
+class AuthActionsSLZ(serializers.Serializer):
+    actions = serializers.ListField(label="操作列表", child=AuthActionIDSLZ(label="操作"), allow_empty=False)
+
+
+class BaseAuthSLZ(AuthSystemSLZ):
     asynchronous = serializers.BooleanField(label="是否同步调用", default=False)  # noqa
-    operate = serializers.ChoiceField(label="授权/回收", choices=Operate.get_choices())
-    system = serializers.CharField(label="系统ID", required=True)
+    operate = serializers.ChoiceField(label="授权/回收", choices=OperateEnum.get_choices())
     subject = SubjectSLZ(label="授权对象")
     expired_at = serializers.IntegerField(
         label="过期时间", required=False, default=0, min_value=0, max_value=PERMANENT_SECONDS
@@ -68,13 +86,11 @@ class BaseAuthSLZ(serializers.Serializer):
         return value
 
 
-class AuthInstanceSLZ(BaseAuthSLZ):
-    action = AuthActionSLZ(label="操作")
+class AuthInstanceSLZ(BaseAuthSLZ, AuthActionSLZ):
     resources = serializers.ListField(label="资源实例", child=ResourceInstanceSLZ(label="实例"), allow_empty=True)
 
 
-class AuthPathSLZ(BaseAuthSLZ):
-    action = AuthActionSLZ(label="操作")
+class AuthPathSLZ(BaseAuthSLZ, AuthActionSLZ):
     resources = serializers.ListField(label="资源拓扑", child=ResourcePathSLZ(label="拓扑"), allow_empty=False)
 
 
@@ -89,19 +105,18 @@ class BatchResourceInstanceSLZ(serializers.Serializer):
     instances = serializers.ListField(label="资源实例", child=SimpleInstanceSLZ(label="实例"), allow_empty=True)
 
 
-class AuthBatchInstanceSLZ(BaseAuthSLZ):
-    actions = serializers.ListField(label="操作列表", child=AuthActionSLZ(label="操作"), allow_empty=False)
+class AuthBatchInstanceSLZ(BaseAuthSLZ, AuthActionsSLZ):
     resources = serializers.ListField(label="资源实例", child=BatchResourceInstanceSLZ(label="批量实例"), allow_empty=True)
 
     def validate(self, data):
         operate = data["operate"]
-        if operate == Operate.GRANT.value:
+        if operate == OperateEnum.GRANT.value:
             for resource in data["resources"]:
                 if len(resource["instances"]) > settings.AUTHORIZATION_INSTANCE_LIMIT:
                     raise serializers.ValidationError(
                         f"maximum number of instance grant {settings.AUTHORIZATION_INSTANCE_LIMIT}"
                     )
-        if operate == Operate.REVOKE.value:
+        if operate == OperateEnum.REVOKE.value:
             for resource in data["resources"]:
                 if len(resource["instances"]) > REVOKE_INSTANCE_LIMIT:
                     raise serializers.ValidationError(f"maximum number of instance revoke {REVOKE_INSTANCE_LIMIT}")
@@ -118,23 +133,30 @@ class BatchResourcePathSLZ(serializers.Serializer):
     )
 
 
-class AuthBatchPathSLZ(BaseAuthSLZ):
-    actions = serializers.ListField(label="操作列表", child=AuthActionSLZ(label="操作"), allow_empty=False)
+class AuthBatchPathSLZ(BaseAuthSLZ, AuthActionsSLZ):
     resources = serializers.ListField(label="资源拓扑", child=BatchResourcePathSLZ(label="匹配资源拓扑"), allow_empty=False)
 
     def validate(self, data):
         operate = data["operate"]
-        if operate == Operate.GRANT.value:
+        if operate == OperateEnum.GRANT.value:
             for resource in data["resources"]:
                 if len(resource["paths"]) > settings.AUTHORIZATION_INSTANCE_LIMIT:
                     raise serializers.ValidationError(
                         f"maximum number of path grant {settings.AUTHORIZATION_INSTANCE_LIMIT}"
                     )
-        if operate == Operate.REVOKE.value:
+        if operate == OperateEnum.REVOKE.value:
             for resource in data["resources"]:
                 if len(resource["paths"]) > REVOKE_INSTANCE_LIMIT:
                     raise serializers.ValidationError(f"maximum number of path revoke {REVOKE_INSTANCE_LIMIT}")
         return data
+
+
+class AuthResourceTypeSLZ(serializers.Serializer):
+    type = serializers.CharField(label="资源类型")
+
+
+class ResourceCreatorActionBaseInfoSLZ(AuthSystemSLZ, AuthResourceTypeSLZ):
+    creator = serializers.CharField(label="创建者")
 
 
 class AncestorSLZ(serializers.Serializer):
@@ -143,28 +165,20 @@ class AncestorSLZ(serializers.Serializer):
     id = serializers.CharField(label="祖先资源ID")
 
 
-class ResourceCreatorActionSLZ(serializers.Serializer):
-    creator = serializers.CharField(label="创建者")
-    system = serializers.CharField(label="系统ID")
-    type = serializers.CharField(label="资源类型")
+class SingleInstanceSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源ID")
     name = serializers.CharField(label="资源名称")
     ancestors = serializers.ListField(label="祖先", child=AncestorSLZ(label="祖先层级"), allow_empty=True, required=False)
 
 
-class SingleInstance(serializers.Serializer):
-    id = serializers.CharField(label="资源ID")
-    name = serializers.CharField(label="资源名称")
-    ancestors = serializers.ListField(label="祖先", child=AncestorSLZ(label="祖先层级"), allow_empty=True, required=False)
+class ResourceCreatorActionSLZ(ResourceCreatorActionBaseInfoSLZ, SingleInstanceSLZ):
+    pass
 
 
-class BatchResourceCreatorActionSLZ(serializers.Serializer):
-    creator = serializers.CharField(label="创建者")
-    system = serializers.CharField(label="系统ID")
-    type = serializers.CharField(label="资源类型")
+class BatchResourceCreatorActionSLZ(ResourceCreatorActionBaseInfoSLZ):
     instances = serializers.ListField(
         label="批量资源实例",
-        child=SingleInstance(label="资源实例"),
+        child=SingleInstanceSLZ(label="资源实例"),
         allow_empty=False,
         max_length=settings.AUTHORIZATION_INSTANCE_LIMIT,
     )
@@ -181,10 +195,7 @@ class SingleAttributeSLZ(serializers.Serializer):
     values = serializers.ListField(label="属性VALUE", child=SingleAttributeValueSLZ(label="值"))
 
 
-class ResourceCreatorActionAttributeSLZ(serializers.Serializer):
-    creator = serializers.CharField(label="创建者")
-    system = serializers.CharField(label="系统ID")
-    type = serializers.CharField(label="资源类型")
+class ResourceCreatorActionAttributeSLZ(ResourceCreatorActionBaseInfoSLZ):
     attributes = serializers.ListField(
         label="属性", default=list, child=SingleAttributeSLZ(label="属性"), allow_empty=True
     )
