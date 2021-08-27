@@ -909,7 +909,6 @@
             },
 
             handlePathSelect (value, node, payload, index) {
-                // debugger
                 window.changeAlert = true
                 const { type, path, paths } = payload[0]
                 const tempPath = path[0]
