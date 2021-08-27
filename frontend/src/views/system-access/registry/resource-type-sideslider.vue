@@ -20,16 +20,18 @@
                     </p>
                     <div v-if="item.expanded" :class="['btn-wrapper', { 'reset-top': index === 0 }]">
                         <template v-if="!item.isEdit">
-                            <bk-button size="small" @click="item.isEdit = true">{{ $t(`m.common['编辑']`) }}</bk-button>
+                            <bk-button size="small" @click="editInstanceSelection(item)">
+                                {{ $t(`m.common['编辑']`) }}
+                            </bk-button>
+                            <bk-button size="small" theme="danger" outline :disabled="item.submitLoading"
+                                @click.stop.prevent="delResourceType(item, index)">
+                                {{ $t(`m.common['删除']`) }}
+                            </bk-button>
                         </template>
                         <template v-else>
                             <bk-button size="small" :disabled="item.submitLoading" theme="primary"
                                 @click.stop.prevent="saveResourceType(item, index)">
                                 {{ $t(`m.common['保存']`) }}
-                            </bk-button>
-                            <bk-button size="small" :disabled="item.submitLoading || item.isNewAdd"
-                                @click.stop.prevent="delResourceType(item, index)">
-                                {{ $t(`m.common['删除']`) }}
                             </bk-button>
                             <bk-button size="small" :disabled="item.submitLoading"
                                 @click.stop.prevent="cancelEdit(index)">
@@ -43,7 +45,7 @@
                                 v-bkloading="{ isLoading: item.submitLoading, opacity: 1, color: '#f5f6fa' }">
                                 <iam-form-item :label="$t(`m.access['资源类型ID']`)" :property="'id'" required>
                                     <bk-input :disabled="!item.isNewAdd" v-model="item.id"
-                                        placeholder="$t(`m.access['请输入资源类型ID']`)" />
+                                        :placeholder="$t(`m.access['请输入资源类型ID']`)" />
                                 </iam-form-item>
                                 <iam-form-item :label="$t(`m.access['资源类型中文名']`)" :property="'name'" required>
                                     <bk-input :disabled="!item.isEdit" v-model="item.name"
@@ -56,7 +58,11 @@
                                 <iam-form-item :label="$t(`m.access['回调接口']`)" :property="'provider_config.path'"
                                     required>
                                     <bk-input :disabled="!item.isEdit" v-model="item.provider_config.path"
-                                        :placeholder="$t(`m.access['请输入回调接口']`)" />
+                                        :placeholder="$t(`m.access['请输入回调接口']`)">
+                                        <template slot="prepend">
+                                            <div class="group-text">{{$store.state.host}}</div>
+                                        </template>
+                                    </bk-input>
                                 </iam-form-item>
                             </bk-form>
                         </div>
@@ -126,27 +132,27 @@
                     if (value) {
                         this.rules = {
                             id: [
-                                { required: true, message: this.$t(`m.verify['资源类型ID必填']`), trigger: 'change' },
+                                { required: true, message: this.$t(`m.verify['资源类型ID必填']`), trigger: 'blur' },
                                 {
                                     max: 32,
                                     message: '不能多于32个字符',
-                                    trigger: 'change'
+                                    trigger: 'blur'
                                 },
-                                { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'change' }
+                                { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'blur' }
                             ],
                             name: [
-                                { required: true, message: this.$t(`m.verify['资源类型中文名必填']`), trigger: 'change' }
+                                { required: true, message: this.$t(`m.verify['资源类型中文名必填']`), trigger: 'blur' }
                             ],
                             name_en: [
-                                { required: true, message: this.$t(`m.verify['资源类型英文名必填']`), trigger: 'change' }
+                                { required: true, message: this.$t(`m.verify['资源类型英文名必填']`), trigger: 'blur' },
+                                { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
                             ],
                             'provider_config.path': [
-                                { required: true, message: this.$t(`m.verify['回调接口必填']`), trigger: 'change' },
-                                { regex: /^(https|http)?:\/\//, message: this.$t(`m.verify['请输入正确的系统回调接口']`), trigger: 'change' }
+                                { required: true, message: this.$t(`m.verify['回调接口必填']`), trigger: 'blur' },
+                                { regex: /^(\/[A-Za-z0-9_-]+(\/?))+$/, message: this.$t(`m.verify['请输入正确的系统回调接口']`), trigger: 'blur' }
 
                             ]
                         }
-
                         this.isLoading = true
                         await this.fetchResourceType()
                     } else {
@@ -196,6 +202,26 @@
             },
 
             /**
+             * 校验资源类型ID唯一性
+             */
+            async checkName (val) {
+                try {
+                    const res = await this.$store.dispatch('access/checkResourceId', {
+                        id: this.modelingId,
+                        data: {
+                            type: 'resource_type',
+                            id: val.trim()
+
+                        }
+                    })
+                    return !res.data.exists
+                } catch (e) {
+                    console.error(e)
+                    return false
+                }
+            },
+
+            /**
              * 保存资源类型
              */
             saveResourceType (item, index) {
@@ -203,6 +229,7 @@
                 if (formComp && formComp[0]) {
                     formComp[0].validate().then(async validator => {
                         try {
+                            this.rules.id = this.rules.id.filter(t => t.type !== 'dynamicValidator') // 校验通过重置规则
                             item.submitLoading = true
                             await this.$store.dispatch('access/updateModeling', {
                                 id: this.modelingId,
@@ -222,7 +249,8 @@
                             item.isEdit = false
                             item.isNewAdd = false
                             this.messageSuccess(this.$t(`m.access['保存资源类型成功']`), 1000)
-                            this.$emit('on-refresh-system-list')
+                            this.$emit('on-refresh-system-list', 'resourceType')
+                            this.addValidatorRules()
                         } catch (e) {
                             console.error(e)
                             this.bkMessageInstance = this.$bkMessage({
@@ -277,7 +305,7 @@
                             me.resourceTypeList.splice(0, me.resourceTypeList.length, ...resourceTypeList)
 
                             me.messageSuccess(me.$t(`m.access['删除资源类型成功']`), 1000)
-                            me.$emit('on-refresh-system-list')
+                            this.$emit('on-refresh-system-list', 'resourceType')
                             return true
                         } catch (e) {
                             console.error(e)
@@ -296,14 +324,33 @@
             },
 
             /**
+             * edit
+             */
+            editInstanceSelection (item) {
+                item.isEdit = true
+                this.rules.id = this.rules.id.filter(t => t.type !== 'dynamicValidator') // 编辑时实例ID不可编辑不校验规则
+            },
+
+            /**
              * add
              */
             add () {
+                this.addValidatorRules()
                 const resourceTypeList = []
                 resourceTypeList.splice(0, 0, ...(this.resourceTypeList))
                 resourceTypeList.push(getDefaultData())
                 this.resourceTypeList.splice(0, this.resourceTypeList.length, ...resourceTypeList)
                 this.resourceTypeListBackup = JSON.parse(JSON.stringify(resourceTypeList))
+            },
+
+            /**
+             * addValidatorRules
+             */
+            addValidatorRules () {
+                const dynamicValidatorRulesLength = this.rules.id.filter(e => e.type === 'dynamicValidator').length
+                if (!dynamicValidatorRulesLength) {
+                    this.rules.id.push({ type: 'dynamicValidator', validator: this.checkName, message: this.$t(`m.verify['资源类型ID已被占用']`), trigger: 'blur' }) // 需要添加是否被占用规则
+                }
             },
 
             /**
@@ -314,6 +361,7 @@
                 if (formComp && formComp[0]) {
                     formComp[0].clearError()
                 }
+                this.addValidatorRules()
                 const curItem = this.resourceTypeList[index]
                 // 如果是未保存过的，那么取消的时候直接删除
                 if (curItem.isNewAdd) {
@@ -334,7 +382,7 @@
              * 隐藏侧边栏
              */
             hideSideslider () {
-                const invalidItemList = this.resourceTypeList.filter(item => item.isEdit || item.isNewAdd)
+                const invalidItemList = this.resourceTypeList.filter(item => item.isEdit && !item.isNewAdd)
                 if (invalidItemList.length) {
                     this.$bkInfo({
                         title: this.$t(`m.access['请先保存下列资源类型']`),

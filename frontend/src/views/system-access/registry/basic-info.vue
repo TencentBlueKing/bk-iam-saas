@@ -80,6 +80,14 @@
                 rules: null
             }
         },
+        computed: {
+            /**
+             * modelingId
+             */
+            modelingId () {
+                return this.$route.params.id
+            }
+        },
         watch: {
             /**
              * infoData
@@ -94,7 +102,7 @@
                                 message: '不能多于32个字符',
                                 trigger: 'change'
                             },
-                            { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'change' }
+                            { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'blur' }
                         ],
                         type: [
                             { required: true, message: this.$t(`m.verify['操作类型必选']`), trigger: 'change' }
@@ -103,13 +111,16 @@
                             { required: true, message: this.$t(`m.verify['操作中文名必填']`), trigger: 'change' }
                         ],
                         name_en: [
-                            { required: true, message: this.$t(`m.verify['操作英文名必填']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['操作英文名必填']`), trigger: 'change' },
+                            { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
                         ],
                         description: [
                             { required: true, message: this.$t(`m.verify['操作中文描述必填']`), trigger: 'change' }
                         ],
                         description_en: [
-                            { required: true, message: this.$t(`m.verify['操作英文描述必填']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['操作英文描述必填']`), trigger: 'change' },
+                            { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
+
                         ]
                     }
                     if (value && Object.keys(value).length) {
@@ -122,7 +133,9 @@
                         this.formData.isNewAdd = value.isNewAdd
                         this.formData.isEdit = value.isEdit
                     }
-                    // this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['操作ID已被占用']`), trigger: 'change' })
+                    if (this.formData.isNewAdd) {
+                        this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['操作ID已被占用']`), trigger: 'change' })
+                    }
                 },
                 deep: true,
                 immediate: true
@@ -132,10 +145,29 @@
             /**
              * checkName
              */
+            // async checkName (val) {
+            //     try {
+            //         const res = await this.$store.dispatch('access/checkModelingId', {
+            //             id: val.trim()
+            //         })
+            //         return !res.data.exists
+            //     } catch (e) {
+            //         console.error(e)
+            //         return false
+            //     }
+            // },
+
+            /**
+             * 校验操作ID唯一性
+             */
             async checkName (val) {
                 try {
-                    const res = await this.$store.dispatch('access/checkModelingId', {
-                        id: val.trim()
+                    const res = await this.$store.dispatch('access/checkResourceId', {
+                        id: this.modelingId,
+                        data: {
+                            type: 'action',
+                            id: val.trim()
+                        }
                     })
                     return !res.data.exists
                 } catch (e) {

@@ -23,7 +23,7 @@
                                 text
                                 size="small"
                                 :style="buttonStyle"
-                                :disabled="child.disabled"
+                                :disabled="child.disabled && item.path[childIndex][0].disabled"
                                 @click="handleRemove(child, index, childIndex)">
                                 {{ $t(`m.common['移除']`) }}
                             </bk-button>

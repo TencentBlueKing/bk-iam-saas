@@ -387,7 +387,7 @@
             },
 
             handleDragMouseup (e) {
-                this.dragWidth = this.dragRealityWidth
+                // this.dragWidth = this.dragRealityWidth
                 this.isDrag = false
                 document.removeEventListener('mousemove', this.handleDragMousemove)
                 document.removeEventListener('mouseup', this.handleDragMouseup)
@@ -406,6 +406,7 @@
                     return
                 }
                 this.dragRealityWidth = offsetX
+                this.dragWidth = offsetX
             },
 
             async fetchInstanceSelection (params = {}) {
@@ -908,7 +909,6 @@
             },
 
             handlePathSelect (value, node, payload, index) {
-                // debugger
                 window.changeAlert = true
                 const { type, path, paths } = payload[0]
                 const tempPath = path[0]
