@@ -70,7 +70,7 @@ export default {
         },
 
         /**
-         * 获取用户页面接入构建模型数据
+         * 校验系统ID唯一性
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -82,6 +82,22 @@ export default {
          */
         checkModelingId ({ commit, state, dispatch }, params, config) {
             return http.get(`${AJAX_URL_PREFIX}/modeling/is_id_exists/?${json2Query(params)}`, config)
+        },
+
+        /**
+         * 检查模型中的某种资源的id是否已存在
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        checkResourceId ({ commit, state, dispatch }, params, config) {
+            const { id, data = {} } = params
+            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/is_id_exists/?${json2Query(data)}`, config)
         },
 
         /**

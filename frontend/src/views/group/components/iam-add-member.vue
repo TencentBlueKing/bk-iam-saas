@@ -467,6 +467,11 @@
                 immediate: true
             }
         },
+        created () {
+            if (this.$route.name === 'gradingAdminCreate') {
+                this.handleSave()
+            }
+        },
         methods: {
             handleSearchInput () {
                 this.isSerachFocus = true
@@ -1014,7 +1019,6 @@
                     }, 300)
                 }
             },
-
             handleDelete (item, type) {
                 if (this.isAll) {
                     return

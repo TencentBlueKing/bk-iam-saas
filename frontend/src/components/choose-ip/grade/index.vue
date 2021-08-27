@@ -837,8 +837,27 @@
             handleTreeSelect (value, node) {
                 const parentChain = _.cloneDeep(node.parentChain)
                 let isNeedAny = false
+                // 用户组以及权限模板这里，除了子节点没有“无限制”，其他节点，包括顶级节点和中间节点都有“无限制”
+                // 如果顶级节点无数据，那么也有“无限制”
                 if (this.isTemplateMode) {
-                    isNeedAny = node.async
+                    // 没有中间节点以及子节点，例如 业务访问
+                    if (this.curChain.length === 1) {
+                        isNeedAny = node.async
+                    } else {
+                        // 有父节点
+                        if (node.parentChain && node.parentChain.length && node.parentId) {
+                            isNeedAny = node.async
+                        } else {
+                            isNeedAny = node.async
+                            // 没有子节点并且已经点过展开了
+                            if (!node.children.length && !node.async) {
+                                isNeedAny = true
+                                // 这里需要把 node.async 设置为 true
+                                // 下面的 if (node.level === 0 && !node.async) 这个逻辑需要
+                                node.async = isNeedAny
+                            }
+                        }
+                    }
                 } else {
                     if (node.parentChain && node.parentChain.length && node.parentId) {
                         isNeedAny = node.async
@@ -937,20 +956,22 @@
                 }
 
                 // 判断是否忽略路径
-                const isNeedIgnore = this.ignorePathFlag && !isNeedAny
+                // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
                 const params = [{
                     type: id,
                     name,
-                    path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+                    // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+                    path: [parentChain],
                     paths: [parentChain]
                 }]
 
                 if (node.isExistNoCarryLimit) {
+                    const p = [parentChain.slice(0, parentChain.length - 1)]
                     params.push({
                         type: id,
                         name,
-                        path: [parentChain.slice(0, parentChain.length - 1)],
-                        paths: [parentChain.slice(0, parentChain.length - 1)]
+                        path: p,
+                        paths: p
                     })
                 }
 

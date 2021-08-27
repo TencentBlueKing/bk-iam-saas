@@ -955,12 +955,12 @@
                 this.curCopyKey = `${payload.system_id}${payload.type}`
                 this.curCopyData = _.cloneDeep(payload.condition)
                 this.curCopyMode = 'normal'
-                this.curCopyParams = this.getBacthCopyParms(action, payload)
+                this.curCopyParams = this.getBatchCopyParms(action, payload)
                 this.showMessage(this.$t(`m.info['实例复制']`))
                 this.$refs[`condition_${index}_${subIndex}_ref`][0] && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(true)
             },
 
-            getBacthCopyParms (payload, content) {
+            getBatchCopyParms (payload, content) {
                 const actions = []
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
@@ -993,6 +993,7 @@
             },
 
             handlerOnPaste (payload, content, $index, contentIndex) {
+                // debugger
                 let tempCurData = ['none']
                 if (this.curCopyMode === 'normal') {
                     if (!payload.flag) {
@@ -1048,6 +1049,7 @@
             },
 
             handlerOnBatchPaste (payload, content, index, subIndex) {
+                // debugger
                 let tempCurData = ['none']
                 let tempArrgegateData = []
                 if (this.curCopyMode === 'normal') {
