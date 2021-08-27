@@ -252,7 +252,9 @@ const store = new Vuex.Store({
             secondaryColor: '#FAFAFC'
         },
         // 系统回调地址
-        host: ''
+        host: '',
+        // 前置路由
+        fromRouteName: ''
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -271,11 +273,15 @@ const store = new Vuex.Store({
         routerDiff: state => state.routerDiff,
         noviceGuide: state => state.noviceGuide,
         loadingConf: state => state.loadingConf,
-        host: state => state.host
+        host: state => state.host,
+        fromRouteName: state => state.fromRouteName
     },
     mutations: {
         updateHost (state, params) {
             state.host = params
+        },
+        updateRoute (state, params) {
+            state.fromRouteName = params
         },
         updateGroup (state, obj) {
             if (obj.hasOwnProperty('hasPerm')) {
