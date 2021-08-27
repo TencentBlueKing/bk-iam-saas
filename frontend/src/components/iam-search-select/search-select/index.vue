@@ -290,8 +290,8 @@
             this.calcTextareaWidth = _.throttle(this._calcTextareaWidth, 30)
             this.showPopper = _.throttle(this._showMenu, 50)
             this.remoteExecuteImmediate()
-            this.chipList = []
-            this.triggerChange()
+            // this.chipList = []
+            // this.triggerChange()
         },
 
         beforeDestroy () {

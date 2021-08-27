@@ -20,16 +20,19 @@
                     </p>
                     <div v-if="item.expanded" :class="['btn-wrapper', { 'reset-top': index === 0 }]">
                         <template v-if="!item.isEdit">
-                            <bk-button size="small" @click="item.isEdit = true">{{ $t(`m.common['编辑']`) }}</bk-button>
+                            <!-- "item.isEdit = true" -->
+                            <bk-button size="small" @click="editInstanceSelection(item)">
+                                {{ $t(`m.common['编辑']`) }}
+                            </bk-button>
+                            <bk-button size="small" theme="danger" outline :disabled="item.submitLoading"
+                                @click.stop.prevent="delInstanceSelection(item, index)">
+                                {{ $t(`m.common['删除']`) }}
+                            </bk-button>
                         </template>
                         <template v-else>
                             <bk-button size="small" :disabled="item.submitLoading" theme="primary"
                                 @click.stop.prevent="saveInstanceSelection(item, index)">
                                 {{ $t(`m.common['保存']`) }}
-                            </bk-button>
-                            <bk-button size="small" :disabled="item.submitLoading || item.isNewAdd"
-                                @click.stop.prevent="delInstanceSelection(item, index)">
-                                {{ $t(`m.common['删除']`) }}
                             </bk-button>
                             <bk-button size="small" :disabled="item.submitLoading"
                                 @click.stop.prevent="cancelEdit(index)">{{ $t(`m.common['取消']`) }}</bk-button>
@@ -40,17 +43,17 @@
                             <bk-form :ref="`instanceSelectionForm${index}`"
                                 :model="item" form-type="vertical" :rules="rules"
                                 v-bkloading="{ isLoading: item.submitLoading, opacity: 1, color: '#f5f6fa' }">
-                                <iam-form-item :label="$t(`m.access['实例ID']`)" :property="'id'" required>
+                                <iam-form-item :label="$t(`m.access['实例视图ID']`)" :property="'id'" required>
                                     <bk-input :disabled="!item.isNewAdd" v-model="item.id"
-                                        :placeholder="$t(`m.access['请输入实例ID']`)" />
+                                        :placeholder="$t(`m.access['请输入实例视图ID']`)" />
                                 </iam-form-item>
-                                <iam-form-item :label="$t(`m.access['实例中文名']`)" :property="'name'" required>
+                                <iam-form-item :label="$t(`m.access['实例视图中文名']`)" :property="'name'" required>
                                     <bk-input :disabled="!item.isEdit" v-model="item.name"
-                                        :placeholder="$t(`m.access['请输入实例中文名']`)" />
+                                        :placeholder="$t(`m.access['请输入实例视图中文名']`)" />
                                 </iam-form-item>
-                                <iam-form-item :label="$t(`m.access['实例英文名']`)" :property="'name_en'" required>
+                                <iam-form-item :label="$t(`m.access['实例视图英文名']`)" :property="'name_en'" required>
                                     <bk-input :disabled="!item.isEdit" v-model="item.name_en"
-                                        :placeholder="$t(`m.access['请输入实例英文名']`)" />
+                                        :placeholder="$t(`m.access['请输入实例视图英文名']`)" />
                                 </iam-form-item>
                                 <iam-form-item class="resource-type-chain-form-item"
                                     :label="$t(`m.access['选择资源实例层级']`)" required>
@@ -171,17 +174,25 @@
                     if (value) {
                         this.rules = {
                             id: [
-                                { required: true, message: this.$t(`m.verify['系统ID必填']`), trigger: 'change' }
+                                { required: true, message: this.$t(`m.verify['实例视图ID必填']`), trigger: 'blur' },
+                                {
+                                    max: 32,
+                                    message: '不能多于32个字符',
+                                    trigger: 'blur'
+                                },
+                                { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'blur' }
                             ],
                             name: [
-                                { required: true, message: this.$t(`m.verify['系统中文名称必填']`), trigger: 'change' }
+                                { required: true, message: this.$t(`m.verify['实例视图中文名称必填']`), trigger: 'blur' }
                             ],
                             name_en: [
-                                { required: true, message: this.$t(`m.verify['系统英文名称必填']`), trigger: 'change' }
+                                { required: true, message: this.$t(`m.verify['实例视图英文名称必填']`), trigger: 'blur' },
+                                { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
                             ]
                         }
 
                         this.isLoading = true
+
                         try {
                             await Promise.all([
                                 this.fetchSystemList(),
@@ -205,6 +216,25 @@
             }
         },
         methods: {
+            /**
+             * 校验实例视图ID唯一性
+             */
+            async checkName (val) {
+                try {
+                    const res = await this.$store.dispatch('access/checkResourceId', {
+                        id: this.modelingId,
+                        data: {
+                            type: 'instance_selection',
+                            id: val.trim()
+
+                        }
+                    })
+                    return !res.data.exists
+                } catch (e) {
+                    console.error(e)
+                    return false
+                }
+            },
             /**
              * addChain
              */
@@ -415,7 +445,8 @@
                             item.isEdit = false
                             item.isNewAdd = false
                             this.messageSuccess(this.$t(`m.access['保存实例视图成功']`), 1000)
-                            this.$emit('on-refresh-system-list')
+                            this.$emit('on-refresh-system-list', 'instanceSelection')
+                            this.addValidatorRules() // 保存成功重新添加规则
                         } catch (e) {
                             console.error(e)
                             this.bkMessageInstance = this.$bkMessage({
@@ -460,7 +491,7 @@
                                 id: me.modelingId,
                                 data: {
                                     id: item.id,
-                                    type: 'resource_type'
+                                    type: 'instance_selection'
                                 }
                             })
 
@@ -474,7 +505,7 @@
                             )
 
                             me.messageSuccess(me.$t(`m.access['删除实例视图成功']`), 1000)
-                            me.$emit('on-refresh-system-list')
+                            this.$emit('on-refresh-system-list', 'instanceSelection')
                             return true
                         } catch (e) {
                             console.error(e)
@@ -493,14 +524,33 @@
             },
 
             /**
+             * edit
+             */
+            editInstanceSelection (item) {
+                item.isEdit = true
+                this.rules.id = this.rules.id.filter(t => t.type !== 'dynamicValidator') // 编辑时实例ID不可编辑不校验规则
+            },
+
+            /**
              * add
              */
             add () {
+                this.addValidatorRules()
                 const instanceSelectionList = []
                 instanceSelectionList.splice(0, 0, ...(this.instanceSelectionList))
                 instanceSelectionList.push(getDefaultData())
                 this.instanceSelectionList.splice(0, this.instanceSelectionList.length, ...instanceSelectionList)
                 this.instanceSelectionListBackup = JSON.parse(JSON.stringify(instanceSelectionList))
+            },
+
+            /**
+             * addValidatorRules
+             */
+            addValidatorRules () {
+                const dynamicValidatorRulesLength = this.rules.id.filter(e => e.type === 'dynamicValidator').length
+                if (!dynamicValidatorRulesLength) {
+                    this.rules.id.push({ type: 'dynamicValidator', validator: this.checkName, message: this.$t(`m.verify['实例视图ID已被占用']`), trigger: 'blur' }) // 需要添加是否被占用规则
+                }
             },
 
             /**
@@ -511,6 +561,7 @@
                 if (formComp && formComp[0]) {
                     formComp[0].clearError()
                 }
+                this.addValidatorRules()
                 const curItem = this.instanceSelectionList[index]
                 // 如果是未保存过的，那么取消的时候直接删除
                 if (curItem.isNewAdd) {

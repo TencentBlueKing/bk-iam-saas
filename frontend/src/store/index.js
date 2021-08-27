@@ -250,7 +250,9 @@ const store = new Vuex.Store({
             speed: 2,
             primaryColor: '#f5f6fa',
             secondaryColor: '#FAFAFC'
-        }
+        },
+        // 系统回调地址
+        host: ''
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -268,9 +270,13 @@ const store = new Vuex.Store({
         roleList: state => state.roleList,
         routerDiff: state => state.routerDiff,
         noviceGuide: state => state.noviceGuide,
-        loadingConf: state => state.loadingConf
+        loadingConf: state => state.loadingConf,
+        host: state => state.host
     },
     mutations: {
+        updateHost (state, params) {
+            state.host = params
+        },
         updateGroup (state, obj) {
             if (obj.hasOwnProperty('hasPerm')) {
                 state.group.hasPerm = obj.hasPerm

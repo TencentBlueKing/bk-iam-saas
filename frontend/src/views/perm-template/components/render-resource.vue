@@ -481,7 +481,7 @@
             },
 
             handleDragMouseup (e) {
-                this.dragWidth = this.dragRealityWidth
+                // this.dragWidth = this.dragRealityWidth
                 this.isDrag = false
                 document.removeEventListener('mousemove', this.handleDragMousemove)
                 document.removeEventListener('mouseup', this.handleDragMouseup)
@@ -500,6 +500,7 @@
                     return
                 }
                 this.dragRealityWidth = offsetX
+                this.dragWidth = offsetX
             },
 
             async fetchInstanceSelection (params = {}) {

@@ -19,7 +19,11 @@
                 </bk-checkbox>
             </iam-form-item>
             <iam-form-item :label="$t(`m.access['系统健康检查地址']`)" :property="'healthz'" required>
-                <bk-input class="input" v-model="formData.healthz" :placeholder="$t(`m.access['请输入接入的系统健康检查地址']`)" />
+                <bk-input class="input" v-model="formData.healthz" :placeholder="$t(`m.access['请输入接入的系统健康检查地址']`)">
+                    <template slot="prepend">
+                        <div class="group-text">{{formData.host}}</div>
+                    </template>
+                </bk-input>
             </iam-form-item>
             <iam-form-item :label="$t(`m.access['系统中文描述']`)" :property="'description'" required>
                 <bk-input
@@ -71,32 +75,37 @@
                 handler (value) {
                     this.rules = {
                         id: [
-                            { required: true, message: this.$t(`m.verify['系统ID必填']`), trigger: 'change' },
+                            { required: true, message: this.$t(`m.verify['系统ID必填']`), trigger: 'blur' },
                             {
                                 max: 32,
                                 message: '不能多于32个字符',
-                                trigger: 'change'
+                                trigger: 'blur'
                             },
-                            { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'change' }
+                            { regex: /^[a-z][a-z-z0-9_-]*$/, message: this.$t(`m.verify['只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)']`), trigger: 'blur' }
                         ],
                         name: [
-                            { required: true, message: this.$t(`m.verify['系统中文名称必填']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['系统中文名称必填']`), trigger: 'blur' }
                         ],
                         name_en: [
-                            { required: true, message: this.$t(`m.verify['系统英文名称必填']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['系统英文名称必填']`), trigger: 'blur' },
+                            { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
                         ],
                         host: [
-                            { required: true, message: this.$t(`m.verify['系统回调地址必填']`), trigger: 'change' },
-                            { regex: /^(https|http)?:\/\//, message: this.$t(`m.verify['请输入正确的系统回调地址']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['系统回调地址必填']`), trigger: 'blur' },
+                            { regex: /^((https|http|ftp|rtsp|mms)?:\/\/)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(\/?[A-Za-z0-9]+(\/?))*$/, message: this.$t(`m.verify['请输入正确的系统回调地址']`), trigger: 'blur' }
                         ],
                         healthz: [
-                            { required: true, message: this.$t(`m.verify['系统健康检查地址必填']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['系统健康检查地址必填']`), trigger: 'blur' },
+                            { regex: /^(\/[A-Za-z0-9_-]+(\/?))+$/, message: this.$t(`m.verify['请输入正确的系统健康检查地址']`), trigger: 'blur' }
+
                         ],
                         description: [
-                            { required: true, message: this.$t(`m.verify['系统中文描述必填']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['系统中文描述必填']`), trigger: 'blur' }
                         ],
                         description_en: [
-                            { required: true, message: this.$t(`m.verify['系统英文描述必填']`), trigger: 'change' }
+                            { required: true, message: this.$t(`m.verify['系统英文描述必填']`), trigger: 'blur' },
+                            { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
+
                         ]
                     }
                     if (value && Object.keys(value).length) {
@@ -113,6 +122,13 @@
                     if (!this.isEdit) {
                         this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['系统ID已被占用']`), trigger: 'change' })
                     }
+                },
+                deep: true,
+                immediate: true
+            },
+            formData: {
+                handler (value) {
+                    this.$store.commit('updateHost', value.host)
                 },
                 deep: true,
                 immediate: true
