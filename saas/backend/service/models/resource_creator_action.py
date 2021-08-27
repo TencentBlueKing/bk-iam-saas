@@ -8,10 +8,34 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import LowerStrEnum, auto
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 
-class ActionTag(LowerStrEnum):
-    READONLY = auto()
-    CHECKED = auto()
-    UNCHECKED = auto()
+class ResourceCreatorActionInfo(BaseModel):
+    """
+    新建关联配置中单个Action
+    """
+
+    id: str
+    required: bool
+
+
+class ResourceCreatorActionConfigItem(BaseModel):
+    """
+    资源类型对应的被创建时所需的Action配置等
+    """
+
+    id: str
+    actions: List[ResourceCreatorActionInfo]
+    sub_resource_types: Optional[List["ResourceCreatorActionConfigItem"]] = None
+
+
+class ResourceCreatorActionConfig(BaseModel):
+    """
+    新建关联配置
+    """
+
+    mode: str
+    config: List[ResourceCreatorActionConfigItem]

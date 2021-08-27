@@ -15,11 +15,17 @@ from typing import Any, Dict, List
 
 from pydantic.tools import parse_obj_as
 
+from backend.biz.action import ActionBean, ActionBeanList, ActionBiz, ActionCheckBiz, ActionForCheck
+from backend.biz.policy import (
+    ConditionBean,
+    InstanceBean,
+    PathNodeBean,
+    PolicyBean,
+    PolicyBeanList,
+    RelatedResourceBean,
+)
 from backend.common.error_codes import error_codes
 from backend.util.cache import region
-
-from ..action import ActionBean, ActionBeanList, ActionBiz, ActionCheckBiz, ActionForCheck
-from ..policy import ConditionBean, InstanceBean, PathNodeBean, PolicyBean, PolicyBeanList, RelatedResourceBean
 
 
 class PolicyTrans:
@@ -71,14 +77,14 @@ class PolicyTrans:
     @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
     def _get_action_list(self, system_id: str) -> ActionBeanList:
         """获取某个系统的操作列表"""
-        return ActionBeanList(actions=self.action_biz.list(system_id))
+        return self.action_biz.list(system_id)
 
     def _get_action(self, system_id: str, action_id: str) -> ActionBean:
         """查询操作的权限模型"""
         action_list = self._get_action_list(system_id)
         action = action_list.get(action_id)
         if not action:
-            raise error_codes.VALIDATE_ERROR.format(f"{action_id} action not exists")
+            raise error_codes.VALIDATE_ERROR.format(f"system({system_id}) has not action({action_id})")
 
         return action
 

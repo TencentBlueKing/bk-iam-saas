@@ -25,15 +25,12 @@ from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz, GroupCheckBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import RoleRelatedObjectType
+from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType
 from backend.service.group_saas_attribute import GroupAttributeService
-from backend.service.models.system import Subject
-from backend.service.system import SystemService
-
-from ...service.constants import ADMIN_USER
-from .constants import GroupMemberType
+from backend.service.models import Subject
 
 
 class GroupMemberSLZ(serializers.Serializer):
@@ -171,7 +168,7 @@ class GroupTemplateSLZ(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         template_ids = [tmp.template_id for tmp in args[0]]
         self._template_name_dict = TemplateBiz().get_template_name_dict_by_ids(template_ids)
-        self._system_list = SystemService().new_system_list()
+        self._system_list = SystemBiz().new_system_list()
 
     def get_system(self, obj):
         system_id = obj.system_id
@@ -193,7 +190,7 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
     def __init__(self, *args, **kwargs):
         serializers.ModelSerializer.__init__(self, *args, **kwargs)
         self._template_name_dict = TemplateBiz().get_template_name_dict_by_ids([self.instance.id])
-        self._system_list = SystemService().new_system_list()
+        self._system_list = SystemBiz().new_system_list()
 
     class Meta:
         model = PermTemplatePolicyAuthorized

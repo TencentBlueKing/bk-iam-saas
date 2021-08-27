@@ -20,7 +20,7 @@ from backend.biz.policy import (
     PolicyBeanList,
     RelatedResourceBean,
 )
-from backend.service.policy.query import Attribute, Value
+from backend.service.models import Attribute, Value
 from backend.service.utils.translate import translate_path
 
 from .constants import ConditionTag, PolicyTag

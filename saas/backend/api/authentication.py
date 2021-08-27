@@ -14,11 +14,9 @@ import logging
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework.authentication import BaseAuthentication, BasicAuthentication
+from rest_framework.authentication import BaseAuthentication
 
-from backend.apps.role.models import AnonymousRole, Role
 from backend.component import esb
-from backend.service.constants import RoleType
 from backend.util.cache import region
 
 from .constants import BKNonEntityUser
@@ -136,27 +134,3 @@ class ESBAuthentication(BaseAuthentication):
             return self._get_apigw_public_key()
         data = esb.get_api_public_key()
         return data["public_key"]
-
-
-class BasicAppCodeAuthentication(BasicAuthentication):
-    """
-    使用app_code认证的BasicAuth
-    """
-
-    def authenticate_credentials(self, userid, password, request=None):
-        if userid != settings.APP_ID or password != settings.APP_TOKEN:
-            return None
-        user_model = get_user_model()
-        user, _ = user_model.objects.get_or_create(
-            username="admin", defaults={"is_active": True, "is_staff": False, "is_superuser": False}
-        )
-        if request:
-            request.bk_app_code = userid
-        return user, None
-
-    def authenticate(self, request):
-        user_auth_tuple = super().authenticate(request)
-        if user_auth_tuple is not None:
-            role = Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first() or AnonymousRole()
-            setattr(request, "role", role)
-        return user_auth_tuple

@@ -14,8 +14,6 @@ from pydantic.fields import Field
 from pydantic.main import BaseModel
 from pydantic.tools import parse_obj_as
 
-from backend.apps.action.constants import ActionTag
-from backend.biz.role import RoleListQuery
 from backend.common.error_codes import error_codes
 from backend.service.action import ActionList, ActionService
 from backend.service.constants import ACTION_ALL, SubjectType
@@ -23,6 +21,9 @@ from backend.service.models import Action, RelatedResourceType, ResourceTypeDict
 from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.util.model import ExcludeModel
+
+from .constants import ActionTag
+from .role import RoleListQuery
 
 
 class RelatedResourceTypeBean(RelatedResourceType, ExcludeModel):
@@ -92,18 +93,15 @@ class ActionBiz:
     resource_type_svc = ResourceTypeService()
     policy_svc = PolicyQueryService()
 
-    def _list(self, system_id: str) -> ActionBeanList:
+    def list(self, system_id: str) -> ActionBeanList:
         actions = self.action_svc.list(system_id)
         action_list = ActionBeanList(parse_obj_as(List[ActionBean], actions))
         action_list.fill_related_resource_type_name()
 
         return action_list
 
-    def list(self, system_id: str) -> List[ActionBean]:
-        return self._list(system_id).actions
-
     def list_by_role(self, system_id: str, role) -> List[ActionBean]:
-        action_list = self._list(system_id)
+        action_list = self.list(system_id)
         scope_action_ids = RoleListQuery(role).list_scope_action_id(system_id)
 
         actions = action_list.filter_by_scope_action_ids(scope_action_ids)
@@ -149,7 +147,7 @@ class ActionBiz:
 
     def search(self, system_id: str, condition: ActionSearchCondition) -> List[ActionBean]:
         """搜索过滤某个系统下的操作"""
-        action_list = self._list(system_id)
+        action_list = self.list(system_id)
         # 搜索条件
         if condition.keyword:
             action_list = ActionBeanList(action_list.filter_by_name(condition.keyword))

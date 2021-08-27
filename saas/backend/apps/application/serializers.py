@@ -20,10 +20,10 @@ from backend.apps.policy.serializers import PolicyActionSLZ, ResourceSLZ, Resour
 from backend.apps.role.serializers import RatingMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
+from backend.biz.system import SystemBiz
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import ApplicationTypeEnum
-from backend.service.models.system import Subject
-from backend.service.system import SystemService
+from backend.service.models import Subject
 
 from .base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 
@@ -202,7 +202,7 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
             # 授权范围处理
             auth_scopes = data["authorization_scopes"]
             # 填充system name
-            system_dict = {s.id: s for s in SystemService().list()}
+            system_dict = {s.id: s for s in SystemBiz().list()}
             for scope in auth_scopes:
                 if "system_id" in scope:
                     system_id = scope.pop("system_id")

@@ -12,7 +12,8 @@ from typing import Any, Dict, Optional
 
 from backend.biz.policy import PolicyBeanList
 from backend.biz.role import RoleInfoBean
-from backend.biz.trans.policy import PolicyTrans
+
+from .policy import PolicyTrans
 
 
 class RoleTrans:

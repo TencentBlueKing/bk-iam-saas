@@ -71,7 +71,7 @@ python = "3.6.6"
 # blueapps requirement
 Django = "2.2.24"
 mysqlclient = "2.0.1"
-MarkupSafe = "1.0"
+MarkupSafe = "1.1.1"
 Mako = "1.0.6"
 requests = "2.26.0"
 celery = "3.1.25"
