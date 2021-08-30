@@ -17,7 +17,7 @@
                                 <div class="block-title">SDK鉴权 (Python/Go )</div>
                                 <div class="block-content">
                                     <div class="language">Python SDK</div>
-                                    <div class="time">2021-03-23发布</div>
+                                    <!-- <div class="time">2021-03-23发布</div> -->
                                     <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-python-sdk" target="_blank">访问</bk-link>
                                 </div>
                             </div>
@@ -25,7 +25,7 @@
                                 <div class="block-title"></div>
                                 <div class="block-content">
                                     <div class="language">GO SDK</div>
-                                    <div class="time">2021-03-23发布</div>
+                                    <!-- <div class="time">2021-03-23发布</div> -->
                                     <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-go-sdk" target="_blank">访问</bk-link>
                                 </div>
                             </div>
