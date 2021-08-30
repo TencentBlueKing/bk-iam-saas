@@ -947,7 +947,15 @@
                             return false
                         } finally {
                             item.loading = false
-                            me.actionListBackup = JSON.parse(JSON.stringify(me.actionList))
+                            this.$router.push({
+                                name: 'systemAccessRegistry',
+                                params: {
+                                    id: this.modelingId
+                                }
+                            })
+                            this.$nextTick(() => {
+                                me.actionListBackup = JSON.parse(JSON.stringify(me.actionList))
+                            })
                         }
                     }
                 })
