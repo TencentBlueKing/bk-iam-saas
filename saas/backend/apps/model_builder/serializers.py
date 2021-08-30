@@ -96,7 +96,7 @@ class ModelSystemSLZ(serializers.Serializer):
     description_en = serializers.CharField(label="英文描述(description_en)", required=False)
 
     # required=False, 什么都不配置, 注册时会将发起注册的app_code加入
-    clients = serializers.CharField(label="合法CLIENTS(clients)", required=False)
+    clients = serializers.CharField(label="合法CLIENTS(clients)", required=False, default="")
 
     provider_config = SystemProviderConfigSLZ(label="回调配置(provider_config)", required=True)
 

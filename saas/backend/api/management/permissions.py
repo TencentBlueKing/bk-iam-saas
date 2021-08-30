@@ -52,7 +52,11 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
         # 对于配置了忽略鉴权的，直接返回鉴权通过
         if (param_source, api) == IGNORE_VERIFY_API_CONFIG:
             return True
-        return self._verify_api(view, request, param_source, api)
+
+        # 若校验不通过，则会直接抛出exceptions.PermissionDenied异常
+        self._verify_api(view, request, param_source, api)
+
+        return True
 
     def _verify_api(self, view, request, param_source, api):
         """
@@ -71,7 +75,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             # 由于URL参数是必然会获取得到的，否则是已经404的，不会执行到这里，所以可以直接[]获取而不需要判断是否存在
             object_id = request.parser_context["kwargs"][object_id_key]
             self.verify_api_by_object(app_code, VerifyAPIParamSourceToObjectTypeMap[param_source], int(object_id), api)
-            return True
+            return
 
         # 参数system来着Body Data或Query
         if param_source in [
@@ -91,7 +95,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             source_system_id = slz.validated_data["system"]
 
             self.verify_api(app_code, source_system_id, api)
-            return True
+            return
 
         # 参数来着body data - group_ids
         if param_source == VerifyAPIParamLocationEnum.GROUP_IDS_IN_BODY:
@@ -100,6 +104,4 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             group_ids = slz.validated_data["group_ids"]
 
             self.verify_api_by_groups(app_code, group_ids, api)
-            return True
-
-        return False
+            return

@@ -11,6 +11,8 @@ specific language governing permissions and limitations under the License.
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
+from django.utils.translation import gettext as _
+
 from backend.apps.model_builder.constants import ModelSectionEnum
 from backend.apps.model_builder.models import MockSystemModel
 from backend.common.error_codes import error_codes
@@ -173,7 +175,8 @@ def _get_actions_from_common_actions(data: Dict) -> List[str]:
     actions = []
     for d in common_actions:
         actions.extend(d.get("actions", []))
-    return actions
+
+    return [a["id"] for a in actions]
 
 
 def _get_actions_from_action_groups(data: Dict) -> List[str]:
@@ -245,17 +248,37 @@ def validate_delete_part(_id: str, _type: str, _type_id: str):
     if _type == ModelSectionEnum.ACTION.value:
         # common_actions
         if _type_id in _get_actions_from_common_actions(data):
-            raise error_codes.VALIDATE_ERROR.format(f"the id={_type_id} is referenced in common_actions")
+            raise error_codes.VALIDATE_ERROR.format(
+                _("操作(action) id={_type_id} 在常用操作(common_actions)中被引用").format(
+                    _type_id=_type_id,
+                )
+            )
 
         if _type_id in _get_actions_from_action_groups(data):
-            raise error_codes.VALIDATE_ERROR.format(f"the id={_type_id} is referenced in action_groups")
+            raise error_codes.VALIDATE_ERROR.format(
+                _("操作(action) id={_type_id} 在操作组(action_groups)中被引用").format(
+                    _type_id=_type_id,
+                )
+            )
 
     elif _type == ModelSectionEnum.INSTANCE_SELECTION.value:
         if (model.system_id, _type_id) in _get_instance_selections_from_action(data):
-            raise error_codes.VALIDATE_ERROR.format(f"the id={_type_id} is referenced in action")
+            raise error_codes.VALIDATE_ERROR.format(
+                _("实例视图(instance_selection) id={_type_id} 在操作(action)中被引用").format(
+                    _type_id=_type_id,
+                )
+            )
     elif _type == ModelSectionEnum.RESOURCE_TYPE.value:
         if (model.system_id, _type_id) in _get_resource_type_from_instance_selection(data):
-            raise error_codes.VALIDATE_ERROR.format(f"the id={_type_id} is referenced in instance_selection")
+            raise error_codes.VALIDATE_ERROR.format(
+                _("资源类型(resource_type) id={_type_id} 在实例视图(instance_selection)中被引用").format(
+                    _type_id=_type_id,
+                )
+            )
 
         if (model.system_id, _type_id) in _get_resource_types_from_action(data):
-            raise error_codes.VALIDATE_ERROR.format(f"the id={_type_id} is referenced in action")
+            raise error_codes.VALIDATE_ERROR.format(
+                _("资源类型(resource_type) id={_type_id} 在操作(action)中被引用").format(
+                    _type_id=_type_id,
+                )
+            )

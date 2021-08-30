@@ -49,12 +49,12 @@ from backend.apps.model_builder.validators import (
     validate_system,
 )
 from backend.biz.instance_selection import InstanceSelectionBiz
+from backend.biz.system import SystemBiz
 from backend.common.error_codes import error_codes
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.instance_selection import InstanceSelectionService
 from backend.service.models.resource_type import ResourceTypeDict
 from backend.service.resource_type import ResourceTypeService
-from backend.service.system import SystemService
 
 
 class UserMockSystemModelViewSet(GenericViewSet, mixins.ListModelMixin):
@@ -220,7 +220,7 @@ class MockSystemModelViewSet(GenericViewSet):
 
         _type = body["type"]
         if _type == ModelSectionEnum.SYSTEM.value:
-            raise error_codes.VALIDATE_ERROR.format(_("system can't be delete"))
+            raise error_codes.VALIDATE_ERROR.format(_("系统不能被删除"))
 
         # 需要检查引用, 被引用不能删除
         validate_delete_part(kwargs["id"], _type, body.get("id"))
@@ -259,7 +259,7 @@ class MockSystemModelViewSet(GenericViewSet):
 
         _type = body["type"]
         if _type not in type_slzs:
-            raise error_codes.VALIDATE_ERROR.format(_("the type not supported yet"))
+            raise error_codes.VALIDATE_ERROR.format(_("暂时不支持这种type"))
 
         slz_class, many = type_slzs[_type]
         ds = slz_class(data=body["data"], many=many)
@@ -288,8 +288,8 @@ class MockSystemModelViewSet(GenericViewSet):
 def _list_all_systems(mock_system_id: str, mock_system_name: str) -> List[Tuple[str, str]]:
     data = [(mock_system_id, mock_system_name)]
 
-    svc = SystemService()
-    systems = svc.list()
+    biz = SystemBiz()
+    systems = biz.list()
     for s in systems:
         if s.id != mock_system_id:
             data.append((s.id, s.name))
@@ -305,8 +305,6 @@ class SystemListView(GenericViewSet):
     paginator = None  # 去掉swagger中的limit offset参数
 
     permission_classes = [ModelOwnerPermission]
-
-    svc = SystemService()
 
     @swagger_auto_schema(
         operation_description="构建模型时拉取所有系统列表",

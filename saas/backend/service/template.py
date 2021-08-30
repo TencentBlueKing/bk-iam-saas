@@ -18,9 +18,9 @@ from pydantic import BaseModel, parse_obj_as
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreGroupSync
 from backend.common.error_codes import error_codes
 from backend.component import iam
-from backend.service.policy.query import Policy, PolicyList, SystemCounter, new_backend_policy_list_by_subject
 
-from .models import Subject
+from .models import Policy, Subject, SystemCounter
+from .policy.query import PolicyList, new_backend_policy_list_by_subject
 
 
 class TemplateGroupPreCommit(BaseModel):

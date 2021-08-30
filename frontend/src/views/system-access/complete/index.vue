@@ -1,7 +1,13 @@
 <template>
     <div class="iam-system-access-optimize-wrapper">
         <div class="inner">
-            <bk-steps class="system-access-step" ref="systemAccessStep" :steps="steps" direction="vertical"></bk-steps>
+            <bk-steps class="system-access-step" ref="systemAccessStep" direction="vertical"
+                :steps="controllableSteps.steps"
+                :controllable="controllableSteps.controllable"
+                :cur-step.sync="controllableSteps.curStep"
+                :before-change="beforeStepChanged"
+                @step-changed="stepChanged">
+            </bk-steps>
             <smart-action class="content-wrapper">
                 <div class="complete-wrapper">
                     <div class="success-msg-wrapper">
@@ -55,19 +61,25 @@
 </template>
 <script>
     import { saveAs } from '@/common/file-saver'
+    import beforeStepChangedMixin from '../common/before-stepchange'
 
     export default {
+        mixins: [beforeStepChangedMixin],
         data () {
             return {
                 modelingId: '',
                 downloadLoading: false,
 
-                steps: [
-                    { title: '接入系统', icon: 1 },
-                    { title: '注册操作', icon: 2 },
-                    { title: '体验优化', icon: 3 },
-                    { title: '完成', icon: 4 }
-                ]
+                controllableSteps: {
+                    controllable: true,
+                    steps: [
+                        { title: '注册系统', icon: 1 },
+                        { title: '注册操作', icon: 2 },
+                        { title: '体验优化', icon: 3 },
+                        { title: '完成', icon: 4 }
+                    ],
+                    curStep: 4
+                }
             }
         },
         mounted () {
@@ -81,6 +93,8 @@
             }
         },
         methods: {
+            stepChanged (index) {
+            },
             async fetchPageData () {
                 const modelingId = this.$route.params.id
                 if (modelingId === null || modelingId === undefined || modelingId === '') {

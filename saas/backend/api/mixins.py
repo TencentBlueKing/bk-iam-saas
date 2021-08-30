@@ -16,29 +16,24 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import set_rollback
 
+from backend.biz.system import SystemBiz
 from backend.common.constants import DjangoLanguageEnum
 from backend.common.error_codes import error_codes
-from backend.component import iam
-from backend.util.cache import region
 
 
 class SystemClientCheckMixin:
+    system_biz = SystemBiz()
+
     def verify_system_client(self, system_id: str, app_code: str):
         """
         验证app_code是否能访问系统
         """
-        clients = self._get_system_clients(system_id)
+        clients = self.system_biz.list_client(system_id)
 
-        if app_code not in set(clients):
+        if app_code not in clients:
             raise exceptions.PermissionDenied(
                 detail="app_code {} can not access system {}".format(app_code, system_id)
             )
-
-    @staticmethod
-    @region.cache_on_arguments(expiration_time=5 * 60)  # 5分钟过期
-    def _get_system_clients(system_id: str):
-        system = iam.get_system(system_id, fields="clients")
-        return system["clients"].split(",")
 
 
 class ExceptionHandlerMixin:

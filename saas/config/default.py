@@ -182,11 +182,11 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_user_group_policy_expire_remind": {
         "task": "backend.apps.user.tasks.user_group_policy_expire_remind",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
     },
     "periodic_role_group_expire_remind": {
         "task": "backend.apps.role.tasks.role_group_expire_remind",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
     },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
@@ -264,9 +264,6 @@ FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
-# iam host
-BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
-
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 CORS_ORIGIN_WHITELIST = []  # 默认只支持同域名请求
@@ -336,5 +333,5 @@ PUB_SUB_REDIS_DB = os.environ.get("BKAPP_PUB_SUB_REDIS_DB", 0)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "True").lower() == "true"
+    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true"
 }

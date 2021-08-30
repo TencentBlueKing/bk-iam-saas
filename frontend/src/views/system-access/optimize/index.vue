@@ -5,6 +5,7 @@
                 :steps="controllableSteps.steps"
                 :controllable="controllableSteps.controllable"
                 :cur-step.sync="controllableSteps.curStep"
+                :before-change="beforeStepChanged"
                 @step-changed="stepChanged">
             </bk-steps>
             <smart-action class="content-wrapper">
@@ -145,7 +146,7 @@
                 </render-horizontal-block>
 
                 <div slot="action">
-                    <bk-button theme="primary" type="button" @click="handleSubmit">
+                    <bk-button theme="primary" type="button" @click="handleSubmit('systemAccessComplete')">
                         {{ $t(`m.common['下一步']`) }}
                     </bk-button>
                     <bk-button style="margin-left: 10px;" @click="handlePrev">{{ $t(`m.common['上一步']`) }}</bk-button>
@@ -232,6 +233,7 @@
     import EditSubGroupDialog from './edit-sub-group-dialog.vue'
     import AddCommonDialog from './add-common-dialog.vue'
     import EditCommonDialog from './edit-common-dialog.vue'
+    import beforeStepChangedMixin from '../common/before-stepchange'
 
     export default {
         name: '',
@@ -243,6 +245,7 @@
             AddCommonDialog,
             EditCommonDialog
         },
+        mixins: [beforeStepChangedMixin],
         data () {
             return {
                 modelingId: '',
@@ -255,7 +258,7 @@
                         { title: '体验优化', icon: 3 },
                         { title: '完成', icon: 4 }
                     ],
-                    curStep: 1
+                    curStep: 3
                 },
                 allActionIdNameMap: {},
                 allActionList: [],
@@ -310,6 +313,13 @@
             }
         },
         methods: {
+            // stepChanged (index) {
+            //     if (index === 2) {
+            //         this.handlePrev()
+            //     } else if (index === 4) {
+            //         this.handleSubmit()
+            //     }
+            // },
             /**
              * fetchPageData
              */
@@ -979,9 +989,9 @@
             //         params: this.$route.params
             //     })
             // },
-            handleSubmit () {
+            handleSubmit (routerName) {
                 this.$router.push({
-                    name: 'systemAccessComplete',
+                    name: routerName,
                     params: {
                         id: this.modelingId
                     }

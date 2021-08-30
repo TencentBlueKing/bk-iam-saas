@@ -17,19 +17,17 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.account.permissions import role_perm_class
-from backend.apps.organization.models import Department, User
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicyPartDeleteSLZ, PolicySLZ, PolicySystemSLZ
-from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.swagger import ResponseSwaggerAutoSchema
-from backend.service.constants import PermissionCodeEnum
+from backend.service.constants import PermissionCodeEnum, SubjectRelationType
 from backend.service.models import Subject
 
 from .audit import SubjectGroupDeleteAuditProvider, SubjectPolicyDeleteAuditProvider
-from .serializers import SubjectDepartmentSLZ, SubjectGroupSLZ, UserRelationSLZ
+from .serializers import SubjectGroupSLZ, UserRelationSLZ
 
 permission_logger = logging.getLogger("permission")
 
@@ -49,9 +47,8 @@ class SubjectGroupViewSet(GenericViewSet):
         tags=["subject"],
     )
     def list(self, request, *args, **kwargs):
-        _type = kwargs["subject_type"]
-        _id = kwargs["subject_id"]
-        relations = self.biz.list_subject_group(Subject(type=_type, id=_id), is_recursive=True)
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        relations = self.biz.list_subject_group(subject, is_recursive=True)
         return Response([one.dict() for one in relations])
 
     @swagger_auto_schema(
@@ -63,62 +60,22 @@ class SubjectGroupViewSet(GenericViewSet):
     )
     @view_audit_decorator(SubjectGroupDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
         serializer = UserRelationSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-
         data = serializer.validated_data
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
         permission_logger.info("subject group delete by user: %s", request.user.username)
 
-        if data["type"] == "group":
-            group_id = data["id"]
-            self.biz.remove_members(group_id, [Subject.parse_obj({"type": subject.type, "id": subject.id})])
+        # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
+        if data["type"] == SubjectRelationType.GROUP.value:
+            self.biz.remove_members(data["id"], [subject])
 
             # 写入审计上下文
             audit_context_setter(subject=subject, group=Subject.parse_obj(data))
 
         return Response({})
-
-
-class SubjectDepartmentViewSet(GenericViewSet):
-
-    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
-
-    paginator = None  # 去掉swagger中的limit offset参数
-
-    @swagger_auto_schema(
-        operation_description="我的权限-部门列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: SubjectDepartmentSLZ(label="部门", many=True)},
-        tags=["subject"],
-    )
-    def list(self, request, *args, **kwargs):
-        _type = kwargs["subject_type"]
-        _id = kwargs["subject_id"]
-        if _type != "user":
-            return Response([])
-        # 获取userid
-        user = User.objects.get(username=_id)
-        department_id_set = user.ancestor_department_ids
-
-        if not department_id_set:
-            return Response([])
-
-        # TODO: [重构] view 不应该有这么原子调用，而是封装在biz层，迁移到biz.subject
-        # 哪些部门被授权过
-        authorized_department_ids = PermTemplatePolicyAuthorized.objects.filter(
-            subject_type="department", subject_id__in=department_id_set
-        ).values_list("subject_id", flat=True)
-        authorized_department_ids = list(map(int, authorized_department_ids))  # 转为整型便于查询
-
-        # 查询被授过权的部门信息
-        data = [
-            {"id": dept.id, "name": dept.name, "full_name": dept.full_name}
-            for dept in Department.objects.filter(id__in=authorized_department_ids)
-        ]
-
-        return Response(data)
 
 
 class SubjectSystemViewSet(GenericViewSet):
@@ -161,12 +118,12 @@ class SubjectPolicyViewSet(GenericViewSet):
         tags=["subject"],
     )
     def list(self, request, *args, **kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
         slz = SystemQuerySLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
@@ -181,15 +138,17 @@ class SubjectPolicyViewSet(GenericViewSet):
     )
     @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
         slz = PolicyDeleteSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
         permission_logger.info("subject policy delete by user: %s", request.user.username)
 
+        # 为了记录审计日志，需要在删除前查询
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
         # 删除权限
@@ -209,9 +168,10 @@ class SubjectPolicyViewSet(GenericViewSet):
     )
     @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
     def update(self, request, *args, **kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
         slz = PolicyPartDeleteSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
-
         data = slz.validated_data
 
         policy_id = kwargs["pk"]
@@ -219,8 +179,6 @@ class SubjectPolicyViewSet(GenericViewSet):
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
-
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
         permission_logger.info("subject policy delete partial by user: %s", request.user.username)
 

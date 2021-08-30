@@ -14,16 +14,16 @@ from typing import Optional
 from celery import task
 
 from backend.apps.action.models import AggregateAction
+from backend.biz.system import SystemBiz
 from backend.service.action import ActionService
 from backend.service.models.action import Action
 from backend.service.models.instance_selection import ChainNode
-from backend.service.system import SystemService
 
 
 @task(ignore_result=True)
 def generate_action_aggregate():
     # 生成操作聚合配置
-    systems = SystemService().list()
+    systems = SystemBiz().list()
     action_svc = ActionService()
 
     # 编译每个系统

@@ -36,8 +36,8 @@ from backend.service.constants import RoleRelatedObjectType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
-from backend.service.models import Subject
-from backend.service.policy.query import Policy, PolicyQueryService
+from backend.service.models import Policy, Subject
+from backend.service.policy.query import PolicyQueryService
 from backend.service.role import RoleService, UserRole
 from backend.service.system import SystemService
 from backend.service.template import TemplateService
@@ -130,6 +130,7 @@ class GroupBiz:
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
+    batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
 
     def create_and_add_members(
         self, role_id: int, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int
@@ -190,9 +191,13 @@ class GroupBiz:
 
         return group_systems
 
-    def check_update_policies_resource_name(
-        self, system_id: str, template_id: int, policies: List[PolicyBean], subject: Subject
+    def check_update_policies_resource_name_and_role_scope(
+        self, role, system_id: str, template_id: int, policies: List[PolicyBean], subject: Subject
     ):
+        """
+        检查更新策略中增量数据实例名称
+        检查更新策略中增量数据是否满足角色的授权范围
+        """
         # 查询已授权的策略数据
         if template_id == 0:
             old_policies = parse_obj_as(List[PolicyBean], self.policy_query_svc.list_by_subject(system_id, subject))
@@ -206,38 +211,33 @@ class GroupBiz:
         # 校验新增数据资源实例名称是否正确
         added_policy_list.check_resource_name()
 
-    def preprocess_group_policies(self, role, system_id: str, policies: List[PolicyBean]):
-        """
-        用户组的policies预处理
-        """
         # 校验权限是否满足角色的管理范围
         scope_checker = RoleAuthorizationScopeChecker(role)
-        scope_checker.check_policies(system_id, policies)
-
-        self.action_check_biz.check(system_id, [ActionForCheck.parse_obj(p.dict()) for p in policies])
-
-        policy_list = PolicyBeanList(system_id, policies, need_ignore_path=True)
-
-        # 设置过期时间为永久
-        for p in policy_list.policies:
-            p.set_expired_at(PERMANENT_SECONDS)
-
-        return policy_list.policies
+        scope_checker.check_policies(system_id, added_policy_list.policies)
 
     def update_policies(self, role, group_id: int, system_id: str, template_id: int, policies: List[PolicyBean]):
         """
         更新用户组单个权限
         """
         subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
-        self.check_update_policies_resource_name(system_id, template_id, policies, subject)
-        policies = self.preprocess_group_policies(role, system_id, policies)
+        # 检查新增的实例名字, 检查新增的实例是否满足角色的授权范围
+        self.check_update_policies_resource_name_and_role_scope(role, system_id, template_id, policies, subject)
+        # 检查策略是否与操作信息匹配
+        self.action_check_biz.check(system_id, [ActionForCheck.parse_obj(p.dict()) for p in policies])
+
+        policy_list = PolicyBeanList(system_id, policies, need_ignore_path=True)
+        # 设置过期时间为永久
+        for p in policy_list.policies:
+            p.set_expired_at(PERMANENT_SECONDS)
 
         # 自定义权限
         if template_id == 0:
-            self.policy_operation_biz.update(system_id, subject, policies)
+            self.policy_operation_biz.update(system_id, subject, policy_list.policies)
         # 权限模板权限
         else:
-            self.template_svc.update_template_auth(subject, template_id, parse_obj_as(List[Policy], policies))
+            self.template_svc.update_template_auth(
+                subject, template_id, parse_obj_as(List[Policy], policy_list.policies)
+            )
 
     def _convert_to_subject_group_beans(self, relations: List[SubjectGroup]) -> List[SubjectGroupBean]:
         """
