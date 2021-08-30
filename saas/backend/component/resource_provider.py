@@ -13,6 +13,7 @@ import time
 import traceback
 from functools import partial
 from typing import Any, Dict, List, Tuple, Union
+from urllib.parse import urlparse
 
 import requests
 from aenum import LowerStrEnum, auto
@@ -104,10 +105,19 @@ class ResourceProviderClient:
         }
 
         # 由于request_id可能在请求返回header被更新，所以需要lazyObject
-        base_msg = SimpleLazyObject(
+        # 该信息用于日志
+        base_log_msg = SimpleLazyObject(
             lambda: "resource_provider[system: {}, resource_type: {}] API[request_id: {}]".format(
                 self.system_id, self.resource_type_id, self.request_id
             )
+        )
+
+        # 回调请求的详细信息
+        request_detail_info = (
+            f"request detail info: system_id={self.system_id}, "
+            f"resource_type_id={self.resource_type_id}, "
+            f"url_path={urlparse(self.url).path}, "
+            f"data.method={data['method']}"
         )
 
         try:
@@ -118,14 +128,14 @@ class ResourceProviderClient:
             latency = int((time.time() - st) * 1000)
             # 打印INFO日志，用于调试时使用
             logger.info(
-                f"{base_msg}, latency: {latency} ms, info: {kwargs}, "
+                f"{base_log_msg}, latency: {latency} ms, info: {kwargs}, "
                 f"status_code: {resp.status_code}, response_content: {resp.text}"
             )
         except requests.exceptions.RequestException:
-            logger.exception(f"{base_msg} RequestException, info: {kwargs}")
+            logger.exception(f"{base_log_msg} RequestException, info: {kwargs}")
             trace_func(exc=traceback.format_exc())
             # 接口不可达
-            raise error_codes.RESOURCE_PROVIDER_ERROR.format("system: `{self.system_id}`, unreachable interface call")
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(f"unreachable interface call, {request_detail_info}")
 
         try:
             # 非2xx类都会异常
@@ -133,34 +143,35 @@ class ResourceProviderClient:
             # 返回可能非JSON
             resp = resp.json()
         except requests.exceptions.HTTPError:
-            logger.exception(f"{base_msg} StatusCodeException, info: {kwargs}")
+            logger.exception(f"{base_log_msg} StatusCodeException, info: {kwargs}")
             trace_func(exc=traceback.format_exc())
             # 接口状态码异常
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"system: `{self.system_id}`, interface status code: `{resp.status_code}` error"
+                f"interface status code: `{resp.status_code}` error, {request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
             logger.error(
-                f"{base_msg} RespDataException, info: {kwargs}, response_content: {resp.text}， error: {error}"
+                f"{base_log_msg} RespDataException, info: {kwargs}, response_content: {resp.text}， error: {error}"
             )
             trace_func(exc=traceback.format_exc())
             # 数据异常，JSON解析出错
-            raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(f"error: {error}")
+            raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(f"error: {error}, {request_detail_info}")
 
         code = resp["code"]
         if code == 0:
             # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
             return resp["data"]
 
-        logger.error(f"{base_msg} Return Code Not Zero, info: %s, resp: %s", kwargs, resp)
+        logger.error(f"{base_log_msg} Return Code Not Zero, info: %s, resp: %s", kwargs, resp)
 
         # code不同值代表不同意思，401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
         if code not in ResponseCodeToErrorDict:
             trace_func(code=code)
-            raise error_codes.RESOURCE_PROVIDER_ERROR.format("system: `{self.system_id}`, Unknown Error")
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(f"Unknown Error, {request_detail_info}")
 
         raise ResponseCodeToErrorDict[code]["error"].format(
-            message=resp.get("message", ""), replace=ResponseCodeToErrorDict[code]["replace_message"]
+            message=f"{resp.get('message', '')}, {request_detail_info}",
+            replace=ResponseCodeToErrorDict[code]["replace_message"],
         )
 
     def _handle_empty_data(self, data, default_empty_data: Union[List, Dict]) -> Any:
