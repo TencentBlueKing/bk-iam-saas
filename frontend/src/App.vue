@@ -77,10 +77,11 @@
             ...mapGetters(['mainContentLoading', 'user'])
         },
         watch: {
-            '$route' (to) {
+            '$route' (to, from) {
                 this.layoutCls = kebabCase(to.name) + '-container'
                 this.routeName = to.name
                 this.userGroupId = to.params.id
+                this.$store.commit('updateRoute', from.name)
             },
             user: {
                 handler (value) {
