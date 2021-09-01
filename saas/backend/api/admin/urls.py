@@ -8,17 +8,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf.urls import include, url
+from django.urls import path
+
+from . import views
 
 urlpatterns = [
-    # 授权类API
-    url(r"^authorization/", include("backend.api.authorization.urls")),
-    # 无权限跳转
-    url(r"^application/", include("backend.api.application.urls")),
-    # 初始化
-    url(r"^initialization/", include("backend.api.initialization.urls")),
-    # 管理类API
-    url(r"^management/", include("backend.api.management.urls")),
-    # 超级管理类API
-    url(r"^admin/", include("backend.api.admin.urls")),
+    # 用户组
+    path("groups/", views.AdminGroupViewSet.as_view({"get": "list"}), name="open.admin.group"),
+    # 用户组成员
+    path(
+        "groups/<int:id>/members/",
+        views.AdminGroupMemberViewSet.as_view({"get": "list"}),
+        name="open.admin.group_member",
+    ),
+    # Subject
+    path(
+        "subjects/<str:subject_type>/<str:subject_id>/groups/",
+        views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
+        name="open.admin.subject_group",
+    ),
 ]
