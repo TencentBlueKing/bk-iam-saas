@@ -20,7 +20,7 @@ from django.utils.translation import gettext as _
 from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
-from backend.common.time import expired_at_display
+from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
 from backend.service.constants import ANY_ID
 from backend.service.models import (
@@ -718,6 +718,15 @@ class PolicyBeanList:
     def get(self, action_id: str) -> Optional[PolicyBean]:
         return self._policy_dict.get(action_id, None)
 
+    @staticmethod
+    def _generate_expired_at(expired_at: int) -> int:
+        """生成一个新策略的默认过期时间"""
+        # 如果传入设置的过期时间, 大于当前时间，且小于或等于永久，则使用它
+        if time.time() < expired_at <= PERMANENT_SECONDS:
+            return expired_at
+
+        return generate_default_expired_at()
+
     # For Operation
     def split_to_creation_and_update_for_grant(
         self, new_policy_list: "PolicyBeanList"
@@ -733,6 +742,8 @@ class PolicyBeanList:
             # 已有的权限不存在, 则创建
             old_policy = self.get(p.action_id)
             if not old_policy:
+                # 对于新策略，需要校验策略的过期时间是否合理，不合理则生成一个默认的过期时间
+                p.set_expired_at(self._generate_expired_at(p.expired_at))
                 create_policies.append(p)
                 continue
 
@@ -1001,8 +1012,8 @@ def policy_change_lock(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         # Note: 必须保证被装饰的函数有参数system_id和subject
-        system_id = kwargs["system_id"] if "system_id" in kwargs else args[1]
-        subject = kwargs["subject"] if "subject" in kwargs else args[2]
+        system_id = kwargs["system_id"] if "system_id" in kwargs else args[0]
+        subject = kwargs["subject"] if "subject" in kwargs else args[1]
         # TODO: 后面重构cache模块时统一定义前缀
         lock_key = f"bk_iam:lock:{system_id}:{subject.type}:{subject.id}"
         # 加 system + subject 锁
