@@ -12,11 +12,12 @@ from typing import List
 
 from rest_framework import exceptions
 
+from backend.api.constants import ALLOW_ANY
 from backend.api.mixins import SystemClientCheckMixin
 from backend.apps.role.models import RoleRelatedObject, RoleSource
 from backend.service.constants import RoleRelatedObjectType, RoleSourceTypeEnum
 
-from .constants import ALLOW_ANY, ManagementAPIEnum, VerifyAPIObjectTypeEnum
+from .constants import ManagementAPIEnum, VerifyAPIObjectTypeEnum
 from .models import ManagementAPIAllowListConfig, SystemAllowAuthSystem
 
 
