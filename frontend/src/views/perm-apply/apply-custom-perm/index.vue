@@ -1794,13 +1794,26 @@
                     this.tableData.forEach(item => {
                         // item.expired_at = 1627616000
 
-                        // 新增的权限不判断是否过期
-                        if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
-                            item.isShowRenewal = true
-                            item.isExpired = true
-                            // this.$set(item, 'isShowRenewal', true)
-                            // this.$set(item, 'isExpired', true)
+                        // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
+                        if (item.tag === 'add') {
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.expired_at = 15552000
+                            }
+                        } else {
+                            // 新增的权限不判断是否过期
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.isShowRenewal = true
+                                item.isExpired = true
+                            }
                         }
+
+                        // // 新增的权限不判断是否过期
+                        // if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
+                        //     item.isShowRenewal = true
+                        //     item.isExpired = true
+                        //     // this.$set(item, 'isShowRenewal', true)
+                        //     // this.$set(item, 'isExpired', true)
+                        // }
                     })
                     this.newTableList = _.cloneDeep(this.tableData.filter(item => {
                         return !item.isExpiredAtDisabled
