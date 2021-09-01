@@ -13,28 +13,25 @@ from django.db import models
 from backend.api.constants import ALLOW_ANY
 from backend.common.models import BaseModel
 
-from .constants import AuthorizationAPIEnum
+from .constants import AdminAPIEnum
 
 
-class AuthAPIAllowListConfig(BaseModel):
-    """
-    授权API白名单配置
-    """
+class AdminAPIAllowListConfig(BaseModel):
+    """Admin API允许app_code白名单"""
 
-    type = models.CharField("API类型", choices=AuthorizationAPIEnum.get_choices(), max_length=32)
-    system_id = models.CharField("接入系统", max_length=32)
-    object_id = models.CharField("资源类型或操作ID", max_length=32, help_text="*代表任意")
+    api = models.CharField("API", choices=AdminAPIEnum.get_choices(), max_length=32, help_text="*代表任意")
+    app_code = models.CharField("API调用者", max_length=32)
 
     class Meta:
-        verbose_name = "授权API白名单配置"
-        verbose_name_plural = "授权API白名单配置"
+        verbose_name = "Admin API允许的应用白名单"
+        verbose_name_plural = "Admin API允许的应用白名单"
         ordering = ["-id"]
-        index_together = ["system_id", "object_id"]
+        index_together = ["app_code", "api"]
 
     @classmethod
-    def is_allowed(cls, _type: str, system_id: str, object_id: str):
+    def is_allowed(cls, app_code: str, api: str):
         """
-        检测是否允许[某类API允许被某个系统的某个操作/Action调用]
-        由于支持配置任意，所以判断是需要判断是否包含了任意
+        检测某个AppCode是否允许调用某个Admin API
+        由于支持配置任意，所以判断还需要判断是否包含了任意
         """
-        return cls.objects.filter(type=_type, system_id=system_id, object_id__in=[ALLOW_ANY, object_id]).exists()
+        return cls.objects.filter(app_code=app_code, api__in=[ALLOW_ANY, api]).exists()

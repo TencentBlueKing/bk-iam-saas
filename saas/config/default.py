@@ -55,6 +55,7 @@ INSTALLED_APPS += (
     "backend.apps.template",
     "backend.apps.organization",
     "backend.api.authorization",
+    "backend.api.admin",
     "backend.api.management",
     "backend.apps.role",
     "backend.apps.user",
@@ -248,7 +249,7 @@ if locals().get("DISABLED_APPS"):
 # Django RestFramework
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),

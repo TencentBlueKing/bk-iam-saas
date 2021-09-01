@@ -8,17 +8,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf.urls import include, url
+from .group import AdminGroupMemberViewSet, AdminGroupViewSet
+from .subject import AdminSubjectGroupViewSet
 
-urlpatterns = [
-    # 授权类API
-    url(r"^authorization/", include("backend.api.authorization.urls")),
-    # 无权限跳转
-    url(r"^application/", include("backend.api.application.urls")),
-    # 初始化
-    url(r"^initialization/", include("backend.api.initialization.urls")),
-    # 管理类API
-    url(r"^management/", include("backend.api.management.urls")),
-    # 超级管理类API
-    url(r"^admin/", include("backend.api.admin.urls")),
+__all__ = [
+    "AdminGroupViewSet",
+    "AdminGroupMemberViewSet",
+    "AdminSubjectGroupViewSet",
 ]

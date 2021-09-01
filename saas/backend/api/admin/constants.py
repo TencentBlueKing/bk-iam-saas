@@ -12,25 +12,21 @@ from aenum import LowerStrEnum, auto, skip
 
 from backend.util.enum import ChoicesEnum
 
-# 各种API白名单控制时，表示允许任意API
-ALLOW_ANY = "*"
 
+class AdminAPIEnum(ChoicesEnum, LowerStrEnum):
+    """枚举每个Admin API"""
 
-class BKNonEntityUser(ChoicesEnum, LowerStrEnum):
-    """
-    蓝鲸非实体用户，主要用于API调用时的审计，区别于正常的实体用户
-    """
-
-    # 双下划线是为了避免与实体用户名冲突
-    BK__UNVERIFIED_USER = auto()
-    BK__ANONYMOUS_USER = auto()
+    # 用户组
+    GROUP_LIST = auto()
+    # 用户组成员
+    GROUP_MEMBER_LIST = auto()
+    # Subject
+    SUBJECT_JOINED_GROUP_LIST = auto()
 
     _choices_labels = skip(
         (
-            # 主要用于API调用时，ESB/APIGW传递过来的Jwt.user.verified为False时，Jwt.user.username是不可信的，有可能是很随意的字符串
-            # 所以可以使用BK__UNVERIFIED_USER统一表示这类用户
-            (BK__UNVERIFIED_USER, "未认证的用户"),
-            # 主要用于API调用时，ESB/APIGW传递过来的Jwt.user为空时，但审计等其他场景需要做标识
-            (BK__ANONYMOUS_USER, "匿名用户，即空用户"),
+            (GROUP_LIST, "获取用户组列表"),
+            (GROUP_MEMBER_LIST, "获取用户组成员列表"),
+            (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
         )
     )
