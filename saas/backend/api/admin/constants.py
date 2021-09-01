@@ -22,14 +22,11 @@ class AdminAPIEnum(ChoicesEnum, LowerStrEnum):
     GROUP_MEMBER_LIST = auto()
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
-    # User
-    USER_GROUP_INHERITED_FROM_DEPARTMENT_LIST = auto()
 
     _choices_labels = skip(
         (
             (GROUP_LIST, "获取用户组列表"),
             (GROUP_MEMBER_LIST, "获取用户组成员列表"),
             (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
-            (USER_GROUP_INHERITED_FROM_DEPARTMENT_LIST, "获取用户继承来着部门的用户组列表"),
         )
     )

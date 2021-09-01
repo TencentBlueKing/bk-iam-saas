@@ -57,6 +57,7 @@ class AdminAPIPermission(permissions.IsAuthenticated):
         # 所有API认证鉴权所需
         app_code = request.bk_app_code
 
+        # TODO: 添加缓存，避免每次请求都进行DB查询，同时对于managment和authorization也需要添加
         is_allowed = AdminAPIAllowListConfig.is_allowed(app_code, api)
         if not is_allowed:
             raise exceptions.PermissionDenied(detail=f"app_code({app_code}) do not be allowed to call api({api})")

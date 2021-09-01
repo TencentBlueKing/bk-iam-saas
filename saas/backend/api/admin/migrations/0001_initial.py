@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('updater', models.CharField(max_length=64, verbose_name='更新者')),
                 ('created_time', models.DateTimeField(auto_now_add=True)),
                 ('updated_time', models.DateTimeField(auto_now=True)),
-                ('api', models.CharField(choices=[('group_list', '获取用户组列表'), ('group_member_list', '获取用户组成员列表'), ('subject_joined_group_list', '获取Subject加入的用户组列表'), ('user_group_inherited_from_department_list', '获取用户继承来着部门的用户组列表')], help_text='*代表任意', max_length=32, verbose_name='API')),
+                ('api', models.CharField(choices=[('group_list', '获取用户组列表'), ('group_member_list', '获取用户组成员列表'), ('subject_joined_group_list', '获取Subject加入的用户组列表')], help_text='*代表任意', max_length=32, verbose_name='API')),
                 ('app_code', models.CharField(max_length=32, verbose_name='API调用者')),
             ],
             options={
