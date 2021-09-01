@@ -223,6 +223,7 @@ class InstanceBeanList:
             instance = self.get(new_instance.type)
             if not instance:
                 self.instances.append(new_instance)
+                self._instance_dict[new_instance.type] = new_instance
             else:
                 instance.add_paths(new_instance.path)
 
@@ -236,6 +237,7 @@ class InstanceBeanList:
             instance.remove_paths(new_instance.path)
 
         self.instances = [instance for instance in self.instances if not instance.is_empty]
+        self._instance_dict = {one.type: one for one in self.instances}
         return self
 
 
@@ -353,7 +355,7 @@ class ConditionBeanList:
         裁剪
         """
         # 如果新旧条件都是任意, 相当于清空
-        if self.is_any and condition_list.is_any == 0:
+        if self.is_any and condition_list.is_any:
             self.is_empty = True
             return self
 
@@ -506,6 +508,7 @@ class RelatedResourceBeanList:
 
             condition_list = condition_list.add(new_condition_list)
             resource_type.condition = condition_list.conditions
+            self._condition_list_dict[(resource_type.system_id, resource_type.type)] = condition_list
 
         return self
 
@@ -644,7 +647,7 @@ class PolicyBean(Policy):
         裁剪
         """
         if self.is_unrelated():
-            return self
+            raise PolicyEmptyException
 
         resource_type_list = RelatedResourceBeanList(self.related_resource_types)
         resource_type_list.sub(RelatedResourceBeanList(related_resource))
