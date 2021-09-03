@@ -62,8 +62,8 @@
                                     :id="option.id"
                                     :name="option.name">
                                     <span style="display: block; line-height: 32px;"
-                                        :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.nodes.join(' -> ')}`">
-                                        {{ option.name }}
+                                        :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">
+                                        {{ option.name }}{{option}}
                                     </span>
                                 </bk-option>
                                 <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }"
@@ -154,7 +154,7 @@
             curTitle () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).nodes.join(' -> ')}`
+                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`
                     }
                     return ''
                 }
