@@ -252,6 +252,12 @@
                 }
             },
 
+            /**
+             * @description: 子item
+             * @param {*} flag
+             * @param {*} item
+             * @return {*}
+             */
             async handleTemplateExpanded (flag, item) {
                 if (!flag) {
                     this.$set(item, 'isEdit', false)

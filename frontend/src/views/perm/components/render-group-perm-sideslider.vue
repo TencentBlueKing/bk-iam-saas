@@ -14,6 +14,7 @@
             slot="content"
             class="content-wrapper"
             v-bkloading="{ isLoading, opacity: 1 }">
+            <!-- 组权限 -->
             <render-tab
                 v-if="!isLoading && showMember"
                 :active.sync="tabActive"
@@ -41,6 +42,7 @@
                     mode="detail"
                     @on-init="handleOnInit" />
             </section>
+            <!-- 这一块代码不会执行 -->
             <section v-show="!isPerm">
                 <render-member-item :data="userList" type="user" v-if="userList.length > 0" />
                 <render-member-item :data="departmentList" type="department" v-if="departmentList.length > 0" />
@@ -144,7 +146,12 @@
                     this.requestQueue.shift()
                 }
             },
-
+            
+            /**
+             * @description: 组件初始化方法
+             * @param {*} flag
+             * @return {*}
+             */
             handleOnInit (flag) {
                 if (!flag) {
                     this.requestQueue.shift()
