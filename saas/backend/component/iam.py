@@ -116,16 +116,6 @@ def list_instance_selection(system_id: str) -> List[Dict]:
     return _call_iam_api(http_get, url_path, data={})
 
 
-def get_backend_expression(system_id: str, subject: Dict, action_id: str) -> Dict:
-    """
-    查询单个policy(个人)
-    """
-    url_path = f"/api/v1/web/systems/{system_id}/custom-policy"
-    return _call_iam_api(
-        http_get, url_path, data={"subject_type": subject["type"], "subject_id": subject["id"], "action_id": action_id}
-    )
-
-
 def get_action_groups(system_id: str) -> List[Dict]:
     """
     获取指定操作类型的关联拓扑
