@@ -574,6 +574,7 @@
                 window.changeDialog = true
                 this.commonActions = []
                 this.linearAction = []
+                this.curSelectActions = []
                 this.requestQueue = ['actions', 'commonActions']
                 this.fetchActions(value)
                 this.fetchCommonActions(value)

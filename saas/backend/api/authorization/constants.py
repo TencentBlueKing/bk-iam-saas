@@ -12,9 +12,6 @@ from aenum import LowerStrEnum, auto, skip
 
 from backend.util.enum import ChoicesEnum
 
-# 白名单控制时的任意
-ALLOW_ANY = "*"
-
 
 class OperateEnum(ChoicesEnum, LowerStrEnum):
     GRANT = auto()

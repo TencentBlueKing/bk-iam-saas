@@ -10,9 +10,10 @@ specific language governing permissions and limitations under the License.
 """
 from django.db import models
 
+from backend.api.constants import ALLOW_ANY
 from backend.common.models import BaseModel
 
-from .constants import ALLOW_ANY, ManagementAPIEnum
+from .constants import ManagementAPIEnum
 
 
 class ManagementAPIAllowListConfig(BaseModel):
