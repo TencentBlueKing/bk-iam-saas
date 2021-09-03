@@ -423,6 +423,7 @@ class ChainList:
 
         return new_chain_list if new_chain_list.length != 0 else None
 
+    @property
     def length(self) -> int:
         return len(self.chains)
 
