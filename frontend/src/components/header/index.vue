@@ -1,4 +1,5 @@
 <template>
+    <!-- eslint-disable max-len -->
     <header :class="['header-layout', { 'nav-sticked': navStick }]">
         <iam-guide
             v-if="showGuide"
@@ -13,7 +14,6 @@
             @click="back">
             <div v-if="!isHide">
                 <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-                <!-- eslint-disable max-len -->
                 <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">{{ $t(`m.common['用户组']`) }}【{{userGroupName}}】{{ $t(`m.common['添加权限']`) }}</h2>
                 <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
             </div>
@@ -31,46 +31,6 @@
                 {{ curIdentity !== 'STAFF' ? curIdentity : user.username }}
                 <Icon type="down-angle" :class="['user-name-angle', { dropped: isShowUserDropdown }]" />
             </p>
-            <!-- <transition name="toggle-slide">
-                <ul class="user-dropdown"
-                    :class="isShowGradingWrapper ? 'reset-style' : ''"
-                    v-show="isShowUserDropdown"
-                    v-bk-clickoutside="handleHideDropdown">
-                    <div class="current-user-info" :class="curIdentity === '' ? 'reset-padding-bottom' : ''">
-                        <div class="cur-identity-info set-margin-bottom" v-if="curIdentity !== 'STAFF'">
-                            <div class="icon">
-                                <Icon :type="iconMap[curRole]" />
-                            </div>
-                            <div class="info">
-                                <p class="text">
-                                    {{ $t(`m.nav['当前身份']`) }}：
-                                    <Icon :type="identityIconMap[curRole]" />
-                                </p>
-                                <p class="text">
-                                    {{ curIdentity }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="cur-login-info">
-                            <div class="cur-icon" :class="['', 'STAFF'].includes(curIdentity) ? 'primary' : ''">
-                                {{ curAccountLogo }}
-                            </div>
-                            <div class="info">
-                                <p class="text">{{ $t(`m.nav['登录账号']`) }}：</p>
-                                <p class="text">
-                                    {{ user.username }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <li :class="['user-dropdown-item mt', { 'active': isShowGradingWrapper }]"
-                        v-if="roleList.length > 0"
-                        @click="handleSwitchIdentity">
-                        <Icon type="switch-identity" />
-                        {{ $t(`m.nav['切换身份']`) }}
-                    </li>
-                </ul>
-            </transition> -->
             <transition name="toggle-slide">
                 <section
                     class="iam-grading-admin-list-wrapper"
@@ -79,7 +39,7 @@
                     v-bk-clickoutside="handleClickOutSide">
                     <div :class="['userInfo',{ 'lineHeight': curRole === 'staff' }]">
                         <p :class="userName">{{ user.username }}</p>
-                        <Icon :type="identityIconMap[curRole]" />
+                        <Icon :type="identityIconMap[curRole] || ''" />
                     </div>
                     <div class="search-input">
                         <bk-input
@@ -92,9 +52,7 @@
                         </bk-input>
                         <div v-if="isShowSearch" class="search-nextfix">
                             <slot name="nextfix">
-                                <i
-                                    class="bk-icon icon-search search-nextfix-icon"
-                                    :class="{ 'is-focus': focused }" />
+                                <i class="bk-icon icon-search search-nextfix-icon" />
                             </slot>
                         </div>
                     </div>
@@ -112,7 +70,6 @@
                                 <i v-if="isShowSuperManager(item)" class="superManagerIcon"></i>
                                 <i v-if="isShowSystemManager(item)" class="systemManagerIcon"></i>
                                 <i v-if="isShowRatingManager(item)" class="ratingManagerIcon"></i>
-                                <!-- <Icon :type="iconMap[item.type]" class="grading-icon" /> -->
                                 <span class="name">{{ item.name }}</span>
                                 <Icon v-if="item.id === curRoleId" type="check-small" class="checked" />
                             </li>
@@ -152,7 +109,7 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    import IamGuide from '@/components/iam-guide'
+    import IamGuide from '@/components/iam-guide/index.vue'
     import { leavePageConfirm } from '@/common/leave-page-confirm'
     import { il8n, language } from '@/language'
     import { bus } from '@/common/bus'
@@ -160,6 +117,7 @@
     import SystemLog from '../system-log'
     import { getRouterDiff } from '@/common/router-handle'
 
+    // 有选项卡的页面，user-group-detail 以及 perm-template-detail
     const getTabData = (routerName) => {
         const map = {
             '': [],
@@ -242,12 +200,8 @@
                 type: String,
                 default: ''
             },
-            userGroupName: {
-                type: String,
-                default: ''
-            },
             userGroupId: {
-                type: Number
+                type: String
             }
         },
         data () {
@@ -297,7 +251,6 @@
                 'backRouter',
                 'user',
                 'mainContentLoading',
-                'versionLogs',
                 'roleList'
             ]),
             style () {
@@ -403,12 +356,7 @@
             handleClickOutSide (e) {
                 this.isShowGradingWrapper = false
             },
-            // handleOpenUserPanel () {
-            //     this.isShowUserDropdown = !this.isShowUserDropdown
-            //     if (!this.isShowUserDropdown) {
-            //         this.isShowGradingWrapper = false
-            //     }
-            // },
+
             // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 分级管理员
             isShowSuperManager (value) {
                 if (value.type === 'super_manager') {
@@ -425,30 +373,9 @@
                     return true
                 }
             },
+
             handleInput (value) {
                 this.curRoleList = this.roleList.filter(item => item.name.indexOf(value) > -1)
-            },
-
-            handleHideDropdown () {
-                const curDom = Array.from(arguments)[0]
-                const className = curDom.target.className
-                if (!curDom.target || !className || !className.indexOf) {
-                    return
-                }
-                if (className.indexOf('user-name') > -1
-                    || className.indexOf('user-name-angle') > -1
-                    || className.indexOf('iam-grading-admin-list-wrapper') > -1
-                    || className.indexOf('grading-item') > -1
-                    || className.indexOf('grading-icon') > -1
-                    || className.indexOf('bk-form-input') > -1
-                    || className.indexOf('clear-icon') > -1
-                    || className.indexOf('search-input') > -1) {
-                    return
-                }
-                if (this.isShowGradingWrapper) {
-                    this.isShowGradingWrapper = false
-                }
-                this.isShowUserDropdown = false
             },
 
             handleOpenVersion () {
@@ -487,16 +414,16 @@
                 }, _ => _)
             },
 
-            updateRouter (payload) {
-                this.$store.commit('updataRouterDiff', payload)
-                const difference = getRouterDiff(payload)
+            updateRouter (roleType) {
+                this.$store.commit('updataRouterDiff', roleType)
+                const difference = getRouterDiff(roleType)
                 const curRouterName = this.$route.name
                 if (difference.length) {
                     if (difference.includes(curRouterName)) {
                         this.$store.commit('setHeaderTitle', '')
                         window.localStorage.removeItem('iam-header-title-cache')
                         window.localStorage.removeItem('iam-header-name-cache')
-                        if (payload === 'staff' || payload === '') {
+                        if (roleType === 'staff' || roleType === '') {
                             this.$router.push({
                                 name: 'myPerm'
                             })
@@ -509,7 +436,12 @@
                         })
                         return
                     }
-                    if (['permTemplateCreate', 'permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'].includes(curRouterName)) {
+
+                    const permTemplateRoutes = [
+                        'permTemplateCreate', 'permTemplateDetail',
+                        'permTemplateEdit', 'permTemplateDiff'
+                    ]
+                    if (permTemplateRoutes.includes(curRouterName)) {
                         this.$router.push({ name: 'permTemplate' })
                         return
                     }
@@ -548,8 +480,8 @@
                 }
             },
 
-            handleSelect (payload) {
-                if (this.curRoleId === payload.id) {
+            handleSelect (roleData) {
+                if (this.curRoleId === roleData.id) {
                     return
                 }
                 if (this.routeName === 'addGroupPerm') {
@@ -559,7 +491,7 @@
                 }
                 this.isShowGradingWrapper = false
                 this.isShowUserDropdown = false
-                this.handleSwitchRole(payload)
+                this.handleSwitchRole(roleData)
             },
 
             handleSwitchIdentity () {
