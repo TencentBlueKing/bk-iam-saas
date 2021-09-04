@@ -111,7 +111,7 @@
     import _ from 'lodash'
     import UserGroupDialog from '@/components/render-user-group-dialog'
     import IamSearchSelect from '@/components/iam-search-select'
-    import IamGuide from '@/components/iam-guide'
+    import IamGuide from '@/components/iam-guide/index.vue'
     import { fuzzyRtxSearch } from '@/common/rtx'
     import { buildURLParams } from '@/common/url'
     export default {

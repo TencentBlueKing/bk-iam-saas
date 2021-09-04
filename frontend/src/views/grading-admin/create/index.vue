@@ -158,7 +158,7 @@
     import _ from 'lodash'
     import { mapGetters } from 'vuex'
     import { guid } from '@/common/util'
-    import IamGuide from '@/components/iam-guide'
+    import IamGuide from '@/components/iam-guide/index.vue'
     import { leavePageConfirm } from '@/common/leave-page-confirm'
     import basicInfo from '../components/basic-info'
     import renderAction from '../common/render-action'
