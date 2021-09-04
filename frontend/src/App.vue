@@ -16,7 +16,6 @@
             :content="$t(`m.guide['创建审批流程']`)" />
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
-            :user-group-name="userGroupName"
             :user-group-id="userGroupId"
             v-if="isRouterAlive">
         </the-header>
@@ -31,9 +30,9 @@
     </div>
 </template>
 <script>
-    import theHeader from '@/components/header'
-    import theNav from '@/components/nav'
-    import IamGuide from '@/components/iam-guide'
+    import theHeader from '@/components/header/index.vue'
+    import theNav from '@/components/nav/index.vue'
+    import IamGuide from '@/components/iam-guide/index.vue'
     import { bus } from '@/common/bus'
     import { mapGetters } from 'vuex'
     import { afterEach } from '@/router'
@@ -69,7 +68,6 @@
                 groupGuideShow: false,
                 routeName: '',
                 userGroupId: '',
-                userGroupName: '',
                 isRouterAlive: true
             }
         },
@@ -103,6 +101,7 @@
             }
             this.fetchVersionLog()
             this.fetchNoviceGuide()
+
             const isPoll = window.localStorage.getItem('isPoll')
             if (isPoll) {
                 this.$store.commit('updateSync', true)
@@ -110,6 +109,7 @@
                     this.fetchSyncStatus()
                 }, 15000)
             }
+
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('show-login-modal')
                 bus.$off('close-login-modal')
@@ -155,6 +155,7 @@
                     this.isRouterAlive = true
                 })
             },
+
             /**
              * 刷新当前 route，这个刷新和 window.location.reload 不同，这个刷新会保持 route.params
              *
@@ -173,6 +174,11 @@
                     afterEach(route)
                 })
             },
+
+            /**
+             * 获取版本日志。header -> system-log
+             * version_log/
+             */
             async fetchVersionLog () {
                 try {
                     await this.$store.dispatch('versionLogInfo')
@@ -181,6 +187,10 @@
                 }
             },
 
+            /**
+             * 获取 guide 数据。iam-guide
+             * users/profile/newbie/
+             */
             async fetchNoviceGuide () {
                 try {
                     await this.$store.dispatch('getNoviceGuide')
@@ -189,6 +199,10 @@
                 }
             },
 
+            /**
+             * 获取同步组织架构的状态
+             * views/user/index.vue 发出同步组织架构的请求
+             */
             async fetchSyncStatus () {
                 try {
                     const res = await this.$store.dispatch('organization/getOrganizationsSyncTask')
@@ -203,7 +217,9 @@
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: status === 'Succeed' ? 'success' : 'error',
-                            message: status === 'Succeed' ? this.$t(`m.permTemplate['同步组织架构成功']`) : this.$t(`m.permTemplate['同步组织架构失败']`)
+                            message: status === 'Succeed'
+                                ? this.$t(`m.permTemplate['同步组织架构成功']`)
+                                : this.$t(`m.permTemplate['同步组织架构失败']`)
                         })
                     }
                 } catch (e) {
@@ -223,7 +239,7 @@
 </script>
 
 <style lang="postcss">
-    @import './css/index';
+    @import './css/index.css';
 
     .nav-layout {
         position: relative;
