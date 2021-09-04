@@ -110,7 +110,7 @@
             actions: {
                 handler (value) {
                     if (value.length > 0) {
-                        this.tableList = value.map(item => new GradePolicy(item))
+                        this.tableList = value.map(item => new GradePolicy(item)) // 继承。此处会新增字段
                         this.tableList.forEach(item => {
                             if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {
                                 this.systemFilter.push({
