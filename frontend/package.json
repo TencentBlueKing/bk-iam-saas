@@ -187,7 +187,9 @@
     "webpack-hot-middleware": "~2.25.0",
     "webpack-merge": "~4.2.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "webpack-filter-warnings-plugin": "~1.2.1"
+  },
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"

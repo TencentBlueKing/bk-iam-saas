@@ -67,18 +67,6 @@
             @on-cancel="cancelDelete"
             @on-sumbit="confirmDelete" />
 
-        <!-- <bk-dialog v-model="deleteDialogConf.visiable"
-            :loading="deleteDialogConf.loading"
-            :mask-close="false"
-            :esc-close="false"
-            :close-icon="false"
-            @confirm="confirmDelete"
-            @cancel="cancelDelete"
-            @after-leave="afterLeaveDelete"
-            title="退出用户组">
-            <p style="text-align: center;">{{deleteDialogConf.msg}}</p>
-        </bk-dialog> -->
-
         <render-perm-sideslider
             :show="isShowPermSidesilder"
             :name="curGroupName"
@@ -111,7 +99,7 @@
 </template>
 <script>
     import { mapGetters } from 'vuex'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderPermSideslider from '../components/render-group-perm-sideslider'
 
     export default {
@@ -119,6 +107,12 @@
         components: {
             DeleteDialog,
             RenderPermSideslider
+        },
+        props: {
+            personalGroupList: {
+                type: Array,
+                default: () => []
+            }
         },
         data () {
             return {
@@ -140,31 +134,28 @@
                 isShowPermSidesilder: false,
                 curGroupName: '',
                 curGroupId: '',
-                requestQueue: ['group'],
                 // 控制侧边弹出层显示
                 isShowGradeSlider: false,
                 sliderLoading: false,
                 gradeSliderTitle: ''
             }
         },
-        // this.$emit('toggle-loading', false)
         computed: {
             ...mapGetters(['user'])
         },
         watch: {
-            requestQueue (value) {
-                if (value.length < 1) {
-                    this.$emit('toggle-loading', false)
-                }
+            personalGroupList: {
+                handler (v) {
+                    if (v.length) {
+                        this.dataList.splice(0, this.dataList.length, ...v)
+                        this.initPageConf()
+                        this.curPageData = this.getDataByPage(this.pageConf.current)
+                    }
+                },
+                immediate: true
             }
         },
         async created () {
-            // 动态组件暂时不能使用 fetchPageData。这里 fetchPermGroups 请求需要用到 user.username
-            if (!this.user || !Object.keys(this.user).length) {
-                this.requestQueue.push('user')
-                await this.fetchUser()
-            }
-            await this.fetchPermGroups()
         },
         methods: {
             /**
@@ -180,8 +171,6 @@
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText
                     })
-                } finally {
-                    this.requestQueue.shift()
                 }
             },
 
@@ -189,27 +178,6 @@
                 this.curGroupName = ''
                 this.curGroupId = ''
                 this.isShowPermSidesilder = false
-            },
-
-            /**
-             * 获取权限模板列表
-             */
-            async fetchPermGroups () {
-                try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups')
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []))
-                    this.initPageConf()
-                    this.curPageData = this.getDataByPage(this.pageConf.current)
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
-                    })
-                } finally {
-                    this.requestQueue.shift()
-                }
             },
 
             /**
@@ -305,8 +273,7 @@
                     })
                     this.cancelDelete()
                     this.messageSuccess(this.$t(`m.info['退出成功']`), 2000)
-                    this.$emit('toggle-loading', true)
-                    await this.fetchPermGroups()
+                    this.$emit('refresh')
                 } catch (e) {
                     this.deleteDialogConf.loading = false
                     console.error(e)

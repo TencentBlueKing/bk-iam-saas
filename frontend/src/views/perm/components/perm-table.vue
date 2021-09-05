@@ -69,7 +69,7 @@
     import _ from 'lodash'
     import RenderDetail from './render-detail'
     import PermPolicy from '@/model/my-perm-policy'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
     export default {
         name: '',
