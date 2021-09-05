@@ -24,7 +24,7 @@
         </template>
         <bk-tab
             v-else
-            :active.sync="active"
+            :active="active"
             type="unborder-card"
             ext-cls="iam-my-perm-tab-cls"
             @tab-change="handleTabChange">
@@ -34,9 +34,11 @@
                 :key="index">
                 <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
                     <component
-                        v-show="!componentLoading"
+                        v-if="!componentLoading"
                         :is="active"
-                        @toggle-loading="toggleLoadingHandler"
+                        :personal-group-list="personalGroupList"
+                        :system-list="systemList"
+                        @refresh="fetchData"
                     ></component>
                 </div>
             </bk-tab-panel>
@@ -45,10 +47,10 @@
 </template>
 <script>
     import { buildURLParams } from '@/common/url'
-    import CustomPerm from './custom-perm'
-    import GroupPerm from './group-perm'
+    import CustomPerm from './custom-perm/index.vue'
+    import GroupPerm from './group-perm/index.vue'
     export default {
-        name: '',
+        name: 'MyPerm',
         components: {
             CustomPerm,
             GroupPerm
@@ -67,15 +69,15 @@
                 active: 'GroupPerm',
                 isEmpty: false,
                 isNoRenewal: false,
-                SoonGroupLength: '',
-                SoonPermLength: ''
-
+                soonGroupLength: 0,
+                soonPermLength: 0,
+                personalGroupList: [],
+                systemList: []
             }
         },
         created () {
             const query = this.$route.query
             if (query.tab) {
-                this.componentLoading = true
                 this.active = query.tab
             }
         },
@@ -84,22 +86,35 @@
                 await this.fetchData()
             },
 
-            handleTabChange (payload) {
-                this.componentLoading = true
-                window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`)
+            async handleTabChange (tabName) {
+                this.active = tabName
+                await this.fetchData()
+                window.history.replaceState({}, '', `?${buildURLParams({ tab: tabName })}`)
             },
+
             async fetchData () {
+                this.componentLoading = true
                 try {
                     const [res1, res2, res3, res4] = await Promise.all([
-                        this.fetchPermGroups(),
-                        this.fetchSystems(),
-                        this.fetchSoonGroupWithUser(),
-                        this.fetchSoonPerm()
+                        this.$store.dispatch('perm/getPersonalGroups'),
+                        this.$store.dispatch('permApply/getHasPermSystem'),
+                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
+                        this.$store.dispatch('renewal/getExpireSoonPerm')
+                        // this.fetchPermGroups(),
+                        // this.fetchSystems(),
+                        // this.fetchSoonGroupWithUser(),
+                        // this.fetchSoonPerm()
                     ])
-                    this.isEmpty = res1.data.length < 1 && res2.data.length < 1
-                    this.SoonGroupLength = res3.data.length
-                    this.SoonPermLength = res4.data.length
-                    this.isNoRenewal = this.SoonGroupLength < 1 && this.SoonPermLength < 1
+                    const personalGroupList = res1.data || []
+                    this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList)
+
+                    const systemList = res2.data || []
+                    this.systemList.splice(0, this.systemList.length, ...systemList)
+
+                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
+                    this.soonGroupLength = res3.data.length
+                    this.soonPermLength = res4.data.length
+                    this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -107,21 +122,23 @@
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText
                     })
+                } finally {
+                    this.componentLoading = false
                 }
             },
-            fetchSoonGroupWithUser () {
-                return this.$store.dispatch('renewal/getExpireSoonGroupWithUser')
-            },
-            fetchSoonPerm () {
-                return this.$store.dispatch('renewal/getExpireSoonPerm')
-            },
-            fetchSystems () {
-                return this.$store.dispatch('permApply/getHasPermSystem')
-            },
+            // fetchSoonGroupWithUser () {
+            //     return this.$store.dispatch('renewal/getExpireSoonGroupWithUser')
+            // },
+            // fetchSoonPerm () {
+            //     return this.$store.dispatch('renewal/getExpireSoonPerm')
+            // },
+            // fetchSystems () {
+            //     return this.$store.dispatch('permApply/getHasPermSystem')
+            // },
 
-            fetchPermGroups () {
-                return this.$store.dispatch('perm/getPersonalGroups')
-            },
+            // fetchPermGroups () {
+            //     return this.$store.dispatch('perm/getPersonalGroups')
+            // },
 
             handleGoApply () {
                 this.$router.push({
@@ -130,21 +147,21 @@
             },
 
             handleBatchRenewal () {
-                if (this.SoonGroupLength > 0 && this.SoonPermLength < 1) {
+                if (this.soonGroupLength > 0 && this.soonPermLength < 1) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
                             tab: 'group'
                         }
                     })
-                } else if (this.SoonPermLength > 0 && this.SoonGroupLength < 1) {
+                } else if (this.soonPermLength > 0 && this.soonGroupLength < 1) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
                             tab: 'custom'
                         }
                     })
-                } else if (this.SoonPermLength > 0 && this.SoonGroupLength > 0) {
+                } else if (this.soonPermLength > 0 && this.soonGroupLength > 0) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
@@ -152,15 +169,6 @@
                         }
                     })
                 }
-            },
-
-            /**
-             * 切换父组件的 loading 状态回调函数
-             *
-             * @param {boolean} isLoading loading 状态
-             */
-            toggleLoadingHandler (isLoading) {
-                this.componentLoading = isLoading
             }
         }
     }
