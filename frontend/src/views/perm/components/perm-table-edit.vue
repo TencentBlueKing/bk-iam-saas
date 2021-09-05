@@ -110,7 +110,7 @@
 <script>
     import _ from 'lodash'
     import IamPopoverConfirm from '@/components/iam-popover-confirm'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
     import PermPolicy from '@/model/my-perm-policy'
     import { leaveConfirm } from '@/common/leave-confirm'

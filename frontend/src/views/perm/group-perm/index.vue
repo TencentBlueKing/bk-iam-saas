@@ -67,18 +67,6 @@
             @on-cancel="cancelDelete"
             @on-sumbit="confirmDelete" />
 
-        <!-- <bk-dialog v-model="deleteDialogConf.visiable"
-            :loading="deleteDialogConf.loading"
-            :mask-close="false"
-            :esc-close="false"
-            :close-icon="false"
-            @confirm="confirmDelete"
-            @cancel="cancelDelete"
-            @after-leave="afterLeaveDelete"
-            title="退出用户组">
-            <p style="text-align: center;">{{deleteDialogConf.msg}}</p>
-        </bk-dialog> -->
-
         <render-perm-sideslider
             :show="isShowPermSidesilder"
             :name="curGroupName"
@@ -111,7 +99,7 @@
 </template>
 <script>
     import { mapGetters } from 'vuex'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderPermSideslider from '../components/render-group-perm-sideslider'
 
     export default {
