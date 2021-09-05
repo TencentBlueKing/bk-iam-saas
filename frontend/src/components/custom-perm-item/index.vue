@@ -23,7 +23,7 @@
 </template>
 <script>
     export default {
-        name: '',
+        name: 'CustomPermItem',
         props: {
             expanded: {
                 type: Boolean,
@@ -58,7 +58,9 @@
         },
         created () {
             if (this.onePerm === 1) {
-                this.handleExpanded()
+                this.$nextTick(() => {
+                    this.handleExpanded()
+                })
             }
         },
         methods: {

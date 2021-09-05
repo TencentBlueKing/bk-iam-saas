@@ -97,7 +97,7 @@
 <script>
     import _ from 'lodash'
     import { mapGetters } from 'vuex'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import CheckUpdateSideslider from '../../perm-template/components/check-update-sideslider'
     import PreviewResourceSideslider from '../../perm-template/components/preview-resource-sideslider'
     import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider'
