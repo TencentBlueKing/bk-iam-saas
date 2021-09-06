@@ -1,9 +1,6 @@
 <template>
     <div class="iam-my-perm-related-content">
-        <bk-tab
-            :active.sync="active"
-            type="unborder-card"
-            @tab-change="handleTabChange">
+        <bk-tab :active.sync="active" type="unborder-card" @tab-change="handleTabChange">
             <bk-tab-panel
                 v-for="(panel, index) in panels"
                 v-bind="panel"
@@ -12,10 +9,7 @@
                     <tree :data="panel.data" :has-border="true" />
                 </template>
                 <template v-else>
-                    <condition-detail
-                        :data="panel.data"
-                        :can-edit="canEdit"
-                        ref="conditionRef"
+                    <condition-detail :data="panel.data" :can-edit="canEdit" ref="conditionRef"
                         @on-change="handleChange" />
                 </template>
             </bk-tab-panel>
@@ -25,6 +19,7 @@
 <script>
     import Tree from '@/components/attach-action-preview/attach-action-tree'
     import ConditionDetail from '@/components/render-resource/edit'
+
     export default {
         name: '',
         components: {

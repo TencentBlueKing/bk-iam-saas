@@ -200,9 +200,9 @@
             /**
              * fetchData
              */
-            async fetchData (payload) {
+            async fetchData (params) {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalPolicy', { ...payload })
+                    const res = await this.$store.dispatch('perm/getPersonalPolicy', { ...params })
                     this.tableList = res.data.map(item => new PermPolicy(item))
                 } catch (e) {
                     console.error(e)
@@ -335,13 +335,6 @@
              */
             hideCancelDelete () {
                 this.deleteDialog.visible = false
-            },
-
-            /**
-             * handleViewCondition
-             */
-            handleViewCondition (row) {
-                console.warn('view')
             },
 
             /**

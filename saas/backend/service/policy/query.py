@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from django.db.models import Count
 
@@ -140,14 +140,6 @@ class PolicyQueryService:
         """
         backend_policies = iam.list_policy(subject.type, subject.id, expired_at)
         return [BackendThinPolicy(**policy) for policy in backend_policies]
-
-    def get_backend_expression_by_subject_action(
-        self, system_id: str, action_id: str, subject: Subject
-    ) -> Dict[str, Any]:
-        """
-        获取subject指定action的后端表达式
-        """
-        return iam.get_backend_expression(system_id, subject.dict(), action_id)
 
     def new_policy_list_by_subject(self, system_id: str, subject: Subject) -> PolicyList:
         return PolicyList(self.list_by_subject(system_id, subject))

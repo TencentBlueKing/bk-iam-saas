@@ -1,21 +1,21 @@
 <template>
     <div class="my-perm-custom-perm">
         <template v-if="hasPerm">
-            <custom-perm-item
-                v-for="(sys, sysIndex) in dataList"
+            <custom-perm-system-policy
+                v-for="(sys, sysIndex) in systemPolicyList"
                 :key="sys.id"
                 :expanded.sync="sys.expanded"
                 :ext-cls="sysIndex > 0 ? 'iam-perm-ext-cls' : ''"
-                :class="sysIndex === dataList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
+                :class="sysIndex === systemPolicyList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
                 :title="sys.name"
                 :perm-length="sys.count"
                 :one-perm="onePerm"
                 @on-expanded="handleExpanded(...arguments, sys)">
-                <perm-table
+                <custom-perm-table
                     :key="sys.id"
                     :system-id="sys.id"
                     @after-delete="handleAfterDelete(...arguments, sysIndex)" />
-            </custom-perm-item>
+            </custom-perm-system-policy>
         </template>
         <template v-else>
             <div class="my-perm-custom-perm-empty-wrapper">
@@ -26,14 +26,15 @@
     </div>
 </template>
 <script>
-    import CustomPermItem from '@/components/custom-perm-item/index.vue'
-    import PermTable from '../components/perm-table-edit'
+    import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue'
     import PermSystem from '@/model/my-perm-system'
+    import CustomPermTable from './custom-perm-table.vue'
+
     export default {
-        name: '',
+        name: 'CustomPerm',
         components: {
-            CustomPermItem,
-            PermTable
+            CustomPermSystemPolicy,
+            CustomPermTable
         },
         props: {
             systemList: {
@@ -44,20 +45,20 @@
         data () {
             return {
                 onePerm: '',
-                dataList: []
+                systemPolicyList: []
             }
         },
         computed: {
             hasPerm () {
-                return this.dataList.length > 0
+                return this.systemPolicyList.length > 0
             }
         },
         watch: {
             systemList: {
                 handler (v) {
-                    const dataList = v.map(item => new PermSystem(item))
-                    this.dataList.splice(0, this.dataList.length, ...dataList)
-                    this.onePerm = dataList.length
+                    const systemPolicyList = v.map(item => new PermSystem(item))
+                    this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList)
+                    this.onePerm = systemPolicyList.length
                 },
                 immediate: true,
                 deep: true
@@ -74,10 +75,10 @@
              */
             handleExpanded (value, payload) {},
 
-            handleAfterDelete (payload, sysIndex) {
-                --this.dataList[sysIndex].count
-                if (this.dataList[sysIndex].count < 1) {
-                    this.dataList.splice(sysIndex, 1)
+            handleAfterDelete (policyListLen, sysIndex) {
+                --this.systemPolicyList[sysIndex].count
+                if (this.systemPolicyList[sysIndex].count < 1) {
+                    this.systemPolicyList.splice(sysIndex, 1)
                 }
             }
         }

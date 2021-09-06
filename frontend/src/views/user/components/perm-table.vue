@@ -205,13 +205,6 @@
             },
 
             /**
-             * handleViewCondition
-             */
-            handleViewCondition (row) {
-                console.warn('view')
-            },
-
-            /**
              * handleViewResource
              */
             handleViewResource (payload) {
