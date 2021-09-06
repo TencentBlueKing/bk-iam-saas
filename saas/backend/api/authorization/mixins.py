@@ -72,7 +72,7 @@ class AuthViewMixin:
         if operate == OperateEnum.GRANT.value:
             action_ids = [p.action_id for p in policy_list.policies]
             self.policy_operation_biz.alter(system_id, subject, policy_list.policies)
-            policies = self.policy_query_biz.list_by_subject_and_action(system_id, subject, action_ids)
+            policies = self.policy_query_biz.list_by_subject(system_id, subject, action_ids)
         elif operate == OperateEnum.REVOKE.value:
             policies = self.policy_operation_biz.revoke(system_id, subject, policy_list.policies)
 
