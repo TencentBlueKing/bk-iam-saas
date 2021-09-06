@@ -23,7 +23,7 @@
 </template>
 <script>
     export default {
-        name: 'CustomPermItem',
+        name: 'CustomPermSystemPolicy',
         props: {
             expanded: {
                 type: Boolean,

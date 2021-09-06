@@ -49,6 +49,7 @@
     import { buildURLParams } from '@/common/url'
     import CustomPerm from './custom-perm/index.vue'
     import GroupPerm from './group-perm/index.vue'
+
     export default {
         name: 'MyPerm',
         components: {

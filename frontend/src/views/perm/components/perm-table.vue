@@ -170,10 +170,6 @@
                 this.deleteDialog.visible = false
             },
 
-            handleViewCondition (row) {
-                console.warn('view')
-            },
-
             handleViewResource (payload) {
                 this.curId = payload.id
                 const params = []
