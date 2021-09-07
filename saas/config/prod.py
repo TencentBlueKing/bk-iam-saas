@@ -158,6 +158,3 @@ CACHES = {
         },
     }
 }
-
-# iam backend host
-BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
