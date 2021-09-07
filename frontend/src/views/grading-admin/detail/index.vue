@@ -94,6 +94,11 @@
             }
         },
         methods: {
+            /**
+             * @description: fetchPageData 进入页面时在路由文件中统一请求 @/router/index.js
+             * @param {*}
+             * @return {*}
+             */
             async fetchPageData () {
                 await this.fetchRatingManagerDetail()
             },

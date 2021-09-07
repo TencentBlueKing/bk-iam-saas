@@ -75,7 +75,7 @@
             curCom () {
                 let com = ''
                 for (const [key, value] of this.comMap.entries()) {
-                    if (key.includes(this.currentApplyData.type)) {
+                    if (key.includes(this.currentApplyData.type)) { // 根据后台返回值渲染动态组件
                         com = value
                         break
                     }
