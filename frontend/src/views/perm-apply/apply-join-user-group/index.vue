@@ -177,7 +177,9 @@
             }
         },
         created () {
-            this.searchParams = this.$route.params
+            this.searchParams = this.$route.query
+            delete this.searchParams.limit
+            delete this.searchParams.current
             this.curRole = this.user.role.type
             this.searchData = [
                 {
@@ -210,6 +212,7 @@
                     remoteMethod: this.handleGradeAdmin
                 }
             ]
+            this.setCurrentQueryCache(this.refreshCurrentQuery())
             const isObject = payload => {
                 return Object.prototype.toString.call(payload) === '[object Object]'
             }
