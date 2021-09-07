@@ -425,8 +425,8 @@
                     })
                     this.systemList = res.data || []
                     this.systemValue = res.data[0].id || ''
-                    this.fetchActions(this.systemValue)
-                    this.fetchCommonActions(this.systemValue)
+                    await this.fetchActions(this.systemValue)
+                    await this.fetchCommonActions(this.systemValue)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -502,10 +502,17 @@
             async fetchCommonActions (systemId) {
                 try {
                     const res = await this.$store.dispatch('permTemplate/getCommonAction', { systemId })
-                    this.commonActions.splice(0, this.commonActions.length, ...(res.data || []))
-                    this.commonActions.forEach(item => {
-                        item.$id = guid()
+                    const list = res.data || []
+
+                    const linearActionIdList = this.linearAction.map(la => la.id)
+                    const commonActions = []
+                    list.forEach(ca => {
+                        ca.$id = guid()
+                        if (ca.action_ids.every(aId => linearActionIdList.indexOf(aId) > -1)) {
+                            commonActions.push(ca)
+                        }
                     })
+                    this.commonActions.splice(0, this.commonActions.length, ...commonActions)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -567,6 +574,7 @@
                 window.changeDialog = true
                 this.commonActions = []
                 this.linearAction = []
+                this.curSelectActions = []
                 this.requestQueue = ['actions', 'commonActions']
                 this.fetchActions(value)
                 this.fetchCommonActions(value)

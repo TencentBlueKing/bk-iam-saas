@@ -271,8 +271,18 @@
                         id: this.groupId,
                         templateId: item.id
                     })
-                    const tableData = res.data.actions.map(item => new GroupPolicy({ ...item, policy_id: 1 }, 'detail', 'template', { system: res.data.system }))
-                    const tableDataBackup = res.data.actions.map(item => new GroupPolicy({ ...item, policy_id: 1 }, 'detail', 'template', { system: res.data.system }))
+                    const tableData = res.data.actions.map(row => new GroupPolicy(
+                        { ...row, policy_id: 1 },
+                        'detail',
+                        'template',
+                        { system: res.data.system }
+                    ))
+                    const tableDataBackup = res.data.actions.map(row => new GroupPolicy(
+                        { ...row, policy_id: 1 },
+                        'detail',
+                        'template',
+                        { system: res.data.system }
+                    ))
                     this.$set(item, 'tableData', tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
                 } catch (e) {
@@ -294,8 +304,21 @@
                         id: this.groupId,
                         systemId: item.system.id
                     })
-                    const tableData = res.data.map(item => new GroupPolicy(item, 'detail', 'custom', { system: item.system }))
-                    const tableDataBackup = res.data.map(item => new GroupPolicy(item, 'detail', 'custom'), { system: item.system })
+
+                    const tableData = res.data.map(row => {
+                        return new GroupPolicy(
+                            row,
+                            'detail',
+                            'custom',
+                            { system: item.system }
+                        )
+                    })
+                    const tableDataBackup = res.data.map(row => new GroupPolicy(
+                        row,
+                        'detail',
+                        'custom',
+                        { system: item.system }
+                    ))
                     this.$set(item, 'tableData', tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
                 } catch (e) {

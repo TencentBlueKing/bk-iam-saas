@@ -32,6 +32,9 @@ class ResourceCreatorActionConfigItem(BaseModel):
     sub_resource_types: Optional[List["ResourceCreatorActionConfigItem"]] = None
 
 
+ResourceCreatorActionConfigItem.update_forward_refs()
+
+
 class ResourceCreatorActionConfig(BaseModel):
     """
     新建关联配置

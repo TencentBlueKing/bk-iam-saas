@@ -177,6 +177,7 @@
             }
         },
         created () {
+            this.searchParams = this.$route.params
             this.curRole = this.user.role.type
             this.searchData = [
                 {

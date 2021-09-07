@@ -20,7 +20,7 @@ from django.utils.translation import gettext as _
 from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
-from backend.common.time import expired_at_display
+from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
 from backend.service.constants import ANY_ID
 from backend.service.models import (
@@ -223,6 +223,7 @@ class InstanceBeanList:
             instance = self.get(new_instance.type)
             if not instance:
                 self.instances.append(new_instance)
+                self._instance_dict[new_instance.type] = new_instance
             else:
                 instance.add_paths(new_instance.path)
 
@@ -236,6 +237,7 @@ class InstanceBeanList:
             instance.remove_paths(new_instance.path)
 
         self.instances = [instance for instance in self.instances if not instance.is_empty]
+        self._instance_dict = {one.type: one for one in self.instances}
         return self
 
 
@@ -353,7 +355,7 @@ class ConditionBeanList:
         裁剪
         """
         # 如果新旧条件都是任意, 相当于清空
-        if self.is_any and condition_list.is_any == 0:
+        if self.is_any and condition_list.is_any:
             self.is_empty = True
             return self
 
@@ -506,6 +508,7 @@ class RelatedResourceBeanList:
 
             condition_list = condition_list.add(new_condition_list)
             resource_type.condition = condition_list.conditions
+            self._condition_list_dict[(resource_type.system_id, resource_type.type)] = condition_list
 
         return self
 
@@ -644,7 +647,7 @@ class PolicyBean(Policy):
         裁剪
         """
         if self.is_unrelated():
-            return self
+            raise PolicyEmptyException
 
         resource_type_list = RelatedResourceBeanList(self.related_resource_types)
         resource_type_list.sub(RelatedResourceBeanList(related_resource))
@@ -718,6 +721,15 @@ class PolicyBeanList:
     def get(self, action_id: str) -> Optional[PolicyBean]:
         return self._policy_dict.get(action_id, None)
 
+    @staticmethod
+    def _generate_expired_at(expired_at: int) -> int:
+        """生成一个新策略的默认过期时间"""
+        # 如果传入设置的过期时间, 大于当前时间，且小于或等于永久，则使用它
+        if time.time() < expired_at <= PERMANENT_SECONDS:
+            return expired_at
+
+        return generate_default_expired_at()
+
     # For Operation
     def split_to_creation_and_update_for_grant(
         self, new_policy_list: "PolicyBeanList"
@@ -733,6 +745,8 @@ class PolicyBeanList:
             # 已有的权限不存在, 则创建
             old_policy = self.get(p.action_id)
             if not old_policy:
+                # 对于新策略，需要校验策略的过期时间是否合理，不合理则生成一个默认的过期时间
+                p.set_expired_at(self._generate_expired_at(p.expired_at))
                 create_policies.append(p)
                 continue
 
@@ -900,22 +914,19 @@ class PolicyQueryBiz:
 
     svc = PolicyQueryService()
 
-    def list_by_subject(self, system_id: str, subject: Subject) -> List[PolicyBean]:
+    def list_by_subject(
+        self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
+    ) -> List[PolicyBean]:
         """
         查询subject指定系统的策略
         """
-        policy_list = self.new_policy_list(system_id, subject)
+        policy_list = self.new_policy_list(system_id, subject, action_ids)
         return policy_list.policies
 
-    def list_by_subject_and_action(self, system_id: str, subject: Subject, action_ids: List[str]) -> List[PolicyBean]:
-        """
-        查询subject指定系统指定操作列表的策略
-        """
-        policies = self.list_by_subject(system_id, subject)
-        return [p for p in policies if p.action_id in action_ids]
-
-    def new_policy_list(self, system_id: str, subject: Subject) -> PolicyBeanList:
-        policies = self.svc.list_by_subject(system_id, subject)
+    def new_policy_list(
+        self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
+    ) -> PolicyBeanList:
+        policies = self.svc.list_by_subject(system_id, subject, action_ids)
         policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
         return policy_list
 
@@ -1001,8 +1012,8 @@ def policy_change_lock(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         # Note: 必须保证被装饰的函数有参数system_id和subject
-        system_id = kwargs["system_id"] if "system_id" in kwargs else args[1]
-        subject = kwargs["subject"] if "subject" in kwargs else args[2]
+        system_id = kwargs["system_id"] if "system_id" in kwargs else args[0]
+        subject = kwargs["subject"] if "subject" in kwargs else args[1]
         # TODO: 后面重构cache模块时统一定义前缀
         lock_key = f"bk_iam:lock:{system_id}:{subject.type}:{subject.id}"
         # 加 system + subject 锁
@@ -1068,7 +1079,7 @@ class PolicyOperationBiz:
 
         覆盖更新, 返回更新后的策略
         """
-        old_policy_list = self.query_biz.new_policy_list(system_id, subject)
+        old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
         update_policy_list = PolicyBeanList(system_id, policies, need_fill_empty_fields=True)
         for policy in update_policy_list.policies:
             old_policy = old_policy_list.get(policy.action_id)
@@ -1086,7 +1097,7 @@ class PolicyOperationBiz:
         """
         变更subject权限策略
         """
-        old_policy_list = self.query_biz.new_policy_list(system_id, subject)
+        old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
         new_policy_list = PolicyBeanList(system_id, policies)
 
         create_policy_list, update_policy_list = old_policy_list.split_to_creation_and_update_for_grant(
@@ -1105,7 +1116,7 @@ class PolicyOperationBiz:
         删除策略，这里diff可能进行部分删除，若完全一样，则整条策略删除
         返回受影响的策略
         """
-        old_policy_list = self.query_biz.new_policy_list(system_id, subject)
+        old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in delete_policies])
         deleted_policy_list = PolicyBeanList(system_id, delete_policies)
 
         # 获取需要更新和整条删除的策略

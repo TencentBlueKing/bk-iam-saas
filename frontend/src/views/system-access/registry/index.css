@@ -25,6 +25,7 @@
         flex: 1;
         .registry-action-item {
             margin-bottom: 20px;
+            padding-bottom:20px;
             position: relative;
             background: #fff;
             border-radius: 2px;
@@ -43,14 +44,14 @@
                 justify-content: flex-start;
                 padding: 0 30px;
                 height: 60px;
-                line-height: 60px;
+                line-height: 80px;
                 font-size: 14px;
                 color: #63656e;
                 border-radius: 2px;
                 cursor: pointer;
                 .expanded-icon {
                     position: absolute;
-                    top: 23px;
+                    top: 33px;
                     left: 10px;
                 }
                 .title {
@@ -67,8 +68,8 @@
             }
             .btn-wrapper {
                 position: absolute;
-                right: 20px;
-                top: 18px;
+                left: 125px;
+                bottom: 10px;
                 z-index: 1;
                 .bk-button {
                     margin-left: 5px;
@@ -124,8 +125,8 @@
         /deep/ .registry-action-table-cell-cls {
             .cell {
                 -webkit-line-clamp: unset !important;
-                margin: 15px 60px 15px 40px;
-                padding-right: 60px;
+                margin: 15px 0px 15px 40px;
+                padding-right: 100px;
             }
             .related-instance-selections-wrapper {
                 display: flex;
@@ -138,7 +139,8 @@
                     margin-bottom: 10px;
                 }
                 .reduce-icon,
-                .add-icon {
+                .add-icon,
+                .remove-icon {
                     font-size: 16px;
                     color: #979ba5;
                     position: absolute;
@@ -150,10 +152,14 @@
                     }
                 }
                 .reduce-icon {
-                    right: -46px;
+                    right: -40px;
                 }
                 .add-icon {
-                    right: -26px;
+                    right: -20px;
+                }
+                .remove-icon {
+                    right: -95px;
+                    top:30px
                 }
             }
         }

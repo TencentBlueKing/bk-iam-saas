@@ -12,9 +12,6 @@ from aenum import LowerStrEnum, auto, skip
 
 from backend.util.enum import ChoicesEnum
 
-# 白名单控制时的任意
-ALLOW_ANY = "*"
-
 
 class ManagementAPIEnum(ChoicesEnum, LowerStrEnum):
     """这里的枚举的是每个具体管理类API"""

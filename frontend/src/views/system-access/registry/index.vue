@@ -1,7 +1,14 @@
 <template>
+    <!-- eslint-disable max-len -->
     <div class="iam-system-access-registry-wrapper">
         <div class="inner">
-            <bk-steps class="system-access-step" ref="systemAccessStep" :steps="steps" direction="vertical"></bk-steps>
+            <bk-steps class="system-access-step" ref="systemAccessStep" direction="vertical"
+                :steps="controllableSteps.steps"
+                :controllable="controllableSteps.controllable"
+                :cur-step.sync="controllableSteps.curStep"
+                :before-change="beforeStepChanged"
+                @step-changed="stepChanged">
+            </bk-steps>
             <smart-action class="content-wrapper">
                 <template v-if="actionList.length">
                     <div class="registry-action-item" v-for="(item, index) in actionList" :key="index">
@@ -9,21 +16,6 @@
                             :style="{ position: item.isExpand ? 'absolute' : 'relative' }">
                             <Icon bk class="expanded-icon" :type="item.isExpand ? 'down-shape' : 'right-shape'" />
                             <label class="title">{{ item.title || $t(`m.access['注册操作']`) }}</label>
-                        </div>
-                        <div v-if="item.isExpand" class="btn-wrapper">
-                            <template v-if="!item.isEdit">
-                                <bk-button size="small" @click="item.isEdit = true">
-                                    {{ $t(`m.common['编辑']`) }}
-                                </bk-button>
-                            </template>
-                            <template v-else>
-                                <bk-button size="small" :disabled="item.loading" theme="primary"
-                                    @click.stop.prevent="saveAction(item, index)">{{ $t(`m.common['保存']`) }}</bk-button>
-                                <bk-button size="small" :disabled="item.loading || item.isNewAdd"
-                                    @click.stop.prevent="delAction(item, index)">{{ $t(`m.common['删除']`) }}</bk-button>
-                                <bk-button size="small" :disabled="item.loading"
-                                    @click.stop.prevent="cancelEdit(index)">{{ $t(`m.common['取消']`) }}</bk-button>
-                            </template>
                         </div>
                         <div class="content" v-if="item.isExpand">
                             <div class="slot-content">
@@ -70,24 +62,22 @@
                                                 </template>
                                             </bk-table-column>
                                             <bk-table-column :resizable="false" min-width="450"
-                                                :label="$t(`m.access['实例视图']`)" :render-header="renderHeader">
+                                                :label="$t(`m.access['资源实例选择方式']`)" :render-header="renderHeader">
                                                 <template slot-scope="{ row }">
                                                     <div class="related-instance-selections-wrapper">
                                                         <bk-checkbox :disabled="!item.isEdit"
-                                                            :checked="row.selection_mode === 'instance'"
-                                                            :true-value="'instance'" :false-value="'attribute'"
-                                                            v-model="row.selection_mode"
-                                                            style="margin-right: 20px; margin-top: 7px;">
+                                                            :checked="row.selection_mode === 'instance' || row.selection_mode === 'all'"
+                                                            style="margin-right: 20px; margin-top: 7px;"
+                                                            @change="instanceSelectionCheckboxHandler('instance', row, ...arguments)">
                                                             {{$t(`m.access['通过拓扑选择']`)}}
                                                         </bk-checkbox>
                                                         <div class="related-instance-selections-cascade-wrapper">
-                                                            <!-- eslint-disable max-len -->
                                                             <div style="position: relative;"
                                                                 v-for="(isItem, isItemIndex) in row.related_instance_selections"
                                                                 :key="isItemIndex">
                                                                 <iam-cascade
                                                                     class="related-instance-selections-cascade"
-                                                                    :disabled="!item.isEdit"
+                                                                    :disabled="!item.isEdit || (row.selection_mode !== 'instance' && row.selection_mode !== 'all')"
                                                                     v-model="isItem.instanceSelectionsCascadeValue"
                                                                     :list="systemListInstanceSelections"
                                                                     :is-remote="true"
@@ -96,7 +86,7 @@
                                                                     :dropdown-content-cls="'system-access-cascade-dropdown-content'"
                                                                     :placeholder="$t(`m.access['请选择实例视图']`)"
                                                                     :empty-text="$t(`m.access['无匹配数据']`)"
-                                                                    @change="handleInstanceSelectionsChange(isItem, ...arguments)">
+                                                                    @change="handleInstanceSelectionsChange(row, isItem, ...arguments)">
                                                                     <div slot="extension" class="system-access-cascade-extension"
                                                                         style="cursor: pointer;" @click="showAddInstanceSelection">
                                                                         <i class="bk-icon icon-plus-circle"></i>{{ $t(`m.access['新增实例视图']`) }}
@@ -105,10 +95,13 @@
                                                                 <Icon type="add-hollow" class="add-icon" :class="!item.isEdit ? 'disabled' : ''" @click="addRelatedInstanceSelections(item, row)" />
                                                                 <Icon type="reduce-hollow" class="reduce-icon" v-if="row.related_instance_selections.length > 1" :class="!item.isEdit ? 'disabled' : ''" @click="delRelatedInstanceSelections(item, row, isItemIndex)" />
                                                             </div>
+                                                            <Icon type="close-fill" class="remove-icon" v-if="item.related_resource_types.length > 1" :class="!item.isEdit ? 'disabled' : ''" @click="delRelatedRelatedResource(item, isItemIndex, $event)" />
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <bk-checkbox :disabled="!item.isEdit" :checked="row.selection_mode === 'attribute'" :true-value="'attribute'" :false-value="'instance'" v-model="row.selection_mode">
+                                                        <bk-checkbox :disabled="!item.isEdit"
+                                                            :checked="row.selection_mode === 'attribute' || row.selection_mode === 'all'"
+                                                            @change="instanceSelectionCheckboxHandler('attribute', row, ...arguments)">
                                                             {{$t(`m.access['通过属性选择']`)}}
                                                         </bk-checkbox>
                                                     </div>
@@ -140,13 +133,29 @@
                                 </div>
                             </div>
                         </div>
+                        <div v-if="item.isExpand" class="btn-wrapper">
+                            <template v-if="!item.isEdit">
+                                <bk-button size="small" @click="item.isEdit = true">
+                                    {{ $t(`m.common['编辑']`) }}
+                                </bk-button>
+                                <bk-button size="small" theme="danger" outline :disabled="item.loading"
+                                    @click.stop.prevent="delAction(item, index)">{{ $t(`m.common['删除']`) }}</bk-button>
+                            </template>
+                            <template v-else>
+                                <bk-button size="small" :disabled="item.loading" theme="primary"
+                                    @click.stop.prevent="saveAction(item, index)">{{ $t(`m.common['保存']`) }}</bk-button>
+                                <bk-button size="small" :disabled="item.loading"
+                                    @click.stop.prevent="cancelEdit(index)">{{ $t(`m.common['取消']`) }}</bk-button>
+                            </template>
+                        </div>
                     </div>
                 </template>
 
                 <render-action :title="$t(`m.access['新增操作']`)" style="margin-bottom: 20px;" @on-click="addAction"></render-action>
 
                 <div slot="action">
-                    <bk-button theme="primary" type="button" :loading="submitLoading" @click="handleSubmit">
+                    <bk-button theme="primary" type="button" :loading="submitLoading"
+                        @click="handleSubmit('systemAccessOptimize')">
                         {{ $t(`m.common['下一步']`) }}
                     </bk-button>
                     <bk-button style="margin-left: 10px;" @click="handlePrev">{{ $t(`m.common['上一步']`) }}</bk-button>
@@ -174,6 +183,8 @@
 
     import ResourceTypeSideslider from './resource-type-sideslider'
     import InstanceSelectionSideslider from './instance-selection-sideslider'
+
+    import beforeStepChangedMixin from '../common/before-stepchange'
 
     const getDefaultActionData = () => ({
         id: '',
@@ -216,17 +227,21 @@
             ResourceTypeSideslider,
             InstanceSelectionSideslider
         },
+        mixins: [beforeStepChangedMixin],
         data () {
             return {
                 submitLoading: false,
 
-                steps: [
-                    { title: '注册系统', icon: 1 },
-                    { title: '注册操作', icon: 2 },
-                    { title: '体验优化', icon: 3 },
-                    { title: '完成', icon: 4 }
-                ],
-
+                controllableSteps: {
+                    controllable: true,
+                    steps: [
+                        { title: '注册系统', icon: 1 },
+                        { title: '注册操作', icon: 2 },
+                        { title: '体验优化', icon: 3 },
+                        { title: '完成', icon: 4 }
+                    ],
+                    curStep: 2
+                },
                 isExpandAdvanced: false,
                 // modelingSystemData: null,
                 actionList: [],
@@ -266,31 +281,100 @@
             }
         },
         methods: {
+            // this.$emit('change', newValue, oldValue, this.localTrueValue)
+            instanceSelectionCheckboxHandler (idx, row, value, oldValue, localTrueValue) {
+                // 当前点击的是 通过属性选择 多选框
+                if (idx === 'attribute') {
+                    // 选中
+                    if (value) {
+                        // 通过拓扑选择 多选框已选中
+                        if (row.selection_mode === 'instance') {
+                            row.selection_mode = 'all'
+                        } else if (row.selection_mode === '') {
+                            row.selection_mode = 'attribute'
+                        } else {
+                            row.selection_mode = ''
+                        }
+                    } else {
+                        // 通过拓扑选择 多选框已选中
+                        if (row.selection_mode === 'all') {
+                            row.selection_mode = 'instance'
+                        } else {
+                            row.selection_mode = ''
+                        }
+                    }
+                }
+                // 当前点击的是 通过拓扑选择 多选框
+                if (idx === 'instance') {
+                    // 选中
+                    if (value) {
+                        // 通过属性选择 多选框已选中
+                        if (row.selection_mode === 'attribute') {
+                            row.selection_mode = 'all'
+                        } else if (row.selection_mode === '') {
+                            row.selection_mode = 'instance'
+                        } else {
+                            row.selection_mode = ''
+                        }
+                    } else {
+                        // 通过拓扑选择 多选框已选中
+                        if (row.selection_mode === 'all') {
+                            row.selection_mode = 'attribute'
+                        } else {
+                            row.selection_mode = ''
+                        }
+                    }
+                }
+            },
             async fetchPageData () {
                 await Promise.all([
-                    this.fetchSystemList(),
+                    this.fetchSystemList('all'),
                     // this.fetchModeling()
                     this.fetchActionList()
                 ])
             },
 
-            async fetchSystemList () {
+            async fetchSystemList (type) {
                 try {
                     const res = await this.$store.dispatch('access/getSystemList', {
                         id: this.modelingId
                     })
-                    const systemList = []
+                    const systemListResourceType = []
+                    const systemListInstanceSelections = []
                     const list = res.data || []
                     list.forEach(item => {
-                        systemList.push({
+                        const id = item[0]
+                        const sysResourceType = this.systemListResourceType.find(s => s.id === id)
+                        const sysInstanceSelections = this.systemListInstanceSelections.find(s => s.id === id)
+                        const obj = {
                             id: item[0],
                             name: item[1],
                             // TODO: cascade/caspanel.vue 的 handleItemFn 使用。目的是不允许选中第一层节点中没有子层级的节点，暂时先这么实现
                             parent: true
-                        })
+                        }
+                        if (type === 'all' || type === 'resourceType') {
+                            if (sysResourceType && sysResourceType.children) {
+                                obj.children = sysResourceType.children
+                            }
+                            systemListResourceType.push(obj)
+                        }
+                        if (type === 'all' || type === 'instanceSelection') {
+                            if (sysInstanceSelections && sysInstanceSelections.children) {
+                                obj.children = sysInstanceSelections.children
+                            }
+                            systemListInstanceSelections.push(obj)
+                        }
                     })
-                    this.systemListResourceType.splice(0, this.systemListResourceType.length, ...systemList)
-                    this.systemListInstanceSelections = JSON.parse(JSON.stringify(systemList))
+                    if (type === 'all' || type === 'resourceType') {
+                        this.systemListResourceType.splice(
+                            0,
+                            this.systemListResourceType.length,
+                            ...systemListResourceType
+                        )
+                    }
+                    if (type === 'all' || type === 'instanceSelection') {
+                        this.systemListInstanceSelections = JSON.parse(JSON.stringify(systemListInstanceSelections))
+                    }
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -358,7 +442,7 @@
                                     } else {
                                         c.related_instance_selections.forEach(is => {
                                             is.instanceSelectionsCascadeValue = [is.system_id, is.id]
-                                            preloadInstanceSelectionsBySysParams.push(c.system_id)
+                                            preloadInstanceSelectionsBySysParams.push(is.system_id)
                                             preloadInstanceSelectionsBySys.push(this.$store.dispatch('access/getInstanceSelectionsListBySystem', {
                                                 id: this.modelingId,
                                                 data: {
@@ -457,10 +541,11 @@
                 row.id = row.resourceTypeCascadeValue[1] || row.resourceTypeCascadeValue[0]
             },
 
-            handleInstanceSelectionsChange (row, newValue, oldValue, selectList) {
-                row.system_id = row.instanceSelectionsCascadeValue[0]
+            handleInstanceSelectionsChange (resourceTypeRow, instanceSelectionRow, newValue, oldValue, selectList) {
+                instanceSelectionRow.system_id = instanceSelectionRow.instanceSelectionsCascadeValue[0]
                 // 只有一层的情况
-                row.id = row.instanceSelectionsCascadeValue[1] || row.instanceSelectionsCascadeValue[0]
+                instanceSelectionRow.id = instanceSelectionRow.instanceSelectionsCascadeValue[1]
+                    || instanceSelectionRow.instanceSelectionsCascadeValue[0]
             },
 
             /**
@@ -562,6 +647,18 @@
                     })
                     sys.children = list
                     resolve(sys)
+
+                    const systemListResourceType = []
+                    systemListResourceType.splice(0, 0, ...this.systemListResourceType)
+                    const curSys = systemListResourceType.find(item => item.id === sys.id)
+                    if (curSys) {
+                        curSys.children = list
+                        this.systemListResourceType.splice(
+                            0,
+                            this.systemListResourceType.length,
+                            ...systemListResourceType
+                        )
+                    }
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -597,6 +694,18 @@
                     })
                     sys.children = list
                     resolve(sys)
+
+                    const systemListInstanceSelections = []
+                    systemListInstanceSelections.splice(0, 0, ...this.systemListInstanceSelections)
+                    const curSys = systemListInstanceSelections.find(item => item.id === sys.id)
+                    if (curSys) {
+                        curSys.children = list
+                        this.systemListInstanceSelections.splice(
+                            0,
+                            this.systemListInstanceSelections.length,
+                            ...systemListInstanceSelections
+                        )
+                    }
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -651,15 +760,50 @@
             },
 
             /**
+             * delRelatedRelatedResource
+             */
+            delRelatedRelatedResource (item, isItemIndex, event) {
+                if (!item.isEdit) {
+                    return
+                }
+                isItemIndex = event.currentTarget.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute('data-table-row').split('-')[1]
+                const relatedResourceTypes = []
+                relatedResourceTypes.splice(0, 0, ...item.related_resource_types)
+                relatedResourceTypes.splice(isItemIndex, 1)
+                item.related_resource_types = JSON.parse(JSON.stringify(relatedResourceTypes))
+            },
+
+            /**
              * saveAction
              */
             async saveAction (item, index) {
                 const formComp = this.$refs[`basicInfoRef${index}`]
+                console.log(formComp)
                 if (formComp && formComp[0]) {
                     try {
                         await formComp[0].handleValidator()
                     } catch (e) {
                         this.scrollToLocation(this.$refs[`basicInfoContentRef${index}`][0])
+                        return
+                    }
+                    
+                    // 依赖实例时才需要校验
+                    if (item.related_resource_types.filter(t => t.selection_mode && !t.id).length) {
+                        this.messageError(this.$t(`m.access['资源实例选择方式至少选择一个']`), 1000)
+                        return
+                    }
+
+                    const instanceSelectionModeList = ['all', 'instance']
+
+                    // 通过拓扑选择，但是没有选择实例视图的判断
+                    // 选择实例视图组件在清空时，数组还是有数据的，所以用 system_id 来判断
+                    const invalidLength = item.related_resource_types.filter(t =>
+                        (instanceSelectionModeList.indexOf(t.selection_mode) > -1)
+                        && (t.related_instance_selections.filter(is => !is.system_id).length)
+                    ).length
+
+                    if (invalidLength) {
+                        this.messageError(this.$t(`m.access['通过拓扑选择时必须要选择实例视图']`), 1000)
                         return
                     }
 
@@ -671,14 +815,22 @@
                                 id: t.id,
                                 selection_mode: t.selection_mode
                             }
-                            if (t.related_instance_selections && t.related_instance_selections.length) {
-                                obj.related_instance_selections = []
-                                t.related_instance_selections.forEach(is => {
-                                    obj.related_instance_selections.push({
-                                        system_id: is.system_id,
-                                        id: is.id
+                            if (instanceSelectionModeList.indexOf(t.selection_mode) > -1) {
+                                if (t.related_instance_selections && t.related_instance_selections.length) {
+                                    obj.related_instance_selections = []
+                                    t.related_instance_selections.forEach(is => {
+                                        obj.related_instance_selections.push({
+                                            system_id: is.system_id,
+                                            id: is.id
+                                        })
                                     })
-                                })
+                                }
+                            } else {
+                                t.related_instance_selections = [{
+                                    instanceSelectionsCascadeValue: [],
+                                    id: '',
+                                    system_id: ''
+                                }]
                             }
                             relatedResourceTypes.push(obj)
                         }
@@ -795,7 +947,15 @@
                             return false
                         } finally {
                             item.loading = false
-                            me.actionListBackup = JSON.parse(JSON.stringify(me.actionList))
+                            this.$router.push({
+                                name: 'systemAccessRegistry',
+                                params: {
+                                    id: this.modelingId
+                                }
+                            })
+                            this.$nextTick(() => {
+                                me.actionListBackup = JSON.parse(JSON.stringify(me.actionList))
+                            })
                         }
                     }
                 })
@@ -804,7 +964,7 @@
             /**
              * handleSubmit
              */
-            async handleSubmit () {
+            async handleSubmit (routerName) {
                 if (!this.actionList.length) {
                     this.messageError(this.$t(`m.access['至少要注册一个操作']`), 1000)
                     return
@@ -838,12 +998,12 @@
                     return
                 }
 
-                console.log('actionList', this.actionList)
-                console.log('actionListBackup', this.actionListBackup)
+                // console.log('actionList', this.actionList)
+                // console.log('actionListBackup', this.actionListBackup)
 
                 this.$router.push({
                     // name: 'systemAccessComplete',
-                    name: 'systemAccessOptimize',
+                    name: routerName,
                     params: {
                         id: this.modelingId
                     }

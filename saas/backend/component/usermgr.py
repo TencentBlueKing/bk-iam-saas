@@ -21,9 +21,20 @@ USERMGR_DEFAULT_PAGE_SIZE = 1000
 
 def list_category() -> List[Dict]:
     """获取目录列表"""
-    url_path = "/api/c/compapi/v2/usermanage/list_categories/"
-    params = {"fields": "id,display_name", "no_page": True}
-    return _call_esb_api(http_get, url_path, data=params)
+
+    def list_paging_category(page: int, page_size: int) -> Tuple[int, List[Dict]]:
+        """[分页]获取目录列表"""
+        url_path = "/api/c/compapi/v2/usermanage/list_categories/"
+        params = {
+            "fields": "id,display_name",
+            "ordering": "id",
+            "page": page,
+            "page_size": page_size,
+        }
+        data = _call_esb_api(http_get, url_path, data=params)
+        return data["count"], data["results"]
+
+    return list_all_data_by_paging(list_paging_category, USERMGR_DEFAULT_PAGE_SIZE)
 
 
 def retrieve_user(username) -> Dict:
@@ -40,17 +51,23 @@ def list_new_user(end_utc_time: datetime.datetime, minute_delta: int = 0) -> Lis
     for i in range(minute_delta):
         create_times.append(end_utc_time - datetime.timedelta(minutes=i + 1))
     create_time_fuzzy_lookups = [t.strftime("%Y-%m-%d %H:%M") for t in create_times]
+    fuzzy_lookups = ",".join(create_time_fuzzy_lookups)
 
-    # Call UserManager API
-    url_path = "/api/c/compapi/v2/usermanage/list_users/"
-    params = {
-        "fields": "id,username,display_name,staff_status,category_id",
-        "no_page": True,
-        "lookup_field": "create_time",
-        "fuzzy_lookups": ",".join(create_time_fuzzy_lookups),
-    }
-    data = _call_esb_api(http_get, url_path, data=params)
-    return data
+    def list_paging_new_user(page: int, page_size: int) -> Tuple[int, List[Dict]]:
+        """[分页]获取新增用户列表"""
+        url_path = "/api/c/compapi/v2/usermanage/list_users/"
+        params = {
+            "fields": "id,username,display_name,staff_status,category_id",
+            "ordering": "id",
+            "page": page,
+            "page_size": page_size,
+            "lookup_field": "create_time",
+            "fuzzy_lookups": fuzzy_lookups,
+        }
+        data = _call_esb_api(http_get, url_path, data=params)
+        return data["count"], data["results"]
+
+    return list_all_data_by_paging(list_paging_new_user, USERMGR_DEFAULT_PAGE_SIZE)
 
 
 def list_profile() -> List[Dict]:
