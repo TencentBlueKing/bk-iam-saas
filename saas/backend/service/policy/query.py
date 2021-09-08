@@ -76,11 +76,16 @@ class BackendThinPolicyList:
 class PolicyQueryService:
     """Policy Query Service"""
 
-    def list_by_subject(self, system_id: str, subject: Subject) -> List[Policy]:
+    def list_by_subject(
+        self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
+    ) -> List[Policy]:
         """
         查询subject指定系统下的所有Policy
         """
         qs = PolicyModel.objects.filter(system_id=system_id, subject_type=subject.type, subject_id=subject.id)
+
+        if action_ids is not None and len(action_ids) > 0:
+            qs.filter(action_id__in=action_ids)
 
         return self._trans_from_queryset(system_id, subject, qs)
 

@@ -63,7 +63,7 @@
                                     :name="option.name">
                                     <span style="display: block; line-height: 32px;"
                                         :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">
-                                        {{ option.name }}{{option}}
+                                        {{ option.name }}
                                     </span>
                                 </bk-option>
                                 <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }"

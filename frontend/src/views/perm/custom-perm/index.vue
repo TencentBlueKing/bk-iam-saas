@@ -44,7 +44,7 @@
         },
         data () {
             return {
-                onePerm: '',
+                onePerm: 0,
                 systemPolicyList: []
             }
         },
