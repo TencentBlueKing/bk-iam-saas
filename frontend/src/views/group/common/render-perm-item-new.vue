@@ -87,7 +87,7 @@
 
             handleExpanded () {
                 this.isExpanded = !this.isExpanded
-                this.$emit('update:expanded', true)
+                this.$emit('update:expanded', true) // 更新expanded
                 this.$emit('on-expanded', this.isExpanded)
             }
         }

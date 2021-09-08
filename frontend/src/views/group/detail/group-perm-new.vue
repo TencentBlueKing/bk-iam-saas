@@ -137,11 +137,11 @@
                 try {
                     const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId })
                     ;(res.data || []).forEach(item => {
-                        item.expanded = false
+                        item.expanded = false // 此处会在子组件更新为true
                         item.loading = false
-                        item.templates = []
+                        item.templates = [] // 在getGroupTemplateList方法赋值
                     })
-                    this.groupSystemList = res.data
+                    this.groupSystemList = res.data // groupSystemList会通过handleExpanded调用其他方法做属性的添加
                     this.groupSystemListLength = res.data.length
                 } catch (e) {
                     console.error(e)
