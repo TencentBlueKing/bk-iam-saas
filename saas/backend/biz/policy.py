@@ -914,22 +914,19 @@ class PolicyQueryBiz:
 
     svc = PolicyQueryService()
 
-    def list_by_subject(self, system_id: str, subject: Subject) -> List[PolicyBean]:
+    def list_by_subject(
+        self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
+    ) -> List[PolicyBean]:
         """
         查询subject指定系统的策略
         """
-        policy_list = self.new_policy_list(system_id, subject)
+        policy_list = self.new_policy_list(system_id, subject, action_ids)
         return policy_list.policies
 
-    def list_by_subject_and_action(self, system_id: str, subject: Subject, action_ids: List[str]) -> List[PolicyBean]:
-        """
-        查询subject指定系统指定操作列表的策略
-        """
-        policies = self.list_by_subject(system_id, subject)
-        return [p for p in policies if p.action_id in action_ids]
-
-    def new_policy_list(self, system_id: str, subject: Subject) -> PolicyBeanList:
-        policies = self.svc.list_by_subject(system_id, subject)
+    def new_policy_list(
+        self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
+    ) -> PolicyBeanList:
+        policies = self.svc.list_by_subject(system_id, subject, action_ids)
         policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
         return policy_list
 
@@ -1082,7 +1079,7 @@ class PolicyOperationBiz:
 
         覆盖更新, 返回更新后的策略
         """
-        old_policy_list = self.query_biz.new_policy_list(system_id, subject)
+        old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
         update_policy_list = PolicyBeanList(system_id, policies, need_fill_empty_fields=True)
         for policy in update_policy_list.policies:
             old_policy = old_policy_list.get(policy.action_id)
@@ -1100,7 +1097,7 @@ class PolicyOperationBiz:
         """
         变更subject权限策略
         """
-        old_policy_list = self.query_biz.new_policy_list(system_id, subject)
+        old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in policies])
         new_policy_list = PolicyBeanList(system_id, policies)
 
         create_policy_list, update_policy_list = old_policy_list.split_to_creation_and_update_for_grant(
@@ -1119,7 +1116,7 @@ class PolicyOperationBiz:
         删除策略，这里diff可能进行部分删除，若完全一样，则整条策略删除
         返回受影响的策略
         """
-        old_policy_list = self.query_biz.new_policy_list(system_id, subject)
+        old_policy_list = self.query_biz.new_policy_list(system_id, subject, [p.action_id for p in delete_policies])
         deleted_policy_list = PolicyBeanList(system_id, delete_policies)
 
         # 获取需要更新和整条删除的策略
