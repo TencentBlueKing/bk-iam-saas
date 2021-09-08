@@ -30,10 +30,6 @@
                             :is-edit="subItem.isEdit"
                             :loading="subItem.editLoading"
                             :expanded.sync="subItem.expanded"
-                            :delete-loading="subItem.deleteLoading"
-                            :policy-count="item.custom_policy_count"
-                            :template-count="item.template_count"
-                            :group-system-list-length="groupSystemListLength"
                             :mode="isEditMode ? 'edit' : 'detail'"
                             @on-delete="handleDelete(item, subItem)"
                             @on-save="handleSave(item, index, subItem, subIndex)"
@@ -42,7 +38,7 @@
                             @on-expanded="handleTemplateExpanded(...arguments, subItem)">
                             <div style="min-height: 136px;"
                                 v-bkloading="{ isLoading: subItem.loading, opacity: 1 }">
-                                <resource-instance-table
+                                <render-instance-table
                                     v-if="!subItem.loading"
                                     mode="detail"
                                     :is-custom="subItem.count > 0"
@@ -72,18 +68,19 @@
 <script>
     // import _ from 'lodash'
     import GroupPolicy from '@/model/group-policy'
-    import RenderPermItem from '../common/render-perm-item-new'
-    import RenderTemplateItem from '../common/render-template-item'
-    import ResourceInstanceTable from '../components/render-instance-table'
+    import RenderPermItem from '../common/render-perm-item-new.vue'
+    import RenderTemplateItem from '../common/render-template-item.vue'
+    import RenderInstanceTable from '../components/render-instance-table.vue'
     // import GroupAggregationPolicy from '@/model/group-aggregation-policy'
     // import store from '@/store'
     const CUSTOM_CUSTOM_TEMPLATE_ID = 0
+
     export default {
         name: '',
         components: {
             RenderPermItem,
             RenderTemplateItem,
-            ResourceInstanceTable
+            RenderInstanceTable
         },
         props: {
             id: {
@@ -177,14 +174,15 @@
                 this.$set(paylaod, 'isEdit', false)
             },
 
-            async getGroupTemplateList (payload) {
-                payload.loading = true
+            async getGroupTemplateList (groupSystem) {
+                groupSystem.loading = true
                 let res
                 try {
                     res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', {
                         id: this.groupId,
-                        systemId: payload.id
+                        systemId: groupSystem.id
                     })
+
                     res.data.forEach(item => {
                         item.loading = false
                         item.tableData = []
@@ -193,16 +191,16 @@
                         item.editLoading = false
                         item.deleteLoading = false
                     })
-                    payload.templates = res.data // 赋值给展开项
-                    if (payload.custom_policy_count) {
-                        payload.templates.push({
+                    groupSystem.templates = res.data
+                    if (groupSystem.custom_policy_count) {
+                        groupSystem.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
-                            id: CUSTOM_CUSTOM_TEMPLATE_ID,
+                            id: CUSTOM_CUSTOM_TEMPLATE_ID, // 自定义权限 id 为 0
                             system: {
-                                id: payload.id,
-                                name: payload.name
+                                id: groupSystem.id,
+                                name: groupSystem.name
                             },
-                            count: payload.custom_policy_count,
+                            count: groupSystem.custom_policy_count,
                             loading: false,
                             tableData: [],
                             tableDataBackup: [],
@@ -218,10 +216,10 @@
                         message: e.message || e.data.msg || e.statusText
                     })
                 } finally {
-                    payload.loading = false
+                    groupSystem.loading = false
                     if (res.data.length === 1) {
                         this.$nextTick(() => {
-                            this.$refs[`rTemplateItem${payload.id}`][0].handleExpanded()
+                            this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded()
                         })
                     }
                 }
@@ -263,6 +261,7 @@
                     this.$set(item, 'isEdit', false)
                     return
                 }
+                // count > 0 说明是自定义权限
                 if (item.count > 0) {
                     this.getGroupCustomPolicy(item)
                     return
