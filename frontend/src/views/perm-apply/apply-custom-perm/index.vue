@@ -1477,7 +1477,7 @@
                     }
                 })
             },
-
+            
             handleActionChecked (newVal, oldVal, val, actData, payload) {
                 const data = this.linearActionList.find(item => item.id === actData.id)
                 this.isShowActionError = false
@@ -1652,7 +1652,12 @@
                 this.handleRelatedActions(actData, true)
                 item.count++
             },
-
+            
+            /**
+             *
+             * @param {Boolean} setChecked
+             * 此方法获取数据赋值给this.linearActionList
+             */
             handleActionLinearData (setChecked = false) {
                 const linearActions = []
                 const hasCheckedList = []
@@ -1772,6 +1777,8 @@
              * 获取系统下的权限列表
              *
              * @param {String} systemId 系统id
+             * 此方法获取数据，继承处理赋值给this.tableData
+             * this.linearActionList 在handleActionLinearData获取并处理
              */
             async fetchPolicies (systemId) {
                 const params = {
@@ -1784,6 +1791,7 @@
                     const res = await this.$store.dispatch('permApply/getPolicies', params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
+                        // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
                             related_actions: relatedActions,
@@ -1838,6 +1846,7 @@
              * 获取系统对应的自定义操作
              *
              * @param {String} systemId 系统id
+             * 执行handleActionLinearData方法
              */
             async fetchActions (systemId) {
                 const params = {

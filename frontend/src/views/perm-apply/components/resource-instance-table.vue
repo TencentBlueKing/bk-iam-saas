@@ -24,6 +24,7 @@
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
                 <template slot-scope="{ row, $index }">
+                    <!-- isAggregate代表批量编辑状态 -->
                     <div class="relation-content-wrapper" v-if="!!row.isAggregate">
                         <label class="resource-type-name">{{ row.aggregateResourceType.name }}</label>
                         <render-condition
