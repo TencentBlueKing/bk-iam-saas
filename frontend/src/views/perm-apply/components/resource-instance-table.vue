@@ -652,6 +652,10 @@
                 }
             },
 
+            /**
+             *new Policy() 第三个参数会影响@/components/choose-ip/view中是否可移除的disabled
+             * 具体体现在instance.js文件initPath方法中
+             */
             handleRelatedAction (payload) {
                 if (payload.length < 1) {
                     return
@@ -668,7 +672,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: 'add', isShowRelatedText: true, inOriginalList }, '', true)
+                            new Policy({ ...item, tag: 'add', isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })
