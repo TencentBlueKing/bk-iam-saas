@@ -48,6 +48,7 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
     APP_CODE = APP_ID = os.environ.get("BKPAAS_APP_ID", APP_CODE)
     SECRET_KEY = APP_TOKEN = os.environ.get("BKPAAS_APP_SECRET", SECRET_KEY)
     BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS2_INNER_URL", BK_PAAS_INNER_HOST)
+    BK_COMPONENT_API_URL = os.environ.get("BK_COMPONENT_API_URL")
 
     # 正式环境数据库可以在这里配置
     DATABASES.update(  # 需要兼容V3环境变量
@@ -88,6 +89,8 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
 
 # V2 Smart 配置
 else:
+    BK_COMPONENT_API_URL = BK_PAAS_INNER_HOST
+
     # 正式环境数据库可以在这里配置
     DATABASES.update(
         {
