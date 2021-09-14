@@ -40,5 +40,5 @@ modules:
         replicas: 1
     svc_discovery:
       bk_saas:
-        - 'bk_iam'
-        - 'bk_itsm'
+        - bk_app_code: 'bk_iam'
+        - bk_app_code: 'bk_itsm'

@@ -42,7 +42,7 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
     def get_app_service_url(app_code: str) -> str:
         value = os.environ["BKPAAS_SERVICE_ADDRESSES_BKSAAS"]
         decoded_value = json.loads(base64.b64decode(value).decode("utf-8"))
-        return decoded_value[app_code]
+        return {item["key"]["bk_app_code"]: item["value"]["prod"] for item in decoded_value}[app_code]
 
     # 兼容component的APP_ID,APP_TOKEN
     APP_CODE = APP_ID = os.environ.get("BKPAAS_APP_ID", APP_CODE)
