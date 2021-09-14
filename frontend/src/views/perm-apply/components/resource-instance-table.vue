@@ -656,7 +656,7 @@
                 if (payload.length < 1) {
                     return
                 }
-
+        
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
                     if (curIndex > -1) {
@@ -668,7 +668,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: 'update', isShowRelatedText: true, inOriginalList }, '', false)
+                            new Policy({ ...item, tag: item.tag || 'update', isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })
