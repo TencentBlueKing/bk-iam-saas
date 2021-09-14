@@ -175,23 +175,26 @@ class SubjectPolicyViewSet(GenericViewSet):
         data = slz.validated_data
 
         policy_id = kwargs["pk"]
-        system_id = data["system_id"]
+        resource_system_id = data["system_id"]
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
 
         permission_logger.info("subject policy delete partial by user: %s", request.user.username)
 
-        delete_policy = self.policy_operation_biz.delete_partial(
+        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
+        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        update_policy = self.policy_operation_biz.delete_partial(
+            system_id,
             subject,
             policy_id,
-            system_id,
+            resource_system_id,
             resource_type,
             condition_ids,
             [ConditionBean(attributes=[], **c) for c in condition],
         )
 
         # 写入审计上下文
-        audit_context_setter(subject=subject, system_id=system_id, policies=[delete_policy])
+        audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
 
         return Response({})
