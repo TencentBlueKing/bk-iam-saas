@@ -668,7 +668,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: 'add', isShowRelatedText: true, inOriginalList }, '', false)
+                            new Policy({ ...item, tag: 'update', isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })
