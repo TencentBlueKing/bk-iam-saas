@@ -668,7 +668,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: 'add', isShowRelatedText: true, inOriginalList }, '', true)
+                            new Policy({ ...item, tag: 'update', isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })
@@ -709,6 +709,7 @@
                                 // 是否带有下一层级的无限制
                                 const isHasNoLimit = v.some(({ id }) => id === '*')
                                 const isDisabled = v.some(_ => !!_.disabled)
+                                // 可编辑的才会计数
                                 if (!isHasNoLimit && !isDisabled) {
                                     ++newResourceCount
                                 }
