@@ -12,7 +12,12 @@ from typing import List
 
 from pydantic import BaseModel
 
-from ..constants import APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP, ApplicationTypeEnum, ProcessorSourceEnum
+from ..constants import (
+    APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP,
+    INSTANCE_APPROVER,
+    ApplicationTypeEnum,
+    ProcessorSourceEnum,
+)
 
 
 class ApprovalProcess(BaseModel):
@@ -108,7 +113,7 @@ class ApprovalProcessNodeWithProcessor(ApprovalProcessNode):
         )
 
 
-class ApprovalProcessWithNodeProcessor(ApprovalProcess):
+class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
     """附带流程里的每个节点, 且每个节点都附带具体处理人"""
 
     nodes: List[ApprovalProcessNodeWithProcessor] = []
@@ -119,3 +124,23 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcess):
 
     def __eq__(self, other):
         return self.id == other.id and self.nodes == other.nodes
+
+    def set_instance_approver(self, approver: List[str]):
+        for node in self.nodes:
+            if node.is_iam_source() and node.processor_type == INSTANCE_APPROVER:
+                node.processors = approver
+
+    def has_instance_approver_node(self, judge_emptry=False):
+        """
+        是否包含资源审批人节点
+
+        judge_emptry: 是否判断节点的审批人为空
+        """
+        for node in self.nodes:
+            if node.is_iam_source() and node.processor_type == INSTANCE_APPROVER:
+                # 判断节点审批人是否为空
+                if judge_emptry and len(node.processors) == 0:
+                    return False
+
+                return True
+        return False

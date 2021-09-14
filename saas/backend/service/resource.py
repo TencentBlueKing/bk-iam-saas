@@ -16,6 +16,7 @@ from redis.exceptions import RedisError
 from backend.component import iam, resource_provider
 from backend.util.basic import chunked
 from backend.util.cache import redis_region, region
+from saas.backend.service.models.resource import ResourceApproverAttribute
 
 from .models import (
     ResourceAttribute,
@@ -134,6 +135,7 @@ class ResourceProvider:
     """资源提供者"""
 
     name_attribute = "display_name"
+    approver_attribute = "_bk_iam_approver_"
 
     def __init__(self, system_id: str, resource_type_id: str):
         """初始化：认证信息、请求客户端"""
@@ -256,5 +258,24 @@ class ResourceProvider:
                 for i in not_cached_results
             ]
         )
+
+        return results
+
+    def fetch_instance_approver(self, ids: List[str]) -> List[ResourceApproverAttribute]:
+        """批量查询资源实例的实例审批人属性"""
+        instance_infos = self.fetch_instance_info(ids, [self.approver_attribute])
+
+        results = []
+        for one in instance_infos:
+            if self.approver_attribute not in one.attributes:
+                continue
+
+            # 兼容可能返回 list/string 的情况
+            if isinstance(one.attributes[self.approver_attribute], list) and one.attributes[self.approver_attribute]:
+                results.append(ResourceApproverAttribute(id=one.id, approver=one.attributes[self.approver_attribute]))
+            elif isinstance(one.attributes[self.approver_attribute], str) and one.attributes[self.approver_attribute]:
+                results.append(
+                    ResourceApproverAttribute(id=one.id, approver=[one.attributes[self.approver_attribute]])
+                )
 
         return results

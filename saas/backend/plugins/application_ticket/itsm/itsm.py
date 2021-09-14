@@ -79,6 +79,11 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         params = self._generate_ticket_common_params(data, process, callback_url)
         params["title"] = f"{data.content.system.name}权限申请"
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [ActionTable.from_application(data.content).dict()]}
+
+        # 如果审批流程中包含资源审批人, 并且资源审批人不为空
+        # 增加 has_instance_approver 字段, 用于itsm审批流程走分支
+        params["has_instance_approver"] = process.has_instance_approver_node(judge_emptry=True)
+
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 

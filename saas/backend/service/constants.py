@@ -184,9 +184,17 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
     )
 
 
+# 实例审批人
+INSTANCE_APPROVER = "instance_approver"
+
+
 # 每一种申请单据，对应的审批流程节点可以支持的ROLE
 APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
-    ApplicationTypeEnum.GRANT_ACTION.value: (RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value),
+    ApplicationTypeEnum.GRANT_ACTION.value: (
+        RoleType.SUPER_MANAGER.value,
+        RoleType.SYSTEM_MANAGER.value,
+        INSTANCE_APPROVER,
+    ),
     ApplicationTypeEnum.JOIN_GROUP.value: (RoleType.SUPER_MANAGER.value, RoleType.RATING_MANAGER.value),
     ApplicationTypeEnum.JOIN_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value, RoleType.RATING_MANAGER.value),
     ApplicationTypeEnum.CREATE_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value,),
@@ -206,6 +214,7 @@ IAM_SUPPORT_PROCESSOR_TYPES = [
     RoleType.SUPER_MANAGER.value,
     RoleType.SYSTEM_MANAGER.value,
     RoleType.RATING_MANAGER.value,
+    INSTANCE_APPROVER,  # 实例审批人
 ]
 
 
