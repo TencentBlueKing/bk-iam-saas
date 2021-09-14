@@ -85,7 +85,7 @@ class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
         self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
 
         groups = self.group_biz.batch_create(
-            request.role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
+            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
         )
 
         # 添加审计信息

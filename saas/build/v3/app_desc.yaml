@@ -24,6 +24,8 @@ modules:
     env_variables:
       - key: DISABLE_COLLECTSTATIC
         value: 1
+      - key: PIP_VERSION
+        value: 20.2.3
     processes:
       web:
         command: bash bin/start.sh
