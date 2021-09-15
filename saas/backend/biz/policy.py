@@ -1018,7 +1018,7 @@ def policy_change_lock(func):
         lock_key = f"bk_iam:lock:{system_id}:{subject.type}:{subject.id}"
         # 加 system + subject 锁
         with cache.lock(lock_key, timeout=10):
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
 
     return wrapper
 

@@ -66,6 +66,7 @@
             :title="sidesliderTitle"
             :width="725"
             quick-close
+            data-test-id="myPerm-sideslider-resourceInsance"
             @update:isShow="handleResourceCancel">
             <div slot="header" class="iam-my-custom-perm-silder-header">
                 <span>{{ sidesliderTitle}}</span>

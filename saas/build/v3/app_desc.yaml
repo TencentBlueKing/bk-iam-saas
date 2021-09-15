@@ -24,6 +24,8 @@ modules:
     env_variables:
       - key: DISABLE_COLLECTSTATIC
         value: 1
+      - key: PIP_VERSION
+        value: 20.2.3
     processes:
       web:
         command: bash bin/start.sh
@@ -38,5 +40,5 @@ modules:
         replicas: 1
     svc_discovery:
       bk_saas:
-        - 'bk_iam'
-        - 'bk_itsm'
+        - bk_app_code: 'bk_iam'
+        - bk_app_code: 'bk_itsm'

@@ -35,7 +35,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     }
     data.update(common_params)
 
-    url = f"{settings.BK_PAAS_INNER_HOST}{url_path}"
+    url = f"{settings.BK_COMPONENT_API_URL}{url_path}"
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
     ok, data = http_func(**kwargs)
