@@ -41,14 +41,14 @@ class ResourceInstanceSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID", required=True)
     type = serializers.CharField(label="资源类型")
     id = serializers.CharField(label="资源ID")
-    name = serializers.CharField(label="资源名称")
+    name = serializers.CharField(label="资源名称", trim_whitespace=False)
 
 
 class PathNodeSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID", default="", allow_blank=True, required=False)
     type = serializers.CharField(label="资源类型", required=True)
     id = serializers.CharField(label="资源实例ID", required=True)
-    name = serializers.CharField(label="资源实例ID名称", required=True, allow_blank=True)
+    name = serializers.CharField(label="资源实例ID名称", required=True, allow_blank=True, trim_whitespace=False)
 
 
 class ResourcePathSLZ(serializers.Serializer):
@@ -96,7 +96,7 @@ class AuthPathSLZ(BaseAuthSLZ, AuthActionSLZ):
 
 class SimpleInstanceSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源ID")
-    name = serializers.CharField(label="资源名称")
+    name = serializers.CharField(label="资源名称", trim_whitespace=False)
 
 
 class BatchResourceInstanceSLZ(serializers.Serializer):
@@ -167,7 +167,7 @@ class AncestorSLZ(serializers.Serializer):
 
 class SingleInstanceSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源ID")
-    name = serializers.CharField(label="资源名称")
+    name = serializers.CharField(label="资源名称", trim_whitespace=False)
     ancestors = serializers.ListField(label="祖先", child=AncestorSLZ(label="祖先层级"), allow_empty=True, required=False)
 
 
