@@ -390,8 +390,8 @@ class ApplicationBiz:
 
         # 原始的策略删除带有新的审批流程的部分
         old_policy_list = PolicyBeanList(system_id, policies)
-        for policy_process in policy_process_with_approver:
-            old_policy_list = old_policy_list.sub(PolicyBeanList(system_id, [policy_process[0]]))
+        for policy, __ in policy_process_with_approver:
+            old_policy_list = old_policy_list.sub(PolicyBeanList(system_id, [policy]))
 
         for policy in old_policy_list.policies:
             policy_process_with_approver.append((policy, process))
