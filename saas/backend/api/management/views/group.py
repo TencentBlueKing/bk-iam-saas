@@ -288,7 +288,7 @@ class ManagementGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
         self.biz.remove_members(str(group.id), members)
 
         # 写入审计上下文
-        audit_context_setter(group=group, members=members)
+        audit_context_setter(group=group, members=[m.dict() for m in members])
 
         return Response({})
 

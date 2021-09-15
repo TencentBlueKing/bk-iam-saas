@@ -252,7 +252,7 @@ class ApplicationBiz:
             processors = []
             if node.processor_type == RoleType.SUPER_MANAGER.value:
                 processors = self.approval_processor_biz.get_super_manager_members()
-            elif node.processor_type == RoleType.SUPER_MANAGER.value:
+            elif node.processor_type == RoleType.SYSTEM_MANAGER.value:
                 processors = self.approval_processor_biz.get_system_manager_members(system_id=kwargs["system_id"])
             elif node.processor_type == RoleType.RATING_MANAGER.value:
                 processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
