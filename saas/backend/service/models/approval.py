@@ -14,8 +14,8 @@ from pydantic import BaseModel
 
 from ..constants import (
     APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP,
-    INSTANCE_APPROVER,
     ApplicationTypeEnum,
+    ProcessorNodeTypeEnum,
     ProcessorSourceEnum,
 )
 
@@ -127,7 +127,7 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
 
     def set_instance_approver(self, approver: List[str]):
         for node in self.nodes:
-            if node.is_iam_source() and node.processor_type == INSTANCE_APPROVER:
+            if node.is_iam_source() and node.processor_type == ProcessorNodeTypeEnum.INSTANCE_APPROVER.value:
                 node.processors = approver
 
     def has_instance_approver_node(self, judge_empty=False):
@@ -137,7 +137,7 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
         judge_empty: 是否判断节点的审批人为空
         """
         for node in self.nodes:
-            if node.is_iam_source() and node.processor_type == INSTANCE_APPROVER:
+            if node.is_iam_source() and node.processor_type == ProcessorNodeTypeEnum.INSTANCE_APPROVER.value:
                 # 判断节点审批人是否为空
                 if judge_empty and len(node.processors) == 0:
                     return False

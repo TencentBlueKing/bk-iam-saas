@@ -14,9 +14,9 @@ from typing import Dict, List, Optional, Tuple
 from redis.exceptions import RedisError
 
 from backend.component import iam, resource_provider
+from backend.service.models.resource import ResourceApproverAttribute
 from backend.util.basic import chunked
 from backend.util.cache import redis_region, region
-from saas.backend.service.models.resource import ResourceApproverAttribute
 
 from .models import (
     ResourceAttribute,
