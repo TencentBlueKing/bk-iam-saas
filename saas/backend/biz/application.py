@@ -258,6 +258,7 @@ class ApplicationBiz:
                 processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
                     group_id=kwargs["group_id"]
                 )
+            # NOTE: 由于资源实例审批人节点的逻辑涉及到复杂的拆分, 合并逻辑, 不在这里处理
 
             node_with_processor.processors = processors
             nodes_with_processor.append(node_with_processor)
@@ -326,6 +327,7 @@ class ApplicationBiz:
             # 从申请数据里获取对应Actions要申请的策略
             policies: List[PolicyBean] = [policy_list.get(action_id) for action_id in action_ids]  # type: ignore
 
+            # 流程中不存在资源实例审批节点
             if not process.has_instance_approver_node():
                 # 组装申请数据
                 application_data = GrantActionApplicationData(
@@ -369,7 +371,7 @@ class ApplicationBiz:
         """
         生成有资源审批人节点的申请数据
         """
-        # 筛选出需要查询实例审批人的节点
+        # 筛选出需要查询实例审批人的资源实例叶子节点(不包含非叶子节点的路径)
         resource_nodes = self._list_leaf_node_by_policies(policies)
         # 不需要查询实例审批人
         if not resource_nodes:
@@ -382,17 +384,18 @@ class ApplicationBiz:
 
         # 需要使用实例审批人的策略 - 流程
         policy_process_with_approver: List[Tuple[PolicyBean, ApprovalProcessWithNodeProcessor]] = []
-        # 遍历policies, 抠出有资源实例审批人的部分实例
+        # 遍历policies, 抠出有资源实例审批人的部分实例, 生成单实例的policy与填充了实例审批人的流程
         for policy in policies:
             policy_process_with_approver.extend(
                 self._gen_leaf_node_policy_process(policy, process, resource_approver_dict)
             )
 
-        # 原始的策略删除带有新的审批流程的部分
+        # 原始的策略删除带有实例审批人的部分
         old_policy_list = PolicyBeanList(system_id, policies)
         for policy, __ in policy_process_with_approver:
             old_policy_list = old_policy_list.sub(PolicyBeanList(system_id, [policy]))
 
+        # NOTE: 原始的策略也可能与部分资源审批人查询不到的策略合并
         for policy in old_policy_list.policies:
             policy_process_with_approver.append((policy, process))
 
@@ -404,13 +407,13 @@ class ApplicationBiz:
         self, system_id, policy_resource: List[Tuple[PolicyBean, ApprovalProcessWithNodeProcessor]]
     ) -> List[Tuple[PolicyBeanList, ApprovalProcessWithNodeProcessor]]:
         """聚合审批流程相同的策略"""
-        # 聚合相同流程所有的单path polices
+        # 聚合相同流程所有的polices
         merge_process_dict = defaultdict(list)
         for policy, _process in policy_resource:
             merge_process_dict[_process].append(policy)
 
         policy_list_process = []
-        # 聚合相同流程中, 操作相同的所有 policies
+        # 流程相同的策略中, 合并action_id一样的策略
         for _process, _policies in merge_process_dict.items():
             policy_list = PolicyBeanList(system_id, [])
             for p in _policies:
@@ -427,6 +430,7 @@ class ApplicationBiz:
         resource_approver_dict: ResourceNodeAttributeDictBean,
     ) -> List[Tuple[PolicyBean, ApprovalProcessWithNodeProcessor]]:
         """生成叶子节点有实例审批人的审批流程"""
+        # NOTE: 支持关联单个资源类型的操作使用实例审批人节点
         if len(policy.related_resource_types) != 1:
             return []
 

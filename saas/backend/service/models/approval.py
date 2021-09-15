@@ -130,16 +130,16 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
             if node.is_iam_source() and node.processor_type == INSTANCE_APPROVER:
                 node.processors = approver
 
-    def has_instance_approver_node(self, judge_emptry=False):
+    def has_instance_approver_node(self, judge_empty=False):
         """
         是否包含资源审批人节点
 
-        judge_emptry: 是否判断节点的审批人为空
+        judge_empty: 是否判断节点的审批人为空
         """
         for node in self.nodes:
             if node.is_iam_source() and node.processor_type == INSTANCE_APPROVER:
                 # 判断节点审批人是否为空
-                if judge_emptry and len(node.processors) == 0:
+                if judge_empty and len(node.processors) == 0:
                     return False
 
                 return True
