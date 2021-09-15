@@ -32,7 +32,7 @@ class ResourceSLZ(serializers.Serializer):
     type = serializers.CharField(label="资源类型", required=True)
     type_name = serializers.CharField(label="资源类型名称", required=True, allow_blank=True)
     id = serializers.CharField(label="资源实例ID", required=True)
-    name = serializers.CharField(label="资源实例ID名称", required=True, allow_blank=True)
+    name = serializers.CharField(label="资源实例ID名称", required=True, allow_blank=True, trim_whitespace=False)
 
 
 class InstanceSLZ(serializers.Serializer):
