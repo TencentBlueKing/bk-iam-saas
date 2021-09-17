@@ -83,7 +83,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         # 如果审批流程中包含资源审批人, 并且资源审批人不为空
         # 增加 has_instance_approver 字段, 用于itsm审批流程走分支
         if process.has_instance_approver_node():
-            params["has_instance_approver"] = process.has_instance_approver_node(judge_empty=True)
+            params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
