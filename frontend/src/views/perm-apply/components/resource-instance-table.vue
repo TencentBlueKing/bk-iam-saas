@@ -286,6 +286,7 @@
                 if (!curData) {
                     return []
                 }
+                console.log('condition', _.cloneDeep(curData.condition))
                 return _.cloneDeep(curData.condition)
             },
             originalCondition () {

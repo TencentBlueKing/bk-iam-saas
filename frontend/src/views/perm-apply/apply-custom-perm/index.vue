@@ -1408,7 +1408,7 @@
                                     // console.log('instances: ')
                                     // console.log(instances)
                                     console.log('isAllEqual: ', isAllEqual)
-                                    if (isAllEqual && instances[0][0]) {
+                                    if (isAllEqual) {
                                         const instanceData = instances[0][0][0]
                                         item.instances = instanceData.path.map(pathItem => {
                                             return {
