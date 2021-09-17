@@ -341,6 +341,7 @@
             list: {
                 handler (value) {
                     this.tableList = value
+                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             },
