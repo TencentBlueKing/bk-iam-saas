@@ -86,7 +86,7 @@ class OpenRelatedResource(BaseModel):
         for path in self.paths:
             for node in path:
                 if node.name == "":
-                    node.name = name_provider.get_attribute(node.system_id, node.type, node.id)
+                    node.name = name_provider.get_attribute(parse_obj_as(ResourceNodeBean, node))
 
 
 class OpenPolicy(BaseModel):

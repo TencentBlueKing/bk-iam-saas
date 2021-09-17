@@ -79,12 +79,12 @@ class ResourceNodeAttributeDictBean(BaseModel):
     def has(self, system_id: str, _type: str, _id: str):
         return ResourceNodeBean(system_id=system_id, type=_type, id=_id) in self.data
 
-    def get_attribute(self, system_id: str, _type: str, _id: str):
+    def get_attribute(self, node: ResourceNodeBean):
         """获取资源属性"""
-        return self.data.get(ResourceNodeBean(system_id=system_id, type=_type, id=_id), None)
+        return self.data.get(node, None)
 
     def is_empty(self):
-        return bool(self.data)
+        return len(self.data) == 0
 
 
 class ResourceBiz:

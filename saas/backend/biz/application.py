@@ -462,13 +462,13 @@ class ApplicationBiz:
                                 condition=[
                                     ConditionBean(
                                         attributes=[],
-                                        instances=[InstanceBean(path=[path], **instance.dict(exclude=["path"]))],
+                                        instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
                                     )
                                 ],
-                                **rrt.dict(exclude=["condition"]),
+                                **rrt.dict(exclude={"condition"}),
                             )
                         ],
-                        **policy.dict(exclude=["related_resource_types"]),
+                        **policy.dict(exclude={"related_resource_types"}),
                     )
 
                     # 复制出新的审批流程, 并填充实例审批人
