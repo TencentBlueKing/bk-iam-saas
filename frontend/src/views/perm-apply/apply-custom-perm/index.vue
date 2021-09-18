@@ -1551,7 +1551,7 @@
                                             curData.expired_display = item.expired_display
                                             if (instances.length > 0) {
                                                 curData.related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')]
+                                                    subItem.condition = [new Condition({ instances }, '', 'add')] // 选择的时候flag为add 代表为新增数据  侧边栏数据disabled为false可选择
                                                 })
                                             }
                                             this.tableData.splice(i, 1, curData)
