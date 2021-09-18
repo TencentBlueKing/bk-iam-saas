@@ -1134,7 +1134,7 @@
                         tempExpiredAt = parseInt(item.expired_display, 10) * 24 * 3600
                     }
                     if (!item.isAggregate) {
-                        const { type, id, name, environment, description, policy_id, isNew } = item
+                        const { type, id, name, environment, description, policy_id, isNew, isChanged } = item
                         const relatedResourceTypes = []
                         if (item.related_resource_types.length > 0) {
                             item.related_resource_types.forEach(resItem => {
@@ -1205,7 +1205,7 @@
                             policy_id,
                             expired_at: item.expired_at === '' ? tempExpiredAt : Number(item.expired_at)
                         }
-                        if ((isNew || item.isExpired) && params.expired_at !== PERMANENT_TIMESTAMP) {
+                        if ((isNew || isChanged || item.isExpired) && params.expired_at !== PERMANENT_TIMESTAMP) { // 变更isChanged也需要加上this.user.timestamp
                             // 说明显示了 取消续期 按钮，即选择续期时间的下拉框已经选择了选择具体的续期时间，所以过期时间是选择的那个续期时间加上时间戳
                             // 如果没有显示 取消续期 按钮，那么就是显示的续期按钮，这时没有选择具体的续期时间因此过期时间还是之前的，不变
                             if (!item.isShowRenewal) {
