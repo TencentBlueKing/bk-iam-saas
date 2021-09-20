@@ -22,6 +22,7 @@
                 :class="conditionData.length === 1 ? 'is-one-resource-instance' : ''">
                 <render-order-number v-if="conditionData.length > 1" :number="`${index + 1 }`" />
                 <div class="resource-instance-wrapper" :class="conditionData.length > 1 ? 'set-padding' : ''">
+                    <!-- 实例 -->
                     <render-resource-instance
                         v-if="condition.hasOwnProperty('instance')"
                         :expanded.sync="condition.instanceExpanded"
@@ -70,6 +71,7 @@
                             </div>
                         </div>
                     </render-resource-instance>
+                    <!-- 属性 -->
                     <render-resource-instance
                         v-if="condition.hasOwnProperty('attribute')"
                         type="property"

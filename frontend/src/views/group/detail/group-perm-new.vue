@@ -167,7 +167,7 @@
             },
 
             handleEdit (paylaod) {
-                this.$set(paylaod, 'isEdit', true)
+                this.$set(paylaod, 'isEdit', true) // 事件会冒泡会触发handleExpanded方法
             },
 
             handleCancel (paylaod) {
@@ -191,7 +191,7 @@
                         item.editLoading = false
                         item.deleteLoading = false
                     })
-                    groupSystem.templates = res.data
+                    groupSystem.templates = res.data // 赋值给展开项
                     if (groupSystem.custom_policy_count) {
                         groupSystem.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
@@ -313,7 +313,7 @@
                     const tableData = res.data.map(row => {
                         return new GroupPolicy(
                             row,
-                            'detail',
+                            'detail', // 此属性为flag，会在related-resource-types赋值为add
                             'custom',
                             { system: item.system }
                         )
