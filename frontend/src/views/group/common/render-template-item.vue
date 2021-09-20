@@ -9,7 +9,7 @@
                         ({{ count }})
                     </template>
                 </span>
-                <template v-if="(isExpanded || ShowEditFill) && mode === 'edit'">
+                <template v-if="(isExpanded || ShowEditFill) && !isUser">
                     <section class="edit-action" @click.stop="handleEdit">
                         <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail ? false : true" />
                     </section>
@@ -18,7 +18,7 @@
                     trigger="click"
                     :title="$t(`m.info['确定删除']`)"
                     @confirm="handleDelete">
-                    <template v-if="(isExpanded || ShowEditFill) && mode === 'edit'">
+                    <template v-if="(isExpanded || ShowEditFill) && !isUser">
                         <section class="delete-action" @click.stop="toDeletePolicyCount">
                             <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
                         </section>
@@ -104,6 +104,9 @@
             },
             isStaff () {
                 return store.state.user.role.type === 'staff'
+            },
+            isUser () {
+                return this.$route.name === 'user'
             }
         },
         watch: {
