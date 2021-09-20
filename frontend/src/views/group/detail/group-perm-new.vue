@@ -191,7 +191,7 @@
                         item.editLoading = false
                         item.deleteLoading = false
                     })
-                    groupSystem.templates = res.data
+                    groupSystem.templates = res.data // 赋值给展开项
                     if (groupSystem.custom_policy_count) {
                         groupSystem.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
