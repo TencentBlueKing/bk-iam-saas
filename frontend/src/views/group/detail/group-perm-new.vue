@@ -167,7 +167,7 @@
             },
 
             handleEdit (paylaod) {
-                this.$set(paylaod, 'isEdit', true)
+                this.$set(paylaod, 'isEdit', true) // 事件会冒泡会触发handleExpanded方法
             },
 
             handleCancel (paylaod) {
@@ -313,7 +313,7 @@
                     const tableData = res.data.map(row => {
                         return new GroupPolicy(
                             row,
-                            'detail',
+                            'detail', // 此属性为flag，会在related-resource-types赋值为add
                             'custom',
                             { system: item.system }
                         )
