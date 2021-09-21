@@ -225,6 +225,7 @@
                 }
             },
 
+            // 进入之后会在子组件中触发执行
             handleExpanded (flag, item) {
                 if (!flag) {
                     return
