@@ -21,6 +21,7 @@ class VueTemplateView(TemplateView):
         try:
             context = {
                 "BK_PAAS_HOST": settings.BK_PAAS_HOST.rstrip("/"),
+                "BK_COMPONENT_API_URL": settings.BK_COMPONENT_API_URL.rstrip("/"),
                 "LOGIN_SERVICE_URL": settings.LOGIN_SERVICE_URL.rstrip("/"),
                 "AJAX_URL_PREFIX": settings.AJAX_URL_PREFIX.rstrip("/"),
                 "SITE_URL": settings.SITE_URL,
