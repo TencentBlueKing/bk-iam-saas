@@ -285,7 +285,6 @@
                 if (!curData) {
                     return []
                 }
-                if (curData.condition.length === 0) curData.condition = ['none']
                 return _.cloneDeep(curData.condition)
             },
             originalCondition () {
@@ -341,6 +340,7 @@
             list: {
                 handler (value) {
                     this.tableList = value
+                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             },

@@ -30,7 +30,7 @@ import Condition from './condition'
 const isCn = language === 'zh-cn'
 export default class RelateResourceTypes {
     // instanceNotDisabled: instance 不允许 disabled
-    constructor (payload, action, flag = '', instanceNotDisabled = false) {
+    constructor (payload, action, flag = '', instanceNotDisabled = false, isNew = false) {
         this.type = ['', 'detail'].includes(flag) ? payload.type : payload.id
         this.system_id = payload.system_id
         this.name = payload.name || ''
@@ -42,17 +42,17 @@ export default class RelateResourceTypes {
         this.isChange = false
         this.selectionMode = payload.selection_mode || 'all'
         const curFlag = flag === 'detail' ? 'add' : ''
-        this.initCondition(payload, curFlag, instanceNotDisabled)
+        this.initCondition(payload, curFlag, instanceNotDisabled, isNew)
     }
 
-    initCondition (payload, flag, instanceNotDisabled) {
+    initCondition (payload, flag, instanceNotDisabled, isNew) {
         // conditionBackup: 做还原操作时的数据备份
         const isEmpty = !payload.condition
             || (
                 payload.condition.length > 0
                     && payload.condition.every(item => item.attributes.length < 1 && item.instances.length < 1)
             )
-        if (isEmpty) {
+        if (isEmpty || (payload.condition.length === 0 && isNew)) {
             this.condition = ['none']
             this.conditionBackup = ['none']
             return
