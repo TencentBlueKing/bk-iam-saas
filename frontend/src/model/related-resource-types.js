@@ -40,6 +40,7 @@ export default class RelateResourceTypes {
         this.tag = payload.tag || ''
         this.flag = ['add', 'detail'].includes(flag) ? 'add' : ''
         this.isChange = false
+        this.isNew = isNew
         this.selectionMode = payload.selection_mode || 'all'
         const curFlag = flag === 'detail' ? 'add' : ''
         this.initCondition(payload, curFlag, instanceNotDisabled, isNew)
@@ -67,7 +68,7 @@ export default class RelateResourceTypes {
     }
 
     get isDefaultLimit () {
-        return this.flag === '' && this.condition.length < 1 && !this.isChange
+        return this.flag === '' && this.condition.length < 1 && !this.isChange && !this.isNew
     }
 
     get empty () {

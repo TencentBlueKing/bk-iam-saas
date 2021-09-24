@@ -94,13 +94,13 @@
                     </template>
                     <template v-else>
                         <!-- 22 -->
-                        <template v-if="!row.isNew && !row.isExpired">
+                        <template v-if="!row.isNew && !row.isExpired && !row.isChanged">
                             <!-- 33 -->
                             <div class="mock-disabled-select">{{row.expired_display}}</div>
                         </template>
                         <template v-else>
                             <!-- 44 -->
-                            <template v-if="row.isShowRelatedText && row.inOriginalList">
+                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId">
                                 <!-- 55 -->
                                 <div class="mock-disabled-select">{{row.expired_display}}</div>
                             </template>
@@ -144,7 +144,7 @@
                                 <bk-button
                                     class="cancel-renewal-action"
                                     outline
-                                    v-if="!row.isNew && !row.isShowRenewal"
+                                    v-if="!row.isNew && !row.isShowRenewal && !row.isChanged"
                                     @click="handleCancelRenewal(row)">
                                     {{ $t(`m.permApply['取消续期']`) }}
                                 </bk-button>
@@ -232,6 +232,10 @@
                 default: () => []
             },
             systemId: {
+                type: String,
+                default: ''
+            },
+            cacheId: {
                 type: String,
                 default: ''
             }
@@ -668,7 +672,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: item.tag || 'update', isShowRelatedText: true, inOriginalList }, '', false)
+                            new Policy({ ...item, tag: item.tag || 'add', isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })
