@@ -101,8 +101,8 @@ def user_cleanup_expired_policy():
                 continue
 
             # 分系统删除过期的策略
-            sorted_policies = sorted(policies, key=lambda p: p.system)
-            for system_id, per_policies in groupby(sorted_policies, lambda p: p.system):
+            sorted_policies = sorted(policies, key=lambda p: p.system.id)
+            for system_id, per_policies in groupby(sorted_policies, lambda p: p.system.id):
                 per_policies = list(per_policies)
                 policy_operation_biz.delete_by_ids(system_id, subject, [p.id for p in per_policies])
 
