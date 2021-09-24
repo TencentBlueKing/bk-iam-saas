@@ -372,7 +372,7 @@ class ApplicationBiz:
         生成有资源审批人节点的申请数据
         """
         # 筛选出需要查询实例审批人的资源实例节点
-        resource_nodes = self._list_approver_node_by_policies(policies)
+        resource_nodes = self._list_approver_resource_node_by_policies(policies)
         # 不需要查询实例审批人
         if not resource_nodes:
             return [(PolicyBeanList(system_id, policies), process)]
@@ -387,7 +387,7 @@ class ApplicationBiz:
         # 遍历policies, 抠出有资源实例审批人的部分实例, 生成单实例的policy与填充了实例审批人的流程
         for policy in policies:
             policy_process_with_approver.extend(
-                self._gen_approver_node_policy_process(policy, process, resource_approver_dict)
+                self._gen_approver_resource_node_policy_process(policy, process, resource_approver_dict)
             )
 
         # 原始的策略删除带有实例审批人的部分
@@ -423,7 +423,7 @@ class ApplicationBiz:
 
         return policy_list_process
 
-    def _gen_approver_node_policy_process(
+    def _gen_approver_resource_node_policy_process(
         self,
         policy: PolicyBean,
         process: ApprovalProcessWithNodeProcessor,
@@ -479,7 +479,7 @@ class ApplicationBiz:
 
         return policy_process
 
-    def _list_approver_node_by_policies(self, policies: List[PolicyBean]) -> List[ResourceNodeBean]:
+    def _list_approver_resource_node_by_policies(self, policies: List[PolicyBean]) -> List[ResourceNodeBean]:
         """列出policies中所有资源的节点"""
         # 需要查询资源实例审批人的节点集合
         resource_node_set = set()
