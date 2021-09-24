@@ -371,8 +371,8 @@ class ApplicationBiz:
         """
         生成有资源审批人节点的申请数据
         """
-        # 筛选出需要查询实例审批人的资源实例叶子节点(不包含非叶子节点的路径)
-        resource_nodes = self._list_leaf_node_by_policies(policies)
+        # 筛选出需要查询实例审批人的资源实例节点
+        resource_nodes = self._list_approver_node_by_policies(policies)
         # 不需要查询实例审批人
         if not resource_nodes:
             return [(PolicyBeanList(system_id, policies), process)]
@@ -387,7 +387,7 @@ class ApplicationBiz:
         # 遍历policies, 抠出有资源实例审批人的部分实例, 生成单实例的policy与填充了实例审批人的流程
         for policy in policies:
             policy_process_with_approver.extend(
-                self._gen_leaf_node_policy_process(policy, process, resource_approver_dict)
+                self._gen_approver_node_policy_process(policy, process, resource_approver_dict)
             )
 
         # 原始的策略删除带有实例审批人的部分
@@ -423,13 +423,13 @@ class ApplicationBiz:
 
         return policy_list_process
 
-    def _gen_leaf_node_policy_process(
+    def _gen_approver_node_policy_process(
         self,
         policy: PolicyBean,
         process: ApprovalProcessWithNodeProcessor,
         resource_approver_dict: ResourceNodeAttributeDictBean,
     ) -> List[Tuple[PolicyBean, ApprovalProcessWithNodeProcessor]]:
-        """生成叶子节点有实例审批人的审批流程"""
+        """生成审批人节点有实例审批人的审批流程"""
         # NOTE: 支持关联单个资源类型的操作使用实例审批人节点
         if len(policy.related_resource_types) != 1:
             return []
@@ -447,9 +447,9 @@ class ApplicationBiz:
                 for path in instance.path:
                     last_node = path[-1]
                     if last_node.id == "*":
-                        continue
-                    if last_node.system_id != rrt.system_id or last_node.type != rrt.type:
-                        continue
+                        if len(path) < 2:
+                            continue
+                        last_node = path[-2]
 
                     resource_node = parse_obj_as(ResourceNodeBean, last_node)
                     if not resource_approver_dict.get_attribute(resource_node):
@@ -479,8 +479,8 @@ class ApplicationBiz:
 
         return policy_process
 
-    def _list_leaf_node_by_policies(self, policies: List[PolicyBean]) -> List[ResourceNodeBean]:
-        """列出policies中所有资源的叶子节点"""
+    def _list_approver_node_by_policies(self, policies: List[PolicyBean]) -> List[ResourceNodeBean]:
+        """列出policies中所有资源的节点"""
         # 需要查询资源实例审批人的节点集合
         resource_node_set = set()
         for policy in policies:
@@ -492,10 +492,10 @@ class ApplicationBiz:
             for path in rrt.iter_path_list(ignore_attribute=True):
                 last_node = path.nodes[-1]
                 if last_node.id == "*":
-                    continue
-                # 必须是资源类型的叶子节点才支持查询资源审批人
-                if last_node.system_id == rrt.system_id and last_node.type == rrt.type:
-                    resource_node_set.add(parse_obj_as(ResourceNodeBean, last_node))
+                    if len(path.nodes) < 2:
+                        continue
+                    last_node = path.nodes[-2]
+                resource_node_set.add(parse_obj_as(ResourceNodeBean, last_node))
         return list(resource_node_set)
 
     def create_for_renew_policy(
