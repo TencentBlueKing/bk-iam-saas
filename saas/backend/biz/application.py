@@ -31,7 +31,7 @@ from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, RoleType, SubjectType
+from backend.service.constants import ANY_ID, ApplicationStatus, ApplicationTypeEnum, RoleType, SubjectType
 from backend.service.models import (
     ApplicantDepartment,
     ApplicantInfo,
@@ -446,7 +446,7 @@ class ApplicationBiz:
             for instance in condition.instances:
                 for path in instance.path:
                     last_node = path[-1]
-                    if last_node.id == "*":
+                    if last_node.id == ANY_ID:
                         if len(path) < 2:
                             continue
                         last_node = path[-2]
@@ -456,20 +456,7 @@ class ApplicationBiz:
                         continue
 
                     # 复制出单实例的policy
-                    copied_policy = PolicyBean(
-                        related_resource_types=[
-                            RelatedResourceBean(
-                                condition=[
-                                    ConditionBean(
-                                        attributes=[],
-                                        instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
-                                    )
-                                ],
-                                **rrt.dict(exclude={"condition"}),
-                            )
-                        ],
-                        **policy.dict(exclude={"related_resource_types"}),
-                    )
+                    copied_policy = self._copy_policy_by_instance_path(policy, rrt, instance, path)
 
                     # 复制出新的审批流程, 并填充实例审批人
                     copied_process = deepcopy(process)
@@ -478,6 +465,24 @@ class ApplicationBiz:
                     policy_process.append((copied_policy, copied_process))
 
         return policy_process
+
+    def _copy_policy_by_instance_path(self, policy, rrt, instance, path):
+        # 复制出单实例的policy
+        copied_policy = PolicyBean(
+            related_resource_types=[
+                RelatedResourceBean(
+                    condition=[
+                        ConditionBean(
+                            attributes=[],
+                            instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
+                        )
+                    ],
+                    **rrt.dict(exclude={"condition"}),
+                )
+            ],
+            **policy.dict(exclude={"related_resource_types"}),
+        )
+        return copied_policy
 
     def _list_approver_resource_node_by_policies(self, policies: List[PolicyBean]) -> List[ResourceNodeBean]:
         """列出policies中所有资源的节点"""
@@ -491,7 +496,7 @@ class ApplicationBiz:
             rrt = policy.related_resource_types[0]
             for path in rrt.iter_path_list(ignore_attribute=True):
                 last_node = path.nodes[-1]
-                if last_node.id == "*":
+                if last_node.id == ANY_ID:
                     if len(path.nodes) < 2:
                         continue
                     last_node = path.nodes[-2]
