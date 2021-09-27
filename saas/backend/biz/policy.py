@@ -865,7 +865,7 @@ class PolicyBeanList:
 
         # 校验从接入系统查询的资源实例名称与提交的数据里的名称是否一致
         for node in path_nodes:
-            real_name = resource_name_dict.get_attribute(parse_obj_as(ResourceNodeBean, node))
+            real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
             # 任意需要特殊判断：只要包含无限制即可
             if node.id == ANY_ID and real_name in node.name:
                 continue

@@ -243,7 +243,7 @@ class InstanceAproverHandler(PolicyProcesshandler):
                             continue
                         last_node = path[-2]
 
-                    resource_node = parse_obj_as(ResourceNodeBean, last_node)
+                    resource_node = ResourceNodeBean.parse_obj(last_node)
                     if not resource_approver_dict.get_attribute(resource_node):
                         continue
 
@@ -305,7 +305,7 @@ class InstanceAproverHandler(PolicyProcesshandler):
                 if len(path.nodes) < 2:
                     continue
                 last_node = path.nodes[-2]
-            resource_node_set.add(parse_obj_as(ResourceNodeBean, last_node))
+            resource_node_set.add(ResourceNodeBean.parse_obj(last_node))
         return list(resource_node_set)
 
 

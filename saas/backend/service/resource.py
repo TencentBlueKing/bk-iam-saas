@@ -271,11 +271,10 @@ class ResourceProvider:
                 continue
 
             # 兼容可能返回 list/string 的情况
-            if isinstance(one.attributes[self.approver_attribute], list) and one.attributes[self.approver_attribute]:
-                results.append(ResourceApproverAttribute(id=one.id, approver=one.attributes[self.approver_attribute]))
-            elif isinstance(one.attributes[self.approver_attribute], str) and one.attributes[self.approver_attribute]:
-                results.append(
-                    ResourceApproverAttribute(id=one.id, approver=[one.attributes[self.approver_attribute]])
-                )
+            approver = one.attributes[self.approver_attribute]
+            if isinstance(approver, list) and approver:
+                results.append(ResourceApproverAttribute(id=one.id, approver=approver))
+            elif isinstance(approver, str) and approver:
+                results.append(ResourceApproverAttribute(id=one.id, approver=[approver]))
 
         return results
