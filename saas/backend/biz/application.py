@@ -54,9 +54,9 @@ from backend.service.role import RoleService
 from backend.service.system import SystemService
 from backend.util.cache import region
 
+from .application_process import InstanceAproverHandler, PolicyProcess, PolicyProcessHandler
 from .group import GroupBiz, GroupMemberExpiredAtBean
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
-from .process import InstanceAproverHandler, PolicyProcess, PolicyProcessHandler
 from .role import RoleBiz, RoleInfo, RoleInfoBean
 from .subject import SubjectInfoList
 from .template import TemplateBiz
