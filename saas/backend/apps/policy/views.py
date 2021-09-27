@@ -70,10 +70,6 @@ class PolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         cache_id = slz.validated_data["cache_id"]
 
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
-
-        policies = self.policy_query_biz.list_by_subject(system_id, subject)
-
         if cache_id != "":
             cached_policy_list = self.application_policy_list_cache.get(cache_id)
             if cached_policy_list.system_id != system_id:
@@ -86,6 +82,8 @@ class PolicyViewSet(GenericViewSet):
 
             return Response([p.dict() for p in apply_policy_list.policies])
 
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
         return Response([p.dict() for p in policies])
 
     @swagger_auto_schema(
