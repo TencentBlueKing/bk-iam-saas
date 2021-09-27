@@ -389,7 +389,6 @@ class ApplicationBiz:
 
     policy_biz = PolicyQueryBiz()
     template_biz = TemplateBiz()
-    resource_biz = ResourceBiz()
 
     def _get_approval_process_with_node_processor(
         self, process: ApprovalProcess, **kwargs
