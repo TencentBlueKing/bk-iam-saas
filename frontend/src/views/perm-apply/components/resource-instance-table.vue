@@ -94,13 +94,13 @@
                     </template>
                     <template v-else>
                         <!-- 22 -->
-                        <template v-if="!row.isNew && !row.isExpired">
+                        <template v-if="!row.isNew && !row.isExpired && !row.isChanged">
                             <!-- 33 -->
                             <div class="mock-disabled-select">{{row.expired_display}}</div>
                         </template>
                         <template v-else>
                             <!-- 44 -->
-                            <template v-if="row.isShowRelatedText && row.inOriginalList">
+                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId">
                                 <!-- 55 -->
                                 <div class="mock-disabled-select">{{row.expired_display}}</div>
                             </template>
@@ -144,7 +144,7 @@
                                 <bk-button
                                     class="cancel-renewal-action"
                                     outline
-                                    v-if="!row.isNew && !row.isShowRenewal"
+                                    v-if="!row.isNew && !row.isShowRenewal && !row.isChanged"
                                     @click="handleCancelRenewal(row)">
                                     {{ $t(`m.permApply['取消续期']`) }}
                                 </bk-button>
@@ -234,6 +234,10 @@
             systemId: {
                 type: String,
                 default: ''
+            },
+            cacheId: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -285,7 +289,6 @@
                 if (!curData) {
                     return []
                 }
-                if (curData.condition.length === 0) curData.condition = ['none']
                 return _.cloneDeep(curData.condition)
             },
             originalCondition () {
@@ -341,6 +344,7 @@
             list: {
                 handler (value) {
                     this.tableList = value
+                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             },
@@ -668,7 +672,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: item.tag || 'update', isShowRelatedText: true, inOriginalList }, '', false)
+                            new Policy({ ...item, tag: item.tag || 'add', isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })
@@ -1134,7 +1138,7 @@
                         tempExpiredAt = parseInt(item.expired_display, 10) * 24 * 3600
                     }
                     if (!item.isAggregate) {
-                        const { type, id, name, environment, description, policy_id, isNew } = item
+                        const { type, id, name, environment, description, policy_id, isNew, isChanged } = item
                         const relatedResourceTypes = []
                         if (item.related_resource_types.length > 0) {
                             item.related_resource_types.forEach(resItem => {
@@ -1205,7 +1209,7 @@
                             policy_id,
                             expired_at: item.expired_at === '' ? tempExpiredAt : Number(item.expired_at)
                         }
-                        if ((isNew || item.isExpired) && params.expired_at !== PERMANENT_TIMESTAMP) {
+                        if ((isNew || isChanged || item.isExpired) && params.expired_at !== PERMANENT_TIMESTAMP) { // 变更isChanged也需要加上this.user.timestamp
                             // 说明显示了 取消续期 按钮，即选择续期时间的下拉框已经选择了选择具体的续期时间，所以过期时间是选择的那个续期时间加上时间戳
                             // 如果没有显示 取消续期 按钮，那么就是显示的续期按钮，这时没有选择具体的续期时间因此过期时间还是之前的，不变
                             if (!item.isShowRenewal) {

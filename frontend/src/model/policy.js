@@ -78,7 +78,7 @@ export default class Policy {
             return
         }
         this.related_resource_types = payload.related_resource_types.map(
-            item => new RelateResourceTypes(item, action, flag, instanceNotDisabled)
+            item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
         )
     }
 

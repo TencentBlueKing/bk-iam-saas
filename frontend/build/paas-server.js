@@ -59,7 +59,8 @@ const GLOBAL_VAR = {
     CSRF_COOKIE_NAME: process.env.CSRF_COOKIE_NAME || '',
     SESSION_COOKIE_DOMAIN: process.env.SESSION_COOKIE_DOMAIN || '',
     BK_ITSM_APP_URL: process.env.BK_ITSM_APP_URL || '',
-    ENABLE_MODEL_BUILD: process.env.ENABLE_MODEL_BUILD || ''
+    ENABLE_MODEL_BUILD: process.env.ENABLE_MODEL_BUILD || '',
+    BK_COMPONENT_API_URL: process.env.BK_COMPONENT_API_URL || ''
 }
 
 // APA 重定向回首页，由首页Route响应处理

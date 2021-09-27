@@ -102,7 +102,7 @@ class PathNodeBeanList:
         if (
             selection.ignore_iam_path
             and len(self.nodes) == len(selection.resource_type_chain)
-            and self.nodes[-1] != ANY_ID
+            and self.nodes[-1].id != ANY_ID
         ):
             return [self.nodes[-1]]
 
