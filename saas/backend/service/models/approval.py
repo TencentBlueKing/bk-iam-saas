@@ -130,7 +130,7 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
             if node.is_iam_source() and node.processor_type == ProcessorNodeTypeEnum.INSTANCE_APPROVER.value:
                 node.processors = approver
 
-    def has_instance_approver_node(self, judge_empty=False):
+    def has_instance_approver_node(self, judge_empty=False) -> bool:
         """
         是否包含资源审批人节点
 

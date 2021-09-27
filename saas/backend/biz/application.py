@@ -9,9 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from abc import ABC, abstractmethod
 from collections import defaultdict
-from copy import deepcopy
 from itertools import groupby
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -27,12 +25,11 @@ from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
 from backend.apps.template.models import PermTemplatePolicyAuthorized
-from backend.biz.resource import ResourceBiz, ResourceNodeAttributeDictBean, ResourceNodeBean
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ANY_ID, ApplicationStatus, ApplicationTypeEnum, RoleType, SubjectType
+from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, RoleType, SubjectType
 from backend.service.models import (
     ApplicantDepartment,
     ApplicantInfo,
@@ -58,16 +55,8 @@ from backend.service.system import SystemService
 from backend.util.cache import region
 
 from .group import GroupBiz, GroupMemberExpiredAtBean
-from .policy import (
-    ConditionBean,
-    InstanceBean,
-    PolicyBean,
-    PolicyBeanList,
-    PolicyEmptyException,
-    PolicyOperationBiz,
-    PolicyQueryBiz,
-    RelatedResourceBean,
-)
+from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
+from .process import InstanceAproverHandler, PolicyProcess, PolicyProcessHandler
 from .role import RoleBiz, RoleInfo, RoleInfoBean
 from .subject import SubjectInfoList
 from .template import TemplateBiz
@@ -148,165 +137,6 @@ class ApprovalProcessorBiz:
     def get_grade_manager_members_by_group_id(self, group_id: int) -> str:
         """获取分级管理员"""
         return self.svc.get_role_by_group_id(group_id).members
-
-
-class PolicyProcess(BaseModel):
-    """
-    策略关联的审批流程对象
-
-    用于自定义申请
-    """
-
-    policy: PolicyBean
-    process: ApprovalProcessWithNodeProcessor
-
-
-class PolicyProcesshandler(ABC):
-    """
-    处理policy - process的管道
-    """
-
-    @abstractmethod
-    def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
-        pass
-
-
-class InstanceAproverHandler(PolicyProcesshandler):
-    """
-    实例审批人处理管道
-    """
-
-    resource_biz = ResourceBiz()
-
-    def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
-        # 返回的结果
-        policy_process_results = []
-        # 需要处理的有实例审批人节点的policy_process
-        policy_process_with_approver_node = []
-        # 需要查询实例审批人的资源实例
-        resource_nodes = set()
-
-        for policy_process in policy_process_list:
-            # 没有实例审批人节点不需要处理
-            if not policy_process.process.has_instance_approver_node():
-                policy_process_results.append(policy_process)
-                continue
-
-            # 保存需要处理实例审批人的policy_process
-            policy_process_with_approver_node.append(policy_process)
-            # 筛选出需要查询实例审批人的资源实例
-            for resource_node in self._list_approver_resource_node_by_policy(policy_process.policy):
-                resource_nodes.add(resource_node)
-
-        # 没有需要查询资源审批人的实例节点
-        if not resource_node:
-            return policy_process_list
-
-        # 查询资源实例的审批人
-        resource_approver_dict = self.resource_biz.fetch_resource_approver(list(resource_nodes))
-        if resource_approver_dict.is_empty():
-            return policy_process_list
-
-        # 依据实例审批人信息, 拆分policy, 添加到结果中
-        for policy_process in policy_process_with_approver_node:
-            policy_process_results.extend(
-                self._split_policy_process_by_resource_approver_dict(policy_process, resource_approver_dict)
-            )
-
-        return policy_process_results
-
-    def _split_policy_process_by_resource_approver_dict(
-        self, policy_process: PolicyProcess, resource_approver_dict: ResourceNodeAttributeDictBean
-    ) -> List[PolicyProcess]:
-        """
-        通过实例审批人信息, 分离policy_process为独立的实例policy
-        """
-        if len(policy_process.policy.related_resource_types) != 1:
-            return [policy_process]
-
-        policy = policy_process.policy
-        process = policy_process.process
-        rrt = policy.related_resource_types[0]
-
-        policy_process_list: List[PolicyProcess] = []
-        for condition in rrt.condition:
-            # 忽略有属性的condition
-            if not condition.has_no_attributes():
-                continue
-
-            # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
-            for instance in condition.instances:
-                for path in instance.path:
-                    last_node = path[-1]
-                    if last_node.id == ANY_ID:
-                        if len(path) < 2:
-                            continue
-                        last_node = path[-2]
-
-                    resource_node = ResourceNodeBean.parse_obj(last_node)
-                    if not resource_approver_dict.get_attribute(resource_node):
-                        continue
-
-                    # 复制出单实例的policy
-                    copied_policy = self._copy_policy_by_instance_path(policy, rrt, instance, path)
-
-                    # 复制出新的审批流程, 并填充实例审批人
-                    copied_process = deepcopy(process)
-                    copied_process.set_instance_approver(resource_approver_dict.get_attribute(resource_node))
-
-                    policy_process_list.append(PolicyProcess(policy=copied_policy, process=copied_process))
-
-        # 如果没有拆分处理部分实例, 直接返回原始的policy_process
-        if not policy_process_list:
-            return [policy_process]
-
-        # 把原始的策略剔除拆分的部分
-        for part_policy_process in policy_process_list:
-            try:
-                policy_process.policy.remove_related_resource_types(part_policy_process.policy.related_resource_types)
-            except PolicyEmptyException:
-                # 如果原始的策略全部删完了, 直接返回拆分的部分
-                return policy_process_list
-
-        # 原始拆分后剩余的部分填回来
-        policy_process_list.append(policy_process)
-        return policy_process_list
-
-    def _copy_policy_by_instance_path(self, policy, rrt, instance, path):
-        # 复制出单实例的policy
-        copied_policy = PolicyBean(
-            related_resource_types=[
-                RelatedResourceBean(
-                    condition=[
-                        ConditionBean(
-                            attributes=[],
-                            instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
-                        )
-                    ],
-                    **rrt.dict(exclude={"condition"}),
-                )
-            ],
-            **policy.dict(exclude={"related_resource_types"}),
-        )
-        return copied_policy
-
-    def _list_approver_resource_node_by_policy(self, policy: PolicyBean) -> List[ResourceNodeBean]:
-        """列出policies中所有资源的节点"""
-        # 需要查询资源实例审批人的节点集合
-        resource_node_set = set()
-        # 只支持关联1个资源类型的操作查询资源审批人
-        if len(policy.related_resource_types) != 1:
-            return []
-
-        rrt = policy.related_resource_types[0]
-        for path in rrt.iter_path_list(ignore_attribute=True):
-            last_node = path.nodes[-1]
-            if last_node.id == ANY_ID:
-                if len(path.nodes) < 2:
-                    continue
-                last_node = path.nodes[-2]
-            resource_node_set.add(ResourceNodeBean.parse_obj(last_node))
-        return list(resource_node_set)
 
 
 class ApprovedPassApplicationBiz:
@@ -481,7 +311,7 @@ class ApplicationBiz:
             policy_process_list.append(PolicyProcess(policy=policy, process=process))
 
         # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
-        pipeline: List[PolicyProcesshandler] = [InstanceAproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
+        pipeline: List[PolicyProcessHandler] = [InstanceAproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
         for pipe in pipeline:
             policy_process_list = pipe.handle(policy_process_list)
 
