@@ -59,14 +59,14 @@ class AuthViewMixin:
         """授权或回收权限"""
         system_id = policy_list.system_id
 
-        # 检测被授权的用户是否存在，不存在则尝试同步
-        if subject.type == SubjectType.USER.value:
-            self._check_or_sync_user(subject.id)
-
         # 对于授权Admin，自动忽略
         if subject.type == SubjectType.USER.value and subject.id.lower() == ADMIN_USER:
             # 原样返回，PolicyID=0，默认没有执行实际授权
             return policy_list.policies
+
+        # 检测被授权的用户是否存在，不存在则尝试同步
+        if subject.type == SubjectType.USER.value:
+            self._check_or_sync_user(subject.id)
 
         # 特殊逻辑：校验授权用户组是否超过其分级管理员范围
         if subject.type == SubjectType.GROUP.value and operate == OperateEnum.GRANT.value:
