@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from itertools import groupby
@@ -62,6 +63,7 @@ from .policy import (
     InstanceBean,
     PolicyBean,
     PolicyBeanList,
+    PolicyEmptyException,
     PolicyOperationBiz,
     PolicyQueryBiz,
     RelatedResourceBean,
@@ -146,6 +148,165 @@ class ApprovalProcessorBiz:
     def get_grade_manager_members_by_group_id(self, group_id: int) -> str:
         """获取分级管理员"""
         return self.svc.get_role_by_group_id(group_id).members
+
+
+class PolicyProcess(BaseModel):
+    """
+    策略关联的审批流程对象
+
+    用于自定义申请
+    """
+
+    policy: PolicyBean
+    process: ApprovalProcessWithNodeProcessor
+
+
+class PolicyProcesshandler(ABC):
+    """
+    处理policy - process的管道
+    """
+
+    @abstractmethod
+    def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
+        pass
+
+
+class InstanceAproverHandler(PolicyProcesshandler):
+    """
+    实例审批人处理管道
+    """
+
+    resource_biz = ResourceBiz()
+
+    def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
+        # 返回的结果
+        policy_process_results = []
+        # 需要处理的有实例审批人节点的policy_process
+        policy_process_with_approver_node = []
+        # 需要查询实例审批人的资源实例
+        resource_nodes = set()
+
+        for policy_process in policy_process_list:
+            # 没有实例审批人节点不需要处理
+            if not policy_process.process.has_instance_approver_node():
+                policy_process_results.append(policy_process)
+                continue
+
+            # 保存需要处理实例审批人的policy_process
+            policy_process_with_approver_node.append(policy_process)
+            # 筛选出需要查询实例审批人的资源实例
+            for resource_node in self._list_approver_resource_node_by_policy(policy_process.policy):
+                resource_nodes.add(resource_node)
+
+        # 没有需要查询资源审批人的实例节点
+        if not resource_node:
+            return policy_process_list
+
+        # 查询资源实例的审批人
+        resource_approver_dict = self.resource_biz.fetch_resource_approver(list(resource_nodes))
+        if resource_approver_dict.is_empty():
+            return policy_process_list
+
+        # 依据实例审批人信息, 拆分policy, 添加到结果中
+        for policy_process in policy_process_with_approver_node:
+            policy_process_results.extend(
+                self._split_policy_process_by_resource_approver_dict(policy_process, resource_approver_dict)
+            )
+
+        return policy_process_results
+
+    def _split_policy_process_by_resource_approver_dict(
+        self, policy_process: PolicyProcess, resource_approver_dict: ResourceNodeAttributeDictBean
+    ) -> List[PolicyProcess]:
+        """
+        通过实例审批人信息, 分离policy_process为独立的实例policy
+        """
+        if len(policy_process.policy.related_resource_types) != 1:
+            return [policy_process]
+
+        policy = policy_process.policy
+        process = policy_process.process
+        rrt = policy.related_resource_types[0]
+
+        policy_process_list: List[PolicyProcess] = []
+        for condition in rrt.condition:
+            # 忽略有属性的condition
+            if not condition.has_no_attributes():
+                continue
+
+            # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
+            for instance in condition.instances:
+                for path in instance.path:
+                    last_node = path[-1]
+                    if last_node.id == ANY_ID:
+                        if len(path) < 2:
+                            continue
+                        last_node = path[-2]
+
+                    resource_node = parse_obj_as(ResourceNodeBean, last_node)
+                    if not resource_approver_dict.get_attribute(resource_node):
+                        continue
+
+                    # 复制出单实例的policy
+                    copied_policy = self._copy_policy_by_instance_path(policy, rrt, instance, path)
+
+                    # 复制出新的审批流程, 并填充实例审批人
+                    copied_process = deepcopy(process)
+                    copied_process.set_instance_approver(resource_approver_dict.get_attribute(resource_node))
+
+                    policy_process_list.append(PolicyProcess(policy=copied_policy, process=copied_process))
+
+        # 如果没有拆分处理部分实例, 直接返回原始的policy_process
+        if not policy_process_list:
+            return [policy_process]
+
+        # 把原始的策略剔除拆分的部分
+        for part_policy_process in policy_process_list:
+            try:
+                policy_process.policy.remove_related_resource_types(part_policy_process.policy.related_resource_types)
+            except PolicyEmptyException:
+                # 如果原始的策略全部删完了, 直接返回拆分的部分
+                return policy_process_list
+
+        # 原始拆分后剩余的部分填回来
+        policy_process_list.append(policy_process)
+        return policy_process_list
+
+    def _copy_policy_by_instance_path(self, policy, rrt, instance, path):
+        # 复制出单实例的policy
+        copied_policy = PolicyBean(
+            related_resource_types=[
+                RelatedResourceBean(
+                    condition=[
+                        ConditionBean(
+                            attributes=[],
+                            instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
+                        )
+                    ],
+                    **rrt.dict(exclude={"condition"}),
+                )
+            ],
+            **policy.dict(exclude={"related_resource_types"}),
+        )
+        return copied_policy
+
+    def _list_approver_resource_node_by_policy(self, policy: PolicyBean) -> List[ResourceNodeBean]:
+        """列出policies中所有资源的节点"""
+        # 需要查询资源实例审批人的节点集合
+        resource_node_set = set()
+        # 只支持关联1个资源类型的操作查询资源审批人
+        if len(policy.related_resource_types) != 1:
+            return []
+
+        rrt = policy.related_resource_types[0]
+        for path in rrt.iter_path_list(ignore_attribute=True):
+            last_node = path.nodes[-1]
+            if last_node.id == ANY_ID:
+                if len(path.nodes) < 2:
+                    continue
+                last_node = path.nodes[-2]
+            resource_node_set.add(parse_obj_as(ResourceNodeBean, last_node))
+        return list(resource_node_set)
 
 
 class ApprovedPassApplicationBiz:
@@ -312,50 +473,36 @@ class ApplicationBiz:
         action_ids = [p.action_id for p in policy_list.policies]
         action_processes = self.approval_process_svc.list_action_process(system_id=system_id, action_ids=action_ids)
 
-        # 4. 实例化每个流程
-        action_process_dict = {}
+        # 4. 生成policy - process对象列表
+        policy_process_list = []
         for action_process in action_processes:
             process = self._get_approval_process_with_node_processor(action_process.process, system_id=system_id)
-            action_process_dict[action_process.action_id] = process
+            policy = policy_list.get(action_process.action_id)
 
-        # 5. 合并单据
-        merge_process_dict = self._merge_application_by_approval_process(action_process_dict)
+            policy_process_list.append(PolicyProcess(policy=policy, process=process))
 
-        # 6. 根据合并的单据，组装出调用Service层创建单据所需数据
+        # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
+        pipeline: List[PolicyProcesshandler] = [InstanceAproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
+        for pipe in pipeline:
+            policy_process_list = pipe.handle(policy_process_list)
+
+        # 6. 依据审批流程合并策略
+        policy_list_process = self._merge_policies_by_approval_process(system_id, policy_process_list)
+
+        # 7. 根据合并的单据，组装出调用Service层创建单据所需数据
         new_data_list = []
-        for process, action_ids in merge_process_dict.items():
-            # 从申请数据里获取对应Actions要申请的策略
-            policies: List[PolicyBean] = [policy_list.get(action_id) for action_id in action_ids]  # type: ignore
-
-            # 流程中不存在资源实例审批节点
-            if not process.has_instance_approver_node():
-                # 组装申请数据
-                application_data = GrantActionApplicationData(
-                    type=application_type,
-                    applicant_info=applicant_info,
-                    reason=data.reason,
-                    content=GrantActionApplicationContent(
-                        system=system_info, policies=parse_obj_as(List[ApplicationPolicyInfo], policies)
-                    ),
-                )
-                new_data_list.append((application_data, process))
-                continue
-
-            # 如果流程中存在资源审批人, 处理资源审批人相关的拆分/合并逻辑
-            for policy_list, _process in self._gen_grant_policy_list_by_instance_approver_process(
-                system_id, policies, process
-            ):
-                # 组装申请数据
-                application_data = GrantActionApplicationData(
-                    type=application_type,
-                    applicant_info=applicant_info,
-                    reason=data.reason,
-                    content=GrantActionApplicationContent(
-                        system=system_info,
-                        policies=parse_obj_as(List[ApplicationPolicyInfo], policy_list.policies),
-                    ),
-                )
-                new_data_list.append((application_data, _process))
+        for policy_list, process in policy_list_process:
+            # 组装申请数据
+            application_data = GrantActionApplicationData(
+                type=application_type,
+                applicant_info=applicant_info,
+                reason=data.reason,
+                content=GrantActionApplicationContent(
+                    system=system_info,
+                    policies=parse_obj_as(List[ApplicationPolicyInfo], policy_list.policies),
+                ),
+            )
+            new_data_list.append((application_data, process))
 
         # 7. 循环创建申请单
         applications = []
@@ -365,52 +512,14 @@ class ApplicationBiz:
 
         return applications
 
-    def _gen_grant_policy_list_by_instance_approver_process(
-        self, system_id: str, policies: List[PolicyBean], process: ApprovalProcessWithNodeProcessor
-    ) -> List[Tuple[PolicyBeanList, ApprovalProcessWithNodeProcessor]]:
-        """
-        生成有资源审批人节点的申请数据
-        """
-        # 筛选出需要查询实例审批人的资源实例节点
-        resource_nodes = self._list_approver_resource_node_by_policies(policies)
-        # 不需要查询实例审批人
-        if not resource_nodes:
-            return [(PolicyBeanList(system_id, policies), process)]
-
-        # 查询资源实例节点的实例审批人信息
-        resource_approver_dict = self.resource_biz.fetch_resource_approver(resource_nodes)
-        if resource_approver_dict.is_empty():
-            return [(PolicyBeanList(system_id, policies), process)]
-
-        # 需要使用实例审批人的策略 - 流程
-        policy_process_with_approver: List[Tuple[PolicyBean, ApprovalProcessWithNodeProcessor]] = []
-        # 遍历policies, 抠出有资源实例审批人的部分实例, 生成单实例的policy与填充了实例审批人的流程
-        for policy in policies:
-            policy_process_with_approver.extend(
-                self._gen_approver_resource_node_policy_process(policy, process, resource_approver_dict)
-            )
-
-        # 原始的策略删除带有实例审批人的部分
-        old_policy_list = PolicyBeanList(system_id, policies)
-        for policy, __ in policy_process_with_approver:
-            old_policy_list = old_policy_list.sub(PolicyBeanList(system_id, [policy]))
-
-        # NOTE: 原始的策略也可能与部分资源审批人查询不到的策略合并
-        for policy in old_policy_list.policies:
-            policy_process_with_approver.append((policy, process))
-
-        # 聚合审批流程相同的策略
-        policy_list_process = self._merge_policies_by_approval_process(system_id, policy_process_with_approver)
-        return policy_list_process
-
     def _merge_policies_by_approval_process(
-        self, system_id, policy_resource: List[Tuple[PolicyBean, ApprovalProcessWithNodeProcessor]]
+        self, system_id, policy_process_list: List[PolicyProcess]
     ) -> List[Tuple[PolicyBeanList, ApprovalProcessWithNodeProcessor]]:
         """聚合审批流程相同的策略"""
         # 聚合相同流程所有的polices
         merge_process_dict = defaultdict(list)
-        for policy, _process in policy_resource:
-            merge_process_dict[_process].append(policy)
+        for policy_process in policy_process_list:
+            merge_process_dict[policy_process.process].append(policy_process.policy)
 
         policy_list_process = []
         # 流程相同的策略中, 合并action_id一样的策略
@@ -422,86 +531,6 @@ class ApplicationBiz:
             policy_list_process.append((policy_list, _process))
 
         return policy_list_process
-
-    def _gen_approver_resource_node_policy_process(
-        self,
-        policy: PolicyBean,
-        process: ApprovalProcessWithNodeProcessor,
-        resource_approver_dict: ResourceNodeAttributeDictBean,
-    ) -> List[Tuple[PolicyBean, ApprovalProcessWithNodeProcessor]]:
-        """生成审批人节点有实例审批人的审批流程"""
-        # NOTE: 支持关联单个资源类型的操作使用实例审批人节点
-        if len(policy.related_resource_types) != 1:
-            return []
-
-        rrt = policy.related_resource_types[0]
-
-        policy_process = []
-        for condition in rrt.condition:
-            # 忽略有属性的condition
-            if not condition.has_no_attributes():
-                continue
-
-            # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
-            for instance in condition.instances:
-                for path in instance.path:
-                    last_node = path[-1]
-                    if last_node.id == ANY_ID:
-                        if len(path) < 2:
-                            continue
-                        last_node = path[-2]
-
-                    resource_node = parse_obj_as(ResourceNodeBean, last_node)
-                    if not resource_approver_dict.get_attribute(resource_node):
-                        continue
-
-                    # 复制出单实例的policy
-                    copied_policy = self._copy_policy_by_instance_path(policy, rrt, instance, path)
-
-                    # 复制出新的审批流程, 并填充实例审批人
-                    copied_process = deepcopy(process)
-                    copied_process.set_instance_approver(resource_approver_dict.get_attribute(resource_node))
-
-                    policy_process.append((copied_policy, copied_process))
-
-        return policy_process
-
-    def _copy_policy_by_instance_path(self, policy, rrt, instance, path):
-        # 复制出单实例的policy
-        copied_policy = PolicyBean(
-            related_resource_types=[
-                RelatedResourceBean(
-                    condition=[
-                        ConditionBean(
-                            attributes=[],
-                            instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
-                        )
-                    ],
-                    **rrt.dict(exclude={"condition"}),
-                )
-            ],
-            **policy.dict(exclude={"related_resource_types"}),
-        )
-        return copied_policy
-
-    def _list_approver_resource_node_by_policies(self, policies: List[PolicyBean]) -> List[ResourceNodeBean]:
-        """列出policies中所有资源的节点"""
-        # 需要查询资源实例审批人的节点集合
-        resource_node_set = set()
-        for policy in policies:
-            # 只支持关联1个资源类型的操作查询资源审批人
-            if len(policy.related_resource_types) != 1:
-                continue
-
-            rrt = policy.related_resource_types[0]
-            for path in rrt.iter_path_list(ignore_attribute=True):
-                last_node = path.nodes[-1]
-                if last_node.id == ANY_ID:
-                    if len(path.nodes) < 2:
-                        continue
-                    last_node = path.nodes[-2]
-                resource_node_set.add(parse_obj_as(ResourceNodeBean, last_node))
-        return list(resource_node_set)
 
     def create_for_renew_policy(
         self, policy_infos: List[ApplicationRenewPolicyInfoBean], applicant: str, reason: str
