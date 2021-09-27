@@ -17,7 +17,7 @@ from backend.biz.org_sync.syncer import Syncer
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleBiz
 from backend.common.error_codes import APIException, error_codes
-from backend.service.constants import SubjectType
+from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
 
 from .constants import AuthorizationAPIEnum, OperateEnum
@@ -62,6 +62,11 @@ class AuthViewMixin:
         # 检测被授权的用户是否存在，不存在则尝试同步
         if subject.type == SubjectType.USER.value:
             self._check_or_sync_user(subject.id)
+
+        # 对于授权Admin，自动忽略
+        if subject.type == SubjectType.USER.value and subject.id.lower() == ADMIN_USER:
+            # 原样返回，PolicyID=0，默认没有执行实际授权
+            return policy_list.policies
 
         # 特殊逻辑：校验授权用户组是否超过其分级管理员范围
         if subject.type == SubjectType.GROUP.value and operate == OperateEnum.GRANT.value:
