@@ -14,6 +14,7 @@ from copy import deepcopy
 from itertools import chain, groupby
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
+from django.conf import settings
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
@@ -881,6 +882,19 @@ class PolicyBeanList:
                     )
                 )
 
+    def check_instance_count_limit(self):
+        """
+        检查策略里的实例数量，避免大规模实例超限
+        """
+        for p in self.policies:
+            for rrt in p.related_resource_types:
+                if rrt.count_instance() > settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT:
+                    raise error_codes.VALIDATE_ERROR.format(
+                        "操作[{}]关联的[{}]的实例数已达上限{}个，请改用范围或者属性授权。".format(
+                            p.action_id, rrt.type, settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT
+                        )
+                    )
+
 
 class SystemCounterBean(SystemCounter):
     name: str = ""
@@ -1092,6 +1106,9 @@ class PolicyOperationBiz:
             policy.expired_at = old_policy.expired_at
             policy.policy_id = old_policy.policy_id
 
+        # 检查策略里的实例数量，避免大规模实例超限
+        update_policy_list.check_instance_count_limit()
+
         self.svc.alter(system_id, subject, update_policies=update_policy_list.to_svc_policies())
 
         return update_policy_list.policies
@@ -1107,6 +1124,11 @@ class PolicyOperationBiz:
         create_policy_list, update_policy_list = old_policy_list.split_to_creation_and_update_for_grant(
             new_policy_list
         )
+
+        # 检查策略里的实例数量，避免大规模实例超限
+        create_policy_list.check_instance_count_limit()
+        update_policy_list.check_instance_count_limit()
+
         self.svc.alter(
             system_id,
             subject,
