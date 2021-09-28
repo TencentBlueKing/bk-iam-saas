@@ -600,8 +600,11 @@
             },
 
             async handleMainActionSubmit (payload, relatedActions) {
-                const curPayload = _.cloneDeep(payload)
+                let curPayload = _.cloneDeep(payload)
                 this.sliderLoading = true
+                curPayload = curPayload.filter(e =>
+                    (e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)
+                )
                 curPayload.forEach(item => {
                     item.instances = item.instance || []
                     item.attributes = item.attribute || []
