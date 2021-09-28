@@ -394,7 +394,11 @@ class ConditionBeanList:
         """
         移除指定id的condition
         """
+        if self.is_any:
+            return
+
         self.conditions = [condition for condition in self.conditions if condition.id not in ids]
+        self.is_empty = len(self.conditions) == 0
 
 
 class RelatedResourceBean(RelatedResource):
@@ -619,17 +623,17 @@ class PolicyBean(Policy):
                 related_resource_type.condition = resource_type.condition
                 break
 
-    def add_related_resource_types(self, related_resource: List[RelatedResourceBean]) -> "PolicyBean":
+    def add_related_resource_types(self, related_resources: List[RelatedResourceBean]) -> "PolicyBean":
         """
         合并
         """
         resource_type_list = RelatedResourceBeanList(self.related_resource_types)
-        resource_type_list.add(RelatedResourceBeanList(related_resource))
+        resource_type_list.add(RelatedResourceBeanList(related_resources))
 
         self.related_resource_types = resource_type_list.related_resource_types
         return self
 
-    def has_related_resource_types(self, related_resource: List[RelatedResourceBean]) -> bool:
+    def has_related_resource_types(self, related_resources: List[RelatedResourceBean]) -> bool:
         """
         包含
 
@@ -638,12 +642,12 @@ class PolicyBean(Policy):
         if self.is_unrelated():
             return True
 
-        resource_type_list = RelatedResourceBeanList(deepcopy(related_resource))
+        resource_type_list = RelatedResourceBeanList(deepcopy(related_resources))
         resource_type_list.sub(RelatedResourceBeanList(self.related_resource_types))
 
         return resource_type_list.is_empty
 
-    def remove_related_resource_types(self, related_resource: List[RelatedResourceBean]) -> "PolicyBean":
+    def remove_related_resource_types(self, related_resources: List[RelatedResourceBean]) -> "PolicyBean":
         """
         裁剪
         """
@@ -651,7 +655,7 @@ class PolicyBean(Policy):
             raise PolicyEmptyException
 
         resource_type_list = RelatedResourceBeanList(self.related_resource_types)
-        resource_type_list.sub(RelatedResourceBeanList(related_resource))
+        resource_type_list.sub(RelatedResourceBeanList(related_resources))
 
         if resource_type_list.is_empty:
             raise PolicyEmptyException
@@ -771,7 +775,7 @@ class PolicyBeanList:
         self, delete_policy_list: "PolicyBeanList"
     ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
         """
-        回收权限时, 分离出需要更新的策略与删除的策略ID
+        回收权限时, 分离出需要更新的策略与删除的策略
 
         self: 原来已有的policy list
         delete_policy_list: 需要回收的policy list
@@ -845,7 +849,7 @@ class PolicyBeanList:
                     continue
                 rrt.check_selection(resource_type.instance_selections, ignore_path)
 
-    def list_path_node(self) -> List[PathNodeBean]:
+    def _list_path_node(self) -> List[PathNodeBean]:
         """
         查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点
         """
@@ -860,7 +864,7 @@ class PolicyBeanList:
         特别注意：该函数只能用于校验新增的策略，不能校验老策略，因为老的资源实例可能被删除或重命名了
         """
         # 获取策略里的资源的所有节点
-        path_nodes = self.list_path_node()
+        path_nodes = self._list_path_node()
         # 查询资源实例的实际名称
         resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
 
