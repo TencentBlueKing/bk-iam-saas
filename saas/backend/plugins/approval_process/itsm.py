@@ -87,11 +87,11 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
         nodes = itsm.get_process_nodes(process_id)
         for node in nodes:
             # 转换为IAM规定的结构所需要流程处理者来源和类型
-            source, _type = ProcessorSourceEnum.OTHER.value, node["processors"]
+            source, _type = ProcessorSourceEnum.OTHER.value, node["processors"]  # NOTE: other的节点iam无需处理
             if node["processors_type"] == "IAM":
                 source = ProcessorSourceEnum.IAM.value
                 # 对于来源于IAM，需要检查角色是否满足
-                if node["processors"] not in IAM_SUPPORT_PROCESSOR_TYPES:
+                if _type not in IAM_SUPPORT_PROCESSOR_TYPES:
                     raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(f"process_id: {process_id}, node:{node}")
 
             process_nodes.append(
