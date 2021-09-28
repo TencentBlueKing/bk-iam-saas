@@ -31,8 +31,7 @@
 
 ## Roadmap
 
-- [SaaS版本日志](./saas/release.md)
-- [frontend版本日志](./frontend/release.md)
+- [版本日志](./release.md)
 
 ## Backend & SDK
 

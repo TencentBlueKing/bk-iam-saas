@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from pydantic import BaseModel
 
@@ -44,3 +44,8 @@ class ResourceInstanceInfo(BaseModel):
     id: str
     # 由于查询某个资源的属性接口是动态传入要查询的属性，属性key是不固定的，属性值可能是list[str/bool/int]/str/bool/int
     attributes: Dict[str, Any]
+
+
+class ResourceApproverAttribute(BaseModel):
+    id: str
+    approver: List[str]

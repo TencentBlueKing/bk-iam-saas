@@ -80,6 +80,10 @@
                                     <img src="@/images/back.svg" alt="" class="back-staff">
                                     <span>{{ $t(`m.nav['普通成员']`) }}</span>
                                 </div>
+                            </div>
+                        </template>
+                        <template>
+                            <div class="operation right">
                                 <div class="user-dropdown-item " @click="handleLogout">
                                     <Icon type="logout" />
                                     {{ $t(`m.nav['注销']`) }}

@@ -404,6 +404,7 @@
                 </div>
                 <div class="tableData">
                     <resource-instance-table
+                        :cache-id="routerQuery.cache_id"
                         :list="newTableList"
                         :original-list="tableDataBackup"
                         :system-id="systemValue"
@@ -1805,6 +1806,7 @@
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params)
+                    console.log(res.data, params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
                         // 此处处理related_resource_types中value的赋值
@@ -1842,7 +1844,9 @@
                     this.newTableList = _.cloneDeep(this.tableData.filter(item => {
                         return !item.isExpiredAtDisabled
                     }))
+                    console.log('this.tableData', this.tableData)
                     this.tableDataBackup = _.cloneDeep(this.tableData)
+                    console.log('this.tableDataBackup', this.tableDataBackup)
                     this.aggregationsTableData = _.cloneDeep(this.tableData)
                 } catch (e) {
                     console.error(e)

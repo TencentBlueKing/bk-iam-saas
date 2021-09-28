@@ -22,7 +22,7 @@
     "lint:fix": "eslint --fix ./src ./build --ext .js,.ts,.tsx,.vue",
     "postinstall1": "cd ../ && husky install && npx husky add .husky/commit-msg 'npx --no-install commitlint --edit \"$1\"'",
     "prepare1": "cd .. && husky install frontend/.husky",
-    "postinstall": "cd .. && husky install frontend/.husky && cd frontend && npx husky add .husky/commit-msg 'npx --no-install commitlint --edit \"$1\"'"
+    "add-husky": "cd .. && husky install frontend/.husky && cd frontend && npx husky add .husky/commit-msg 'npx --no-install commitlint --edit \"$1\"'"
   },
   "keywords": [],
   "license": "ISC",
