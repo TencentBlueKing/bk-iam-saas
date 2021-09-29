@@ -70,7 +70,7 @@ class InstanceAproverHandler(PolicyProcessHandler):
                 resource_nodes.add(resource_node)
 
         # 没有需要查询资源审批人的实例节点
-        if not resource_node:
+        if not resource_nodes:
             return policy_process_list
 
         # 查询资源实例的审批人
