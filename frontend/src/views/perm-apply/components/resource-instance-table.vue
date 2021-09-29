@@ -602,15 +602,18 @@
             async handleMainActionSubmit (payload, relatedActions) {
                 let curPayload = _.cloneDeep(payload)
                 this.sliderLoading = true
-                curPayload = curPayload.filter(e =>
-                    (e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)
+                curPayload = curPayload.filter(e => {
+                    if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
+                        e.instances = e.instance || []
+                        e.attributes = e.attribute || []
+                        delete e.instance
+                        delete e.attribute
+                        return true
+                    }
+                    return false
+                }
+                    
                 )
-                curPayload.forEach(item => {
-                    item.instances = item.instance || []
-                    item.attributes = item.attribute || []
-                    delete item.instance
-                    delete item.attribute
-                })
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
                 curData.related_resource_types = [curData.related_resource_types[this.curResIndex]]
                 curData.related_resource_types[0].condition = curPayload
