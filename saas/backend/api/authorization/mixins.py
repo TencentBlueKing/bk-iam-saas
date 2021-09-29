@@ -12,6 +12,7 @@ import logging
 from typing import List
 
 from rest_framework import exceptions
+from rest_framework.response import Response
 
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
@@ -109,3 +110,22 @@ class AuthViewMixin:
             # 临时方案：校验不通过，则修改分级管理员的权限范围，使其通过
             need_added_policies = scope_checker.list_not_match_policy(system_id, policy_list.policies)
             self.role_biz.inc_update_auth_scope(role.id, system_id, need_added_policies)
+
+    def policy_response(self, policy: PolicyBean):
+        """所有返回单一策略的接口都统一返回的结构"""
+        return Response(
+            {"policy_id": policy.policy_id, "statistics": {"instance_count": policy.count_all_type_instance()}}
+        )
+
+    def batch_policy_response(self, policies: List[PolicyBean]):
+        """所有返回批量策略的接口都统一返回的结构"""
+        return Response(
+            [
+                {
+                    "action": {"id": p.action_id},
+                    "policy_id": p.policy_id,
+                    "statistics": {"instance_count": p.count_all_type_instance()},
+                }
+                for p in policies
+            ]
+        )

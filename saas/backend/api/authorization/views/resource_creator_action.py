@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
@@ -78,7 +77,7 @@ class ResourceCreatorActionView(AuthViewMixin, ExceptionHandlerMixin, APIView):
 
         audit_context_setter(operate=OperateEnum.GRANT.value, subject=subject, system_id=system_id, policies=policies)
 
-        return Response([{"action": {"id": p.action_id}, "policy_id": p.policy_id} for p in policies])
+        return self.batch_policy_response(policies)
 
 
 class BatchResourceCreatorActionView(AuthViewMixin, ExceptionHandlerMixin, APIView):
@@ -130,7 +129,7 @@ class BatchResourceCreatorActionView(AuthViewMixin, ExceptionHandlerMixin, APIVi
 
         audit_context_setter(operate=OperateEnum.GRANT.value, subject=subject, system_id=system_id, policies=policies)
 
-        return Response([{"action": {"id": p.action_id}, "policy_id": p.policy_id} for p in policies])
+        return self.batch_policy_response(policies)
 
 
 class ResourceCreatorActionAttributeView(AuthViewMixin, ExceptionHandlerMixin, APIView):
@@ -182,4 +181,4 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, ExceptionHandlerMixin, A
 
         audit_context_setter(operate=OperateEnum.GRANT.value, subject=subject, system_id=system_id, policies=policies)
 
-        return Response([{"action": {"id": p.action_id}, "policy_id": p.policy_id} for p in policies])
+        return self.batch_policy_response(policies)
