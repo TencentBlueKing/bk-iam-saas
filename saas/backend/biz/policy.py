@@ -671,6 +671,12 @@ class PolicyBean(Policy):
                 nodes.extend(path_list.nodes)
         return nodes
 
+    def count_all_type_instance(self) -> int:
+        """
+        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        """
+        return sum([rrt.count_instance() for rrt in self.related_resource_types])
+
 
 class PolicyBeanList:
     action_svc = ActionService()
