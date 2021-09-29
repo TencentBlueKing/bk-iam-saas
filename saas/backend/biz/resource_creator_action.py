@@ -60,9 +60,8 @@ class ResourceCreatorActionBiz:
             )
             if config_item.sub_resource_types is None:
                 continue
-            # 遍历子资源类型
-            for sub_rca_config in config_item.sub_resource_types:
-                sub_rac_beans = self._tiled_resource_creator_action(sub_rca_config)
-                rac_beans.extend(sub_rac_beans)
+            # 处理子资源类型的
+            sub_rac_beans = self._tiled_resource_creator_action(config_item.sub_resource_types)
+            rac_beans.extend(sub_rac_beans)
 
         return rac_beans

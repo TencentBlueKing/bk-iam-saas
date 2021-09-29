@@ -17,8 +17,9 @@
                 <bk-popconfirm
                     trigger="click"
                     :title="$t(`m.info['确定删除']`)"
-                    @confirm="handleDelete">
-                    <template v-if="(isExpanded || ShowEditFill) && !isUser">
+                    @confirm="handleDelete"
+                    v-if="isStaff || isPermTemplateDetail || isUser ? false : true">
+                    <template v-if="isExpanded || ShowEditFill && !isUser">
                         <section class="delete-action" @click.stop="toDeletePolicyCount">
                             <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
                         </section>

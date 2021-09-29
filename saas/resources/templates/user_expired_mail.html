@@ -172,6 +172,12 @@
             text-align: center;
             cursor: pointer;
         }
+        
+        .renewal-action a {
+            border: none;
+            text-decoration: none !important;
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -311,7 +317,7 @@
                         <p class="current-info">你收到此邮件，是因为你是这些权限的拥有者。</p>
                         <div class="current-date">{% now "Y-m-d H:i:s" %}</div>
                     </section>
-                    <div class="renewal-action" id="renewal-button"><a href="{{ url }}">马上续期</a></div>
+                    <div class="renewal-action" id="renewal-button"><a style="color: #fff;" href="{{ url }}">马上续期</a></div>
                 </td>
             </tr>
         </table>

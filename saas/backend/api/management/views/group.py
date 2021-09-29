@@ -85,7 +85,7 @@ class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
         self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
 
         groups = self.group_biz.batch_create(
-            request.role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
+            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
         )
 
         # 添加审计信息
@@ -288,7 +288,7 @@ class ManagementGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
         self.biz.remove_members(str(group.id), members)
 
         # 写入审计上下文
-        audit_context_setter(group=group, members=members)
+        audit_context_setter(group=group, members=[m.dict() for m in members])
 
         return Response({})
 

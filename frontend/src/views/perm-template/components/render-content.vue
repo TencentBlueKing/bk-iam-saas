@@ -291,8 +291,8 @@
                     this.description = res.data.description
                     this.systemName = res.data.system.name
                     this.originalCustomTmplList = _.cloneDeep(res.data.actions)
-                    this.handleActionLinearData()
-                    this.fetchCommonActions(this.systemValue)
+                    await this.handleActionLinearData()
+                    await this.fetchCommonActions(this.systemValue)
                     this.initialTempName = this.tempName
                     this.initialDescription = this.description
                 } catch (e) {
@@ -570,14 +570,14 @@
                 }
             },
 
-            handleSysSelected (value, option) {
+            async handleSysSelected (value, option) {
                 window.changeDialog = true
                 this.commonActions = []
                 this.linearAction = []
                 this.curSelectActions = []
                 this.requestQueue = ['actions', 'commonActions']
-                this.fetchActions(value)
-                this.fetchCommonActions(value)
+                await this.fetchActions(value)
+                await this.fetchCommonActions(value)
             },
 
             handleSelect (payload) {

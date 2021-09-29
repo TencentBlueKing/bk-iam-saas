@@ -31,8 +31,7 @@ BK-IAM is a universal permission control product developed based on ABAC(a power
 
 ## Roadmap
 
-- [SaaS release log](./saas/release.md)
-- [frontend release log](./frontend/release.md)
+- [release log](./release.md)
 
 ## Backend & SDK
 

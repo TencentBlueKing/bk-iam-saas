@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from collections import defaultdict
 from typing import Dict, List
 
 from pydantic.tools import parse_obj_as
@@ -106,21 +107,22 @@ class GradeManagerTrans(ManagementCommonTrans):
         }
         """
         # 将授权的权限范围数据转换为策略格式的auth_scopes
-        authorization_scopes = []
+        system_authorization_scope_dict = defaultdict(list)
         for auth_scope in data["authorization_scopes"]:
             system_id = auth_scope["system"]
             resources = auth_scope["resources"]
             action_ids = [action["id"] for action in auth_scope["actions"]]
             # 转换为策略列表(转换时会对action、实例视图等进行校验)
             policy_list = self.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
-            authorization_scopes.append(
-                {
-                    "system_id": system_id,
-                    # 由于RoleInfoBean需要的action_id是以id表示，而非action_id，所以PolicyBean转为字典时需要用其别名
-                    "actions": [p.dict(by_alias=True) for p in policy_list.policies],
-                }
-            )
+            # 由于RoleInfoBean需要的action_id是以id表示，而非action_id，所以PolicyBean转为字典时需要用其别名
+            policies = [p.dict(by_alias=True) for p in policy_list.policies]
+            system_authorization_scope_dict[system_id].extend(policies)
 
+        # 将按system分组的数据转为authorization_scopes
+        authorization_scopes = [
+            {"system_id": system_id, "actions": policies}
+            for system_id, policies in system_authorization_scope_dict.items()
+        ]
         # 替换掉data里原有的authorization_scopes
         data["authorization_scopes"] = authorization_scopes
 

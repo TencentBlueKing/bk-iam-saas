@@ -17,7 +17,7 @@ class SystemInfoSLZ(serializers.Serializer):
 
 class AggResourceInstance(serializers.Serializer):
     id = serializers.CharField(label="实例ID", required=True)
-    name = serializers.CharField(label="实例名称", required=True)
+    name = serializers.CharField(label="实例名称", required=True, trim_whitespace=False)
 
 
 class AggResourceTypeSLZ(serializers.Serializer):

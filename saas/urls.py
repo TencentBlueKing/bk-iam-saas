@@ -72,8 +72,10 @@ if settings.RUN_MODE == "DEVELOP":
         url(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     ]
 
-# static file
-urlpatterns += [
-    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-    url(r"^.*$", never_cache(VueTemplateView.as_view())),
-]
+# if deploy use smart, need staticfiles
+if settings.IS_SMART_DEPLOY:
+    # static file
+    urlpatterns += [
+        url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
+        url(r"^.*$", never_cache(VueTemplateView.as_view())),
+    ]

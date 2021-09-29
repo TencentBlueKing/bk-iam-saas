@@ -70,25 +70,20 @@ class PolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         cache_id = slz.validated_data["cache_id"]
 
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
-
-        policies = self.policy_query_biz.list_by_subject(system_id, subject)
-
         if cache_id != "":
             cached_policy_list = self.application_policy_list_cache.get(cache_id)
             if cached_policy_list.system_id != system_id:
                 raise error_codes.INVALID_ARGS.format(_("请求的system与缓存策略数据的system不一致"))
 
-            # 合并申请数据
-            policy_list = PolicyTagBeanList(system_id, parse_obj_as(List[PolicyTagBean], policies))
             apply_policy_list = PolicyTagBeanList(
                 system_id, parse_obj_as(List[PolicyTagBean], cached_policy_list.policies)
             )
             apply_policy_list.set_tag(PolicyTag.ADD.value)
-            policy_list.merge(apply_policy_list)
 
-            return Response([p.dict() for p in policy_list.policies])
+            return Response([p.dict() for p in apply_policy_list.policies])
 
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
         return Response([p.dict() for p in policies])
 
     @swagger_auto_schema(

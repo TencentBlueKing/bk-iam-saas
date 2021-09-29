@@ -1,6 +1,7 @@
 <template>
     <div class="my-perm-group-perm">
         <bk-table
+            data-test-id="myPerm_table_group"
             :data="curPageData"
             :size="'small'"
             :pagination="pageConf"
