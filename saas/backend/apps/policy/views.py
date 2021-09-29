@@ -234,6 +234,17 @@ class RelatedPolicyViewSet(GenericViewSet):
                 system_id, parse_obj_as(List[PolicyTagBean], add_policy_list.policies)
             )
             tag_add_policy_list.set_tag(PolicyTag.ADD.value)  # 对于新增的部分打tag, 方便前端处理
+
+            # 对已有策略中会增加部分实例的策略打update标签
+            for p in target_policy_list.policies:
+                add_policy = add_policy_list.get(p.action_id)
+                if (
+                    add_policy
+                    and not p.has_related_resource_types(add_policy.related_resource_types)
+                    and p.tag != PolicyTag.ADD.value
+                ):
+                    p.tag = PolicyTag.UPDATE.value
+
             target_policy_list.add(tag_add_policy_list)  # 合并
 
         target_policy_list.fill_empty_fields()
