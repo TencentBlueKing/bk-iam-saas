@@ -107,10 +107,9 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     ) -> str:
         """创建 - 创建或更新分级管理员"""
         params = self._generate_ticket_common_params(data, process, callback_url)
-        title = (
+        params["title"] = (
             "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_RATING_MANAGER.value else "申请编辑分级管理员"
         ) + f"：{data.content.name}"
-        params["title"] = title
         params["content"] = {
             "schemes": FORM_SCHEMES,
             "form_data": GradeManagerForm.from_application(data.content).form_data,
