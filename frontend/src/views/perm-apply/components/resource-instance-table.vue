@@ -94,7 +94,7 @@
                     </template>
                     <template v-else>
                         <!-- 22 -->
-                        <template v-if="!row.isNew && !row.isExpired && !row.isChanged">
+                        <template v-if="!row.isNew && !row.isExpired">
                             <!-- 33 -->
                             <div class="mock-disabled-select">{{row.expired_display}}</div>
                         </template>
@@ -144,7 +144,7 @@
                                 <bk-button
                                     class="cancel-renewal-action"
                                     outline
-                                    v-if="!row.isNew && !row.isShowRenewal && !row.isChanged"
+                                    v-if="!row.isNew && !row.isShowRenewal"
                                     @click="handleCancelRenewal(row)">
                                     {{ $t(`m.permApply['取消续期']`) }}
                                 </bk-button>
@@ -344,7 +344,6 @@
             list: {
                 handler (value) {
                     this.tableList = value
-                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             },
@@ -601,14 +600,20 @@
             },
 
             async handleMainActionSubmit (payload, relatedActions) {
-                const curPayload = _.cloneDeep(payload)
+                let curPayload = _.cloneDeep(payload)
                 this.sliderLoading = true
-                curPayload.forEach(item => {
-                    item.instances = item.instance || []
-                    item.attributes = item.attribute || []
-                    delete item.instance
-                    delete item.attribute
-                })
+                curPayload = curPayload.filter(e => {
+                    if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
+                        e.instances = e.instance || []
+                        e.attributes = e.attribute || []
+                        delete e.instance
+                        delete e.attribute
+                        return true
+                    }
+                    return false
+                }
+                    
+                )
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
                 curData.related_resource_types = [curData.related_resource_types[this.curResIndex]]
                 curData.related_resource_types[0].condition = curPayload
@@ -660,10 +665,11 @@
                 if (payload.length < 1) {
                     return
                 }
-        
+                
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
                     if (curIndex > -1) {
+                        const curData = this.tableList[curIndex]
                         this.needEmitFlag = true
                         const inOriginalList = !!this.originalList.filter(
                             original => String(original.id) === String(item.id)
@@ -672,7 +678,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: item.tag || 'add', isShowRelatedText: true, inOriginalList }, '', false)
+                            new Policy({ ...item, tag: curData.tag === 'add' ? 'add' : item.tag, isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })

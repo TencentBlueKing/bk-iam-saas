@@ -460,7 +460,8 @@
                 window.changeDialog = true
                 const conditionData = this.$refs.renderResourceRef.handleGetValue()
                 const { isEmpty, data } = conditionData
-                if (isEmpty) {
+                if (isEmpty || data[0] === 'none') {
+                    this.isShowResourceInstanceSideslider = false
                     return
                 }
 

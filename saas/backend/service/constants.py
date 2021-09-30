@@ -184,13 +184,31 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
     )
 
 
+# IAM支持的审批流程节点类型
+class ProcessorNodeTypeEnum(LowerStrEnum):
+    SUPER_MANAGER = auto()
+    SYSTEM_MANAGER = auto()
+    RATING_MANAGER = auto()
+    INSTANCE_APPROVER = auto()
+
+
 # 每一种申请单据，对应的审批流程节点可以支持的ROLE
 APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
-    ApplicationTypeEnum.GRANT_ACTION.value: (RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value),
-    ApplicationTypeEnum.JOIN_GROUP.value: (RoleType.SUPER_MANAGER.value, RoleType.RATING_MANAGER.value),
-    ApplicationTypeEnum.JOIN_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value, RoleType.RATING_MANAGER.value),
-    ApplicationTypeEnum.CREATE_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value,),
-    ApplicationTypeEnum.UPDATE_RATING_MANAGER.value: (RoleType.SUPER_MANAGER.value,),
+    ApplicationTypeEnum.GRANT_ACTION.value: (
+        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
+        ProcessorNodeTypeEnum.SYSTEM_MANAGER.value,
+        ProcessorNodeTypeEnum.INSTANCE_APPROVER.value,
+    ),
+    ApplicationTypeEnum.JOIN_GROUP.value: (
+        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
+        ProcessorNodeTypeEnum.RATING_MANAGER.value,
+    ),
+    ApplicationTypeEnum.JOIN_RATING_MANAGER.value: (
+        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
+        ProcessorNodeTypeEnum.RATING_MANAGER.value,
+    ),
+    ApplicationTypeEnum.CREATE_RATING_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
+    ApplicationTypeEnum.UPDATE_RATING_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
 }
 
 
@@ -203,9 +221,10 @@ class ProcessorSourceEnum(ChoicesEnum, StrEnum):
 
 # 对于IAM来源的处理者，IAM有固定支持的处理者类型
 IAM_SUPPORT_PROCESSOR_TYPES = [
-    RoleType.SUPER_MANAGER.value,
-    RoleType.SYSTEM_MANAGER.value,
-    RoleType.RATING_MANAGER.value,
+    ProcessorNodeTypeEnum.SUPER_MANAGER.value,
+    ProcessorNodeTypeEnum.SYSTEM_MANAGER.value,
+    ProcessorNodeTypeEnum.RATING_MANAGER.value,
+    ProcessorNodeTypeEnum.INSTANCE_APPROVER.value,
 ]
 
 
