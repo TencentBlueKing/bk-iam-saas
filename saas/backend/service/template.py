@@ -17,6 +17,7 @@ from pydantic import BaseModel, parse_obj_as
 
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreGroupSync
 from backend.common.error_codes import error_codes
+from backend.common.time import PERMANENT_SECONDS
 from backend.component import iam
 
 from .models import Policy, Subject, SystemCounter
@@ -117,7 +118,7 @@ class TemplateService:
         """
         authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template_id)
         system_id = authorized_template.system_id
-        policy_list = PolicyList(parse_obj_as(List[Policy], authorized_template.data["actions"]))
+        policy_list = self._convert_template_actions_to_policy_list(authorized_template.data["actions"])
 
         # 查询subject的后端权限信息
         backend_policy_list = new_backend_policy_list_by_subject(system_id, subject, template_id)
@@ -139,6 +140,15 @@ class TemplateService:
             iam.update_template_policies(
                 system_id, subject.type, subject.id, template_id, [p.to_backend_dict() for p in policies]
             )
+
+    def _convert_template_actions_to_policy_list(self, actions: List[Dict]) -> PolicyList:
+        """转换模板的授权的actions到PolicyList, 兼容过期时间为空的情况"""
+        policies = []
+        for action in actions:
+            if "expired_at" not in action or not action["expired_at"]:
+                action["expired_at"] = PERMANENT_SECONDS
+            policies.append(Policy.parse_obj(action))
+        return PolicyList(policies)
 
     def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
         """
