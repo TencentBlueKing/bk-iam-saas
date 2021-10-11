@@ -62,7 +62,7 @@ class PathNodeSLZ(serializers.Serializer):
 
         # 非任意ID则Name必填
         if attrs["name"] == "":
-            raise serializers.ValidationError("name is required when id is not `*`")
+            raise serializers.ValidationError(f"name is required when id({_id}) is not `*`")
 
         return attrs
 
