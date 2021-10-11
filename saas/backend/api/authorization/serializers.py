@@ -11,11 +11,12 @@ specific language governing permissions and limitations under the License.
 import time
 
 from django.conf import settings
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.apps.policy.serializers import ValueFiled
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import SubjectType
+from backend.service.constants import ANY_ID, SubjectType
 
 from .constants import OperateEnum
 
@@ -49,6 +50,21 @@ class PathNodeSLZ(serializers.Serializer):
     type = serializers.CharField(label="资源类型", required=True)
     id = serializers.CharField(label="资源实例ID", required=True)
     name = serializers.CharField(label="资源实例ID名称", required=True, allow_blank=True, trim_whitespace=False)
+
+    def validate(self, attrs):
+        """
+        路径授权时，只有ID为任意，Name才可以为空字符串
+        """
+        _id = attrs["id"]
+        if _id == ANY_ID:
+            attrs["name"] = _("无限制")
+            return attrs
+
+        # 非任意ID则Name必填
+        if attrs["name"] == "":
+            raise serializers.ValidationError("name is required when id is not `*`")
+
+        return attrs
 
 
 class ResourcePathSLZ(serializers.Serializer):
