@@ -233,9 +233,10 @@ class ResourceBiz:
             system_id, resource_type_id = k
             # 接口查询
             rp = self.new_resource_provider(system_id, resource_type_id)
-            resource_approver_attrubutes = rp.fetch_instance_approver(ids)
+
+            resource_approver_attributes = rp.fetch_instance_approver(ids)
             # 遍历返回的数据
-            for r in resource_approver_attrubutes:
+            for r in resource_approver_attributes:
                 resource_node = ResourceNodeBean(system_id=system_id, type=resource_type_id, id=r.id)
                 resource_attribute_dict[resource_node] = r.approver
 
