@@ -14,6 +14,7 @@ from django.conf import settings
 
 from backend.common.error_codes import error_codes
 from backend.common.local import local
+from backend.util.url import url_join
 
 from .http import http_get, http_post, logger
 
@@ -35,7 +36,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     }
     data.update(common_params)
 
-    url = f"{settings.BK_COMPONENT_API_URL}{url_path}"
+    url = url_join(settings.BK_COMPONENT_API_URL, url_path)
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
     ok, data = http_func(**kwargs)

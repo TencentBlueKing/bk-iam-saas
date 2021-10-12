@@ -22,6 +22,7 @@ from backend.api.mixins import ExceptionHandlerMixin
 from backend.biz.open import ApplicationPolicyListCache
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.trans.open_application import AccessSystemApplicationTrans
+from backend.util.url import url_join
 
 from .serializers import AccessSystemApplicationSLZ, AccessSystemApplicationUrlSLZ
 
@@ -59,7 +60,7 @@ class ApplicationView(ExceptionHandlerMixin, views.APIView):
         cache_id = self.application_policy_list_cache.set(policy_list)
 
         # 返回重定向地址
-        url = f"{settings.APP_URL}/apply-custom-perm"
+        url = url_join(settings.APP_URL, "/apply-custom-perm")
         params = {"system_id": system_id, "cache_id": cache_id}
         url = url + "?" + urlencode(params)
 
