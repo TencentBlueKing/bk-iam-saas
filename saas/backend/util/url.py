@@ -8,21 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-"""Django project settings
-"""
 
-try:
-    from django.conf import settings
 
-    APP_CODE = settings.APP_ID
-    SECRET_KEY = settings.APP_TOKEN
-    COMPONENT_SYSTEM_HOST = getattr(settings, 'BK_COMPONENT_INNER_API_URL',
-                                    settings.BK_PAAS_HOST)
-    DEFAULT_BK_API_VER = getattr(settings, 'DEFAULT_BK_API_VER', 'v2')
-except Exception:  # pylint: disable=broad-except
-    APP_CODE = ''
-    SECRET_KEY = ''
-    COMPONENT_SYSTEM_HOST = ''
-    DEFAULT_BK_API_VER = 'v2'
+def url_join(host: str, path: str) -> str:
+    """
+    拼接host, path生成url
 
-CLIENT_ENABLE_SIGNATURE = False
+    处理host, path有多余/的情况
+    """
+    return "{}/{}".format(host.rstrip("/"), path.lstrip("/"))
