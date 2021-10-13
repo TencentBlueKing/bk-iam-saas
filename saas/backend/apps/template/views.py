@@ -40,7 +40,7 @@ from backend.common.error_codes import error_codes
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
-from backend.long_task.task import TaskFactory
+from backend.long_task.tasks import TaskFactory
 from backend.service.constants import PermissionCodeEnum, SubjectType, TemplatePreUpdateStatus
 from backend.service.models import Subject
 

@@ -15,9 +15,10 @@ import sys
 import time
 import traceback
 from abc import ABCMeta, abstractmethod
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Type
 
-from celery import Task
+from celery import Task, task
 from django.db.models import Max
 
 from .constants import TaskStatus
@@ -217,3 +218,17 @@ def register_handler(_type: str):
         return cls
 
     return decorate
+
+
+@task(ignore_result=True)
+def retry_long_task():
+    """
+    重试一天以前一直 PENDING/RUNNING 的任务
+    """
+    day_before = datetime.now() - timedelta(days=1)
+
+    qs = TaskDetail.objects.filter(
+        status__in=[TaskStatus.PENDING.value, TaskStatus.RUNNING.value], created_time__lt=day_before
+    )
+    for t in qs:
+        TaskFactory().delay(t.id)
