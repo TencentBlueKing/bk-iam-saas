@@ -17,6 +17,7 @@ from backend.component import iam, resource_provider
 from backend.service.models.resource import ResourceApproverAttribute
 from backend.util.basic import chunked
 from backend.util.cache import redis_region, region
+from backend.util.url import url_join
 
 from .models import (
     ResourceAttribute,
@@ -144,7 +145,7 @@ class ResourceProvider:
         # 根据系统和资源类型获取相关认证信息和Host、URL_PATH
         provider_config = ResourceProviderConfig(system_id, resource_type_id)
         auth_info, host, url_path = provider_config.auth_info, provider_config.host, provider_config.path
-        url = f"{host}{url_path}"
+        url = url_join(host, url_path)
         self.client = resource_provider.ResourceProviderClient(system_id, resource_type_id, url, auth_info)
         # 缓存服务
         self.id_name_cache = ResourceIDNameCache(system_id, resource_type_id)

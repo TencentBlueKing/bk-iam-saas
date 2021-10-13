@@ -17,6 +17,7 @@ from backend.apps.application.models import Application
 from backend.plugins.application_ticket.base import ApplicationTicketProvider
 from backend.plugins.application_ticket.itsm import ITSMApplicationTicketProvider
 from backend.util.json import json_dumps
+from backend.util.url import url_join
 from backend.util.uuid import gen_uuid
 
 from .models import (
@@ -51,7 +52,7 @@ class ApplicationService:
     def _generate_callback_info(self) -> Tuple[str, str]:
         """生成回调信息"""
         callback_id = gen_uuid()
-        callback_url = f"{settings.APP_API_URL}/api/v1/applications/{callback_id}/approve/"
+        callback_url = url_join(settings.APP_API_URL, f"/api/v1/applications/{callback_id}/approve/")
         return callback_id, callback_url
 
     def _create(self, data: TypeUnionApplicationData, create_ticket_func: Callable[[str], str]) -> Application:
