@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from collections import defaultdict
 from itertools import groupby
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -54,6 +54,7 @@ from backend.service.role import RoleService
 from backend.service.system import SystemService
 from backend.util.cache import region
 
+from .application_process import InstanceAproverHandler, PolicyProcess, PolicyProcessHandler
 from .group import GroupBiz, GroupMemberExpiredAtBean
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
@@ -247,6 +248,7 @@ class ApplicationBiz:
                 processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
                     group_id=kwargs["group_id"]
                 )
+            # NOTE: 由于资源实例审批人节点的逻辑涉及到复杂的拆分, 合并逻辑, 不在这里处理
 
             node_with_processor.processors = processors
             nodes_with_processor.append(node_with_processor)
@@ -300,27 +302,33 @@ class ApplicationBiz:
         action_ids = [p.action_id for p in policy_list.policies]
         action_processes = self.approval_process_svc.list_action_process(system_id=system_id, action_ids=action_ids)
 
-        # 4. 实例化每个流程
-        action_process_dict = {}
+        # 4. 生成policy - process对象列表
+        policy_process_list = []
         for action_process in action_processes:
             process = self._get_approval_process_with_node_processor(action_process.process, system_id=system_id)
-            action_process_dict[action_process.action_id] = process
+            policy = policy_list.get(action_process.action_id)
 
-        # 5. 合并单据
-        merge_process_dict = self._merge_application_by_approval_process(action_process_dict)
+            policy_process_list.append(PolicyProcess(policy=policy, process=process))
 
-        # 6. 根据合并的单据，组装出调用Service层创建单据所需数据
+        # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
+        pipeline: List[PolicyProcessHandler] = [InstanceAproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
+        for pipe in pipeline:
+            policy_process_list = pipe.handle(policy_process_list)
+
+        # 6. 依据审批流程合并策略
+        policy_list_process = self._merge_policies_by_approval_process(system_id, policy_process_list)
+
+        # 7. 根据合并的单据，组装出调用Service层创建单据所需数据
         new_data_list = []
-        for process, action_ids in merge_process_dict.items():
-            # 从申请数据里获取对应Actions要申请的策略
-            policies = [policy_list.get(action_id) for action_id in action_ids]
+        for policy_list, process in policy_list_process:
             # 组装申请数据
             application_data = GrantActionApplicationData(
                 type=application_type,
                 applicant_info=applicant_info,
                 reason=data.reason,
                 content=GrantActionApplicationContent(
-                    system=system_info, policies=parse_obj_as(List[ApplicationPolicyInfo], policies)
+                    system=system_info,
+                    policies=parse_obj_as(List[ApplicationPolicyInfo], policy_list.policies),
                 ),
             )
             new_data_list.append((application_data, process))
@@ -332,6 +340,26 @@ class ApplicationBiz:
             applications.append(application)
 
         return applications
+
+    def _merge_policies_by_approval_process(
+        self, system_id, policy_process_list: List[PolicyProcess]
+    ) -> List[Tuple[PolicyBeanList, ApprovalProcessWithNodeProcessor]]:
+        """聚合审批流程相同的策略"""
+        # 聚合相同流程所有的polices
+        merge_process_dict = defaultdict(list)
+        for policy_process in policy_process_list:
+            merge_process_dict[policy_process.process].append(policy_process.policy)
+
+        policy_list_process = []
+        # 流程相同的策略中, 合并action_id一样的策略
+        for _process, _policies in merge_process_dict.items():
+            policy_list = PolicyBeanList(system_id, [])
+            for p in _policies:
+                policy_list.add(PolicyBeanList(system_id, [p]))
+
+            policy_list_process.append((policy_list, _process))
+
+        return policy_list_process
 
     def create_for_renew_policy(
         self, policy_infos: List[ApplicationRenewPolicyInfoBean], applicant: str, reason: str

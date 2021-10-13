@@ -73,15 +73,18 @@ class ResourceNodeBean(BaseModel):
         return self.system_id == other.system_id and self.type == other.type and self.id == other.id
 
 
-class ResourceNodeNameDictBean(BaseModel):
-    data: Dict[ResourceNodeBean, str]
+class ResourceNodeAttributeDictBean(BaseModel):
+    data: Dict[ResourceNodeBean, Any]
 
     def has(self, system_id: str, _type: str, _id: str):
         return ResourceNodeBean(system_id=system_id, type=_type, id=_id) in self.data
 
-    def get_name(self, system_id: str, _type: str, _id: str):
-        """获取资源实例名称"""
-        return self.data.get(ResourceNodeBean(system_id=system_id, type=_type, id=_id), None)
+    def get_attribute(self, node: ResourceNodeBean):
+        """获取资源属性"""
+        return self.data.get(node, None)
+
+    def is_empty(self):
+        return len(self.data) == 0
 
 
 class ResourceBiz:
@@ -171,7 +174,7 @@ class ResourceBiz:
 
     def fetch_resource_name(
         self, resource_node_beans: List[ResourceNodeBean], raise_not_found_exception=False
-    ) -> ResourceNodeNameDictBean:
+    ) -> ResourceNodeAttributeDictBean:
         """获取资源实例名称, 默认查询不到的资源不会有异常"""
         resource_name_dict: Dict[ResourceNodeBean, str] = {}
 
@@ -196,7 +199,7 @@ class ResourceBiz:
                 resource_node = ResourceNodeBean(system_id=system_id, type=resource_type_id, id=r.id)
                 resource_name_dict[resource_node] = r.display_name
 
-        name_dict_bean = ResourceNodeNameDictBean(data=resource_name_dict)
+        name_dict_bean = ResourceNodeAttributeDictBean(data=resource_name_dict)
 
         # 默认对于查询不到的资源实例Name，需要抛异常
         if raise_not_found_exception:
@@ -209,3 +212,44 @@ class ResourceBiz:
                     )
 
         return name_dict_bean
+
+    def fetch_resource_approver(
+        self, resource_node_beans: List[ResourceNodeBean], raise_not_found_exception=False
+    ) -> ResourceNodeAttributeDictBean:
+        """获取资源实例审批人, 默认查询不到的资源不会有异常"""
+        resource_attribute_dict: Dict[ResourceNodeBean, Any] = {}
+
+        # 按system_id、resource_type_id 分组批量查询
+        resource_ids_dict = defaultdict(list)
+        for r in resource_node_beans:
+            # 任意实例不需要查询
+            if r.id == "*":
+                continue
+            # 需要查询的实例，添加到对应资源类型分组里
+            resource_ids_dict[(r.system_id, r.type)].append(r.id)
+
+        # 查询
+        for k, ids in resource_ids_dict.items():
+            system_id, resource_type_id = k
+            # 接口查询
+            rp = self.new_resource_provider(system_id, resource_type_id)
+
+            resource_approver_attributes = rp.fetch_instance_approver(ids)
+            # 遍历返回的数据
+            for r in resource_approver_attributes:
+                resource_node = ResourceNodeBean(system_id=system_id, type=resource_type_id, id=r.id)
+                resource_attribute_dict[resource_node] = r.approver
+
+        attribute_dict_bean = ResourceNodeAttributeDictBean(data=resource_attribute_dict)
+
+        # 默认对于查询不到的资源实例Name，需要抛异常
+        if raise_not_found_exception:
+            # 校验每个资源是否都能查询到对应的资源Name
+            for r in resource_node_beans:
+                if not attribute_dict_bean.has(r.system_id, r.type, r.id):
+                    raise error_codes.INVALID_ARGS.format(
+                        "The resource(system_id:{}, type:{}, id:{}) _bk_iam_approver_ cannot be "
+                        "queried through the API - fetch_instance_info".format(r.system_id, r.type, r.id)
+                    )
+
+        return attribute_dict_bean

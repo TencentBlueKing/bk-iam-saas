@@ -1,10 +1,27 @@
+from copy import deepcopy
 from typing import List
 
 import pytest
 
-from backend.biz.policy import InstanceBean, InstanceBeanList, PathNodeBean, PathNodeBeanList
+from backend.biz.policy import (
+    ConditionBean,
+    ConditionBeanList,
+    InstanceBean,
+    InstanceBeanList,
+    PathNodeBean,
+    PathNodeBeanList,
+    PolicyBean,
+    PolicyBeanList,
+    PolicyEmptyException,
+    RelatedResourceBean,
+    RelatedResourceBeanList,
+    group_paths,
+)
 from backend.common.error_codes import APIException
+from backend.common.time import PERMANENT_SECONDS, expired_at_display
+from backend.service.constants import SelectionMode
 from backend.service.models import PathResourceType, ResourceTypeDict
+from backend.service.models.action import Action, RelatedResourceType
 from backend.service.models.instance_selection import InstanceSelection
 
 
@@ -52,7 +69,7 @@ def path_node_bean_list(path_node_bean: PathNodeBean):
     path_node_bean1.type_name_en = "type_name_en1"
     return PathNodeBeanList(
         nodes=[
-            path_node_bean,
+            path_node_bean.copy(deep=True),
             path_node_bean1,
         ]
     )
@@ -147,7 +164,7 @@ def instance_bean(path_node_bean: PathNodeBean):
     path_node_bean1.type = "type1"
     path_node_bean1.type_name = "type_name1"
     path_node_bean1.type_name_en = "type_name_en1"
-    return InstanceBean(path=[[path_node_bean, path_node_bean1]], type="type")
+    return InstanceBean(path=[[path_node_bean.copy(deep=True), path_node_bean1]], type="type")
 
 
 def gen_paths():
@@ -266,12 +283,20 @@ class TestInstanceBean:
         instance_bean.check_instance_selection("system_id", "type", [instance_selection], ignore_path=True)
         assert len(instance_bean.path[0]) == 1
 
+    def test_check_instance_selection_ignore_path_any(self, instance_bean: InstanceBean):
+        instance_selection = gen_instance_selection(
+            [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}], ignore_iam_path=True
+        )
+        instance_bean.path[0][-1].id = "*"
+        instance_bean.check_instance_selection("system_id", "type", [instance_selection], ignore_path=True)
+        assert len(instance_bean.path[0]) == 2
+
 
 @pytest.fixture()
 def instance_bean_list(instance_bean: InstanceBean):
     instance_bean1 = instance_bean.copy(deep=True)
     instance_bean1.type = "type1"
-    return InstanceBeanList([instance_bean, instance_bean1])
+    return InstanceBeanList([instance_bean.copy(deep=True), instance_bean1])
 
 
 class TestInstanceBeanList:
@@ -313,8 +338,408 @@ class TestInstanceBeanList:
         assert len(instance_bean_list.instances) == 0
 
 
-"""
-PolicyBeanList sub
-1. 需要sub没有关联资源类型的操作
-2. 需要sub都是任意的操作
-"""
+@pytest.fixture()
+def condition_bean(instance_bean: InstanceBean):
+    return ConditionBean(instances=[instance_bean.copy(deep=True)], attributes=[])
+
+
+class TestConditionBean:
+    def test_fill_empty_fields(self, condition_bean: ConditionBean):
+        resource_type_dict = ResourceTypeDict(data={("system_id", "type"): {"name": "test", "name_en": "test_en"}})
+        condition_bean = condition_bean.copy(deep=True)
+        condition_bean.fill_empty_fields(resource_type_dict)
+        assert condition_bean.instances[0].path[0][0].type_name == "test"
+        assert condition_bean.instances[0].path[0][0].type_name_en == "test_en"
+
+    def test_get_system_id_set(self, condition_bean: ConditionBean):
+        system_id_set = condition_bean.get_system_id_set()
+        assert system_id_set == {"system_id"}
+
+    def test_add_instances(self, condition_bean: ConditionBean, instance_bean: InstanceBean):
+        condition_bean.add_instances([instance_bean])
+        assert len(condition_bean.instances) == 1
+        assert len(condition_bean.instances[0].path) == 1
+
+    def test_remove_instances(self, condition_bean: ConditionBean, instance_bean: InstanceBean):
+        condition_bean.remove_instances([instance_bean])
+        assert len(condition_bean.instances) == 0
+
+    def test_count_instance(self, condition_bean: ConditionBean):
+        assert condition_bean.count_instance("type") == 1
+
+
+@pytest.fixture()
+def condition_bean_list(condition_bean: ConditionBean):
+    return ConditionBeanList([condition_bean.copy(deep=True)])
+
+
+class TestConditionBeanList:
+    def test_init_empty(self):
+        condition_bean_list = ConditionBeanList([])
+        assert condition_bean_list.is_any
+        assert not condition_bean_list.is_empty
+
+    def test_init(self, condition_bean_list: ConditionBeanList):
+        assert not condition_bean_list.is_any
+        assert not condition_bean_list.is_empty
+
+    def test_add(self, condition_bean_list: ConditionBeanList):
+        new_condition = condition_bean_list.conditions[0].copy(deep=True)
+        new_condition.instances[0].path[0][-1].id = "test"
+        condition_bean_list.add(ConditionBeanList([new_condition]))
+        assert len(condition_bean_list.conditions) == 1
+        assert len(condition_bean_list.conditions[0].instances) == 1
+        assert len(condition_bean_list.conditions[0].instances[0].path) == 2
+
+    def test_sub(self, condition_bean_list: ConditionBeanList):
+        condition_bean_list.sub(condition_bean_list)
+        assert condition_bean_list.is_empty
+
+    def test_remove_by_ids(self, condition_bean_list: ConditionBeanList):
+        condition_bean_list.remove_by_ids(condition_bean_list.conditions[0].id)
+        assert condition_bean_list.is_empty
+
+
+@pytest.fixture()
+def related_resource_bean(condition_bean: ConditionBean):
+    return RelatedResourceBean(system_id="system_id", type="type", condition=[condition_bean.copy(deep=True)])
+
+
+class TestRelatedResourceBean:
+    def test_fill_empty_fields(self, related_resource_bean: RelatedResourceBean, resource_type_dict: ResourceTypeDict):
+        rrt = RelatedResourceType(system_id="system_id", id="type", name="name", name_en="name_en")
+        related_resource_bean.fill_empty_fields(rrt, resource_type_dict)
+        assert related_resource_bean.selection_mode == SelectionMode.INSTANCE.value
+        assert related_resource_bean.name == "name_test"
+        assert related_resource_bean.name_en == "name_en_test"
+        assert related_resource_bean.condition[0].instances[0].name == "name_test"
+
+    def test_get_system_id_set(self, related_resource_bean: RelatedResourceBean):
+        assert related_resource_bean.get_system_id_set() == {"system_id"}
+
+    @pytest.mark.parametrize(
+        "instance_selection, raise_exception",
+        [
+            (
+                gen_instance_selection(
+                    [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}]
+                ),
+                False,
+            ),
+            (gen_instance_selection([{"system_id": "system_id", "id": "type"}]), True),
+        ],
+    )
+    def test_check_selection(self, related_resource_bean: RelatedResourceBean, instance_selection, raise_exception):
+        try:
+            related_resource_bean.check_selection([instance_selection])
+            assert not raise_exception
+        except APIException:
+            assert raise_exception
+
+    def test_check_selection_ignore_path(self, related_resource_bean: RelatedResourceBean):
+        instance_selection = gen_instance_selection(
+            [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}], ignore_iam_path=True
+        )
+        related_resource_bean.check_selection([instance_selection], ignore_path=True)
+        assert len(related_resource_bean.condition[0].instances[0].path[0]) == 1
+
+    def test_count_instance(self, related_resource_bean: RelatedResourceBean):
+        assert related_resource_bean.count_instance() == 1
+
+    @pytest.mark.parametrize(
+        "instance_selection, length",
+        [
+            (
+                gen_instance_selection(
+                    [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}]
+                ),
+                1,
+            ),
+            (gen_instance_selection([{"system_id": "system_id", "id": "type"}]), 0),
+        ],
+    )
+    def test_clone_and_filter_by_instance_selections(
+        self, related_resource_bean: RelatedResourceBean, instance_selection, length
+    ):
+        instance_bean1 = related_resource_bean.clone_and_filter_by_instance_selections([instance_selection])
+        if instance_bean1 is not None:
+            assert len(related_resource_bean.condition[0].instances[0].path) == length
+        else:
+            assert 0 == length
+
+    def test_iter_path_list(self, related_resource_bean: RelatedResourceBean):
+        _list = list(related_resource_bean.iter_path_list())
+        assert len(_list) == 1
+
+
+@pytest.fixture()
+def related_resource_bean_list(related_resource_bean: RelatedResourceBean):
+    return RelatedResourceBeanList([related_resource_bean.copy(deep=True)])
+
+
+class TestRelatedResourceBeanList:
+    def test_get_condition_list(self, related_resource_bean_list: RelatedResourceBeanList):
+        condition_list = related_resource_bean_list.get_condition_list("system_id", "type")
+        assert condition_list
+
+    def test_add(self, related_resource_bean_list: RelatedResourceBeanList):
+        new_related_resource_bean_list = deepcopy(related_resource_bean_list)
+        related_resource_bean_list.add(new_related_resource_bean_list)
+        assert len(related_resource_bean_list._condition_list_dict) == 1
+
+    def test_sub(self, related_resource_bean_list: RelatedResourceBeanList):
+        new_related_resource_bean_list = deepcopy(related_resource_bean_list)
+        related_resource_bean_list.sub(new_related_resource_bean_list)
+        assert related_resource_bean_list.is_empty
+
+
+@pytest.fixture()
+def policy_bean(related_resource_bean: RelatedResourceBean):
+    return PolicyBean(action_id="action_id", related_resource_types=[related_resource_bean.copy(deep=True)])
+
+
+class TestPolicyBean:
+    def test_dict(self, policy_bean: PolicyBean):
+        data = policy_bean.dict()
+        assert "id" in data
+
+    def test_fill_empty_fields(self, policy_bean: PolicyBean, resource_type_dict: ResourceTypeDict):
+        action = Action(
+            id="action_id",
+            name="action_name",
+            name_en="action_name_en",
+            description="",
+            description_en="",
+            related_resource_types=[
+                RelatedResourceType(system_id="system_id", id="type", name="name", name_en="name_en")
+            ],
+        )
+        policy_bean.fill_empty_fields(action, resource_type_dict)
+        assert policy_bean.name == "action_name"
+        assert policy_bean.name_en == "action_name_en"
+        assert policy_bean.related_resource_types[0].name == "name_test"
+
+    def test_get_system_id_set(self, policy_bean: PolicyBean):
+        assert policy_bean.get_system_id_set() == {"system_id"}
+
+    def test_get_related_resource_type(self, policy_bean: PolicyBean):
+        assert policy_bean.get_related_resource_type("system_id", "type")
+
+    def test_set_expired_at(self, policy_bean: PolicyBean):
+        policy_bean.set_expired_at(PERMANENT_SECONDS)
+        assert policy_bean.expired_at == PERMANENT_SECONDS
+        assert policy_bean.expired_display == expired_at_display(PERMANENT_SECONDS)
+
+    def test_is_unrelated(self, policy_bean: PolicyBean):
+        assert not policy_bean.is_unrelated()
+
+    def test_set_related_resource_type(self, policy_bean: PolicyBean, related_resource_bean: RelatedResourceBean):
+        related_resource_bean.condition = []
+        policy_bean.set_related_resource_type(related_resource_bean)
+        assert len(policy_bean.related_resource_types[0].condition) == 0
+
+    def test_add_related_resource_types(self, policy_bean: PolicyBean, related_resource_bean: RelatedResourceBean):
+        related_resource_bean.condition[0].instances[0].path[0][-1].id = "id2"
+        policy_bean.add_related_resource_types([related_resource_bean])
+        assert len(policy_bean.related_resource_types[0].condition[0].instances[0].path) == 2
+
+    def test_has_related_resource_types(self, policy_bean: PolicyBean):
+        assert policy_bean.has_related_resource_types(policy_bean.related_resource_types)
+        policy_bean.related_resource_types = []
+        assert policy_bean.has_related_resource_types(policy_bean.related_resource_types)
+
+    def test_remove_related_resource_types(self, policy_bean: PolicyBean):
+        try:
+            policy_bean.remove_related_resource_types(policy_bean.related_resource_types)
+            assert False
+        except PolicyEmptyException:
+            assert True
+
+        policy_bean.related_resource_types = []
+        try:
+            policy_bean.remove_related_resource_types(policy_bean.related_resource_types)
+            assert False
+        except PolicyEmptyException:
+            assert True
+
+    def test_list_path_node(self, policy_bean: PolicyBean):
+        assert len(policy_bean.list_path_node()) == 2
+
+
+@pytest.fixture()
+def policy_bean_list(policy_bean: PolicyBean):
+    return PolicyBeanList("system_id", [policy_bean])
+
+
+class TestPolicyBeanList:
+    def test_get_system_id_set(self, policy_bean_list: PolicyBeanList):
+        assert policy_bean_list.get_system_id_set() == {"system_id"}
+
+    def test_get(self, policy_bean_list: PolicyBeanList):
+        assert policy_bean_list.get("action_id")
+
+    def test_split_to_creation_and_update_for_grant(self, policy_bean_list: PolicyBeanList):
+        new_policy_list = deepcopy(policy_bean_list)
+        new_policy_list.policies[0].action_id = "action_id2"
+        cp, up = policy_bean_list.split_to_creation_and_update_for_grant(new_policy_list)
+        assert len(cp.policies) == 1
+        assert cp.policies[0].action_id == "action_id2"
+        assert len(up.policies) == 0
+
+        new_policy_list = deepcopy(policy_bean_list)
+        cp, up = policy_bean_list.split_to_creation_and_update_for_grant(new_policy_list)
+        assert len(cp.policies) == 0
+        assert len(up.policies) == 0
+
+        new_policy_list = deepcopy(policy_bean_list)
+        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id = "id2"
+        cp, up = policy_bean_list.split_to_creation_and_update_for_grant(new_policy_list)
+        assert len(cp.policies) == 0
+        assert len(up.policies) == 1
+        assert len(up.policies[0].related_resource_types[0].condition[0].instances[0].path) == 2
+
+        new_policy_list = deepcopy(policy_bean_list)
+        new_policy_list.policies[0].set_expired_at(123)
+        cp, up = policy_bean_list.split_to_creation_and_update_for_grant(new_policy_list)
+        assert len(cp.policies) == 0
+        assert len(up.policies) == 1
+
+    def test_split_to_update_and_delete_for_revoke(self, policy_bean_list: PolicyBeanList):
+        up, du = policy_bean_list.split_to_update_and_delete_for_revoke(policy_bean_list)
+        assert len(up.policies) == 0
+        assert len(du.policies) == 1
+
+        new_policy_list = deepcopy(policy_bean_list)
+        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id = "id2"
+        up, du = new_policy_list.split_to_update_and_delete_for_revoke(policy_bean_list)
+        assert len(up.policies) == 1
+        assert len(du.policies) == 0
+
+        new_policy_list.policies[0].related_resource_types = []
+        up, du = new_policy_list.split_to_update_and_delete_for_revoke(new_policy_list)
+        assert len(up.policies) == 0
+        assert len(du.policies) == 1
+
+    def test_add(self, policy_bean_list: PolicyBeanList):
+        new_policy_list = deepcopy(policy_bean_list)
+        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id = "id2"
+        policy_bean_list.add(new_policy_list)
+        assert len(policy_bean_list.policies[0].related_resource_types[0].condition[0].instances[0].path) == 2
+
+    def test_sub(self, policy_bean_list: PolicyBeanList):
+        new_policy_list = deepcopy(policy_bean_list)
+        new_policy_list.policies[0].action_id = "action_id2"
+        subtraction = policy_bean_list.sub(new_policy_list)
+        assert len(subtraction.policies) == 0
+
+        subtraction = new_policy_list.sub(policy_bean_list)
+        assert len(subtraction.policies) == 1
+
+        new_policy_list = deepcopy(policy_bean_list)
+        new_path = deepcopy(new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0])
+        new_path[-1].id = "id2"
+        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path.append(new_path)
+        subtraction = new_policy_list.sub(policy_bean_list)
+        assert len(subtraction.policies) == 1
+        assert len(subtraction.policies[0].related_resource_types[0].condition[0].instances[0].path) == 1
+        assert subtraction.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id == "id2"
+
+    def test_list_path_node(self, policy_bean_list: PolicyBeanList):
+        nodes = policy_bean_list._list_path_node()
+        assert len(nodes) == 2
+
+
+def test_group_paths():
+    paths = [
+        [
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type",
+                "id": "id",
+            },
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type1",
+                "id": "id2",
+            },
+        ]
+    ]
+    assert len(group_paths(paths)) == 1
+
+    paths = [
+        [
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type",
+                "id": "id",
+            },
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type1",
+                "id": "id2",
+            },
+        ],
+        [
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type",
+                "id": "id",
+            },
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type1",
+                "id": "*",
+            },
+        ],
+    ]
+    assert len(group_paths(paths)) == 2
+
+    paths = [
+        [
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type",
+                "id": "id",
+            },
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type1",
+                "id": "id2",
+            },
+        ],
+        [
+            {
+                "system_id": "system_id",
+                "name": "name",
+                "type_name_en": "type_name_en",
+                "type_name": "type_name",
+                "type": "type",
+                "id": "id",
+            }
+        ],
+    ]
+    assert len(group_paths(paths)) == 2

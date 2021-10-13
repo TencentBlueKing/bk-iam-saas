@@ -14,8 +14,10 @@ from typing import Dict, List, Optional, Tuple
 from redis.exceptions import RedisError
 
 from backend.component import iam, resource_provider
+from backend.service.models.resource import ResourceApproverAttribute
 from backend.util.basic import chunked
 from backend.util.cache import redis_region, region
+from backend.util.url import url_join
 
 from .models import (
     ResourceAttribute,
@@ -134,6 +136,7 @@ class ResourceProvider:
     """资源提供者"""
 
     name_attribute = "display_name"
+    approver_attribute = "_bk_iam_approver_"
 
     def __init__(self, system_id: str, resource_type_id: str):
         """初始化：认证信息、请求客户端"""
@@ -142,7 +145,7 @@ class ResourceProvider:
         # 根据系统和资源类型获取相关认证信息和Host、URL_PATH
         provider_config = ResourceProviderConfig(system_id, resource_type_id)
         auth_info, host, url_path = provider_config.auth_info, provider_config.host, provider_config.path
-        url = f"{host}{url_path}"
+        url = url_join(host, url_path)
         self.client = resource_provider.ResourceProviderClient(system_id, resource_type_id, url, auth_info)
         # 缓存服务
         self.id_name_cache = ResourceIDNameCache(system_id, resource_type_id)
@@ -256,5 +259,23 @@ class ResourceProvider:
                 for i in not_cached_results
             ]
         )
+
+        return results
+
+    def fetch_instance_approver(self, ids: List[str]) -> List[ResourceApproverAttribute]:
+        """批量查询资源实例的实例审批人属性"""
+        instance_infos = self.fetch_instance_info(ids, [self.approver_attribute])
+
+        results = []
+        for one in instance_infos:
+            if self.approver_attribute not in one.attributes:
+                continue
+
+            # 兼容可能返回 list/string 的情况
+            approver = one.attributes[self.approver_attribute]
+            if isinstance(approver, list) and approver:
+                results.append(ResourceApproverAttribute(id=one.id, approver=approver))
+            elif isinstance(approver, str) and approver:
+                results.append(ResourceApproverAttribute(id=one.id, approver=[approver]))
 
         return results
