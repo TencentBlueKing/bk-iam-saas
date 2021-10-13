@@ -95,7 +95,7 @@
                     </template>
                     <template v-else>
                         <!-- 22 -->
-                        <template v-if="!row.isNew && !row.isExpired && !row.isChanged">
+                        <template v-if="!row.isNew && !row.isExpired">
                             <!-- 33 -->
                             <div class="mock-disabled-select">{{row.expired_display}}</div>
                         </template>
@@ -145,7 +145,7 @@
                                 <bk-button
                                     class="cancel-renewal-action"
                                     outline
-                                    v-if="!row.isNew && !row.isShowRenewal && !row.isChanged"
+                                    v-if="!row.isNew && !row.isShowRenewal"
                                     @click="handleCancelRenewal(row)">
                                     {{ $t(`m.permApply['取消续期']`) }}
                                 </bk-button>
@@ -672,10 +672,11 @@
                 if (payload.length < 1) {
                     return
                 }
-        
+                
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
                     if (curIndex > -1) {
+                        const curData = this.tableList[curIndex]
                         this.needEmitFlag = true
                         const inOriginalList = !!this.originalList.filter(
                             original => String(original.id) === String(item.id)
@@ -684,7 +685,7 @@
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: item.tag || 'add', isShowRelatedText: true, inOriginalList }, '', false)
+                            new Policy({ ...item, tag: curData.tag === 'add' ? 'add' : item.tag, isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })

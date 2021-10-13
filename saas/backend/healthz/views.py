@@ -17,6 +17,7 @@ from django.http import HttpResponse, HttpResponseServerError
 from rest_framework import serializers
 
 from backend.component import usermgr
+from backend.util.url import url_join
 
 logger = getLogger("app")
 
@@ -114,7 +115,7 @@ class HealthChecker:
 
     def iam(self):
         try:
-            url = f"{settings.BK_IAM_HOST}/healthz"
+            url = url_join(settings.BK_IAM_HOST, "/healthz")
             resp = requests.get(url)
             if resp.status_code != requests.codes.ok:
                 return False, f"iam backend response status[{resp.status_code}] not OK"

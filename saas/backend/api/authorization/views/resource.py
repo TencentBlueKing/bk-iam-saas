@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
@@ -69,7 +68,7 @@ class AuthInstanceView(AuthViewMixin, ExceptionHandlerMixin, APIView):
 
         audit_context_setter(operate=operate, subject=subject, system_id=system_id, policies=policies)
 
-        return Response({"policy_id": policies[0].policy_id})
+        return self.policy_response(policies[0])
 
 
 class AuthPathView(AuthViewMixin, ExceptionHandlerMixin, APIView):
@@ -114,7 +113,7 @@ class AuthPathView(AuthViewMixin, ExceptionHandlerMixin, APIView):
 
         audit_context_setter(operate=operate, subject=subject, system_id=system_id, policies=policies)
 
-        return Response({"policy_id": policies[0].policy_id})
+        return self.policy_response(policies[0])
 
 
 class AuthBatchInstanceView(AuthViewMixin, ExceptionHandlerMixin, APIView):
@@ -159,7 +158,7 @@ class AuthBatchInstanceView(AuthViewMixin, ExceptionHandlerMixin, APIView):
 
         audit_context_setter(operate=operate, subject=subject, system_id=system_id, policies=policies)
 
-        return Response([{"action": {"id": p.action_id}, "policy_id": p.policy_id} for p in policies])
+        return self.batch_policy_response(policies)
 
 
 class AuthBatchPathView(AuthViewMixin, ExceptionHandlerMixin, APIView):
@@ -204,4 +203,4 @@ class AuthBatchPathView(AuthViewMixin, ExceptionHandlerMixin, APIView):
 
         audit_context_setter(operate=operate, subject=subject, system_id=system_id, policies=policies)
 
-        return Response([{"action": {"id": p.action_id}, "policy_id": p.policy_id} for p in policies])
+        return self.batch_policy_response(policies)
