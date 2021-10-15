@@ -177,7 +177,7 @@ class ResourceProviderClient:
         if code not in ResponseCodeToErrorDict:
             trace_func(code=code)
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"{self.system_id}'s API response body.code != 0, {code} is an unknown value! "
+                f"{self.system_id}'s API response body.code != 0, code is {code}! "
                 f"{request_detail_info}"
             )
 
@@ -187,31 +187,48 @@ class ResourceProviderClient:
             replace=ResponseCodeToErrorDict[code]["replace_message"],
         )
 
-    def _handle_empty_data(self, data, default_empty_data: Union[List, Dict]) -> Any:
+    def _handle_empty_data(self, data, default: Union[List, Dict]) -> Any:
         """处理兼容对方返回空数据为None、[]、{}、字符串"""
         if not data:
-            return default_empty_data
+            return default
+
         # 校验类型是否一致
-        if type(data) != type(default_empty_data):
+        if type(data) != type(default):
             raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
-                f"the type of data must be {type(default_empty_data)}, data: {data}"
+                f"{self.system_id}'s API response data wrong! "
+                f"the type of data must be {type(default)}, but got {type(data)}! [data={data}]"
+                f"you should check the response of {self.system_id}'s API "
+                f"[POST {urlparse(self.url).path} request_id={self.request_id}]."
             )
         return data
 
-    def _handle_data_valid(self, resp_data: Dict) -> Tuple[int, List[Dict[str, str]]]:
+    def _validate_paginated_data(self, resp_data: Dict) -> None:
+        if "count" not in resp_data or "results" not in resp_data:
+            raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
+                f"{self.system_id}'s API response data wrong! "
+                f"it's a paginated API, so the response.body.data should contain key `count` and `result`!"
+                f"[response.body.data={resp_data}]"
+                f"you should check the response of {self.system_id}'s API "
+                f"[POST {urlparse(self.url).path} request_id={self.request_id}]."
+            )
+
         count, results = resp_data["count"], resp_data["results"]
         if len(results) > count:
-            logger.error("resource_provider data invalid, count: %d, results: %s", count, results)
+            logger.error("resource_provider data invalid, "
+                         "the count of data must be greater than or equal to the length of results, "
+                         "count=%d, len(results)=%d", count, len(results))
             raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
+                f"{self.system_id}'s API response data wrong! "
                 f"the count of data must be greater than or equal to the length of results, "
-                f"count: {count}, len(results): {len(results)}"
+                f"[count={count}, len(results)={len(results)}]."
+                f"you should check the response of {self.system_id}'s API "
+                f"[POST {urlparse(self.url).path} request_id={self.request_id}]."
             )
-        return count, results
 
     def list_attr(self) -> List[Dict[str, str]]:
         """查询某个资源类型可用于配置权限的属性列表"""
         data = {"type": self.resource_type_id, "method": "list_attr"}
-        return self._handle_empty_data(self._call_api(data), [])
+        return self._handle_empty_data(self._call_api(data), default=[])
 
     def list_attr_value(
         self, attr: str, filter_condition: Dict, page: Dict[str, int]
@@ -219,19 +236,23 @@ class ResourceProviderClient:
         """获取一个资源类型某个属性的值列表"""
         filter_condition["attr"] = attr
         data = {"type": self.resource_type_id, "method": "list_attr_value", "filter": filter_condition, "page": page}
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]
 
     def list_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
         """根据过滤条件查询实例"""
         data = {"type": self.resource_type_id, "method": "list_instance", "filter": filter_condition, "page": page}
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]
 
     def fetch_instance_info(self, filter_condition: Dict) -> List[Dict]:
         """批量获取资源实例详情"""
         data = {"type": self.resource_type_id, "method": "fetch_instance_info", "filter": filter_condition}
-        return self._handle_empty_data(self._call_api(data), [])
+        return self._handle_empty_data(self._call_api(data), default=[])
 
     def list_instance_by_policy(
         self, filter_condition: Dict, page: Dict[str, int]
@@ -243,8 +264,10 @@ class ResourceProviderClient:
             "filter": filter_condition,
             "page": page,
         }
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]
 
     def search_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
         """根据过滤条件且必须保证keyword不为空查询实例"""
@@ -260,5 +283,7 @@ class ResourceProviderClient:
                 f"search_instance[system:{system_id}] param keyword should not be empty"
             )
         data = {"type": resource_type_id, "method": "search_instance", "filter": filter_condition, "page": page}
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]
