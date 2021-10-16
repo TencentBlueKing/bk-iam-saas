@@ -15,6 +15,7 @@ from django.conf import settings
 from backend.common.error_codes import error_codes
 from backend.common.local import local
 from backend.util.json import json_dumps
+from backend.util.url import url_join
 
 from .http import http_post, logger
 
@@ -36,9 +37,9 @@ def _call_engine_api(http_func, url_path, data, timeout=30):
     if settings.BK_IAM_ENGINE_HOST_TYPE == "direct":
         headers.update({"X-Bk-App-Code": settings.APP_ID, "X-Bk-App-Secret": settings.APP_TOKEN})
 
-    url = f"{settings.BK_IAM_ENGINE_HOST}/api/v1/engine{url_path}"
+    url = url_join(settings.BK_IAM_ENGINE_HOST, f"/api/v1/engine{url_path}")
     if settings.BK_IAM_ENGINE_HOST_TYPE == "direct":
-        url = f"{settings.BK_IAM_ENGINE_HOST}/api/v1{url_path}"
+        url = url_join(settings.BK_IAM_ENGINE_HOST, f"/api/v1{url_path}")
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
     ok, data = http_func(**kwargs)
