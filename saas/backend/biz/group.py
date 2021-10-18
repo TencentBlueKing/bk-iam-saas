@@ -31,7 +31,7 @@ from backend.common.error_codes import APIException, CodeException, error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
-from backend.long_task.task import TaskFactory
+from backend.long_task.tasks import TaskFactory
 from backend.service.constants import RoleRelatedObjectType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
