@@ -116,8 +116,8 @@ class ResourceProviderClient:
 
         # 回调请求的详细信息
         request_detail_info = (
-            f"call {self.system_id}'s API fail!"
-            f"you should check the network/{self.system_id} is available and {self.system_id}'s log for more info."
+            f"call {self.system_id}'s API fail! "
+            f"you should check the network/{self.system_id} is available and {self.system_id}'s log for more info. "
             f"request: [POST {urlparse(self.url).path} body.data.method={data['method']}]"
             f"(system_id={self.system_id}, resource_type_id={self.resource_type_id})"
         )
@@ -133,13 +133,12 @@ class ResourceProviderClient:
                 f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
                 f"{base_log_msg}"
             )
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
             logger.exception(f"RequestException! {base_log_msg} ")
             trace_func(exc=traceback.format_exc())
             # 接口不可达
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"{self.system_id}'s API unreachable! "
-                f"{request_detail_info}"
+                f"{self.system_id}'s API unreachable! {request_detail_info}. Exception {e}"
             )
 
         try:
@@ -196,9 +195,9 @@ class ResourceProviderClient:
         if type(data) != type(default):
             raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
                 f"{self.system_id}'s API response data wrong! "
-                f"the type of data must be {type(default)}, but got {type(data)}! [data={data}]"
+                f"the type of data must be {type(default)}, but got {type(data)}! [data={data}]."
                 f"you should check the response of {self.system_id}'s API "
-                f"[POST {urlparse(self.url).path} request_id={self.request_id}]."
+                f"[POST {urlparse(self.url).path} request_id={self.request_id}]"
             )
         return data
 
