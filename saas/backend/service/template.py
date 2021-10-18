@@ -75,7 +75,7 @@ class TemplateService:
         # 获取已有的授权信息
         authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template_id)
         system_id = authorized_template.system_id
-        policy_list = PolicyList(parse_obj_as(List[Policy], authorized_template.data["actions"]))
+        policy_list = self._convert_template_actions_to_policy_list(authorized_template.data["actions"])
 
         # 查询subject的后端权限信息
         backend_policy_list = new_backend_policy_list_by_subject(system_id, subject, template_id)
