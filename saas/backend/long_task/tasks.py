@@ -15,11 +15,12 @@ import sys
 import time
 import traceback
 from abc import ABCMeta, abstractmethod
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any, Dict, List, Type
 
 from celery import Task, task
 from django.db.models import Max
+from django.utils import timezone
 
 from .constants import TaskStatus
 from .models import SubTaskState, TaskDetail
@@ -225,7 +226,7 @@ def retry_long_task():
     """
     重试一天以前一直 PENDING/RUNNING 的任务
     """
-    day_before = datetime.now() - timedelta(days=1)
+    day_before = timezone.now() - timedelta(days=1)
 
     qs = TaskDetail.objects.filter(
         status__in=[TaskStatus.PENDING.value, TaskStatus.RUNNING.value], created_time__lt=day_before
