@@ -107,10 +107,17 @@ class ResourceProviderClient:
         # 由于request_id可能在请求返回header被更新，所以需要lazyObject
         # 该信息用于日志
         base_log_msg = SimpleLazyObject(
-            lambda: ("resource_provider [system={}, resource={}]; "
-                     "API [request_id={}, url={}, data.method={}]; "
-                     "Detail[{}]").format(
-                self.system_id, self.resource_type_id, self.request_id, self.url, data["method"], kwargs,
+            lambda: (
+                "resource_provider [system={}, resource={}]; "
+                "API [request_id={}, url={}, data.method={}]; "
+                "Detail[{}]"
+            ).format(
+                self.system_id,
+                self.resource_type_id,
+                self.request_id,
+                self.url,
+                data["method"],
+                kwargs,
             )
         )
 
@@ -155,14 +162,11 @@ class ResourceProviderClient:
                 f"{request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
-            logger.error(
-                f"RespDataException response_content: {resp.text}， error: {error}. {base_log_msg}"
-            )
+            logger.error(f"RespDataException response_content: {resp.text}， error: {error}. {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 数据异常，JSON解析出错
             raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(
-                f"{self.system_id}'s API error: {error}! "
-                f"{request_detail_info}"
+                f"{self.system_id}'s API error: {error}! " f"{request_detail_info}"
             )
 
         code = resp["code"]
@@ -176,13 +180,14 @@ class ResourceProviderClient:
         if code not in ResponseCodeToErrorDict:
             trace_func(code=code)
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"{self.system_id}'s API response body.code != 0, code is {code}! "
-                f"{request_detail_info}"
+                f"{self.system_id}'s API response body.code != 0, code is {code}! " f"{request_detail_info}"
             )
 
         raise ResponseCodeToErrorDict[code]["error"].format(
-            message=(f"{self.system_id}'s API response body.code is {code}, body.message={resp.get('message', '')}! "
-                     f"{request_detail_info}"),
+            message=(
+                f"{self.system_id}'s API response body.code is {code}, body.message={resp.get('message', '')}! "
+                f"{request_detail_info}"
+            ),
             replace=ResponseCodeToErrorDict[code]["replace_message"],
         )
 
@@ -213,9 +218,13 @@ class ResourceProviderClient:
 
         count, results = resp_data["count"], resp_data["results"]
         if len(results) > count:
-            logger.error("resource_provider data invalid, "
-                         "the count of data must be greater than or equal to the length of results, "
-                         "count=%d, len(results)=%d", count, len(results))
+            logger.error(
+                "resource_provider data invalid, "
+                "the count of data must be greater than or equal to the length of results, "
+                "count=%d, len(results)=%d",
+                count,
+                len(results),
+            )
             raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
                 f"{self.system_id}'s API response data wrong! "
                 f"the count of data must be greater than or equal to the length of results, "
