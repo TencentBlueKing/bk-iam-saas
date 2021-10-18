@@ -13,7 +13,7 @@ from typing import Any, Dict, List
 from django.db import transaction
 from django.db.models import Count, F
 from django.utils.translation import gettext as _
-from pydantic import BaseModel, parse_obj_as
+from pydantic import BaseModel
 
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreGroupSync
 from backend.common.error_codes import error_codes
