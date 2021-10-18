@@ -9,13 +9,14 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+import traceback
 
 from celery import task
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
-from backend.apps.organization.models import SyncRecord
+from backend.apps.organization.models import SyncRecord, SyncErrorRecord
 from backend.biz.org_sync.department import DBDepartmentSyncExactInfo, DBDepartmentSyncService
 from backend.biz.org_sync.department_member import DBDepartmentMemberSyncService
 from backend.biz.org_sync.iam_department import IAMBackendDepartmentSyncService
@@ -43,10 +44,17 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
                 executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Running.value
             )
             record_id = record.id
+            create_time = record.created_time
+
     except Exception:  # pylint: disable=broad-except
-        logger.exception("sync_organization cache lock error")
+        traceback_msg = traceback.format_exc()
+        exception_msg = "sync_organization cache lock error"
+        logger.exception(exception_msg)
         # 获取分布式锁失败时，需要创建一条失败记录
-        SyncRecord.objects.create(executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Failed.value)
+        record = SyncRecord.objects.create(executor=executor, type=SyncType.Full.value,
+                                           status=SyncTaskStatus.Failed.value)
+        SyncErrorRecord.objects.create(sync_record_id=record.id,
+                                       error_msg=f"exception_msg:{exception_msg}-traceback_msg:{traceback_msg}")
         return
     try:
         # 1. SaaS 从用户管理同步组织架构
@@ -87,12 +95,17 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
         for iam_service in iam_services:
             iam_service.sync_to_iam_backend()
 
-        status = SyncTaskStatus.Succeed.value
+        SyncRecord.objects.filter(id=record_id).update(status=SyncTaskStatus.Succeed.value, updated_time=timezone.now(),
+                                                       total_time=timezone.now()-create_time)
+
     except Exception:  # pylint: disable=broad-except
-        logger.exception("sync_organization error")
-        status = SyncTaskStatus.Failed.value
-    # 更新记录状态
-    SyncRecord.objects.filter(id=record_id).update(status=status, updated_time=timezone.now())
+        exception_msg = "sync_organization error"
+        traceback_msg = traceback.format_exc()
+        logger.exception(exception_msg)
+        SyncRecord.objects.filter(id=record_id).update(status=SyncTaskStatus.Failed.value, updated_time=timezone.now(),
+                                                       total_time=timezone.now()-create_time)
+        SyncErrorRecord.objects.create(sync_record_id=record.id,
+                                       error_msg=f"exception_msg:{exception_msg}-traceback_msg:{traceback_msg}")
 
 
 @task(ignore_result=True)

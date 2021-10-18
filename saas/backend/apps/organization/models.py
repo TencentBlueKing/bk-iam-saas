@@ -164,9 +164,21 @@ class UserLeader(models.Model):
 
 class SyncRecord(TimestampedModel):
     """同步记录"""
-
+    total_time = models.IntegerField("耗时", default=0)
     executor = models.CharField("执行者", max_length=64, default=SYNC_TASK_DEFAULT_EXECUTOR)
     type = models.CharField("同步任务类型", choices=SyncType.get_choices(), default=SyncType.Full.value, max_length=16)
     status = models.CharField(
         "任务状态", choices=SyncTaskStatus.get_choices(), default=SyncTaskStatus.Running.value, max_length=16
     )
+
+    @property
+    def detail(self):
+        if not self.status == SyncTaskStatus.Failed.value:
+            return []
+        return SyncErrorRecord.objects.filter(sync_record_id=self.id).values("error_msg").first()
+
+
+class SyncErrorRecord(models.Model):
+    """同步异常记录"""
+    sync_record_id = models.IntegerField("同步记录id", db_index=True)
+    error_msg = models.TextField("异常信息")

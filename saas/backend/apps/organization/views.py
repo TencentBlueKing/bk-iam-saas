@@ -13,17 +13,19 @@ from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, views
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, mixins
 
-from backend.account.permissions import role_perm_class
+from backend.account.permissions import role_perm_class, RolePermission
 from backend.apps.organization.constants import SyncType
-from backend.apps.organization.models import Department, SyncRecord, User
+from backend.apps.organization.models import Department, SyncRecord, SyncErrorRecord, User
 from backend.apps.organization.serializers import (
     DepartmentSLZ,
     OrganizationCategorySLZ,
     OrganizationSearchResultSLZ,
     OrganizationSearchSLZ,
     OrganizationSyncTaskSLZ,
+    OrganizationSyncRecordSLZ,
+    OrganizationSyncErrorRecordSLZ,
     UserInfoSLZ,
     UserQuerySLZ,
 )
@@ -186,7 +188,6 @@ class OrganizationViewSet(GenericViewSet):
 
 
 class OrganizationSyncTaskView(views.APIView):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     paginator = None  # 去掉swagger中的limit offset参数
@@ -222,3 +223,31 @@ class OrganizationSyncTaskView(views.APIView):
         # 异步调用任务
         sync_organization.delay(username)
         return Response({})
+
+
+class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+
+    permission_classes = [RolePermission]
+    queryset = SyncRecord.objects.all()
+    serializer_class = OrganizationSyncRecordSLZ
+    lookup_field = "id"
+
+    @swagger_auto_schema(
+        operation_description="同步记录列表",
+        auto_schema=ResponseSwaggerAutoSchema,
+        # query_serializer=OrganizationSearchSLZ,
+        responses={status.HTTP_200_OK: OrganizationSyncRecordSLZ(label="同步记录")},
+        tags=["organization"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(self, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="同步异常记录详情",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: OrganizationSyncErrorRecordSLZ(label="同步异常记录详情")},
+        tags=["organization"],
+    )
+    def retrieve(self, request, *args, **kwargs):
+        sync_record = self.get_object()
+        return Response(sync_record.detail)
