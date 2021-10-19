@@ -10,7 +10,8 @@
             <p>{{ $t(`m.userGroup['用户组']`) }}【{{ name }}】{{ $t(`m.common['的详情']`) }}</p>
             <p class="group-id">ID: {{ groupId }}</p>
         </div>
-        <div slot="content" class="content-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+        <div slot="content" class="content-wrapper" data-test-id="myPerm_sideslider_groupPermContentWrapper"
+            v-bkloading="{ isLoading, opacity: 1 }">
             <div class="iam-group-perm-sideslider-tab set-tab-margin-bottom" v-if="!isLoading && showMember">
                 <section class="tab-item active">{{$t(`m.perm['组权限']`)}}</section>
             </div>
