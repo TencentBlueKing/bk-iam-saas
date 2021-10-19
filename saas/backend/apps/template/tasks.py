@@ -13,7 +13,7 @@ from typing import Any, List
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.template import TemplateBiz
 from backend.long_task.constants import TaskType
-from backend.long_task.task import StepTask, register_handler
+from backend.long_task.tasks import StepTask, register_handler
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
