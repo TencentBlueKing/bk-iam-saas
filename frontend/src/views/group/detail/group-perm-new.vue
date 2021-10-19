@@ -9,6 +9,7 @@
         </bk-button>
         <template v-if="!isLoading && !isEmpty">
             <render-perm-item
+                data-test-id="myPerm_list_permItem"
                 v-for="(item, index) in groupSystemList"
                 :key="item.id"
                 :expanded.sync="item.expanded"
@@ -22,6 +23,7 @@
                 <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
                     <div v-if="!item.loading">
                         <render-template-item
+                            data-test-id="myPerm_list_templateItem"
                             :ref="`rTemplateItem${item.id}`"
                             v-for="(subItem, subIndex) in item.templates"
                             :key="subIndex"
@@ -39,6 +41,7 @@
                             <div style="min-height: 136px;"
                                 v-bkloading="{ isLoading: subItem.loading, opacity: 1 }">
                                 <render-instance-table
+                                    data-test-id="myPerm_list_instanceTable"
                                     v-if="!subItem.loading"
                                     mode="detail"
                                     :is-custom="subItem.count > 0"
