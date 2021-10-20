@@ -57,7 +57,7 @@ class TaskDetail(BaseModel):
 
         # 运行中的任务, 实时从redis中取结果
         if self.status == TaskStatus.RUNNING.value:
-            from .task import ResultStore
+            from .tasks import ResultStore
 
             store = ResultStore(self.id)
             results += store.list()
@@ -85,7 +85,7 @@ class TaskDetail(BaseModel):
 
         task.save(force_insert=True)
 
-        # from .task import TaskFactory
+        # from .tasks import TaskFactory
 
         # TaskFactory().delay(task.id)  # NOTE 保证事务执行完成以后再执行任务
         return task
