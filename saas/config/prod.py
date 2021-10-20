@@ -40,6 +40,12 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
     import json
 
     def get_app_service_url(app_code: str) -> str:
+        if app_code == os.environ.get("BKPAAS_APP_ID", APP_CODE) and "BK_IAM_APP_URL" in os.environ:
+            return os.environ["BK_IAM_APP_URL"]
+
+        if app_code == "bk_itsm" and "BK_ITSM_APP_URL" in os.environ:
+            return os.environ["BK_ITSM_APP_URL"]
+
         value = os.environ["BKPAAS_SERVICE_ADDRESSES_BKSAAS"]
         decoded_value = json.loads(base64.b64decode(value).decode("utf-8"))
         return {item["key"]["bk_app_code"]: item["value"]["prod"] for item in decoded_value}[app_code]
