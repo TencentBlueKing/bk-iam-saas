@@ -15,17 +15,17 @@ from rest_framework import status, views
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
-from backend.account.permissions import role_perm_class, RolePermission
+from backend.account.permissions import role_perm_class
 from backend.apps.organization.constants import SyncType
-from backend.apps.organization.models import Department, SyncRecord, SyncErrorRecord, User
+from backend.apps.organization.models import Department, SyncErrorLog, SyncRecord, User
 from backend.apps.organization.serializers import (
     DepartmentSLZ,
     OrganizationCategorySLZ,
     OrganizationSearchResultSLZ,
     OrganizationSearchSLZ,
-    OrganizationSyncTaskSLZ,
+    OrganizationSyncErrorLogSLZ,
     OrganizationSyncRecordSLZ,
-    OrganizationSyncErrorRecordSLZ,
+    OrganizationSyncTaskSLZ,
     UserInfoSLZ,
     UserQuerySLZ,
 )
@@ -227,8 +227,8 @@ class OrganizationSyncTaskView(views.APIView):
 
 class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
 
-    permission_classes = [RolePermission]
-    queryset = SyncRecord.objects.all()
+    role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)
+    queryset = SyncRecord.objects.filter(type=SyncType.Full.value)
     serializer_class = OrganizationSyncRecordSLZ
     lookup_field = "id"
 
@@ -245,7 +245,7 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
     @swagger_auto_schema(
         operation_description="同步异常记录详情",
         auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: OrganizationSyncErrorRecordSLZ(label="同步异常记录详情")},
+        responses={status.HTTP_200_OK: OrganizationSyncErrorLogSLZ(label="同步异常日志详情")},
         tags=["organization"],
     )
     def retrieve(self, request, *args, **kwargs):

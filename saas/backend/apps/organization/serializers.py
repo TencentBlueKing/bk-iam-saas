@@ -62,11 +62,11 @@ class OrganizationSyncTaskSLZ(serializers.Serializer):
 class OrganizationSyncRecordSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="同步记录id")
     created_time = serializers.CharField(label="执行开始时间")
-    total_time = serializers.CharField(label="耗时")
+    updated_time = serializers.CharField(label="执行结束时间")
     executor = serializers.CharField(label="执行者")
     type = serializers.CharField(label="触发类型")
     status = serializers.CharField(label="同步任务状态", help_text=f"{SyncTaskStatus.get_choices()}")
 
 
-class OrganizationSyncErrorRecordSLZ(serializers.Serializer):
-    error_msg = serializers.CharField(label="异常信息")
+class OrganizationSyncErrorLogSLZ(serializers.Serializer):
+    log = serializers.JSONField(help_text="日志详情")

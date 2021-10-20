@@ -13,6 +13,7 @@ import logging
 from typing import Dict, List
 
 from django.db import models
+from jsonfield import JSONField
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -164,7 +165,7 @@ class UserLeader(models.Model):
 
 class SyncRecord(TimestampedModel):
     """同步记录"""
-    total_time = models.IntegerField("耗时", default=0)
+
     executor = models.CharField("执行者", max_length=64, default=SYNC_TASK_DEFAULT_EXECUTOR)
     type = models.CharField("同步任务类型", choices=SyncType.get_choices(), default=SyncType.Full.value, max_length=16)
     status = models.CharField(
@@ -173,12 +174,20 @@ class SyncRecord(TimestampedModel):
 
     @property
     def detail(self):
-        if not self.status == SyncTaskStatus.Failed.value:
-            return []
-        return SyncErrorRecord.objects.filter(sync_record_id=self.id).values("error_msg").first()
+        """同步异常日志详情"""
+
+        if self.status != SyncTaskStatus.Failed.value:
+            return {}
+
+        sync_error_log = SyncErrorLog.objects.filter(sync_record_id=self.id)
+        if sync_error_log.exists():
+            return sync_error_log.values("log").first()
+
+        return {}
 
 
-class SyncErrorRecord(models.Model):
+class SyncErrorLog(models.Model):
     """同步异常记录"""
+
     sync_record_id = models.IntegerField("同步记录id", db_index=True)
-    error_msg = models.TextField("异常信息")
+    log = JSONField("日志详情", default={})
