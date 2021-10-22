@@ -245,7 +245,8 @@
                 curDocuLink: `${window.PRODUCT_DOC_URL_PREFIX}${NORMAL_DOCU_LINK}`,
                 showGuide: false,
                 isShowHeader: false,
-                placeholderValue: ''
+                placeholderValue: '',
+                userGroupName: ''
             }
         },
         computed: {
@@ -313,6 +314,7 @@
             },
             routeName: {
                 handler (value) {
+                    console.log('value', value)
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup()
                     }
@@ -347,7 +349,9 @@
                 }
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupDetail', params)
-                    this.userGroupName = res.data.name
+                    this.$nextTick(() => {
+                        this.$set(this, 'userGroupName', res.data.name)
+                    })
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
