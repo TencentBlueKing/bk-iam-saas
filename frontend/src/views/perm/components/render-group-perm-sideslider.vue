@@ -7,7 +7,7 @@
         :quick-close="true"
         @animation-end="handleAnimationEnd">
         <div slot="header">
-            <p>{{ $t(`m.userGroup['用户组']`) }}【{{ name }}】{{ $t(`m.common['的详情']`) }}esdsd</p>
+            <p>{{ $t(`m.userGroup['用户组']`) }}【{{ name }}】{{ $t(`m.common['的详情']`) }}</p>
             <p class="group-id">ID: {{ groupId }}</p>
         </div>
         <div
