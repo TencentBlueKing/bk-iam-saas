@@ -42,9 +42,10 @@ from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
+from backend.biz.policy import PolicyOperationBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
-from backend.service.constants import RoleType
+from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
@@ -308,6 +309,7 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
 
     group_biz = GroupBiz()
     role_biz = RoleBiz()
+    policy_biz = PolicyOperationBiz()
     trans = ManagementCommonTrans()
 
     @swagger_auto_schema(
@@ -340,7 +342,13 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
             policies=policy_list.policies,
         )
         role = self.role_biz.get_role_by_group_id(group.id)
-        self.group_biz.grant(role, group, [template])
+
+        # 检查数据正确性：授权范围是否超限角色访问，这里不需要检查资源实例名称，因为授权时，接入系统可能使用同步方式，这时候资源可能还没创建
+        self.group_biz.check_before_grant(group, [template], role, need_check_resource_name=False)
+
+        # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
+        # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
+        self.policy_biz.alter(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)

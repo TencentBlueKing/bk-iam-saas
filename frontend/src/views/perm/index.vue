@@ -32,6 +32,7 @@
             @tab-change="handleTabChange">
             <bk-tab-panel
                 v-for="(panel, index) in panels"
+                :data-test-id="`myPerm_tabPanel_${panel.name}`"
                 v-bind="panel"
                 :key="index">
                 <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">

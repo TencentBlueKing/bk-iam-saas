@@ -26,6 +26,7 @@ from backend.common.time import db_time, get_soon_expire_ts
 from backend.component import esb
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
+from backend.util.url import url_join
 
 logger = logging.getLogger("celery")
 
@@ -42,7 +43,7 @@ def user_group_policy_expire_remind():
     qs = User.objects.filter(staff_status=StaffStatus.IN.value)
     paginator = Paginator(qs, 100)
 
-    base_url = f"{settings.APP_URL}/perm-renewal"
+    base_url = url_join(settings.APP_URL, "/perm-renewal")
 
     if not paginator.count:
         return

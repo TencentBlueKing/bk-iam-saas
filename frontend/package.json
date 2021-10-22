@@ -92,6 +92,7 @@
     "@icon-cool/bk-icon-bk-iam": "^0.0.2",
     "@vue/babel-sugar-v-on": "^1.1.2",
     "acorn": "~6.4.2",
+    "ansi-html-community": "0.0.8",
     "art-template": "^4.13.2",
     "axios": "^0.21.3",
     "babel-core": "^7.0.0-bridge.0",
@@ -184,11 +185,9 @@
     "webpack-cli": "~3.3.2",
     "webpack-dev-middleware": "~3.7.0",
     "webpack-dev-server": "~3.4.1",
+    "webpack-filter-warnings-plugin": "~1.2.1",
     "webpack-hot-middleware": "~2.25.0",
     "webpack-merge": "~4.2.1"
-  },
-  "devDependencies": {
-    "webpack-filter-warnings-plugin": "~1.2.1"
   },
   "husky": {
     "hooks": {
@@ -196,7 +195,7 @@
     }
   },
   "engines": {
-    "node": ">= 10.10.0",
+    "node": "^ 10.10.0",
     "npm": "6.14.15"
   }
 }

@@ -17,6 +17,7 @@ from backend.common.error_codes import error_codes
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
 from backend.util.cache import region
+from backend.util.url import url_join
 
 from .http import http_delete, http_get, http_post, http_put, logger
 from .util import execute_all_data_by_paging, list_all_data_by_paging
@@ -36,7 +37,7 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
         "X-BK-APP-SECRET": settings.APP_TOKEN,
         "X-Request-Id": local.request_id,
     }
-    url = f"{settings.BK_IAM_HOST}{url_path}"
+    url = url_join(settings.BK_IAM_HOST, url_path)
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
     ok, data = http_func(**kwargs)

@@ -77,7 +77,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     ) -> str:
         """创建 - 申请或续期自定义权限单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
-        params["title"] = f"{data.content.system.name}权限申请"
+        params["title"] = f"申请{data.content.system.name}{len(data.content.policies)}个操作权限"
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [ActionTable.from_application(data.content).dict()]}
 
         # 如果审批流程中包含资源审批人, 并且资源审批人不为空
@@ -93,11 +93,14 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     ) -> str:
         """创建 - 申请加入或续期用户组单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
-        params["title"] = (
+
+        title_prefix = (
             f"申请加入 {len(data.content.groups)} 个用户组"
             if data.type == ApplicationTypeEnum.JOIN_GROUP
             else f"申请续期 {len(data.content.groups)} 个用户组"
         )
+        params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
@@ -107,7 +110,10 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     ) -> str:
         """创建 - 创建或更新分级管理员"""
         params = self._generate_ticket_common_params(data, process, callback_url)
-        params["title"] = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_RATING_MANAGER.value else "申请编辑分级管理员"
+
+        title_prefix = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_RATING_MANAGER.value else "申请编辑分级管理员"
+        params["title"] = f"{title_prefix}：{data.content.name}"
+
         params["content"] = {
             "schemes": FORM_SCHEMES,
             "form_data": GradeManagerForm.from_application(data.content).form_data,

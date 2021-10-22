@@ -21,7 +21,7 @@
             <div class="slot-content">
                 <slot />
             </div>
-            <p class="expand-action" @click="handlePackup">
+            <p class="expand-action" @click="handlePackup" data-test-id="renderPermItem_btn_expandAction">
                 <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
                 {{ $t(`m.common['点击收起']`) }}
             </p>
