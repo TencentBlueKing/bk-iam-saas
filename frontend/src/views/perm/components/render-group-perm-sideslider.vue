@@ -113,10 +113,6 @@
                 // this.isLoading = flag
             },
 
-            handleTabChange (payload) {
-                this.tabActive = payload
-            },
-
             handleAnimationEnd () {
                 // this.groupTemplateList = []
                 this.requestQueue = ['list']
