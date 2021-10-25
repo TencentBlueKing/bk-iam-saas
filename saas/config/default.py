@@ -162,7 +162,12 @@ BROKER_HEARTBEAT = 60
 CELERYD_CONCURRENCY = os.getenv("BK_CELERYD_CONCURRENCY", 2)
 
 # CELERY 配置，申明任务的文件路径，即包含有 @task 装饰器的函数文件
-CELERY_IMPORTS = ("backend.apps.organization.tasks", "backend.apps.role.tasks", "backend.publisher.tasks")
+CELERY_IMPORTS = (
+    "backend.apps.organization.tasks",
+    "backend.apps.role.tasks",
+    "backend.publisher.tasks",
+    "backend.long_task.tasks",
+)
 
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
@@ -191,7 +196,7 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨0时执行
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
     },
     "periodic_group_expired_member_cleanup": {
         "task": "backend.apps.group.tasks.group_cleanup_expired_member",
@@ -208,6 +213,10 @@ CELERYBEAT_SCHEDULE = {
     "periodic_execute_model_change_event": {
         "task": "backend.apps.policy.tasks.execute_model_change_event",
         "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
+    },
+    "periodic_retry_long_task": {
+        "task": "backend.long_task.tasks.retry_long_task",
+        "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
     },
 }
 
