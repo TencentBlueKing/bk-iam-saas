@@ -113,30 +113,6 @@
                 // this.isLoading = flag
             },
 
-            async fetchMemberList () {
-                try {
-                    const params = {
-                        id: this.groupId,
-                        limit: 1000,
-                        offset: 0
-                    }
-                    const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params)
-                    this.userList = res.data.results.filter(item => item.type === 'user')
-                    this.departmentList = res.data.results.filter(item => item.type !== 'user')
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    })
-                } finally {
-                    this.requestQueue.shift()
-                }
-            },
-
             handleTabChange (payload) {
                 this.tabActive = payload
             },
