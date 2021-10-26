@@ -80,6 +80,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
             "subject_count",
             "tag",
             "is_lock",
+            "need_update",
             "updater",
             "updated_time",
             "creator",
@@ -119,10 +120,22 @@ class TemplateListSchemaSLZ(serializers.ModelSerializer):
     system = SystemInfoSLZ(label="系统信息", required=True)
     tag = serializers.CharField(label="标签")
     is_lock = serializers.BooleanField(label="是否锁定")
+    need_update = serializers.BooleanField(label="是否需要更新")
 
     class Meta:
         model = PermTemplate
-        fields = ("id", "system", "name", "description", "subject_count", "tag", "is_lock", "updater", "updated_time")
+        fields = (
+            "id",
+            "system",
+            "name",
+            "description",
+            "subject_count",
+            "tag",
+            "is_lock",
+            "need_update",
+            "updater",
+            "updated_time",
+        )
 
 
 class TemplateRetrieveSchemaSLZ(TemplateListSchemaSLZ):
