@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from unittest import mock
 
+import pytest
 from django.test import TestCase
 
 from backend.apps.role.models import Role
@@ -66,55 +67,66 @@ class TestInstanceDiff(TestCase):
         self.assertFalse(ActionScopeDiffer(None, None)._diff_instances(template_instances, scope_instances))
 
 
+@pytest.fixture()
+def role_scope_system_action_system_all():
+    return RoleScopeSystemActions(systems={SYSTEM_ALL: set()})
+
+
+@pytest.fixture()
+def role_scope_system_action_action_all():
+    return RoleScopeSystemActions(systems={"system": {ACTION_ALL}})
+
+
+@pytest.fixture()
+def role_scope_system_action_normal():
+    return RoleScopeSystemActions(systems={"system": {"action"}})
+
+
 class TestRoleScopeSystemActions:
-    def test_has_system(self):
-        system_actions = RoleScopeSystemActions(systems={SYSTEM_ALL: set()})
-        assert system_actions.has_system("system")
+    def test_has_system(self, role_scope_system_action_system_all, role_scope_system_action_action_all):
+        assert role_scope_system_action_system_all.has_system("system")
 
-        system_actions = RoleScopeSystemActions(systems={"system": set()})
-        assert system_actions.has_system("system")
-        assert not system_actions.has_system("test")
+        assert role_scope_system_action_action_all.has_system("system")
+        assert not role_scope_system_action_action_all.has_system("test")
 
-    def test_is_action_all(self):
-        system_actions = RoleScopeSystemActions(systems={SYSTEM_ALL: set()})
-        assert system_actions.is_action_all("system")
+    def test_is_action_all(
+        self, role_scope_system_action_system_all, role_scope_system_action_action_all, role_scope_system_action_normal
+    ):
+        assert role_scope_system_action_system_all.is_action_all("system")
 
-        system_actions = RoleScopeSystemActions(systems={"system": {ACTION_ALL}})
-        assert system_actions.is_action_all("system")
-        assert not system_actions.is_action_all("test")
+        assert role_scope_system_action_action_all.is_action_all("system")
+        assert not role_scope_system_action_action_all.is_action_all("test")
 
-        system_actions = RoleScopeSystemActions(systems={"system": {"action"}})
-        assert not system_actions.is_action_all("system")
+        assert not role_scope_system_action_normal.is_action_all("system")
 
-    def test_list_action_id(self):
-        system_actions = RoleScopeSystemActions(systems={SYSTEM_ALL: set()})
-        assert system_actions.list_action_id("system") == []
+    def test_list_action_id(
+        self, role_scope_system_action_system_all, role_scope_system_action_action_all, role_scope_system_action_normal
+    ):
+        assert role_scope_system_action_system_all.list_action_id("system") == []
 
-        system_actions = RoleScopeSystemActions(systems={"system": {ACTION_ALL}})
-        assert system_actions.list_action_id("system") == [ACTION_ALL]
-        assert system_actions.list_action_id("test") == []
+        assert role_scope_system_action_action_all.list_action_id("system") == [ACTION_ALL]
+        assert role_scope_system_action_action_all.list_action_id("test") == []
 
-        system_actions = RoleScopeSystemActions(systems={"system": {"action"}})
-        assert system_actions.list_action_id("system") == ["action"]
+        assert role_scope_system_action_normal.list_action_id("system") == ["action"]
 
 
 class TestRoleListQuery:
-    def test_list_scope_action_id(self):
+    def test_list_scope_action_id(self, role_scope_system_action_system_all, role_scope_system_action_normal):
         role = Role(type=RoleType.STAFF.value)
         q = RoleListQuery(role=role)
         assert q.list_scope_action_id("system") == [ACTION_ALL]
 
         role = Role(type=RoleType.RATING_MANAGER.value)
         q = RoleListQuery(role=role)
-        q.get_scope_system_actions = mock.Mock(return_value=RoleScopeSystemActions(systems={"system": {"action"}}))
+        q.get_scope_system_actions = mock.Mock(return_value=role_scope_system_action_normal)
         assert q.list_scope_action_id("test") == []
 
         role = Role(type=RoleType.RATING_MANAGER.value)
         q = RoleListQuery(role=role)
-        q.get_scope_system_actions = mock.Mock(return_value=RoleScopeSystemActions(systems={SYSTEM_ALL: set()}))
+        q.get_scope_system_actions = mock.Mock(return_value=role_scope_system_action_system_all)
         assert q.list_scope_action_id("system") == [ACTION_ALL]
 
         role = Role(type=RoleType.RATING_MANAGER.value)
         q = RoleListQuery(role=role)
-        q.get_scope_system_actions = mock.Mock(return_value=RoleScopeSystemActions(systems={"system": {"action"}}))
+        q.get_scope_system_actions = mock.Mock(return_value=role_scope_system_action_normal)
         assert q.list_scope_action_id("system") == ["action"]
