@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from collections import defaultdict
-from typing import List, Optional
+from typing import Dict, List, Optional, Set
 
 from django.db.models import Q
 from django.utils.functional import cached_property
@@ -58,6 +58,38 @@ class RoleInfoBean(RoleInfo):
 class AuthScopeSystemBean(BaseModel):
     system: ThinSystem
     actions: List[PolicyBean]
+
+
+class RoleScopeSystemActions(BaseModel):
+    """
+    role的授权范围系统-操作列表
+    """
+
+    systems: Dict[str, Set[str]]  # key: system_id, value: action_id_set
+
+    def is_action_all(self, system_id: str) -> bool:
+        """
+        是否是全操作列表
+        """
+        if not self.has_system(system_id):
+            return False
+
+        if SYSTEM_ALL in self.systems or ACTION_ALL in self.systems[system_id]:
+            return True
+
+        return False
+
+    def has_system(self, system_id: str) -> bool:
+        if SYSTEM_ALL in self.systems or system_id in self.systems:
+            return True
+
+        return False
+
+    def list_action_id(self, system_id: str) -> List[str]:
+        if system_id in self.systems:
+            return list(self.systems[system_id])
+
+        return []
 
 
 class RoleBiz:
@@ -280,15 +312,22 @@ class RoleListQuery:
         if self.role.type == RoleType.STAFF.value:
             return [ACTION_ALL]
 
-        scopes = self.role_svc.list_auth_scope(self.role.id)
-        systems = {s.system_id: {a.id for a in s.actions} for s in scopes}
-        if system_id not in systems and SYSTEM_ALL not in systems:
+        system_actions = self.get_scope_system_actions()
+        if not system_actions.has_system(system_id):
             return []
 
-        if SYSTEM_ALL in systems or ACTION_ALL in systems[system_id]:
+        if system_actions.is_action_all(system_id):
             return [ACTION_ALL]
 
-        return list(systems[system_id])
+        return system_actions.list_action_id(system_id)
+
+    def get_scope_system_actions(self) -> RoleScopeSystemActions:
+        """
+        获取授权范围的系统-操作字典
+        """
+        scopes = self.role_svc.list_auth_scope(self.role.id)
+        systems = {s.system_id: {a.id for a in s.actions} for s in scopes}
+        return RoleScopeSystemActions(systems=systems)
 
     def query_template(self):
         """

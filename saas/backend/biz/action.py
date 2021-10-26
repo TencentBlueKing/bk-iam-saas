@@ -107,14 +107,37 @@ class ActionBiz:
         actions = action_list.filter_by_scope_action_ids(scope_action_ids)
         return actions
 
-    def list_checked_action_by_role(self, system_id: str, role, checked_action_set: Set[str]) -> List[ActionBean]:
+    def list_template_tagged_action_by_role(
+        self, system_id: str, role, template_action_set: Set[str]
+    ) -> List[ActionBean]:
         """
-        查询角色相关的操作列表, 并上标签
+        查询角色相关的操作列表, 加上标签
+
+        返回的操作是role范围+template操作的合集
+        对role范围外的操作要打上delete标签
         """
-        actions = self.list_by_role(system_id, role)
-        for action in actions:
-            action.tag = ActionTag.CHECKED.value if action.id in checked_action_set else ActionTag.UNCHECKED.value
-        return actions
+        actions = self.list(system_id).actions
+        scope_action_ids = RoleListQuery(role).list_scope_action_id(system_id)
+        if ACTION_ALL in scope_action_ids:
+            for action in actions:
+                action.tag = ActionTag.CHECKED.value if action.id in template_action_set else ActionTag.UNCHECKED.value
+            return actions
+
+        # 筛选出在role范围内+在模板操作的操作集合
+        filter_actions = [
+            action for action in actions if action.id in scope_action_ids or action.id in template_action_set
+        ]
+        for action in filter_actions:
+            # 如果操作在模板内且不在role范围内, 操作已被删除
+            if action.id in template_action_set and action.id not in scope_action_ids:
+                action.tag = ActionTag.DELETE.value
+            # 如果操作同时在role范围内与模板内, 操作已勾选
+            elif action.id in template_action_set and action.id in scope_action_ids:
+                action.tag = ActionTag.CHECKED.value
+            # 如果操作不在模板内, 操作未勾选
+            else:
+                action.tag = ActionTag.UNCHECKED.value
+        return filter_actions
 
     def list_by_subject(self, system_id: str, role, subject: Subject) -> List[ActionBean]:
         """
