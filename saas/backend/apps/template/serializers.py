@@ -113,7 +113,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
             return False
 
         # template 的 action set 减去 role 的action set, 还有剩下的说明模板需要更新
-        return bool(set(obj.action_ids) - set(self.role_system_actions.is_action_all(obj.system_id)))
+        return bool(set(obj.action_ids) - set(self.role_system_actions.list_action_id(obj.system_id)))
 
 
 class TemplateListSchemaSLZ(serializers.ModelSerializer):
