@@ -17,7 +17,7 @@ from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import role_perm_class
 from backend.apps.organization.constants import SyncType
-from backend.apps.organization.models import Department, SyncErrorLog, SyncRecord, User
+from backend.apps.organization.models import Department, SyncRecord, User
 from backend.apps.organization.serializers import (
     DepartmentSLZ,
     OrganizationCategorySLZ,
@@ -227,7 +227,8 @@ class OrganizationSyncTaskView(views.APIView):
 
 class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
 
-    role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
+
     queryset = SyncRecord.objects.filter(type=SyncType.Full.value)
     serializer_class = OrganizationSyncRecordSLZ
     lookup_field = "id"
@@ -243,7 +244,7 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
         return super().list(self, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="同步异常记录详情",
+        operation_description="同步异常日志详情",
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: OrganizationSyncErrorLogSLZ(label="同步异常日志详情")},
         tags=["organization"],

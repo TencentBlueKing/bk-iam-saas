@@ -23,7 +23,7 @@ urlpatterns = [
     path("search/", views.OrganizationViewSet.as_view({"get": "list"}), name="organization.search"),
     path("sync_task/", views.OrganizationSyncTaskView.as_view(), name="organization.sync_task"),
     path(
-        "sync_records/", views.OrganizationSyncRecordViewSet.as_view({"get": "list"}), name="organization.sync_record"
+        "sync_records/", views.OrganizationSyncRecordViewSet.as_view({"get": "list"}), name="organization.sync_records"
     ),
     path(
         "sync_records/<int:id>/log",
