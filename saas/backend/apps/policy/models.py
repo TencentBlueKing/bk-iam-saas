@@ -34,7 +34,6 @@ class Policy(BaseModel):
 
     # policy
     _resources = models.TextField("资源策略", db_column="resources")  # json
-    _environment = models.TextField("可用条件", db_column="environment")  # json
     policy_id = models.BigIntegerField("后端policy_id", default=0)
 
     class Meta:
@@ -50,11 +49,3 @@ class Policy(BaseModel):
     @resources.setter
     def resources(self, resources):
         self._resources = json_dumps(resources)
-
-    @property
-    def environment(self):
-        return json.loads(self._environment)
-
-    @environment.setter
-    def environment(self, environment):
-        self._environment = json_dumps(environment)
