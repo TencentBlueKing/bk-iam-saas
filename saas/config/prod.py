@@ -94,6 +94,9 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
     # itsm saas url
     BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
 
+    # load logging settings
+    LOGGING = get_logging_config_dict(locals())
+
 # V2 Smart 配置
 else:
     BK_COMPONENT_INNER_API_URL = BK_PAAS_INNER_HOST
