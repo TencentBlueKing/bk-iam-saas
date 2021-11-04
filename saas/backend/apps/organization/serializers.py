@@ -69,4 +69,5 @@ class OrganizationSyncRecordSLZ(serializers.Serializer):
 
 
 class OrganizationSyncErrorLogSLZ(serializers.Serializer):
-    log = serializers.DictField(label="日志详情")
+    exception_msg = serializers.CharField(label="异常信息", default="")
+    traceback_msg = serializers.CharField(label="日志详情", default="")
