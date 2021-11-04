@@ -12,7 +12,7 @@ from django.db import models
 
 
 class SyncErrorLogManager(models.Manager):
-    def create_error_log(self, exception_msg: str, traceback_msg: str):
+    def create_error_log(self, sync_record_id: int, exception_msg: str, traceback_msg: str):
         """创建：同步用户管理组织架构异常记录的日志详情"""
         sync_error_log = {"exception_msg": exception_msg, "traceback_msg": traceback_msg}
-        return self.create(log=sync_error_log)
+        return self.create(sync_record_id=sync_record_id, log=sync_error_log)
