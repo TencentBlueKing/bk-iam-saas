@@ -17,8 +17,13 @@ from django.db.models import TextField
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 
-from backend.apps.organization.constants import SYNC_TASK_DEFAULT_EXECUTOR, StaffStatus, SyncTaskStatus, SyncType, \
-    TriggerType
+from backend.apps.organization.constants import (
+    SYNC_TASK_DEFAULT_EXECUTOR,
+    StaffStatus,
+    SyncTaskStatus,
+    SyncType,
+    TriggerType,
+)
 from backend.apps.organization.managers import SyncErrorLogManager
 from backend.biz.organization import get_category_name
 from backend.common.models import TimestampedModel
