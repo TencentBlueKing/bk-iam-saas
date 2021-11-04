@@ -1,7 +1,6 @@
 <template>
     <div class="iam-system-access-wrapper">
         <render-search>
-            <!-- <bk-button theme="primary" @click="goCreate">{{ $t(`m.common['新增']`) }}</bk-button> -->
             <span class="display-name">同步记录</span>
         </render-search>
         <bk-table
@@ -12,35 +11,31 @@
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
-            @select="handlerChange"
-            @select-all="handlerAllChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <!-- <bk-table-column type="selection" align="center"></bk-table-column> -->
             <bk-table-column :label="$t(`m.user['开始时间']`)" :min-width="220">
                 <template slot-scope="{ row }">
-                    <span class="system-access-name" :title="row.system.name" @click="goDetail(row)">
-                        {{ row.system.name }}
-                    </span>
+                    {{ timestampToTime(row.created_time) }}
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.user['耗时']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.system.id">{{ row.system.id }}</span>
+                    <span :title="row.cost_time">{{ row.cost_time }}s</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.user['操作人']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.owner">{{ row.owner }}</span>
+                    <span :title="row.executor">{{ row.executor }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.user['触发类型']`)" :sortable="true" sort-by="created_time">
+            <bk-table-column :label="$t(`m.user['触发类型']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.created_time">{{ row.created_time }}</span>
+                    <span :title="row.trigger_type">{{ row.trigger_type }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['状态']`)" :sortable="true" sort-by="updated_time">
+            <bk-table-column :label="$t(`m.audit['状态']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.updated_time">{{ row.updated_time }}</span>
+                    <render-status :status="row.status" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="270">
@@ -61,20 +56,31 @@
             :width="725"
             :quick-close="true"
             @animation-end="handleAnimationEnd">
-            <div slot="content">
-                <log-details v-model="detailData" :value="detailData"></log-details>
+            <div slot="content" v-bkloading="{ isLoading: logDetailLoading, opacity: 1 }">
+                <section v-show="!logDetailLoading">
+                    <div class="link-btn">
+                        <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">同步失败排查指引</bk-link>
+                    </div>
+                    <div class="msg-content">
+                        <div v-if="exceptionMsg || tracebackMsg">
+                            <div>{{exceptionMsg}}</div>
+                            <div>{{tracebackMsg}}</div>
+                        </div>
+                        <div v-else>暂无日志详情</div>
+                    </div>
+                </section>
             </div>
         </bk-sideslider>
     </div>
 </template>
 <script>
-    import { buildURLParams } from '@/common/url'
-    import LogDetails from './log-details'
+    import { timestampToTime } from '@/common/util'
+    import RenderStatus from './render-status'
 
     export default {
         name: 'system-access-index',
         components: {
-            LogDetails
+            RenderStatus
         },
         data () {
             return {
@@ -86,9 +92,11 @@
                     limit: 10
                 },
                 currentBackup: 1,
-                currentSelectList: [],
                 isShowLogDetails: false,
-                detailData: '测试'
+                logDetailLoading: false,
+                exceptionMsg: '',
+                tracebackMsg: '',
+                timestampToTime: timestampToTime
             }
         },
         watch: {
@@ -97,57 +105,21 @@
             }
         },
         created () {
-            console.log(123455)
             this.fetchPageData()
-            const currentQueryCache = this.getCurrentQueryCache()
-            if (currentQueryCache && Object.keys(currentQueryCache).length) {
-                if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
-                }
-            }
         },
         methods: {
             async fetchPageData () {
                 await this.fetchModelingList(true)
             },
 
-            handleOpenMoreLink () {
-                window.open(`${window.PRODUCT_DOC_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`)
-            },
-
-            refreshCurrentQuery () {
-                const { limit, current } = this.pagination
-                const queryParams = { limit, current }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
-                return queryParams
-            },
-
-            setCurrentQueryCache (payload) {
-                window.localStorage.setItem('templateList', JSON.stringify(payload))
-            },
-
-            getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('templateList'))
-            },
-
-            resetPagination () {
-                this.pagination = Object.assign({}, {
-                    limit: 10,
-                    current: 1,
-                    count: 0
-                })
-            },
-
             async fetchModelingList (isLoading = false) {
                 this.tableLoading = isLoading
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
                 const params = {
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 }
                 try {
-                    const res = await this.$store.dispatch('access/getModelingList', params)
+                    const res = await this.$store.dispatch('organization/getRecordsList', params)
                     this.pagination.count = res.data.count
                     res.data.results = res.data.results.length && res.data.results.sort(
                         (a, b) => new Date(b.updated_time) - new Date(a.updated_time))
@@ -167,21 +139,6 @@
                 }
             },
 
-            goDetail (payload) {
-                this.$router.push({
-                    name: 'systemAccessAccess',
-                    params: {
-                        id: payload.id
-                    }
-                })
-            },
-
-            goCreate () {
-                this.$router.push({
-                    name: 'systemAccessCreate'
-                })
-            },
-
             handlePageChange (page) {
                 if (this.currentBackup === page) {
                     return
@@ -196,18 +153,29 @@
                 this.fetchModelingList(true)
             },
 
-            handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+            handleAnimationEnd () {
+                this.isShowLogDetails = false
             },
 
-            handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
-            },
-
-            handleAnimationEnd () {},
-
-            showLogDetails () {
+            async showLogDetails (data) {
                 this.isShowLogDetails = true
+                this.logDetailLoading = true
+                try {
+                    const res = await this.$store.dispatch('organization/getRecordsLog', data.id)
+                    this.exceptionMsg = res.data.exception_msg
+                    this.tracebackMsg = res.data.traceback_msg
+                } catch (e) {
+                    console.error(e)
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    })
+                } finally {
+                    this.logDetailLoading = false
+                }
             }
             
         }
@@ -242,6 +210,17 @@
                 font-size: 12px;
                 color: #fe9c00;
             }
+        }
+        .link-btn{
+            margin: 10px 0 10px 600px;
+        }
+        .msg-content{
+            background: #555555;
+            color: #fff;
+            margin: 0 0px 0 30px;
+            padding: 10px;
+            max-height: 1200px;
+            overflow-y: scroll;
         }
     }
 </style>
