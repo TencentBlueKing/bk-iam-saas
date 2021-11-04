@@ -71,6 +71,10 @@
         .text {
             color: #313238;
         }
+        .icon-content {
+            display: flex;
+            justify-content: space-between;
+        }
     }
     .action-wrapper {
         position: relative;
