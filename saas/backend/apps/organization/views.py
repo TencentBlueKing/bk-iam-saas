@@ -251,4 +251,5 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
     )
     def retrieve(self, request, *args, **kwargs):
         sync_record = self.get_object()
-        return Response(sync_record.detail)
+        response_slz = OrganizationSyncErrorLogSLZ(sync_record.detail)
+        return Response(response_slz.data)
