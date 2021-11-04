@@ -180,6 +180,11 @@ class SyncRecord(TimestampedModel):
         "任务状态", choices=SyncTaskStatus.get_choices(), default=SyncTaskStatus.Running.value, max_length=16
     )
 
+    class Meta:
+        ordering = ["-id"]
+        verbose_name = "组织架构同步记录"
+        verbose_name_plural = "组织架构同步记录"
+
     @property
     def detail(self) -> Dict:
         """同步异常日志详情"""
