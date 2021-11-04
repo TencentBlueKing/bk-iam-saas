@@ -157,6 +157,31 @@ export default {
          */
         verifyManualUser ({ commit, state, dispatch }, params, config) {
             return http.post(`${AJAX_URL_PREFIX}/organizations/users/query/`, params, config)
+        },
+
+        /**
+         * 获取同步记录
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @return {Promise} promise 对象
+         */
+        getRecordsList ({ commit, state, dispatch }, params, config = {}) {
+            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/?${json2Query(params)}`, {}, config)
+        },
+        /**
+         * 获取日志详情
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @return {Promise} promise 对象
+         */
+        getRecordsLog ({ commit, state, dispatch }, id, config) {
+            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/${id}/logs/`, config)
         }
     }
 }

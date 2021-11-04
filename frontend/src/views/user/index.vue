@@ -560,6 +560,7 @@
                     return
                 }
                 this.$store.commit('updateSync', true)
+                this.curSelectedData.type = 'depart'
                 try {
                     const res = await this.$store.dispatch('organization/organizationsSyncTask')
                     if (res.result) {
