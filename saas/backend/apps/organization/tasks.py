@@ -53,9 +53,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
         record = SyncRecord.objects.create(
             executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Failed.value
         )
-        SyncErrorLog.objects.create(
-            sync_record_id=record.id, exception_msg=exception_msg, traceback_msg=exception_msg
-        )
+        SyncErrorLog.objects.create(sync_record_id=record.id, exception_msg=exception_msg, traceback_msg=exception_msg)
         return
     try:
         # 1. SaaS 从用户管理同步组织架构
@@ -108,7 +106,8 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
         SyncRecord.objects.filter(id=record_id).update(status=sync_status, updated_time=timezone.now())
         if sync_status == SyncTaskStatus.Failed.value:
             SyncErrorLog.objects.create(
-                sync_record_id=record_id, exception_msg=exception_msg, traceback_msg=traceback_msg)
+                sync_record_id=record_id, exception_msg=exception_msg, traceback_msg=traceback_msg
+            )
 
 
 @task(ignore_result=True)
