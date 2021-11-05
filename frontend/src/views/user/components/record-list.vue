@@ -2,6 +2,15 @@
     <div class="iam-system-access-wrapper">
         <render-search>
             <span class="display-name">同步记录</span>
+            <!-- <div slot="right">
+                <bk-date-picker
+                    v-model="initDateTime"
+                    placeholder=""
+                    type="month"
+                    :clearable="false"
+                    @change="handleDateChange">
+                </bk-date-picker>
+            </div> -->
         </render-search>
         <bk-table
             :data="tableList"
@@ -20,17 +29,19 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.user['耗时']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.cost_time">{{ row.cost_time }}s</span>
+                    <span :title="row.cost_time">{{ row.cost_time | getDuration }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.user['操作人']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.executor">{{ row.executor }}</span>
+                    <span :title="row.executor">
+                        {{ row.trigger_type === 'periodic_task' ? '定时同步' : row.executor }}
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.user['触发类型']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.trigger_type">{{ row.trigger_type }}</span>
+                    <span :title="row.trigger_type">{{ triggerType[row.trigger_type] }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['状态']`)">
@@ -76,9 +87,36 @@
 <script>
     import { timestampToTime } from '@/common/util'
     import RenderStatus from './render-status'
+    import moment from 'moment'
+
+    const getDate = payload => {
+        return payload.split('-').join('')
+    }
+
+    const getFormatDate = payload => {
+        const now = new Date(payload)
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
+        return `${year}-${month < 10 ? '0' + month.toString() : month}`
+    }
 
     export default {
         name: 'system-access-index',
+        filters: {
+            getDuration (val) {
+                const d = moment.duration(val, 'seconds')
+                if (val >= 86400) {
+                    return `${Math.floor(d.asDays())}d${d.hours()}h${d.minutes()}min${d.seconds()}s`
+                }
+                if (val >= 3600) {
+                    return `${d.hours()}h${d.minutes()}min${d.seconds()}s`
+                }
+                if (val > 60) {
+                    return `${d.minutes()}min${d.seconds()}s`
+                }
+                return `${Math.floor(val)}s`
+            }
+        },
         components: {
             RenderStatus
         },
@@ -96,7 +134,9 @@
                 logDetailLoading: false,
                 exceptionMsg: '',
                 tracebackMsg: '',
-                timestampToTime: timestampToTime
+                timestampToTime: timestampToTime,
+                initDateTime: new Date(),
+                triggerType: { 'periodic_task': '定时同步', 'manual_sync': '手动同步' }
             }
         },
         watch: {
@@ -176,6 +216,20 @@
                 } finally {
                     this.logDetailLoading = false
                 }
+            },
+
+            resetPagination () {
+                this.pagination = Object.assign({}, {
+                    limit: 10,
+                    current: 1,
+                    count: 0
+                })
+            },
+
+            handleDateChange (date, type) {
+                this.resetPagination()
+                this.currentMonth = getDate(getFormatDate(date))
+                this.fetchModelingList(true)
             }
             
         }
