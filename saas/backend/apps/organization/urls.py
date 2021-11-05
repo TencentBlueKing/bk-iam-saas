@@ -26,7 +26,7 @@ urlpatterns = [
         "sync_records/", views.OrganizationSyncRecordViewSet.as_view({"get": "list"}), name="organization.sync_records"
     ),
     path(
-        "sync_records/<int:id>/log",
+        "sync_records/<int:id>/logs/",
         views.OrganizationSyncRecordViewSet.as_view({"get": "retrieve"}),
         name="organization.sync_record_error_log",
     ),

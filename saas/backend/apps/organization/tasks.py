@@ -53,10 +53,9 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
         record = SyncRecord.objects.create(
             executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Failed.value
         )
-        SyncErrorLog.objects.create(
-            sync_record_id=record.id, exception_msg=exception_msg, traceback_msg=exception_msg
-        )
+        SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
         return
+
     try:
         # 1. SaaS 从用户管理同步组织架构
         # 用户
@@ -96,19 +95,16 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
         for iam_service in iam_services:
             iam_service.sync_to_iam_backend()
 
-        sync_status = SyncTaskStatus.Succeed.value
-
+        sync_status, exception_msg, traceback_msg = SyncTaskStatus.Succeed.value, "", ""
     except Exception:  # pylint: disable=broad-except
         sync_status = SyncTaskStatus.Failed.value
         exception_msg = "sync_organization error"
         traceback_msg = traceback.format_exc()
         logger.exception(exception_msg)
 
-    finally:
-        SyncRecord.objects.filter(id=record_id).update(status=sync_status, updated_time=timezone.now())
-        if sync_status == SyncTaskStatus.Failed.value:
-            SyncErrorLog.objects.create(
-                sync_record_id=record_id, exception_msg=exception_msg, traceback_msg=traceback_msg)
+    SyncRecord.objects.filter(id=record_id).update(status=sync_status, updated_time=timezone.now())
+    if sync_status == SyncTaskStatus.Failed.value:
+        SyncErrorLog.objects.create_error_log(record_id, exception_msg, traceback_msg)
 
 
 @task(ignore_result=True)

@@ -17,8 +17,13 @@ from django.db.models import TextField
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 
-from backend.apps.organization.constants import SYNC_TASK_DEFAULT_EXECUTOR, StaffStatus, SyncTaskStatus, SyncType, \
-    TriggerType
+from backend.apps.organization.constants import (
+    SYNC_TASK_DEFAULT_EXECUTOR,
+    StaffStatus,
+    SyncTaskStatus,
+    SyncType,
+    TriggerType,
+)
 from backend.apps.organization.managers import SyncErrorLogManager
 from backend.biz.organization import get_category_name
 from backend.common.models import TimestampedModel
@@ -174,6 +179,11 @@ class SyncRecord(TimestampedModel):
     status = models.CharField(
         "任务状态", choices=SyncTaskStatus.get_choices(), default=SyncTaskStatus.Running.value, max_length=16
     )
+
+    class Meta:
+        ordering = ["-id"]
+        verbose_name = "组织架构同步记录"
+        verbose_name_plural = "组织架构同步记录"
 
     @property
     def detail(self) -> Dict:
