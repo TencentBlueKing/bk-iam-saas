@@ -89,7 +89,7 @@
     "@blueking/user-selector": "1.0.6",
     "@commitlint/cli": "~13.1.0",
     "@commitlint/config-conventional": "~13.1.0",
-    "@icon-cool/bk-icon-bk-iam": "^0.0.2",
+    "@icon-cool/bk-icon-bk-iam": "^0.0.3",
     "@vue/babel-sugar-v-on": "^1.1.2",
     "acorn": "~6.4.2",
     "art-template": "^4.13.2",
@@ -109,6 +109,7 @@
     "chalk": "~2.4.2",
     "cheerio": "~1.0.0-rc.3",
     "circular-json": "^0.5.9",
+    "codemirror": "^5.63.3",
     "connect-history-api-fallback": "~1.6.0",
     "cookie": "~0.4.0",
     "cookie-parser": "^1.4.4",
@@ -187,7 +188,6 @@
     "webpack-hot-middleware": "~2.25.0",
     "webpack-merge": "~4.2.1"
   },
-  "devDependencies": {},
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"

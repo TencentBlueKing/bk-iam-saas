@@ -132,6 +132,12 @@ export const beforeEach = async (to, from, next) => {
             curRole = 'staff'
         }
 
+        if (to.name === 'applyCustomPerm') {
+            await store.dispatch('role/updateCurrentRole', { id: 0 })
+            await store.dispatch('userInfo')
+            curRole = 'staff'
+        }
+
         const difference = getRouterDiff(curRole)
 
         if (difference.length) {
