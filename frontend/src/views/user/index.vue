@@ -10,10 +10,10 @@
                         @click.stop="handleSyncDepartment">
                         <Icon type="refresh" />
                     </div>
-                    <!-- <div class="action-wrapper"
+                    <div class="action-wrapper"
                         @click.stop="handleSyncRecordList">
                         <Icon type="time-circle-fill" />
-                    </div> -->
+                    </div>
                 </div>
             </div>
             <div :class="['search-wrapper', { 'active': isSerachFocus }]">
