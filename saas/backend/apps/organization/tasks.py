@@ -55,7 +55,6 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
         )
         SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
         return
-
     try:
         # 1. SaaS 从用户管理同步组织架构
         # 用户

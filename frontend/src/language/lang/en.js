@@ -567,7 +567,9 @@ export const m = {
         '耗时': 'time consuming',
         '操作人': 'Operator',
         '触发类型': 'Trigger type',
-        '日志详情': 'Log details'
+        '日志详情': 'Log details',
+        '成功': 'Succeed',
+        '失败': 'Failed'
     },
     grading: {
         '分级管理员': 'Grading Manager',
