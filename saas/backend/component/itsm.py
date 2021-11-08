@@ -40,6 +40,7 @@ def create_ticket(
     organization_names: str,
     reason: str,
     content: Dict,
+    **kwargs,
 ) -> Dict:
     """获取审批流程，并根据单据创建者判断是否实例化审批节点"""
     url_path = "/api/c/compapi/v2/itsm/create_ticket/"
@@ -55,6 +56,9 @@ def create_ticket(
             {"key": "content", "value": content},
         ],
     }
+    # 填充额外的fields
+    for k, v in kwargs.items():
+        data["fields"].append({"key": k, "value": v})  # type: ignore
     return _call_esb_api(http_post, url_path, data=data)
 
 

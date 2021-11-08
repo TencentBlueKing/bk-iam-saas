@@ -2,6 +2,7 @@
     <div class="iam-my-perm-wrapper">
         <div class="header">
             <bk-button
+                data-test-id="myPerm_btn_applyPerm"
                 type="button"
                 theme="primary"
                 style="margin-bottom: 16px;"
@@ -9,6 +10,7 @@
                 {{ $t(`m.common['申请权限']`) }}
             </bk-button>
             <bk-button
+                data-test-id="myPerm_btn_batchRenewal"
                 style="margin: 0 0 16px 6px;"
                 :disabled="isEmpty || isNoRenewal"
                 @click="handleBatchRenewal">
@@ -105,7 +107,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },

@@ -1,7 +1,13 @@
 <template>
     <div class="iam-system-access-join-wrapper">
         <div class="inner">
-            <bk-steps class="system-access-step" :steps="steps" direction="vertical"></bk-steps>
+            <bk-steps class="system-access-step" ref="systemAccessStep" direction="vertical"
+                :steps="controllableSteps.steps"
+                :controllable="controllableSteps.controllable"
+                :cur-step.sync="controllableSteps.curStep"
+                :before-change="beforeStepChanged"
+                @step-changed="stepChanged">
+            </bk-steps>
             <smart-action class="base-info-wrapper">
                 <render-horizontal-block :label="$t(`m.access['基础信息']`)">
                     <section ref="basicInfoContentRef">
@@ -31,7 +37,8 @@
                 </render-horizontal-block> -->
 
                 <div slot="action">
-                    <bk-button theme="primary" type="button" :loading="submitLoading" @click="handleSubmit">
+                    <bk-button theme="primary" type="button" :loading="submitLoading"
+                        @click="handleSubmit('systemAccessRegistry')">
                         {{ $t(`m.common['下一步']`) }}
                     </bk-button>
                     <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
@@ -43,12 +50,14 @@
 <script>
     import { leavePageConfirm } from '@/common/leave-page-confirm'
     import BasicInfo from './basic-info'
+    import beforeStepChangedMixin from '../common/before-stepchange'
 
     export default {
         name: '',
         components: {
             BasicInfo
         },
+        mixins: [beforeStepChangedMixin],
         data () {
             return {
                 modelingId: '',
@@ -66,12 +75,16 @@
 
                 submitLoading: false,
 
-                steps: [
-                    { title: '注册系统', icon: 1 },
-                    { title: '注册操作', icon: 2 },
-                    { title: '体验优化', icon: 3 },
-                    { title: '完成', icon: 4 }
-                ]
+                controllableSteps: {
+                    controllable: true,
+                    steps: [
+                        { title: '注册系统', icon: 1 },
+                        { title: '注册操作', icon: 2 },
+                        { title: '体验优化', icon: 3 },
+                        { title: '完成', icon: 4 }
+                    ],
+                    curStep: 1
+                }
             }
         },
         methods: {
@@ -98,7 +111,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -121,7 +136,7 @@
                 this.formData = Object.assign({}, value)
             },
 
-            async handleSubmit () {
+            async handleSubmit (routerName) {
                 const infoFlag = await this.$refs.basicInfoRef.handleValidator()
                 if (infoFlag) {
                     this.scrollToLocation(this.$refs.basicInfoContentRef)
@@ -172,7 +187,7 @@
                     const res = await this.$store.dispatch(url, params)
                     // this.messageSuccess(this.$t(`m.access['新建系统成功']`), 1000)
                     this.$router.push({
-                        name: 'systemAccessRegistry',
+                        name: routerName,
                         params: {
                             id: this.modelingId || res.data.id
                         }
@@ -182,7 +197,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.submitLoading = false

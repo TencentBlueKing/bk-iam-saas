@@ -11,7 +11,8 @@ specific language governing permissions and limitations under the License.
 from typing import List
 
 from backend.component import iam
-from backend.service.models import Action, InstanceSelection, RawInstanceSelection
+
+from .models import Action, InstanceSelection, RawInstanceSelection
 
 
 class InstanceSelectionService:

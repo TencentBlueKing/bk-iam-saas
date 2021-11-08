@@ -240,7 +240,11 @@ export const m = {
         '内容格式不正确': 'The content format is incorrect',
         '未设置任何条件': 'No Condition Setted',
         '只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)': 'Only lowercase letters, digits, underscores (_), and hyphens (-) are allowed',
-        '操作ID已被占用': '操作ID已被占用'
+        '操作ID已被占用': '操作ID已被占用',
+        '请输入正确的系统回调接口': 'Please enter the correct system callback interface',
+        '请输入正确的系统健康检查地址': 'Please enter the correct system health check address',
+        '资源类型ID已被占用': 'The resource type ID has been occupied',
+        '只允许输入英文': 'Only English is allowed'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -558,7 +562,14 @@ export const m = {
         '同步组织': 'Update',
         '同步中': 'Processing',
         '组织的权限': 'Organization Permissions',
-        '正在同步中': 'Updating'
+        '正在同步中': 'Updating',
+        '开始时间': 'Starting time',
+        '耗时': 'time consuming',
+        '操作人': 'Operator',
+        '触发类型': 'Trigger type',
+        '日志详情': 'Log details',
+        '成功': 'Succeed',
+        '失败': 'Failed'
     },
     grading: {
         '分级管理员': 'Grading Manager',
@@ -721,7 +732,13 @@ export const m = {
         '访问': 'Visit',
         '创建者': 'Creator',
         '系统名称': 'System Name',
-        '系统ID': 'System ID'
+        '系统ID': 'System ID',
+        '实例视图ID': 'Instance View ID',
+        '请输入实例视图ID': 'Please enter the instance view ID',
+        '实例视图中文名': 'Instance view Chinese name',
+        '请输入实例视图中文名': 'Please enter the Instance view Chinese name',
+        '实例视图英文名': 'English name of the instance view',
+        '请输入实例视图英文名': 'Please enter the English name of the instance view'
     }
 }
 export default {

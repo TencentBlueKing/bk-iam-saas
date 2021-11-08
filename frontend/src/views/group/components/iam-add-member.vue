@@ -467,6 +467,11 @@
                 immediate: true
             }
         },
+        created () {
+            if (this.$route.name === 'gradingAdminCreate') {
+                this.handleSave()
+            }
+        },
         methods: {
             handleSearchInput () {
                 this.isSerachFocus = true
@@ -594,7 +599,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -661,7 +668,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.treeLoading = false
@@ -1014,7 +1023,6 @@
                     }, 300)
                 }
             },
-
             handleDelete (item, type) {
                 if (this.isAll) {
                     return

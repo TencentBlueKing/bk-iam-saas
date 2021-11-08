@@ -55,6 +55,7 @@ INSTALLED_APPS += (
     "backend.apps.template",
     "backend.apps.organization",
     "backend.api.authorization",
+    "backend.api.admin",
     "backend.api.management",
     "backend.apps.role",
     "backend.apps.user",
@@ -161,7 +162,12 @@ BROKER_HEARTBEAT = 60
 CELERYD_CONCURRENCY = os.getenv("BK_CELERYD_CONCURRENCY", 2)
 
 # CELERY 配置，申明任务的文件路径，即包含有 @task 装饰器的函数文件
-CELERY_IMPORTS = ("backend.apps.organization.tasks", "backend.apps.role.tasks", "backend.publisher.tasks")
+CELERY_IMPORTS = (
+    "backend.apps.organization.tasks",
+    "backend.apps.role.tasks",
+    "backend.publisher.tasks",
+    "backend.long_task.tasks",
+)
 
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
@@ -182,15 +188,15 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_user_group_policy_expire_remind": {
         "task": "backend.apps.user.tasks.user_group_policy_expire_remind",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
     },
     "periodic_role_group_expire_remind": {
         "task": "backend.apps.role.tasks.role_group_expire_remind",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
     },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨0时执行
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
     },
     "periodic_group_expired_member_cleanup": {
         "task": "backend.apps.group.tasks.group_cleanup_expired_member",
@@ -207,6 +213,10 @@ CELERYBEAT_SCHEDULE = {
     "periodic_execute_model_change_event": {
         "task": "backend.apps.policy.tasks.execute_model_change_event",
         "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
+    },
+    "periodic_retry_long_task": {
+        "task": "backend.long_task.tasks.retry_long_task",
+        "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
     },
 }
 
@@ -248,7 +258,7 @@ if locals().get("DISABLED_APPS"):
 # Django RestFramework
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
@@ -336,5 +346,8 @@ PUB_SUB_REDIS_DB = os.environ.get("BKAPP_PUB_SUB_REDIS_DB", 0)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "True").lower() == "true"
+    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true"
 }
+
+# 是否是smart部署方式
+IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"

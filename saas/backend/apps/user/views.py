@@ -26,7 +26,7 @@ from backend.biz.role import RoleBiz
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import SubjectType
+from backend.service.constants import SubjectRelationType, SubjectType
 from backend.service.models import Subject
 
 from .serializers import GroupSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
@@ -61,17 +61,17 @@ class UserGroupViewSet(GenericViewSet):
     )
     @view_audit_decorator(SubjectGroupDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
+        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+
         serializer = UserRelationSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-
         data = serializer.validated_data
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
 
         permission_logger.info("subject group delete by user: %s", request.user.username)
 
-        if data["type"] == "group":
-            group_id = data["id"]
-            self.biz.remove_members(group_id, [Subject.parse_obj({"type": subject.type, "id": subject.id})])
+        # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
+        if data["type"] == SubjectRelationType.GROUP.value:
+            self.biz.remove_members(data["id"], [subject])
 
             # 写入审计上下文
             audit_context_setter(subject=subject, group=Subject.parse_obj(data))

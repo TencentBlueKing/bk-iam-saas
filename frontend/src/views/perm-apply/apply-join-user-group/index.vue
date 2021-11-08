@@ -177,6 +177,9 @@
             }
         },
         created () {
+            this.searchParams = this.$route.query
+            delete this.searchParams.limit
+            delete this.searchParams.current
             this.curRole = this.user.role.type
             this.searchData = [
                 {
@@ -209,6 +212,7 @@
                     remoteMethod: this.handleGradeAdmin
                 }
             ]
+            this.setCurrentQueryCache(this.refreshCurrentQuery())
             const isObject = payload => {
                 return Object.prototype.toString.call(payload) === '[object Object]'
             }
@@ -349,7 +353,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.sliderLoading = false
@@ -461,7 +467,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -539,7 +547,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.submitLoading = false

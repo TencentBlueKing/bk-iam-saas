@@ -8,121 +8,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from django.db.models import Count
-from pydantic import BaseModel
-from pydantic.fields import Field
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.common.error_codes import error_codes
 from backend.component import iam
-from backend.service.models import Subject
-from backend.service.utils.translate import ResourceExpressionTranslator
-from backend.util.uuid import gen_uuid
 
-
-# TODO Policy重构完成后, 迁移模型到models下
-class PathNode(BaseModel):
-    id: str
-    name: str
-    system_id: str = ""  # NOTE 兼容一下, 早期的policy数据中可能没有system_id
-    type: str
-
-
-class Instance(BaseModel):
-    type: str
-    path: List[List[PathNode]]
-
-
-class Value(BaseModel):
-    id: Any
-    name: str
-
-
-class Attribute(BaseModel):
-    id: str
-    name: str
-    values: List[Value]
-
-    def sort_values(self):
-        self.values.sort(key=lambda value: value.id)
-
-    def trim(self) -> Tuple:
-        return self.id, tuple([value.id for value in self.values])
-
-
-class Condition(BaseModel):
-    instances: List[Instance]
-    attributes: List[Attribute]
-    id: str
-
-    def __init__(self, **data: Any) -> None:
-        if "id" not in data:
-            data["id"] = gen_uuid()
-        super().__init__(**data)
-
-    def sort_attributes(self):
-        for a in self.attributes:
-            a.sort_values()
-        self.attributes.sort(key=lambda attribute: attribute.id)
-
-    def hash_attributes(self):
-        self.sort_attributes()
-        return hash(tuple([attribute.trim() for attribute in self.attributes]))
-
-    def has_no_attributes(self) -> bool:
-        return len(self.attributes) == 0
-
-    def has_no_instances(self) -> bool:
-        return len(self.instances) == 0
-
-
-class RelatedResource(BaseModel):
-    system_id: str
-    type: str
-    condition: List[Condition]
-
-
-class Policy(BaseModel):
-    action_id: str = Field(alias="id")
-    related_resource_types: List[RelatedResource]
-    policy_id: int
-    expired_at: int
-
-    class Config:
-        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
-
-    @classmethod
-    def from_db_model(cls, policy: PolicyModel, expired_at: int) -> "Policy":
-        return cls(
-            action_id=policy.action_id,
-            related_resource_types=policy.resources,
-            policy_id=policy.policy_id,
-            expired_at=expired_at,
-        )
-
-    def to_db_model(self, system_id: str, subject: Subject) -> PolicyModel:
-        p = PolicyModel(
-            subject_type=subject.type,
-            subject_id=subject.id,
-            system_id=system_id,
-            action_type="",
-            action_id=self.action_id,
-        )
-        p.resources = [rt.dict() for rt in self.related_resource_types]
-        p.environment = {}
-        return p
-
-    def to_backend_dict(self):
-        translator = ResourceExpressionTranslator()
-        return {
-            "action_id": self.action_id,
-            "resource_expression": translator.translate([rt.dict() for rt in self.related_resource_types]),
-            "environment": "{}",
-            "expired_at": self.expired_at,
-            "id": self.policy_id,
-        }
+from ..models import BackendThinPolicy, Policy, Subject, SystemCounter
 
 
 class PolicyList:
@@ -166,18 +60,6 @@ class PolicyList:
         old_policy.policy_id = policy.policy_id
 
 
-class BackendThinPolicy(BaseModel):
-    id: int
-    system: str
-    action_id: str
-    expired_at: int
-
-
-class SystemCounter(BaseModel):
-    id: str
-    count: int
-
-
 class BackendThinPolicyList:
     def __init__(self, policies: List[BackendThinPolicy]) -> None:
         self.policies = policies
@@ -194,11 +76,16 @@ class BackendThinPolicyList:
 class PolicyQueryService:
     """Policy Query Service"""
 
-    def list_by_subject(self, system_id: str, subject: Subject) -> List[Policy]:
+    def list_by_subject(
+        self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
+    ) -> List[Policy]:
         """
         查询subject指定系统下的所有Policy
         """
         qs = PolicyModel.objects.filter(system_id=system_id, subject_type=subject.type, subject_id=subject.id)
+
+        if action_ids is not None and len(action_ids) > 0:
+            qs.filter(action_id__in=action_ids)
 
         return self._trans_from_queryset(system_id, subject, qs)
 
@@ -258,14 +145,6 @@ class PolicyQueryService:
         """
         backend_policies = iam.list_policy(subject.type, subject.id, expired_at)
         return [BackendThinPolicy(**policy) for policy in backend_policies]
-
-    def get_backend_expression_by_subject_action(
-        self, system_id: str, action_id: str, subject: Subject
-    ) -> Dict[str, Any]:
-        """
-        获取subject指定action的后端表达式
-        """
-        return iam.get_backend_expression(system_id, subject.dict(), action_id)
 
     def new_policy_list_by_subject(self, system_id: str, subject: Subject) -> PolicyList:
         return PolicyList(self.list_by_subject(system_id, subject))

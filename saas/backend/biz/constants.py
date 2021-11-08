@@ -27,3 +27,9 @@ class ConditionTag(LowerStrEnum):
     ADD = auto()
     DELETE = auto()
     UNCHANGED = auto()
+
+
+class ActionTag(LowerStrEnum):
+    READONLY = auto()
+    CHECKED = auto()
+    UNCHECKED = auto()

@@ -39,16 +39,15 @@ from backend.apps.group.audit import (
 )
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
-from backend.apps.role.models import Role, RoleRelatedObject
+from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean
-from backend.biz.policy import PolicyBean, PolicyOperationBiz
-from backend.biz.role import RoleBiz
-from backend.biz.trans import ToPolicyRelatedResources
+from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
+from backend.biz.policy import PolicyOperationBiz
+from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
-from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
-from backend.service.group_saas_attribute import GroupAttributeService
+from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
+from backend.trans.open_management import ManagementCommonTrans
 
 
 class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
@@ -65,10 +64,8 @@ class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
 
-    group_attribute_svc = GroupAttributeService()
-
-    group_check_biz = GroupCheckBiz()
     group_biz = GroupBiz()
+    group_check_biz = GroupCheckBiz()
 
     @swagger_auto_schema(
         operation_description="批量创建用户组",
@@ -89,7 +86,7 @@ class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
         self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
 
         groups = self.group_biz.batch_create(
-            request.role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
+            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
         )
 
         # 添加审计信息
@@ -113,16 +110,15 @@ class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
         limit = pagination.get_limit(request)
         offset = pagination.get_offset(request)
 
-        # 查询与角色关联的用户组
-        object_relation_queryset = RoleRelatedObject.objects.list_object_relation(
-            role.id, RoleRelatedObjectType.GROUP.value
-        )
-        count = object_relation_queryset.count()
-        group_ids = [obj.object_id for obj in object_relation_queryset[offset : offset + limit]]
-        # 查询用户组基本信息
-        groups = Group.objects.filter(id__in=group_ids)
+        # 查询当前分级管理员可以管理的用户组
+        group_queryset = RoleListQuery(role, None).query_group()
+
+        # 分页数据
+        count = group_queryset.count()
+        groups = group_queryset[offset : offset + limit]
+
         # 查询用户组属性
-        group_attrs = self.group_attribute_svc.batch_get_attributes([g.id for g in groups])
+        group_attrs = self.group_biz.batch_get_attributes([g.id for g in groups])
         results = [
             {
                 "id": g.id,
@@ -293,7 +289,7 @@ class ManagementGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
         self.biz.remove_members(str(group.id), members)
 
         # 写入审计上下文
-        audit_context_setter(group=group, members=members)
+        audit_context_setter(group=group, members=[m.dict() for m in members])
 
         return Response({})
 
@@ -312,8 +308,9 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
     queryset = Group.objects.all()
 
     group_biz = GroupBiz()
-    policy_biz = PolicyOperationBiz()
     role_biz = RoleBiz()
+    policy_biz = PolicyOperationBiz()
+    trans = ManagementCommonTrans()
 
     @swagger_auto_schema(
         operation_description="用户组授权",
@@ -330,23 +327,30 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        # 将授权的权限数据转为List[Policy]
-        # 1. Resources转换为Policy的RelatedResourceTypes结构
-        related_resources = ToPolicyRelatedResources().from_resource_paths(data["resources"])
-        # 2. 将Actions展开并给每个Action添加对应的Resources得到Policies
-        policies = [PolicyBean(action_id=a["id"], related_resource_types=related_resources) for a in data["actions"]]
+        system_id = data["system"]
+        action_ids = [a["id"] for a in data["actions"]]
+        resources = data["resources"]
+
+        # 将授权的权限数据转为PolicyBeanList
+        policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
 
         # 组装数据进行对用户组权限处理
         system_id = data["system"]
+        template = GroupTemplateGrantBean(
+            system_id=system_id,
+            template_id=0,  # 自定义权限template_id为0
+            policies=policy_list.policies,
+        )
         role = self.role_biz.get_role_by_group_id(group.id)
-        # preprocess_group_policies 已包含：分级管理员授权范围鉴权、数据校验和部分默认用户组策略数据填充
-        policies = self.group_biz.preprocess_group_policies(role, system_id, policies)
 
-        # 用户组授权
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
-        self.policy_biz.alter(system_id, subject, policies)  # TODO 加上subject的授权锁
+        # 检查数据正确性：授权范围是否超限角色访问，这里不需要检查资源实例名称，因为授权时，接入系统可能使用同步方式，这时候资源可能还没创建
+        self.group_biz.check_before_grant(group, [template], role, need_check_resource_name=False)
+
+        # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
+        # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
+        self.policy_biz.alter(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
 
         # 写入审计上下文
-        audit_context_setter(group=group, system_id=system_id, policies=policies)
+        audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
 
         return Response({})

@@ -5,7 +5,7 @@
                 <basic-info :data="formData" @on-change="handleBasicInfoChange" ref="basicInfoRef" />
             </section>
         </render-horizontal-block>
-        <render-action
+        <!-- <render-action
             style="margin-bottom: 16px;"
             :title="$t(`m.grading['最大可授权资源范围']`)"
             :tips="addActionTips"
@@ -16,10 +16,10 @@
                 direction="left"
                 :style="{ top: '-20px', left: '220px' }"
                 :content="$t(`m.guide['操作和资源实例']`)" />
-        </render-action>
+        </render-action> -->
         <render-horizontal-block
             :label="$t(`m.grading['最大可授权资源范围']`)"
-            v-if="isSelectSystem">
+            v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddAction">
@@ -31,35 +31,43 @@
                         class="info-icon"
                         v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
                 </div>
-                <div class="info-wrapper">
-                    <p class="tips">{{ infoText }}</p>
-                    <section style="min-width: 108px; position: relative;">
-                        <iam-guide
-                            type="rating_manager_merge_action"
-                            direction="right"
-                            :loading="isLoading"
-                            :style="{ top: '-15px', right: '120px' }"
-                            :content="$t(`m.guide['聚合操作']`)" />
-                        <bk-switcher
-                            v-model="isAllExpanded"
-                            :disabled="isAggregateDisabled"
-                            size="small"
-                            theme="primary"
-                            @change="handleAggregateAction" />
-                        <span class="text">{{ expandedText }}</span>
-                    </section>
+                <div class="sub-title" v-if="isSelectSystem">
+                    {{ $t(`m.common['共']`) }}
+                    <span class="number">0</span>
+                    {{ $t(`m.common['个']`) }}
+                    {{ $t(`m.perm['操作权限']`) }}
                 </div>
-                <div class="resource-instance-wrapper"
-                    ref="instanceTableContentRef"
-                    v-bkloading="{ isLoading, opacity: 1, zIndex: 1000, extCls: 'loading-resource-instance-cls' }">
-                    <render-instance-table
-                        ref="resourceInstanceRef"
-                        :data="policyList"
-                        :list="policyList"
-                        :backup-list="aggregationsTableData"
-                        @on-delete="handleDelete"
-                        @on-aggregate-delete="handleAggregateDelete"
-                        @on-select="handleAttrValueSelected" />
+                <div v-if="isSelectSystemShow">
+                    <div class="info-wrapper">
+                        <p class="tips">{{ infoText }}</p>
+                        <section style="min-width: 108px; position: relative;">
+                            <iam-guide
+                                type="rating_manager_merge_action"
+                                direction="right"
+                                :loading="isLoading"
+                                :style="{ top: '-15px', right: '120px' }"
+                                :content="$t(`m.guide['聚合操作']`)" />
+                            <bk-switcher
+                                v-model="isAllExpanded"
+                                :disabled="isAggregateDisabled"
+                                size="small"
+                                theme="primary"
+                                @change="handleAggregateAction" />
+                            <span class="text">{{ expandedText }}</span>
+                        </section>
+                    </div>
+                    <div class="resource-instance-wrapper"
+                        ref="instanceTableContentRef"
+                        v-bkloading="{ isLoading, opacity: 1, zIndex: 1000, extCls: 'loading-resource-instance-cls' }">
+                        <render-instance-table
+                            ref="resourceInstanceRef"
+                            :data="policyList"
+                            :list="policyList"
+                            :backup-list="aggregationsTableData"
+                            @on-delete="handleDelete"
+                            @on-aggregate-delete="handleAggregateDelete"
+                            @on-select="handleAttrValueSelected" />
+                    </div>
                 </div>
             </div>
         </render-horizontal-block>
@@ -213,12 +221,15 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-                isAll: false
+                isAll: true
             }
         },
         computed: {
             ...mapGetters(['user']),
             isSelectSystem () {
+                return this.originalList.length === 0
+            },
+            isSelectSystemShow () {
                 return this.originalList.length > 0
             },
             defaultValue () {
@@ -331,7 +342,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -443,7 +456,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.isLoading = false
@@ -744,7 +759,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.dialogLoading = false
@@ -822,7 +839,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.submitLoading = false
@@ -880,6 +899,15 @@
                     &:hover {
                         color: #3a84ff;
                     }
+                }
+            }
+            .sub-title {
+                margin-top:10px;
+                margin-left:10px;
+                font-size:14px;
+                color: #979ba5;
+                .number {
+                    font-weight: 600;
                 }
             }
             .info-wrapper {

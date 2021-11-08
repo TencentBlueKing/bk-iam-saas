@@ -13,6 +13,7 @@ import time
 import traceback
 from functools import partial
 from typing import Any, Dict, List, Tuple, Union
+from urllib.parse import urlparse
 
 import requests
 from aenum import LowerStrEnum, auto
@@ -104,10 +105,28 @@ class ResourceProviderClient:
         }
 
         # 由于request_id可能在请求返回header被更新，所以需要lazyObject
-        base_msg = SimpleLazyObject(
-            lambda: "resource_provider[system: {}, resource_type: {}] API[request_id: {}]".format(
-                self.system_id, self.resource_type_id, self.request_id
+        # 该信息用于日志
+        base_log_msg = SimpleLazyObject(
+            lambda: (
+                "resource_provider [system={}, resource={}]; "
+                "API [request_id={}, url={}, data.method={}]; "
+                "Detail[{}]"
+            ).format(
+                self.system_id,
+                self.resource_type_id,
+                self.request_id,
+                self.url,
+                data["method"],
+                kwargs,
             )
+        )
+
+        # 回调请求的详细信息
+        request_detail_info = (
+            f"call {self.system_id}'s API fail! "
+            f"you should check the network/{self.system_id} is available and {self.system_id}'s log for more info. "
+            f"request: [POST {urlparse(self.url).path} body.data.method={data['method']}]"
+            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id})"
         )
 
         try:
@@ -118,14 +137,16 @@ class ResourceProviderClient:
             latency = int((time.time() - st) * 1000)
             # 打印INFO日志，用于调试时使用
             logger.info(
-                f"{base_msg}, latency: {latency} ms, info: {kwargs}, "
-                f"status_code: {resp.status_code}, response_content: {resp.text}"
+                f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
+                f"{base_log_msg}"
             )
-        except requests.exceptions.RequestException:
-            logger.exception(f"{base_msg} RequestException, info: {kwargs}")
+        except requests.exceptions.RequestException as e:
+            logger.exception(f"RequestException! {base_log_msg} ")
             trace_func(exc=traceback.format_exc())
             # 接口不可达
-            raise error_codes.RESOURCE_PROVIDER_ERROR.format("system: `{self.system_id}`, unreachable interface call")
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(
+                f"{self.system_id}'s API unreachable! {request_detail_info}. Exception {e}"
+            )
 
         try:
             # 非2xx类都会异常
@@ -133,61 +154,89 @@ class ResourceProviderClient:
             # 返回可能非JSON
             resp = resp.json()
         except requests.exceptions.HTTPError:
-            logger.exception(f"{base_msg} StatusCodeException, info: {kwargs}")
+            logger.exception(f"StatusCodeException! {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 接口状态码异常
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"system: `{self.system_id}`, interface status code: `{resp.status_code}` error"
+                f"{self.system_id}'s API response status code is `{resp.status_code}`, should be 200! "
+                f"{request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
-            logger.error(
-                f"{base_msg} RespDataException, info: {kwargs}, response_content: {resp.text}， error: {error}"
-            )
+            logger.error(f"RespDataException response_content: {resp.text}， error: {error}. {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 数据异常，JSON解析出错
-            raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(f"error: {error}")
+            raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(
+                f"{self.system_id}'s API error: {error}! " f"{request_detail_info}"
+            )
 
         code = resp["code"]
         if code == 0:
             # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
             return resp["data"]
 
-        logger.error(f"{base_msg} Return Code Not Zero, info: %s, resp: %s", kwargs, resp)
+        logger.error(f"Return Code Not Zero, resp: %s. {base_log_msg} ", resp)
 
         # code不同值代表不同意思，401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
         if code not in ResponseCodeToErrorDict:
             trace_func(code=code)
-            raise error_codes.RESOURCE_PROVIDER_ERROR.format("system: `{self.system_id}`, Unknown Error")
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(
+                f"{self.system_id}'s API response body.code != 0, code is {code}! " f"{request_detail_info}"
+            )
 
         raise ResponseCodeToErrorDict[code]["error"].format(
-            message=resp.get("message", ""), replace=ResponseCodeToErrorDict[code]["replace_message"]
+            message=(
+                f"{self.system_id}'s API response body.code is {code}, body.message={resp.get('message', '')}! "
+                f"{request_detail_info}"
+            ),
+            replace=ResponseCodeToErrorDict[code]["replace_message"],
         )
 
-    def _handle_empty_data(self, data, default_empty_data: Union[List, Dict]) -> Any:
+    def _handle_empty_data(self, data, default: Union[List, Dict]) -> Any:
         """处理兼容对方返回空数据为None、[]、{}、字符串"""
         if not data:
-            return default_empty_data
+            return default
+
         # 校验类型是否一致
-        if type(data) != type(default_empty_data):
+        if type(data) != type(default):
             raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
-                f"the type of data must be {type(default_empty_data)}, data: {data}"
+                f"{self.system_id}'s API response data wrong! "
+                f"the type of data must be {type(default)}, but got {type(data)}! [data={data}]."
+                f"you should check the response of {self.system_id}'s API "
+                f"[POST {urlparse(self.url).path} request_id={self.request_id}]"
             )
         return data
 
-    def _handle_data_valid(self, resp_data: Dict) -> Tuple[int, List[Dict[str, str]]]:
+    def _validate_paginated_data(self, resp_data: Dict) -> None:
+        if "count" not in resp_data or "results" not in resp_data:
+            raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
+                f"{self.system_id}'s API response data wrong! "
+                f"it's a paginated API, so the response.body.data should contain key `count` and `result`!"
+                f"[response.body.data={resp_data}]"
+                f"you should check the response of {self.system_id}'s API "
+                f"[POST {urlparse(self.url).path} request_id={self.request_id}]."
+            )
+
         count, results = resp_data["count"], resp_data["results"]
         if len(results) > count:
-            logger.error("resource_provider data invalid, count: %d, results: %s", count, results)
-            raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
-                f"the count of data must be greater than or equal to the length of results, "
-                f"count: {count}, len(results): {len(results)}"
+            logger.error(
+                "resource_provider data invalid, "
+                "the count of data must be greater than or equal to the length of results, "
+                "count=%d, len(results)=%d",
+                count,
+                len(results),
             )
-        return count, results
+            raise error_codes.RESOURCE_PROVIDER_DATA_INVALID.format(
+                f"{self.system_id}'s API response data wrong! "
+                f"the count of data must be greater than or equal to the length of results, "
+                f"[count={count}, len(results)={len(results)}]."
+                f"you should check the response of {self.system_id}'s API "
+                f"[POST {urlparse(self.url).path} request_id={self.request_id}]."
+            )
 
     def list_attr(self) -> List[Dict[str, str]]:
         """查询某个资源类型可用于配置权限的属性列表"""
         data = {"type": self.resource_type_id, "method": "list_attr"}
-        return self._handle_empty_data(self._call_api(data), [])
+        return self._handle_empty_data(self._call_api(data), default=[])
 
     def list_attr_value(
         self, attr: str, filter_condition: Dict, page: Dict[str, int]
@@ -195,19 +244,23 @@ class ResourceProviderClient:
         """获取一个资源类型某个属性的值列表"""
         filter_condition["attr"] = attr
         data = {"type": self.resource_type_id, "method": "list_attr_value", "filter": filter_condition, "page": page}
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]
 
     def list_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
         """根据过滤条件查询实例"""
         data = {"type": self.resource_type_id, "method": "list_instance", "filter": filter_condition, "page": page}
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]
 
     def fetch_instance_info(self, filter_condition: Dict) -> List[Dict]:
         """批量获取资源实例详情"""
         data = {"type": self.resource_type_id, "method": "fetch_instance_info", "filter": filter_condition}
-        return self._handle_empty_data(self._call_api(data), [])
+        return self._handle_empty_data(self._call_api(data), default=[])
 
     def list_instance_by_policy(
         self, filter_condition: Dict, page: Dict[str, int]
@@ -219,8 +272,10 @@ class ResourceProviderClient:
             "filter": filter_condition,
             "page": page,
         }
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]
 
     def search_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
         """根据过滤条件且必须保证keyword不为空查询实例"""
@@ -236,5 +291,7 @@ class ResourceProviderClient:
                 f"search_instance[system:{system_id}] param keyword should not be empty"
             )
         data = {"type": resource_type_id, "method": "search_instance", "filter": filter_condition, "page": page}
-        resp_data = self._handle_empty_data(self._call_api(data), default_empty_data={"count": 0, "results": []})
-        return self._handle_data_valid(resp_data)
+        resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
+
+        self._validate_paginated_data(resp_data)
+        return resp_data["count"], resp_data["results"]

@@ -12,8 +12,8 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
-from backend.apps.group.constants import GroupMemberType
 from backend.apps.role.serializers import RatingMangerBaseInfoSZL, RoleScopeSubjectSLZ
+from backend.service.constants import GroupMemberType
 
 
 class ManagementSourceSystemSLZ(serializers.Serializer):
@@ -28,7 +28,9 @@ class ManagementResourcePathNodeSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     id = serializers.CharField(label="资源实例ID")
-    name = serializers.CharField(label="资源实例ID名称", allow_blank=True)  # 路径节点存在无限制，当id="*"则name可以为空
+    name = serializers.CharField(
+        label="资源实例ID名称", allow_blank=True, trim_whitespace=False
+    )  # 路径节点存在无限制，当id="*"则name可以为空
 
 
 class ManagementResourcePathsSLZ(serializers.Serializer):

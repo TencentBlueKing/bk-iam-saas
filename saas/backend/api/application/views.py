@@ -20,8 +20,9 @@ from rest_framework.viewsets import views
 from backend.api.authentication import ESBAuthentication
 from backend.api.mixins import ExceptionHandlerMixin
 from backend.biz.open import ApplicationPolicyListCache
-from backend.biz.trans.open import AccessSystemApplicationTrans
 from backend.common.swagger import ResponseSwaggerAutoSchema
+from backend.trans.open_application import AccessSystemApplicationTrans
+from backend.util.url import url_join
 
 from .serializers import AccessSystemApplicationSLZ, AccessSystemApplicationUrlSLZ
 
@@ -53,13 +54,13 @@ class ApplicationView(ExceptionHandlerMixin, views.APIView):
         system_id = data["system"]
 
         # 将申请的数据转换为PolicyBeanList数据结构，同时需要进行数据检查
-        policy_list = self.access_system_application_biz.to_policies(data)
+        policy_list = self.access_system_application_biz.to_policy_list(data)
 
         # 保存到cache中
         cache_id = self.application_policy_list_cache.set(policy_list)
 
         # 返回重定向地址
-        url = f"{settings.APP_URL}/apply-custom-perm"
+        url = url_join(settings.APP_URL, "/apply-custom-perm")
         params = {"system_id": system_id, "cache_id": cache_id}
         url = url + "?" + urlencode(params)
 

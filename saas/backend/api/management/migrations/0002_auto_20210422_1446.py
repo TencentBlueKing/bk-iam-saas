@@ -12,7 +12,7 @@ specific language governing permissions and limitations under the License.
 
 from django.db import migrations
 
-from backend.api.management.constants import ALLOW_ANY
+from backend.api.constants import ALLOW_ANY
 
 
 def init_allow_list(apps, schema_editor):

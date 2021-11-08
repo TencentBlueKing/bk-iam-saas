@@ -51,22 +51,25 @@ class Instance {
         }
         const tempList = []
         this.path.forEach(item => {
-            // const len = item.chain.length
-            // const displayName = item.chain.map(sub => sub.name).join('/')
-            // tempList.push({
-            //     name: displayName,
-            //     id: item.chain[len - 1].id,
-            //     level: len - 1,
-            //     status: item.tag
-            // })
-            const len = item.length
-            const displayName = item.map(sub => sub.name).join('/')
-            tempList.push({
-                name: displayName,
-                id: item[len - 1].id,
-                level: len - 1,
-                status: item[len - 1].tag
-            })
+            if (item.chain) {
+                const len = item.chain.length
+                const displayName = item.chain.map(sub => sub.name).join('/')
+                tempList.push({
+                    name: displayName,
+                    id: item.chain[len - 1].id,
+                    level: len - 1,
+                    status: item.tag
+                })
+            } else {
+                const len = item.length
+                const displayName = item.map(sub => sub.name).join('/')
+                tempList.push({
+                    name: displayName,
+                    id: item[len - 1].id,
+                    level: len - 1,
+                    status: item[len - 1].tag
+                })
+            }
         })
         return tempList
     }

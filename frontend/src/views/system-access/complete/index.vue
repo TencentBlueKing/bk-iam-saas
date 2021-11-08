@@ -1,7 +1,13 @@
 <template>
     <div class="iam-system-access-optimize-wrapper">
         <div class="inner">
-            <bk-steps class="system-access-step" ref="systemAccessStep" :steps="steps" direction="vertical"></bk-steps>
+            <bk-steps class="system-access-step" ref="systemAccessStep" direction="vertical"
+                :steps="controllableSteps.steps"
+                :controllable="controllableSteps.controllable"
+                :cur-step.sync="controllableSteps.curStep"
+                :before-change="beforeStepChanged"
+                @step-changed="stepChanged">
+            </bk-steps>
             <smart-action class="content-wrapper">
                 <div class="complete-wrapper">
                     <div class="success-msg-wrapper">
@@ -17,7 +23,7 @@
                                 <div class="block-title">SDK鉴权 (Python/Go )</div>
                                 <div class="block-content">
                                     <div class="language">Python SDK</div>
-                                    <div class="time">2021-03-23发布</div>
+                                    <!-- <div class="time">2021-03-23发布</div> -->
                                     <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-python-sdk" target="_blank">访问</bk-link>
                                 </div>
                             </div>
@@ -25,7 +31,7 @@
                                 <div class="block-title"></div>
                                 <div class="block-content">
                                     <div class="language">GO SDK</div>
-                                    <div class="time">2021-03-23发布</div>
+                                    <!-- <div class="time">2021-03-23发布</div> -->
                                     <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-go-sdk" target="_blank">访问</bk-link>
                                 </div>
                             </div>
@@ -55,19 +61,25 @@
 </template>
 <script>
     import { saveAs } from '@/common/file-saver'
+    import beforeStepChangedMixin from '../common/before-stepchange'
 
     export default {
+        mixins: [beforeStepChangedMixin],
         data () {
             return {
                 modelingId: '',
                 downloadLoading: false,
 
-                steps: [
-                    { title: '接入系统', icon: 1 },
-                    { title: '注册操作', icon: 2 },
-                    { title: '体验优化', icon: 3 },
-                    { title: '完成', icon: 4 }
-                ]
+                controllableSteps: {
+                    controllable: true,
+                    steps: [
+                        { title: '注册系统', icon: 1 },
+                        { title: '注册操作', icon: 2 },
+                        { title: '体验优化', icon: 3 },
+                        { title: '完成', icon: 4 }
+                    ],
+                    curStep: 4
+                }
             }
         },
         mounted () {
@@ -81,6 +93,8 @@
             }
         },
         methods: {
+            stepChanged (index) {
+            },
             async fetchPageData () {
                 const modelingId = this.$route.params.id
                 if (modelingId === null || modelingId === undefined || modelingId === '') {
@@ -117,7 +131,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.downloadLoading = false

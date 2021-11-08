@@ -70,25 +70,20 @@ class PolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         cache_id = slz.validated_data["cache_id"]
 
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
-
-        policies = self.policy_query_biz.list_by_subject(system_id, subject)
-
         if cache_id != "":
             cached_policy_list = self.application_policy_list_cache.get(cache_id)
             if cached_policy_list.system_id != system_id:
                 raise error_codes.INVALID_ARGS.format(_("请求的system与缓存策略数据的system不一致"))
 
-            # 合并申请数据
-            policy_list = PolicyTagBeanList(system_id, parse_obj_as(List[PolicyTagBean], policies))
             apply_policy_list = PolicyTagBeanList(
                 system_id, parse_obj_as(List[PolicyTagBean], cached_policy_list.policies)
             )
             apply_policy_list.set_tag(PolicyTag.ADD.value)
-            policy_list.merge(apply_policy_list)
 
-            return Response([p.dict() for p in policy_list.policies])
+            return Response([p.dict() for p in apply_policy_list.policies])
 
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
         return Response([p.dict() for p in policies])
 
     @swagger_auto_schema(
@@ -143,7 +138,10 @@ class PolicyViewSet(GenericViewSet):
 
         permission_logger.info("policy delete partial by user: %s", request.user.username)
 
-        system_id, update_policy = self.policy_operation_biz.delete_partial(
+        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
+        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        update_policy = self.policy_operation_biz.delete_partial(
+            system_id,
             subject,
             policy_id,
             resource_system_id,
@@ -236,6 +234,17 @@ class RelatedPolicyViewSet(GenericViewSet):
                 system_id, parse_obj_as(List[PolicyTagBean], add_policy_list.policies)
             )
             tag_add_policy_list.set_tag(PolicyTag.ADD.value)  # 对于新增的部分打tag, 方便前端处理
+
+            # 对已有策略中会增加部分实例的策略打update标签
+            for p in target_policy_list.policies:
+                add_policy = add_policy_list.get(p.action_id)
+                if (
+                    add_policy
+                    and not p.has_related_resource_types(add_policy.related_resource_types)
+                    and p.tag != PolicyTag.ADD.value
+                ):
+                    p.tag = PolicyTag.UPDATE.value
+
             target_policy_list.add(tag_add_policy_list)  # 合并
 
         target_policy_list.fill_empty_fields()

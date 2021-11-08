@@ -278,7 +278,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -291,8 +293,8 @@
                     this.description = res.data.description
                     this.systemName = res.data.system.name
                     this.originalCustomTmplList = _.cloneDeep(res.data.actions)
-                    this.handleActionLinearData()
-                    this.fetchCommonActions(this.systemValue)
+                    await this.handleActionLinearData()
+                    await this.fetchCommonActions(this.systemValue)
                     this.initialTempName = this.tempName
                     this.initialDescription = this.description
                 } catch (e) {
@@ -300,7 +302,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -318,7 +322,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -344,7 +350,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -425,14 +433,16 @@
                     })
                     this.systemList = res.data || []
                     this.systemValue = res.data[0].id || ''
-                    this.fetchActions(this.systemValue)
-                    this.fetchCommonActions(this.systemValue)
+                    await this.fetchActions(this.systemValue)
+                    await this.fetchCommonActions(this.systemValue)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -502,16 +512,25 @@
             async fetchCommonActions (systemId) {
                 try {
                     const res = await this.$store.dispatch('permTemplate/getCommonAction', { systemId })
-                    this.commonActions.splice(0, this.commonActions.length, ...(res.data || []))
-                    this.commonActions.forEach(item => {
-                        item.$id = guid()
+                    const list = res.data || []
+
+                    const linearActionIdList = this.linearAction.map(la => la.id)
+                    const commonActions = []
+                    list.forEach(ca => {
+                        ca.$id = guid()
+                        if (ca.action_ids.every(aId => linearActionIdList.indexOf(aId) > -1)) {
+                            commonActions.push(ca)
+                        }
                     })
+                    this.commonActions.splice(0, this.commonActions.length, ...commonActions)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -532,7 +551,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -563,13 +584,14 @@
                 }
             },
 
-            handleSysSelected (value, option) {
+            async handleSysSelected (value, option) {
                 window.changeDialog = true
                 this.commonActions = []
                 this.linearAction = []
+                this.curSelectActions = []
                 this.requestQueue = ['actions', 'commonActions']
-                this.fetchActions(value)
-                this.fetchCommonActions(value)
+                await this.fetchActions(value)
+                await this.fetchCommonActions(value)
             },
 
             handleSelect (payload) {
@@ -616,7 +638,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.nextRequestQueue.shift()
@@ -637,7 +661,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.nextRequestQueue.shift()
@@ -748,7 +774,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.saveLoading = false

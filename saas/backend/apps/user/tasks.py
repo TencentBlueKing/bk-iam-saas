@@ -21,12 +21,12 @@ from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.biz.group import GroupBiz
-from backend.biz.policy import PolicyQueryBiz
+from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.time import db_time, get_soon_expire_ts
 from backend.component import esb
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
-from backend.service.policy.query import PolicyQueryService
+from backend.util.url import url_join
 
 logger = logging.getLogger("celery")
 
@@ -43,7 +43,7 @@ def user_group_policy_expire_remind():
     qs = User.objects.filter(staff_status=StaffStatus.IN.value)
     paginator = Paginator(qs, 100)
 
-    base_url = f"{settings.APP_URL}/perm-renewal"
+    base_url = url_join(settings.APP_URL, "/perm-renewal")
 
     if not paginator.count:
         return
@@ -79,7 +79,8 @@ def user_cleanup_expired_policy():
     """
     清理用户的长时间过期策略
     """
-    policy_svc = PolicyQueryService()
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
 
     expired_at = int(db_time()) - settings.MAX_EXPIRED_POLICY_DELETE_TIME
     task_id = user_cleanup_expired_policy.request.id
@@ -96,14 +97,15 @@ def user_cleanup_expired_policy():
             subject = Subject(type=SubjectType.USER.value, id=user.username)
 
             # 查询用户指定过期时间之前的所有策略
-            policies = policy_svc.list_backend_policy_before_expired_at(expired_at, subject)
+            policies = policy_query_biz.list_expired(subject, expired_at)
             if not policies:
                 continue
 
             # 分系统删除过期的策略
-            sorted_policies = sorted(policies, key=lambda p: p.system)
-            for system_id, per_policies in groupby(sorted_policies, lambda p: p.system):
-                audit_policies = policy_svc.delete_by_ids(system_id, subject, [p.id for p in per_policies])
+            sorted_policies = sorted(policies, key=lambda p: p.system.id)
+            for system_id, per_policies in groupby(sorted_policies, lambda p: p.system.id):
+                per_policies = list(per_policies)
+                policy_operation_biz.delete_by_ids(system_id, subject, [p.id for p in per_policies])
 
                 # 记审计信息
-                log_user_cleanup_policy_audit_event(task_id, user, system_id, audit_policies)
+                log_user_cleanup_policy_audit_event(task_id, user, system_id, per_policies)

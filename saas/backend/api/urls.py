@@ -19,4 +19,6 @@ urlpatterns = [
     url(r"^initialization/", include("backend.api.initialization.urls")),
     # 管理类API
     url(r"^management/", include("backend.api.management.urls")),
+    # 超级管理类API
+    url(r"^admin/", include("backend.api.admin.urls")),
 ]

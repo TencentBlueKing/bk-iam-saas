@@ -12,6 +12,9 @@ from aenum import LowerStrEnum, auto, skip
 
 from backend.util.enum import ChoicesEnum
 
+# 各种API白名单控制时，表示允许任意API
+ALLOW_ANY = "*"
+
 
 class BKNonEntityUser(ChoicesEnum, LowerStrEnum):
     """

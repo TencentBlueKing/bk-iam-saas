@@ -12,9 +12,8 @@ from collections import defaultdict
 from typing import Dict, List, Tuple
 
 from backend.component import iam
-from backend.service.models.resource_type import ResourceTypeDict
 
-from .models import ResourceType
+from .models import ResourceType, ResourceTypeDict
 
 
 class ResourceTypeService:

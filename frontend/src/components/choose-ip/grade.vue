@@ -671,20 +671,22 @@
 
                 // 判断是否忽略路径
                 // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
-                const isNeedIgnore = this.ignorePathFlag
+                // const isNeedIgnore = this.ignorePathFlag
                 const params = [{
                     type: id,
                     name,
-                    path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+                    // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+                    path: [parentChain],
                     paths: [parentChain]
                 }]
 
                 if (node.isExistNoCarryLimit) {
+                    const p = [parentChain.slice(0, parentChain.length - 1)]
                     params.push({
                         type: id,
                         name,
-                        path: [parentChain.slice(0, parentChain.length - 1)],
-                        paths: [parentChain.slice(0, parentChain.length - 1)]
+                        path: p,
+                        paths: p
                     })
                 }
 
@@ -865,7 +867,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -1004,7 +1008,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     node.loadingMore = false

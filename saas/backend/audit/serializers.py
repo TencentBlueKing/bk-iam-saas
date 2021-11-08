@@ -15,7 +15,7 @@ from rest_framework import serializers
 from backend.apps.role.models import Role
 from backend.audit.detail import EventDetailExtra
 from backend.audit.models import EventForMeta
-from backend.service.system import SystemService
+from backend.biz.system import SystemBiz
 
 
 class EventListSchemaSLZ(serializers.ModelSerializer):
@@ -43,7 +43,7 @@ class EventListSchemaSLZ(serializers.ModelSerializer):
 class EventListSLZ(EventListSchemaSLZ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._systems = {s.id: s for s in SystemService().list()}
+        self._systems = {s.id: s for s in SystemBiz().list()}
 
     def get_system(self, obj):
         system_id = obj.system_id
@@ -106,7 +106,7 @@ class EventDetailSchemaSLZ(serializers.ModelSerializer):
 class EventDetailSLZ(EventDetailSchemaSLZ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._systems = {s.id: s for s in SystemService().list()}
+        self._systems = {s.id: s for s in SystemBiz().list()}
         if self.instance:
             self._extra = EventDetailExtra(self.instance)
 

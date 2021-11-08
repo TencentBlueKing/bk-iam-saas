@@ -5,7 +5,7 @@
 
 ## Overview
 
-BK-IAM SaaS (bk-iam-app) is docked to [BK-IAM](https://github.com/TencentBlueKing/bk-iam), which provides a unified permission control service for BlueKing and supports fine-grained permission management.
+BK-IAM SaaS (bk-iam-saas) is docked to [BK-IAM](https://github.com/TencentBlueKing/bk-iam), which provides a unified permission control service for BlueKing and supports fine-grained permission management.
 
 - [Architecture(In Chinese)](./docs/overview/architecture.md)
 - [Code directory(In Chinese)](./docs/overview/project_codes.md)
@@ -31,8 +31,7 @@ BK-IAM is a universal permission control product developed based on ABAC(a power
 
 ## Roadmap
 
-- [SaaS release log](./saas/release.md)
-- [frontend release log](./frontend/release.md)
+- [release log](./release.md)
 
 ## Backend & SDK
 

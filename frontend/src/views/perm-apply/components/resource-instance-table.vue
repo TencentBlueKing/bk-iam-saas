@@ -100,7 +100,7 @@
                         </template>
                         <template v-else>
                             <!-- 44 -->
-                            <template v-if="row.isShowRelatedText && row.inOriginalList">
+                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId">
                                 <!-- 55 -->
                                 <div class="mock-disabled-select">{{row.expired_display}}</div>
                             </template>
@@ -232,6 +232,10 @@
                 default: () => []
             },
             systemId: {
+                type: String,
+                default: ''
+            },
+            cacheId: {
                 type: String,
                 default: ''
             }
@@ -596,14 +600,20 @@
             },
 
             async handleMainActionSubmit (payload, relatedActions) {
-                const curPayload = _.cloneDeep(payload)
+                let curPayload = _.cloneDeep(payload)
                 this.sliderLoading = true
-                curPayload.forEach(item => {
-                    item.instances = item.instance || []
-                    item.attributes = item.attribute || []
-                    delete item.instance
-                    delete item.attribute
-                })
+                curPayload = curPayload.filter(e => {
+                    if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
+                        e.instances = e.instance || []
+                        e.attributes = e.attribute || []
+                        delete e.instance
+                        delete e.attribute
+                        return true
+                    }
+                    return false
+                }
+                    
+                )
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
                 curData.related_resource_types = [curData.related_resource_types[this.curResIndex]]
                 curData.related_resource_types[0].condition = curPayload
@@ -644,7 +654,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.sliderLoading = false
@@ -655,19 +667,24 @@
                 if (payload.length < 1) {
                     return
                 }
-
+                
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
                     if (curIndex > -1) {
+                        const curData = this.tableList[curIndex]
                         this.needEmitFlag = true
                         const inOriginalList = !!this.originalList.filter(
                             original => String(original.id) === String(item.id)
                         ).length
-                        item.expired_at = item.expired_at - this.user.timestamp
+                        if ((item.tag === 'add' || item.tag === 'update' || item.isExpired) && item.expired_at !== PERMANENT_TIMESTAMP) {
+                            if (!item.isShowRenewal) {
+                                item.expired_at = item.expired_at - this.user.timestamp
+                            }
+                        }
                         this.tableList.splice(
                             curIndex,
                             1,
-                            new Policy({ ...item, tag: 'add', isShowRelatedText: true, inOriginalList }, '', true)
+                            new Policy({ ...item, tag: curData.tag === 'add' ? 'add' : item.tag, isShowRelatedText: true, inOriginalList }, '', false)
                         )
                     }
                 })
@@ -708,6 +725,7 @@
                                 // 是否带有下一层级的无限制
                                 const isHasNoLimit = v.some(({ id }) => id === '*')
                                 const isDisabled = v.some(_ => !!_.disabled)
+                                // 可编辑的才会计数
                                 if (!isHasNoLimit && !isDisabled) {
                                     ++newResourceCount
                                 }
@@ -1132,7 +1150,7 @@
                         tempExpiredAt = parseInt(item.expired_display, 10) * 24 * 3600
                     }
                     if (!item.isAggregate) {
-                        const { type, id, name, environment, description, policy_id, isNew } = item
+                        const { type, id, name, environment, description, policy_id, isNew, isChanged } = item
                         const relatedResourceTypes = []
                         if (item.related_resource_types.length > 0) {
                             item.related_resource_types.forEach(resItem => {
@@ -1203,7 +1221,7 @@
                             policy_id,
                             expired_at: item.expired_at === '' ? tempExpiredAt : Number(item.expired_at)
                         }
-                        if ((isNew || item.isExpired) && params.expired_at !== PERMANENT_TIMESTAMP) {
+                        if ((isNew || isChanged || item.isExpired) && params.expired_at !== PERMANENT_TIMESTAMP) { // 变更isChanged也需要加上this.user.timestamp
                             // 说明显示了 取消续期 按钮，即选择续期时间的下拉框已经选择了选择具体的续期时间，所以过期时间是选择的那个续期时间加上时间戳
                             // 如果没有显示 取消续期 按钮，那么就是显示的续期按钮，这时没有选择具体的续期时间因此过期时间还是之前的，不变
                             if (!item.isShowRenewal) {

@@ -59,7 +59,7 @@
                                     :key="option.id"
                                     :id="option.id"
                                     :name="option.name">
-                                    <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.nodes.join(' -> ')}`">{{ option.name }}</span>
+                                    <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">{{ option.name }}</span>
                                 </bk-option>
                                 <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }" @click="handleOpenCreateLink" style="cursor: not-allowed;">
                                     <Icon bk type="plus-circle" />
@@ -152,7 +152,7 @@
             curTitle () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).nodes.join(' -> ')}`
+                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`
                     }
                     return ''
                 }
@@ -247,7 +247,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.tableLoading = false
@@ -263,7 +265,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },

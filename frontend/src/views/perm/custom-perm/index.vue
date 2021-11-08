@@ -2,6 +2,7 @@
     <div class="my-perm-custom-perm">
         <template v-if="hasPerm">
             <render-perm-item
+                data-test-id="myPerm_list_system"
                 v-for="(sys, sysIndex) in systemList"
                 :key="sys.id"
                 :expanded.sync="sys.expanded"
@@ -12,6 +13,7 @@
                 :one-perm="onePerm"
                 @on-expanded="handleExpanded(...arguments, sys)">
                 <perm-table
+                    data-test-id="myPerm_table_actionPerm"
                     :key="sys.id"
                     :system-id="sys.id"
                     @after-delete="handleAfterDelete(...arguments, sysIndex)" />
@@ -71,7 +73,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.$emit('toggle-loading', false)

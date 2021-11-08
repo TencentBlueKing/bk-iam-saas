@@ -151,7 +151,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.isLoading = false
@@ -215,7 +217,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     payload.loading = false
@@ -247,7 +251,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -271,8 +277,18 @@
                         id: this.groupId,
                         templateId: item.id
                     })
-                    const tableData = res.data.actions.map(item => new GroupPolicy({ ...item, policy_id: 1 }, 'detail', 'template', { system: res.data.system }))
-                    const tableDataBackup = res.data.actions.map(item => new GroupPolicy({ ...item, policy_id: 1 }, 'detail', 'template', { system: res.data.system }))
+                    const tableData = res.data.actions.map(row => new GroupPolicy(
+                        { ...row, policy_id: 1 },
+                        'detail',
+                        'template',
+                        { system: res.data.system }
+                    ))
+                    const tableDataBackup = res.data.actions.map(row => new GroupPolicy(
+                        { ...row, policy_id: 1 },
+                        'detail',
+                        'template',
+                        { system: res.data.system }
+                    ))
                     this.$set(item, 'tableData', tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
                 } catch (e) {
@@ -280,7 +296,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     item.loading = false
@@ -294,8 +312,21 @@
                         id: this.groupId,
                         systemId: item.system.id
                     })
-                    const tableData = res.data.map(item => new GroupPolicy(item, 'detail', 'custom', { system: item.system }))
-                    const tableDataBackup = res.data.map(item => new GroupPolicy(item, 'detail', 'custom'), { system: item.system })
+
+                    const tableData = res.data.map(row => {
+                        return new GroupPolicy(
+                            row,
+                            'detail',
+                            'custom',
+                            { system: item.system }
+                        )
+                    })
+                    const tableDataBackup = res.data.map(row => new GroupPolicy(
+                        row,
+                        'detail',
+                        'custom',
+                        { system: item.system }
+                    ))
                     this.$set(item, 'tableData', tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
                 } catch (e) {
@@ -303,7 +334,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     item.loading = false
@@ -337,7 +370,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     subItem.editLoading = false
@@ -387,7 +422,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     subItem.deleteLoading = false
@@ -417,7 +454,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (flag) {

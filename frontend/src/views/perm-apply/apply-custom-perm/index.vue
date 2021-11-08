@@ -404,6 +404,7 @@
                 </div>
                 <div class="tableData">
                     <resource-instance-table
+                        :cache-id="routerQuery.cache_id"
                         :list="newTableList"
                         :original-list="tableDataBackup"
                         :system-id="systemValue"
@@ -536,6 +537,8 @@
                 checkRadio: 'userGroup',
                 tableLoading: false,
                 gradeMembers: [],
+
+                // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
                 newTableList: []
@@ -550,7 +553,7 @@
             },
             // 无权限组时
             isNoPermissionsSet () {
-                return this.routerQuery.tid
+                return this.routerQuery.cache_id
             },
             isShowGroupAction () {
                 return (item) => {
@@ -590,17 +593,17 @@
         watch: {
             '$route': {
                 handler (value) {
-                    if (value.query.system_id && value.query.tid) {
-                        const { system_id, tid } = value.query
+                    if (value.query.system_id && value.query.cache_id) {
+                        const { system_id, cache_id } = value.query
                         this.routerQuery = Object.assign({}, {
                             system_id,
-                            tid
+                            cache_id
                         })
                         this.sysAndtid = true
                     } else {
                         this.routerQuery = Object.assign({}, {
                             system_id: '',
-                            tid: ''
+                            cache_id: ''
                         })
                     }
                 },
@@ -650,7 +653,7 @@
             async fetchUserGroupList () {
                 this.tableLoading = true
                 const params = {
-                    tid: this.routerQuery.tid
+                    cache_id: this.routerQuery.cache_id
                 }
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupList', params)
@@ -670,7 +673,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.tableLoading = false
@@ -745,7 +750,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -759,7 +766,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.sliderLoading = false
@@ -917,7 +926,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1045,7 +1056,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1754,7 +1767,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1775,38 +1790,60 @@
                 const params = {
                     system_id: systemId
                 }
-                if (this.routerQuery.tid) {
-                    params.tid = this.routerQuery.tid
+                if (this.routerQuery.cache_id) {
+                    params.cache_id = this.routerQuery.cache_id
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params)
+                    console.log(res.data, params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
-                        return new Policy({ ...item, related_actions: relatedActions, tid: this.routerQuery.tid ? this.routerQuery.tid : '' })
+                        return new Policy({
+                            ...item,
+                            related_actions: relatedActions,
+                            tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
+                        })
                     })
                     this.tableData = data
                     this.tableData.forEach(item => {
                         // item.expired_at = 1627616000
 
-                        // 新增的权限不判断是否过期
-                        if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
-                            item.isShowRenewal = true
-                            item.isExpired = true
-                            // this.$set(item, 'isShowRenewal', true)
-                            // this.$set(item, 'isExpired', true)
+                        // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
+                        if (item.tag === 'add') {
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.expired_at = 15552000
+                            }
+                        } else {
+                            // 新增的权限不判断是否过期
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.isShowRenewal = true
+                                item.isExpired = true
+                            }
                         }
+
+                        // // 新增的权限不判断是否过期
+                        // if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
+                        //     item.isShowRenewal = true
+                        //     item.isExpired = true
+                        //     // this.$set(item, 'isShowRenewal', true)
+                        //     // this.$set(item, 'isExpired', true)
+                        // }
                     })
                     this.newTableList = _.cloneDeep(this.tableData.filter(item => {
                         return !item.isExpiredAtDisabled
                     }))
+                    console.log('this.tableData', this.tableData)
                     this.tableDataBackup = _.cloneDeep(this.tableData)
+                    console.log('this.tableDataBackup', this.tableDataBackup)
                     this.aggregationsTableData = _.cloneDeep(this.tableData)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1825,8 +1862,8 @@
                     system_id: systemId,
                     user_id: this.user.username
                 }
-                if (this.routerQuery.tid) {
-                    params.tid = this.routerQuery.tid
+                if (this.routerQuery.cache_id) {
+                    params.cache_id = this.routerQuery.cache_id
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getActions', params)
@@ -1838,7 +1875,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1937,7 +1976,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.buttonLoading = false
@@ -2006,7 +2047,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.buttonLoading = false

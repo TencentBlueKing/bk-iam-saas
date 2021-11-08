@@ -13,7 +13,7 @@ from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, views
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import role_perm_class
 from backend.apps.organization.constants import SyncType
@@ -23,6 +23,8 @@ from backend.apps.organization.serializers import (
     OrganizationCategorySLZ,
     OrganizationSearchResultSLZ,
     OrganizationSearchSLZ,
+    OrganizationSyncErrorLogSLZ,
+    OrganizationSyncRecordSLZ,
     OrganizationSyncTaskSLZ,
     UserInfoSLZ,
     UserQuerySLZ,
@@ -186,7 +188,6 @@ class OrganizationViewSet(GenericViewSet):
 
 
 class OrganizationSyncTaskView(views.APIView):
-
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     paginator = None  # 去掉swagger中的limit offset参数
@@ -222,3 +223,33 @@ class OrganizationSyncTaskView(views.APIView):
         # 异步调用任务
         sync_organization.delay(username)
         return Response({})
+
+
+class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
+
+    queryset = SyncRecord.objects.filter(type=SyncType.Full.value)
+    serializer_class = OrganizationSyncRecordSLZ
+    lookup_field = "id"
+
+    @swagger_auto_schema(
+        operation_description="同步记录列表",
+        auto_schema=ResponseSwaggerAutoSchema,
+        # query_serializer=OrganizationSearchSLZ,
+        responses={status.HTTP_200_OK: OrganizationSyncRecordSLZ(label="同步记录")},
+        tags=["organization"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(self, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="同步异常日志详情",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: OrganizationSyncErrorLogSLZ(label="同步异常日志详情")},
+        tags=["organization"],
+    )
+    def retrieve(self, request, *args, **kwargs):
+        sync_record = self.get_object()
+        response_slz = OrganizationSyncErrorLogSLZ(sync_record.detail)
+        return Response(response_slz.data)

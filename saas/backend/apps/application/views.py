@@ -31,12 +31,12 @@ from backend.biz.group import GroupCheckBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
-from backend.biz.trans.application import ApplicationDataTrans
-from backend.biz.trans.role import RoleTrans
 from backend.common.error_codes import error_codes
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType, SubjectType
 from backend.service.models import Subject
+from backend.trans.application import ApplicationDataTrans
+from backend.trans.role import RoleTrans
 
 from .filters import ApplicationFilter
 from .serializers import (
