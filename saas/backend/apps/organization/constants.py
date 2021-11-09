@@ -47,6 +47,13 @@ class SyncTaskLockKey(ChoicesEnum):
     SingleUser = f"sync_task_{SyncType.SingleUser.value}"
 
 
+class TriggerType(ChoicesEnum, LowerStrEnum):
+    PERIODIC_TASK = auto()
+    MANUAL_SYNC = auto()
+
+    _choices_labels = skip(((PERIODIC_TASK, _("周期同步")), (MANUAL_SYNC, _("手动同步"))))
+
+
 SYNC_TASK_DEFAULT_EXECUTOR = "periodic_task"
 
 # 新用户自动同步的用户数量
