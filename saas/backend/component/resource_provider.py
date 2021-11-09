@@ -143,7 +143,11 @@ class ResourceProviderClient:
             )
 
             callback_request_duration.labels(
-                system=self.system_id, method="post", path=urlparse(self.url).path, status=resp.status_code
+                system=self.system_id,
+                resource_type=self.resource_type_id,
+                method="post",
+                path=urlparse(self.url).path,
+                status=resp.status_code,
             ).observe(latency)
         except requests.exceptions.RequestException as e:
             logger.exception(f"RequestException! {base_log_msg} ")

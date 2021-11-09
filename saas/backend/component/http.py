@@ -73,6 +73,7 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
         trace_func(exc=traceback.format_exc())
         return False, None
     else:
+        # record for /metrics
         latency = int((time.time() - st) * 1000)
         component_request_duration.labels(
             component=get_component_by_url(url),

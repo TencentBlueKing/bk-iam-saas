@@ -26,17 +26,17 @@ class ComponentEnum(LowerStrEnum):
 
 def get_component_by_url(url: str) -> str:
     path = urlparse(url).path
-    if path.startswith("/api/v1/web/"):
+    if "/api/v1/web/" in path:
         return ComponentEnum.IAM_BACKEND.value
-    elif path.startswith("/api/v1/engine") or path.startswith("/api/v1/batch-search"):
+    elif "/api/v1/engine" in path or "/api/v1/batch-search" in path:
         return ComponentEnum.IAM_ENGINE.value
-    elif path.startswith("/api/c/compapi/v2/usermanage/"):
+    elif "/api/c/compapi/v2/usermanage/" in path:
         return ComponentEnum.USERMGR.value
-    elif path.startswith("/api/c/compapi/v2/itsm/"):
+    elif "/api/c/compapi/v2/itsm/" in path:
         return ComponentEnum.ITSM.value
-    elif path.startswith("/api/c/compapi/v2/esb/"):
+    elif "/api/c/compapi/v2/esb/" in path:
         return ComponentEnum.ESB.value
-    elif path.startswith("/api/c/compapi/cmsi/"):
+    elif "/api/c/compapi/cmsi/" in path:
         return ComponentEnum.CMSI.value
     return "unknown"
 
@@ -53,6 +53,6 @@ component_request_duration = Histogram(
 callback_request_duration = Histogram(
     "callback_request_duration_milliseconds",
     "How long it took to process the request, partitioned by status code, method and HTTP path.",
-    ("system", "method", "path", "status"),
+    ("system", "resource_type", "method", "path", "status"),
     buckets=(50, 100, 200, 500, 1000, 2000, 5000),
 )
