@@ -28,6 +28,9 @@ rd_pool = redis.ConnectionPool(
     password=settings.REDIS_PASSWORD,
     encoding="utf8",
     decode_responses=True,
+    # 必须设置，否则在redis有问题的情况下某些命令可能会一直block
+    socket_connect_timeout=5,
+    socket_timeout=5,
 )
 redis_region = make_region().configure(
     "dogpile.cache.redis",
