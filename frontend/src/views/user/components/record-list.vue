@@ -2,15 +2,17 @@
     <div class="iam-system-access-wrapper">
         <render-search>
             <span class="display-name">同步记录</span>
-            <!-- <div slot="right">
+            <div slot="right">
                 <bk-date-picker
-                    v-model="initDateTime"
-                    placeholder=""
-                    type="month"
-                    :clearable="false"
+                    v-model="initDateTimeRange"
+                    :placeholder="'选择日期范围'"
+                    :type="'daterange'"
+                    placement="bottom-end"
+                    :shortcuts="shortcuts"
+                    :shortcut-close="true"
                     @change="handleDateChange">
                 </bk-date-picker>
-            </div> -->
+            </div>
         </render-search>
         <bk-table
             :data="tableList"
@@ -89,17 +91,6 @@
     import RenderStatus from './render-status'
     import moment from 'moment'
 
-    const getDate = payload => {
-        return payload.split('-').join('')
-    }
-
-    const getFormatDate = payload => {
-        const now = new Date(payload)
-        const year = now.getFullYear()
-        const month = now.getMonth() + 1
-        return `${year}-${month < 10 ? '0' + month.toString() : month}`
-    }
-
     export default {
         name: 'system-access-index',
         filters: {
@@ -135,8 +126,37 @@
                 exceptionMsg: '',
                 tracebackMsg: '',
                 timestampToTime: timestampToTime,
-                initDateTime: new Date(),
-                triggerType: { 'periodic_task': '定时同步', 'manual_sync': '手动同步' }
+                initDateTimeRange: [],
+                triggerType: { 'periodic_task': '定时同步', 'manual_sync': '手动同步' },
+                shortcuts: [
+                    {
+                        text: '今天',
+                        value () {
+                            const end = new Date()
+                            const start = new Date()
+                            return [start, end]
+                        }
+                    },
+                    {
+                        text: '最近7天',
+                        value () {
+                            const end = new Date()
+                            const start = new Date()
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+                            return [start, end]
+                        }
+                    },
+                    {
+                        text: '最近30天',
+                        value () {
+                            const end = new Date()
+                            const start = new Date()
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+                            return [start, end]
+                        }
+                    }
+                ],
+                dateRange: { startTime: '', endTime: '' }
             }
         },
         watch: {
@@ -156,7 +176,9 @@
                 this.tableLoading = isLoading
                 const params = {
                     limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+                    offset: this.pagination.limit * (this.pagination.current - 1),
+                    start_time: this.dateRange.startTime,
+                    end_time: this.dateRange.endTime
                 }
                 try {
                     const res = await this.$store.dispatch('organization/getRecordsList', params)
@@ -226,9 +248,12 @@
                 })
             },
 
-            handleDateChange (date, type) {
+            handleDateChange (date) {
                 this.resetPagination()
-                this.currentMonth = getDate(getFormatDate(date))
+                this.dateRange = {
+                    startTime: `${date[0]}` ? `${date[0]} 00:00:00` : '',
+                    endTime: `${date[1]}` ? `${date[1]} 23:59:59` : ''
+                }
                 this.fetchModelingList(true)
             }
             
