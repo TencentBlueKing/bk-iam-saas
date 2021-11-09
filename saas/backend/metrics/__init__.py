@@ -53,6 +53,6 @@ component_request_duration = Histogram(
 callback_request_duration = Histogram(
     "callback_request_duration_milliseconds",
     "How long it took to process the request, partitioned by status code, method and HTTP path.",
-    ("system", "resource_type", "method", "path", "status"),
+    ("system", "resource_type", "function", "method", "path", "status"),
     buckets=(50, 100, 200, 500, 1000, 2000, 5000),
 )

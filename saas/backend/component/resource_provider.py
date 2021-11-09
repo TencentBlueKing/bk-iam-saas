@@ -145,6 +145,7 @@ class ResourceProviderClient:
             callback_request_duration.labels(
                 system=self.system_id,
                 resource_type=self.resource_type_id,
+                function=data["method"],
                 method="post",
                 path=urlparse(self.url).path,
                 status=resp.status_code,
