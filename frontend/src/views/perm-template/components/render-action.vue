@@ -11,7 +11,7 @@
                 <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
                     <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
                     <span>{{ item.name }}</span>
-                    <span v-if="isShowCount" class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
+                    <span v-if="isShowCount" class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }} <span v-if="mode === 'detail' && item.deleteCount" class="delete-count"> 包含{{item.deleteCount}}个需要被删除的操作</span></span>
                 </section>
                 <span
                     v-if="!isDisabled"
@@ -35,10 +35,12 @@
                         @change="handleActionChecked(...arguments, act, item)">
                         <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                             <template v-if="act.disabled">
-                                <span class="text">{{ act.name }}</span>
+                                <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}1</span>
+                                <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                             </template>
                             <template v-else>
-                                <span class="text">{{ act.name }}</span>
+                                <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}2</span>
+                                <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                             </template>
                             <div slot="content" class="iam-perm-apply-action-popover-content">
                                 <div>
@@ -89,10 +91,12 @@
                                     @change="handleSubActionChecked(...arguments, act, subAct, item)">
                                     <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                         <template v-if="act.disabled">
-                                            <span class="text">{{ act.name }}</span>
+                                            <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}3</span>
+                                            <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                                         </template>
                                         <template v-else>
-                                            <span class="text">{{ act.name }}</span>
+                                            <span class="text" :class="{ 'text-through': act.tag === 'delete' }">{{ act.name }}4</span>
+                                            <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                                         </template>
                                         <div slot="content" class="iam-perm-apply-action-popover-content">
                                             <div>
@@ -239,15 +243,38 @@
                             }
                         })
                         const isSubAllChecked = sub.actions.every(v => v.checked)
+                        const subActions = sub.actions.filter(e => !e.disabled)
+                        let isSubAllCheckedData = true
+                        if (subActions.length) {
+                            isSubAllCheckedData = subActions.every(v => v.checked)
+                        }
+
                         sub.allChecked = isSubAllChecked
+                        sub.allCheckedData = isSubAllCheckedData
                     })
+                    
                     const isAllChecked = item.actions.every(v => v.checked)
-                    item.allChecked = isAllChecked
-                    if (item.sub_groups && item.sub_groups.length > 0) {
-                        item.actionsAllChecked = isAllChecked && item.sub_groups.every(v => v.allChecked)
-                    } else {
-                        item.actionsAllChecked = isAllChecked
+                    const actions = item.actions.filter(e => !e.disabled)
+                    let isAllCheckedData = true
+                    if (actions.length) {
+                        isAllCheckedData = actions.every(v => v.checked)
                     }
+                        
+                    console.log('isAllChecked', isAllChecked)
+                    item.allChecked = isAllChecked
+                    item.allCheckedData = isAllCheckedData
+                    if (item.sub_groups && item.sub_groups.length > 0) {
+                        console.log('isAllChecked && item.sub_groups.every(v => v.allCheckedData)', item.sub_groups.every(v => v.allCheckedData))
+                        this.$nextTick(() => {
+                            item.actionsAllChecked = isAllCheckedData && item.sub_groups.every(v => v.allCheckedData)
+                            console.log('item.actionsAllChecked', item.actionsAllChecked)
+                        })
+                    } else {
+                        this.$nextTick(() => {
+                            item.actionsAllChecked = isAllCheckedData
+                        })
+                    }
+                    console.log('this.originalCustomTmplList', this.originalCustomTmplList)
                 })
             },
 
@@ -373,7 +400,7 @@
                 tempActions.forEach(item => {
                     this.handleRelatedActions(item, payload.actionsAllChecked)
                 })
-                payload.count = payload.actionsAllChecked ? payload.allCount : 0
+                payload.count = payload.actionsAllChecked ? tempActions.length : 0
             },
 
             handleActionChecked (newVal, oldVal, val, actData, payload) {
@@ -562,6 +589,9 @@
                 font-weight: normal;
                 color: #979ba5;
             }
+            .delete-count{
+                color: #ec4545;
+            }
         }
         .check-all {
             position: relative;
@@ -615,6 +645,14 @@
             .iam-action-cls {
                 width: 175px;
                 line-height: 36px;
+                .error-icon {
+                    font-size: 14px;
+                    color: #ffb400;
+                }
+                .text-through{
+                    text-decoration: line-through;
+                    text-decoration-color: #ffb400;
+                }
             }
             .iam-action-all-cls {
                 position: absolute;

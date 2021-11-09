@@ -460,6 +460,7 @@
                     item.actions.forEach(act => {
                         this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
                         this.$set(act, 'disabled', act.tag === 'readonly')
+                        this.$set(act, 'disabled', act.tag === 'delete')
                         linearActions.push(act)
                         if (act.checked) {
                             this.curSelectActions.push(act.id)
@@ -477,6 +478,7 @@
                         sub.actions.forEach(act => {
                             this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
                             this.$set(act, 'disabled', act.tag === 'readonly')
+                            this.$set(act, 'disabled', act.tag === 'delete')
                             linearActions.push(act)
                             if (act.checked) {
                                 this.curSelectActions.push(act.id)
