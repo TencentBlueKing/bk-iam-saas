@@ -89,15 +89,15 @@ class TestRoleScopeSystemActions:
         assert role_scope_system_action_action_all.has_system("system")
         assert not role_scope_system_action_action_all.has_system("test")
 
-    def test_is_action_all(
+    def test_is_all_action(
         self, role_scope_system_action_system_all, role_scope_system_action_action_all, role_scope_system_action_normal
     ):
-        assert role_scope_system_action_system_all.is_action_all("system")
+        assert role_scope_system_action_system_all.is_all_action("system")
 
-        assert role_scope_system_action_action_all.is_action_all("system")
-        assert not role_scope_system_action_action_all.is_action_all("test")
+        assert role_scope_system_action_action_all.is_all_action("system")
+        assert not role_scope_system_action_action_all.is_all_action("test")
 
-        assert not role_scope_system_action_normal.is_action_all("system")
+        assert not role_scope_system_action_normal.is_all_action("system")
 
     def test_list_action_id(
         self, role_scope_system_action_system_all, role_scope_system_action_action_all, role_scope_system_action_normal

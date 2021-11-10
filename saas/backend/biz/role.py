@@ -67,7 +67,7 @@ class RoleScopeSystemActions(BaseModel):
 
     systems: Dict[str, Set[str]]  # key: system_id, value: action_id_set
 
-    def is_action_all(self, system_id: str) -> bool:
+    def is_all_action(self, system_id: str) -> bool:
         """
         是否是全操作列表
         """
@@ -80,12 +80,12 @@ class RoleScopeSystemActions(BaseModel):
         return False
 
     def has_system(self, system_id: str) -> bool:
-        if SYSTEM_ALL in self.systems or system_id in self.systems:
-            return True
-
-        return False
+        return SYSTEM_ALL in self.systems or system_id in self.systems
 
     def list_action_id(self, system_id: str) -> List[str]:
+        """
+        返回role范围内的所有action_id, 如果为all_action, 应该事先判断
+        """
         if system_id in self.systems:
             return list(self.systems[system_id])
 
@@ -316,7 +316,7 @@ class RoleListQuery:
         if not system_actions.has_system(system_id):
             return []
 
-        if system_actions.is_action_all(system_id):
+        if system_actions.is_all_action(system_id):
             return [ACTION_ALL]
 
         return system_actions.list_action_id(system_id)

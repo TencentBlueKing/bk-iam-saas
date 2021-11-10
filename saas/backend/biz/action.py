@@ -124,6 +124,7 @@ class ActionBiz:
             return actions
 
         # 筛选出在role范围内+在模板操作的操作集合
+        # 存量模板的action范围可能会超过role的范围, 为了展示完整, 需要补全role范围中没有的action
         filter_actions = [
             action for action in actions if action.id in scope_action_ids or action.id in template_action_set
         ]
