@@ -58,6 +58,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         self.authorized_template = kwargs.pop("authorized_template", set())
         self.role_system_actions: RoleScopeSystemActions = kwargs.pop("role_system_actions")  # NOTE: 必须要传
+        assert self.role_system_actions
         super().__init__(*args, **kwargs)
         self._system_list = SystemBiz().new_system_list()
 
@@ -113,7 +114,8 @@ class TemplateListSLZ(serializers.ModelSerializer):
             return False
 
         # template 的 action set 减去 role 的action set, 还有剩下的说明模板需要更新
-        return bool(set(obj.action_ids) - set(self.role_system_actions.list_action_id(obj.system_id)))
+        rest_action = set(obj.action_ids) - set(self.role_system_actions.list_action_id(obj.system_id))
+        return len(rest_action) == 0
 
 
 class TemplateListSchemaSLZ(serializers.ModelSerializer):
