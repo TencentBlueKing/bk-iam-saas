@@ -214,7 +214,7 @@ class SensitiveCleaner:
                         self._clean(one)
             elif isinstance(value, str):
                 for sk in self.sensitive_keys:
-                    if key.endswith(sk):
+                    if str(key).endswith(sk):
                         data[key] = "***"
 
                 if key in self.sensitive_key_func:
