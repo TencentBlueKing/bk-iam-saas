@@ -11,7 +11,7 @@
                 <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
                     <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
                     <span>{{ item.name }}</span>
-                    <span v-if="isShowCount" class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }} <span v-if="mode === 'detail' && item.deleteCount" class="delete-count"> 包含{{item.deleteCount}}个需要被删除的操作</span></span>
+                    <span v-if="isShowCount" class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }} <span v-if="item.deleteCount" class="delete-count"> 包含{{item.deleteCount}}个需要被删除的操作</span></span>
                 </section>
                 <span
                     v-if="!isDisabled"
@@ -35,11 +35,11 @@
                         @change="handleActionChecked(...arguments, act, item)">
                         <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                             <template v-if="act.disabled">
-                                <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}1</span>
+                                <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
                                 <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                             </template>
                             <template v-else>
-                                <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}2</span>
+                                <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
                                 <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                             </template>
                             <div slot="content" class="iam-perm-apply-action-popover-content">
@@ -91,11 +91,11 @@
                                     @change="handleSubActionChecked(...arguments, act, subAct, item)">
                                     <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                         <template v-if="act.disabled">
-                                            <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}3</span>
+                                            <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
                                             <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                                         </template>
                                         <template v-else>
-                                            <span class="text" :class="{ 'text-through': act.tag === 'delete' }">{{ act.name }}4</span>
+                                            <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
                                             <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                                         </template>
                                         <div slot="content" class="iam-perm-apply-action-popover-content">
@@ -177,16 +177,23 @@
             curSelectActions () {
                 const allActionIds = []
                 this.originalCustomTmplList.forEach(payload => {
+                    payload.deleteCount = 0
                     if (!payload.actionsAllDisabled) {
                         payload.actions.forEach(item => {
                             if (!item.disabled && item.checked) {
                                 allActionIds.push(item.id)
+                            }
+                            if (!item.disabled && item.checked && item.tag === 'delete') {
+                                payload.deleteCount++
                             }
                         })
                         ;(payload.sub_groups || []).forEach(subItem => {
                             (subItem.actions || []).forEach(act => {
                                 if (!act.disabled && act.checked) {
                                     allActionIds.push(act.id)
+                                }
+                                if (!act.disabled && act.checked && act.tag === 'delete') {
+                                    payload.deleteCount++
                                 }
                             })
                         })
@@ -400,7 +407,7 @@
                 tempActions.forEach(item => {
                     this.handleRelatedActions(item, payload.actionsAllChecked)
                 })
-                payload.count = payload.actionsAllChecked ? tempActions.length : 0
+                payload.count = payload.actionsAllChecked ? payload.allCount : 0
             },
 
             handleActionChecked (newVal, oldVal, val, actData, payload) {
