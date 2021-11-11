@@ -176,8 +176,6 @@
                     this.isFilter = true
                 }
             }
-            this.pagination.current = 1
-            this.searchValue = ''
         },
         methods: {
             showImgDialog () {
