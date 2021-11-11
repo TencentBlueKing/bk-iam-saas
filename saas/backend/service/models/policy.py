@@ -107,7 +107,6 @@ class Policy(BaseModel):
             action_id=self.action_id,
         )
         p.resources = [rt.dict() for rt in self.related_resource_types]
-        p.environment = {}
         return p
 
     def to_backend_dict(self):

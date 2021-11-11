@@ -95,7 +95,7 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
     BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
 
     # load logging settings
-    LOGGING = get_logging_config_dict(locals())
+    LOGGING = get_logging_config_dict({"LOG_LEVEL": LOG_LEVEL})
 
 # V2 Smart 配置
 else:

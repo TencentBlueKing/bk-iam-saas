@@ -26,6 +26,7 @@ from backend.common.error_codes import error_codes
 from backend.common.i18n import get_bk_language
 from backend.common.local import local
 from backend.util.cache import region
+from backend.metrics import callback_request_duration
 
 request_pool = requests.Session()
 logger = logging.getLogger("component")
@@ -140,6 +141,15 @@ class ResourceProviderClient:
                 f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
                 f"{base_log_msg}"
             )
+
+            callback_request_duration.labels(
+                system=self.system_id,
+                resource_type=self.resource_type_id,
+                function=data["method"],
+                method="post",
+                path=urlparse(self.url).path,
+                status=resp.status_code,
+            ).observe(latency)
         except requests.exceptions.RequestException as e:
             logger.exception(f"RequestException! {base_log_msg} ")
             trace_func(exc=traceback.format_exc())

@@ -17,6 +17,7 @@ from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import role_perm_class
 from backend.apps.organization.constants import SyncType
+from backend.apps.organization.filters import SyncRecordFilter
 from backend.apps.organization.models import Department, SyncRecord, User
 from backend.apps.organization.serializers import (
     DepartmentSLZ,
@@ -230,13 +231,13 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
     queryset = SyncRecord.objects.filter(type=SyncType.Full.value)
+    filterset_class = SyncRecordFilter
     serializer_class = OrganizationSyncRecordSLZ
     lookup_field = "id"
 
     @swagger_auto_schema(
         operation_description="同步记录列表",
         auto_schema=ResponseSwaggerAutoSchema,
-        # query_serializer=OrganizationSearchSLZ,
         responses={status.HTTP_200_OK: OrganizationSyncRecordSLZ(label="同步记录")},
         tags=["organization"],
     )
