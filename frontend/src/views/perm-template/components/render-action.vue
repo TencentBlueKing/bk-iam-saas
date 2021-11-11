@@ -36,11 +36,9 @@
                         <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                             <template v-if="act.disabled">
                                 <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
-                                <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                             </template>
                             <template v-else>
                                 <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
-                                <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                             </template>
                             <div slot="content" class="iam-perm-apply-action-popover-content">
                                 <div>
@@ -52,6 +50,19 @@
                                 <div class="description">{{ $t(`m.common['描述']`) + '：' + (act.description || '--') }}</div>
                                 <div class="relate-action" v-if="act.related_actions.length > 0">
                                     {{ getRelatedActionTips(act.related_actions) }}
+                                </div>
+                            </div>
+                        </bk-popover>
+
+                        <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                            <template v-if="act.tag === 'delete'">
+                                <Icon type="error-fill" class="error-icon" />
+                            </template>
+                            <div slot="content" class="iam-perm-apply-action-popover-content">
+                                <div>
+
+                                    由于分级管理员的授权范围没有包含此操作，<br>
+                                    如需使用该模板进行新的授权必须先删除该操作。
                                 </div>
                             </div>
                         </bk-popover>
@@ -92,11 +103,9 @@
                                     <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                         <template v-if="act.disabled">
                                             <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
-                                            <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                                         </template>
                                         <template v-else>
                                             <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
-                                            <Icon v-if="act.tag === 'delete'" type="error-fill" class="error-icon" />
                                         </template>
                                         <div slot="content" class="iam-perm-apply-action-popover-content">
                                             <div>
@@ -108,6 +117,18 @@
                                             <div class="description">{{ $t(`m.common['描述']`) + '：' + (act.description || '--') }}</div>
                                             <div class="relate-action" v-if="act.related_actions.length > 0">
                                                 {{ getRelatedActionTips(act.related_actions) }}
+                                            </div>
+                                        </div>
+                                    </bk-popover>
+                                    <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                                        <template v-if="act.tag === 'delete'">
+                                            <Icon type="error-fill" class="error-icon" />
+                                        </template>
+                                        <div slot="content" class="iam-perm-apply-action-popover-content">
+                                            <div>
+
+                                                由于分级管理员的授权范围没有包含此操作，<br>
+                                                如需使用该模板进行新的授权必须先删除该操作。
                                             </div>
                                         </div>
                                     </bk-popover>
