@@ -31,7 +31,7 @@ from backend.common.error_codes import APIException, CodeException, error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
-from backend.long_task.task import TaskFactory
+from backend.long_task.tasks import TaskFactory
 from backend.service.constants import RoleRelatedObjectType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
@@ -401,7 +401,7 @@ class GroupBiz:
             # 填充
             resource["attribute"] = attrs
 
-    def _check_before_grant(self, group: Group, templates: List[GroupTemplateGrantBean]):
+    def _check_lock_before_grant(self, group: Group, templates: List[GroupTemplateGrantBean]):
         """
         检查用户组是否满足授权条件
         """
@@ -420,6 +420,40 @@ class GroupBiz:
         ):
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板或自定义权限已经在授权中, 不能重复授权!"))
 
+    def check_before_grant(
+        self, group: Group, templates: List[GroupTemplateGrantBean], role: Role, need_check_resource_name=True
+    ):
+        """
+        检查用户组授权自定义权限或模板
+        （1）模板操作是否超过原始模板的范围
+        （2）权限是否超过分级管理员的授权范围
+        （3）检查实例名称是否正确
+        """
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+        # 这里遍历时，兼容了自定义权限和模板权限的检查
+        for template in templates:
+            action_ids = [p.action_id for p in template.policies]
+            if template.template_id != 0:
+                # 检查操作列表是否与模板一致
+                self.template_check_biz.check_add_member(template.template_id, subject, action_ids)
+            else:
+                # 检查操作列表是否为新增自定义权限
+                self._valid_grant_actions_not_exists(subject, template.system_id, action_ids)
+
+            try:
+                # 校验资源的名称是否一致
+                if need_check_resource_name:
+                    template_policy_list = PolicyBeanList(system_id=template.system_id, policies=template.policies)
+                    template_policy_list.check_resource_name()
+                # 检查策略是否在role的授权范围内
+                scope_checker = RoleAuthorizationScopeChecker(role)
+                scope_checker.check_policies(template.system_id, template.policies)
+            except CodeException as e:
+                raise error_codes.VALIDATE_ERROR.format(
+                    _("系统: {} 模板: {} 校验错误: {}").format(template.system_id, template.template_id, e.message),
+                    replace=True,
+                )
+
     def _valid_grant_actions_not_exists(self, subject: Subject, system_id, action_ids: List[str]):
         """
         校验授权的操作没有重复授权
@@ -429,32 +463,10 @@ class GroupBiz:
             if policy_list.get(action_id):
                 raise error_codes.VALIDATE_ERROR.format(_("系统: {} 的操作: {} 权限已存在").format(system_id, action_id))
 
-    def _gen_grant_lock(
-        self, subject: Subject, template: GroupTemplateGrantBean, role: Role, uuid: str
-    ) -> GroupAuthorizeLock:
+    def _gen_grant_lock(self, subject: Subject, template: GroupTemplateGrantBean, uuid: str) -> GroupAuthorizeLock:
         """
         生成用户组授权的信息锁
         """
-        action_ids = [p.action_id for p in template.policies]
-        if template.template_id != 0:
-            # 检查操作列表是否与模板一致
-            self.template_check_biz.check_add_member(template.template_id, subject, action_ids)
-        else:
-            # 检查操作列表是否为新增自定义权限
-            self._valid_grant_actions_not_exists(subject, template.system_id, action_ids)
-
-        try:
-            # 校验资源的名称是否一致
-            template_policy_list = PolicyBeanList(system_id=template.system_id, policies=template.policies)
-            template_policy_list.check_resource_name()
-            # 检查策略是否在role的授权范围内
-            scope_checker = RoleAuthorizationScopeChecker(role)
-            scope_checker.check_policies(template.system_id, template.policies)
-        except CodeException as e:
-            raise error_codes.VALIDATE_ERROR.format(
-                _("系统: {} 模板: {} 校验错误: {}").format(template.system_id, template.template_id, e.message), replace=True
-            )
-
         # 设置过期时间为永久
         for p in template.policies:
             p.set_expired_at(PERMANENT_SECONDS)
@@ -469,16 +481,19 @@ class GroupBiz:
         """
         用户组授权
         """
-        # 检查用户组是否满足授权条件
-        self._check_before_grant(group, templates)
+        # 检查数据正确性
+        self.check_before_grant(group, templates, role)
 
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+        # 检查用户组是否满足授权条件，即是否可添加锁
+        self._check_lock_before_grant(group, templates)
 
         locks = []
         uuid = gen_uuid()
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+
         for template in templates:
             # 生成授权数据锁
-            lock = self._gen_grant_lock(subject, template, role, uuid)
+            lock = self._gen_grant_lock(subject, template, uuid)
             locks.append(lock)
 
         with transaction.atomic():

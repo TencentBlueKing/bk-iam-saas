@@ -119,7 +119,7 @@ class PolicyOperationService:
         """
         db_policies = PolicyModel.objects.filter(
             system_id=system_id, subject_type=subject.type, subject_id=subject.id, policy_id=0
-        ).defer("_resources", "_environment")
+        ).defer("_resources")
 
         if len(db_policies) == 0:
             return

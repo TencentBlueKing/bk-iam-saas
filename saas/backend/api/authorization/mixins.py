@@ -12,12 +12,13 @@ import logging
 from typing import List
 
 from rest_framework import exceptions
+from rest_framework.response import Response
 
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleBiz
 from backend.common.error_codes import APIException, error_codes
-from backend.service.constants import SubjectType
+from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
 
 from .constants import AuthorizationAPIEnum, OperateEnum
@@ -58,6 +59,11 @@ class AuthViewMixin:
     def grant_or_revoke(self, operate: OperateEnum, subject: Subject, policy_list: PolicyBeanList) -> List[PolicyBean]:
         """授权或回收权限"""
         system_id = policy_list.system_id
+
+        # 对于授权Admin，自动忽略
+        if subject.type == SubjectType.USER.value and subject.id.lower() == ADMIN_USER:
+            # 原样返回，PolicyID=0，默认没有执行实际授权
+            return policy_list.policies
 
         # 检测被授权的用户是否存在，不存在则尝试同步
         if subject.type == SubjectType.USER.value:
@@ -104,3 +110,22 @@ class AuthViewMixin:
             # 临时方案：校验不通过，则修改分级管理员的权限范围，使其通过
             need_added_policies = scope_checker.list_not_match_policy(system_id, policy_list.policies)
             self.role_biz.inc_update_auth_scope(role.id, system_id, need_added_policies)
+
+    def policy_response(self, policy: PolicyBean):
+        """所有返回单一策略的接口都统一返回的结构"""
+        return Response(
+            {"policy_id": policy.policy_id, "statistics": {"instance_count": policy.count_all_type_instance()}}
+        )
+
+    def batch_policy_response(self, policies: List[PolicyBean]):
+        """所有返回批量策略的接口都统一返回的结构"""
+        return Response(
+            [
+                {
+                    "action": {"id": p.action_id},
+                    "policy_id": p.policy_id,
+                    "statistics": {"instance_count": p.count_all_type_instance()},
+                }
+                for p in policies
+            ]
+        )

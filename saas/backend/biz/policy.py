@@ -14,6 +14,7 @@ from copy import deepcopy
 from itertools import chain, groupby
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
+from django.conf import settings
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
@@ -393,7 +394,11 @@ class ConditionBeanList:
         """
         移除指定id的condition
         """
+        if self.is_any:
+            return
+
         self.conditions = [condition for condition in self.conditions if condition.id not in ids]
+        self.is_empty = len(self.conditions) == 0
 
 
 class RelatedResourceBean(RelatedResource):
@@ -618,17 +623,17 @@ class PolicyBean(Policy):
                 related_resource_type.condition = resource_type.condition
                 break
 
-    def add_related_resource_types(self, related_resource: List[RelatedResourceBean]) -> "PolicyBean":
+    def add_related_resource_types(self, related_resources: List[RelatedResourceBean]) -> "PolicyBean":
         """
         合并
         """
         resource_type_list = RelatedResourceBeanList(self.related_resource_types)
-        resource_type_list.add(RelatedResourceBeanList(related_resource))
+        resource_type_list.add(RelatedResourceBeanList(related_resources))
 
         self.related_resource_types = resource_type_list.related_resource_types
         return self
 
-    def has_related_resource_types(self, related_resource: List[RelatedResourceBean]) -> bool:
+    def has_related_resource_types(self, related_resources: List[RelatedResourceBean]) -> bool:
         """
         包含
 
@@ -637,12 +642,12 @@ class PolicyBean(Policy):
         if self.is_unrelated():
             return True
 
-        resource_type_list = RelatedResourceBeanList(deepcopy(related_resource))
+        resource_type_list = RelatedResourceBeanList(deepcopy(related_resources))
         resource_type_list.sub(RelatedResourceBeanList(self.related_resource_types))
 
         return resource_type_list.is_empty
 
-    def remove_related_resource_types(self, related_resource: List[RelatedResourceBean]) -> "PolicyBean":
+    def remove_related_resource_types(self, related_resources: List[RelatedResourceBean]) -> "PolicyBean":
         """
         裁剪
         """
@@ -650,7 +655,7 @@ class PolicyBean(Policy):
             raise PolicyEmptyException
 
         resource_type_list = RelatedResourceBeanList(self.related_resource_types)
-        resource_type_list.sub(RelatedResourceBeanList(related_resource))
+        resource_type_list.sub(RelatedResourceBeanList(related_resources))
 
         if resource_type_list.is_empty:
             raise PolicyEmptyException
@@ -665,6 +670,12 @@ class PolicyBean(Policy):
             for path_list in rrt.iter_path_list():
                 nodes.extend(path_list.nodes)
         return nodes
+
+    def count_all_type_instance(self) -> int:
+        """
+        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        """
+        return sum([rrt.count_instance() for rrt in self.related_resource_types])
 
 
 class PolicyBeanList:
@@ -770,7 +781,7 @@ class PolicyBeanList:
         self, delete_policy_list: "PolicyBeanList"
     ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
         """
-        回收权限时, 分离出需要更新的策略与删除的策略ID
+        回收权限时, 分离出需要更新的策略与删除的策略
 
         self: 原来已有的policy list
         delete_policy_list: 需要回收的policy list
@@ -844,7 +855,7 @@ class PolicyBeanList:
                     continue
                 rrt.check_selection(resource_type.instance_selections, ignore_path)
 
-    def list_path_node(self) -> List[PathNodeBean]:
+    def _list_path_node(self) -> List[PathNodeBean]:
         """
         查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点
         """
@@ -859,13 +870,13 @@ class PolicyBeanList:
         特别注意：该函数只能用于校验新增的策略，不能校验老策略，因为老的资源实例可能被删除或重命名了
         """
         # 获取策略里的资源的所有节点
-        path_nodes = self.list_path_node()
+        path_nodes = self._list_path_node()
         # 查询资源实例的实际名称
         resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
 
         # 校验从接入系统查询的资源实例名称与提交的数据里的名称是否一致
         for node in path_nodes:
-            real_name = resource_name_dict.get_name(node.system_id, node.type, node.id)
+            real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
             # 任意需要特殊判断：只要包含无限制即可
             if node.id == ANY_ID and real_name in node.name:
                 continue
@@ -876,6 +887,19 @@ class PolicyBeanList:
                         node.system_id, node.type, node.id, node.name, real_name
                     )
                 )
+
+    def check_instance_count_limit(self):
+        """
+        检查策略里的实例数量，避免大规模实例超限
+        """
+        for p in self.policies:
+            for rrt in p.related_resource_types:
+                if rrt.count_instance() > settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT:
+                    raise error_codes.VALIDATE_ERROR.format(
+                        "操作[{}]关联的[{}]的实例数已达上限{}个，请改用范围或者属性授权。".format(
+                            p.action_id, rrt.type, settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT
+                        )
+                    )
 
 
 class SystemCounterBean(SystemCounter):
@@ -1088,6 +1112,9 @@ class PolicyOperationBiz:
             policy.expired_at = old_policy.expired_at
             policy.policy_id = old_policy.policy_id
 
+        # 检查策略里的实例数量，避免大规模实例超限
+        update_policy_list.check_instance_count_limit()
+
         self.svc.alter(system_id, subject, update_policies=update_policy_list.to_svc_policies())
 
         return update_policy_list.policies
@@ -1103,6 +1130,11 @@ class PolicyOperationBiz:
         create_policy_list, update_policy_list = old_policy_list.split_to_creation_and_update_for_grant(
             new_policy_list
         )
+
+        # 检查策略里的实例数量，避免大规模实例超限
+        create_policy_list.check_instance_count_limit()
+        update_policy_list.check_instance_count_limit()
+
         self.svc.alter(
             system_id,
             subject,

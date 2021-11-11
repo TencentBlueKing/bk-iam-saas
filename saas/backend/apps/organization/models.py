@@ -13,12 +13,21 @@ import logging
 from typing import Dict, List
 
 from django.db import models
+from django.db.models import TextField
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
 
-from backend.apps.organization.constants import SYNC_TASK_DEFAULT_EXECUTOR, StaffStatus, SyncTaskStatus, SyncType
+from backend.apps.organization.constants import (
+    SYNC_TASK_DEFAULT_EXECUTOR,
+    StaffStatus,
+    SyncTaskStatus,
+    SyncType,
+    TriggerType,
+)
+from backend.apps.organization.managers import SyncErrorLogManager
 from backend.biz.organization import get_category_name
 from backend.common.models import TimestampedModel
+from backend.util.json import json_dumps
 
 logger = logging.getLogger("app")
 
@@ -170,3 +179,48 @@ class SyncRecord(TimestampedModel):
     status = models.CharField(
         "任务状态", choices=SyncTaskStatus.get_choices(), default=SyncTaskStatus.Running.value, max_length=16
     )
+
+    class Meta:
+        ordering = ["-id"]
+        verbose_name = "组织架构同步记录"
+        verbose_name_plural = "组织架构同步记录"
+
+    @property
+    def detail(self) -> Dict:
+        """同步异常日志详情"""
+        if self.status != SyncTaskStatus.Failed.value:
+            return {}
+
+        sync_error_log = SyncErrorLog.objects.filter(sync_record_id=self.id).first()
+        if sync_error_log is not None:
+            return sync_error_log.log
+
+        return {}
+
+    @property
+    def cost_time(self) -> int:
+        return int((self.updated_time - self.created_time).total_seconds())
+
+    @property
+    def trigger_type(self) -> str:
+        if self.executor == SYNC_TASK_DEFAULT_EXECUTOR:
+            return TriggerType.PERIODIC_TASK.value
+
+        return TriggerType.MANUAL_SYNC.value
+
+
+class SyncErrorLog(models.Model):
+    """同步异常记录"""
+
+    sync_record_id = models.IntegerField("同步记录id", db_index=True)
+    _log = TextField("日志详情", db_column="log")
+
+    objects = SyncErrorLogManager()
+
+    @property
+    def log(self) -> dict:
+        return json.loads(self._log)
+
+    @log.setter
+    def log(self, log):
+        self._log = json_dumps(log)

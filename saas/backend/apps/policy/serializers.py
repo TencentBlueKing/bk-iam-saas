@@ -95,10 +95,6 @@ class ResourceTypeSLZ(serializers.Serializer):
         return data
 
 
-class EnvironmentSLZ(serializers.Serializer):
-    pass
-
-
 class PolicySLZ(serializers.Serializer):
     type = serializers.CharField(label="操作类型")
     id = serializers.CharField(label="操作ID")
@@ -107,7 +103,6 @@ class PolicySLZ(serializers.Serializer):
     name = serializers.CharField(label="操作名称", allow_blank=True)
     description = serializers.CharField(label="操作描述")
     related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
-    environment = EnvironmentSLZ(label="可用条件")
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     expired_display = serializers.CharField()
 
@@ -183,7 +178,6 @@ class BasePolicyActionSLZ(serializers.Serializer):
     id = serializers.CharField(label="操作ID", required=True)
     type = serializers.CharField(label="操作类型", required=True, allow_blank=True)
     related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
-    environment = EnvironmentSLZ(label="可用条件", required=True)
 
 
 class PolicyActionSLZ(BasePolicyActionSLZ):

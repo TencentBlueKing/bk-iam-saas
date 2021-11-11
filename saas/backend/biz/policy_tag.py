@@ -23,7 +23,7 @@ from backend.biz.policy import (
 from backend.service.models import Attribute, Value
 from backend.service.utils.translate import translate_path
 
-from .constants import ConditionTag, PolicyTag
+from .constants import ConditionTag
 
 
 class AbstractTagBean(ABC):
@@ -240,23 +240,6 @@ class PolicyTagBeanList(PolicyBeanList):
 
     def get(self, action_id: str) -> Optional[PolicyTagBean]:
         return self._policy_dict.get(action_id, None)
-
-    def merge(self, new_policy_list: "PolicyTagBeanList") -> "PolicyTagBeanList":  # type: ignore
-        """
-        合并权限
-
-        仅用于合并无权限跳转权限, 需要打tag
-        """
-        for p in new_policy_list.policies:
-            old_policy = self.get(p.action_id)
-            if not old_policy:
-                self.policies.append(p)
-                self._policy_dict[p.action_id] = p
-                continue
-
-            old_policy.tag = PolicyTag.UPDATE.value
-            old_policy.add_related_resource_types(p.related_resource_types)
-        return self
 
 
 class ConditionTagBiz:

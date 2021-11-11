@@ -21,7 +21,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.template import TemplateBiz
 from backend.common.time import db_time
 from backend.long_task.constants import TaskType
-from backend.long_task.task import StepTask, register_handler
+from backend.long_task.tasks import StepTask, register_handler
 from backend.service.models import Subject
 
 from .audit import log_group_cleanup_member_audit_event

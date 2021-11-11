@@ -8,3 +8,8 @@ i18n_po:
 # compile django.po and djangojs.po to django.mo and djangojs.mo
 i18n_mo:
 	python manage.py compilemessages
+
+# 虽然使用了poetry，但是由于蓝鲸Smart应用还是依赖requirements，所以需要导出
+export_requirements:
+	poetry export -f requirements.txt --output requirements.txt --without-hashes
+	poetry export --dev -f requirements.txt --output requirements_dev.txt --without-hashes

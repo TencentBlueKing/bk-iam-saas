@@ -16,37 +16,10 @@
             v-bkloading="{ isLoading, opacity: 1 }">
             <render-tab
                 v-if="!isLoading && showMember"
-                :active.sync="tabActive"
-                ext-cls="set-tab-margin-bottom"
-                @on-change="handleTabChange" />
-            <section v-show="isPerm">
-                <!-- <template v-if="groupTemplateList.length && !isLoading">
-                    <render-perm-item
-                        v-for="(groupTemplate, groupTemplateIndex) in groupTemplateList"
-                        :key="groupTemplate.id"
-                        :expanded.sync="groupTemplate.expanded"
-                        :ext-cls="groupTemplateIndex > 0 ? 'iam-perm-ext-cls' : ''"
-                        :title="groupTemplate.displayName">
-                        <detail-table :template-id="groupTemplate.id" :system-id="groupTemplate.system.id"
-                            :version="groupTemplate.version" />
-                    </render-perm-item>
-                </template>
-                <template v-if="!groupTemplateList.length && !isLoading">
-                    <div class="iam-my-perm-empty-wrapper">
-                        <iam-svg />
-                    </div>
-                </template> -->
-                <render-group-perm
-                    :id="groupId"
-                    mode="detail"
-                    @on-init="handleOnInit" />
-            </section>
-            <section v-show="!isPerm">
-                <render-member-item :data="userList" type="user" v-if="userList.length > 0" />
-                <render-member-item :data="departmentList" type="department" v-if="departmentList.length > 0" />
-                <div class="iam-group-member-empty-wrapper" v-if="isEmpty">
-                    <iam-svg />
-                </div>
+                :active="'perm'"
+                ext-cls="set-tab-margin-bottom" />
+            <section>
+                <render-group-perm :id="groupId" mode="detail" @on-init="handleOnInit" />
             </section>
         </div>
     </bk-sideslider>
@@ -55,15 +28,11 @@
     // import RenderPermItem from '../group-perm/render-perm'
     // import DetailTable from '../group-perm/detail-table'
     import RenderTab from '../group-perm/render-tab'
-    import RenderMemberItem from '../components/render-member'
     import renderGroupPerm from '../../group/detail/group-perm-new'
     export default {
         name: '',
         components: {
-            // RenderPermItem,
-            // DetailTable,
             RenderTab,
-            RenderMemberItem,
             renderGroupPerm
         },
         props: {
@@ -92,21 +61,12 @@
             return {
                 groupTemplateList: [],
                 isShowSideslider: false,
-                requestQueue: ['list', 'member'],
-                tabActive: 'perm',
-                userList: [],
-                departmentList: []
+                requestQueue: ['list']
             }
         },
         computed: {
             isLoading () {
                 return this.requestQueue.length > 0
-            },
-            isPerm () {
-                return this.tabActive === 'perm'
-            },
-            isEmpty () {
-                return this.userList.length < 1 && this.departmentList.length < 1
             }
         },
         watch: {
@@ -115,7 +75,6 @@
                     this.isShowSideslider = !!value
                     if (this.isShowSideslider) {
                         // this.fetchPermList()
-                        this.fetchMemberList()
                     }
                 },
                 immediate: true
@@ -138,7 +97,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -152,38 +113,9 @@
                 // this.isLoading = flag
             },
 
-            async fetchMemberList () {
-                try {
-                    const params = {
-                        id: this.groupId,
-                        limit: 1000,
-                        offset: 0
-                    }
-                    const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params)
-                    this.userList = res.data.results.filter(item => item.type === 'user')
-                    this.departmentList = res.data.results.filter(item => item.type !== 'user')
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
-                    })
-                } finally {
-                    this.requestQueue.shift()
-                }
-            },
-
-            handleTabChange (payload) {
-                this.tabActive = payload
-            },
-
             handleAnimationEnd () {
                 // this.groupTemplateList = []
-                this.userList = []
-                this.departmentList = []
-                this.tabActive = 'perm'
-                this.requestQueue = ['list', 'member']
+                this.requestQueue = ['list']
                 this.$emit('animation-end')
             }
         }

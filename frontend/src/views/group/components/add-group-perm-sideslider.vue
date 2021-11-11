@@ -55,6 +55,20 @@
                         <bk-table-column type="selection" align="center" :selectable="getIsSelect"></bk-table-column>
                         <bk-table-column :label="$t(`m.permTemplate['模板名']`)">
                             <template slot-scope="{ row }">
+                                <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                                    <template>
+                                        <Icon v-if="!getIsSelect(row)" type="error-fill" class="error-icon" />
+                                    </template>
+                                    <div slot="content" class="iam-perm-apply-action-popover-content">
+                                        该模板无法选择的原因是：分级管理员缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。
+                                        <bk-button
+                                            text
+                                            :loading="editLoading"
+                                            @click="handleEdit(row)">
+                                            去编辑
+                                        </bk-button>
+                                    </div>
+                                </bk-popover>
                                 <span class="perm-template-name" :title="row.name" @click="handleViewTemplateDetail(row)">{{ row.name }}</span>
                             </template>
                         </bk-table-column>
@@ -280,7 +294,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.tableLoading = false
@@ -289,7 +305,7 @@
             },
 
             getIsSelect (row, index) {
-                return row.tag === 'unchecked'
+                return row.tag === 'unchecked' && !row.need_to_update
             },
 
             handleRefresh () {
@@ -430,7 +446,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueueBySys.shift()
@@ -446,7 +464,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueueByTemplate.shift()
@@ -462,7 +482,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueueBySys.shift()
@@ -497,6 +519,14 @@
             handleSliderClose () {
                 this.$emit('update:isShow', false)
                 this.$emit('animation-end')
+            },
+
+            handleEdit (data) {
+                window.localStorage.setItem('iam-header-title-cache', `${this.$t(`m.nav['编辑权限模板']`)}(${data.name})`)
+                this.$router.push({
+                    name: 'permTemplateEdit',
+                    params: { id: data.id, systemId: data.system.id }
+                })
             }
         }
     }
@@ -571,6 +601,13 @@
                 border-color: #3a84ff;
                 color: #3a84ff;
             }
+        }
+        .error-icon {
+            font-size: 14px;
+            color: #ffb400;
+            position: absolute;
+            left: -15px;
+            top: -11px;
         }
     }
 </style>
