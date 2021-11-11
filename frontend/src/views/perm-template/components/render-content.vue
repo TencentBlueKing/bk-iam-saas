@@ -704,6 +704,7 @@
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     })
+                    return
                 }
                 this.handleNameBlur(this.tempName)
                 this.isShowActionError = this.curSelectActions.length < 1
