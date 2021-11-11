@@ -33,3 +33,4 @@ class ActionTag(LowerStrEnum):
     READONLY = auto()
     CHECKED = auto()
     UNCHECKED = auto()
+    DELETE = auto()

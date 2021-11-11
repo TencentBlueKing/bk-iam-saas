@@ -55,6 +55,7 @@
                         <bk-table-column type="selection" align="center" :selectable="getIsSelect"></bk-table-column>
                         <bk-table-column :label="$t(`m.permTemplate['模板名']`)">
                             <template slot-scope="{ row }">
+                                <Icon v-if="!getIsSelect(row)" type="error-fill" class="error-icon" />
                                 <span class="perm-template-name" :title="row.name" @click="handleViewTemplateDetail(row)">{{ row.name }}</span>
                             </template>
                         </bk-table-column>
@@ -291,7 +292,7 @@
             },
 
             getIsSelect (row, index) {
-                return row.tag === 'unchecked'
+                return row.tag === 'unchecked' && !row.need_to_update
             },
 
             handleRefresh () {
@@ -579,6 +580,12 @@
                 border-color: #3a84ff;
                 color: #3a84ff;
             }
+        }
+        .error-icon {
+            font-size: 14px;
+            color: #ffb400;
+            position: absolute;
+            left: -5px;
         }
     }
 </style>

@@ -32,7 +32,7 @@ class VueTemplateView(TemplateView):
                 # csrftoken name
                 "CSRF_COOKIE_NAME": settings.CSRF_COOKIE_NAME,
                 # BK_ITSM
-                "BK_ITSM_APP_URL": settings.BK_ITSM_APP_URL,
+                "BK_ITSM_APP_URL": settings.BK_ITSM_APP_URL.rstrip("/"),
             }
 
             # 添加前端功能启用开关

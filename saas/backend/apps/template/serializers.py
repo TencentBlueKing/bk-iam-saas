@@ -21,6 +21,7 @@ from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.role import RoleScopeSystemActions
 from backend.biz.system import SystemBiz
 from backend.service.constants import SubjectType
 
@@ -52,9 +53,12 @@ class TemplateListSLZ(serializers.ModelSerializer):
     system = serializers.SerializerMethodField(label="系统信息")
     tag = serializers.SerializerMethodField(label="标签")
     is_lock = serializers.SerializerMethodField(label="是否锁定")
+    need_to_update = serializers.SerializerMethodField(label="是否需要更新")
 
     def __init__(self, *args, **kwargs):
         self.authorized_template = kwargs.pop("authorized_template", set())
+        self.role_system_actions: RoleScopeSystemActions = kwargs.pop("role_system_actions")  # NOTE: 必须要传
+        assert self.role_system_actions
         super().__init__(*args, **kwargs)
         self._system_list = SystemBiz().new_system_list()
 
@@ -77,6 +81,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
             "subject_count",
             "tag",
             "is_lock",
+            "need_to_update",
             "updater",
             "updated_time",
             "creator",
@@ -99,15 +104,40 @@ class TemplateListSLZ(serializers.ModelSerializer):
     def get_is_lock(self, obj):
         return obj.id in self._lock_ids
 
+    def get_need_to_update(self, obj):
+        # 如果系统不在授权范围内, 说明整个系统的操作都被删除了, 这个模板只能被删除
+        if not self.role_system_actions.has_system(obj.system_id):
+            return True
+
+        # 如果role的范围时任意, 模板不需要更新
+        if self.role_system_actions.is_all_action(obj.system_id):
+            return False
+
+        # template 的 action set 减去 role 的action set, 还有剩下的说明模板需要更新
+        rest_action = set(obj.action_ids) - set(self.role_system_actions.list_action_id(obj.system_id))
+        return len(rest_action) != 0
+
 
 class TemplateListSchemaSLZ(serializers.ModelSerializer):
     system = SystemInfoSLZ(label="系统信息", required=True)
     tag = serializers.CharField(label="标签")
     is_lock = serializers.BooleanField(label="是否锁定")
+    need_to_update = serializers.BooleanField(label="是否需要更新")
 
     class Meta:
         model = PermTemplate
-        fields = ("id", "system", "name", "description", "subject_count", "tag", "is_lock", "updater", "updated_time")
+        fields = (
+            "id",
+            "system",
+            "name",
+            "description",
+            "subject_count",
+            "tag",
+            "is_lock",
+            "need_to_update",
+            "updater",
+            "updated_time",
+        )
 
 
 class TemplateRetrieveSchemaSLZ(TemplateListSchemaSLZ):
