@@ -403,6 +403,7 @@
                     return !item.isExpiredAtDisabled
                         && !item.isAggregate
                         && relatedActions.includes(item.id)
+                        && curData.system_id === item.system_id
                         && !item.related_resource_types.every(sub => sub.empty)
                 }))
                 if (relatedList.length > 0) {
