@@ -57,7 +57,7 @@
                             <template slot-scope="{ row }">
                                 <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                     <template>
-                                        <Icon v-if="!getIsSelect(row)" type="error-fill" class="error-icon" />
+                                        <Icon v-if="row.need_to_update" type="error-fill" class="error-icon" />
                                     </template>
                                     <div slot="content" class="iam-perm-apply-action-popover-content">
                                         该模板无法选择的原因是：分级管理员缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。

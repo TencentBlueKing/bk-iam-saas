@@ -76,8 +76,8 @@
                     </div>
                     <div class="msg-content">
                         <div v-if="exceptionMsg || tracebackMsg">
-                            <div>{{exceptionMsg}}</div>
-                            <div>{{tracebackMsg}}</div>
+                            <div v-html="exceptionMsg"></div>
+                            <div v-html="tracebackMsg"></div>
                         </div>
                         <div v-else>暂无日志详情</div>
                     </div>
@@ -225,7 +225,7 @@
                 try {
                     const res = await this.$store.dispatch('organization/getRecordsLog', data.id)
                     this.exceptionMsg = res.data.exception_msg
-                    this.tracebackMsg = res.data.traceback_msg
+                    this.tracebackMsg = res.data.traceback_msg.replaceAll('\n', '<br>')
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
