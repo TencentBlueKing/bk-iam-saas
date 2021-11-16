@@ -406,7 +406,9 @@ export const m = {
         '取消续期': 'Cancel renewal',
         '根据你的需求，自动匹配到以下的用户组（包含更多可申请权限）': 'According to your requirements, automatically matched to the following user groups (including more applicable permissions)',
         '你也可以继续申请独立权限': 'You can also continue to apply for independent access',
-        '你可以申请独立权限': 'You can apply for independent access'
+        '你可以申请独立权限': 'You can apply for independent access',
+        '你已获得该组权限，但是已过期': 'You have been granted permission for this group, but it has expired',
+        '去续期': 'Go to renew'
     },
     myApply: {
         '申请列表': 'Apply List',
