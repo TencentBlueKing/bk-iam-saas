@@ -224,7 +224,7 @@
                 this.logDetailLoading = true
                 try {
                     const res = await this.$store.dispatch('organization/getRecordsLog', data.id)
-                    this.exceptionMsg = res.data.exception_msg
+                    this.exceptionMsg = res.data.exception_msg.replaceAll('\n', '<br>')
                     this.tracebackMsg = res.data.traceback_msg.replaceAll('\n', '<br>')
                 } catch (e) {
                     console.error(e)
