@@ -40,9 +40,10 @@ class AllowItem:
         # 若分隔符在object_id里，说明需要拆分出真正的object_id和operation
         if AllowListObjectOperationSep in object_id:
             object_split_list = object_id.split(AllowListObjectOperationSep)
-            assert len(object_split_list) == 2
-            self.operation = object_split_list[0]
-            self.object_id = object_split_list[1]
+            # 长度非2，则说明非正常的规则，则默认使用等于匹配
+            if len(object_split_list) == 2:
+                self.operation = object_split_list[0]
+                self.object_id = object_split_list[1]
 
     def match(self, object_id: str) -> bool:
         """判断是否匹配，需要根据每种不同的匹配规则进行判断"""
