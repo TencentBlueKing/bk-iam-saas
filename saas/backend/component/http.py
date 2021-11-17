@@ -18,8 +18,8 @@ Rules:
 
 from __future__ import unicode_literals
 
-import time
 import logging
+import time
 import traceback
 from functools import partial
 from urllib.parse import urlparse

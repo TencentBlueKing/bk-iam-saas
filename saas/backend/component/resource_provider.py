@@ -25,8 +25,8 @@ from backend.common.debug import http_trace
 from backend.common.error_codes import error_codes
 from backend.common.i18n import get_bk_language
 from backend.common.local import local
-from backend.util.cache import region
 from backend.metrics import callback_request_duration
+from backend.util.cache import region
 
 request_pool = requests.Session()
 logger = logging.getLogger("component")
