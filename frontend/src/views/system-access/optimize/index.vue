@@ -10,6 +10,16 @@
             </bk-steps>
             <smart-action class="content-wrapper">
                 <render-horizontal-block :label="$t(`m.access['操作分组']`)">
+                    <template>
+                        <div id="container-pop">
+                            <pop-content
+                                title="什么是操作分组？"
+                                desc="操作分组可以让用户在申请权限时更方便的找到想要的操作。"
+                                :image="operationGroupImage"
+                            ></pop-content>
+                        </div>
+                        <Icon class="icon-info-regis" type="info-new" v-bk-tooltips="htmlConfig" />
+                    </template>
                     <div v-bkloading="{ isLoading: groupActionLoading, opacity: 0.8 }">
                         <div class="action-no-group-list-wrapper">
                             <div class="action-item set-border reset-padding-top">
@@ -106,6 +116,16 @@
                 </render-horizontal-block>
 
                 <render-horizontal-block :label="$t(`m.access['常用操作']`)">
+                    <template>
+                        <div id="container-pop">
+                            <pop-content
+                                title="什么是常用操作？"
+                                desc="常用操作可以让用户在申请权限时可以一次性选择某一类角色需要的操作。"
+                                :image="operationCommonImage"
+                            ></pop-content>
+                        </div>
+                        <Icon class="icon-info-regis" type="info-new" v-bk-tooltips="htmlConfig" />
+                    </template>
                     <div v-bkloading="{ isLoading: commonActionLoading, opacity: 0.8 }">
                         <div class="common-action-list-wrapper">
                             <div
@@ -234,6 +254,9 @@
     import AddCommonDialog from './add-common-dialog.vue'
     import EditCommonDialog from './edit-common-dialog.vue'
     import beforeStepChangedMixin from '../common/before-stepchange'
+    import PopContent from '../common/pop-content'
+    import operationGroupImage from '@/images/operation-group.png'
+    import operationCommonImage from '@/images/operation-common.png'
 
     export default {
         name: '',
@@ -243,7 +266,8 @@
             EditGroupDialog,
             EditSubGroupDialog,
             AddCommonDialog,
-            EditCommonDialog
+            EditCommonDialog,
+            PopContent
         },
         mixins: [beforeStepChangedMixin],
         data () {
@@ -299,7 +323,17 @@
                 isShowAddCommonDialog: false,
                 isShowEditCommonDialog: false,
                 curEditCommon: null,
-                curEditCommonIndex: -1
+                curEditCommonIndex: -1,
+                operationGroupImage,
+                operationCommonImage,
+                htmlConfig: {
+                    allowHtml: true,
+                    width: 520,
+                    trigger: 'click',
+                    theme: 'light',
+                    content: '#container-pop',
+                    placement: 'right-start'
+                }
             }
         },
         mounted () {

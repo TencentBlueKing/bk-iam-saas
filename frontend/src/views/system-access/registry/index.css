@@ -66,6 +66,11 @@
                     }
                 }
             }
+            .icon-info-regis {
+                position: absolute;
+                left: 90px;
+                top: 32px;
+            }
             .btn-wrapper {
                 position: absolute;
                 left: 125px;

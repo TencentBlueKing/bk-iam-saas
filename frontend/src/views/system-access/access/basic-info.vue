@@ -1,31 +1,37 @@
 <template>
     <div class="iam-access-base-info-wrapper">
         <bk-form :model="formData" :rules="rules" form-type="vertical" ref="basicInfoForm">
-            <iam-form-item :label="$t(`m.access['系统ID']`)" :property="'id'" required>
+            <iam-form-item :label="$t(`m.access['系统ID']`)" :property="'id'" required
+                desc="接入系统在权限中心的唯一标识，一般为接入系统的app_code">
                 <bk-input class="input" v-if="isEdit" disabled v-model="formData.id"
                     :placeholder="$t(`m.access['请输入app_code']`)" />
                 <bk-input class="input" v-else v-model="formData.id" :placeholder="$t(`m.access['请输入app_code']`)" />
             </iam-form-item>
-            <iam-form-item :label="$t(`m.access['系统中文名称']`)" :property="'name'" required>
+            <iam-form-item :label="$t(`m.access['系统中文名称']`)" :property="'name'" required
+                desc="接入系统的中文名称">
                 <bk-input class="input" v-model="formData.name" :placeholder="$t(`m.access['请输入接入的系统中文名称']`)" />
             </iam-form-item>
-            <iam-form-item :label="$t(`m.access['系统英文名称']`)" :property="'name_en'" required>
+            <iam-form-item :label="$t(`m.access['系统英文名称']`)" :property="'name_en'" required
+                desc="接入系统的英文文名称">
                 <bk-input class="input" v-model="formData.name_en" :placeholder="$t(`m.access['请输入接入的系统英文名称']`)" />
             </iam-form-item>
-            <iam-form-item :label="$t(`m.access['系统回调地址']`)" :property="'host'" required>
+            <iam-form-item :label="$t(`m.access['系统回调地址']`)" :property="'host'" required
+                desc="权限中心会通过该URL访问访问系统进行一些的交互">
                 <bk-input class="input" v-model="formData.host" :placeholder="$t(`m.access['请输入接入的系统回调地址']`)" />
                 <bk-checkbox class="basic-auth" :true-value="'basic'" :false-value="'none'" v-model="formData.auth">
                     {{$t(`m.access['Basic认证']`)}}
                 </bk-checkbox>
             </iam-form-item>
-            <iam-form-item :label="$t(`m.access['系统健康检查地址']`)" :property="'healthz'" required>
+            <iam-form-item :label="$t(`m.access['系统健康检查地址']`)" :property="'healthz'" required
+                desc="权限中心会通过该URL确认接入系统状态正常">
                 <bk-input class="input" v-model="formData.healthz" :placeholder="$t(`m.access['请输入接入的系统健康检查地址']`)">
                     <template slot="prepend">
                         <div class="group-text">{{formData.host}}</div>
                     </template>
                 </bk-input>
             </iam-form-item>
-            <iam-form-item :label="$t(`m.access['系统中文描述']`)" :property="'description'" required>
+            <iam-form-item :label="$t(`m.access['系统中文描述']`)" :property="'description'" required
+                desc="接入系统的产品功能简要描述">
                 <bk-input
                     type="textarea"
                     v-model="formData.description"
@@ -33,7 +39,8 @@
                     :placeholder="$t(`m.verify['请输入系统中文描述']`)">
                 </bk-input>
             </iam-form-item>
-            <iam-form-item :label="$t(`m.access['系统英文描述']`)" :property="'description_en'" required>
+            <iam-form-item :label="$t(`m.access['系统英文描述']`)" :property="'description_en'" required
+                desc="国际化版本会展示该信息">
                 <!-- eslint-disable vue/camelcase -->
                 <bk-input
                     type="textarea"

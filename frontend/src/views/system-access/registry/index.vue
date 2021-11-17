@@ -17,6 +17,17 @@
                             <Icon bk class="expanded-icon" :type="item.isExpand ? 'down-shape' : 'right-shape'" />
                             <label class="title">{{ item.title || $t(`m.access['注册操作']`) }}</label>
                         </div>
+                        <template v-if="!item.title">
+                            <div id="container-pop">
+                                <pop-content
+                                    title="什么是操作？"
+                                    desc="操作是接入系统要控制的某个场景功能，如 服务器重启、脚本执行、菜单查看等，一 个操作是最小的权限控制单元，
+                                    操作应该是可枚举相对静态的，一个接入系统的操作 数量有可能随着系统功能模块的增加而增加，但一般不会随着时间的推移无限增长。"
+                                    :image="operationImage"
+                                ></pop-content>
+                            </div>
+                            <Icon class="icon-info-regis" type="info-new" v-bk-tooltips="htmlConfig" />
+                        </template>
                         <div class="content" v-if="item.isExpand">
                             <div class="slot-content">
                                 <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
@@ -35,7 +46,20 @@
                                             class="expand-advanced-settings" />
                                     </bk-button>
                                     <template v-if="item.isExpandAdvanced">
-                                        <div class="label-info">{{$t(`m.access['依赖资源']`)}}</div>
+                                        <div class="label-info">
+                                            {{$t(`m.access['依赖资源']`)}}
+                                            <template>
+                                                <div id="container-pop">
+                                                    <pop-content
+                                                        title="什么是资源类型？"
+                                                        desc="资源类型是指操作所关联的对象，如服务器重启关联的对象是服务器、脚本编辑关联的 对象是脚本，
+                                                        服务器、脚本都是一种资源类型，一个操作可以不关联任何资源类型，也 可以关联一种或多种资源类型。"
+                                                        :image="resourceImage"
+                                                    ></pop-content>
+                                                </div>
+                                                <Icon type="info-new" v-bk-tooltips="htmlConfig" />
+                                            </template>
+                                        </div>
                                         <bk-table :data="item.related_resource_types" border
                                             :cell-class-name="getCellClass">
                                             <bk-table-column :resizable="false" min-width="250"
@@ -180,11 +204,15 @@
     import iamCascade from '@/components/cascade'
     import RenderAction from '../common/render-action'
     import BasicInfo from './basic-info'
+    import PopContent from '../common/pop-content'
 
     import ResourceTypeSideslider from './resource-type-sideslider'
     import InstanceSelectionSideslider from './instance-selection-sideslider'
 
     import beforeStepChangedMixin from '../common/before-stepchange'
+
+    import resourceImage from '@/images/resource-type.png'
+    import operationImage from '@/images/operation.png'
 
     const getDefaultActionData = () => ({
         id: '',
@@ -225,7 +253,8 @@
             RenderAction,
             iamCascade,
             ResourceTypeSideslider,
-            InstanceSelectionSideslider
+            InstanceSelectionSideslider,
+            PopContent
         },
         mixins: [beforeStepChangedMixin],
         data () {
@@ -250,7 +279,17 @@
                 isShowAddInstanceSelectionSideslider: false,
                 systemListResourceType: [],
                 systemListInstanceSelections: [],
-                relatedActionList: []
+                relatedActionList: [],
+                htmlConfig: {
+                    allowHtml: true,
+                    width: 520,
+                    trigger: 'click',
+                    theme: 'light',
+                    content: '#container-pop',
+                    placement: 'right-start'
+                },
+                resourceImage,
+                operationImage
             }
         },
         computed: {
