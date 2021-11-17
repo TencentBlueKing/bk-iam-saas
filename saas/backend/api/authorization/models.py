@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from django.db import models
 
-from backend.api.constants import ALLOW_ANY
 from backend.common.models import BaseModel
 
 from .constants import AuthorizationAPIEnum
@@ -30,11 +29,3 @@ class AuthAPIAllowListConfig(BaseModel):
         verbose_name_plural = "授权API白名单配置"
         ordering = ["-id"]
         index_together = ["system_id", "object_id"]
-
-    @classmethod
-    def is_allowed(cls, _type: str, system_id: str, object_id: str):
-        """
-        检测是否允许[某类API允许被某个系统的某个操作/Action调用]
-        由于支持配置任意，所以判断是需要判断是否包含了任意
-        """
-        return cls.objects.filter(type=_type, system_id=system_id, object_id__in=[ALLOW_ANY, object_id]).exists()
