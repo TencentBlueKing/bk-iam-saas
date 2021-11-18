@@ -7,6 +7,16 @@
         :title="$t(`m.access['新增实例视图']`)"
         @update:isShow="hideSideslider">
         <div slot="content" class="content-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template>
+                <div id="container-pop">
+                    <pop-content
+                        title="什么是实例视图？"
+                        desc="实例视图代表一种资源类型的实例数据获取途径，一种资源类型的实例视图可以有多种。"
+                        :image="imageInfo"
+                    ></pop-content>
+                </div>
+                <Icon class="icon-info-instance" type="info-new" v-bk-tooltips="htmlConfig" />
+            </template>
             <div class="add-resource-type-form-wrapper" v-if="!isLoading">
                 <div
                     v-for="(item, index) in instanceSelectionList"
@@ -43,7 +53,8 @@
                             <bk-form :ref="`instanceSelectionForm${index}`"
                                 :model="item" form-type="vertical" :rules="rules"
                                 v-bkloading="{ isLoading: item.submitLoading, opacity: 1, color: '#f5f6fa' }">
-                                <iam-form-item :label="$t(`m.access['实例视图ID']`)" :property="'id'" required>
+                                <iam-form-item :label="$t(`m.access['实例视图ID']`)" :property="'id'" required
+                                    desc="实例视图的唯一标识">
                                     <bk-input :disabled="!item.isNewAdd" v-model="item.id"
                                         :placeholder="$t(`m.access['请输入实例视图ID']`)" />
                                 </iam-form-item>
@@ -128,6 +139,9 @@
     // eslint-disable-next-line no-unused-vars
     // import { leaveConfirm } from '@/common/leave-confirm'
     import iamCascade from '@/components/cascade'
+    import PopContent from '../common/pop-content'
+    import hostImage from '@/images/business-host.png'
+    import dynamicsImage from '@/images/business-dynamics.png'
 
     const getDefaultData = () => ({
         id: '',
@@ -145,7 +159,8 @@
 
     export default {
         components: {
-            iamCascade
+            iamCascade,
+            PopContent
         },
         props: {
             isShow: {
@@ -160,7 +175,16 @@
                 instanceSelectionListBackup: [],
 
                 systemList: [],
-                alreadySelecteds: {}
+                alreadySelecteds: {},
+                htmlConfig: {
+                    allowHtml: true,
+                    width: 520,
+                    trigger: 'click',
+                    theme: 'light',
+                    content: '#container-pop',
+                    placement: 'right-start'
+                },
+                imageInfo: [{ name: '业务主机列表', imageSrc: hostImage }, { name: '业务动态分组列表', imageSrc: dynamicsImage }]
             }
         },
         computed: {

@@ -43,11 +43,13 @@
                         <div class="sub-group-action-content">
                             <bk-form :ref="`resourceTypeForm${index}`" :model="item" form-type="vertical" :rules="rules"
                                 v-bkloading="{ isLoading: item.submitLoading, opacity: 1, color: '#f5f6fa' }">
-                                <iam-form-item :label="$t(`m.access['资源类型ID']`)" :property="'id'" required>
+                                <iam-form-item :label="$t(`m.access['资源类型ID']`)" :property="'id'" required
+                                    desc="资源类型的唯一标识">
                                     <bk-input :disabled="!item.isNewAdd" v-model="item.id"
                                         :placeholder="$t(`m.access['请输入资源类型ID']`)" />
                                 </iam-form-item>
-                                <iam-form-item :label="$t(`m.access['资源类型中文名']`)" :property="'name'" required>
+                                <iam-form-item :label="$t(`m.access['资源类型中文名']`)" :property="'name'" required
+                                    desc="资源类型的名称">
                                     <bk-input :disabled="!item.isEdit" v-model="item.name"
                                         :placeholder="$t(`m.access['请输入资源类型中文名']`)" />
                                 </iam-form-item>
@@ -56,7 +58,7 @@
                                         :placeholder="$t(`m.access['请输入资源类型英文名']`)" />
                                 </iam-form-item>
                                 <iam-form-item :label="$t(`m.access['回调接口']`)" :property="'provider_config.path'"
-                                    required>
+                                    required desc="权限中心会通过该接口拉取对应资源类型的实例数据">
                                     <bk-input :disabled="!item.isEdit" v-model="item.provider_config.path"
                                         :placeholder="$t(`m.access['请输入回调接口']`)">
                                         <template slot="prepend">
