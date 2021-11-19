@@ -282,12 +282,15 @@ class RoleAuthorizationScopeView(views.APIView):
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
-        scope_system = self.biz.get_auth_scope_bean_by_system(request.role.id, system_id)
+        # ResourceNameAutoUpdate
+        scope_system = self.biz.get_auth_scope_bean_by_system(
+            request.role.id, system_id, auto_update_resource_name=True
+        )
         data = [one.dict() for one in scope_system.actions] if scope_system else []
         return Response(data)
 
 
-class RoleSubjectScopView(views.APIView):
+class RoleSubjectScopeView(views.APIView):
     """
     角色的subject授权范围
     """
