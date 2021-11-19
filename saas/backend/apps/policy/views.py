@@ -86,7 +86,7 @@ class PolicyViewSet(GenericViewSet):
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         # ResourceNameAutoUpdate
-        updated_policies = self.policy_operation_biz.update_for_rename_resource(system_id, subject, policies)
+        updated_policies = self.policy_operation_biz.update_due_to_renamed_resource(system_id, subject, policies)
 
         return Response([p.dict() for p in updated_policies])
 

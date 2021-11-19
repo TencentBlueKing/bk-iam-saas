@@ -210,13 +210,13 @@ class InstanceBean(Instance):
         """
         return len(self.path)
 
-    def update_resource_name(self, rename_resources: Dict[PathNodeBean, str]) -> bool:
+    def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
         is_changed = False
         for p in self.path:
             for node in p:
-                new_name = rename_resources.get(node)
+                new_name = renamed_resources.get(node)
                 # 只会更新有重命名的资源
-                if new_name is not None:
+                if new_name is not None and new_name != node.name:
                     node.name = new_name
                     # 记录是否真的修改了数据，便于后续直接修改DB数据
                     is_changed = True
@@ -503,12 +503,12 @@ class RelatedResourceBean(RelatedResource):
                 for path in instance.path:
                     yield PathNodeBeanList(path)
 
-    def update_resource_name(self, rename_resources: Dict[PathNodeBean, str]) -> bool:
+    def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
         is_changed = False
         for condition in self.condition:
             for instance in condition.instances:
                 # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
-                if instance.update_resource_name(rename_resources):
+                if instance.update_resource_name(renamed_resources):
                     is_changed = True
 
         return is_changed
@@ -699,14 +699,14 @@ class PolicyBean(Policy):
         """
         return sum([rrt.count_instance() for rrt in self.related_resource_types])
 
-    def update_resource_name(self, rename_resources: Dict[PathNodeBean, str]) -> bool:
+    def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
         """
         更新资源实例名称
         """
         is_changed = False
         for rrt in self.related_resource_types:
             # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
-            if rrt.update_resource_name(rename_resources):
+            if rrt.update_resource_name(renamed_resources):
                 is_changed = True
 
         return is_changed
@@ -935,18 +935,15 @@ class PolicyBeanList:
                         )
                     )
 
-    def auto_update_resource_name(self) -> List[PolicyBean]:
-        """
-        策略里存储的资源名称可能已经变了，需要进行更新
-        Note: 该函数仅用于需要对外展示策略数据时调用，其他时候不自动更新，这是一个lazy操作
-        """
+    def get_renamed_resources(self) -> Dict[PathNodeBean, str]:
+        """查询已经被重命名的资源实例"""
         # 获取策略里的资源的所有节点
         path_nodes = self._list_path_node()
         # 查询资源实例的实际名称
         resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
 
         # 查询出已经名称已变更的资源
-        rename_resources: Dict[PathNodeBean, str] = {}
+        renamed_resources: Dict[PathNodeBean, str] = {}
         for node in path_nodes:
             real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
             # 任意则无需更新
@@ -959,16 +956,26 @@ class PolicyBeanList:
 
             # 名称不一致，说明资源重命名了，需要更新
             if real_name != node.name:
-                rename_resources[node] = real_name
+                renamed_resources[node] = real_name
 
-        # 没有名称变更的资源
-        if len(rename_resources) == 0:
+        return renamed_resources
+
+    def auto_update_resource_name(self) -> List[PolicyBean]:
+        """
+        策略里存储的资源名称可能已经变了，需要进行更新
+        Note: 该函数仅用于需要对外展示策略数据时调用，不会自动更新DB里数据
+        """
+        # 获取策略里被重命名的资源实例
+        renamed_resources = self.get_renamed_resources()
+
+        # 没有任何被重命名的资源实例，则无需更新策略
+        if len(renamed_resources) == 0:
             return []
 
         # 修改即将对外展示数据
         changed_policies = []
         for p in self.policies:
-            is_changed = p.update_resource_name(rename_resources)
+            is_changed = p.update_resource_name(renamed_resources)
             # 若策略里有资源实例重名了，则记录起来，用于后续修改DB数据
             if is_changed:
                 changed_policies.append(p)
@@ -1241,7 +1248,7 @@ class PolicyOperationBiz:
         return update_policy_list.policies + whole_delete_policy_list.policies
 
     @method_decorator(policy_change_lock)
-    def update_for_rename_resource(
+    def update_due_to_renamed_resource(
         self, system_id: str, subject: Subject, policies: List[PolicyBean]
     ) -> List[PolicyBean]:
         """

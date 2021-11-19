@@ -202,7 +202,7 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
         )
 
         # ResourceNameAutoUpdate
-        updated_policies = GroupBiz().update_template_for_resource_name(
+        updated_policies = GroupBiz().update_template_due_to_renamed_resource(
             int(obj.data["subject_id"]), obj.data["template_id"], policy_list
         )
 

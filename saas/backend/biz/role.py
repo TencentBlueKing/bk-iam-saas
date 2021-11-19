@@ -172,7 +172,7 @@ class RoleBiz:
         """
         self.svc.update_super_manager_member_system_permission(username, need_sync_backend_role)
 
-    def _update_auth_scope_for_resource_name(
+    def _update_auth_scope_due_to_renamed_resource(
         self, role_id: int, auth_systems: List[AuthScopeSystem], auth_system_beans: List[AuthScopeSystemBean]
     ) -> List[AuthScopeSystemBean]:
         """
@@ -216,7 +216,9 @@ class RoleBiz:
 
         return auth_system_beans
 
-    def list_auth_scope_bean(self, role_id: int, auto_update_resource_name: bool = False) -> List[AuthScopeSystemBean]:
+    def list_auth_scope_bean(
+        self, role_id: int, should_auto_update_resource_name: bool = False
+    ) -> List[AuthScopeSystemBean]:
         """
         查询角色的auth授权范围Bean
         """
@@ -232,8 +234,10 @@ class RoleBiz:
 
         # ResourceNameAutoUpdate
         # 判断是否主动检查更新授权范围
-        if auto_update_resource_name:
-            auth_system_beans = self._update_auth_scope_for_resource_name(role_id, auth_systems, auth_system_beans)
+        if should_auto_update_resource_name:
+            auth_system_beans = self._update_auth_scope_due_to_renamed_resource(
+                role_id, auth_systems, auth_system_beans
+            )
 
         return auth_system_beans
 
@@ -258,7 +262,7 @@ class RoleBiz:
         return AuthScopeSystemBean(system=ThinSystem.parse_obj(system), actions=policies)
 
     def get_auth_scope_bean_by_system(
-        self, role_id: int, system_id: str, auto_update_resource_name: bool = False
+        self, role_id: int, system_id: str, should_auto_update_resource_name: bool = False
     ) -> Optional[AuthScopeSystemBean]:
         """
         获取指定系统的auth授权范围Bean
@@ -274,8 +278,10 @@ class RoleBiz:
 
         # ResourceNameAutoUpdate
         # 判断是否主动检查更新授权范围
-        if auto_update_resource_name and auth_system_bean is not None:
-            auth_system_beans = self._update_auth_scope_for_resource_name(role_id, auth_systems, [auth_system_bean])
+        if should_auto_update_resource_name and auth_system_bean is not None:
+            auth_system_beans = self._update_auth_scope_due_to_renamed_resource(
+                role_id, auth_systems, [auth_system_bean]
+            )
             auth_system_bean = auth_system_beans[0]
 
         return auth_system_bean

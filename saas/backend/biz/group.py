@@ -239,7 +239,7 @@ class GroupBiz:
                 subject, template_id, parse_obj_as(List[Policy], policy_list.policies)
             )
 
-    def update_template_for_resource_name(
+    def update_template_due_to_renamed_resource(
         self, group_id: int, template_id: int, policy_list: PolicyBeanList
     ) -> List[PolicyBean]:
         """
