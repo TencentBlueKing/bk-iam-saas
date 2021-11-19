@@ -740,7 +740,36 @@ export const m = {
         '实例视图中文名': 'Instance view Chinese name',
         '请输入实例视图中文名': 'Please enter the Instance view Chinese name',
         '实例视图英文名': 'English name of the instance view',
-        '请输入实例视图英文名': 'Please enter the English name of the instance view'
+        '请输入实例视图英文名': 'Please enter the English name of the instance view',
+
+        '接入系统在权限中心的唯一标识，一般为接入系统的app_code': 'The unique identifier of the access system in the authorization center, generally the app_code of the access system',
+        '接入系统的中文名称': 'Chinese name of the access system',
+        '接入系统的英文文名称': 'English name of the access system',
+        '权限中心会通过该URL访问访问系统进行一些的交互': 'The permission center will access the system through the URL for some interaction',
+        '权限中心会通过该URL确认接入系统状态正常': 'The authorization center will confirm that the access system status is normal through the URL',
+        '接入系统的产品功能简要描述': 'Brief description of the product function of the access system',
+        '国际化版本会展示该信息': 'The internationalized version will show this information',
+
+        '操作的唯一标识': 'Unique identifier of the operation',
+        '仅使用建筑材料操作分类使用': 'Use only building materials to operate classified use',
+        '即操作展示名称，中文名称：名词+动词，如：服务器重启，脚本操作': 'Name of operation display, Chinese name: noun + verb, such as: server restart, script operation',
+        '国际化版本会展示该字段': 'The internationalized version will show this field',
+        '简要描述清楚操作的功能作用': 'Briefly describe clearly the functional role of the operation',
+        '资源类型的唯一标识': 'Unique identifier of resource type',
+        '资源类型的名称': 'The name of the resource type',
+        '权限中心会通过该接口拉取对应资源类型的实例数据': 'The permission center will pull instance data of the corresponding resource type through this interface',
+        '实例视图的唯一标识': 'The unique identifier of the instance view',
+        '什么是注册操作？': '什么是注册操作？',
+        '操作是接入系统要控制的某个场景功能，如 服务器重启、脚本执行、菜单查看等，一 个操作是最小的权限控制单元，操作应该是可枚举相对静态的，一个接入系统的操作 数量有可能随着系统功能模块的增加而增加，但一般不会随着时间的推移无限增长。': 'Operation is a certain scene function to be controlled by the access system, such as server restart, script execution, menu viewing, etc. An operation is the smallest authority control unit, and the operation should be enumerable and relatively static, and the number of operations for an access system It may increase with the increase of system function modules, but generally it will not increase indefinitely over time.',
+        /* eslint-disable no-dupe-keys */
+        '什么是资源类型？': 'What is the resource type?',
+        '资源类型是指操作所关联的对象，如服务器重启关联的对象是服务器、脚本编辑关联的 对象是脚本，服务器、脚本都是一种资源类型，一个操作可以不关联任何资源类型，也 可以关联一种或多种资源类型。': 'The resource type refers to the object associated with the operation. For example, the object associated with server restart is the server, and the object associated with script editing is the script. Servers and scripts are all types of resources. An operation may not be associated with any resource type, or it can be associated with one. One or more resource types.',
+        '什么是操作分组？': 'What is operation grouping?',
+        '操作分组可以让用户在申请权限时更方便的找到想要的操作。': 'Operation grouping allows users to more easily find the desired operation when applying for permissions.',
+        '什么是常用操作？': 'What are common operations?',
+        '常用操作可以让用户在申请权限时可以一次性选择某一类角色需要的操作。': 'Common operations allow users to select the operations required by a certain type of role at one time when applying for permissions.',
+        '什么是实例视图？': 'What is an instance view?',
+        '实例视图代表一种资源类型的实例数据获取途径，一种资源类型的实例视图可以有多种。': 'An instance view represents a way to obtain instance data of a resource type, and there can be multiple instance views of a resource type.'
     }
 }
 export default {

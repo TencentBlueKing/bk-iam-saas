@@ -13,8 +13,8 @@
                     <template>
                         <div id="container-pop">
                             <pop-content
-                                title="什么是操作分组？"
-                                desc="操作分组可以让用户在申请权限时更方便的找到想要的操作。"
+                                :title="$t(`m.access['什么是操作分组？']`)"
+                                :desc="$t(`m.access['操作分组可以让用户在申请权限时更方便的找到想要的操作。']`)"
                                 :image="operationGroupImage"
                             ></pop-content>
                         </div>
@@ -119,8 +119,8 @@
                     <template>
                         <div id="container-pop">
                             <pop-content
-                                title="什么是常用操作？"
-                                desc="常用操作可以让用户在申请权限时可以一次性选择某一类角色需要的操作。"
+                                :title="$t(`m.access['什么是常用操作？']`)"
+                                :desc="$t(`m.access['常用操作可以让用户在申请权限时可以一次性选择某一类角色需要的操作。']`)"
                                 :image="operationCommonImage"
                             ></pop-content>
                         </div>

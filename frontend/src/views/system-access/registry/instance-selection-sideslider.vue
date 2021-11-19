@@ -10,8 +10,8 @@
             <template>
                 <div id="container-pop">
                     <pop-content
-                        title="什么是实例视图？"
-                        desc="实例视图代表一种资源类型的实例数据获取途径，一种资源类型的实例视图可以有多种。"
+                        :title="$t(`m.access['什么是实例视图？']`)"
+                        :desc="$t(`m.access['实例视图代表一种资源类型的实例数据获取途径，一种资源类型的实例视图可以有多种。']`)"
                         :image="imageInfo"
                     ></pop-content>
                 </div>
@@ -54,7 +54,7 @@
                                 :model="item" form-type="vertical" :rules="rules"
                                 v-bkloading="{ isLoading: item.submitLoading, opacity: 1, color: '#f5f6fa' }">
                                 <iam-form-item :label="$t(`m.access['实例视图ID']`)" :property="'id'" required
-                                    desc="实例视图的唯一标识">
+                                    :desc="$t(`m.access['实例视图的唯一标识']`)">
                                     <bk-input :disabled="!item.isNewAdd" v-model="item.id"
                                         :placeholder="$t(`m.access['请输入实例视图ID']`)" />
                                 </iam-form-item>
