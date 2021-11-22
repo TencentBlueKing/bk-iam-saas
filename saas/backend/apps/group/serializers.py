@@ -203,7 +203,7 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
 
         # ResourceNameAutoUpdate
         updated_policies = GroupBiz().update_template_due_to_renamed_resource(
-            int(obj.data["subject_id"]), obj.data["template_id"], policy_list
+            int(obj.subject_id), obj.template_id, policy_list
         )
 
         return [p.dict() for p in updated_policies]

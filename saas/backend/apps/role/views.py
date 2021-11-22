@@ -284,7 +284,7 @@ class RoleAuthorizationScopeView(views.APIView):
         system_id = slz.validated_data["system_id"]
         # ResourceNameAutoUpdate
         scope_system = self.biz.get_auth_scope_bean_by_system(
-            request.role.id, system_id, auto_update_resource_name=True
+            request.role.id, system_id, should_auto_update_resource_name=True
         )
         data = [one.dict() for one in scope_system.actions] if scope_system else []
         return Response(data)
