@@ -45,7 +45,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     if not ok:
         message = "esb api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
         logger.error(message)
-        raise error_codes.REMOTE_REQUEST_ERROR.format(f'request esb api error: {data["message"]}')
+        raise error_codes.REMOTE_REQUEST_ERROR.format(f'request esb api error: {data["error"]}')
 
     code = data["code"]
     message = data["message"]
