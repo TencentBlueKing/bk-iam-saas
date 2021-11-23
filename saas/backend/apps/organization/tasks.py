@@ -32,7 +32,7 @@ logger = logging.getLogger("celery")
 
 
 @task(ignore_result=True)
-def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
+def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     try:
         # 分布式锁，避免同一时间该任务多个worker执行
         with cache.lock(SyncTaskLockKey.Full.value, timeout=10):  # type: ignore[attr-defined]
