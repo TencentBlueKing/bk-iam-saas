@@ -84,9 +84,11 @@ class ResourceProviderClient:
         self.resource_type_id = resource_type_id
         self.url = url
         self.request_id = local.request_id
+        self.request_username = local.request_username
         self.headers = {
             "Content-Type": "application/json",
             "Request-Id": self.request_id,
+            "Request-Username": self.request_username,  # 特殊参数，可能为空
             "Blueking-Language": get_bk_language(translation.get_language()),
         }
         self.http_auth = _generate_http_auth(auth_info)
@@ -110,11 +112,12 @@ class ResourceProviderClient:
         base_log_msg = SimpleLazyObject(
             lambda: (
                 "resource_provider [system={}, resource={}]; "
-                "API [request_id={}, url={}, data.method={}]; "
+                "API [request_username={}, request_id={}, url={}, data.method={}]; "
                 "Detail[{}]"
             ).format(
                 self.system_id,
                 self.resource_type_id,
+                self.request_username,
                 self.request_id,
                 self.url,
                 data["method"],
