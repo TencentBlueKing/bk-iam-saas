@@ -75,7 +75,7 @@ class Local(Singleton):
     def request_username(self) -> str:
         try:
             # celery后台，openAPI都可能没有user，需要判断
-            if self.request or hasattr(self.request, "user"):
+            if self.request and hasattr(self.request, "user"):
                 return self.request.user.username
         except Exception:  # pylint: disable=broad-except
             return ""
