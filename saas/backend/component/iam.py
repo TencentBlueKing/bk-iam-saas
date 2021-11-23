@@ -17,8 +17,8 @@ from backend.common.error_codes import error_codes
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
 from backend.util.cache import region
-from backend.util.url import url_join
 from backend.util.json import json_dumps
+from backend.util.url import url_join
 
 from .http import http_delete, http_get, http_post, http_put, logger
 from .util import execute_all_data_by_paging, list_all_data_by_paging

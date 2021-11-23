@@ -141,6 +141,19 @@ class TemplateService:
                 system_id, subject.type, subject.id, template_id, [p.to_backend_dict() for p in policies]
             )
 
+    def direct_update_db_template_auth(self, subject: Subject, template_id: int, policies: List[Policy]):
+        """
+        直接更新Subject的模板授权信息，这里只更新DB，不更新后台
+        一般用于更新name等，与鉴权无关的信息
+        """
+        authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, template_id)
+        with transaction.atomic():
+            authorized_template = PermTemplatePolicyAuthorized.objects.select_for_update().get(
+                id=authorized_template.id
+            )
+            authorized_template.data = {"actions": [p.dict() for p in policies]}
+            authorized_template.save(update_fields=["_data"])
+
     def _convert_template_actions_to_policy_list(self, actions: List[Dict]) -> PolicyList:
         """转换模板的授权的actions到PolicyList, 兼容过期时间为空的情况"""
         policies = []

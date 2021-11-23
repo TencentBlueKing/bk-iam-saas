@@ -32,18 +32,18 @@ logger = logging.getLogger("celery")
 
 
 @task(ignore_result=True)
-def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
+def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     try:
         # 分布式锁，避免同一时间该任务多个worker执行
         with cache.lock(SyncTaskLockKey.Full.value, timeout=10):  # type: ignore[attr-defined]
             # Note: 虽然拿到锁了，但是还是得确定没有正在运行的任务才可以（因为10秒后锁自动释放了）
-            if SyncRecord.objects.filter(type=SyncType.Full.value, status=SyncTaskStatus.Running.value).exists():
-                return
+            record = SyncRecord.objects.filter(type=SyncType.Full.value, status=SyncTaskStatus.Running.value).first()
+            if record is not None:
+                return record.id
             # 添加执行记录
             record = SyncRecord.objects.create(
                 executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Running.value
             )
-            record_id = record.id
 
     except Exception:  # pylint: disable=broad-except
         traceback_msg = traceback.format_exc()
@@ -54,7 +54,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
             executor=executor, type=SyncType.Full.value, status=SyncTaskStatus.Failed.value
         )
         SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
-        return
+        return record.id
     try:
         # 1. SaaS 从用户管理同步组织架构
         # 用户
@@ -101,9 +101,11 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR):
         traceback_msg = traceback.format_exc()
         logger.exception(exception_msg)
 
-    SyncRecord.objects.filter(id=record_id).update(status=sync_status, updated_time=timezone.now())
+    SyncRecord.objects.filter(id=record.id).update(status=sync_status, updated_time=timezone.now())
     if sync_status == SyncTaskStatus.Failed.value:
-        SyncErrorLog.objects.create_error_log(record_id, exception_msg, traceback_msg)
+        SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
+
+    return record.id
 
 
 @task(ignore_result=True)
