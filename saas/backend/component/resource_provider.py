@@ -110,8 +110,8 @@ class ResourceProviderClient:
 
         # 特殊场景下，给到请求时的用户名
         headers = self.headers.copy()
-        headers["Request-Username"] = ""
         if data["method"] in [ResourceAPIEnum.LIST_INSTANCE.value, ResourceAPIEnum.SEARCH_INSTANCE.value]:
+            # 值有可能未空，因为并非所有请求都是来自页面
             headers["Request-Username"] = self.request_username
 
         kwargs = {
