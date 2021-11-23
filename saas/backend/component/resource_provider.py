@@ -112,13 +112,13 @@ class ResourceProviderClient:
         base_log_msg = SimpleLazyObject(
             lambda: (
                 "resource_provider [system={}, resource={}]; "
-                "API [request_username={}, request_id={}, url={}, data.method={}]; "
+                "API [request_id={}, request_username={}, url={}, data.method={}]; "
                 "Detail[{}]"
             ).format(
                 self.system_id,
                 self.resource_type_id,
-                self.request_username,
                 self.request_id,
+                self.request_username,
                 self.url,
                 data["method"],
                 kwargs,
