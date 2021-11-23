@@ -33,8 +33,6 @@ class Command(BaseCommand):
         # 4. 异步任务 - 全量同步组织架构
         record_id = sync_organization("admin")
         # handle sync result
-        if record_id == 0:
-            raise Exception("get redis sync lock error")
         record = SyncRecord.objects.get(id=record_id)
         if record.status == SyncTaskStatus.Failed.value:
             raise Exception(json.dumps(record.detail))
