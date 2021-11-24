@@ -49,7 +49,7 @@ class PolicyOperationService:
                 self._create_db_policies(system_id, subject, create_policies)
 
             if update_policies:
-                self._update_db_policies(system_id, subject, update_policies)
+                self.update_db_policies(system_id, subject, update_policies)
 
             if delete_policy_ids:
                 self._delete_db_policies(system_id, subject, delete_policy_ids)
@@ -86,7 +86,7 @@ class PolicyOperationService:
         db_policies = [p.to_db_model(system_id, subject) for p in policies]
         PolicyModel.objects.bulk_create(db_policies, batch_size=100)
 
-    def _update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
+    def update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
         """
         更新已有的策略
         """

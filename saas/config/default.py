@@ -229,6 +229,7 @@ if IS_USE_CELERY:
     djcelery.setup_loader()
     CELERY_ENABLE_UTC = True
     CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
+    CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 
 # remove disabled apps
 if locals().get("DISABLED_APPS"):
