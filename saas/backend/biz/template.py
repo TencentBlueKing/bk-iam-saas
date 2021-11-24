@@ -42,6 +42,7 @@ from backend.service.action import ActionList, ActionService
 from backend.service.constants import RoleRelatedObjectType, SubjectType, TemplatePreUpdateStatus
 from backend.service.models import Action, ChainNode, Policy, Subject
 from backend.service.template import TemplateGroupPreCommit, TemplateService
+from backend.util.uuid import gen_uuid
 
 
 class TemplateCreateBean(BaseModel):
@@ -540,7 +541,8 @@ class TemplatePolicyCloneBiz:
         ]
         # TODO 确认是否需要填充resource_group_id
         return PolicyBean(
-            action_id=action.id, resource_groups=ResourceGroupBean(related_resource_types=related_resource_types)
+            action_id=action.id,
+            resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=related_resource_types)],
         )
 
     def gen_system_action_clone_config(

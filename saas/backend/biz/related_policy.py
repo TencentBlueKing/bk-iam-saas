@@ -95,7 +95,7 @@ class RelatedPolicyBiz:
                     return PolicyBean(
                         action_id=action.id,
                         expired_at=policy.expired_at,
-                        resource_groups=ResourceGroupBean(related_resource_types=[deepcopy(rrt)]),
+                        resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=[deepcopy(rrt)])],
                     )
 
                 # 遍历申请的操作的实例拓扑, 匹配依赖操作的实例视图
@@ -104,7 +104,7 @@ class RelatedPolicyBiz:
                     return PolicyBean(
                         action_id=action.id,
                         expired_at=policy.expired_at,
-                        resource_groups=ResourceGroupBean(related_resource_types=[new_rrt]),
+                        resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=[new_rrt])],
                     )
 
                 return None
@@ -116,7 +116,7 @@ class RelatedPolicyBiz:
         if new_rrt:
             return PolicyBean(
                 action_id=action.id,
-                resource_groups=ResourceGroupBean(related_resource_types=[new_rrt]),
+                resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=[new_rrt])],
                 expired_at=policy.expired_at,
             )
 

@@ -46,7 +46,7 @@ class AuthScopeAction(BaseModel):
             data["resource_groups"] = ResourceGroupList(
                 [
                     ResourceGroup(
-                        id="00000000000000000000000000000000",
+                        id="00000000000000000000000000000000",  # NOTE: 固定resource_group_id方便删除逻辑
                         related_resource_types=data.pop("related_resource_types"),
                     )
                 ]

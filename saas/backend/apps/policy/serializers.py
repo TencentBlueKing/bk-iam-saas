@@ -98,6 +98,15 @@ class ResourceGroupSLZ(serializers.Serializer):
     id = serializers.CharField(label="ID")
     related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
 
+    def validate(self, data):
+        """
+        自动填充resource_group_id
+        """
+        if not isinstance(data["id"], str) or not data["id"]:
+            data["id"] = gen_uuid()
+
+        return data
+
 
 class PolicySLZ(serializers.Serializer):
     type = serializers.CharField(label="操作类型")

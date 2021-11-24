@@ -46,8 +46,8 @@ from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
-from backend.util import uuid
 from backend.util.model import ExcludeModel, ListModel
+from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
 
@@ -550,6 +550,9 @@ class ResourceGroupBean(BaseModel):
         """
         填充默认为空的fields
         """
+        if self.id == "":
+            self.id = gen_uuid()
+
         for related_resource_type in self.related_resource_types:
             action_related_resource_type = action.get_related_resource_type(
                 related_resource_type.system_id, related_resource_type.type
@@ -557,10 +560,6 @@ class ResourceGroupBean(BaseModel):
             if not action_related_resource_type:
                 continue
             related_resource_type.fill_empty_fields(action_related_resource_type, resource_type_dict)
-
-    def fill_id(self):
-        if self.id == "":
-            self.id = uuid()
 
     def get_system_id_set(self) -> Set[str]:
         """
@@ -666,9 +665,6 @@ class ResourceGroupBeanList(ListModel):
             if original_rg is not None:
                 original_rg.add_related_resource_types(rg.related_resource_types)
             elif not self._has_related_resource_types(rg.related_resource_types):
-                # 这个时候合并进去的resource_group必须有完整的唯一id
-                # 落到数据库或者申请单中的策略id不能为空, 只有前端新增的可能为空
-                rg.fill_id()
                 self.__root__.append(rg)
 
     def has(self, resource_groups: "ResourceGroupBeanList") -> bool:
@@ -709,7 +705,7 @@ class ResourceGroupBeanList(ListModel):
         # 关联多个资源类型的操作
         del_resource_group_ids: Set[str] = set()
         for original_rg in self:
-            if resource_groups.has_related_resource_types(original_rg.related_resource_types):
+            if resource_groups._has_related_resource_types(original_rg.related_resource_types):
                 del_resource_group_ids.add(original_rg.id)
                 continue
 
@@ -759,6 +755,13 @@ class ResourceGroupBeanList(ListModel):
         这里是统计所有实例总数，Action关联多种资源类型是一起计算的
         """
         return sum([rg.count_all_type_instance() for rg in self])
+
+    def pop(self, id: str) -> Optional[ResourceGroupBean]:
+        rg = self.get(id)
+        if rg is None:
+            return rg
+        self.__root__ = [rg for rg in self if rg.id != id]
+        return rg
 
 
 class ResourceTypeInstanceCount(BaseModel):
@@ -847,7 +850,7 @@ class PolicyBean(Policy):
 
         return self.resource_groups.has(resource_group_list)
 
-    def remove_resource_group_list(self, resource_group_list: ResourceGroupBeanList):
+    def remove_resource_group_list(self, resource_group_list: ResourceGroupBeanList) -> "PolicyBean":
         """
         裁剪
         """
@@ -855,6 +858,7 @@ class PolicyBean(Policy):
             raise PolicyEmptyException
 
         self.resource_groups.remove(resource_group_list)
+        return self
 
     def list_path_node(self) -> List[PathNodeBean]:
         """查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点"""
@@ -873,12 +877,6 @@ class PolicyBean(Policy):
         if resource_group is None:
             return None
         return resource_group.get_related_resource_type(system_id, resource_type_id)
-
-    def set_related_resource_type(self, resource_group_id: str, resource_type: RelatedResourceBean):
-        resource_group = self.resource_groups.get(resource_group_id)
-        if resource_group is None:
-            return
-        resource_group.set_related_resource_type(resource_type)
 
     def delete_partial(self, resource_group_id: str):
         """
@@ -1324,7 +1322,12 @@ class PolicyOperationBiz:
 
         # 更新修改后的条件
         resource_type.condition = condition_list.conditions
-        policy.set_related_resource_type(resource_group_id, resource_type)
+        resource_group = policy.resource_groups.pop(resource_type_id)
+        resource_group.set_related_resource_type(resource_type)  # type: ignore
+
+        # 如果policy中其它的resource_group能包含删减后的resource_group, 则整体删除
+        policy.add_resource_group_list(ResourceGroupBeanList([resource_group]))
+
         self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy)])
 
         return policy

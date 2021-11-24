@@ -114,6 +114,7 @@ class Policy(BaseModel):
         # 兼容新老结构
         resource_groups = policy.resources
         if cls._is_old_structure(policy.resources):
+            # NOTE: 固定resource_group_id, 方便删除逻辑
             resource_groups = [
                 ResourceGroup(id="00000000000000000000000000000000", related_resource_types=policy.resources)
             ]

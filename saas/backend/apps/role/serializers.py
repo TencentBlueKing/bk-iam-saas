@@ -13,7 +13,7 @@ import time
 from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
-from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceSLZ, ResourceTypeSLZ
+from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleCommonAction, RoleUser
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
@@ -81,8 +81,7 @@ class RoleResourceTypeSLZ(ResourceTypeSLZ):
     condition = serializers.ListField(label="生效条件", child=RoleConditionSLZ(label="条件"), required=True)
 
 
-class RoleResourceGroupSLZ(serializers.Serializer):
-    id = serializers.CharField(label="ID")
+class RoleResourceGroupSLZ(ResourceGroupSLZ):
     related_resource_types = serializers.ListField(
         label="资源类型条件", child=RoleResourceTypeSLZ(label="资源类型"), required=True
     )
