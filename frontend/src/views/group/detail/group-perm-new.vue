@@ -145,6 +145,7 @@
                         item.templates = []
                     })
                     this.groupSystemList = res.data
+                    console.log('this.groupSystemList', this.groupSystemList)
                     this.groupSystemListLength = res.data.length
                 } catch (e) {
                     console.error(e)
@@ -277,6 +278,13 @@
                         id: this.groupId,
                         templateId: item.id
                     })
+                    res.data.actions.forEach(element => {
+                        element.resource_groups = [{
+                            id: 1,
+                            related_resource_types: element.related_resource_types
+                        }]
+                    })
+                    console.log('res.data.actions', res.data.actions)
                     const tableData = res.data.actions.map(row => new GroupPolicy(
                         { ...row, policy_id: 1 },
                         'detail',
@@ -313,6 +321,12 @@
                         systemId: item.system.id
                     })
 
+                    res.data.forEach(element => {
+                        element.resource_groups = [{
+                            id: 1,
+                            related_resource_types: element.related_resource_types
+                        }]
+                    })
                     const tableData = res.data.map(row => {
                         return new GroupPolicy(
                             row,
@@ -329,6 +343,8 @@
                     ))
                     this.$set(item, 'tableData', tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
+
+                    console.log('item123', item)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({

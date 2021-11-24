@@ -591,6 +591,8 @@
                     resource_type_id: resItem.type
                 }
                 const index = this.tableList.findIndex(item => item.id === data.id)
+                console.log('index', index)
+                console.log('resIndex', resIndex)
                 this.curIndex = index
                 this.curResIndex = resIndex
 
@@ -669,7 +671,8 @@
                 }
                 
                 payload.forEach(item => {
-                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
+                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        && sub.system_id === item.related_resource_types[0].system_id)
                     if (curIndex > -1) {
                         const curData = this.tableList[curIndex]
                         this.needEmitFlag = true

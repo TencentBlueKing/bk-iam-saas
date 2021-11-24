@@ -1062,6 +1062,8 @@
                     })
                     this.aggregationsBackup = _.cloneDeep(aggregations)
                     this.aggregations = aggregations
+
+                    console.log('this.originalCustomTmplList', this.originalCustomTmplList)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({

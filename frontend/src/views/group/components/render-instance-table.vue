@@ -35,16 +35,18 @@
                 <template slot-scope="{ row, $index }">
                     <template v-if="!isEdit">
                         <template v-if="!row.isEmpty">
-                            <p class="related-resource-item"
-                                v-for="item in row.related_resource_types"
-                                :key="item.type">
-                                <render-resource-popover
-                                    :key="item.type"
-                                    :data="item.condition"
-                                    :value="`${item.name}：${item.value}`"
-                                    :max-width="380"
-                                    @on-view="handleViewResource(row)" />
-                            </p>
+                            <div v-for="_ in row.resource_groups" :key="_.id">
+                                <p class="related-resource-item"
+                                    v-for="item in _.related_resource_types"
+                                    :key="item.type">
+                                    <render-resource-popover
+                                        :key="item.type"
+                                        :data="item.condition"
+                                        :value="`${item.name}：${item.value}`"
+                                        :max-width="380"
+                                        @on-view="handleViewResource(row)" />
+                                </p>
+                            </div>
                         </template>
                         <template v-else>
                             {{ $t(`m.common['无需关联实例']`) }}
@@ -481,18 +483,24 @@
             handleViewResource (payload) {
                 this.curId = payload.id
                 const params = []
-                if (payload.related_resource_types.length > 0) {
-                    payload.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
-                        params.push({
-                            name: type,
-                            label: `${name} ${this.$t(`m.common['实例']`)}`,
-                            tabType: 'resource',
-                            data: condition
-                        })
+                if (payload.resource_groups.length > 0) {
+                    payload.resource_groups.forEach(element => {
+                        if (element.related_resource_types.length > 0) {
+                            element.related_resource_types.forEach(item => {
+                                const { name, type, condition } = item
+                                params.push({
+                                    name: type,
+                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
+                                    tabType: 'resource',
+                                    data: condition
+                                })
+                            })
+                        }
                     })
                 }
+                
                 this.previewData = _.cloneDeep(params)
+                console.log('this.previewData', this.previewData)
                 this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
                 this.isShowSideslider = true
             },
@@ -729,6 +737,8 @@
             },
 
             showResourceInstance (data, index, resItem, resIndex) {
+                console.log('index', index)
+                console.log('resIndex', resIndex)
                 window.changeDialog = true
                 this.params = {
                     system_id: this.systemId,
