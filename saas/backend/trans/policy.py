@@ -25,6 +25,7 @@ from backend.biz.policy import (
     RelatedResourceBean,
 )
 from backend.common.error_codes import error_codes
+from backend.service.models.policy import ResourceGroup
 from backend.util.cache import region
 
 
@@ -66,10 +67,12 @@ class PolicyTrans:
         self, action: ActionBean, condition: ConditionBean, expired_at: int
     ) -> PolicyBean:
         """通过操作模型和选择里实例的Condition生成对应策略"""
-        policy = PolicyBean(action_id=action.id, related_resource_types=[], expired_at=expired_at)
+        policy = PolicyBean(
+            action_id=action.id, resource_groups=[ResourceGroup(related_resource_types=[])], expired_at=expired_at
+        )
         # 对于操作聚合来说，若操作包含多个资源类型，这些资源类型必须第一级一样，否则是不可能进行操作聚合的，所以它们的Condition可以直接赋值
         for rrt in action.related_resource_types:
-            policy.related_resource_types.append(
+            policy.resource_groups[0].related_resource_types.append(
                 RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
             )
         return policy

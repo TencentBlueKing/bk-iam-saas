@@ -101,9 +101,7 @@ class PolicyOperationService:
             update_policy = policy_list.get(p.action_id)
             if not update_policy:
                 continue
-            PolicyModel.objects.filter(id=p.id).update(
-                _resources=json_dumps([rt.dict() for rt in update_policy.related_resource_types])
-            )
+            PolicyModel.objects.filter(id=p.id).update(_resources=json_dumps(update_policy.resource_groups.dict()))
 
     def _delete_db_policies(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """

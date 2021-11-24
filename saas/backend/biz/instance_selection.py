@@ -69,7 +69,11 @@ class InstanceSelectionList:
         """
         获取所有视图节点的system_id
         """
-        return list(set.union(*[selection.get_chain_system_set() for selection in self.selections]))
+        return list(
+            set.union(*[selection.get_chain_system_set() for selection in self.selections])
+            if self.selections
+            else set()
+        )
 
     def fill_chain_node_name(self):
         """

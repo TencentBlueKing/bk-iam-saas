@@ -600,6 +600,7 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
         group = self.get_object()
 
         action_id = data["action_id"]
+        resource_group_id = data["resource_group_id"]
         related_resource_type = data["related_resource_type"]
 
         new_condition = parse_obj_as(List[ConditionTagBean], related_resource_type["condition"])
@@ -614,7 +615,7 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
             if policy.action_id == action_id:
                 # 操作操作中对应于资源类型的操作
                 related_resource_type = policy.get_related_resource_type(
-                    related_resource_type["system_id"], related_resource_type["type"]
+                    resource_group_id, related_resource_type["system_id"], related_resource_type["type"]
                 )
                 old_condition = related_resource_type.condition if related_resource_type else []
 
@@ -656,6 +657,7 @@ class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
             subject,
             data["policy_id"],
+            data["resource_group_id"],
             related_resource_type["system_id"],
             related_resource_type["type"],
         )

@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import Any, List
+
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
@@ -30,3 +32,20 @@ class ExcludeModel(BaseModel, metaclass=ExcludeModelMetaclass):
     """
 
     pass
+
+
+class ListModel(BaseModel):
+    """
+    用于包装typing List, 不需要额外的结构来支持ModelList
+    """
+
+    __root__: List[Any]
+
+    def __iter__(self):
+        return iter(self.__root__)
+
+    def __getitem__(self, item):
+        return self.__root__[item]
+
+    def __len__(self):
+        return len(self.__root__)

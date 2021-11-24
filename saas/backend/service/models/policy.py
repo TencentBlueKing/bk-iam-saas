@@ -8,12 +8,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.service.utils.translate import ResourceExpressionTranslator
+from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
 
 from .subject import Subject
@@ -80,22 +81,48 @@ class RelatedResource(BaseModel):
     condition: List[Condition]
 
 
+class ResourceGroup(BaseModel):
+    id: str = ""
+    related_resource_types: List[RelatedResource]
+
+
+class ResourceGroupList(ListModel):
+    __root__: List[ResourceGroup]
+
+
 class Policy(BaseModel):
     action_id: str = Field(alias="id")
-    related_resource_types: List[RelatedResource]
     policy_id: int
     expired_at: int
+    resource_groups: ResourceGroupList
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
+    @staticmethod
+    def _is_old_structure(resources: List[Dict[str, Any]]) -> bool:
+        """
+        是否是老的policy结构
+        """
+        for r in resources:
+            if "condition" in r and "system_id" in r and "type" in r:
+                return True
+        return False
+
     @classmethod
     def from_db_model(cls, policy: PolicyModel, expired_at: int) -> "Policy":
+        # 兼容新老结构
+        resource_groups = policy.resources
+        if cls._is_old_structure(policy.resources):
+            resource_groups = [
+                ResourceGroup(id="00000000000000000000000000000000", related_resource_types=policy.resources)
+            ]
+
         return cls(
             action_id=policy.action_id,
-            related_resource_types=policy.resources,
             policy_id=policy.policy_id,
             expired_at=expired_at,
+            resource_groups=ResourceGroupList(resource_groups),
         )
 
     def to_db_model(self, system_id: str, subject: Subject) -> PolicyModel:
@@ -106,14 +133,14 @@ class Policy(BaseModel):
             action_type="",
             action_id=self.action_id,
         )
-        p.resources = [rt.dict() for rt in self.related_resource_types]
+        p.resources = self.resource_groups.dict()
         return p
 
     def to_backend_dict(self):
         translator = ResourceExpressionTranslator()
         return {
             "action_id": self.action_id,
-            "resource_expression": translator.translate([rt.dict() for rt in self.related_resource_types]),
+            "resource_expression": translator.translate(self.resource_groups.dict()),
             "environment": "{}",
             "expired_at": self.expired_at,
             "id": self.policy_id,

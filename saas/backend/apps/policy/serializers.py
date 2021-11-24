@@ -11,7 +11,6 @@ specific language governing permissions and limitations under the License.
 from django.conf import settings
 from rest_framework import serializers
 
-from backend.apps.policy.models import Policy
 from backend.common.serializers import BaseAction
 from backend.common.time import PERMANENT_SECONDS
 from backend.util.uuid import gen_uuid
@@ -95,6 +94,11 @@ class ResourceTypeSLZ(serializers.Serializer):
         return data
 
 
+class ResourceGroupSLZ(serializers.Serializer):
+    id = serializers.CharField(label="ID")
+    related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
+
+
 class PolicySLZ(serializers.Serializer):
     type = serializers.CharField(label="操作类型")
     id = serializers.CharField(label="操作ID")
@@ -102,21 +106,9 @@ class PolicySLZ(serializers.Serializer):
     policy_id = serializers.IntegerField(label="策略ID")
     name = serializers.CharField(label="操作名称", allow_blank=True)
     description = serializers.CharField(label="操作描述")
-    related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     expired_display = serializers.CharField()
-
-
-class PolicyModelSLZ(serializers.ModelSerializer):
-    type = serializers.CharField(source="action_type", read_only=True)
-    id = serializers.CharField(source="action_id", read_only=True)
-    name = serializers.CharField(source="action_name", read_only=True)
-    description = serializers.CharField(source="action_description", read_only=True)
-    related_resource_types = serializers.ReadOnlyField(source="resources")
-
-    class Meta:
-        model = Policy
-        fields = ("policy_id", "type", "id", "name", "description", "related_resource_types", "environment")
+    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"), required=True)
 
 
 class PolicySystemSLZ(serializers.Serializer):
@@ -147,6 +139,7 @@ class ConditionDeleteSLZ(serializers.Serializer):
 
 class PolicyPartDeleteSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="资源类型系统ID", required=True)
+    resource_group_id = serializers.CharField(label="资源条件组ID", required=True)
     type = serializers.CharField(label="资源类型", required=True)
     ids = serializers.ListField(
         label="整体删除的条件ID", child=serializers.CharField(label="ConditionID"), required=True, allow_empty=True
@@ -177,7 +170,7 @@ class PolicyExpireSoonSLZ(serializers.Serializer):
 class BasePolicyActionSLZ(serializers.Serializer):
     id = serializers.CharField(label="操作ID", required=True)
     type = serializers.CharField(label="操作类型", required=True, allow_blank=True)
-    related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
+    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"), required=True)
 
 
 class PolicyActionSLZ(BasePolicyActionSLZ):

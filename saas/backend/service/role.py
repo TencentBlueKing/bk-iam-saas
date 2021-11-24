@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import logging
-from typing import List
+from typing import Any, List
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -31,14 +31,28 @@ from backend.component import iam
 from backend.util.json import json_dumps
 
 from .constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
-from .models import RelatedResource, Subject
+from .models import ResourceGroup, ResourceGroupList, Subject
 
 logger = logging.getLogger("app")
 
 
 class AuthScopeAction(BaseModel):
     id: str
-    related_resource_types: List[RelatedResource]
+    resource_groups: ResourceGroupList
+
+    def __init__(self, **data: Any):
+        # NOTE 兼容 role, group授权信息的旧版结构
+        if "resource_groups" not in data and "related_resource_types" in data:
+            data["resource_groups"] = ResourceGroupList(
+                [
+                    ResourceGroup(
+                        id="00000000000000000000000000000000",
+                        related_resource_types=data.pop("related_resource_types"),
+                    )
+                ]
+            )
+
+        super().__init__(**data)
 
 
 class AuthScopeSystem(BaseModel):

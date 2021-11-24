@@ -88,6 +88,7 @@ class ConditionCompareSLZ(serializers.Serializer):
     """
 
     policy_id = serializers.IntegerField(label="策略ID")
+    resource_group_id = serializers.CharField(label="资源条件组ID", required=True)
     related_resource_type = ResourceTypeSLZ(label="资源类型")
 
 

@@ -21,6 +21,7 @@ from backend.biz.policy import (
     RelatedResourceBean,
 )
 from backend.service.models import Attribute, Value
+from backend.service.models.policy import ResourceGroup
 from backend.service.utils.translate import translate_path
 
 from .constants import ConditionTag
@@ -220,7 +221,7 @@ class RelatedResourceTagBean(RelatedResourceBean):
             c.set_tag(tag)
 
 
-class PolicyTagBean(TagNoneMixin, PolicyBean):
+class ResourceGroupTagBean(TagNoneMixin, ResourceGroup):
     related_resource_types: List[RelatedResourceTagBean]
     tag: str = ""
 
@@ -228,6 +229,16 @@ class PolicyTagBean(TagNoneMixin, PolicyBean):
         self.tag = tag
         for rt in self.related_resource_types:
             rt.set_tag(tag)
+
+
+class PolicyTagBean(TagNoneMixin, PolicyBean):
+    resource_groups: List[ResourceGroupTagBean]
+    tag: str = ""
+
+    def set_tag(self, tag: str):
+        self.tag = tag
+        for rg in self.resource_groups:
+            rg.set_tag(tag)
 
 
 class PolicyTagBeanList(PolicyBeanList):

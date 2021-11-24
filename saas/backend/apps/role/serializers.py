@@ -81,11 +81,16 @@ class RoleResourceTypeSLZ(ResourceTypeSLZ):
     condition = serializers.ListField(label="生效条件", child=RoleConditionSLZ(label="条件"), required=True)
 
 
-class GradeManagerActionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="操作ID", required=True)
+class RoleResourceGroupSLZ(serializers.Serializer):
+    id = serializers.CharField(label="ID")
     related_resource_types = serializers.ListField(
         label="资源类型条件", child=RoleResourceTypeSLZ(label="资源类型"), required=True
     )
+
+
+class GradeManagerActionSLZ(serializers.Serializer):
+    id = serializers.CharField(label="操作ID", required=True)
+    resource_groups = serializers.ListField(label="资源条件组", child=RoleResourceGroupSLZ(label="资源条件组"), required=True)
 
 
 class RoleScopeAuthorizationSLZ(serializers.Serializer):

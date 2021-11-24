@@ -17,6 +17,7 @@ from backend.biz.policy import (
     PathNodeBeanList,
     PolicyBean,
     RelatedResourceBean,
+    ResourceGroupBean,
     group_paths,
 )
 from backend.service.action import ActionService
@@ -81,19 +82,20 @@ class RelatedPolicyBiz:
             return PolicyBean(action_id=action.id, related_resource_types=[], expired_at=policy.expired_at)
 
         # 申请的操作不关联资源类型, 依赖操作关联了资源类型, 不产生依赖操作权限
-        if len(policy.related_resource_types) == 0:
+        if len(policy.resource_groups) == 0:
             return None
 
         # 申请操作关联的资源类型与依赖操作关联的资源类型相同
         action_rrt = action.related_resource_types[0]
-        for rrt in policy.related_resource_types:
+        # NOTE: 对于只关联一种资源类型的操作, 这里默认只有一组resource_group
+        for rrt in policy.resource_groups[0].related_resource_types:
             if rrt.type == action_rrt.id and rrt.system_id == action_rrt.system_id:
                 # 如果申请操作时任意, 创建任意的依赖操作
                 if len(rrt.condition) == 0:
                     return PolicyBean(
                         action_id=action.id,
-                        related_resource_types=[deepcopy(rrt)],
                         expired_at=policy.expired_at,
+                        resource_groups=ResourceGroupBean(related_resource_types=[deepcopy(rrt)]),
                     )
 
                 # 遍历申请的操作的实例拓扑, 匹配依赖操作的实例视图
@@ -101,16 +103,22 @@ class RelatedPolicyBiz:
                 if new_rrt:
                     return PolicyBean(
                         action_id=action.id,
-                        related_resource_types=[new_rrt],
                         expired_at=policy.expired_at,
+                        resource_groups=ResourceGroupBean(related_resource_types=[new_rrt]),
                     )
 
                 return None
 
         # 申请操作关联的资源类型与依赖操作关联的资源类型不同
-        new_rrt = self._filter_condition_of_different_type(policy.related_resource_types, action_rrt)
+        new_rrt = self._filter_condition_of_different_type(
+            policy.resource_groups[0].related_resource_types, action_rrt
+        )
         if new_rrt:
-            return PolicyBean(action_id=action.id, related_resource_types=[new_rrt], expired_at=policy.expired_at)
+            return PolicyBean(
+                action_id=action.id,
+                resource_groups=ResourceGroupBean(related_resource_types=[new_rrt]),
+                expired_at=policy.expired_at,
+            )
 
         return None
 
