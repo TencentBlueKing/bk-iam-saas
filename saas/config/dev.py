@@ -62,8 +62,8 @@ APP_TOKEN = ""
 # 蓝鲸智云开发者中心的域名，形如：http://paas.bking.com
 BK_PAAS_HOST = ""
 
-APP_ID = os.environ.get("APP_ID", APP_ID)
-APP_TOKEN = os.environ.get("APP_TOKEN", APP_TOKEN)
+APP_ID = BK_APP_CODE = os.environ.get("APP_ID", APP_ID)
+APP_TOKEN = BK_APP_SECRET = os.environ.get("APP_TOKEN", APP_TOKEN)
 BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST", BK_PAAS_HOST)
 BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS_INNER_HOST", BK_PAAS_HOST)
 BK_IAM_HOST = ""

@@ -1,0 +1,42 @@
+### 新增 system
+
+注意:
+
+- 一个 app_code 只能创建一个 system, 且 system_id 必须等于 app_code; 如果不符合要求, 接口返回 `1901400 bad request:system_id should be the app_code!`
+- 创建 system 时如果没有把自己加入 clients, 会自动将当前发起`新增system`的 app_code 加入`clients`
+
+-------
+
+{% include '_api_v1_model_system.md.j2' %}
+
+-------
+
+#### Request
+
+```json
+{
+    "id": "bk_cmdb",
+    "name": "配置平台",
+    "name_en": "CMDB",
+    "description": "配置平台是一个...",
+    "description_en": "CMDB is a...",
+    "clients": "bk_cmdb,cmdb",
+    "provider_config": {
+        "host": "http://cmdb.service.consul",
+        "auth": "basic",
+        "healthz": "/api/v1/healthz"
+    }
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {
+        "id": "bk_cmdb"
+    }
+}
+```
