@@ -171,7 +171,7 @@
                             <div class="organization-content" v-if="isDepartSelectedEmpty">
                                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                                     <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" :title="item.name">{{ item.name }}</span><span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                                    <span class="organization-name" :title="item.fullName">{{ item.name }}</span><span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
                                     <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                                 </div>
                             </div>

@@ -200,7 +200,13 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
         policy_list = PolicyBeanList(
             obj.system_id, parse_obj_as(List[PolicyBean], obj.data["actions"]), need_fill_empty_fields=True
         )
-        return [p.dict() for p in policy_list.policies]
+
+        # ResourceNameAutoUpdate
+        updated_policies = GroupBiz().update_template_due_to_renamed_resource(
+            int(obj.subject_id), obj.template_id, policy_list
+        )
+
+        return [p.dict() for p in updated_policies]
 
 
 class GroupTemplateDetailSchemaSLZ(GroupTemplateDetailSLZ):

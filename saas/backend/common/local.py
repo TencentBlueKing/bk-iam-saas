@@ -71,6 +71,17 @@ class Local(Singleton):
         # 最后主动生成一个
         return new_request_id()
 
+    @property
+    def request_username(self) -> str:
+        try:
+            # celery后台，openAPI都可能没有user，需要判断
+            if self.request and hasattr(self.request, "user"):
+                return self.request.user.username
+        except Exception:  # pylint: disable=broad-except
+            return ""
+
+        return ""
+
     def release(self):
         release_local(_local)
 

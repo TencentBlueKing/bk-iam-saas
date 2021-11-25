@@ -241,6 +241,24 @@ class GroupBiz:
                 subject, template_id, parse_obj_as(List[Policy], policy_list.policies)
             )
 
+    def update_template_due_to_renamed_resource(
+        self, group_id: int, template_id: int, policy_list: PolicyBeanList
+    ) -> List[PolicyBean]:
+        """
+        更新用户组被授权模板里的资源实例名称
+        返回的数据包括完全的模板授权信息，包括未被更新的授权策略
+        """
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+
+        updated_policies = policy_list.auto_update_resource_name()
+        # 只有存在更新，才修改DB数据
+        if len(updated_policies) > 0:
+            # 只修改DB数据，由于权限模板授权信息是完整一个json数据，所以只能使用policy_list.policies完整更新，不可使用updated_policies
+            self.template_svc.direct_update_db_template_auth(subject, template_id, policy_list.policies)
+
+        # 返回完整的模板授权信息，包括未被更新资源实例名称的策略
+        return policy_list.policies
+
     def _convert_to_subject_group_beans(self, relations: List[SubjectGroup]) -> List[SubjectGroupBean]:
         """
         转换类型

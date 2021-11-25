@@ -127,7 +127,10 @@ class SubjectPolicyViewSet(GenericViewSet):
 
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
-        return Response([p.dict() for p in policies])
+        # ResourceNameAutoUpdate
+        updated_policies = self.policy_operation_biz.update_due_to_renamed_resource(system_id, subject, policies)
+
+        return Response([p.dict() for p in updated_policies])
 
     @swagger_auto_schema(
         operation_description="删除权限",

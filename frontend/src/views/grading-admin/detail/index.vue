@@ -135,7 +135,8 @@
                     if (item.type === 'department') {
                         departments.push({
                             name: item.name,
-                            count: item.member_count
+                            count: item.member_count,
+                            fullName: item.full_name
                         })
                     }
                     if (item.type === 'user') {
