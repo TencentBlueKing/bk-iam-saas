@@ -70,7 +70,7 @@ class ResourceExpressionTranslator:
         ]
         """
         content = [self._translate_related_resource_types(r["related_resource_types"]) for r in resources]
-        if len(content) == 0:
+        if len(content) == 1:
             expression = content[0]
         else:
             expression = {"OR": {"content": content}}
@@ -82,7 +82,7 @@ class ResourceExpressionTranslator:
         转换一个resource_group中的条件
         """
         content = [self._translate_condition(r) for r in related_resource_types]
-        if len(content) == 0:
+        if len(content) == 1:
             return content[0]
 
         return {"AND": {"content": content}}
