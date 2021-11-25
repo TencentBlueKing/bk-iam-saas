@@ -664,6 +664,18 @@ class ResourceGroupBean(BaseModel):
                 continue
             rrt.check_selection(resource_type.instance_selections, ignore_path)
 
+    def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
+        """
+        更新资源实例名称
+        """
+        is_changed = False
+        for rrt in self.related_resource_types:
+            # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
+            if rrt.update_resource_name(renamed_resources):
+                is_changed = True
+
+        return is_changed
+
 
 class ResourceGroupBeanList(ListModel):
     __root__: List[ResourceGroupBean]
@@ -937,9 +949,9 @@ class PolicyBean(Policy):
         更新资源实例名称
         """
         is_changed = False
-        for rrt in self.related_resource_types:
+        for rg in self.resource_groups:
             # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
-            if rrt.update_resource_name(renamed_resources):
+            if rg.update_resource_name(renamed_resources):
                 is_changed = True
 
         return is_changed
