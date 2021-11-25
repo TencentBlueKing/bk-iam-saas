@@ -226,7 +226,13 @@ class ActionColumnValue(BaseModel):
 
     @classmethod
     def from_policy(cls, policy: ApplicationPolicyInfo):
-        related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(policy.related_resource_types)
+        if len(policy.resource_groups) == 0:
+            return cls(value=[BaseDictStrValue(value="无需关联实例")])
+
+        # NOTE: 当前默认只有一组
+        related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(
+            policy.resource_groups[0].related_resource_types
+        )
         return cls(
             action=BaseDictStrValue(value=policy.name),
             related_resource_types=related_resource_types,
@@ -256,7 +262,13 @@ class GroupActionColumnValue(BaseModel):
 
     @classmethod
     def from_policy(cls, policy: ApplicationPolicyInfo):
-        related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(policy.related_resource_types)
+        if len(policy.resource_groups) == 0:
+            return cls(value=[BaseDictStrValue(value="无需关联实例")])
+
+        # NOTE: 当前默认只有一组
+        related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(
+            policy.resource_groups[0].related_resource_types
+        )
         return cls(action=BaseDictStrValue(value=policy.name), related_resource_types=related_resource_types)
 
 
@@ -325,7 +337,13 @@ class AuthScopeActionColumnValue(BaseModel):
 
     @classmethod
     def from_policy(cls, policy: ApplicationPolicyInfo):
-        related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(policy.related_resource_types)
+        if len(policy.resource_groups) == 0:
+            return cls(value=[BaseDictStrValue(value="无需关联实例")])
+
+        # NOTE: 当前默认只有一组
+        related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(
+            policy.resource_groups[0].related_resource_types
+        )
         return cls(action=BaseDictStrValue(value=policy.name), related_resource_types=related_resource_types)
 
 

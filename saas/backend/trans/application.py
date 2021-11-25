@@ -100,39 +100,42 @@ class ApplicationDataTrans:
                 {
                     id,
                     type,
-                    related_resource_types: [
-                        {
-                            system_id,
-                            type,
-                            condition: [
-                                {
-                                    id,
-                                    instances: [
-                                        {
-                                            type,
-                                            name,
-                                            path: [
-                                                [
-                                                    {system_id, type, type_name, id, name},
+                    resource_groups: {
+                        id,
+                        related_resource_types: [
+                            {
+                                system_id,
+                                type,
+                                condition: [
+                                    {
+                                        id,
+                                        instances: [
+                                            {
+                                                type,
+                                                name,
+                                                path: [
+                                                    [
+                                                        {system_id, type, type_name, id, name},
+                                                        ...
+                                                    ]
+                                                ]
+                                            }
+                                        ]
+                                        attributes: [
+                                            {
+                                                id,
+                                                name,
+                                                values: [
+                                                    {id, name},
                                                     ...
                                                 ]
-                                            ]
-                                        }
-                                    ]
-                                    attributes: [
-                                        {
-                                            id,
-                                            name,
-                                            values: [
-                                                {id, name},
-                                                ...
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
                     policy_id,
                     expired_at
                 }

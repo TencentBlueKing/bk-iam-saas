@@ -17,8 +17,17 @@ from pydantic import BaseModel
 from backend.biz.resource import ResourceBiz, ResourceNodeAttributeDictBean, ResourceNodeBean
 from backend.service.constants import ANY_ID
 from backend.service.models.approval import ApprovalProcessWithNodeProcessor
+from backend.util.uuid import gen_uuid
 
-from .policy import ConditionBean, InstanceBean, PolicyBean, PolicyEmptyException, RelatedResourceBean
+from .policy import (
+    ConditionBean,
+    InstanceBean,
+    PolicyBean,
+    PolicyEmptyException,
+    RelatedResourceBean,
+    ResourceGroupBean,
+    ResourceGroupBeanList,
+)
 
 
 class PolicyProcess(BaseModel):
@@ -92,12 +101,15 @@ class InstanceAproverHandler(PolicyProcessHandler):
         """
         通过实例审批人信息, 分离policy_process为独立的实例policy
         """
-        if len(policy_process.policy.related_resource_types) != 1:
+        if (
+            len(policy_process.policy.resource_groups) == 0
+            or len(policy_process.policy.resource_groups[0].related_resource_types) != 1
+        ):
             return [policy_process]
 
         policy = policy_process.policy
         process = policy_process.process
-        rrt = policy.related_resource_types[0]
+        rrt = policy_process.policy.resource_groups[0].related_resource_types[0]
 
         policy_process_list: List[PolicyProcess] = []
         for condition in rrt.condition:
@@ -146,18 +158,25 @@ class InstanceAproverHandler(PolicyProcessHandler):
     def _copy_policy_by_instance_path(self, policy, rrt, instance, path):
         # 复制出单实例的policy
         copied_policy = PolicyBean(
-            related_resource_types=[
-                RelatedResourceBean(
-                    condition=[
-                        ConditionBean(
-                            attributes=[],
-                            instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
-                        )
-                    ],
-                    **rrt.dict(exclude={"condition"}),
-                )
-            ],
-            **policy.dict(exclude={"related_resource_types"}),
+            resource_groups=ResourceGroupBeanList(
+                [
+                    ResourceGroupBean(
+                        id=gen_uuid(),
+                        related_resource_types=[
+                            RelatedResourceBean(
+                                condition=[
+                                    ConditionBean(
+                                        attributes=[],
+                                        instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
+                                    )
+                                ],
+                                **rrt.dict(exclude={"condition"}),
+                            )
+                        ],
+                    )
+                ]
+            ),
+            **policy.dict(exclude={"resource_groups"}),
         )
         return copied_policy
 
@@ -166,10 +185,10 @@ class InstanceAproverHandler(PolicyProcessHandler):
         # 需要查询资源实例审批人的节点集合
         resource_node_set = set()
         # 只支持关联1个资源类型的操作查询资源审批人
-        if len(policy.related_resource_types) != 1:
+        if len(policy.resource_groups) == 0 or len(policy.resource_groups[0].related_resource_types) != 1:
             return []
 
-        rrt = policy.related_resource_types[0]
+        rrt = policy.resource_groups[0].related_resource_types[0]
         for path in rrt.iter_path_list(ignore_attribute=True):
             last_node = path.nodes[-1]
             if last_node.id == ANY_ID:

@@ -109,11 +109,16 @@ class ApplicationRelatedResource(BaseModel):
     name_en: str = ""
 
 
+class ApplicationResourceGroup(BaseModel):
+    id: str
+    related_resource_types: List[ApplicationRelatedResource]
+
+
 class ApplicationPolicyInfo(BaseModel):
     """申请内容里的策略"""
 
     action_id: str = Field(alias="id")
-    related_resource_types: List[ApplicationRelatedResource]
+    resource_groups: List[ApplicationResourceGroup]
     expired_at: int = 0
     expired_display: str = ""
     # Action名称

@@ -333,7 +333,7 @@ class ApplicationBiz:
             )
             new_data_list.append((application_data, process))
 
-        # 7. 循环创建申请单
+        # 8. 循环创建申请单
         applications = []
         for _data, _process in new_data_list:
             application = self.svc.create_for_policy(_data, _process)
