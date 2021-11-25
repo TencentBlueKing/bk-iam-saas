@@ -517,13 +517,13 @@ class TestPolicyBean:
         policy_bean.fill_empty_fields(action, resource_type_dict)
         assert policy_bean.name == "action_name"
         assert policy_bean.name_en == "action_name_en"
-        assert policy_bean.related_resource_types[0].name == "name_test"
+        assert policy_bean.resource_groups[0].related_resource_types[0].name == "name_test"
 
     def test_get_system_id_set(self, policy_bean: PolicyBean):
         assert policy_bean.get_system_id_set() == {"system_id"}
 
     def test_get_related_resource_type(self, policy_bean: PolicyBean):
-        assert policy_bean.get_related_resource_type("system_id", "type")
+        assert policy_bean.get_related_resource_type("00000000000000000000000000000000", "system_id", "type")
 
     def test_set_expired_at(self, policy_bean: PolicyBean):
         policy_bean.set_expired_at(PERMANENT_SECONDS)
@@ -531,33 +531,41 @@ class TestPolicyBean:
         assert policy_bean.expired_display == expired_at_display(PERMANENT_SECONDS)
 
     def test_is_unrelated(self, policy_bean: PolicyBean):
-        assert not policy_bean.is_unrelated()
+        assert not policy_bean.resource_groups.is_unrelated()
 
     def test_set_related_resource_type(self, policy_bean: PolicyBean, related_resource_bean: RelatedResourceBean):
         related_resource_bean.condition = []
-        policy_bean.set_related_resource_type(related_resource_bean)
-        assert len(policy_bean.related_resource_types[0].condition) == 0
+        policy_bean.resource_groups[0].set_related_resource_type(related_resource_bean)
+        assert len(policy_bean.resource_groups[0].related_resource_types[0].condition) == 0
 
     def test_add_related_resource_types(self, policy_bean: PolicyBean, related_resource_bean: RelatedResourceBean):
         related_resource_bean.condition[0].instances[0].path[0][-1].id = "id2"
-        policy_bean.add_related_resource_types([related_resource_bean])
-        assert len(policy_bean.related_resource_types[0].condition[0].instances[0].path) == 2
+        policy_bean.resource_groups[0].add_related_resource_types([related_resource_bean])
+        assert len(policy_bean.resource_groups[0].related_resource_types[0].condition[0].instances[0].path) == 2
 
     def test_has_related_resource_types(self, policy_bean: PolicyBean):
-        assert policy_bean.has_related_resource_types(policy_bean.related_resource_types)
-        policy_bean.related_resource_types = []
-        assert policy_bean.has_related_resource_types(policy_bean.related_resource_types)
+        assert policy_bean.resource_groups[0].has_related_resource_types(
+            policy_bean.resource_groups[0].related_resource_types
+        )
+        policy_bean.resource_groups[0].related_resource_types = []
+        assert policy_bean.resource_groups[0].has_related_resource_types(
+            policy_bean.resource_groups[0].related_resource_types
+        )
 
     def test_remove_related_resource_types(self, policy_bean: PolicyBean):
         try:
-            policy_bean.remove_related_resource_types(policy_bean.related_resource_types)
+            policy_bean.resource_groups[0].remove_related_resource_types(
+                policy_bean.resource_groups[0].related_resource_types
+            )
             assert False
         except PolicyEmptyException:
             assert True
 
-        policy_bean.related_resource_types = []
+        policy_bean.resource_groups[0].related_resource_types = []
         try:
-            policy_bean.remove_related_resource_types(policy_bean.related_resource_types)
+            policy_bean.resource_groups[0].remove_related_resource_types(
+                policy_bean.resource_groups[0].related_resource_types
+            )
             assert False
         except PolicyEmptyException:
             assert True
@@ -592,11 +600,13 @@ class TestPolicyBeanList:
         assert len(up.policies) == 0
 
         new_policy_list = deepcopy(policy_bean_list)
-        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id = "id2"
+        new_policy_list.policies[0].resource_groups[0].related_resource_types[0].condition[0].instances[0].path[0][
+            -1
+        ].id = "id2"
         cp, up = policy_bean_list.split_to_creation_and_update_for_grant(new_policy_list)
         assert len(cp.policies) == 0
         assert len(up.policies) == 1
-        assert len(up.policies[0].related_resource_types[0].condition[0].instances[0].path) == 2
+        assert len(up.policies[0].resource_groups[0].related_resource_types[0].condition[0].instances[0].path) == 2
 
         new_policy_list = deepcopy(policy_bean_list)
         new_policy_list.policies[0].set_expired_at(123)
@@ -610,21 +620,35 @@ class TestPolicyBeanList:
         assert len(du.policies) == 1
 
         new_policy_list = deepcopy(policy_bean_list)
-        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id = "id2"
+        new_policy_list.policies[0].resource_groups[0].related_resource_types[0].condition[0].instances[0].path[0][
+            -1
+        ].id = "id2"
         up, du = new_policy_list.split_to_update_and_delete_for_revoke(policy_bean_list)
         assert len(up.policies) == 1
         assert len(du.policies) == 0
 
-        new_policy_list.policies[0].related_resource_types = []
+        new_policy_list.policies[0].resource_groups[0].related_resource_types = []
         up, du = new_policy_list.split_to_update_and_delete_for_revoke(new_policy_list)
         assert len(up.policies) == 0
         assert len(du.policies) == 1
 
     def test_add(self, policy_bean_list: PolicyBeanList):
         new_policy_list = deepcopy(policy_bean_list)
-        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id = "id2"
+        new_policy_list.policies[0].resource_groups[0].related_resource_types[0].condition[0].instances[0].path[0][
+            -1
+        ].id = "id2"
         policy_bean_list.add(new_policy_list)
-        assert len(policy_bean_list.policies[0].related_resource_types[0].condition[0].instances[0].path) == 2
+        assert (
+            len(
+                policy_bean_list.policies[0]
+                .resource_groups[0]
+                .related_resource_types[0]
+                .condition[0]
+                .instances[0]
+                .path
+            )
+            == 2
+        )
 
     def test_sub(self, policy_bean_list: PolicyBeanList):
         new_policy_list = deepcopy(policy_bean_list)
@@ -636,13 +660,29 @@ class TestPolicyBeanList:
         assert len(subtraction.policies) == 1
 
         new_policy_list = deepcopy(policy_bean_list)
-        new_path = deepcopy(new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path[0])
+        new_path = deepcopy(
+            new_policy_list.policies[0].resource_groups[0].related_resource_types[0].condition[0].instances[0].path[0]
+        )
         new_path[-1].id = "id2"
-        new_policy_list.policies[0].related_resource_types[0].condition[0].instances[0].path.append(new_path)
+        new_policy_list.policies[0].resource_groups[0].related_resource_types[0].condition[0].instances[0].path.append(
+            new_path
+        )
         subtraction = new_policy_list.sub(policy_bean_list)
         assert len(subtraction.policies) == 1
-        assert len(subtraction.policies[0].related_resource_types[0].condition[0].instances[0].path) == 1
-        assert subtraction.policies[0].related_resource_types[0].condition[0].instances[0].path[0][-1].id == "id2"
+        assert (
+            len(subtraction.policies[0].resource_groups[0].related_resource_types[0].condition[0].instances[0].path)
+            == 1
+        )
+        assert (
+            subtraction.policies[0]
+            .resource_groups[0]
+            .related_resource_types[0]
+            .condition[0]
+            .instances[0]
+            .path[0][-1]
+            .id
+            == "id2"
+        )
 
     def test_list_path_node(self, policy_bean_list: PolicyBeanList):
         nodes = policy_bean_list._list_path_node()

@@ -830,14 +830,16 @@ class PolicyBean(Policy):
 
         # NOTE 兼容 role, group授权信息的旧版结构
         if "resource_groups" not in data and "related_resource_types" in data:
-            data["resource_groups"] = ResourceGroupBeanList(
-                [
-                    ResourceGroupBean(
-                        id="00000000000000000000000000000000",
-                        related_resource_types=data.pop("related_resource_types"),
-                    )
+            if not data["related_resource_types"]:
+                data["resource_groups"] = []
+            else:
+                data["resource_groups"] = [
+                    # NOTE: 固定resource_group_id方便删除逻辑
+                    {
+                        "id": "00000000000000000000000000000000",
+                        "related_resource_types": data.pop("related_resource_types"),
+                    }
                 ]
-            )
 
         super().__init__(**data)
 
