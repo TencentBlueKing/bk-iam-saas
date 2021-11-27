@@ -29,6 +29,14 @@ class AuthorizationAPIEnum(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((AUTHORIZATION_INSTANCE, "实例授权"), (CREATOR_AUTHORIZATION_INSTANCE, "新建关联实例授权")))
 
 
+class AllowListMatchOperationEnum(ChoicesEnum, LowerStrEnum):
+    EQ = auto()
+    STARTS_WITH = auto()
+
+
+AllowListObjectOperationSep = ":"
+
+
 class VerifyAPIParamLocationEnum(ChoicesEnum, LowerStrEnum):
     SYSTEM_IN_BODY = auto()
     RESOURCE_TYPE_IN_BODY = auto()

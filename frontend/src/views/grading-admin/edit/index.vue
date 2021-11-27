@@ -577,6 +577,7 @@
                             id: Number(item.id),
                             type: 'depart',
                             name: item.name,
+                            fullName: item.full_name,
                             count: item.member_count
                         })
                     }

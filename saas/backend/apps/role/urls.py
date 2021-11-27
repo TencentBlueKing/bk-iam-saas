@@ -29,7 +29,7 @@ urlpatterns = [
         views.RoleAuthorizationScopeView.as_view(),
         name="role.authorization_scope_actions",
     ),
-    path("subject_scope/", views.RoleSubjectScopView.as_view(), name="role.subject_scope"),
+    path("subject_scope/", views.RoleSubjectScopeView.as_view(), name="role.subject_scope"),
     path("<int:id>/members/", views.RoleMemberView.as_view(), name="role.member"),
     # 系统管理员
     path("system_manager/", views.SystemManagerViewSet.as_view({"get": "list"}), name="role.system_manager"),
