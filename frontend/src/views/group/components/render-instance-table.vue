@@ -434,7 +434,7 @@
             // }
         },
         created () {
-            console.log('1.我的权限-用户组名详情 2.权限申请-用户组名详情 3.用户组-用户名组-组权限 4.用户组-用户名组-组权限-添加权限')
+            console.log('1.我的权限-用户组名详情 2.权限申请-用户组名详情 3.用户组-用户名组-组权限 4.用户组-用户名组-组权限-添加权限 5.权限模板-模板名-用户名')
         },
         methods: {
             handleSpanMethod ({ row, column, rowIndex, columnIndex }) {

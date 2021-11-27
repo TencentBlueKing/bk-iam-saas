@@ -213,6 +213,13 @@
                         id: this.groupId,
                         templateId: item.id
                     })
+                    // mock数据
+                    res.data.actions.forEach((element, index) => {
+                        element.resource_groups = [{
+                            id: index,
+                            related_resource_types: element.related_resource_types
+                        }]
+                    })
                     const tableData = res.data.actions.map(item => new Policy({ ...item, policy_id: 1 }, 'detail'))
                     this.$set(item, 'tableData', tableData)
                 } catch (e) {
@@ -235,6 +242,13 @@
                     const res = await this.$store.dispatch('userGroup/getGroupPolicy', {
                         id: this.groupId,
                         systemId: item.system.id
+                    })
+                    // mock数据
+                    res.data.forEach((element, index) => {
+                        element.resource_groups = [{
+                            id: index,
+                            related_resource_types: element.related_resource_types
+                        }]
                     })
                     const tableData = res.data.map(item => new Policy(item, 'detail'))
                     this.$set(item, 'tableData', tableData)
