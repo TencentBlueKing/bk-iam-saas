@@ -15,6 +15,7 @@ from backend.biz.policy import (
     PolicyEmptyException,
     RelatedResourceBean,
     RelatedResourceBeanList,
+    ResourceGroupBeanList,
     group_paths,
 )
 from backend.common.error_codes import APIException
@@ -783,3 +784,58 @@ def test_group_paths():
         ],
     ]
     assert len(group_paths(paths)) == 2
+
+
+class TestResourceGroupBeanList:
+    def test_get_by_id(self, policy_bean: PolicyBean):
+        resource_group = policy_bean.resource_groups.get_by_id(DEAULT_RESOURCE_GROUP_ID)
+        assert resource_group
+
+    def test_pop_by_id(self, policy_bean: PolicyBean):
+        resource_group = policy_bean.resource_groups.pop_by_id(DEAULT_RESOURCE_GROUP_ID)
+        assert resource_group
+        assert len(policy_bean.resource_groups) == 0
+
+    def test_issuper(self, policy_bean: PolicyBean):
+        assert policy_bean.resource_groups.issuper(policy_bean.resource_groups)
+        copied_policy = deepcopy(policy_bean)
+        copied_policy.resource_groups[0].related_resource_types[0].condition = []
+        assert not policy_bean.resource_groups.issuper(copied_policy.resource_groups)
+
+    def test_is_unrelated(self, policy_bean: PolicyBean):
+        assert not policy_bean.resource_groups.is_unrelated()
+        policy_bean.resource_groups = ResourceGroupBeanList.parse_obj([])
+        assert policy_bean.resource_groups.is_unrelated()
+
+    def test_is_single_resource_type(self, policy_bean: PolicyBean):
+        assert policy_bean.resource_groups.is_single_resource_type()
+        copied_policy = deepcopy(policy_bean)
+        copied_policy.resource_groups[0].related_resource_types.append(
+            copied_policy.resource_groups[0].related_resource_types[0]
+        )
+        assert not copied_policy.resource_groups.is_single_resource_type()
+        copied_policy = deepcopy(policy_bean)
+        copied_policy.resource_groups = ResourceGroupBeanList.parse_obj([])
+        assert not copied_policy.resource_groups.is_single_resource_type()
+
+    def test_contains(self, policy_bean: PolicyBean):
+        assert policy_bean.resource_groups[0] in policy_bean.resource_groups
+        copied_policy = deepcopy(policy_bean)
+        copied_policy.resource_groups[0].related_resource_types[0].condition = []
+        assert copied_policy.resource_groups[0] not in policy_bean.resource_groups
+
+    def test_add(self, policy_bean: PolicyBean):
+        resource_groups = policy_bean.resource_groups + policy_bean.resource_groups
+        assert len(resource_groups) == 1
+        copied_resource_groups = deepcopy(policy_bean.resource_groups)
+        copied_resource_groups[0].id = "abc"
+        copied_resource_groups[0].related_resource_types[0].condition = []
+        resource_groups = policy_bean.resource_groups + copied_resource_groups
+        assert len(resource_groups) == 2
+
+    def test_sub(self, policy_bean: PolicyBean):
+        try:
+            policy_bean.resource_groups - policy_bean.resource_groups
+            assert False
+        except PolicyEmptyException:
+            assert True
