@@ -95,7 +95,7 @@ class ResourceTypeSLZ(serializers.Serializer):
 
 
 class ResourceGroupSLZ(serializers.Serializer):
-    id = serializers.CharField(label="ID")
+    id = serializers.CharField(label="ID", allow_blank=True)
     related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
 
     def validate(self, data):
