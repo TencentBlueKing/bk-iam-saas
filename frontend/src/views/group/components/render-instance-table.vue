@@ -682,12 +682,14 @@
                 }
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
-                        item.related_resource_types.forEach((subItem, subItemIndex) => {
-                            if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                                subItem.condition = _.cloneDeep(tempCurData)
-                                subItem.isError = false
-                                this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
-                            }
+                        item.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
+                                if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                                    subItem.condition = _.cloneDeep(tempCurData)
+                                    subItem.isError = false
+                                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
+                                }
+                            })
                         })
                     } else {
                         if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
@@ -877,6 +879,7 @@
                 if (isEmpty) {
                     this.curIndex = -1
                     this.curResIndex = -1
+                    this.curGroupIndex = -1
                     return
                 }
                 const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
@@ -900,6 +903,7 @@
                 this.$emit('on-resource-select', this.curIndex, this.curResIndex, resItem.condition)
                 this.curIndex = -1
                 this.curResIndex = -1
+                this.curGroupIndex = -1
 
                 // 这里触发 create/index.vue 里 handleAggregateAction 事件会导致 tableList 变化，导致 list 属性变化
                 // list 属性变化之后，isShowRelatedText 属性以及其他属性均会重置
@@ -1132,11 +1136,13 @@
                     if (payload.data.length === 0) {
                         this.tableList.forEach(item => {
                             if (!item.isAggregate) {
-                                item.related_resource_types.forEach(resItem => {
-                                    if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
-                                        resItem.condition = []
-                                        resItem.isError = false
-                                    }
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types.forEach(resItem => {
+                                        if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
+                                            resItem.condition = []
+                                            resItem.isError = false
+                                        }
+                                    })
                                 })
                             } else {
                                 if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
@@ -1238,6 +1244,7 @@
             resetDataAfterClose () {
                 this.curIndex = -1
                 this.curResIndex = -1
+                this.curGroupIndex = -1
                 this.previewResourceParams = {}
                 this.params = {}
                 this.resourceInstanceSidesliderTitle = ''
