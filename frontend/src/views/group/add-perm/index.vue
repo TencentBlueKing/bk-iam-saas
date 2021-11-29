@@ -220,6 +220,14 @@
                 hasAddTemplateList.forEach(item => {
                     const temp = _.cloneDeep(item)
                     delete temp.actions
+
+                    // // mock数据
+                    // item.actions.forEach((element, index) => {
+                    //     element.resource_groups = [{
+                    //         id: index,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
                     item.actions.forEach(sub => {
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp))
                     })
@@ -237,6 +245,13 @@
                 })
 
                 const addCustomList = this.hasAddCustomList.filter(item => !temps.includes(item.$id))
+                // // mock数据
+                // addCustomList.forEach((element, index) => {
+                //     element.resource_groups = [{
+                //         id: index,
+                //         related_resource_types: element.related_resource_types
+                //     }]
+                // })
                 addCustomList.forEach(item => {
                     tempList.push(new GroupPolicy(item, 'add', 'custom', {
                         system: {
@@ -248,6 +263,7 @@
                 })
 
                 this.tableList.push(...tempList)
+                console.log('this.tableList', this.tableList)
                 this.tableListBackup = _.cloneDeep(this.tableList)
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
