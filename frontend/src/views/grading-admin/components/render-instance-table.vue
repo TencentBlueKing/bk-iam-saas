@@ -265,13 +265,13 @@
         watch: {
             list: {
                 handler (value) {
-                    // mock数据
-                    value.forEach((element, index) => {
-                        element.resource_groups = [{
-                            id: index,
-                            related_resource_types: element.related_resource_types
-                        }]
-                    })
+                    // // mock数据
+                    // value.forEach((element, index) => {
+                    //     element.resource_groups = [{
+                    //         id: index,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
                     this.tableList = value
                     this.tableList.forEach(item => {
                         if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {
@@ -471,7 +471,8 @@
                 }
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
-                        && sub.system_id === item.related_resource_types[0].system_id && !sub.isExpiredAtDisabled)
+                        && sub.system_id === item.resource_groups[this.curGroupIndex]
+                            .related_resource_types[0].system_id && !sub.isExpiredAtDisabled)
                     if (curIndex > -1) {
                         this.tableList.splice(curIndex, 1, new GradePolicy({
                             ...item,
@@ -507,6 +508,7 @@
                 this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex].isError = false
 
+                console.log('this.tableList11', this.tableList)
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curGroupIndex = -1
@@ -1008,6 +1010,7 @@
                     const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id)
                     if (!item.isAggregate) {
                         const relatedResourceTypes = []
+                        const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 if (groupItem.related_resource_types.length > 0) {
@@ -1053,6 +1056,10 @@
                                         })
                                     })
                                 }
+                                groupResourceTypes.push({
+                                    id: groupItem.id,
+                                    related_resource_types: relatedResourceTypes
+                                })
                             })
                         }
                         const params = {
@@ -1060,7 +1067,7 @@
                             actions: [
                                 {
                                     id: item.id,
-                                    related_resource_types: relatedResourceTypes
+                                    resource_groups: groupResourceTypes
                                 }
                             ],
                             aggregations: []
@@ -1068,7 +1075,7 @@
                         if (curSystemData) {
                             curSystemData.actions.push({
                                 id: item.id,
-                                related_resource_types: relatedResourceTypes
+                                resource_groups: groupResourceTypes
                             })
                         } else {
                             actionList.push(params)

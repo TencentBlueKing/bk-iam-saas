@@ -112,13 +112,13 @@
             actions: {
                 handler (value) {
                     if (value.length > 0) {
-                        // mock数据
-                        value.forEach((element, index) => {
-                            element.resource_groups = [{
-                                id: index,
-                                related_resource_types: element.related_resource_types
-                            }]
-                        })
+                        // // mock数据
+                        // value.forEach((element, index) => {
+                        //     element.resource_groups = [{
+                        //         id: index,
+                        //         related_resource_types: element.related_resource_types
+                        //     }]
+                        // })
                         this.tableList = value.map(item => new GradePolicy(item))
                         this.tableList.forEach(item => {
                             if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {

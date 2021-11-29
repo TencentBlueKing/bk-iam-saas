@@ -73,14 +73,14 @@ export default class Policy {
     }
 
     initRelatedResourceTypes (payload, action, flag, instanceNotDisabled) {
-        console.log('payload', payload)
-        if (!payload.related_resource_types) {
-            this.related_resource_types = []
-            return
-        }
-        this.related_resource_types = payload.related_resource_types.map(
-            item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
-        )
+        // console.log('payload', payload)
+        // if (!payload.related_resource_types) {
+        //     this.related_resource_types = []
+        //     return
+        // }
+        // this.related_resource_types = payload.related_resource_types.map(
+        //     item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+        // )
 
         if (!payload.resource_groups) {
             this.resource_groups = []
@@ -132,7 +132,8 @@ export default class Policy {
     }
 
     get isEmpty () {
-        return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
+        return this.resource_groups.length < 1
+        // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
     }
 
     get isCreate () {

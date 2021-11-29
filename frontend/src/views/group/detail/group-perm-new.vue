@@ -281,13 +281,13 @@
                         templateId: item.id
                     })
 
-                    // mock数据
-                    res.data.actions.forEach(element => {
-                        element.resource_groups = [{
-                            id: 1,
-                            related_resource_types: element.related_resource_types
-                        }]
-                    })
+                    // // mock数据
+                    // res.data.actions.forEach(element => {
+                    //     element.resource_groups = [{
+                    //         id: 1,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
                     const tableData = res.data.actions.map(row => new GroupPolicy(
                         { ...row, policy_id: 1 },
                         'detail',
@@ -325,13 +325,13 @@
                         systemId: item.system.id
                     })
 
-                    // mock数据
-                    res.data.forEach(element => {
-                        element.resource_groups = [{
-                            id: 1,
-                            related_resource_types: element.related_resource_types
-                        }]
-                    })
+                    // // mock数据
+                    // res.data.forEach(element => {
+                    //     element.resource_groups = [{
+                    //         id: 1,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
                     const tableData = res.data.map(row => {
                         return new GroupPolicy(
                             row,
