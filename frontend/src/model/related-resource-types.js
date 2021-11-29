@@ -53,7 +53,7 @@ export default class RelateResourceTypes {
                 payload.condition.length > 0
                     && payload.condition.every(item => item.attributes.length < 1 && item.instances.length < 1)
             )
-        if (isEmpty || (payload.condition.length === 0 && isNew)) {
+        if (isEmpty) {
             this.condition = ['none']
             this.conditionBackup = ['none']
             return

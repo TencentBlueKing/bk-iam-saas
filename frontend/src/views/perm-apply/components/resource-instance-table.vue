@@ -42,33 +42,35 @@
                     </div>
                     <div class="relation-content-wrapper" v-else>
                         <template v-if="!row.isEmpty">
-                            <div class="relation-content-item" v-for="(content, contentIndex) in row.related_resource_types" :key="contentIndex">
-                                <div class="content-name">
-                                    {{ content.name }}
-                                    <template v-if="row.isShowRelatedText">
-                                        <div style="display: inline-block; color: #979ba5;">
-                                            ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
-                                        </div>
-                                    </template>
+                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
+                                <div class="relation-content-item" v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
+                                    <div class="content-name">
+                                        {{ content.name }}
+                                        <template v-if="row.isShowRelatedText">
+                                            <div style="display: inline-block; color: #979ba5;">
+                                                ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="content">
+                                        <render-condition
+                                            :ref="`condition_${$index}_${contentIndex}_ref`"
+                                            :value="content.value"
+                                            :is-empty="content.empty"
+                                            :can-view="row.canView"
+                                            :params="curCopyParams"
+                                            :can-paste="content.canPaste"
+                                            :is-error="content.isLimitExceeded || content.isError"
+                                            @on-mouseover="handlerConditionMouseover(content)"
+                                            @on-mouseleave="handlerConditionMouseleave(content)"
+                                            @on-view="handlerOnView(row, content, contentIndex)"
+                                            @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
+                                            @on-paste="handlerOnPaste(...arguments, row, content)"
+                                            @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
+                                            @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
+                                    </div>
+                                    <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
                                 </div>
-                                <div class="content">
-                                    <render-condition
-                                        :ref="`condition_${$index}_${contentIndex}_ref`"
-                                        :value="content.value"
-                                        :is-empty="content.empty"
-                                        :can-view="row.canView"
-                                        :params="curCopyParams"
-                                        :can-paste="content.canPaste"
-                                        :is-error="content.isLimitExceeded || content.isError"
-                                        @on-mouseover="handlerConditionMouseover(content)"
-                                        @on-mouseleave="handlerConditionMouseleave(content)"
-                                        @on-view="handlerOnView(row, content, contentIndex)"
-                                        @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
-                                        @on-paste="handlerOnPaste(...arguments, row, content)"
-                                        @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
-                                        @on-click="showResourceInstance(row, content, contentIndex)" />
-                                </div>
-                                <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
                             </div>
                         </template>
                         <template v-else>
@@ -257,6 +259,7 @@
                 disabled: false,
                 curIndex: -1,
                 curResIndex: -1,
+                curGroupIndex: -1,
                 isShowPreviewDialog: false,
                 previewDialogTitle: '',
                 previewResourceParams: {},
@@ -282,10 +285,11 @@
         computed: {
             ...mapGetters(['user']),
             condition () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return []
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]
                 if (!curData) {
                     return []
                 }
@@ -294,15 +298,19 @@
             originalCondition () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
+                    || this.curGroupIndex === -1
                     || this.originalList.length < 1) {
                     return []
                 }
                 const curId = this.tableList[this.curIndex].id
-                const curType = this.tableList[this.curIndex].related_resource_types[this.curResIndex].type
+                const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex].type
                 if (!this.originalList.some(item => item.id === curId)) {
                     return []
                 }
                 const curResTypeData = this.originalList.find(item => item.id === curId)
+                    .resource_groups[this.curGroupIndex]
+                console.log('curResTypeData', curResTypeData)
                 if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
                     return []
                 }
@@ -313,24 +321,27 @@
                 return _.cloneDeep(curData.condition)
             },
             curDisabled () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return false
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]
                 return curData.isDefaultLimit
             },
             curFlag () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return 'add'
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]
                 return curData.flag
             },
             curSelectionMode () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return 'all'
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]
                 return curData.selectionMode
             },
             isShowPreview () {
@@ -343,6 +354,7 @@
         watch: {
             list: {
                 handler (value) {
+                    console.log('value', value)
                     this.tableList = value
                 },
                 immediate: true
@@ -354,6 +366,7 @@
                         this.curCopyData = ['none']
                         this.curIndex = -1
                         this.curResIndex = -1
+                        this.curGroupIndex = -1
                         this.aggregateResourceParams = {}
                         this.aggregateIndex = -1
                         this.aggregateValue = []
@@ -365,6 +378,9 @@
                 },
                 immediate: true
             }
+        },
+        created () {
+            console.log('1. 申请自定义权限')
         },
         methods: {
             handleOpenRenewal (row, index) {
@@ -571,7 +587,8 @@
             },
 
             handleLimitChange () {
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]
                 curData.isChange = true
             },
 
@@ -583,7 +600,7 @@
                 payload.isShowCustom = true
             },
 
-            showResourceInstance (data, resItem, resIndex) {
+            showResourceInstance (data, resItem, resIndex, groupIndex) {
                 this.params = {
                     system_id: this.systemId,
                     action_id: data.id,
@@ -591,9 +608,12 @@
                     resource_type_id: resItem.type
                 }
                 const index = this.tableList.findIndex(item => item.id === data.id)
+                console.log('index', index)
+                console.log('resIndex', resIndex)
                 this.curIndex = index
                 this.curResIndex = resIndex
-
+                this.curGroupIndex = groupIndex
+                
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
                 window.changeAlert = 'iamSidesider'
                 this.isShowResourceInstanceSideslider = true
@@ -615,7 +635,8 @@
                     
                 )
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
-                curData.related_resource_types = [curData.related_resource_types[this.curResIndex]]
+                curData.related_resource_types = [curData.resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]]
                 curData.related_resource_types[0].condition = curPayload
                 if (curData.expired_at !== PERMANENT_TIMESTAMP) {
                     curData.expired_at = curData.expired_at + this.user.timestamp
@@ -623,7 +644,7 @@
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
-                        && !item.related_resource_types.every(sub => sub.empty)
+                        && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
                 }))
 
                 if (relatedList.length > 0) {
@@ -632,7 +653,7 @@
                             item.expired_at = item.expired_at + this.user.timestamp
                         }
                         delete item.policy_id
-                        item.related_resource_types.forEach(resItem => {
+                        item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
                             resItem.condition.forEach(conditionItem => {
                                 conditionItem.instances = conditionItem.instance || []
                                 conditionItem.attributes = conditionItem.attribute || []
@@ -669,7 +690,9 @@
                 }
                 
                 payload.forEach(item => {
-                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
+                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        && sub.system_id === item.resource_groups[this.curGroupIndex]
+                            .related_resource_types[0].system_id)
                     if (curIndex > -1) {
                         const curData = this.tableList[curIndex]
                         this.needEmitFlag = true
@@ -697,7 +720,8 @@
                     return
                 }
 
-                const resItem = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]
                 const isConditionEmpty = data.length === 1 && data[0] === 'none'
                 if (isConditionEmpty) {
                     resItem.condition = ['none']
@@ -748,7 +772,8 @@
             },
 
             handleResourcePreview () {
-                const { system_id, type, name } = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
+                const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]
                 const condition = []
                 const conditionData = this.$refs.renderResourceRef.handleGetPreviewValue()
                 conditionData.forEach(item => {
@@ -971,11 +996,13 @@
                     if (payload.data.length === 0) {
                         this.tableList.forEach(item => {
                             if (!item.isAggregate) {
-                                item.related_resource_types.forEach(resItem => {
-                                    if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
-                                        resItem.condition = []
-                                        resItem.isError = false
-                                    }
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types.forEach(resItem => {
+                                        if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
+                                            resItem.condition = []
+                                            resItem.isError = false
+                                        }
+                                    })
                                 })
                             } else {
                                 if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {

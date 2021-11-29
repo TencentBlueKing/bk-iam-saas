@@ -73,13 +73,28 @@ export default class Policy {
     }
 
     initRelatedResourceTypes (payload, action, flag, instanceNotDisabled) {
-        if (!payload.related_resource_types) {
-            this.related_resource_types = []
+        // console.log('payload', payload)
+        // if (!payload.related_resource_types) {
+        //     this.related_resource_types = []
+        //     return
+        // }
+        // this.related_resource_types = payload.related_resource_types.map(
+        //     item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+        // )
+
+        if (!payload.resource_groups) {
+            this.resource_groups = []
             return
         }
-        this.related_resource_types = payload.related_resource_types.map(
-            item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
-        )
+
+        this.resource_groups = payload.resource_groups.reduce((prev, item) => {
+            const relatedRsourceTypes = item.related_resource_types.map(
+                item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+            )
+
+            prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+            return prev
+        }, [])
     }
 
     initAttachActions (payload) {
@@ -117,7 +132,8 @@ export default class Policy {
     }
 
     get isEmpty () {
-        return this.related_resource_types.length < 1
+        return this.resource_groups.length < 1
+        // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
     }
 
     get isCreate () {
