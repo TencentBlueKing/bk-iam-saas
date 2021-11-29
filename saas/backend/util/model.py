@@ -41,6 +41,14 @@ class ListModel(BaseModel):
 
     __root__: List[Any]
 
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        """
+        兼容parse_obj的逻辑
+        """
+        if "__root__" in data and isinstance(data["__root__"], ListModel):
+            data["__root__"] = data["__root__"].__root__
+        super().__init__(**data)
+
     def __iter__(self):
         return iter(self.__root__)
 
