@@ -128,7 +128,7 @@ class Policy(BaseModel):
             action_id=policy.action_id,
             policy_id=policy.policy_id,
             expired_at=expired_at,
-            resource_groups=ResourceGroupList(resource_groups),
+            resource_groups=ResourceGroupList.parse_obj(resource_groups),
         )
 
     def to_db_model(self, system_id: str, subject: Subject) -> PolicyModel:
