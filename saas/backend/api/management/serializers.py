@@ -53,21 +53,6 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
         allow_empty=True,
     )
 
-    def validate(self, data):
-        """多种资源类型时，只需要其中一种非无限制即可"""
-        resources = data["resources"]
-        # 计算有多少种资源类型的路径是非空的，路径空表示无限制
-        not_empty_paths_count = 0
-        for resource in resources:
-            if len(resource["paths"]) != 0:
-                not_empty_paths_count += 1
-
-        # 在与资源实例有关的情况下，若没有非空路径的资源，说明全部都是无限制，不支持
-        if len(resources) > 0 and not_empty_paths_count == 0:
-            raise serializers.ValidationError({"resources": ["不支持所有资源类型都是无限制，不可以所有paths字段都为空列表"]})
-
-        return data
-
 
 class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
     authorization_scopes = serializers.ListField(

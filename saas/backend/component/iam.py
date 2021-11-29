@@ -17,6 +17,7 @@ from backend.common.error_codes import error_codes
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
 from backend.util.cache import region
+from backend.util.json import json_dumps
 from backend.util.url import url_join
 
 from .http import http_delete, http_get, http_post, http_put, logger
@@ -33,10 +34,15 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
     # 默认请求头
     headers = {
         "Content-Type": "application/json",
-        "X-BK-APP-CODE": settings.APP_ID,
-        "X-BK-APP-SECRET": settings.APP_TOKEN,
         "X-Request-Id": local.request_id,
     }
+    if settings.BK_IAM_HOST_TYPE == "apigateway":
+        headers["x-bkapi-authorization"] = json_dumps(
+            {"bk_app_code": settings.APP_ID, "bk_app_secret": settings.APP_TOKEN}
+        )
+    elif settings.BK_IAM_HOST_TYPE == "direct":
+        headers.update({"X-Bk-App-Code": settings.APP_ID, "X-Bk-App-Secret": settings.APP_TOKEN})
+
     url = url_join(settings.BK_IAM_HOST, url_path)
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 

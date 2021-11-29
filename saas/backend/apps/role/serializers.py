@@ -200,7 +200,8 @@ class RatingMangerDetailSLZ(RatingMangerListSLZ):
         )
 
     def get_authorization_scopes(self, obj):
-        scope_systems = RoleBiz().list_auth_scope_bean(obj.id)
+        # ResourceNameAutoUpdate
+        scope_systems = RoleBiz().list_auth_scope_bean(obj.id, should_auto_update_resource_name=True)
         return [one.dict() for one in scope_systems]
 
     def get_subject_scopes(self, obj):

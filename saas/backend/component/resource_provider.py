@@ -25,6 +25,7 @@ from backend.common.debug import http_trace
 from backend.common.error_codes import error_codes
 from backend.common.i18n import get_bk_language
 from backend.common.local import local
+from backend.metrics import callback_request_duration
 from backend.util.cache import region
 
 request_pool = requests.Session()
@@ -45,6 +46,17 @@ class AuthTypeEnum(LowerStrEnum):
     NONE = auto()
     BASIC = auto()
     DIGEST = auto()
+
+
+class ResourceAPIEnum(LowerStrEnum):
+    """资源回调的API"""
+
+    LIST_ATTR = auto()
+    LIST_ATTR_VALUE = auto()
+    LIST_INSTANCE = auto()
+    FETCH_INSTANCE_INFO = auto()
+    LIST_INSTANCE_BY_POLICY = auto()
+    SEARCH_INSTANCE = auto()
 
 
 def _generate_http_auth(auth_info: Dict[str, str]) -> Union[None, auth.HTTPBasicAuth, auth.HTTPDigestAuth]:
@@ -83,6 +95,7 @@ class ResourceProviderClient:
         self.resource_type_id = resource_type_id
         self.url = url
         self.request_id = local.request_id
+        self.request_username = local.request_username
         self.headers = {
             "Content-Type": "application/json",
             "Request-Id": self.request_id,
@@ -95,10 +108,16 @@ class ResourceProviderClient:
         """调用请求API"""
         trace_func = partial(http_trace, method="post", url=self.url, data=data)
 
+        # 特殊场景下，给到请求时的用户名
+        headers = self.headers.copy()
+        if data["method"] in [ResourceAPIEnum.LIST_INSTANCE.value, ResourceAPIEnum.SEARCH_INSTANCE.value]:
+            # 值有可能未空，因为并非所有请求都是来自页面
+            headers["Request-Username"] = self.request_username
+
         kwargs = {
             "url": self.url,
             "json": data,
-            "headers": self.headers,
+            "headers": headers,
             "auth": self.http_auth,
             "timeout": self.timeout,
             "verify": False,
@@ -109,12 +128,13 @@ class ResourceProviderClient:
         base_log_msg = SimpleLazyObject(
             lambda: (
                 "resource_provider [system={}, resource={}]; "
-                "API [request_id={}, url={}, data.method={}]; "
+                "API [request_id={}, request_username={}, url={}, data.method={}]; "
                 "Detail[{}]"
             ).format(
                 self.system_id,
                 self.resource_type_id,
                 self.request_id,
+                self.request_username,
                 self.url,
                 data["method"],
                 kwargs,
@@ -140,6 +160,15 @@ class ResourceProviderClient:
                 f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
                 f"{base_log_msg}"
             )
+
+            callback_request_duration.labels(
+                system=self.system_id,
+                resource_type=self.resource_type_id,
+                function=data["method"],
+                method="post",
+                path=urlparse(self.url).path,
+                status=resp.status_code,
+            ).observe(latency)
         except requests.exceptions.RequestException as e:
             logger.exception(f"RequestException! {base_log_msg} ")
             trace_func(exc=traceback.format_exc())
@@ -235,7 +264,7 @@ class ResourceProviderClient:
 
     def list_attr(self) -> List[Dict[str, str]]:
         """查询某个资源类型可用于配置权限的属性列表"""
-        data = {"type": self.resource_type_id, "method": "list_attr"}
+        data = {"type": self.resource_type_id, "method": ResourceAPIEnum.LIST_ATTR.value}
         return self._handle_empty_data(self._call_api(data), default=[])
 
     def list_attr_value(
@@ -243,7 +272,12 @@ class ResourceProviderClient:
     ) -> Tuple[int, List[Dict[str, str]]]:
         """获取一个资源类型某个属性的值列表"""
         filter_condition["attr"] = attr
-        data = {"type": self.resource_type_id, "method": "list_attr_value", "filter": filter_condition, "page": page}
+        data = {
+            "type": self.resource_type_id,
+            "method": ResourceAPIEnum.LIST_ATTR_VALUE.value,
+            "filter": filter_condition,
+            "page": page,
+        }
         resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
 
         self._validate_paginated_data(resp_data)
@@ -251,7 +285,12 @@ class ResourceProviderClient:
 
     def list_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
         """根据过滤条件查询实例"""
-        data = {"type": self.resource_type_id, "method": "list_instance", "filter": filter_condition, "page": page}
+        data = {
+            "type": self.resource_type_id,
+            "method": ResourceAPIEnum.LIST_INSTANCE.value,
+            "filter": filter_condition,
+            "page": page,
+        }
         resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
 
         self._validate_paginated_data(resp_data)
@@ -259,7 +298,11 @@ class ResourceProviderClient:
 
     def fetch_instance_info(self, filter_condition: Dict) -> List[Dict]:
         """批量获取资源实例详情"""
-        data = {"type": self.resource_type_id, "method": "fetch_instance_info", "filter": filter_condition}
+        data = {
+            "type": self.resource_type_id,
+            "method": ResourceAPIEnum.FETCH_INSTANCE_INFO.value,
+            "filter": filter_condition,
+        }
         return self._handle_empty_data(self._call_api(data), default=[])
 
     def list_instance_by_policy(
@@ -268,7 +311,7 @@ class ResourceProviderClient:
         """根据策略表达式查询资源实例"""
         data = {
             "type": self.resource_type_id,
-            "method": "list_instance_by_policy",
+            "method": ResourceAPIEnum.LIST_INSTANCE_BY_POLICY.value,
             "filter": filter_condition,
             "page": page,
         }
@@ -290,7 +333,12 @@ class ResourceProviderClient:
             raise error_codes.RESOURCE_PROVIDER_VALIDATE_ERROR.format(
                 f"search_instance[system:{system_id}] param keyword should not be empty"
             )
-        data = {"type": resource_type_id, "method": "search_instance", "filter": filter_condition, "page": page}
+        data = {
+            "type": resource_type_id,
+            "method": ResourceAPIEnum.SEARCH_INSTANCE.value,
+            "filter": filter_condition,
+            "page": page,
+        }
         resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
 
         self._validate_paginated_data(resp_data)

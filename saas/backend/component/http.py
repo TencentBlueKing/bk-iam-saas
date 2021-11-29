@@ -19,12 +19,15 @@ Rules:
 from __future__ import unicode_literals
 
 import logging
+import time
 import traceback
 from functools import partial
+from urllib.parse import urlparse
 
 import requests
 
 from backend.common.debug import http_trace
+from backend.metrics import component_request_duration, get_component_by_url
 
 logger = logging.getLogger("component")
 
@@ -39,6 +42,7 @@ def _gen_header():
 def _http_request(method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None):
     trace_func = partial(http_trace, method=method, url=url, data=data)
 
+    st = time.time()
     try:
         if method == "GET":
             resp = requests.get(
@@ -69,6 +73,15 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
         trace_func(exc=traceback.format_exc())
         return False, None
     else:
+        # record for /metrics
+        latency = int((time.time() - st) * 1000)
+        component_request_duration.labels(
+            component=get_component_by_url(url),
+            method=method,
+            path=urlparse(url).path,
+            status=resp.status_code,
+        ).observe(latency)
+
         if resp.status_code != 200:
             content = resp.content[:100] if resp.content else ""
             error_msg = (

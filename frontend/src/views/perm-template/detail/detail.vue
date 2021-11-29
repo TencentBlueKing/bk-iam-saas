@@ -169,15 +169,19 @@
                     this.$set(item, 'expanded', false)
                     let count = 0
                     let allCount = 0
+                    let deleteCount = 0
                     if (!item.actions) {
                         this.$set(item, 'actions', [])
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
+                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
                         this.$set(act, 'disabled', act.tag === 'readonly')
                         if (act.checked) {
                             ++count
                             this.defaultCheckedActions.push(act.id)
+                        }
+                        if (act.tag === 'delete') {
+                            ++deleteCount
                         }
                         ++allCount
                     })
@@ -188,11 +192,14 @@
                             this.$set(sub, 'actions', [])
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
+                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
                             this.$set(act, 'disabled', act.tag === 'readonly')
                             if (act.checked) {
                                 ++count
                                 this.defaultCheckedActions.push(act.id)
+                            }
+                            if (act.tag === 'delete') {
+                                ++deleteCount
                             }
                             ++allCount
                         })
@@ -201,6 +208,7 @@
                         this.$set(sub, 'allChecked', isSubAllChecked)
                     })
 
+                    this.$set(item, 'deleteCount', deleteCount)
                     this.$set(item, 'count', count)
                     this.$set(item, 'allCount', allCount)
 
@@ -233,11 +241,12 @@
                 temps.forEach((item, index) => {
                     this.$set(item, 'expanded', index === 0)
                     let count = 0
+                    let deleteCount = 0
                     if (!item.actions) {
                         this.$set(item, 'actions', [])
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
+                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
                         this.$set(act, 'disabled', act.tag === 'readonly')
                         if (hasAddActions.includes(act.id)) {
                             this.$set(act, 'checked', true)
@@ -250,6 +259,9 @@
                         if (act.checked) {
                             ++count
                         }
+                        if (act.tag === 'delete') {
+                            ++deleteCount
+                        }
                     })
                     ;(item.sub_groups || []).forEach(sub => {
                         this.$set(sub, 'expanded', false)
@@ -258,7 +270,7 @@
                             this.$set(sub, 'actions', [])
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
+                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
                             this.$set(act, 'disabled', act.tag === 'readonly')
                             if (hasAddActions.includes(act.id)) {
                                 this.$set(act, 'checked', true)
@@ -271,12 +283,16 @@
                             if (act.checked) {
                                 ++count
                             }
+                            if (act.tag === 'delete') {
+                                ++deleteCount
+                            }
                         })
 
                         const isSubAllChecked = sub.actions.every(v => v.checked)
                         this.$set(sub, 'allChecked', isSubAllChecked)
                     })
 
+                    this.$set(item, 'deleteCount', deleteCount)
                     this.$set(item, 'count', count)
 
                     const isAllChecked = item.actions.every(v => v.checked)

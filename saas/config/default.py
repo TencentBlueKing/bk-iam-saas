@@ -229,6 +229,7 @@ if IS_USE_CELERY:
     djcelery.setup_loader()
     CELERY_ENABLE_UTC = True
     CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
+    CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 
 # remove disabled apps
 if locals().get("DISABLED_APPS"):
@@ -276,6 +277,7 @@ AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 # iam host
 BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
+BK_IAM_HOST_TYPE = os.environ.get("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
 
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies

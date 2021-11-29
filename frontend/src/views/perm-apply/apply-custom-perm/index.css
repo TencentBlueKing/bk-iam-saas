@@ -317,3 +317,11 @@
 .IndependentApplication {
     margin-bottom:24px
 }
+.error-icon {
+    font-size: 14px;
+    color: #ffb400;
+}
+.expired-text{
+    font-size: 12px;
+    color: #63656e;
+}

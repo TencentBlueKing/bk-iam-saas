@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from collections import defaultdict
-from typing import List, Optional
+from typing import Dict, List, Optional, Set
 
 from django.db.models import Q
 from django.utils.functional import cached_property
@@ -58,6 +58,46 @@ class RoleInfoBean(RoleInfo):
 class AuthScopeSystemBean(BaseModel):
     system: ThinSystem
     actions: List[PolicyBean]
+
+    def is_any_system(self) -> bool:
+        """是否任意系统"""
+        return self.system.id == SYSTEM_ALL
+
+    def is_any_action(self) -> bool:
+        """是否任意操作"""
+        return self.is_any_system() or (len(self.actions) == 1 and self.actions[0].action_id == ACTION_ALL)
+
+
+class RoleScopeSystemActions(BaseModel):
+    """
+    role的授权范围系统-操作列表
+    """
+
+    systems: Dict[str, Set[str]]  # key: system_id, value: action_id_set
+
+    def is_all_action(self, system_id: str) -> bool:
+        """
+        是否是全操作列表
+        """
+        if not self.has_system(system_id):
+            return False
+
+        if SYSTEM_ALL in self.systems or ACTION_ALL in self.systems[system_id]:
+            return True
+
+        return False
+
+    def has_system(self, system_id: str) -> bool:
+        return SYSTEM_ALL in self.systems or system_id in self.systems
+
+    def list_action_id(self, system_id: str) -> List[str]:
+        """
+        返回role范围内的所有action_id, 如果为all_action, 应该事先判断
+        """
+        if system_id in self.systems:
+            return list(self.systems[system_id])
+
+        return []
 
 
 class RoleBiz:
@@ -132,7 +172,53 @@ class RoleBiz:
         """
         self.svc.update_super_manager_member_system_permission(username, need_sync_backend_role)
 
-    def list_auth_scope_bean(self, role_id: int) -> List[AuthScopeSystemBean]:
+    def _update_auth_scope_due_to_renamed_resource(
+        self, role_id: int, auth_systems: List[AuthScopeSystem], auth_system_beans: List[AuthScopeSystemBean]
+    ) -> List[AuthScopeSystemBean]:
+        """
+        更新分级管理员授权范围里的资源类型名称
+        auth_systems: 是DB里原始的授权范围数据
+        auth_system_beans: 即将给到页面的展示授权范围数据，与auth_systems相比，多了填充Name的展示数据
+        auth_system_beans长度有时候会小于auth_systems的长度，因为可能有时候只需要展示部分系统的数据，而不是整个授权范围所有系统的数据
+        返回更新后展示用途的授权范围数据
+        """
+        need_updated_policies_dict: Dict[str, List[PolicyBean]] = {}
+
+        # 遍历授权范围里的每个系统策略
+        for auth_system_bean in auth_system_beans:
+            system_id = auth_system_bean.system.id
+            # 任意Action，则跳过
+            if auth_system_bean.is_any_action():
+                continue
+            # 尝试更新
+            policy_list = PolicyBeanList(system_id=system_id, policies=auth_system_bean.actions)
+            updated_policies = policy_list.auto_update_resource_name()
+            # 需要更新
+            if len(updated_policies) > 0:
+                # 修改要返回的展示数据: 这里是完整覆盖，包括未被更新的策略，不能使用updated_policies
+                auth_system_bean.actions = policy_list.policies
+                # 记录要进行DB修改的数据
+                need_updated_policies_dict[system_id] = policy_list.policies
+
+        if len(need_updated_policies_dict) > 0:
+            # 直接修改原始数据auth_systems，而不是auth_system_beans
+            for auth_system in auth_systems:
+                policies = need_updated_policies_dict.get(auth_system.system_id)
+                # 不在修改范围内的，直接跳过
+                if policies is None:
+                    continue
+                # 直接修改原始数据
+                auth_system.actions = parse_obj_as(List[AuthScopeAction], policies)
+
+            # 变更可授权的权限范围
+            # Note: 这里的修改并没有处理并发的情况
+            self.svc.update_role_auth_scope(role_id, auth_systems)
+
+        return auth_system_beans
+
+    def list_auth_scope_bean(
+        self, role_id: int, should_auto_update_resource_name: bool = False
+    ) -> List[AuthScopeSystemBean]:
         """
         查询角色的auth授权范围Bean
         """
@@ -145,6 +231,13 @@ class RoleBiz:
             if not auth_system_bean:
                 continue
             auth_system_beans.append(auth_system_bean)
+
+        # ResourceNameAutoUpdate
+        # 判断是否主动检查更新授权范围
+        if should_auto_update_resource_name:
+            auth_system_beans = self._update_auth_scope_due_to_renamed_resource(
+                role_id, auth_systems, auth_system_beans
+            )
 
         return auth_system_beans
 
@@ -168,18 +261,30 @@ class RoleBiz:
 
         return AuthScopeSystemBean(system=ThinSystem.parse_obj(system), actions=policies)
 
-    def get_auth_scope_bean_by_system(self, role_id: int, system_id: str) -> Optional[AuthScopeSystemBean]:
+    def get_auth_scope_bean_by_system(
+        self, role_id: int, system_id: str, should_auto_update_resource_name: bool = False
+    ) -> Optional[AuthScopeSystemBean]:
         """
         获取指定系统的auth授权范围Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
         system_list = self.system_svc.new_system_list()
 
+        auth_system_bean = None
         for auth_system in auth_systems:
             if auth_system.system_id == system_id:
-                return self._gen_auth_scope_bean(auth_system, system_list)
+                auth_system_bean = self._gen_auth_scope_bean(auth_system, system_list)
+                break
 
-        return None
+        # ResourceNameAutoUpdate
+        # 判断是否主动检查更新授权范围
+        if should_auto_update_resource_name and auth_system_bean is not None:
+            auth_system_beans = self._update_auth_scope_due_to_renamed_resource(
+                role_id, auth_systems, [auth_system_bean]
+            )
+            auth_system_bean = auth_system_beans[0]
+
+        return auth_system_bean
 
     def inc_update_auth_scope(self, role_id: int, system_id: str, incr_policies: List[PolicyBean]):
         """增量更新分级管理员的授权范围
@@ -280,15 +385,22 @@ class RoleListQuery:
         if self.role.type == RoleType.STAFF.value:
             return [ACTION_ALL]
 
-        scopes = self.role_svc.list_auth_scope(self.role.id)
-        systems = {s.system_id: {a.id for a in s.actions} for s in scopes}
-        if system_id not in systems and SYSTEM_ALL not in systems:
+        system_actions = self.get_scope_system_actions()
+        if not system_actions.has_system(system_id):
             return []
 
-        if SYSTEM_ALL in systems or ACTION_ALL in systems[system_id]:
+        if system_actions.is_all_action(system_id):
             return [ACTION_ALL]
 
-        return list(systems[system_id])
+        return system_actions.list_action_id(system_id)
+
+    def get_scope_system_actions(self) -> RoleScopeSystemActions:
+        """
+        获取授权范围的系统-操作字典
+        """
+        scopes = self.role_svc.list_auth_scope(self.role.id)
+        systems = {s.system_id: {a.id for a in s.actions} for s in scopes}
+        return RoleScopeSystemActions(systems=systems)
 
     def query_template(self):
         """

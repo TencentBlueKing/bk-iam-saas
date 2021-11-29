@@ -12,12 +12,14 @@ specific language governing permissions and limitations under the License.
 
 from django.db import migrations
 
-from backend.biz.org_sync.syncer import Syncer
+# from backend.biz.org_sync.syncer import Syncer
 
 
 def init_admin_user(apps, schema_editor):
     """初始化Admin用户"""
-    Syncer().sync_single_user("admin")
+    # Syncer().sync_single_user("admin")
+    # NOTE: 这里不再migrate时同步admin用户，因为产品被admin使用或者调用授权相关接口时，有信号会自动同步
+    pass
 
 
 class Migration(migrations.Migration):

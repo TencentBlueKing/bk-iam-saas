@@ -4,7 +4,15 @@
             <Icon type="refresh" />
         </div>
         <span v-else :class="['status-circle', { success: isSuccess }]"></span>
-        {{ statusMap[status] }}
+        <bk-popover placement="top" ext-cls="iam-tooltips-cls" v-if="status === 'Failed'">
+            {{ statusMap[status] }}
+            <div slot="content">
+                同步操作失败，请在用户管理后台API日志中查询详情
+            </div>
+        </bk-popover>
+        <span v-else>
+            {{ statusMap[status] }}
+        </span>
     </div>
 </template>
 <script>
