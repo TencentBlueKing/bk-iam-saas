@@ -101,15 +101,12 @@ class InstanceAproverHandler(PolicyProcessHandler):
         """
         通过实例审批人信息, 分离policy_process为独立的实例policy
         """
-        if (
-            len(policy_process.policy.resource_groups) == 0
-            or len(policy_process.policy.resource_groups[0].related_resource_types) != 1
-        ):
+        if not policy_process.policy.is_single_resource_type():
             return [policy_process]
 
         policy = policy_process.policy
         process = policy_process.process
-        rrt = policy_process.policy.resource_groups[0].related_resource_types[0]
+        rrt: RelatedResourceBean = policy_process.policy.get_related_resource_type()  # type: ignore
 
         policy_process_list: List[PolicyProcess] = []
         for condition in rrt.condition:
@@ -158,7 +155,7 @@ class InstanceAproverHandler(PolicyProcessHandler):
     def _copy_policy_by_instance_path(self, policy, rrt, instance, path):
         # 复制出单实例的policy
         copied_policy = PolicyBean(
-            resource_groups=ResourceGroupBeanList(
+            resource_groups=ResourceGroupBeanList.parse_obj(
                 [
                     ResourceGroupBean(
                         id=gen_uuid(),
@@ -185,10 +182,10 @@ class InstanceAproverHandler(PolicyProcessHandler):
         # 需要查询资源实例审批人的节点集合
         resource_node_set = set()
         # 只支持关联1个资源类型的操作查询资源审批人
-        if len(policy.resource_groups) == 0 or len(policy.resource_groups[0].related_resource_types) != 1:
+        if not policy.is_single_resource_type():
             return []
 
-        rrt = policy.resource_groups[0].related_resource_types[0]
+        rrt: RelatedResourceBean = policy.get_related_resource_type()  # type: ignore
         for path in rrt.iter_path_list(ignore_attribute=True):
             last_node = path.nodes[-1]
             if last_node.id == ANY_ID:

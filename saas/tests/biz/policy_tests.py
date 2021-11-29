@@ -19,7 +19,7 @@ from backend.biz.policy import (
 )
 from backend.common.error_codes import APIException
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
-from backend.service.constants import SelectionMode
+from backend.service.constants import DEAULT_RESOURCE_GROUP_ID, SelectionMode
 from backend.service.models import PathResourceType, ResourceTypeDict
 from backend.service.models.action import Action, RelatedResourceType
 from backend.service.models.instance_selection import InstanceSelection
@@ -523,7 +523,7 @@ class TestPolicyBean:
         assert policy_bean.get_system_id_set() == {"system_id"}
 
     def test_get_related_resource_type(self, policy_bean: PolicyBean):
-        assert policy_bean.get_related_resource_type("00000000000000000000000000000000", "system_id", "type")
+        assert policy_bean.get_related_resource_type(DEAULT_RESOURCE_GROUP_ID, "system_id", "type")
 
     def test_set_expired_at(self, policy_bean: PolicyBean):
         policy_bean.set_expired_at(PERMANENT_SECONDS)

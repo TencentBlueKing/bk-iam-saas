@@ -506,7 +506,7 @@ class TemplatePolicyCloneBiz:
         match_paths = []  # 能匹配实例视图前缀的资源路径
         match_path_hash_set = set()  # 用于去重
         # NOTE: 针对只关联了一种资源类型的操作, 默认只有一组resource_group
-        for path_list in source_policy.resource_groups[0].related_resource_types[0].iter_path_list():
+        for path_list in source_policy.get_related_resource_type().iter_path_list():
             for chain in chain_list.chains:
                 if not chain.is_match_path(path_list.nodes):
                     continue

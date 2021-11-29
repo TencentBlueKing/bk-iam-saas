@@ -245,3 +245,6 @@ class ApplicationStatus(ChoicesEnum, LowerStrEnum):
     CANCELLED = auto()
 
     _choices_labels = skip(((PENDING, _("审批中")), (PASS, _("通过")), (REJECT, _("拒绝")), (CANCELLED, _("已取消"))))
+
+
+DEAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"

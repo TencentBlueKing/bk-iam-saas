@@ -30,7 +30,14 @@ from backend.common.error_codes import error_codes
 from backend.component import iam
 from backend.util.json import json_dumps
 
-from .constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
+from .constants import (
+    DEAULT_RESOURCE_GROUP_ID,
+    RoleRelatedObjectType,
+    RoleScopeType,
+    RoleSourceTypeEnum,
+    RoleType,
+    SubjectType,
+)
 from .models import ResourceGroupList, Subject
 
 logger = logging.getLogger("app")
@@ -49,7 +56,7 @@ class AuthScopeAction(BaseModel):
                 data["resource_groups"] = [
                     # NOTE: 固定resource_group_id方便删除逻辑
                     {
-                        "id": "00000000000000000000000000000000",
+                        "id": DEAULT_RESOURCE_GROUP_ID,
                         "related_resource_types": data.pop("related_resource_types"),
                     }
                 ]

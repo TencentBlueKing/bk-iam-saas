@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Tuple
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
+from backend.service.constants import DEAULT_RESOURCE_GROUP_ID
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
@@ -121,9 +122,7 @@ class Policy(BaseModel):
         resource_groups = policy.resources
         if cls._is_old_structure(policy.resources):
             # NOTE: 固定resource_group_id, 方便删除逻辑
-            resource_groups = [
-                ResourceGroup(id="00000000000000000000000000000000", related_resource_types=policy.resources)
-            ]
+            resource_groups = [ResourceGroup(id=DEAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
 
         return cls(
             action_id=policy.action_id,

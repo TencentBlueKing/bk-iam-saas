@@ -44,8 +44,32 @@ class ListModel(BaseModel):
     def __iter__(self):
         return iter(self.__root__)
 
-    def __getitem__(self, item):
-        return self.__root__[item]
+    def __getitem__(self, index):
+        return self.__root__[index]
 
     def __len__(self):
         return len(self.__root__)
+
+    def __delitem__(self, index):
+        self.__root__.pop(index)
+
+    def __setitem__(self, index, val):
+        self.__root__[index] = val
+
+    def __add__(self, other):
+        return ListModel(self.__root__ + other.__root__)
+
+    def __contains__(self, item):
+        return item in self.__root__
+
+    def dict(self, *args, **kwargs):
+        return super().dict(*args, **kwargs)["__root__"]
+
+    def pop(self, index):
+        return self.__root__.pop(index)
+
+    def append(self, item):
+        self.__root__.append(item)
+
+    def extend(self, other):
+        self.__root__.extend(other.__root__)
