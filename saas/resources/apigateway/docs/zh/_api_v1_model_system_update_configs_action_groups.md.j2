@@ -1,0 +1,51 @@
+### 更新操作组
+
+整个列表完全覆盖更新
+
+{% include '__api_v1_model_config_action_groups.md.j2' %}
+
+#### Request
+
+```json
+[
+	{
+		"name": "管理权限",
+		"name_en": "Admin Permissions",
+		"actions": [
+			{
+				"id": "create_biz"
+			},
+			{
+				"id": "delete_biz"
+			}
+		]
+	},
+	{
+		"name": "运维",
+		"name_en": "Devops Permissions",
+		"sub_groups": [
+			{
+				"name": "主机权限",
+				"name_en": "Host Permissions",
+				"actions": [
+					{
+						"id": "view_host"
+					},
+					{
+						"id": "create_host"
+					}
+				]
+			}
+		]
+	}
+]
+```
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

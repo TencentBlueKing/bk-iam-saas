@@ -1,0 +1,38 @@
+### 更新功能开关规则
+
+整个列表完全覆盖更新
+
+{% include '__api_v1_model_config_feature_shield_rules.md.j2' %}
+
+#### Request
+
+```json
+[
+    // 对于自定义申请，屏蔽整个该接入系统所有Action，即该接入系统不支持自定义申请
+    {
+        "effect": "deny",
+        "feature": "application.custom_permission.grant",
+        "action": {
+            "id": "*"
+        }
+    },
+    // 对于个人权限，接入系统某个Aciton的自定义权限不允许被删除
+    {
+        "effect": "deny",
+        "feature": "user_permission.custom_permission.delete",
+        "action": {
+            "id": "access_business"
+        }
+    }
+]
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```
