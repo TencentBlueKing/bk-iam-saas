@@ -1334,7 +1334,7 @@
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(item.id)) {
                             if (item.tag === 'unchanged') {
-                                item.related_resource_types.forEach(subItem => {
+                                item.resource_groups[0].related_resource_types.forEach(subItem => {
                                     subItem.condition.forEach(conditionItem => {
                                         conditionItem.instance.forEach(instanceItem => {
                                             if (instanceItem.type === instances[0].type) {
@@ -1351,7 +1351,7 @@
                                     })
                                 })
                             } else {
-                                item.related_resource_types.forEach(subItem => {
+                                item.resource_groups[0].related_resource_types.forEach(subItem => {
                                     subItem.condition = [new Condition({ instances }, '', 'add')]
                                 })
                             }
@@ -1408,7 +1408,7 @@
                                 // 是否都选择了实例
                                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none')
                                 if (isAllHasInstance) {
-                                    const instances = conditions.map(subItem => subItem.map(v => v.instance))
+                                    const instances = conditions.map(subItem => subItem.map(v => v.instance || []))
                                     let isAllEqual = true
                                     for (let i = 0; i < instances.length - 1; i++) {
                                         if (!_.isEqual(instances[i], instances[i + 1])) {
@@ -1421,12 +1421,14 @@
                                     console.log('isAllEqual: ' + isAllEqual)
                                     if (isAllEqual) {
                                         const instanceData = instances[0][0][0]
-                                        item.instances = instanceData.path.map(pathItem => {
-                                            return {
-                                                id: pathItem[0].id,
-                                                name: pathItem[0].name
-                                            }
-                                        })
+                                        if (instanceData && instanceData.path) {
+                                            item.instances = instanceData.path.map(pathItem => {
+                                                return {
+                                                    id: pathItem[0].id,
+                                                    name: pathItem[0].name
+                                                }
+                                            })
+                                        }
                                     } else {
                                         item.instances = []
                                     }
@@ -1441,6 +1443,7 @@
                     this.tableData.unshift(...aggregations)
                     return
                 }
+
                 const aggregationData = []
                 const newTableData = []
                 this.tableData.forEach(item => {
@@ -1494,7 +1497,7 @@
                                 return arr
                             })()
                             if (instances.length > 0) {
-                                curData.related_resource_types.forEach(subItem => {
+                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
                                     subItem.condition = [new Condition({ instances }, '', 'add')]
                                 })
                             }
@@ -1559,7 +1562,7 @@
                                             curData.expired_at = item.expired_at
                                             curData.expired_display = item.expired_display
                                             if (instances.length > 0) {
-                                                curData.related_resource_types.forEach(subItem => {
+                                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
                                                     subItem.condition = [new Condition({ instances }, '', 'add')]
                                                 })
                                             }
@@ -1650,7 +1653,7 @@
                                             curData.expired_at = item.expired_at
                                             curData.expired_display = item.expired_display
                                             if (instances.length > 0) {
-                                                curData.related_resource_types.forEach(subItem => {
+                                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
                                                     subItem.condition = [new Condition({ instances }, '', 'add')]
                                                 })
                                             }
