@@ -106,6 +106,22 @@ class Policy(BaseModel):
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
+    def __init__(self, **data: Any):
+        # NOTE 兼容 role, group授权信息的旧版结构
+        if "resource_groups" not in data and "related_resource_types" in data:
+            if not data["related_resource_types"]:
+                data["resource_groups"] = []
+            else:
+                data["resource_groups"] = [
+                    # NOTE: 固定resource_group_id方便删除逻辑
+                    {
+                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "related_resource_types": data.pop("related_resource_types"),
+                    }
+                ]
+
+        super().__init__(**data)
+
     @staticmethod
     def _is_old_structure(resources: List[Dict[str, Any]]) -> bool:
         """
