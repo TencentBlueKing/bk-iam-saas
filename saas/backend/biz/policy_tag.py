@@ -19,9 +19,10 @@ from backend.biz.policy import (
     PolicyBean,
     PolicyBeanList,
     RelatedResourceBean,
+    ResourceGroupBean,
+    ResourceGroupBeanList,
 )
 from backend.service.models import Attribute, Value
-from backend.service.models.policy import ResourceGroup, ResourceGroupList
 from backend.service.utils.translate import translate_path
 
 from .constants import ConditionTag
@@ -221,7 +222,7 @@ class RelatedResourceTagBean(RelatedResourceBean):
             c.set_tag(tag)
 
 
-class ResourceGroupTagBean(TagNoneMixin, ResourceGroup):
+class ResourceGroupTagBean(TagNoneMixin, ResourceGroupBean):
     related_resource_types: List[RelatedResourceTagBean]
     tag: str = ""
 
@@ -231,7 +232,7 @@ class ResourceGroupTagBean(TagNoneMixin, ResourceGroup):
             rt.set_tag(tag)
 
 
-class ResourceGroupListTagBean(TagNoneMixin, ResourceGroupList):
+class ResourceGroupListTagBean(TagNoneMixin, ResourceGroupBeanList):
     __root__: List[ResourceGroupTagBean]
 
 
