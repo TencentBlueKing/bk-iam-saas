@@ -855,6 +855,7 @@
                 if (flag) {
                     if (!isExist) {
                         ++item.count
+                        payload.resource_groups = payload.related_resource_types.length ? [{ id: '', related_resource_types: payload.related_resource_types }] : []
                         this.tableData.unshift(new Policy({ ...payload, tag: 'add' }, 'custom'))
                     }
                 } else {
@@ -1402,7 +1403,7 @@
                             }
                             if (item.tag === 'add') {
                                 const conditions = existTableData.map(
-                                    subItem => subItem.related_resource_types[0].condition
+                                    subItem => subItem.resource_groups[0].related_resource_types[0].condition
                                 )
                                 // 是否都选择了实例
                                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none')
@@ -1572,6 +1573,7 @@
                         }
                     }
 
+                    console.log('actData', actData)
                     this.handleRelatedActions(actData, false)
                     payload.count--
                     return
@@ -1585,6 +1587,7 @@
                     payload.actionsAllChecked = payload.allChecked
                 }
 
+                data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)
@@ -1671,6 +1674,9 @@
                     return v.actions.every(act => act.checked)
                 })
 
+                data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                console.log('data111', data)
+                console.log('actData111', actData)
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)

@@ -229,6 +229,7 @@
                     //     }]
                     // })
                     item.actions.forEach(sub => {
+                        sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : []
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp))
                     })
                 })
@@ -244,6 +245,7 @@
                     }
                 })
 
+                console.log('this.hasAddCustomList', this.hasAddCustomList)
                 const addCustomList = this.hasAddCustomList.filter(item => !temps.includes(item.$id))
                 // // mock数据
                 // addCustomList.forEach((element, index) => {
@@ -253,6 +255,7 @@
                 //     }]
                 // })
                 addCustomList.forEach(item => {
+                    item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
                     tempList.push(new GroupPolicy(item, 'add', 'custom', {
                         system: {
                             id: item.system_id,
