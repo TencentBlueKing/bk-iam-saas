@@ -107,7 +107,7 @@
             proceeNameFilter (value, list) {
                 const data = list.find(item => item.id === value)
                 if (data) return data.name
-                return ''
+                return '默认审批流程'
             }
         },
         props: {
@@ -144,7 +144,7 @@
             curSelectName () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return this.list.find(item => item.id === payload.process_id).name
+                        return this.list.find(item => item.id === payload.process_id) ? this.list.find(item => item.id === payload.process_id).name : '默认审批流程'
                     }
                     return ''
                 }
@@ -152,7 +152,7 @@
             curTitle () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`
+                        return this.list.find(item => item.id === payload.process_id) ? `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}` : ''
                     }
                     return ''
                 }
