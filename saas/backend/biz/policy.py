@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import functools
+import logging
 import time
 from copy import deepcopy
 from itertools import chain, groupby
@@ -48,6 +49,8 @@ from backend.service.utils.translate import translate_path
 from backend.util.model import ExcludeModel
 
 from .resource import ResourceBiz, ResourceNodeBean
+
+logger = logging.getLogger(__name__)
 
 
 class PolicyEmptyException(Exception):
@@ -970,8 +973,13 @@ class PolicyBeanList:
         策略里存储的资源名称可能已经变了，需要进行更新
         Note: 该函数仅用于需要对外展示策略数据时调用，不会自动更新DB里数据
         """
-        # 获取策略里被重命名的资源实例
-        renamed_resources = self.get_renamed_resources()
+        # 由于自动更新并非核心功能，若接入系统查询有问题，也需要正常显示
+        try:
+            # 获取策略里被重命名的资源实例
+            renamed_resources = self.get_renamed_resources()
+        except Exception as error:
+            logger.exception(f"auto_update: get_renamed_resources error={error}")
+            return []
 
         # 没有任何被重命名的资源实例，则无需更新策略
         if len(renamed_resources) == 0:
