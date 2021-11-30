@@ -23,22 +23,24 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)">
                 <template slot-scope="{ row }">
                     <template v-if="!row.isEmpty">
-                        <p class="related-resource-item"
-                            v-for="item in row.related_resource_types"
-                            :key="item.type">
-                            <template v-if="item.tag === 'delete'">
-                                <s class="item-label is-delete">{{ item.name + '：'}}</s>
-                                <s :title="item.value" class="value is-delete">{{ item.value }}</s>
-                            </template>
-                            <template v-else>
-                                <label class="item-label">{{ item.name + '：'}}</label>
-                                <span :title="item.value" class="value">{{ item.value }}</span>
-                            </template>
-                            <iam-svg name="icon-changed" ext-cls="relate-content-status-icon"
-                                v-if="item.tag === 'update' && curLanguageIsCn" />
-                            <iam-svg name="icon-changed-en" ext-cls="relate-content-status-icon"
-                                v-if="item.tag === 'update' && !curLanguageIsCn" />
-                        </p>
+                        <div v-for="_ in row.resource_groups" :key="_.id">
+                            <p class="related-resource-item"
+                                v-for="item in _.related_resource_types"
+                                :key="item.type">
+                                <template v-if="item.tag === 'delete'">
+                                    <s class="item-label is-delete">{{ item.name + '：'}}</s>
+                                    <s :title="item.value" class="value is-delete">{{ item.value }}</s>
+                                </template>
+                                <template v-else>
+                                    <label class="item-label">{{ item.name + '：'}}</label>
+                                    <span :title="item.value" class="value">{{ item.value }}</span>
+                                </template>
+                                <iam-svg name="icon-changed" ext-cls="relate-content-status-icon"
+                                    v-if="item.tag === 'update' && curLanguageIsCn" />
+                                <iam-svg name="icon-changed-en" ext-cls="relate-content-status-icon"
+                                    v-if="item.tag === 'update' && !curLanguageIsCn" />
+                            </p>
+                        </div>
                     </template>
                     <template v-else>
                         {{ $t(`m.common['无需关联实例']`) }}

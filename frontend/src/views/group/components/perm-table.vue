@@ -13,16 +13,18 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)">
                 <template slot-scope="{ row }">
                     <template v-if="!row.isEmpty">
-                        <p class="related-resource-item"
-                            v-for="item in row.related_resource_types"
-                            :key="item.type">
-                            <render-resource-popover
-                                :key="item.type"
-                                :data="item.condition"
-                                :value="`${item.name}：${item.value}`"
-                                :max-width="380"
-                                @on-view="handleViewResource(row)" />
-                        </p>
+                        <div v-for="_ in row.resource_groups" :key="_.id">
+                            <p class="related-resource-item"
+                                v-for="item in _.related_resource_types"
+                                :key="item.type">
+                                <render-resource-popover
+                                    :key="item.type"
+                                    :data="item.condition"
+                                    :value="`${item.name}：${item.value}`"
+                                    :max-width="380"
+                                    @on-view="handleViewResource(row)" />
+                            </p>
+                        </div>
                     </template>
                     <template v-else>
                         {{ $t(`m.common['无需关联实例']`) }}
@@ -146,15 +148,19 @@
             handleViewResource (payload) {
                 this.curId = payload.id
                 const params = []
-                if (payload.related_resource_types.length > 0) {
-                    payload.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
-                        params.push({
-                            name: type,
-                            label: `${name} ${this.$t(`m.common['实例']`)}`,
-                            tabType: 'resource',
-                            data: condition
-                        })
+                if (payload.resource_groups.length > 0) {
+                    payload.resource_groups.forEach(groupItem => {
+                        if (groupItem.related_resource_types.length > 0) {
+                            groupItem.related_resource_types.forEach(item => {
+                                const { name, type, condition } = item
+                                params.push({
+                                    name: type,
+                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
+                                    tabType: 'resource',
+                                    data: condition
+                                })
+                            })
+                        }
                     })
                 }
                 this.previewData = _.cloneDeep(params)
