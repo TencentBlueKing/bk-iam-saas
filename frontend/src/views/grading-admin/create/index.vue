@@ -318,9 +318,11 @@
                     const list = []
                     res.data.authorization_scopes.forEach(item => {
                         item.actions.forEach(act => {
-                            const tempResource = _.cloneDeep(act.related_resource_types)
-                            tempResource.forEach(subItem => {
-                                subItem.condition = null
+                            const tempResource = _.cloneDeep(act.resource_groups)
+                            tempResource.forEach(groupItem => {
+                                groupItem.related_resource_types.forEach(subItem => {
+                                    subItem.condition = null
+                                })
                             })
                             list.push({
                                 description: act.description,
@@ -332,7 +334,7 @@
                                 $id: `${item.system.id}&${act.id}`,
                                 tag: act.tag,
                                 type: act.type,
-                                related_resource_types: tempResource
+                                resource_groups: tempResource
                             })
                         })
                     })
