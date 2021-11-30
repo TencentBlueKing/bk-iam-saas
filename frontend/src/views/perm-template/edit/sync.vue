@@ -349,6 +349,12 @@
                 if (value.length < 1) {
                     this.$emit('on-ready')
                 }
+            },
+            addAction: {
+                handler (value) {
+                    console.log('value', value)
+                },
+                immediate: true
             }
         },
         created () {
@@ -368,9 +374,12 @@
                     })
                     this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
                     this.tableList = _.cloneDeep(res.data.results)
+                    // debugger
                     this.tableList.forEach((item, index) => {
                         if (this.addAction.length > 0) {
                             this.$set(item, 'add_actions', _.cloneDeep(this.addAction))
+                            console.log('item', item)
+                            // debugger
                             item.add_actions = item.add_actions.map(act => new SyncPolicy({ ...act, tag: 'add' }, 'add'))
                         }
                         item.delete_actions = item.delete_actions.map(act => new SyncPolicy({ ...act, tag: 'add' }, 'add'))
@@ -799,6 +808,8 @@
                 this.curScopeAction = this.authorizationScopeActions.find(
                     item => item.id === data.add_actions[index].id
                 )
+
+                console.log('this.curScopeAction', this.curScopeAction)
                 this.curIndex = $index
                 this.curActionIndex = index
                 this.curResIndex = resIndex

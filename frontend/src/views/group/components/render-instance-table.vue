@@ -144,6 +144,7 @@
                     :disabled="curDisabled"
                     :params="params"
                     :res-index="curResIndex"
+                    :group-index="curGroupIndex"
                     :cur-scope-action="curScopeAction"
                     @on-limit-change="handleLimitChange"
                     @on-init="handleOnInit" />
@@ -1328,14 +1329,14 @@
                                             )
                                         })
                                     })
-                                    // 强制刷新下
-                                    item.resource_groups = _.cloneDeep(item.resource_groups)
                                 }
                                 groupResourceTypes.push({
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
                                 })
                             })
+                            // 强制刷新下
+                            item.resource_groups = _.cloneDeep(item.resource_groups)
                         }
                             
                         actionParam = {
@@ -1469,14 +1470,14 @@
                                             )
                                         })
                                     })
-                                    // 强制刷新下
-                                    item.resource_groups = _.cloneDeep(item.resource_groups)
                                 }
                                 groupResourceTypes.push({
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
                                 })
                             })
+                            // 强制刷新下
+                            item.resource_groups = _.cloneDeep(item.resource_groups)
                         }
                         
                         const params = {
