@@ -245,14 +245,15 @@
 
             async handleDeletePerm (payload) {
                 const data = this.$refs.detailComRef.handleGetValue()
-                const { ids, condition, type } = data
+                const { ids, condition, type, resource_group_id } = data
                 const params = {
                     id: this.curPolicyId,
                     data: {
                         system_id: data.system_id,
                         type: type,
                         ids,
-                        condition
+                        condition,
+                        resource_group_id
                     }
                 }
                 try {
@@ -329,7 +330,8 @@
                                     label: `${name} ${this.$t(`m.common['实例']`)}`,
                                     tabType: 'resource',
                                     data: condition,
-                                    systemId: item.system_id
+                                    systemId: item.system_id,
+                                    resource_group_id: groupItem.id
                                 })
                             })
                         }
