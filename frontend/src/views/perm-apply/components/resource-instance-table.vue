@@ -613,7 +613,7 @@
                 this.curIndex = index
                 this.curResIndex = resIndex
                 this.curGroupIndex = groupIndex
-                
+
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
                 window.changeAlert = 'iamSidesider'
                 this.isShowResourceInstanceSideslider = true
@@ -632,7 +632,7 @@
                     }
                     return false
                 }
-                    
+
                 )
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
                 curData.related_resource_types = [curData.resource_groups[this.curGroupIndex]
@@ -688,7 +688,7 @@
                 if (payload.length < 1) {
                     return
                 }
-                
+
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
                         && sub.system_id === item.resource_groups[this.curGroupIndex]
@@ -786,6 +786,7 @@
                 })
                 this.previewResourceParams = {
                     policy_id: this.tableList[this.curIndex].policy_id,
+                    resource_group_id: this.tableList[this.curIndex].resource_groups[0].id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -826,6 +827,7 @@
                 })
                 this.previewResourceParams = {
                     policy_id: payload.policy_id,
+                    resource_group_id: payload.resource_groups[0].id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -1176,11 +1178,12 @@
                     if (item.expired_at === '' && item.expired_display) {
                         tempExpiredAt = parseInt(item.expired_display, 10) * 24 * 3600
                     }
+
                     if (!item.isAggregate) {
                         const { type, id, name, environment, description, policy_id, isNew, isChanged } = item
                         const relatedResourceTypes = []
-                        if (item.related_resource_types.length > 0) {
-                            item.related_resource_types.forEach(resItem => {
+                        if (item.resource_groups[0].related_resource_types.length > 0) {
+                            item.resource_groups[0].related_resource_types.forEach(resItem => {
                                 let newResourceCount = 0
                                 if (resItem.empty) {
                                     resItem.isError = true
@@ -1236,14 +1239,20 @@
                                 })
                             })
                             // 强制刷新下
-                            item.related_resource_types = _.cloneDeep(item.related_resource_types)
+                            item.resource_groups[0].related_resource_types
+                                = _.cloneDeep(item.resource_groups[0].related_resource_types)
                         }
                         const params = {
                             type,
                             name,
                             id,
                             description,
-                            related_resource_types: relatedResourceTypes,
+                            resource_groups: [
+                                {
+                                    id: item.resource_groups[0].id,
+                                    related_resource_types: relatedResourceTypes
+                                }
+                            ],
                             environment,
                             policy_id,
                             expired_at: item.expired_at === '' ? tempExpiredAt : Number(item.expired_at)
