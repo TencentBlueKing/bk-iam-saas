@@ -229,6 +229,7 @@
                     //     }]
                     // })
                     item.actions.forEach(sub => {
+                        sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : []
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp))
                     })
                 })
@@ -244,6 +245,7 @@
                     }
                 })
 
+                console.log('this.hasAddCustomList', this.hasAddCustomList)
                 const addCustomList = this.hasAddCustomList.filter(item => !temps.includes(item.$id))
                 // // mock数据
                 // addCustomList.forEach((element, index) => {
@@ -253,6 +255,7 @@
                 //     }]
                 // })
                 addCustomList.forEach(item => {
+                    item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
                     tempList.push(new GroupPolicy(item, 'add', 'custom', {
                         system: {
                             id: item.system_id,
@@ -276,7 +279,7 @@
                 })
             },
 
-            handleResSelect (index, resIndex, condition) {
+            handleResSelect (index, resIndex, groupIndex, condition) {
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index]
                     const actions = this.curMap.get(item.aggregationId) || []
@@ -284,7 +287,8 @@
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
                             if (actions[i].id === item.id) {
-                                actions[i].related_resource_types[resIndex].condition = _.cloneDeep(condition)
+                                actions[i].resource_groups[groupIndex]
+                                    .related_resource_types[resIndex].condition = _.cloneDeep(condition)
                                 break
                             }
                         }

@@ -675,6 +675,9 @@
             },
 
             handleSelectSubmit (payload) {
+                payload.forEach(item => {
+                    item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
+                })
                 window.changeDialog = true
                 this.originalList = _.cloneDeep(payload)
                 this.isShowActionEmptyError = false

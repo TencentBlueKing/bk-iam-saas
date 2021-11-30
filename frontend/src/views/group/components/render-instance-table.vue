@@ -873,7 +873,6 @@
             },
             // 保存
             async handleResourceSumit () {
-                // debugger
                 window.changeDialog = true
                 const conditionData = this.$refs.renderResourceRef.handleGetValue()
                 const { isEmpty, data } = conditionData
@@ -901,7 +900,7 @@
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
 
-                this.$emit('on-resource-select', this.curIndex, this.curResIndex, resItem.condition)
+                this.$emit('on-resource-select', this.curIndex, this.curResIndex, this.curGroupIndex, resItem.condition)
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curGroupIndex = -1
@@ -1282,6 +1281,7 @@
                         const { type, id, name, environment, description } = item
                         systemId = item.detail.system.id
                         const relatedResourceTypes = []
+                        const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 if (groupItem.related_resource_types.length > 0) {
@@ -1331,6 +1331,10 @@
                                     // 强制刷新下
                                     item.resource_groups = _.cloneDeep(item.resource_groups)
                                 }
+                                groupResourceTypes.push({
+                                    id: groupItem.id,
+                                    related_resource_types: relatedResourceTypes
+                                })
                             })
                         }
                             
@@ -1339,7 +1343,7 @@
                             name,
                             id,
                             description,
-                            related_resource_types: relatedResourceTypes,
+                            resource_groups: groupResourceTypes,
                             environment
                         }
                     } else {
@@ -1418,6 +1422,7 @@
                     if (!item.isAggregate) {
                         const { type, id, name, environment, description } = item
                         const relatedResourceTypes = []
+                        const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 if (groupItem.related_resource_types.length > 0) {
@@ -1467,6 +1472,10 @@
                                     // 强制刷新下
                                     item.resource_groups = _.cloneDeep(item.resource_groups)
                                 }
+                                groupResourceTypes.push({
+                                    id: groupItem.id,
+                                    related_resource_types: relatedResourceTypes
+                                })
                             })
                         }
                         
@@ -1475,7 +1484,7 @@
                             name,
                             id,
                             description,
-                            related_resource_types: relatedResourceTypes,
+                            resource_groups: groupResourceTypes,
                             environment
                         }
                         actionList.push(_.cloneDeep(params))
