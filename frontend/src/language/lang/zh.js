@@ -944,6 +944,9 @@ export const m = {
         '111': '111',
         '111': '111',
         '111': '111'
+    },
+    permTransfer: {
+        '权限交接': '权限交接'
     }
 }
 export default {
