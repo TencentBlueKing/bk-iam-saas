@@ -11,10 +11,17 @@
             </bk-button>
             <bk-button
                 data-test-id="myPerm_btn_batchRenewal"
-                style="margin: 0 0 16px 6px;"
+                style="margin: 0 6px 16px 6px;"
                 :disabled="isEmpty || isNoRenewal"
                 @click="handleBatchRenewal">
                 {{ $t(`m.renewal['批量续期']`) }}
+            </bk-button>
+            <bk-button
+                data-test-id="myPerm_btn_applyPerm"
+                type="button"
+                style="margin-bottom: 16px;"
+                @click="handleGoPermTransfer">
+                {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
@@ -175,6 +182,15 @@
                         }
                     })
                 }
+            },
+            // 权限交接
+            handleGoPermTransfer () {
+                this.$router.push({
+                    name: 'permRenewal',
+                    query: {
+                        tab: 'custom'
+                    }
+                })
             }
         }
     }

@@ -741,6 +741,9 @@ export const m = {
         '请输入实例视图中文名': 'Please enter the Instance view Chinese name',
         '实例视图英文名': 'English name of the instance view',
         '请输入实例视图英文名': 'Please enter the English name of the instance view'
+    },
+    permTransfer: {
+        '权限交接': 'Authority transfer'
     }
 }
 export default {
