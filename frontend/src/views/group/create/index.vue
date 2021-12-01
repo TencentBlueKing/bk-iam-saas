@@ -121,7 +121,7 @@
     import { bus } from '@/common/bus'
     import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants'
     import { leavePageConfirm } from '@/common/leave-page-confirm'
-    import IamGuide from '@/components/iam-guide'
+    import IamGuide from '@/components/iam-guide/index.vue'
     import AddMemberDialog from '../components/iam-add-member'
     import RenderMember from '../components/render-member'
     import basicInfo from '../components/basic-info'

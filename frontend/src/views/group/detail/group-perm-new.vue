@@ -9,6 +9,7 @@
         </bk-button>
         <template v-if="!isLoading && !isEmpty">
             <render-perm-item
+                data-test-id="myPerm_list_permItem"
                 v-for="(item, index) in groupSystemList"
                 :key="item.id"
                 :expanded.sync="item.expanded"
@@ -22,6 +23,7 @@
                 <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
                     <div v-if="!item.loading">
                         <render-template-item
+                            data-test-id="myPerm_list_templateItem"
                             :ref="`rTemplateItem${item.id}`"
                             v-for="(subItem, subIndex) in item.templates"
                             :key="subIndex"
@@ -30,10 +32,6 @@
                             :is-edit="subItem.isEdit"
                             :loading="subItem.editLoading"
                             :expanded.sync="subItem.expanded"
-                            :delete-loading="subItem.deleteLoading"
-                            :policy-count="item.custom_policy_count"
-                            :template-count="item.template_count"
-                            :group-system-list-length="groupSystemListLength"
                             :mode="isEditMode ? 'edit' : 'detail'"
                             @on-delete="handleDelete(item, subItem)"
                             @on-save="handleSave(item, index, subItem, subIndex)"
@@ -42,7 +40,8 @@
                             @on-expanded="handleTemplateExpanded(...arguments, subItem)">
                             <div style="min-height: 136px;"
                                 v-bkloading="{ isLoading: subItem.loading, opacity: 1 }">
-                                <resource-instance-table
+                                <render-instance-table
+                                    data-test-id="myPerm_list_instanceTable"
                                     v-if="!subItem.loading"
                                     mode="detail"
                                     :is-custom="subItem.count > 0"
@@ -72,18 +71,19 @@
 <script>
     // import _ from 'lodash'
     import GroupPolicy from '@/model/group-policy'
-    import RenderPermItem from '../common/render-perm-item-new'
-    import RenderTemplateItem from '../common/render-template-item'
-    import ResourceInstanceTable from '../components/render-instance-table'
+    import RenderPermItem from '../common/render-perm-item-new.vue'
+    import RenderTemplateItem from '../common/render-template-item.vue'
+    import RenderInstanceTable from '../components/render-instance-table.vue'
     // import GroupAggregationPolicy from '@/model/group-aggregation-policy'
     // import store from '@/store'
     const CUSTOM_CUSTOM_TEMPLATE_ID = 0
+
     export default {
         name: '',
         components: {
             RenderPermItem,
             RenderTemplateItem,
-            ResourceInstanceTable
+            RenderInstanceTable
         },
         props: {
             id: {
@@ -140,12 +140,11 @@
                 try {
                     const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId })
                     ;(res.data || []).forEach(item => {
-                        item.expanded = false
+                        item.expanded = false // 此处会在子组件更新为true
                         item.loading = false
-                        item.templates = []
+                        item.templates = [] // 在getGroupTemplateList方法赋值
                     })
-                    this.groupSystemList = res.data
-                    console.log('this.groupSystemList', this.groupSystemList)
+                    this.groupSystemList = res.data // groupSystemList会通过handleExpanded调用其他方法做属性的添加
                     this.groupSystemListLength = res.data.length
                 } catch (e) {
                     console.error(e)
@@ -173,22 +172,22 @@
             },
 
             handleEdit (paylaod) {
-                console.log('编辑', paylaod)
-                this.$set(paylaod, 'isEdit', true)
+                this.$set(paylaod, 'isEdit', true) // 事件会冒泡会触发handleExpanded方法
             },
 
             handleCancel (paylaod) {
                 this.$set(paylaod, 'isEdit', false)
             },
 
-            async getGroupTemplateList (payload) {
-                payload.loading = true
+            async getGroupTemplateList (groupSystem) {
+                groupSystem.loading = true
                 let res
                 try {
                     res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', {
                         id: this.groupId,
-                        systemId: payload.id
+                        systemId: groupSystem.id
                     })
+
                     res.data.forEach(item => {
                         item.loading = false
                         item.tableData = []
@@ -197,16 +196,16 @@
                         item.editLoading = false
                         item.deleteLoading = false
                     })
-                    payload.templates = res.data
-                    if (payload.custom_policy_count) {
-                        payload.templates.push({
+                    groupSystem.templates = res.data // 赋值给展开项
+                    if (groupSystem.custom_policy_count) {
+                        groupSystem.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
-                            id: CUSTOM_CUSTOM_TEMPLATE_ID,
+                            id: CUSTOM_CUSTOM_TEMPLATE_ID, // 自定义权限 id 为 0
                             system: {
-                                id: payload.id,
-                                name: payload.name
+                                id: groupSystem.id,
+                                name: groupSystem.name
                             },
-                            count: payload.custom_policy_count,
+                            count: groupSystem.custom_policy_count,
                             loading: false,
                             tableData: [],
                             tableDataBackup: [],
@@ -224,15 +223,16 @@
                         ellipsisCopy: true
                     })
                 } finally {
-                    payload.loading = false
+                    groupSystem.loading = false
                     if (res.data.length === 1) {
                         this.$nextTick(() => {
-                            this.$refs[`rTemplateItem${payload.id}`][0].handleExpanded()
+                            this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded()
                         })
                     }
                 }
             },
 
+            // 进入之后会在子组件中触发执行
             handleExpanded (flag, item) {
                 if (!flag) {
                     return
@@ -260,12 +260,19 @@
                 }
             },
 
+            /**
+             * @description: 子item
+             * @param {*} flag
+             * @param {*} item
+             * @return {*}
+             */
             async handleTemplateExpanded (flag, item) {
                 console.log('详情', item)
                 if (!flag) {
                     this.$set(item, 'isEdit', false)
                     return
                 }
+                // count > 0 说明是自定义权限
                 if (item.count > 0) {
                     this.getGroupCustomPolicy(item)
                     return
@@ -335,7 +342,7 @@
                     const tableData = res.data.map(row => {
                         return new GroupPolicy(
                             row,
-                            'detail',
+                            'detail', // 此属性为flag，会在related-resource-types赋值为add
                             'custom',
                             { system: item.system }
                         )

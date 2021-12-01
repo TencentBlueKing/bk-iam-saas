@@ -1,0 +1,128 @@
+### 批量第三方依赖鉴权策略查询
+
+#### 背景
+
+本系统的操作依赖外部系统资源类型, 需要大批量使用外部资源实例鉴权
+
+例如: 用户在作业平台需要触发上千台主机上批量执行某个作业, 比如 需要在 host1, host2 上执行 job1
+
+这个接口, 支持拉取策略的同时, 帮助接入系统到`依赖系统`拉取策略计算需要的资源信息; 
+
+接入系统同时拿到`策略`和`资源信息`, 就可以完成计算, 确认是否有权限;
+
+注: 由于大批量遍历计算 expression 属于 cpu 密集计算, 如果计算放在 IAM, 在并发批量计算时, 会导致 IAM 服务 CPU 资源不足, 进而服务不可用, 所以需要把计算分散到接入系统分布计算, 减轻 IAM 服务的压力
+
+场景 1: 外部依赖资源实例的数量**不**超过 1000 个
+
+使用建议:
+
+直接使用`query_by_ext_resources`接口查询策略表达式与资源实例相关信息到本地后遍历计算是否有权限
+
+场景 2: 外部依赖资源实例的数量**超过**了 1000 个
+
+使用建议:
+
+1. 使用`policy/query`接口查询策略表达式
+2. 本地计算表达式中是否有`any`, 是否有实例`id in ["id1", "id2"]`初步计算部分外部依赖资源实例是否权限
+3. 对于在第二步中计算无权限的资源实例, 再分批次(每次不超过 1000 个)调用`query_by_ext_resources`接口查询策略表达式与资源实例相关信息到本地后遍历计算是否有权限
+
+#### 使用方式
+
+1. 在 request body 中 resources 传 job1 相关的资源信息, 在 ext_resources 中传第三方依赖的 host1, host2
+2. 返回的结果中 expression 是过滤了 request 中 resource 相关条件后的条件表达式, 结果的 ext_resources 返回填充属性的资源信息
+3. **鉴权计算**: 接入系统拿到 ext_resource 后遍历每个 host 实例带入 expression 中计算得到鉴权结果
+
+注意:
+
+- request 中 resources 与 ext_resources 的关系, 当前 ext_resources 只能有一种第三方依赖类型的实例, resource 必须为 action 依赖的其它资源类型的实例
+- ext_resources 一次查询不能超过 1000 个, 如果超过建议分批次查询
+
+------
+
+#### Request
+
+```json
+{
+  "system": "bk_job",
+  "subject": {
+    "type": "user",
+    "id": "admin"
+  },
+  "action": {
+    "id": "execute"
+  },
+  "resources": [  # 参与过滤策略的资源实例, 每种资源类型只能传1个, 可以不传, 不传时返回的表达式包含操作关联所有的资源类型的条件
+    {
+      "system": "bk_job",
+      "type": "job",
+      "id": "job1",
+      "attribute": {}
+    }
+  ],
+  "ext_resources": [  # 不参与计算的资源类型, 可以批量传入, IAM会向第三方系统查询资源的属性信息, 一次最多1000个
+    {
+      "system": "bk_cmdb",
+      "type": "host",
+      "ids": [
+        "host1",
+        "host2"
+      ]
+    }
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "expression": {  # 已经代入request中resources计算过后的表达式
+      "op": "AND",
+      "content": [
+        {
+          "op": "in",
+          "field": "host.id",
+          "value": [
+            "host1",
+            "host2"
+          ]
+        },
+        {
+          "op": "starts_with",
+          "field": "host._bk_iam_path_",
+          "value": [
+            "/biz,5/"
+          ]
+        }
+      ]
+    },
+    "ext_resources": [  # 查询得到的第三方资源实例, 填充了与表达式相关的属性
+      {
+        "system": "bk_cmdb",
+        "type": "host",
+        "instances": [
+          {
+            "id": "host1",
+            "attribute": {
+              "_bk_iam_path_": [
+                "/biz,5/"
+              ]
+            }
+          },
+          {
+            "id": "host2",
+            "attribute": {
+              "_bk_iam_path_": [
+                "/biz,5/"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```

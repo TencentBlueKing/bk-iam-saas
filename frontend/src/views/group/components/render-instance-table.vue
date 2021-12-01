@@ -187,7 +187,6 @@
             @confirm="handleDelete">
             <h3 style="text-align:center">{{ $t(`m.common['是否删除该自定义权限']`) }}</h3>
         </bk-dialog>
-
     </div>
 </template>
 

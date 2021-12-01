@@ -43,11 +43,11 @@
     </div>
 </template>
 <script>
-    import renderResourceInstance from './index'
-    import renderOrderNumber from './order-number'
-    import InstanceItem from './instance-item'
-    import propertyItem from './property-item'
-    import OrStatusBar from '../render-status/bar'
+    import renderResourceInstance from './index.vue'
+    import renderOrderNumber from './order-number.vue'
+    import InstanceItem from './instance-item.vue'
+    import propertyItem from './property-item.vue'
+    import OrStatusBar from '../render-status/bar.vue'
 
     export default {
         name: '',

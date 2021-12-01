@@ -1,8 +1,8 @@
 <template>
-    <div class="iam-perm-edit-table" v-bkloading="{ isLoading: loading, opacity: 1 }">
+    <div class="my-perm-custom-perm-table" v-bkloading="{ isLoading: loading, opacity: 1 }">
         <bk-table
             v-if="!loading"
-            :data="tableList"
+            :data="policyList"
             border
             :cell-class-name="getCellClass">
             <bk-table-column :label="$t(`m.common['操作']`)">
@@ -54,15 +54,6 @@
             @on-cancel="hideCancelDelete"
             @on-sumbit="handleSumbitDelete" />
 
-        <delete-dialog
-            :show.sync="confirmDialog.visible"
-            :loading="confirmDialog.loading"
-            :title="confirmDialog.title"
-            :sub-title="confirmDialog.subTitle"
-            @on-after-leave="handleAfterResDeleteLeave"
-            @on-cancel="hideCancelResDelete"
-            @on-sumbit="handleSumbitResDelete" />
-
         <bk-sideslider
             :is-show="isShowSideslider"
             :title="sidesliderTitle"
@@ -99,8 +90,7 @@
                 </div>
             </div>
             <div slot="content">
-                <component
-                    :is="renderDetailCom"
+                <render-detail
                     :data="previewData"
                     :can-edit="!isBatchDelete"
                     ref="detailComRef"
@@ -113,14 +103,14 @@
 <script>
     import _ from 'lodash'
     import IamPopoverConfirm from '@/components/iam-popover-confirm'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
     import PermPolicy from '@/model/my-perm-policy'
     import { leaveConfirm } from '@/common/leave-confirm'
-    import RenderDetail from './render-detail-edit'
+    import RenderDetail from '../components/render-detail-edit'
 
     export default {
-        name: '',
+        name: 'CustomPermTable',
         components: {
             IamPopoverConfirm,
             RenderDetail,
@@ -135,13 +125,12 @@
         },
         data () {
             return {
-                tableList: [],
+                policyList: [],
                 policyCountMap: {},
                 initRequestQueue: ['permTable'],
                 previewData: [],
                 curId: '',
                 curPolicyId: '',
-                renderDetailCom: 'RenderDetail',
                 isShowSideslider: false,
                 curDeleteIds: [],
 
@@ -151,23 +140,12 @@
                     subTitle: '',
                     loading: false
                 },
-
-                confirmDialog: {
-                    visible: false,
-                    title: this.$t(`m.dialog['确认删除']`),
-                    subTitle: '',
-                    loading: false
-                },
-
                 sidesliderTitle: '',
 
                 isBatchDelete: true,
                 batchDisabled: false,
                 disabled: true,
-                canOperate: true,
-                cellStyle: {
-                    '-webkit-line-clamp': 'unset'
-                }
+                canOperate: true
             }
         },
         computed: {
@@ -185,11 +163,13 @@
                 handler (value) {
                     if (value !== '') {
                         this.initRequestQueue = ['permTable']
-                        this.fetchData(value)
+                        const params = {
+                            systemId: value
+                        }
+                        this.fetchData(params)
                     } else {
-                        this.renderDetailCom = 'RenderDetail'
                         this.initRequestQueue = []
-                        this.tableList = []
+                        this.policyList = []
                         this.policyCountMap = {}
                     }
                 },
@@ -197,10 +177,13 @@
             }
         },
         methods: {
-            async fetchData (payload) {
+            /**
+             * fetchData
+             */
+            async fetchData (params) {
                 try {
-                    const res = await this.$store.dispatch('permApply/getPolicies', { system_id: payload })
-                    this.tableList = res.data.map(item => new PermPolicy(item))
+                    const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId })
+                    this.policyList = res.data.map(item => new PermPolicy(item))
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -215,6 +198,9 @@
                 }
             },
 
+            /**
+             * getCellClass
+             */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
                     return 'iam-perm-table-cell-cls'
@@ -222,11 +208,20 @@
                 return ''
             },
 
+            /**
+             * handleRefreshData
+             */
             handleRefreshData () {
                 this.initRequestQueue = ['permTable']
-                this.fetchData(this.systemId)
+                const params = {
+                    systemId: this.systemId
+                }
+                this.fetchData(params)
             },
 
+            /**
+             * handleBatchDelete
+             */
             handleBatchDelete () {
                 window.changeAlert = true
                 this.isBatchDelete = false
@@ -292,6 +287,9 @@
                 }, _ => _)
             },
 
+            /**
+             * resetDataAfterClose
+             */
             resetDataAfterClose () {
                 this.sidesliderTitle = ''
                 this.previewData = []
@@ -303,19 +301,24 @@
                 this.curPolicyId = ''
             },
 
+            /**
+             * handleAfterDeleteLeave
+             */
             handleAfterDeleteLeave () {
                 this.deleteDialog.subTitle = ''
                 this.curDeleteIds = []
             },
 
+            /**
+             * hideCancelDelete
+             */
             hideCancelDelete () {
                 this.deleteDialog.visible = false
             },
 
-            handleViewCondition (row) {
-                console.warn('view')
-            },
-
+            /**
+             * handleViewResource
+             */
             handleViewResource (payload) {
                 this.curId = payload.id
                 this.curPolicyId = payload.policy_id
@@ -350,32 +353,31 @@
                 this.isShowSideslider = true
             },
 
+            /**
+             * handleDelete
+             */
             handleDelete (payload) {
                 this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id])
                 this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】权限`
                 this.deleteDialog.visible = true
             },
 
-            handleSumbitResDelete () {},
-
-            hideCancelResDelete () {
-                this.confirmDialog.visible = false
-            },
-
-            handleAfterResDeleteLeave () {
-                this.confirmDialog.subTitle = ''
-            },
-
+            /**
+             * handleSumbitDelete
+             */
             async handleSumbitDelete () {
                 this.deleteDialog.loading = true
                 try {
-                    await this.$store.dispatch('permApply/deletePerm', { policyIds: this.curDeleteIds, systemId: this.systemId })
-                    const index = this.tableList.findIndex(item => item.policy_id === this.curDeleteIds[0])
+                    await this.$store.dispatch('permApply/deletePerm', {
+                        policyIds: this.curDeleteIds,
+                        systemId: this.systemId
+                    })
+                    const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0])
                     if (index > -1) {
-                        this.tableList.splice(index, 1)
+                        this.policyList.splice(index, 1)
                     }
                     this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                    this.$emit('after-delete', this.tableList.length)
+                    this.$emit('after-delete', this.policyList.length)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -394,7 +396,7 @@
     }
 </script>
 <style lang='postcss'>
-    .iam-perm-edit-table {
+    .my-perm-custom-perm-table {
         min-height: 101px;
         .bk-table-enable-row-hover .bk-table-body tr:hover > td {
             background-color: #fff;
