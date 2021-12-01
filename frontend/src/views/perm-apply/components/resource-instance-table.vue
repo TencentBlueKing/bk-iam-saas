@@ -635,7 +635,8 @@
 
                 )
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
-                curData.related_resource_types = [curData.resource_groups[this.curGroupIndex]
+                // eslint-disable-next-line max-len
+                curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]]
                 curData.related_resource_types[0].condition = curPayload
                 if (curData.expired_at !== PERMANENT_TIMESTAMP) {
