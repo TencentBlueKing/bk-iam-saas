@@ -22,8 +22,8 @@
                                 {{ curLanguageIsCn ? isUnfold ? item.name : item.name.substr(0, 2) : isUnfold ? item.name : 'MP' }}
                             </template>
                         </div>
-                        <template v-for="child in item.children">
-                            <div
+                        <template>
+                            <div v-for="child in item.children"
                                 v-show="!routerDiff.includes(child.rkey)"
                                 :key="child.id"
                                 :class="['iam-menu-item', { active: openedItem === child.id }, { 'has-darkly-theme': isDarklyTheme }]"
@@ -62,13 +62,28 @@
 
     const routerMap = new Map([
         // 权限模板
-        [['permTemplate', 'permTemplateDetail', 'permTemplateCreate', 'permTemplateEdit', 'permTemplateDiff'], 'permTemplateNav'],
+        [
+            ['permTemplate', 'permTemplateDetail', 'permTemplateCreate', 'permTemplateEdit', 'permTemplateDiff'],
+            'permTemplateNav'
+        ],
         // 首页
         [['', 'index'], 'indexNav'],
         // 用户组
-        [['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'], 'userGroupNav'],
+        [
+            [
+                'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail',
+                'groupPermRenewal', 'addGroupPerm'
+            ],
+            'userGroupNav'
+        ],
         // 系统接入
-        [['systemAccess', 'systemAccessCreate', 'systemAccessAccess', 'systemAccessRegistry', 'systemAccessOptimize', 'systemAccessComplete'], 'systemAccessNav'],
+        [
+            [
+                'systemAccess', 'systemAccessCreate', 'systemAccessAccess',
+                'systemAccessRegistry', 'systemAccessOptimize', 'systemAccessComplete'
+            ],
+            'systemAccessNav'
+        ],
         // 我的申请
         [['apply'], 'applyNav'],
         // 权限申请 'permApply'
@@ -206,24 +221,11 @@
                     }
                     this.openedItem = item.id === this.openedItem ? '' : item.id
                 })
-            },
-
-            handleSelect (id, item) {
-                if (item.url === this.$route.path) {
-                    this.$emit('reload-page', this.$route)
-                    return
-                }
-
-                if (item.hasOwnProperty('url')) {
-                    this.$router.push(item.url)
-                }
-
-                this.openedItem = item.id === this.openedItem ? '' : item.id
             }
         }
     }
 </script>
 
 <style scoped>
-    @import './index';
+    @import './index.css';
 </style>

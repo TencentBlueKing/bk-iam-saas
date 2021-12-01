@@ -1,7 +1,6 @@
 <template>
     <div class="iam-my-perm-related-content">
-        <bk-tab :active.sync="active"
-            type="unborder-card">
+        <bk-tab :active.sync="active" type="unborder-card">
             <bk-tab-panel
                 v-for="(panel, index) in panels"
                 v-bind="panel"
@@ -19,6 +18,7 @@
 <script>
     import Tree from '@/components/attach-action-preview/attach-action-tree'
     import ConditionDetail from '@/components/render-resource/detail'
+
     export default {
         name: '',
         components: {
