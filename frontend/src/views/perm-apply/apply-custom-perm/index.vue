@@ -855,7 +855,9 @@
                 if (flag) {
                     if (!isExist) {
                         ++item.count
-                        payload.resource_groups = payload.related_resource_types.length ? [{ id: '', related_resource_types: payload.related_resource_types }] : []
+                        if (!payload.resource_groups || !payload.resource_groups.length) {
+                            payload.resource_groups = payload.related_resource_types.length ? [{ id: '', related_resource_types: payload.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...payload, tag: 'add' }, 'custom'))
                     }
                 } else {
@@ -1602,7 +1604,9 @@
                     payload.actionsAllChecked = payload.allChecked
                 }
 
-                data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                if (!data.resource_groups || !data.resource_groups.length) {
+                    data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                }
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)
@@ -1689,7 +1693,9 @@
                     return v.actions.every(act => act.checked)
                 })
 
-                data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                if (!data.resource_groups || !data.resource_groups.length) {
+                    data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                }
                 console.log('data111', data)
                 console.log('actData111', actData)
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
