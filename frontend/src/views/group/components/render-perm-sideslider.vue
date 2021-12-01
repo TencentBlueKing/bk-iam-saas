@@ -154,10 +154,6 @@
                 this.$emit('animation-end')
             },
 
-            handleViewCondition (row) {
-                console.warn('view')
-            },
-
             handleViewResource (payload) {
                 this.curId = payload.id
                 const params = []

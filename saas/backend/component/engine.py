@@ -48,7 +48,7 @@ def _call_engine_api(http_func, url_path, data, timeout=30):
     if not ok:
         message = "engine api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
         logger.error(message)
-        raise error_codes.ENGINE_REQUEST_ERROR.format("request engine api error")
+        raise error_codes.ENGINE_REQUEST_ERROR.format(f'request engine api error: {data["error"]}')
 
     code = data["code"]
     message = data["message"]
