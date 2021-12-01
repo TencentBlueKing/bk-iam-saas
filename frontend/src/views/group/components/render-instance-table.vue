@@ -107,7 +107,7 @@
                                                 @on-view="handlerOnView(row, content, contentIndex, groIndex)"
                                                 @on-restore="handlerOnRestore(content)"
                                                 @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
-                                                @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
+                                                @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex, groIndex)"
                                                 @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
                                                 @on-click="showResourceInstance(row, $index, content, contentIndex, groIndex)" />
                                             <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
@@ -682,12 +682,12 @@
                 }
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
-                        item.resource_groups.forEach(groupItem => {
+                        item.resource_groups.forEach((groupItem, groupIndex) => {
                             groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
                                 if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
                                     subItem.condition = _.cloneDeep(tempCurData)
                                     subItem.isError = false
-                                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
+                                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition, groupIndex)
                                 }
                             })
                         })
@@ -901,7 +901,7 @@
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
 
-                this.$emit('on-resource-select', this.curIndex, this.curResIndex, this.curGroupIndex, resItem.condition)
+                this.$emit('on-resource-select', this.curIndex, this.curGroupIndex, resItem.condition, this.curResIndex)
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curGroupIndex = -1
@@ -1040,7 +1040,7 @@
                 }
             },
 
-            handlerOnPaste (payload, content, $index, contentIndex) {
+            handlerOnPaste (payload, content, $index, contentIndex, groIndex) {
                 // debugger
                 let tempCurData = ['none']
                 if (this.curCopyMode === 'normal') {
@@ -1093,7 +1093,7 @@
 
                 content.isError = false
                 this.showMessage(this.$t(`m.info['粘贴成功']`))
-                this.$emit('on-resource-select', $index, contentIndex, content.condition)
+                this.$emit('on-resource-select', $index, contentIndex, content.condition, groIndex)
             },
 
             handlerOnBatchPaste (payload, content, index, subIndex) {
@@ -1216,12 +1216,12 @@
                     }
                     this.tableList.forEach(item => {
                         if (!item.isAggregate) {
-                            item.resource_groups.forEach(groupItem => {
+                            item.resource_groups.forEach((groupItem, groupIndex) => {
                                 groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
                                     if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
                                         subItem.condition = _.cloneDeep(tempCurData)
                                         subItem.isError = false
-                                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
+                                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition, groupIndex)
                                     }
                                 })
                             })

@@ -229,7 +229,9 @@
                     //     }]
                     // })
                     item.actions.forEach(sub => {
-                        sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : []
+                        if (!sub.resource_groups || !sub.resource_groups.length) {
+                            sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : []
+                        }
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp))
                     })
                 })
@@ -255,7 +257,9 @@
                 //     }]
                 // })
                 addCustomList.forEach(item => {
-                    item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
+                    }
                     tempList.push(new GroupPolicy(item, 'add', 'custom', {
                         system: {
                             id: item.system_id,
@@ -279,7 +283,7 @@
                 })
             },
 
-            handleResSelect (index, resIndex, groupIndex, condition) {
+            handleResSelect (index, resIndex, condition, groupIndex) {
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index]
                     const actions = this.curMap.get(item.aggregationId) || []
@@ -471,7 +475,8 @@
                             tempData.push(...value)
                         } else {
                             let curInstances = []
-                            const conditions = value.map(subItem => subItem.related_resource_types[0].condition)
+                            const conditions = value.map(subItem => subItem.resource_groups[0]
+                                .related_resource_types[0].condition)
                             // 是否都选择了实例
                             const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0)
                             if (isAllHasInstance) {
