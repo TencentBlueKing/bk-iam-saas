@@ -116,11 +116,15 @@ class ApplicationResourceGroup(BaseModel):
     related_resource_types: List[ApplicationRelatedResource]
 
 
+class ApplicationResourceGroupList(ListModel):
+    __root__: List[ApplicationResourceGroup]
+
+
 class ApplicationPolicyInfo(BaseModel):
     """申请内容里的策略"""
 
     action_id: str = Field(alias="id")
-    resource_groups: List[ApplicationResourceGroup]
+    resource_groups: ApplicationResourceGroupList
     expired_at: int = 0
     expired_display: str = ""
     # Action名称
@@ -130,11 +134,6 @@ class ApplicationPolicyInfo(BaseModel):
     class Config:
         # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
         allow_population_by_field_name = True
-
-    def __init__(__pydantic_self__, **data: Any) -> None:
-        if "resource_groups" in data and isinstance(data["resource_groups"], ListModel):
-            data["resource_groups"] = data["resource_groups"].__root__
-        super().__init__(**data)
 
 
 class GrantActionApplicationContent(BaseModel):
