@@ -69,11 +69,10 @@ class InstanceSelectionList:
         """
         获取所有视图节点的system_id
         """
-        return list(
-            set.union(*[selection.get_chain_system_set() for selection in self.selections])
-            if self.selections
-            else set()
-        )
+        if not self.selections:
+            return []
+
+        return list(set.union(*[selection.get_chain_system_set() for selection in self.selections]))
 
     def fill_chain_node_name(self):
         """
@@ -100,6 +99,9 @@ class InstanceSelectionBiz:
         selections = self.svc.list_by_action_resource_type(
             system_id, action_id, resource_type_system_id, resource_type_id
         )
+        if not selections:
+            return []
+
         biz_selections = parse_obj_as(List[InstanceSelectionBean], selections)
         return self._fill_chain_node_name(biz_selections)
 

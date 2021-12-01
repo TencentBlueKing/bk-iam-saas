@@ -141,8 +141,8 @@
                     this.status = status
                     this.name = data.name
                     data.authorization_scopes.forEach((item, index) => {
-                        item.list = item.actions.map(subItem => new PermPolicy(subItem))
-                        this.$set(item, 'expanded', index === 0)
+                        item.list = item.actions.map(subItem => new PermPolicy(subItem)) // 添加属性（此处会关联多个js文件，继承很多属性，暂时不清楚目的）
+                        this.$set(item, 'expanded', index === 0) // 默认第一项展开
                     })
                     this.authorizationScopes = _.cloneDeep(data.authorization_scopes)
                     this.users = data.subject_scopes.filter(item => item.type === 'user')

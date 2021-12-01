@@ -1,0 +1,62 @@
+### 新增 instanceSelection
+
+限制:
+- 一个系统只能创建最多 50 个 instanceSelection
+
+----------
+{% include '_api_v1_model_instance_selections.md.j2' %}
+----------
+
+#### Parameters
+
+| 字段 | 类型 | 是否必须 | 位置 | 描述 |
+| :--- | :---| :--- |:--- |:--- |
+| system_id | string | 是 | path | 系统 ID |
+
+#### Request
+
+```json
+[
+    {
+		"id": "free_host",
+		"name": "空闲主机",
+		"name_en": "free host",
+		"resource_type_chain": [{
+			"system_id": "bk_cmdb",
+			"id": "host"
+		}]
+    },
+	{
+		"id": "biz_topology",
+		"name": "业务拓扑",
+		"name_en": "biz topology",
+		"resource_type_chain": [{
+				"system_id": "bk_cmdb",
+				"id": "biz"
+			},
+			{
+				"system_id": "bk_cmdb",
+				"id": "set"
+			},
+			{
+				"system_id": "bk_cmdb",
+				"id": "module"
+			},
+			{
+				"system_id": "bk_cmdb",
+				"id": "host"
+			}
+		]
+	}
+]
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

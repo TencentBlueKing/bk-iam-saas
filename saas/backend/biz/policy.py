@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import functools
+import logging
 import time
 from copy import deepcopy
 from itertools import chain, groupby
@@ -24,7 +25,7 @@ from pydantic.tools import parse_obj_as
 from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
-from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID
+from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
 from backend.service.models import (
     Action,
     BackendThinPolicy,
@@ -50,6 +51,8 @@ from backend.util.model import ExcludeModel, ListModel
 from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
+
+logger = logging.getLogger(__name__)
 
 
 class PolicyEmptyException(Exception):
@@ -1147,12 +1150,17 @@ class PolicyBeanList:
 
             p.check_instance_selection(action, ignore_path)
 
-    def _list_path_node(self) -> List[PathNodeBean]:
+    def _list_path_node(self, is_ignore_big_policy=False) -> List[PathNodeBean]:
         """
         查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点
+        is_ignore_big_policy: 是否忽略大的策略，大策略是指策略里的实例数量大于1000，
+          主要是用于自动更新策略里的资源实例名称时避免大数量的请求接入系统（1000是权限中心的回调接口协议里规定的）
         """
         nodes = []
         for p in self.policies:
+            # 这里是定制逻辑：基于fetch_instance_info限制，避免出现大策略
+            if is_ignore_big_policy and p.count_all_type_instance() > FETCH_MAX_LIMIT:
+                continue
             nodes.extend(p.list_path_node())
         return nodes
 
@@ -1195,8 +1203,8 @@ class PolicyBeanList:
 
     def get_renamed_resources(self) -> Dict[PathNodeBean, str]:
         """查询已经被重命名的资源实例"""
-        # 获取策略里的资源的所有节点
-        path_nodes = self._list_path_node()
+        # 获取策略里的资源的所有节点，防御性措施：忽略大策略，避免给接入系统请求压力
+        path_nodes = self._list_path_node(is_ignore_big_policy=True)
         # 查询资源实例的实际名称
         resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
 
@@ -1223,8 +1231,13 @@ class PolicyBeanList:
         策略里存储的资源名称可能已经变了，需要进行更新
         Note: 该函数仅用于需要对外展示策略数据时调用，不会自动更新DB里数据
         """
-        # 获取策略里被重命名的资源实例
-        renamed_resources = self.get_renamed_resources()
+        # 由于自动更新并非核心功能，若接入系统查询有问题，也需要正常显示
+        try:
+            # 获取策略里被重命名的资源实例
+            renamed_resources = self.get_renamed_resources()
+        except Exception as error:
+            logger.exception(f"auto_update: get_renamed_resources error={error}")
+            return []
 
         # 没有任何被重命名的资源实例，则无需更新策略
         if len(renamed_resources) == 0:

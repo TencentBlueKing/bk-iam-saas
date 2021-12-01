@@ -19,6 +19,7 @@ from backend.util.basic import chunked
 from backend.util.cache import redis_region, region
 from backend.util.url import url_join
 
+from .constants import FETCH_MAX_LIMIT
 from .models import (
     ResourceAttribute,
     ResourceAttributeValue,
@@ -210,10 +211,9 @@ class ResourceProvider:
     ) -> List[ResourceInstanceInfo]:
         """批量查询资源实例属性，包括display_name等"""
         # fetch_instance_info 接口的批量限制
-        fetch_limit = 1000
         # 分页查询资源实例属性
         results = []
-        page_ids_list = chunked(ids, fetch_limit)
+        page_ids_list = chunked(ids, FETCH_MAX_LIMIT)
         for page_ids in page_ids_list:
             filter_condition = {"ids": page_ids, "attrs": attributes} if attributes else {"ids": page_ids}
             page_results = self.client.fetch_instance_info(filter_condition)

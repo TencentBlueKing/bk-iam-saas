@@ -1,0 +1,56 @@
+### 检索有权限的subject列表
+
+#### Parameters
+
+{% include '_api_v1_engine_search.md.j2' %}
+
+#### Request
+
+
+```json
+{
+	"system": "bk_job",
+	"subject_type": "all",  // all同时查询user与group
+	"action": {
+		"id": "execute"
+	},
+	"resources": [{   // 资源类型的顺序必须操作注册时的顺序一致, 否则会导致鉴权失败!
+		"system": "bk_job",
+		"type": "job",
+		"id": "ping",
+		"attribute": {  // 资源的属性值可能有多个, 目前支持string/int/boolean, 以及路径stringList
+			"os": "linux",
+			"_bk_iam_path_": ["/biz,1/set,2/"],
+			"is_ready": true,
+			"area_id": 200
+		}
+	}, {
+		"system": "bk_cmdb",
+		"type": "host",
+		"id": "192.168.1.1",
+		"attribute": {} // 外部资源的属性由iam负责查询属性, 接入方不需要传入
+	}],
+	"limit": 1000  // 最多返回的subject数量
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [  // 返回subject的数组
+        {
+            "type": "user",
+            "id": "admin",
+            "name": "admin"
+        },
+		      {
+            "type": "group",
+            "id": "1001",
+            "name": "测试用户组"
+        }
+	]
+}
+```

@@ -57,7 +57,11 @@
         computed: {
             ...mapGetters(['noviceGuide', 'user']),
             isShow () {
-                const types = ['rating_manager_subject_scope', 'rating_manager_merge_action', 'rating_manager_authorization_scope']
+                const types = [
+                    'rating_manager_subject_scope',
+                    'rating_manager_merge_action',
+                    'rating_manager_authorization_scope'
+                ]
                 if (types.includes(this.type)) {
                     return ['super_manager', 'staff'].includes(this.user.role.type)
                 }
