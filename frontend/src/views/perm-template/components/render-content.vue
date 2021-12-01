@@ -278,7 +278,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -300,7 +302,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -318,7 +322,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -344,7 +350,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -362,6 +370,7 @@
                     let allCheckedLen = 0
                     let count = 0
                     let delCount = 0
+                    let deleteCount = 0
                     item.actions.forEach(item => {
                         if (!item.disabled) {
                             if (payload.includes(item.id)) {
@@ -374,6 +383,9 @@
                                 item.checked = flag
                                 this.$refs.actionsRef.handleRelatedActions(item, flag)
                             }
+                        }
+                        if (item.tag === 'delete') {
+                            ++deleteCount
                         }
                         if (item.disabled || item.checked) {
                             allCheckedLen++
@@ -396,6 +408,10 @@
                                     this.$refs.actionsRef.handleRelatedActions(act, flag)
                                 }
                             }
+
+                            if (item.tag === 'delete') {
+                                ++deleteCount
+                            }
                             if (act.disabled || act.checked) {
                                 allSubCheckedLen++
                             }
@@ -414,6 +430,7 @@
                     } else {
                         item.count = item.count - delCount
                     }
+                    this.$set(item, 'deleteCount', deleteCount)
                 })
             },
 
@@ -432,7 +449,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -443,18 +462,22 @@
                     this.$set(item, 'expanded', index === 0)
                     let allCount = 0
                     let count = 0
+                    let deleteCount = 0
                     this.$set(item, 'count', 0)
                     if (!item.actions) {
                         this.$set(item, 'actions', [])
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
+                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
                         this.$set(act, 'disabled', act.tag === 'readonly')
                         linearActions.push(act)
                         if (act.checked) {
                             this.curSelectActions.push(act.id)
                             this.$set(act, 'flag', 'selected')
                             ++count
+                            if (act.tag === 'delete') {
+                                ++deleteCount
+                            }
                         }
                     })
                     allCount = allCount + item.actions.length
@@ -465,13 +488,16 @@
                             this.$set(sub, 'actions', [])
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
+                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
                             this.$set(act, 'disabled', act.tag === 'readonly')
                             linearActions.push(act)
                             if (act.checked) {
                                 this.curSelectActions.push(act.id)
                                 this.$set(act, 'flag', 'selected')
                                 ++count
+                                if (act.tag === 'delete') {
+                                    ++deleteCount
+                                }
                             }
                         })
 
@@ -483,6 +509,7 @@
 
                     this.$set(item, 'allCount', allCount)
                     this.$set(item, 'count', count)
+                    this.$set(item, 'deleteCount', deleteCount)
                     const isAllChecked = item.actions.every(v => v.checked)
                     const isAllDisabled = item.actions.every(v => v.disabled)
                     this.$set(item, 'allChecked', isAllChecked)
@@ -518,7 +545,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -539,7 +568,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.requestQueue.shift()
@@ -588,19 +619,27 @@
                 const temps = _.cloneDeep(payload)
                 temps.forEach(item => {
                     let count = 0
+                    let deleteCount = 0
                     item.actions.forEach(act => {
                         if (act.checked) {
                             ++count
+                            if (act.tag === 'delete') {
+                                ++deleteCount
+                            }
                         }
                     })
                     ;(item.sub_groups || []).forEach(sub => {
                         sub.actions.forEach(act => {
                             if (act.checked) {
                                 ++count
+                                if (act.tag === 'delete') {
+                                    ++deleteCount
+                                }
                             }
                         })
                     })
                     this.$set(item, 'count', count)
+                    this.$set(item, 'deleteCount', deleteCount)
                 })
 
                 return temps
@@ -624,7 +663,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.nextRequestQueue.shift()
@@ -645,7 +686,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.nextRequestQueue.shift()
@@ -653,6 +696,16 @@
             },
 
             async handleNextStep () {
+                if (!this.hasGroupPreview && this.originalCustomTmplList.some(e => e.deleteCount)) {
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: '由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。',
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    })
+                    return
+                }
                 this.handleNameBlur(this.tempName)
                 this.isShowActionError = this.curSelectActions.length < 1
                 if (this.isShowNameError || this.isShowActionError) {
@@ -756,7 +809,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.saveLoading = false

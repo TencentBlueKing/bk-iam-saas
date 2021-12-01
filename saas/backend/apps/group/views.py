@@ -232,6 +232,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
     permission_classes = [RolePermission]
     action_permission = {
+        "list": PermissionCodeEnum.MANAGE_GROUP.value,
         "create": PermissionCodeEnum.MANAGE_GROUP.value,
         "destroy": PermissionCodeEnum.MANAGE_GROUP.value,
     }
@@ -250,6 +251,11 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         group = get_object_or_404(self.queryset, pk=kwargs["id"])
+
+        # 校验权限
+        checker = RoleObjectRelationChecker(request.role)
+        if not checker.check_group(group):
+            raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
 
         pagination = LimitOffsetPagination()
         limit = pagination.get_limit(request)
@@ -462,7 +468,10 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
-        return Response([p.dict() for p in policies])
+        # ResourceNameAutoUpdate
+        updated_policies = self.policy_operation_biz.update_due_to_renamed_resource(system_id, subject, policies)
+
+        return Response([p.dict() for p in updated_policies])
 
     @swagger_auto_schema(
         operation_description="用户组删除自定义权限",

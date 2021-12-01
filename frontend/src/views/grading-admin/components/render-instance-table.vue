@@ -403,6 +403,7 @@
                     return !item.isExpiredAtDisabled
                         && !item.isAggregate
                         && relatedActions.includes(item.id)
+                        && curData.system_id === item.system_id
                         && !item.related_resource_types.every(sub => sub.empty)
                 }))
                 if (relatedList.length > 0) {
@@ -431,7 +432,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.sliderLoading = false
@@ -443,7 +446,8 @@
                     return
                 }
                 payload.forEach(item => {
-                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id && !sub.isExpiredAtDisabled)
+                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        && sub.system_id === item.related_resource_types[0].system_id && !sub.isExpiredAtDisabled)
                     if (curIndex > -1) {
                         this.tableList.splice(curIndex, 1, new GradePolicy({
                             ...item,

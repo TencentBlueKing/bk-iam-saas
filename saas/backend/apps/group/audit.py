@@ -14,6 +14,7 @@ from backend.apps.group.models import Group
 from backend.audit.audit import DataProvider, audit_context_getter
 from backend.audit.constants import AuditObjectType, AuditSourceType, AuditType
 from backend.audit.models import get_event_model
+from backend.service.models import Subject
 
 
 class BaseGroupDataProvider(DataProvider):
@@ -138,7 +139,7 @@ class GroupPolicyDeleteAuditProvider(BaseGroupPolicyProvider):
     type = AuditType.GROUP_POLICY_DELETE.value
 
 
-def log_group_cleanup_member_audit_event(task_id: str, group: Group, members: List):
+def log_group_cleanup_member_audit_event(task_id: str, group: Group, members: List[Subject]):
     """
     用户组清理长时间过期的成员记录审计信息
     """
@@ -154,6 +155,6 @@ def log_group_cleanup_member_audit_event(task_id: str, group: Group, members: Li
         object_name=group.name,
     )
 
-    event.extra = {"members": members}
+    event.extra = {"members": [m.dict() for m in members]}
 
     event.save(force_insert=True)

@@ -40,13 +40,19 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
     import json
 
     def get_app_service_url(app_code: str) -> str:
+        if app_code == os.environ.get("BKPAAS_APP_ID", APP_CODE) and "BK_IAM_APP_URL" in os.environ:
+            return os.environ["BK_IAM_APP_URL"]
+
+        if app_code == "bk_itsm" and "BK_ITSM_APP_URL" in os.environ:
+            return os.environ["BK_ITSM_APP_URL"]
+
         value = os.environ["BKPAAS_SERVICE_ADDRESSES_BKSAAS"]
         decoded_value = json.loads(base64.b64decode(value).decode("utf-8"))
         return {item["key"]["bk_app_code"]: item["value"]["prod"] for item in decoded_value}[app_code]
 
     # 兼容component的APP_ID,APP_TOKEN
-    APP_CODE = APP_ID = os.environ.get("BKPAAS_APP_ID", APP_CODE)
-    SECRET_KEY = APP_TOKEN = os.environ.get("BKPAAS_APP_SECRET", SECRET_KEY)
+    APP_CODE = APP_ID = BK_APP_CODE = os.environ.get("BKPAAS_APP_ID", APP_CODE)
+    SECRET_KEY = APP_TOKEN = BK_APP_SECRET = os.environ.get("BKPAAS_APP_SECRET", SECRET_KEY)
     BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS2_URL", BK_PAAS_INNER_HOST)
     BK_COMPONENT_API_URL = os.environ.get("BK_COMPONENT_API_URL")
     BK_COMPONENT_INNER_API_URL = BK_COMPONENT_API_URL
@@ -87,6 +93,9 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
 
     # itsm saas url
     BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
+
+    # load logging settings
+    LOGGING = get_logging_config_dict({"LOG_LEVEL": LOG_LEVEL})
 
 # V2 Smart 配置
 else:
@@ -136,8 +145,8 @@ _BK_PAAS_HOSTNAME = BK_PAAS_HOST_PARSE_URL.hostname  # 去除端口的域名
 _BK_PAAS_NETLOC = BK_PAAS_HOST_PARSE_URL.netloc  # 若有端口，则会带上对应端口
 _BK_PAAS_IS_SPECIAL_PORT = BK_PAAS_HOST_PARSE_URL.port in [None, 80, 443]
 _BK_PAAS_SCHEME = BK_PAAS_HOST_PARSE_URL.scheme
-# 特殊端口，则只需要取域名，否则取原生的(若有端口则会自动带上端口)
-SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME if _BK_PAAS_IS_SPECIAL_PORT else _BK_PAAS_NETLOC
+# 注意：Cookie Domain是不支持端口的
+SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
 CSRF_COOKIE_NAME = f"{CSRF_COOKIE_NAME}_{APP_URL_MD5_16BIT}"

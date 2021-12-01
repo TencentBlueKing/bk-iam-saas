@@ -62,8 +62,8 @@ APP_TOKEN = ""
 # 蓝鲸智云开发者中心的域名，形如：http://paas.bking.com
 BK_PAAS_HOST = ""
 
-APP_ID = os.environ.get("APP_ID", APP_ID)
-APP_TOKEN = os.environ.get("APP_TOKEN", APP_TOKEN)
+APP_ID = BK_APP_CODE = os.environ.get("APP_ID", APP_ID)
+APP_TOKEN = BK_APP_SECRET = os.environ.get("APP_TOKEN", APP_TOKEN)
 BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST", BK_PAAS_HOST)
 BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS_INNER_HOST", BK_PAAS_HOST)
 BK_IAM_HOST = ""
@@ -81,8 +81,8 @@ BK_PAAS_HOST_PARSE_URL = urlparse(BK_PAAS_HOST)
 _BK_PAAS_HOSTNAME = BK_PAAS_HOST_PARSE_URL.hostname  # 去除端口的域名
 _BK_PAAS_NETLOC = BK_PAAS_HOST_PARSE_URL.netloc  # 若有端口，则会带上对应端口
 _BK_PAAS_IS_SPECIAL_PORT = BK_PAAS_HOST_PARSE_URL.port in [None, 80, 443, 8000]
-# 特殊端口，则只需要取域名，否则取原生的(若有端口则会自动带上端口)
-SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME if _BK_PAAS_IS_SPECIAL_PORT else _BK_PAAS_NETLOC
+# 注意：Cookie Domain是不支持端口的
+SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
 CSRF_COOKIE_NAME = f"{CSRF_COOKIE_NAME}_{APP_URL_MD5_16BIT}"

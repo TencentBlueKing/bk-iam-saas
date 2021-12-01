@@ -19,12 +19,15 @@ Rules:
 from __future__ import unicode_literals
 
 import logging
+import time
 import traceback
 from functools import partial
+from urllib.parse import urlparse
 
 import requests
 
 from backend.common.debug import http_trace
+from backend.metrics import component_request_duration, get_component_by_url
 
 logger = logging.getLogger("component")
 
@@ -39,6 +42,7 @@ def _gen_header():
 def _http_request(method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None):
     trace_func = partial(http_trace, method=method, url=url, data=data)
 
+    st = time.time()
     try:
         if method == "GET":
             resp = requests.get(
@@ -63,12 +67,21 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         else:
-            return False, None
-    except requests.exceptions.RequestException:
+            return False, {"error": "method not supported"}
+    except requests.exceptions.RequestException as e:
         logger.exception("http request error! method: %s, url: %s, data: %s", method, url, data)
         trace_func(exc=traceback.format_exc())
-        return False, None
+        return False, {"error": str(e)}
     else:
+        # record for /metrics
+        latency = int((time.time() - st) * 1000)
+        component_request_duration.labels(
+            component=get_component_by_url(url),
+            method=method,
+            path=urlparse(url).path,
+            status=resp.status_code,
+        ).observe(latency)
+
         if resp.status_code != 200:
             content = resp.content[:100] if resp.content else ""
             error_msg = (
@@ -77,7 +90,7 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
             logger.error(error_msg, method, url, str(data), resp.status_code, content)
 
             trace_func(status_code=resp.status_code, content=content)
-            return False, None
+            return False, {"error": f"status_code is {resp.status_code}, not 200"}
 
         return True, resp.json()
 

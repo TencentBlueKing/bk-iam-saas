@@ -25,6 +25,12 @@ class PathNode(BaseModel):
     system_id: str = ""  # NOTE 兼容一下, 早期的policy数据中可能没有system_id
     type: str
 
+    def __hash__(self):
+        return hash((self.system_id, self.type, self.id))
+
+    def __eq__(self, other):
+        return self.system_id == other.system_id and self.type == other.type and self.id == other.id
+
 
 class Instance(BaseModel):
     type: str
@@ -107,7 +113,6 @@ class Policy(BaseModel):
             action_id=self.action_id,
         )
         p.resources = [rt.dict() for rt in self.related_resource_types]
-        p.environment = {}
         return p
 
     def to_backend_dict(self):

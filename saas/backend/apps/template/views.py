@@ -40,7 +40,7 @@ from backend.common.error_codes import error_codes
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
-from backend.long_task.task import TaskFactory
+from backend.long_task.tasks import TaskFactory
 from backend.service.constants import PermissionCodeEnum, SubjectType, TemplatePreUpdateStatus
 from backend.service.models import Subject
 
@@ -129,16 +129,22 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         group_id = request.query_params.get("group_id", "")
         queryset = self.filter_queryset(self.get_queryset())
 
+        # 查询role的system-actions set
+        role_system_actions = RoleListQuery(request.role).get_scope_system_actions()
         page = self.paginate_queryset(queryset)
         if page is not None:
             # 查询模板中对group_id中有授权的
             exists_template_set = self._query_group_exists_template_set(group_id, page)
-            serializer = TemplateListSLZ(page, many=True, authorized_template=exists_template_set)
+            serializer = TemplateListSLZ(
+                page, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
+            )
             return self.get_paginated_response(serializer.data)
 
         # 查询模板中对group_id中有授权的
         exists_template_set = self._query_group_exists_template_set(group_id, queryset)
-        serializer = TemplateListSLZ(queryset, many=True, authorized_template=exists_template_set)
+        serializer = TemplateListSLZ(
+            queryset, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
+        )
         return Response(serializer.data)
 
     def _query_group_exists_template_set(self, group_id: str, queryset) -> Set[int]:
@@ -197,12 +203,16 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         slz.is_valid(raise_exception=True)
         grouping = slz.validated_data["grouping"]
 
+        # 查询role的system-actions set
+        role_system_actions = RoleListQuery(request.role).get_scope_system_actions()
         template = get_object_or_404(self.queryset, pk=kwargs["id"])
-        serializer = TemplateListSLZ(instance=template)
+        serializer = TemplateListSLZ(instance=template, role_system_actions=role_system_actions)
         data = serializer.data
         template_action_set = set(template.action_ids)
 
-        actions = self.action_biz.list_checked_action_by_role(template.system_id, request.role, template_action_set)
+        actions = self.action_biz.list_template_tagged_action_by_role(
+            template.system_id, request.role, template_action_set
+        )
         if grouping:
             action_groups = self.action_group_biz.list_by_actions(template.system_id, actions)
             data["actions"] = [one.dict() for one in action_groups]
@@ -549,7 +559,7 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
 
         # 使用长时任务实现用户组授权更新
         task = TaskDetail.create(TaskType.TEMPLATE_UPDATE.value, [template.id])
-        TaskFactory().delay(task.id)
+        TaskFactory()(task.id)
 
         audit_context_setter(template=template)
 

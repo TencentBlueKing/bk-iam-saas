@@ -764,6 +764,7 @@
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
+                        && curData.detail.system.id === item.detail.system.id
                         && !item.related_resource_types.every(sub => sub.empty)
                 }))
                 if (relatedList.length > 0) {
@@ -792,7 +793,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.sliderLoading = false
@@ -802,9 +805,10 @@
                 if (payload.length < 1) {
                     return
                 }
-
+                
                 payload.forEach(item => {
-                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
+                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        && sub.detail.system.id === item.related_resource_types[0].system_id)
                     if (curIndex > -1) {
                         const old = this.tableList[curIndex]
                         this.tableList.splice(curIndex, 1, new GroupPolicy(

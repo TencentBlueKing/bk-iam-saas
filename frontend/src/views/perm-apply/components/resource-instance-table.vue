@@ -657,7 +657,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.sliderLoading = false
@@ -681,7 +683,11 @@
                         const inOriginalList = !!this.originalList.filter(
                             original => String(original.id) === String(item.id)
                         ).length
-                        item.expired_at = item.expired_at - this.user.timestamp
+                        if ((item.tag === 'add' || item.tag === 'update' || item.isExpired) && item.expired_at !== PERMANENT_TIMESTAMP) {
+                            if (!item.isShowRenewal) {
+                                item.expired_at = item.expired_at - this.user.timestamp
+                            }
+                        }
                         this.tableList.splice(
                             curIndex,
                             1,

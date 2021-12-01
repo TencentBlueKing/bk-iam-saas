@@ -4,10 +4,16 @@
         <div class="left-wrapper" :draggable="false" :style="leftStyle">
             <div class="header-wrapper">
                 <span class="text">{{ $t(`m.common['组织架构']`) }}</span>
-                <div :class="['action-wrapper', { 'is-disabled': isSync }]"
-                    :title="isSync ? $t(`m.user['正在同步中']`) : $t(`m.user['同步组织']`)"
-                    @click.stop="handleSyncDepartment">
-                    <Icon type="refresh" />
+                <div class="icon-content">
+                    <div :class="['action-wrapper', { 'is-disabled': isSync }]"
+                        :title="isSync ? $t(`m.user['正在同步中']`) : $t(`m.user['同步组织']`)"
+                        @click.stop="handleSyncDepartment">
+                        <Icon type="refresh" />
+                    </div>
+                    <div class="action-wrapper"
+                        @click.stop="handleSyncRecordList">
+                        <Icon type="time-circle-fill" />
+                    </div>
                 </div>
             </div>
             <div :class="['search-wrapper', { 'active': isSerachFocus }]">
@@ -147,6 +153,11 @@
                     :params="curSelectedData"
                     @on-init="handleInitDepartContent" />
             </template>
+            <template v-else-if="isRecord">
+                <record-list
+                    :params="curSelectedData"
+                    @on-init="handleInitRecordContent" />
+            </template>
             <template v-else>
                 <render-user
                     :params="curSelectedData"
@@ -164,13 +175,15 @@
     import dialogInfiniteList from '@/components/dialog-infinite-list'
     import RenderDepart from './components/render-depart'
     import RenderUser from './components/render-user'
+    import RecordList from './components/record-list'
     export default {
         name: '',
         components: {
             InfiniteTree,
             dialogInfiniteList,
             RenderDepart,
-            RenderUser
+            RenderUser,
+            RecordList
         },
         data () {
             return {
@@ -226,6 +239,9 @@
             },
             isDepart () {
                 return this.curSelectedData.type && this.curSelectedData.type === 'depart'
+            },
+            isRecord () {
+                return this.curSelectedData.type && this.curSelectedData.type === 'record'
             },
             leftStyle () {
                 if (this.dragWidth > 0) {
@@ -544,6 +560,7 @@
                     return
                 }
                 this.$store.commit('updateSync', true)
+                this.curSelectedData.type = 'depart'
                 try {
                     const res = await this.$store.dispatch('organization/organizationsSyncTask')
                     if (res.result) {
@@ -558,6 +575,13 @@
                         message: e.message || e.data.msg || e.statusText
                     })
                 }
+            },
+
+            /**
+             * handleSyncRecordList 展示同步记录
+             */
+            handleSyncRecordList () {
+                this.curSelectedData.type = 'record'
             },
 
             handleAuthHandleClickOutSide () {},
@@ -748,7 +772,12 @@
 
             handleInitUserContent (payload) {
                 this.rightLoading = !payload
+            },
+
+            handleInitRecordContent (payload) {
+                this.rightLoading = !payload
             }
+
         }
     }
 </script>

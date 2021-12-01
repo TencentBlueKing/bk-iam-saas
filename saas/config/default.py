@@ -162,7 +162,12 @@ BROKER_HEARTBEAT = 60
 CELERYD_CONCURRENCY = os.getenv("BK_CELERYD_CONCURRENCY", 2)
 
 # CELERY 配置，申明任务的文件路径，即包含有 @task 装饰器的函数文件
-CELERY_IMPORTS = ("backend.apps.organization.tasks", "backend.apps.role.tasks", "backend.publisher.tasks")
+CELERY_IMPORTS = (
+    "backend.apps.organization.tasks",
+    "backend.apps.role.tasks",
+    "backend.publisher.tasks",
+    "backend.long_task.tasks",
+)
 
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
@@ -191,7 +196,7 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
-        "schedule": crontab(minute=0, hour=2),  # 每天凌晨0时执行
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
     },
     "periodic_group_expired_member_cleanup": {
         "task": "backend.apps.group.tasks.group_cleanup_expired_member",
@@ -209,6 +214,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.policy.tasks.execute_model_change_event",
         "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
     },
+    "periodic_retry_long_task": {
+        "task": "backend.long_task.tasks.retry_long_task",
+        "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
+    },
 }
 
 # celery settings
@@ -220,6 +229,7 @@ if IS_USE_CELERY:
     djcelery.setup_loader()
     CELERY_ENABLE_UTC = True
     CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
+    CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 
 # remove disabled apps
 if locals().get("DISABLED_APPS"):
@@ -267,6 +277,7 @@ AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 # iam host
 BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
+BK_IAM_HOST_TYPE = os.environ.get("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
 
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
@@ -342,3 +353,12 @@ ENABLE_FRONT_END_FEATURES = {
 
 # 是否是smart部署方式
 IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"
+
+# apigateway 相关配置
+# NOTE: it sdk will read settings.BK_APP_CODE and settings.BK_APP_SECRET, so you should set it
+BK_APIGW_NAME = "bk-iam"
+BK_API_URL_TMPL = ""
+INSTALLED_APPS += ("apigw_manager.apigw",)
+BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
+BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
+BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")

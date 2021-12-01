@@ -248,6 +248,17 @@
                                             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                                                 <template slot-scope="{ row }">
                                                     <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                                                    <template v-if="!setDefaultSelect(row)">
+                                                        <Icon type="error-fill" class="error-icon" />
+                                                        <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                                                        <bk-button
+                                                            text
+                                                            theme="primary"
+                                                            style="font-size: 12px;"
+                                                            @click="handleBatchRenewal">
+                                                            {{ $t(`m.permApply['去续期']`) }}
+                                                        </bk-button>
+                                                    </template>
                                                 </template>
                                             </bk-table-column>
                                             <bk-table-column :label="$t(`m.userGroup['描述']`)">
@@ -673,7 +684,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.tableLoading = false
@@ -748,7 +761,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 }
             },
@@ -762,7 +777,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.sliderLoading = false
@@ -920,7 +937,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1048,7 +1067,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1778,7 +1799,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1853,7 +1876,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1886,7 +1911,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     if (this.requestQueue.length > 0) {
@@ -1985,7 +2012,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.buttonLoading = false
@@ -2054,7 +2083,9 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
                     })
                 } finally {
                     this.buttonLoading = false
@@ -2067,6 +2098,18 @@
             handleCancel () {
                 this.$router.push({
                     name: 'applyJoinUserGroup'
+                })
+            },
+
+            /**
+             * 去续期
+             */
+            handleBatchRenewal () {
+                this.$router.push({
+                    name: 'permRenewal',
+                    query: {
+                        tab: 'custom'
+                    }
                 })
             }
         }

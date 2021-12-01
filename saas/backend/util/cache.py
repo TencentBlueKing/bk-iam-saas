@@ -21,19 +21,22 @@ region = make_region().configure("dogpile.cache.memory_pickle", arguments={"cach
 # TODO: 对于Redis并非IAM独享，需要单独的key_generator
 #  https://dogpilecache.sqlalchemy.org/en/latest/api.html#module-dogpile.cache.region
 # 使用Redis缓存，可使用StrictRedis和ConnectionPool来缓存，这里使用ConnectionPool来缓存
-rd_pool = redis.ConnectionPool(
+redis_connection_pool = redis.ConnectionPool(
     host=settings.REDIS_HOST,
     port=settings.REDIS_PORT,
     db=settings.REDIS_DB,
     password=settings.REDIS_PASSWORD,
     encoding="utf8",
     decode_responses=True,
+    # 必须设置，否则在redis有问题的情况下某些命令可能会一直block
+    socket_connect_timeout=5,
+    socket_timeout=5,
 )
 redis_region = make_region().configure(
     "dogpile.cache.redis",
     expiration_time=60 * 10 * 10,  # 避免忘记设置过期时间，可设置个长时间的默认值
     arguments={
-        "connection_pool": rd_pool,
+        "connection_pool": redis_connection_pool,
         # Disable distributed lock for better performance
         "distributed_lock": False,
     },
