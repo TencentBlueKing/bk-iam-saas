@@ -51,6 +51,7 @@ export default class SyncPolicy {
         this.tid = payload.tid || ''
         this.initExpired(payload)
         this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag)
+        this.initRelatedRroupsTypes(payload, { name: this.name, type: this.type }, flag)
         this.initAttachActions(payload)
         this.showAction = false
         this.showPopover = false
@@ -79,6 +80,22 @@ export default class SyncPolicy {
         this.related_resource_types = payload.related_resource_types.map(
             item => new RelateResourceTypes(item, action, flag)
         )
+    }
+
+    initRelatedRroupsTypes (payload, action, flag) {
+        if (!payload.resource_groups) {
+            this.resource_groups = []
+            return
+        }
+
+        this.resource_groups = payload.resource_groups.reduce((prev, item) => {
+            const relatedRsourceTypes = item.related_resource_types.map(
+                item => new RelateResourceTypes(item, action, flag)
+            )
+
+            prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+            return prev
+        }, [])
     }
 
     initAttachActions (payload) {
@@ -116,7 +133,7 @@ export default class SyncPolicy {
     }
 
     get isEmpty () {
-        return this.related_resource_types.length < 1
+        return this.resource_groups.length < 1
     }
 
     get isCreate () {
