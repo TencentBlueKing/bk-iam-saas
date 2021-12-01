@@ -916,16 +916,25 @@ class PolicyBean(Policy):
     def get_related_resource_type(
         self, resource_group_id: str, system_id: str, resource_type_id: str
     ) -> Optional[RelatedResourceBean]:
+        """
+        获取指定resource_group_id下指定的资源类型的条件
+        """
         resource_group = self.resource_groups.get_by_id(resource_group_id)
         if resource_group is None:
             return None
         return resource_group.get_related_resource_type(system_id, resource_type_id)
 
     def check_instance_selection(self, action: Action, ignore_path=False):
+        """
+        检查资源的实例视图是否匹配
+        """
         for rg in self.resource_groups:
             rg.check_instance_selection(action, ignore_path)
 
-    def list_resource_type_instance_count(self):
+    def list_resource_type_instance_count(self) -> List[ResourceTypeInstanceCount]:
+        """
+        查询资源类型的实例数量
+        """
         if len(self.resource_groups) == 0:
             return [ResourceTypeInstanceCount(type="", count=0)]
 
@@ -950,7 +959,7 @@ class PolicyBean(Policy):
 
         return is_changed
 
-    def is_single_resource_type(self):
+    def is_single_resource_type(self) -> bool:
         """
         是否关联一个资源类型
         """
