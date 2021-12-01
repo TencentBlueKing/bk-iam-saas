@@ -1422,7 +1422,7 @@ class PolicyOperationBiz:
 
         # 更新修改后的条件
         resource_type.condition = condition_list.conditions
-        resource_group = policy.resource_groups.pop_by_id(resource_type_id)
+        resource_group = policy.resource_groups.pop_by_id(resource_group_id)
         resource_group.set_related_resource_type(resource_type)  # type: ignore
 
         # 如果policy中其它的resource_group能包含删减后的resource_group, 则整体删除
