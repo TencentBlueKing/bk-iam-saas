@@ -698,9 +698,7 @@
                 }
 
                 payload.forEach(item => {
-                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id
-                        && sub.system_id === item.resource_groups[this.curGroupIndex]
-                            .related_resource_types[0].system_id)
+                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
                     if (curIndex > -1) {
                         const curData = this.tableList[curIndex]
                         this.needEmitFlag = true
@@ -772,6 +770,7 @@
 
                 this.curIndex = -1
                 this.curResIndex = -1
+                this.curGroupIndex = -1
 
                 // 主操作的实例映射到了具体的依赖操作上，需更新到父级的缓存数据中
                 if (this.needEmitFlag) {
@@ -794,7 +793,7 @@
                 })
                 this.previewResourceParams = {
                     policy_id: this.tableList[this.curIndex].policy_id,
-                    resource_group_id: this.tableList[this.curIndex].resource_groups[0].id,
+                    resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -835,7 +834,7 @@
                 })
                 this.previewResourceParams = {
                     policy_id: payload.policy_id,
-                    resource_group_id: payload.resource_groups[0].id,
+                    resource_group_id: payload.resource_groups[this.curGroupIndex].id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -1107,6 +1106,7 @@
             resetDataAfterClose () {
                 this.curIndex = -1
                 this.curResIndex = -1
+                this.curGroupIndex = -1
                 this.previewResourceParams = {}
                 this.params = {}
                 this.resourceInstanceSidesliderTitle = ''
@@ -1190,77 +1190,80 @@
                     if (!item.isAggregate) {
                         const { type, id, name, environment, description, policy_id, isNew, isChanged } = item
                         const relatedResourceTypes = []
-                        if (item.resource_groups[0].related_resource_types.length > 0) {
-                            item.resource_groups[0].related_resource_types.forEach(resItem => {
-                                let newResourceCount = 0
-                                if (resItem.empty) {
-                                    resItem.isError = true
-                                    flag = true
-                                }
-                                const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-                                    ? resItem.condition.map(conItem => {
-                                        const { id, instance, attribute } = conItem
-                                        const attributeList = (attribute && attribute.length > 0)
-                                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                                            : []
-
-                                        const instanceList = (instance && instance.length > 0)
-                                            ? instance.map(({ name, type, paths }) => {
-                                                const tempPath = _.cloneDeep(paths)
-                                                tempPath.forEach(pathItem => {
-                                                    // 是否带有下一层级的无限制
-                                                    const isHasNoLimit = pathItem.some(({ id }) => id === '*')
-                                                    const isDisabled = pathItem.some(_ => !!_.disabled)
-                                                    if (!isHasNoLimit && !isDisabled) {
-                                                        ++newResourceCount
-                                                    }
-                                                    pathItem.forEach(pathSubItem => {
-                                                        delete pathSubItem.disabled
+                        const groupResourceTypes = []
+                        if (item.resource_groups.length > 0) {
+                            item.resource_groups.forEach(groupItem => {
+                                if (groupItem.related_resource_types.length > 0) {
+                                    groupItem.related_resource_types.forEach(resItem => {
+                                        let newResourceCount = 0
+                                        if (resItem.empty) {
+                                            resItem.isError = true
+                                            flag = true
+                                        }
+                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                            ? resItem.condition.map(conItem => {
+                                                const { id, instance, attribute } = conItem
+                                                const attributeList = (attribute && attribute.length > 0)
+                                                    ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                                                    : []
+        
+                                                const instanceList = (instance && instance.length > 0)
+                                                    ? instance.map(({ name, type, paths }) => {
+                                                        const tempPath = _.cloneDeep(paths)
+                                                        tempPath.forEach(pathItem => {
+                                                            // 是否带有下一层级的无限制
+                                                            const isHasNoLimit = pathItem.some(({ id }) => id === '*')
+                                                            const isDisabled = pathItem.some(_ => !!_.disabled)
+                                                            if (!isHasNoLimit && !isDisabled) {
+                                                                ++newResourceCount
+                                                            }
+                                                            pathItem.forEach(pathSubItem => {
+                                                                delete pathSubItem.disabled
+                                                            })
+                                                        })
+                                                        return {
+                                                            name,
+                                                            type,
+                                                            path: tempPath
+                                                        }
                                                     })
-                                                })
+                                                    : []
                                                 return {
-                                                    name,
-                                                    type,
-                                                    path: tempPath
+                                                    id,
+                                                    instances: instanceList,
+                                                    attributes: attributeList
                                                 }
                                             })
                                             : []
-                                        return {
-                                            id,
-                                            instances: instanceList,
-                                            attributes: attributeList
+                                        console.warn('newResourceCount: ' + newResourceCount)
+                                        if (newResourceCount > RESOURCE_MAX_LEN) {
+                                            resItem.isLimitExceeded = true
+                                            flag = true
                                         }
+                                        relatedResourceTypes.push({
+                                            type: resItem.type,
+                                            system_id: resItem.system_id,
+                                            name: resItem.name,
+                                            condition: conditionList.filter(
+                                                item => item.instances.length > 0 || item.attributes.length > 0
+                                            )
+                                        })
                                     })
-                                    : []
-                                console.warn('newResourceCount: ' + newResourceCount)
-                                if (newResourceCount > RESOURCE_MAX_LEN) {
-                                    resItem.isLimitExceeded = true
-                                    flag = true
                                 }
-                                relatedResourceTypes.push({
-                                    type: resItem.type,
-                                    system_id: resItem.system_id,
-                                    name: resItem.name,
-                                    condition: conditionList.filter(
-                                        item => item.instances.length > 0 || item.attributes.length > 0
-                                    )
+                                groupResourceTypes.push({
+                                    id: groupItem.id,
+                                    related_resource_types: relatedResourceTypes
                                 })
                             })
                             // 强制刷新下
-                            item.resource_groups[0].related_resource_types
-                                = _.cloneDeep(item.resource_groups[0].related_resource_types)
+                            item.resource_groups = _.cloneDeep(item.resource_groups)
                         }
                         const params = {
                             type,
                             name,
                             id,
                             description,
-                            resource_groups: [
-                                {
-                                    id: item.resource_groups[0].id,
-                                    related_resource_types: relatedResourceTypes
-                                }
-                            ],
+                            resource_groups: groupResourceTypes,
                             environment,
                             policy_id,
                             expired_at: item.expired_at === '' ? tempExpiredAt : Number(item.expired_at)
