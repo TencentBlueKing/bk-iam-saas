@@ -194,12 +194,29 @@ class RelatedResourceTypeForCheck(BaseModel):
         allow_population_by_field_name = True  # 支持alias字段同时传 type 与 id
 
 
+class ResourceGroupForCheck(BaseModel):
+    related_resource_types: List[RelatedResourceTypeForCheck]
+
+
 class ActionForCheck(BaseModel):
     id: str = Field(alias="action_id")
     related_resource_types: List[RelatedResourceTypeForCheck]
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+
+
+class ActionResourceGroupForCheck(BaseModel):
+    id: str = Field(alias="action_id")
+    resource_groups: List[ResourceGroupForCheck]
+
+    class Config:
+        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
+
+    def to_action_for_check(self) -> List["ActionForCheck"]:
+        return [
+            ActionForCheck(id=self.id, related_resource_types=rg.related_resource_types) for rg in self.resource_groups
+        ]
 
 
 class ActionCheckBiz:
@@ -213,6 +230,12 @@ class ActionCheckBiz:
 
         for action in actions:
             self._check_action(action_list, action)
+
+    def check_action_resource_group(self, system_id: str, action_resource_groups: List[ActionResourceGroupForCheck]):
+        action_list = self._get_action_list(system_id)
+        for arg in action_resource_groups:
+            for action in arg.to_action_for_check():
+                self._check_action(action_list, action)
 
     def _get_action_list(self, system_id: str):
         svc_actions = self.svc.list(system_id)

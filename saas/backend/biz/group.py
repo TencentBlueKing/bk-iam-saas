@@ -44,7 +44,7 @@ from backend.service.template import TemplateService
 from backend.util.time import utc_string_to_local
 from backend.util.uuid import gen_uuid
 
-from .action import ActionCheckBiz, ActionForCheck
+from .action import ActionCheckBiz, ActionResourceGroupForCheck
 from .subject import SubjectInfoList
 
 
@@ -223,7 +223,9 @@ class GroupBiz:
         # 检查新增的实例名字, 检查新增的实例是否满足角色的授权范围
         self.check_update_policies_resource_name_and_role_scope(role, system_id, template_id, policies, subject)
         # 检查策略是否与操作信息匹配
-        self.action_check_biz.check(system_id, [ActionForCheck.parse_obj(p.dict()) for p in policies])
+        self.action_check_biz.check_action_resource_group(
+            system_id, [ActionResourceGroupForCheck.parse_obj(p.dict()) for p in policies]
+        )
 
         policy_list = PolicyBeanList(system_id, policies, need_ignore_path=True)
         # 设置过期时间为永久

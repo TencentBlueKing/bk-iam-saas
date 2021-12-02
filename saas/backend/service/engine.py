@@ -73,9 +73,6 @@ class EngineService:
         """
         policy_resources = []
         for p in policies:
-            if len(p.related_resource_types) > 1:
-                raise error_codes.ENGINE_REQUEST_ERROR.format("不支持关联多个资源类型的查询")
-
             policy_resources.append(self._gen_query_by_policy(p))
 
         return policy_resources
@@ -83,12 +80,18 @@ class EngineService:
     def _gen_query_by_policy(self, policy: Policy) -> PolicyResource:
         """
         使用policy生成查询数据
+        NOTE: 这里默认关联一种资源类型的操作, 只有一个resource_group
         """
-        if len(policy.related_resource_types) == 0 or len(policy.related_resource_types[0].condition) == 0:
+        if len(policy.resource_groups) == 0:
             # 生成无关联操作的查询条件
             return PolicyResource(action_id=policy.action_id, resources=[])
 
-        rrt = policy.related_resource_types[0]
+        if len(policy.list_thin_resource_type()) > 1:
+            raise error_codes.ENGINE_REQUEST_ERROR.format("不支持关联多个资源类型的查询")
+
+        rrt = policy.resource_groups[0].related_resource_types[0]
+        if len(rrt.condition) == 0:
+            return PolicyResource(action_id=policy.action_id, resources=[])
         resources = []
         for condition in rrt.condition:
             resources.extend(self._gen_resources_by_condition(rrt, condition))

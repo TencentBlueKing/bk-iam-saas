@@ -82,11 +82,11 @@ class ApplicationDataTrans:
         """
         # 遍历每条策略，进行检查
         for policy in policy_list.policies:
-            for rrt in policy.related_resource_types:
-                if rrt.count_instance() > settings.APPLY_POLICY_ADD_INSTANCES_LIMIT:
+            for c in policy.list_resource_type_instance_count():
+                if c.count > settings.APPLY_POLICY_ADD_INSTANCES_LIMIT:
                     raise error_codes.VALIDATE_ERROR.format(
                         _("操作 [{}] 关联的资源类型 [{}] 单次申请限{}个实例，实例权限数过多不利于您后期维护，更多实例建议您申请范围权限。").format(
-                            policy.action_id, rrt.type, settings.APPLY_POLICY_ADD_INSTANCES_LIMIT
+                            policy.action_id, c.type, settings.APPLY_POLICY_ADD_INSTANCES_LIMIT
                         )
                     )
 
@@ -100,39 +100,42 @@ class ApplicationDataTrans:
                 {
                     id,
                     type,
-                    related_resource_types: [
-                        {
-                            system_id,
-                            type,
-                            condition: [
-                                {
-                                    id,
-                                    instances: [
-                                        {
-                                            type,
-                                            name,
-                                            path: [
-                                                [
-                                                    {system_id, type, type_name, id, name},
+                    resource_groups: {
+                        id,
+                        related_resource_types: [
+                            {
+                                system_id,
+                                type,
+                                condition: [
+                                    {
+                                        id,
+                                        instances: [
+                                            {
+                                                type,
+                                                name,
+                                                path: [
+                                                    [
+                                                        {system_id, type, type_name, id, name},
+                                                        ...
+                                                    ]
+                                                ]
+                                            }
+                                        ]
+                                        attributes: [
+                                            {
+                                                id,
+                                                name,
+                                                values: [
+                                                    {id, name},
                                                     ...
                                                 ]
-                                            ]
-                                        }
-                                    ]
-                                    attributes: [
-                                        {
-                                            id,
-                                            name,
-                                            values: [
-                                                {id, name},
-                                                ...
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
                     policy_id,
                     expired_at
                 }

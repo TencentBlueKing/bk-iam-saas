@@ -54,6 +54,8 @@ from .policy import (
     Policy,
     PolicyIDExpiredAt,
     RelatedResource,
+    ResourceGroup,
+    ResourceGroupList,
     SystemCounter,
     Value,
 )
@@ -130,4 +132,6 @@ __all__ = [
     "RelatedResource",
     "Value",
     "Attribute",
+    "ResourceGroup",
+    "ResourceGroupList",
 ]

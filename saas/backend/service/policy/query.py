@@ -55,7 +55,7 @@ class PolicyList:
             self.extend_without_repeated([policy])
             return
 
-        old_policy.related_resource_types = policy.related_resource_types
+        old_policy.resource_groups = policy.resource_groups
         old_policy.expired_at = policy.expired_at
         old_policy.policy_id = policy.policy_id
 
