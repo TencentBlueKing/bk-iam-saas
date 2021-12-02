@@ -185,7 +185,7 @@ class InstanceAproverHandler(PolicyProcessHandler):
         if len(policy.list_thin_resource_type()) != 1:
             return []
 
-        rrt: RelatedResourceBean = policy.policy_process.policy.resource_groups[0].related_resource_types[0]
+        rrt: RelatedResourceBean = policy.resource_groups[0].related_resource_types[0]
         for path in rrt.iter_path_list(ignore_attribute=True):
             last_node = path.nodes[-1]
             if last_node.id == ANY_ID:
