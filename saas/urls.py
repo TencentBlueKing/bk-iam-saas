@@ -57,6 +57,7 @@ urlpatterns = [
                 url(r"^modeling/", include("backend.apps.model_builder.urls")),
                 url(r"^audits/", include("backend.audit.urls")),
                 url(r"^debug/", include("backend.debug.urls")),
+                url(r"^handover/", include("backend.apps.handover.urls"))
             ]
         ),
     ),
