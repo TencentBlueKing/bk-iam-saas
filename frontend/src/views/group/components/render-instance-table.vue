@@ -104,10 +104,10 @@
                                                 :is-error="content.isError"
                                                 @on-mouseover="handlerConditionMouseover(content)"
                                                 @on-mouseleave="handlerConditionMouseleave(content)"
-                                                @on-view="handlerOnView(row, content, contentIndex)"
+                                                @on-view="handlerOnView(row, content, contentIndex, groIndex)"
                                                 @on-restore="handlerOnRestore(content)"
                                                 @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
-                                                @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
+                                                @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex, groIndex)"
                                                 @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
                                                 @on-click="showResourceInstance(row, $index, content, contentIndex, groIndex)" />
                                             <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
@@ -144,6 +144,7 @@
                     :disabled="curDisabled"
                     :params="params"
                     :res-index="curResIndex"
+                    :group-index="curGroupIndex"
                     :cur-scope-action="curScopeAction"
                     @on-limit-change="handleLimitChange"
                     @on-init="handleOnInit" />
@@ -186,7 +187,6 @@
             @confirm="handleDelete">
             <h3 style="text-align:center">{{ $t(`m.common['是否删除该自定义权限']`) }}</h3>
         </bk-dialog>
-
     </div>
 </template>
 
@@ -682,12 +682,12 @@
                 }
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
-                        item.resource_groups.forEach(groupItem => {
+                        item.resource_groups.forEach((groupItem, groupIndex) => {
                             groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
                                 if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
                                     subItem.condition = _.cloneDeep(tempCurData)
                                     subItem.isError = false
-                                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
+                                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition, groupIndex)
                                 }
                             })
                         })
@@ -792,7 +792,8 @@
                     delete item.attribute
                 })
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
-                curData.related_resource_types = [curData.resource_groups[this.curGroupIndex]
+                // eslint-disable-next-line max-len
+                curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]]
                 curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
@@ -900,7 +901,7 @@
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
 
-                this.$emit('on-resource-select', this.curIndex, this.curResIndex, this.curGroupIndex, resItem.condition)
+                this.$emit('on-resource-select', this.curIndex, this.curGroupIndex, resItem.condition, this.curResIndex)
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curGroupIndex = -1
@@ -916,6 +917,7 @@
             handleResourcePreview () {
                 // debugger
                 window.changeDialog = true
+                const { id } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                 const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
                 const condition = []
@@ -932,6 +934,7 @@
                 this.previewResourceParams = {
                     id: this.templateId,
                     action_id: this.tableList[this.curIndex].id,
+                    resource_group_id: id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -964,7 +967,8 @@
                 payload.canPaste = false
             },
 
-            handlerOnView (payload, item, itemIndex) {
+            handlerOnView (payload, item, itemIndex, groupIndex) {
+                console.log('payload', payload)
                 const { system_id, type, name } = item
                 const condition = []
                 item.condition.forEach(item => {
@@ -978,6 +982,7 @@
                 this.previewResourceParams = {
                     id: this.templateId,
                     action_id: payload.id,
+                    resource_group_id: payload.resource_groups[groupIndex].id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -1035,7 +1040,7 @@
                 }
             },
 
-            handlerOnPaste (payload, content, $index, contentIndex) {
+            handlerOnPaste (payload, content, $index, contentIndex, groIndex) {
                 // debugger
                 let tempCurData = ['none']
                 if (this.curCopyMode === 'normal') {
@@ -1088,7 +1093,7 @@
 
                 content.isError = false
                 this.showMessage(this.$t(`m.info['粘贴成功']`))
-                this.$emit('on-resource-select', $index, contentIndex, content.condition)
+                this.$emit('on-resource-select', $index, contentIndex, content.condition, groIndex)
             },
 
             handlerOnBatchPaste (payload, content, index, subIndex) {
@@ -1211,12 +1216,12 @@
                     }
                     this.tableList.forEach(item => {
                         if (!item.isAggregate) {
-                            item.resource_groups.forEach(groupItem => {
+                            item.resource_groups.forEach((groupItem, groupIndex) => {
                                 groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
                                     if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
                                         subItem.condition = _.cloneDeep(tempCurData)
                                         subItem.isError = false
-                                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition)
+                                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition, groupIndex)
                                     }
                                 })
                             })
@@ -1328,14 +1333,14 @@
                                             )
                                         })
                                     })
-                                    // 强制刷新下
-                                    item.resource_groups = _.cloneDeep(item.resource_groups)
                                 }
                                 groupResourceTypes.push({
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
                                 })
                             })
+                            // 强制刷新下
+                            item.resource_groups = _.cloneDeep(item.resource_groups)
                         }
                             
                         actionParam = {
@@ -1469,14 +1474,14 @@
                                             )
                                         })
                                     })
-                                    // 强制刷新下
-                                    item.resource_groups = _.cloneDeep(item.resource_groups)
                                 }
                                 groupResourceTypes.push({
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
                                 })
                             })
+                            // 强制刷新下
+                            item.resource_groups = _.cloneDeep(item.resource_groups)
                         }
                         
                         const params = {

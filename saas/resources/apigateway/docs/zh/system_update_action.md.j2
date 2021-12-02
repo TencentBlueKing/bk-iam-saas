@@ -1,0 +1,60 @@
+### 2. 修改 action
+
+----------
+{% include '_api_v1_model_actions.md.j2' %}
+----------
+
+**重点：**
+- 可更新 name\name_en\type\version\related_resource_types 这 5 个 key 的值， 如果传了对应`key`并给了`空值`, 那么执行的是`置空操作`; 如果没有传`key`, 表示不更新该字段；
+- `特别：对于related_resource_types是一个完全覆盖操作，不能单独更新related_resource_types里的某个key的值`
+
+#### Parameters
+
+| 字段 | 类型 | 是否必须 | 位置 | 描述 |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | 是 | path | 系统 ID |
+| action_id | string | 是 | path | 操作 ID |
+
+#### Request
+
+```json
+{
+   "name":"主机编辑New",
+   "name_en":"host_edit",
+   "description":"主机编辑New是...",
+   "description_en":"host_edit is...",
+   "related_resource_types":[
+      {
+         "system_id":"bk_cmdb",
+         "id":"host",
+         "name_alias":"",
+         "name_alias_en":"",
+         "selection_mode": "instance",
+         "related_instance_selections":[
+                    {
+                        "system_id": "bk_cmdb",
+                        "id": "free_host",
+                        "ignore_iam_path": false,
+                    }, 
+                    {
+                        "system_id": "bk_cmdb",
+                        "id": "biz_topology",
+                        "ignore_iam_path": false,
+                    }
+         ]
+      }
+   ],
+   "related_actions": ["view", "delete"],
+   "version":2
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

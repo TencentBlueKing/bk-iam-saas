@@ -133,6 +133,7 @@ class PolicyViewSet(GenericViewSet):
         data = slz.validated_data
 
         policy_id = kwargs["pk"]
+        resource_group_id = data["resource_group_id"]
         resource_system_id = data["system_id"]
         resource_type = data["type"]
         condition_ids = data["ids"]
@@ -148,6 +149,7 @@ class PolicyViewSet(GenericViewSet):
             system_id,
             subject,
             policy_id,
+            resource_group_id,
             resource_system_id,
             resource_type,
             condition_ids,
@@ -244,7 +246,7 @@ class RelatedPolicyViewSet(GenericViewSet):
                 add_policy = add_policy_list.get(p.action_id)
                 if (
                     add_policy
-                    and not p.has_related_resource_types(add_policy.related_resource_types)
+                    and not p.has_resource_group_list(add_policy.resource_groups)
                     and p.tag != PolicyTag.ADD.value
                 ):
                     p.tag = PolicyTag.UPDATE.value

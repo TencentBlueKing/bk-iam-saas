@@ -111,7 +111,7 @@
 <script>
     import _ from 'lodash'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderDetail from '../../perm/components/render-detail-edit'
     import PermPolicy from '@/model/my-perm-policy'
 
@@ -202,9 +202,9 @@
             /**
              * fetchData
              */
-            async fetchData (payload) {
+            async fetchData (params) {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalPolicy', { ...payload })
+                    const res = await this.$store.dispatch('perm/getPersonalPolicy', { ...params })
                     this.tableList = res.data.map(item => new PermPolicy(item))
                 } catch (e) {
                     console.error(e)
@@ -262,7 +262,7 @@
              */
             async handleDeletePerm () {
                 const data = this.$refs.detailComRef.handleGetValue()
-                const { ids, condition, type } = data
+                const { ids, condition, type, resource_group_id } = data
                 const params = {
                     subjectType: this.data.type === 'user' ? this.data.type : 'department',
                     subjectId: this.data.type === 'user' ? this.data.username : this.data.id,
@@ -271,7 +271,8 @@
                         system_id: data.system_id,
                         type: type,
                         ids,
-                        condition
+                        condition,
+                        resource_group_id
                     }
                 }
                 this.deleteLoading = true
@@ -344,13 +345,6 @@
             },
 
             /**
-             * handleViewCondition
-             */
-            handleViewCondition (row) {
-                console.warn('view')
-            },
-
-            /**
              * handleViewResource
              */
             handleViewResource (payload) {
@@ -367,7 +361,8 @@
                                     label: `${name} ${this.$t(`m.common['实例']`)}`,
                                     tabType: 'resource',
                                     data: condition,
-                                    systemId: item.system_id
+                                    systemId: item.system_id,
+                                    resource_group_id: groupItem.id
                                 })
                             })
                         }

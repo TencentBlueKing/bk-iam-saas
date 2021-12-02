@@ -25,7 +25,7 @@ from backend.apps.group.models import Group
 from backend.apps.template import tasks  # noqa
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionBiz, ActionCheckBiz, ActionForCheck
+from backend.biz.action import ActionBiz, ActionCheckBiz, ActionResourceGroupForCheck
 from backend.biz.action_group import ActionGroupBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
 from backend.biz.subject import SubjectInfoList
@@ -439,7 +439,9 @@ class TemplatePreGroupSyncViewSet(TemplatePermissionMixin, GenericViewSet):
         data = slz.validated_data
 
         for group in data["groups"]:
-            self.action_check_biz.check(template.system_id, parse_obj_as(List[ActionForCheck], group["actions"]))
+            self.action_check_biz.check_action_resource_group(
+                template.system_id, parse_obj_as(List[ActionResourceGroupForCheck], group["actions"])
+            )
 
         # 检查数据
         pre_commits = parse_obj_as(List[TemplateGroupPreCommitBean], data["groups"])
@@ -559,7 +561,7 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
 
         # 使用长时任务实现用户组授权更新
         task = TaskDetail.create(TaskType.TEMPLATE_UPDATE.value, [template.id])
-        TaskFactory().delay(task.id)
+        TaskFactory()(task.id)
 
         audit_context_setter(template=template)
 

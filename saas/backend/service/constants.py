@@ -40,6 +40,13 @@ class SubjectRelationType(ChoicesEnum, LowerStrEnum):
 
 
 # ---------------------------------------------------------------------------------------------- #
+# Resource Provider
+# ---------------------------------------------------------------------------------------------- #
+# fetch_instance_info 接口的批量限制
+FETCH_MAX_LIMIT = 1000
+
+
+# ---------------------------------------------------------------------------------------------- #
 # Group Constants
 # ---------------------------------------------------------------------------------------------- #
 class GroupMemberType(ChoicesEnum, LowerStrEnum):
@@ -245,3 +252,6 @@ class ApplicationStatus(ChoicesEnum, LowerStrEnum):
     CANCELLED = auto()
 
     _choices_labels = skip(((PENDING, _("审批中")), (PASS, _("通过")), (REJECT, _("拒绝")), (CANCELLED, _("已取消"))))
+
+
+DEAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"

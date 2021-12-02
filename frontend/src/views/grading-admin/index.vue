@@ -109,7 +109,7 @@
 </template>
 <script>
     import { mapGetters } from 'vuex'
-    import ConfirmDialog from '@/components/iam-confirm-dialog'
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index.vue'
     import { buildURLParams } from '@/common/url'
     import ApplyDialog from './components/apply-join-dialog'
     export default {

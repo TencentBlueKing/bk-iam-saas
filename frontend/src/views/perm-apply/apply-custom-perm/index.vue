@@ -855,7 +855,9 @@
                 if (flag) {
                     if (!isExist) {
                         ++item.count
-                        payload.resource_groups = payload.related_resource_types.length ? [{ id: '', related_resource_types: payload.related_resource_types }] : []
+                        if (!payload.resource_groups || !payload.resource_groups.length) {
+                            payload.resource_groups = payload.related_resource_types.length ? [{ id: '', related_resource_types: payload.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...payload, tag: 'add' }, 'custom'))
                     }
                 } else {
@@ -1267,6 +1269,7 @@
                 let aggregationAction = []
                 const curSelectActions = (() => {
                     const tempAction = []
+                    console.log('this.tableData', this.tableData)
                     this.tableData.forEach(item => {
                         if (item.isAggregate) {
                             tempAction.push(...item.actions.map(_ => _.id))
@@ -1276,6 +1279,8 @@
                     })
                     return tempAction
                 })()
+                console.log('curSelectActions', curSelectActions)
+                console.log('this.aggregationsBackup', this.aggregationsBackup)
                 this.aggregationsBackup.forEach((item, index) => {
                     const tempObj = _.cloneDeep(item)
                     const tempAction = tempObj.actions.map(_ => _.id)
@@ -1287,6 +1292,7 @@
                 })
                 aggregationAction = aggregationAction.filter(item => item.actions.length > 1)
                 this.aggregations = _.cloneDeep(aggregationAction)
+                console.log('this.aggregations', this.aggregations)
             },
 
             handleAggregateActionChange (payload) {
@@ -1366,6 +1372,8 @@
                 aggregationAction.forEach(item => {
                     actionIds.push(...item.actions.map(_ => _.id))
                 })
+                console.log('this.tableData', this.tableData)
+                console.log('this.aggregationsTableData', this.aggregationsTableData)
                 if (payload) {
                     // 缓存新增加的操作权限数据
                     aggregationAction.forEach(item => {
@@ -1373,6 +1381,7 @@
                             subItem => item.actions.map(_ => _.id).includes(subItem.id)
                         )
 
+                        console.log('filterArray', filterArray)
                         const addArray = _.cloneDeep(filterArray.filter(
                             subItem => !this.aggregationsTableData.map(_ => _.id).includes(subItem.id)
                         ))
@@ -1387,13 +1396,16 @@
                         })
                         return !existData
                     }).map((item, index) => {
+                        console.log('item', item)
                         const existTableData = this.aggregationsTableData.filter(
                             subItem => item.actions.map(act => act.id).includes(subItem.id)
                         )
 
+                        console.log('existTableData', existTableData)
                         if (existTableData.length > 0) {
                             item.tag = existTableData.every(subItem => subItem.tag === 'unchanged') ? 'unchanged' : 'add'
                             const tempObj = existTableData.find(subItem => subItem.tag === 'add')
+                            console.log('tempObj', tempObj)
                             if (tempObj) {
                                 item.expired_at = tempObj.expired_at || 15552000
                                 item.expired_display = tempObj.expired_display || this.$t(`m.common['6个月']`)
@@ -1406,7 +1418,8 @@
                                     subItem => subItem.resource_groups[0].related_resource_types[0].condition
                                 )
                                 // 是否都选择了实例
-                                const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none')
+                                const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none') // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
+                                console.log('isAllHasInstance', isAllHasInstance)
                                 if (isAllHasInstance) {
                                     const instances = conditions.map(subItem => subItem.map(v => v.instance || []))
                                     let isAllEqual = true
@@ -1416,9 +1429,9 @@
                                             break
                                         }
                                     }
-                                    console.log('instances: ')
-                                    console.log(instances)
-                                    console.log('isAllEqual: ' + isAllEqual)
+                                    // console.log('instances: ')
+                                    // console.log(instances)
+                                    console.log('isAllEqual: ', isAllEqual)
                                     if (isAllEqual) {
                                         const instanceData = instances[0][0][0]
                                         if (instanceData && instanceData.path) {
@@ -1430,6 +1443,7 @@
                                             })
                                         }
                                     } else {
+                                        console.log('instances', instances)
                                         item.instances = []
                                     }
                                 } else {
@@ -1505,7 +1519,7 @@
                     }
                 })
             },
-
+            
             handleActionChecked (newVal, oldVal, val, actData, payload) {
                 const data = this.linearActionList.find(item => item.id === actData.id)
                 this.isShowActionError = false
@@ -1562,8 +1576,8 @@
                                             curData.expired_at = item.expired_at
                                             curData.expired_display = item.expired_display
                                             if (instances.length > 0) {
-                                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')]
+                                                curData.related_resource_types.forEach(subItem => {
+                                                    subItem.condition = [new Condition({ instances }, '', 'add')] // 选择的时候flag为add 代表为新增数据  侧边栏数据disabled为false可选择
                                                 })
                                             }
                                             this.tableData.splice(i, 1, curData)
@@ -1590,7 +1604,9 @@
                     payload.actionsAllChecked = payload.allChecked
                 }
 
-                data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                if (!data.resource_groups || !data.resource_groups.length) {
+                    data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                }
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)
@@ -1677,7 +1693,9 @@
                     return v.actions.every(act => act.checked)
                 })
 
-                data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                if (!data.resource_groups || !data.resource_groups.length) {
+                    data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                }
                 console.log('data111', data)
                 console.log('actData111', actData)
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
@@ -1685,7 +1703,12 @@
                 this.handleRelatedActions(actData, true)
                 item.count++
             },
-
+            
+            /**
+             *
+             * @param {Boolean} setChecked
+             * 此方法获取数据赋值给this.linearActionList
+             */
             handleActionLinearData (setChecked = false) {
                 const linearActions = []
                 const hasCheckedList = []
@@ -1807,6 +1830,8 @@
              * 获取系统下的权限列表
              *
              * @param {String} systemId 系统id
+             * 此方法获取数据，继承处理赋值给this.tableData
+             * this.linearActionList 在handleActionLinearData获取并处理
              */
             async fetchPolicies (systemId) {
                 const params = {
@@ -1820,6 +1845,7 @@
                     console.log(res.data, params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
+                        // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
                             related_actions: relatedActions,
@@ -1878,6 +1904,7 @@
              * 获取系统对应的自定义操作
              *
              * @param {String} systemId 系统id
+             * 执行handleActionLinearData方法
              */
             async fetchActions (systemId) {
                 const params = {

@@ -70,7 +70,7 @@
                                             :is-error="content.isError"
                                             @on-mouseover="handlerConditionMouseover(content)"
                                             @on-mouseleave="handlerConditionMouseleave(content)"
-                                            @on-view="handlerOnView(row, content, contentIndex)"
+                                            @on-view="handlerOnView(row, content, contentIndex, groIndex)"
                                             @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
                                             @on-paste="handlerOnPaste(...arguments, content)"
                                             @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
@@ -419,7 +419,8 @@
                     delete item.attribute
                 })
                 const curData = _.cloneDeep(this.tableList[this.curIndex])
-                curData.related_resource_types = [curData.resource_groups[this.curGroupIndex]
+                // eslint-disable-next-line max-len
+                curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]]
                 curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
@@ -515,6 +516,7 @@
             },
 
             handlerResourcePreview () {
+                const { id } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                 const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
                 const condition = []
@@ -529,6 +531,7 @@
                 })
                 this.previewResourceParams = {
                     policy_id: this.tableList[this.curIndex].policy_id,
+                    resource_group_id: id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -569,7 +572,7 @@
                 payload.canPaste = false
             },
 
-            handlerOnView (payload, item, itemIndex) {
+            handlerOnView (payload, item, itemIndex, groupIndex) {
                 const { system_id, type, name } = item
                 const condition = []
                 item.condition.forEach(item => {
@@ -582,6 +585,7 @@
                 })
                 this.previewResourceParams = {
                     policy_id: payload.policy_id,
+                    resource_group_id: payload.resource_groups[groupIndex].id,
                     related_resource_type: {
                         system_id,
                         type,

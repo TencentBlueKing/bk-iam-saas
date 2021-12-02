@@ -121,7 +121,7 @@
     import { bus } from '@/common/bus'
     import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants'
     import { leavePageConfirm } from '@/common/leave-page-confirm'
-    import IamGuide from '@/components/iam-guide'
+    import IamGuide from '@/components/iam-guide/index.vue'
     import AddMemberDialog from '../components/iam-add-member'
     import RenderMember from '../components/render-member'
     import basicInfo from '../components/basic-info'
@@ -342,10 +342,16 @@
                     const temp = _.cloneDeep(item)
                     delete temp.actions
                     item.actions.forEach(sub => {
+                        if (!sub.resource_groups || !sub.resource_groups.length) {
+                            sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : []
+                        }
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp))
                     })
                 })
                 this.hasAddCustomList.forEach(item => {
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
+                    }
                     tempList.push(new GroupPolicy(item, 'add', 'custom', {
                         system: {
                             id: item.system_id,
@@ -375,7 +381,7 @@
             /**
              * handleResSelect
              */
-            handleResSelect (index, resIndex, condition) {
+            handleResSelect (index, resIndex, condition, groupIndex) {
                 // debugger
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index]
@@ -384,7 +390,8 @@
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
                             if (actions[i].id === item.id) {
-                                actions[i].related_resource_types[resIndex].condition = _.cloneDeep(condition)
+                                // eslint-disable-next-line max-len
+                                actions[i].resource_groups[groupIndex].related_resource_types[resIndex].condition = _.cloneDeep(condition)
                                 break
                             }
                         }
@@ -585,7 +592,8 @@
                             tempData.push(...value)
                         } else {
                             let curInstances = []
-                            const conditions = value.map(subItem => subItem.related_resource_types[0].condition)
+                            const conditions = value.map(subItem => subItem.resource_groups[0]
+                                .related_resource_types[0].condition)
                             // 是否都选择了实例
                             const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0)
                             if (isAllHasInstance) {

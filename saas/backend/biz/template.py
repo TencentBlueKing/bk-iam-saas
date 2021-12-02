@@ -31,6 +31,7 @@ from backend.biz.policy import (
     PolicyBean,
     PolicyBeanList,
     RelatedResourceBean,
+    ResourceGroupBean,
     ThinAction,
     group_paths,
 )
@@ -41,6 +42,7 @@ from backend.service.action import ActionList, ActionService
 from backend.service.constants import RoleRelatedObjectType, SubjectType, TemplatePreUpdateStatus
 from backend.service.models import Action, ChainNode, Policy, Subject
 from backend.service.template import TemplateGroupPreCommit, TemplateService
+from backend.util.uuid import gen_uuid
 
 
 class TemplateCreateBean(BaseModel):
@@ -501,9 +503,13 @@ class TemplatePolicyCloneBiz:
         """
         生成clone的policy
         """
+        if len(source_policy.list_thin_resource_type()) != 1:
+            return None
+
         match_paths = []  # 能匹配实例视图前缀的资源路径
         match_path_hash_set = set()  # 用于去重
-        for path_list in source_policy.related_resource_types[0].iter_path_list():
+        # NOTE: 针对只关联了一种资源类型的操作, 默认只有一组resource_group
+        for path_list in source_policy.resource_groups[0].related_resource_types[0].iter_path_list():
             for chain in chain_list.chains:
                 if not chain.is_match_path(path_list.nodes):
                     continue
@@ -536,7 +542,11 @@ class TemplatePolicyCloneBiz:
             RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
             for rrt in action.related_resource_types
         ]
-        return PolicyBean(action_id=action.id, related_resource_types=related_resource_types)
+        # TODO 确认是否需要填充resource_group_id
+        return PolicyBean(
+            action_id=action.id,
+            resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=related_resource_types)],
+        )
 
     def gen_system_action_clone_config(
         self, system_id: str, new_action_ids: List[str], old_action_ids: List[str]

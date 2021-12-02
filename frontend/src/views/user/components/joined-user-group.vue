@@ -67,7 +67,7 @@
 </template>
 <script>
     import { mapGetters } from 'vuex'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider'
 
     export default {

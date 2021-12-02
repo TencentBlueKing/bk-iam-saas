@@ -69,7 +69,7 @@
 <script>
     import _ from 'lodash'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderDetail from '../../perm/components/render-detail'
     import PermPolicy from '@/model/my-perm-policy'
     export default {
@@ -206,13 +206,6 @@
              */
             hideCancelDelete () {
                 this.deleteDialog.visible = false
-            },
-
-            /**
-             * handleViewCondition
-             */
-            handleViewCondition (row) {
-                console.warn('view')
             },
 
             /**

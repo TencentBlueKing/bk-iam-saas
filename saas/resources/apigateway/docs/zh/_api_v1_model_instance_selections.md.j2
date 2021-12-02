@@ -1,0 +1,16 @@
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id | string | 是 | 实例视图 id, 系统下唯一, 只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-),最长 32 个字符. |
+| name |string | 是 | 实例视图名称，系统下唯一 |
+| name_en | string | 是 | 实例视图的英文名，国际化时切换到英文版本显示，系统下唯一 |
+|  is_dynamic | bool | 否 | 是否是动态拓扑视图，`默认为false` |
+| resource_type_chain | Array(Object) | 是 | 资源类型的层级链路 |
+
+resource_type_chain 里的元素
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system_id | string | 是 | 资源类型的来源系统 ID |
+| id |string | 是 | 资源类型 ID |

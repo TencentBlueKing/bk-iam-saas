@@ -66,9 +66,9 @@
 </template>
 <script>
     import Policy from '@/model/policy'
-    import RenderPermItem from '../../group/common/render-perm-item-new'
-    import RenderTemplateItem from '../../group/common/render-template-item'
-    import ResourceInstanceTable from '../../group/components/render-instance-table'
+    import RenderPermItem from '@/views/group/common/render-perm-item-new'
+    import RenderTemplateItem from '@/views/group/common/render-template-item'
+    import ResourceInstanceTable from '@/views/group/components/render-instance-table'
 
     const CUSTOM_CUSTOM_TEMPLATE_ID = 0
     export default {

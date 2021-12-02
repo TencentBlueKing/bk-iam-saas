@@ -1,0 +1,25 @@
+### 删除 action
+
+----------
+{% include '_api_v1_model_instance_actions_delete.md.j2' %}
+----------
+
+#### Parameters
+
+|字段 |类型 |是否必须 |位置 |描述 |
+|:--|:--|:--|:--|:--|
+|system_id |string |是 |path |系统 ID |
+|action_id |string |是 |path |操作 ID |
+|check_existence |boolean |否 |query |默认会检查 id 存在, 不存在将导致删除失败, 设置 false 不检查 id 是否存在, 直接走删除( `delete from table where id in []` ) |
+
+#### Request
+
+
+#### Response
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```
