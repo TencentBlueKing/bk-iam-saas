@@ -561,6 +561,7 @@ class RoleAuthorizationScopeChecker:
         path_string_set: Set[str] = set()
         for rg in policy_scope.resource_groups:
             match_paths.extend(self._filter_path_match_resource_group(paths, rg, path_string_set))
+            # 如果所有的路径都能匹配授权范围, 直接返回
             if len(match_paths) == len(paths):
                 break
 

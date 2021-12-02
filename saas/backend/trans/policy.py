@@ -68,17 +68,19 @@ class PolicyTrans:
         self, action: ActionBean, condition: ConditionBean, expired_at: int
     ) -> PolicyBean:
         """通过操作模型和选择里实例的Condition生成对应策略"""
-        policy = PolicyBean(
+        return PolicyBean(
             action_id=action.id,
-            resource_groups=[ResourceGroup(id=gen_uuid(), related_resource_types=[])],
+            resource_groups=[
+                ResourceGroup(
+                    id=gen_uuid(),
+                    related_resource_types=[
+                        RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
+                        for rrt in action.related_resource_types
+                    ],
+                )
+            ],
             expired_at=expired_at,
         )
-        # 对于操作聚合来说，若操作包含多个资源类型，这些资源类型必须第一级一样，否则是不可能进行操作聚合的，所以它们的Condition可以直接赋值
-        for rrt in action.related_resource_types:
-            policy.resource_groups[0].related_resource_types.append(
-                RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
-            )
-        return policy
 
     @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
     def _get_action_list(self, system_id: str) -> ActionBeanList:

@@ -27,16 +27,16 @@ class ValueFiled(serializers.Field):
 
 
 class ResourceSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=True)
-    type = serializers.CharField(label="资源类型", required=True)
-    type_name = serializers.CharField(label="资源类型名称", required=True, allow_blank=True)
-    id = serializers.CharField(label="资源实例ID", required=True)
-    name = serializers.CharField(label="资源实例ID名称", required=True, allow_blank=True, trim_whitespace=False)
+    system_id = serializers.CharField(label="系统ID")
+    type = serializers.CharField(label="资源类型")
+    type_name = serializers.CharField(label="资源类型名称", allow_blank=True)
+    id = serializers.CharField(label="资源实例ID")
+    name = serializers.CharField(label="资源实例ID名称", allow_blank=True, trim_whitespace=False)
 
 
 class InstanceSLZ(serializers.Serializer):
-    type = serializers.CharField(label="资源类型", required=True)
-    name = serializers.CharField(label="资源类型名称", required=True, allow_blank=True)
+    type = serializers.CharField(label="资源类型")
+    name = serializers.CharField(label="资源类型名称", allow_blank=True)
     path = serializers.ListField(
         label="层级链路",
         child=serializers.ListField(label="链路", child=ResourceSLZ(label="节点"), allow_empty=False),
@@ -46,20 +46,20 @@ class InstanceSLZ(serializers.Serializer):
 
 
 class ValueSLZ(serializers.Serializer):
-    id = ValueFiled(label="属性VALUE", required=True)
-    name = serializers.CharField(label="属性VALUE名称", required=True, allow_blank=True)
+    id = ValueFiled(label="属性VALUE")
+    name = serializers.CharField(label="属性VALUE名称", allow_blank=True)
 
 
 class AttributeSLZ(serializers.Serializer):
-    id = serializers.CharField(label="属性KEY", required=True)
-    name = serializers.CharField(label="属性KEY名称", required=True, allow_blank=True)
-    values = serializers.ListField(label="属性VALUE", child=ValueSLZ(label="值"), required=True, allow_empty=False)
+    id = serializers.CharField(label="属性KEY")
+    name = serializers.CharField(label="属性KEY名称", allow_blank=True)
+    values = serializers.ListField(label="属性VALUE", child=ValueSLZ(label="值"), allow_empty=False)
 
 
 class ConditionSLZ(serializers.Serializer):
     id = serializers.CharField(label="条件id", allow_blank=True)
-    instances = serializers.ListField(label="拓扑选择", required=True, child=InstanceSLZ(label="拓扑实例"))
-    attributes = serializers.ListField(label="属性选择", required=True, child=AttributeSLZ(label="属性"))
+    instances = serializers.ListField(label="拓扑选择", child=InstanceSLZ(label="拓扑实例"))
+    attributes = serializers.ListField(label="属性选择", child=AttributeSLZ(label="属性"))
 
     def validate(self, data):
         if not data["instances"] and not data["attributes"]:
@@ -72,9 +72,9 @@ class ConditionSLZ(serializers.Serializer):
 
 
 class ResourceTypeSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="资源类型系统ID", required=True)
-    type = serializers.CharField(label="资源类型", required=True)
-    condition = serializers.ListField(label="生效条件", child=ConditionSLZ(label="条件"), required=True)
+    system_id = serializers.CharField(label="资源类型系统ID")
+    type = serializers.CharField(label="资源类型")
+    condition = serializers.ListField(label="生效条件", child=ConditionSLZ(label="条件"))
 
     def validate(self, data):
         """
@@ -96,7 +96,7 @@ class ResourceTypeSLZ(serializers.Serializer):
 
 class ResourceGroupSLZ(serializers.Serializer):
     id = serializers.CharField(label="ID", allow_blank=True)
-    related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"), required=True)
+    related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"))
 
     def validate(self, data):
         """
@@ -117,7 +117,7 @@ class PolicySLZ(serializers.Serializer):
     description = serializers.CharField(label="操作描述")
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     expired_display = serializers.CharField()
-    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"), required=True)
+    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"))
 
 
 class PolicySystemSLZ(serializers.Serializer):
@@ -143,19 +143,15 @@ class PolicyDeleteSLZ(serializers.Serializer):
 
 class ConditionDeleteSLZ(serializers.Serializer):
     id = serializers.CharField(label="条件id")
-    instances = serializers.ListField(label="拓扑选择", required=True, child=InstanceSLZ(label="拓扑实例"))
+    instances = serializers.ListField(label="拓扑选择", child=InstanceSLZ(label="拓扑实例"))
 
 
 class PolicyPartDeleteSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="资源类型系统ID", required=True)
-    resource_group_id = serializers.CharField(label="资源条件组ID", required=True)
-    type = serializers.CharField(label="资源类型", required=True)
-    ids = serializers.ListField(
-        label="整体删除的条件ID", child=serializers.CharField(label="ConditionID"), required=True, allow_empty=True
-    )
-    condition = serializers.ListField(
-        label="部分删除条件", child=ConditionDeleteSLZ(label="条件"), required=True, allow_empty=True
-    )
+    system_id = serializers.CharField(label="资源类型系统ID")
+    resource_group_id = serializers.CharField(label="资源条件组ID")
+    type = serializers.CharField(label="资源类型")
+    ids = serializers.ListField(label="整体删除的条件ID", child=serializers.CharField(label="ConditionID"), allow_empty=True)
+    condition = serializers.ListField(label="部分删除条件", child=ConditionDeleteSLZ(label="条件"), allow_empty=True)
 
     def validate(self, data):
         if not data["ids"] and not data["condition"]:
@@ -177,14 +173,14 @@ class PolicyExpireSoonSLZ(serializers.Serializer):
 
 
 class BasePolicyActionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="操作ID", required=True)
-    type = serializers.CharField(label="操作类型", required=True, allow_blank=True)
-    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"), required=True)
+    id = serializers.CharField(label="操作ID")
+    type = serializers.CharField(label="操作类型", allow_blank=True)
+    resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"))
 
 
 class PolicyActionSLZ(BasePolicyActionSLZ):
     policy_id = serializers.IntegerField(label="策略id", required=False)
-    expired_at = serializers.IntegerField(label="过期时间", required=True, max_value=PERMANENT_SECONDS)
+    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
 
 class PolicyActionExpiredAtSLZ(BasePolicyActionSLZ):
@@ -192,7 +188,7 @@ class PolicyActionExpiredAtSLZ(BasePolicyActionSLZ):
 
 
 class RelatedPolicySLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=True)
+    system_id = serializers.CharField(label="系统ID")
     source_policy = PolicyActionExpiredAtSLZ(label="来源策略")
     target_policies = serializers.ListField(
         label="操作策略", child=PolicyActionExpiredAtSLZ(label="策略"), required=False, default=list
@@ -201,4 +197,4 @@ class RelatedPolicySLZ(serializers.Serializer):
 
 class PolicyResourceCopySLZ(serializers.Serializer):
     resource_type = ResourceTypeSLZ(label="资源")
-    actions = serializers.ListField(label="目标操作", child=BaseAction(label="操作"), required=True, allow_empty=True)
+    actions = serializers.ListField(label="目标操作", child=BaseAction(label="操作"), allow_empty=True)

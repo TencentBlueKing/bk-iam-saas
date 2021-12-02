@@ -29,7 +29,7 @@ from .base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_acti
 
 
 class ExpiredAtSLZ(serializers.Serializer):
-    expired_at = serializers.IntegerField(label="过期时间", required=True, max_value=PERMANENT_SECONDS)
+    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
     def validate_expired_at(self, value):
         """
@@ -45,7 +45,7 @@ class ReasonSLZ(serializers.Serializer):
 
 
 class AggActionListSLZ(BaseAggActionListSLZ):
-    expired_at = serializers.IntegerField(label="过期时间", required=True, max_value=PERMANENT_SECONDS)
+    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
 
 class ApplicationSLZ(ReasonSLZ):
@@ -53,7 +53,7 @@ class ApplicationSLZ(ReasonSLZ):
     申请数据
     """
 
-    system = SystemInfoSLZ(label="系统信息", required=True)
+    system = SystemInfoSLZ(label="系统信息")
     actions = serializers.ListField(label="操作策略", child=PolicyActionSLZ(label="策略"), required=False, default=list)
     aggregations = serializers.ListField(
         label="聚合操作", child=AggActionListSLZ(label="聚合操作"), required=False, default=list
@@ -88,7 +88,7 @@ class ConditionCompareSLZ(serializers.Serializer):
     """
 
     policy_id = serializers.IntegerField(label="策略ID")
-    resource_group_id = serializers.CharField(label="资源条件组ID", required=True)
+    resource_group_id = serializers.CharField(label="资源条件组ID")
     related_resource_type = ResourceTypeSLZ(label="资源类型")
 
 
@@ -98,8 +98,8 @@ class ResourceTagSLZ(ResourceSLZ):
 
 class InstanceTagSLZ(serializers.Serializer):
     tag = serializers.CharField(label="标签")
-    type = serializers.CharField(label="资源类型", required=True)
-    name = serializers.CharField(label="资源类型名称", required=True)
+    type = serializers.CharField(label="资源类型")
+    name = serializers.CharField(label="资源类型名称")
     path = serializers.ListField(
         label="层级链路", child=serializers.ListField(label="链路", child=ResourceTagSLZ(label="节点"))
     )
@@ -107,22 +107,22 @@ class InstanceTagSLZ(serializers.Serializer):
 
 class ValueTagSLZ(serializers.Serializer):
     tag = serializers.CharField(label="标签")
-    id = ValueFiled(label="属性VALUE", required=True)
-    name = serializers.CharField(label="属性VALUE名称", required=True)
+    id = ValueFiled(label="属性VALUE")
+    name = serializers.CharField(label="属性VALUE名称")
 
 
 class AttributeTagSLZ(serializers.Serializer):
     tag = serializers.CharField(label="标签")
-    id = serializers.CharField(label="属性KEY", required=True)
-    name = serializers.CharField(label="属性KEY名称", required=True)
-    values = serializers.ListField(label="属性VALUE", child=ValueTagSLZ(label="值"), required=True, allow_empty=False)
+    id = serializers.CharField(label="属性KEY")
+    name = serializers.CharField(label="属性KEY名称")
+    values = serializers.ListField(label="属性VALUE", child=ValueTagSLZ(label="值"), allow_empty=False)
 
 
 class ConditionTagSLZ(serializers.Serializer):
     tag = serializers.CharField(label="标签")
     id = serializers.CharField(label="条件id", allow_blank=True)
-    instances = serializers.ListField(label="拓扑选择", required=True, child=InstanceTagSLZ(label="拓扑实例"))
-    attributes = serializers.ListField(label="属性选择", required=True, child=AttributeTagSLZ(label="属性"))
+    instances = serializers.ListField(label="拓扑选择", child=InstanceTagSLZ(label="拓扑实例"))
+    attributes = serializers.ListField(label="属性选择", child=AttributeTagSLZ(label="属性"))
 
 
 class ApplicationListSLZ(serializers.ModelSerializer):

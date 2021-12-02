@@ -37,6 +37,7 @@ from backend.service.models import (
     Policy,
     RelatedResource,
     RelatedResourceType,
+    ResourceGroupList,
     ResourceTypeDict,
     Subject,
     System,
@@ -47,7 +48,7 @@ from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
-from backend.util.model import ExcludeModel, ListModel
+from backend.util.model import ExcludeModel
 from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
@@ -645,19 +646,16 @@ class ResourceGroupBean(BaseModel):
         return sum([rrt.count_instance() for rrt in self.related_resource_types])
 
     def get_related_resource_type(self, system_id: str, resource_type_id: str) -> Optional[RelatedResourceBean]:
-        for related_resource_type in self.related_resource_types:
-            if related_resource_type.system_id == system_id and related_resource_type.type == resource_type_id:
-                return related_resource_type
+        for rrt in self.related_resource_types:
+            if rrt.system_id == system_id and rrt.type == resource_type_id:
+                return rrt
 
         return None
 
     def set_related_resource_type(self, resource_type: RelatedResourceBean):
-        for related_resource_type in self.related_resource_types:
-            if (
-                related_resource_type.system_id == resource_type.system_id
-                and related_resource_type.type == resource_type.type
-            ):
-                related_resource_type.condition = resource_type.condition
+        for rrt in self.related_resource_types:
+            if rrt.system_id == resource_type.system_id and rrt.type == resource_type.type:
+                rrt.condition = resource_type.condition
                 break
 
     def check_instance_selection(self, action: Action, ignore_path=False):
@@ -680,24 +678,32 @@ class ResourceGroupBean(BaseModel):
         return is_changed
 
 
-class ResourceGroupBeanList(ListModel):
+class ResourceGroupBeanList(ResourceGroupList):
     __root__: List[ResourceGroupBean]
+
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        super().__init__(**data)
+        __pydantic_self__._drop_duplicates()
+
+    def _drop_duplicates(self):
+        """
+        去重
+        """
+        if len(self) <= 1:
+            return self
+
+        for __ in range(len(self)):
+            rg = self.pop(0)
+            if rg not in self:
+                self.append(rg)
+
+        return self
 
     def get_by_id(self, id: str) -> Optional[ResourceGroupBean]:
         index = self._index_by_id(id)
-        if index == -1:
-            return None
+        return self[index] if index != -1 else None
 
-        return self[index]
-
-    def _index_by_id(self, id: str) -> int:
-        for i, rg in enumerate(self):
-            if rg.id == id:
-                return i
-
-        return -1
-
-    def issuper(self, resource_groups: "ResourceGroupBeanList") -> bool:
+    def is_super_set(self, resource_groups: "ResourceGroupBeanList") -> bool:
         """
         是否完全包含
         """
@@ -708,17 +714,7 @@ class ResourceGroupBeanList(ListModel):
         return True
 
     def is_unrelated(self) -> bool:
-        return len(self.__root__) == 0
-
-    def is_single_resource_type(self) -> bool:
-        """
-        是否只关联一个资源类型
-        """
-        if not self.__root__:
-            return False
-
-        # NOTE: 数据如果经过action的完整校验, 这里只需要判断第一个resource_group的related_resource_types
-        return len(self.__root__[0].related_resource_types) == 1
+        return len(self) == 0
 
     def __contains__(self, resource_group: ResourceGroupBean) -> bool:
         for rg in self:
@@ -729,11 +725,25 @@ class ResourceGroupBeanList(ListModel):
 
     def __add__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
         """
-        合并
+        合并到新的对象
+        """
+        rg = deepcopy(self)
+        rg += resource_groups
+        return rg
+
+    def __iadd__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
+        """
+        合并到本身
 
         如果已有id相同的, 则直接合并id相同的
         如果不存在id相同的, 判断范围是否已包含, 没有包含的合并
         """
+        # 处理单个资源类型的合并
+        if len(self.list_thin_resource_type()) == 1:
+            for rg in resource_groups:
+                self[0].add_related_resource_types(rg.related_resource_types)
+            return self
+
         for rg in resource_groups:
             original_rg = self.get_by_id(rg.id)
             if original_rg is not None:
@@ -744,6 +754,14 @@ class ResourceGroupBeanList(ListModel):
 
     def __sub__(self, resource_groups: "ResourceGroupBeanList"):
         """
+        移除返回新的对象
+        """
+        rg = deepcopy(self)
+        rg -= resource_groups
+        return rg
+
+    def __isub__(self, resource_groups: "ResourceGroupBeanList"):
+        """
         移除部分条件
 
         1. 如果是只关联1个资源类型的操作, 直接移除
@@ -751,7 +769,7 @@ class ResourceGroupBeanList(ListModel):
            - 完整包含的一组才能移除
         """
         # 只关联1个资源类型的操作
-        if self.is_single_resource_type:
+        if len(self.list_thin_resource_type()) == 1:
             new_resource_groups: List[ResourceGroupBean] = []
             for original_rg in self:
                 try:
@@ -765,7 +783,7 @@ class ResourceGroupBeanList(ListModel):
                 raise PolicyEmptyException
 
             self.__root__ = new_resource_groups
-            return
+            return self
 
         # 关联多个资源类型的操作
         del_resource_group_ids: Set[str] = set()
@@ -777,6 +795,8 @@ class ResourceGroupBeanList(ListModel):
         self.__root__ = [rg for rg in self if rg.id not in del_resource_group_ids]
         if not self.__root__:
             raise PolicyEmptyException
+
+        return self
 
     def fill_empty_fields(self, action: Action, resource_type_dict: ResourceTypeDict):
         for rg in self:
@@ -807,6 +827,13 @@ class ResourceGroupBeanList(ListModel):
             return None
 
         return self.pop(index)
+
+    def _index_by_id(self, id: str) -> int:
+        for i, rg in enumerate(self):
+            if rg.id == id:
+                return i
+
+        return -1
 
 
 class ResourceTypeInstanceCount(BaseModel):
@@ -885,7 +912,7 @@ class PolicyBean(Policy):
         """
         合并
         """
-        self.resource_groups + resource_group_list
+        self.resource_groups += resource_group_list
 
     def has_resource_group_list(self, resource_group_list: ResourceGroupBeanList) -> bool:
         """
@@ -894,7 +921,7 @@ class PolicyBean(Policy):
         if self.resource_groups.is_unrelated():
             return True
 
-        return self.resource_groups.issuper(resource_group_list)
+        return self.resource_groups.is_super_set(resource_group_list)
 
     def remove_resource_group_list(self, resource_group_list: ResourceGroupBeanList) -> "PolicyBean":
         """
@@ -903,7 +930,7 @@ class PolicyBean(Policy):
         if self.resource_groups.is_unrelated():
             raise PolicyEmptyException
 
-        self.resource_groups - resource_group_list
+        self.resource_groups -= resource_group_list
         return self
 
     def list_path_node(self) -> List[PathNodeBean]:
@@ -942,8 +969,9 @@ class PolicyBean(Policy):
             return [ResourceTypeInstanceCount(type="", count=0)]
 
         counts = []
-        for i in range(len(self.resource_groups[0].related_resource_types)):
-            c = ResourceTypeInstanceCount(type=self.resource_groups[0].related_resource_types[i].type, count=0)
+        for i, resource_type in enumerate(self.list_thin_resource_type()):
+            c = ResourceTypeInstanceCount(type=resource_type.type, count=0)
+
             for rg in self.resource_groups:
                 c.count += rg.related_resource_types[i].count_instance()
             counts.append(c)
@@ -961,19 +989,6 @@ class PolicyBean(Policy):
                 is_changed = True
 
         return is_changed
-
-    def is_single_resource_type(self) -> bool:
-        """
-        是否关联一个资源类型
-        """
-        return self.resource_groups.is_single_resource_type()
-
-    def get_single_resource_type(self) -> RelatedResourceBean:
-        """
-        获取关联的单个资源类型
-        """
-        assert self.is_single_resource_type()
-        return self.resource_groups[0].related_resource_types[0]
 
 
 class PolicyBeanList:

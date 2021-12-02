@@ -101,12 +101,12 @@ class InstanceAproverHandler(PolicyProcessHandler):
         """
         通过实例审批人信息, 分离policy_process为独立的实例policy
         """
-        if not policy_process.policy.is_single_resource_type():
+        if len(policy_process.policy.list_thin_resource_type()) != 1:
             return [policy_process]
 
         policy = policy_process.policy
         process = policy_process.process
-        rrt: RelatedResourceBean = policy_process.policy.get_related_resource_type()  # type: ignore
+        rrt: RelatedResourceBean = policy_process.policy.resource_groups[0].related_resource_types[0]  # type: ignore
 
         policy_process_list: List[PolicyProcess] = []
         for condition in rrt.condition:
@@ -182,10 +182,10 @@ class InstanceAproverHandler(PolicyProcessHandler):
         # 需要查询资源实例审批人的节点集合
         resource_node_set = set()
         # 只支持关联1个资源类型的操作查询资源审批人
-        if not policy.is_single_resource_type():
+        if len(policy.list_thin_resource_type()) != 1:
             return []
 
-        rrt: RelatedResourceBean = policy.get_related_resource_type()  # type: ignore
+        rrt: RelatedResourceBean = policy.policy_process.policy.resource_groups[0].related_resource_types[0]
         for path in rrt.iter_path_list(ignore_attribute=True):
             last_node = path.nodes[-1]
             if last_node.id == ANY_ID:

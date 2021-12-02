@@ -111,7 +111,6 @@ class RoleService:
         if not role_scope:
             return []
 
-        print(role_scope.content)
         return parse_obj_as(List[AuthScopeSystem], json.loads(role_scope.content))
 
     def list_user_role(self, user_id: str) -> List[UserRole]:

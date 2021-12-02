@@ -797,26 +797,18 @@ class TestResourceGroupBeanList:
         assert len(policy_bean.resource_groups) == 0
 
     def test_issuper(self, policy_bean: PolicyBean):
-        assert policy_bean.resource_groups.issuper(policy_bean.resource_groups)
+        assert policy_bean.resource_groups.is_super_set(policy_bean.resource_groups)
         copied_policy = deepcopy(policy_bean)
         copied_policy.resource_groups[0].related_resource_types[0].condition = []
-        assert not policy_bean.resource_groups.issuper(copied_policy.resource_groups)
+        assert not policy_bean.resource_groups.is_super_set(copied_policy.resource_groups)
 
     def test_is_unrelated(self, policy_bean: PolicyBean):
         assert not policy_bean.resource_groups.is_unrelated()
         policy_bean.resource_groups = ResourceGroupBeanList.parse_obj([])
         assert policy_bean.resource_groups.is_unrelated()
 
-    def test_is_single_resource_type(self, policy_bean: PolicyBean):
-        assert policy_bean.resource_groups.is_single_resource_type()
-        copied_policy = deepcopy(policy_bean)
-        copied_policy.resource_groups[0].related_resource_types.append(
-            copied_policy.resource_groups[0].related_resource_types[0]
-        )
-        assert not copied_policy.resource_groups.is_single_resource_type()
-        copied_policy = deepcopy(policy_bean)
-        copied_policy.resource_groups = ResourceGroupBeanList.parse_obj([])
-        assert not copied_policy.resource_groups.is_single_resource_type()
+    def test_list_thin_resource_type(self, policy_bean: PolicyBean):
+        assert policy_bean.resource_groups.list_thin_resource_type()
 
     def test_contains(self, policy_bean: PolicyBean):
         assert policy_bean.resource_groups[0] in policy_bean.resource_groups
@@ -831,7 +823,7 @@ class TestResourceGroupBeanList:
         copied_resource_groups[0].id = "abc"
         copied_resource_groups[0].related_resource_types[0].condition = []
         resource_groups = policy_bean.resource_groups + copied_resource_groups
-        assert len(resource_groups) == 2
+        assert len(resource_groups) == 1
 
     def test_sub(self, policy_bean: PolicyBean):
         try:

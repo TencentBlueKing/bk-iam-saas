@@ -86,7 +86,7 @@ class EngineService:
             # 生成无关联操作的查询条件
             return PolicyResource(action_id=policy.action_id, resources=[])
 
-        if len(policy.resource_groups[0].related_resource_types) > 1:
+        if len(policy.list_thin_resource_type()) > 1:
             raise error_codes.ENGINE_REQUEST_ERROR.format("不支持关联多个资源类型的查询")
 
         rrt = policy.resource_groups[0].related_resource_types[0]

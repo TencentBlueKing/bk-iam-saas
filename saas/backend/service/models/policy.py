@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from collections import namedtuple
 from typing import Any, Dict, List, Tuple
 
 from pydantic import BaseModel, Field
@@ -93,8 +94,20 @@ class ResourceGroup(BaseModel):
     related_resource_types: List[RelatedResource]
 
 
+ThinResourceType = namedtuple("ThinResourceType", ["system_id", "type"])
+
+
 class ResourceGroupList(ListModel):
     __root__: List[ResourceGroup]
+
+    def list_thin_resource_type(self) -> List[ThinResourceType]:
+        """
+        获取资源类型列表
+        """
+        if len(self) == 0:
+            return []
+
+        return [ThinResourceType(rrt.system_id, rrt.type) for rrt in self[0].related_resource_types]
 
 
 class Policy(BaseModel):
@@ -167,6 +180,12 @@ class Policy(BaseModel):
             "expired_at": self.expired_at,
             "id": self.policy_id,
         }
+
+    def list_thin_resource_type(self) -> List[ThinResourceType]:
+        """
+        获取权限关联的资源类型列表
+        """
+        return self.resource_groups.list_thin_resource_type()
 
 
 class BackendThinPolicy(BaseModel):

@@ -95,7 +95,7 @@ class ResourceExpressionTranslator:
 
         # 条件为空, 表示任意
         if len(resource["condition"]) == 0:
-            return {"Any": {self._gen_resource_attribute_key(system_id, _type, "id"): []}}
+            return {"Any": {self._gen_field_name(system_id, _type, "id"): []}}
 
         content = []
 
@@ -145,7 +145,7 @@ class ResourceExpressionTranslator:
         # 多组condition之间是OR
         return {"OR": {"content": content}}
 
-    def _gen_resource_attribute_key(self, system_id: str, _type: str, _id: str):
+    def _gen_field_name(self, system_id: str, _type: str, _id: str):
         return ".".join([system_id, _type, _id])
 
     def _translate_attribute(self, system_id: str, _type: str, attribute: Dict) -> Dict:
@@ -161,13 +161,13 @@ class ResourceExpressionTranslator:
             # bool属性值只能有一个
             if len(values) != 1:
                 raise error_codes.INVALID_ARGS.format("bool value must has one")
-            return {"Bool": {self._gen_resource_attribute_key(system_id, _type, attribute["id"]): values}}
+            return {"Bool": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
 
         if isinstance(values[0], (int, float)):
-            return {"NumericEquals": {self._gen_resource_attribute_key(system_id, _type, attribute["id"]): values}}
+            return {"NumericEquals": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
 
         if isinstance(values[0], str):
-            return {"StringEquals": {self._gen_resource_attribute_key(system_id, _type, attribute["id"]): values}}
+            return {"StringEquals": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
 
         raise error_codes.INVALID_ARGS.format("values only support (bool, int, float, str)")
 
@@ -201,24 +201,18 @@ class ResourceExpressionTranslator:
                 paths.append(translate_path(p))
 
         if ids:
-            content.append({"StringEquals": {self._gen_resource_attribute_key(system_id, _type, "id"): ids}})
+            content.append({"StringEquals": {self._gen_field_name(system_id, _type, "id"): ids}})
 
         if paths:
-            content.append(
-                {"StringPrefix": {self._gen_resource_attribute_key(system_id, _type, "_bk_iam_path_"): paths}}
-            )
+            content.append({"StringPrefix": {self._gen_field_name(system_id, _type, "_bk_iam_path_"): paths}})
 
         for path, ids in path_ids.items():
             content.append(
                 {
                     "AND": {
                         "content": [
-                            {"StringEquals": {self._gen_resource_attribute_key(system_id, _type, "id"): ids}},
-                            {
-                                "StringPrefix": {
-                                    self._gen_resource_attribute_key(system_id, _type, "_bk_iam_path_"): [path]
-                                }
-                            },
+                            {"StringEquals": {self._gen_field_name(system_id, _type, "id"): ids}},
+                            {"StringPrefix": {self._gen_field_name(system_id, _type, "_bk_iam_path_"): [path]}},
                         ]
                     }
                 }
