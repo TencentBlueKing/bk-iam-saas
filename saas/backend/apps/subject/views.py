@@ -178,6 +178,7 @@ class SubjectPolicyViewSet(GenericViewSet):
         data = slz.validated_data
 
         policy_id = kwargs["pk"]
+        resource_group_id = data["resource_group_id"]
         resource_system_id = data["system_id"]
         resource_type = data["type"]
         condition_ids = data["ids"]
@@ -191,6 +192,7 @@ class SubjectPolicyViewSet(GenericViewSet):
             system_id,
             subject,
             policy_id,
+            resource_group_id,
             resource_system_id,
             resource_type,
             condition_ids,

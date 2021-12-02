@@ -18,6 +18,7 @@ from backend.biz.instance_selection import InstanceSelectionBean, InstanceSelect
 from backend.biz.policy import PolicyBean, PolicyBeanList, group_paths
 from backend.biz.resource import ResourceBiz, ResourceNodeBean
 from backend.common.error_codes import error_codes
+from backend.util.uuid import gen_uuid
 
 
 class OpenResourcePathNode(BaseModel):
@@ -162,7 +163,10 @@ class OpenCommonTrans:
                 )
 
             policy = PolicyBean.parse_obj(
-                {"action_id": open_policy.action_id, "related_resource_types": related_resource_types}
+                {
+                    "action_id": open_policy.action_id,
+                    "resource_groups": [{"id": gen_uuid(), "related_resource_types": related_resource_types}],
+                }
             )
             policies.append(policy)
 

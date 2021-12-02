@@ -1015,6 +1015,10 @@ class CreateDependingPolicyTests(TestCase):
         self.assertEqual(svc._create_related_policy(policy, action), None)
 
     def test_branch_4(self):
+        import uuid
+
+        uuid.uuid4 = mock.Mock(return_value=uuid.UUID("00000000000000000000000000000000"))
+
         policy = PolicyBean(
             id="edit_host",
             related_resource_types=[
@@ -1063,6 +1067,10 @@ class CreateDependingPolicyTests(TestCase):
         )
 
     def test_branch_5(self):
+        import uuid
+
+        uuid.uuid4 = mock.Mock(return_value=uuid.UUID("00000000000000000000000000000000"))
+
         policy = PolicyBean(
             id="edit_host",
             related_resource_types=[
@@ -1162,7 +1170,7 @@ class CreateDependingPolicyTests(TestCase):
     def test_branch_6(self):
         import uuid
 
-        uuid.uuid4 = mock.Mock(return_value=uuid.UUID("fa17b2cbf38141d7a5a0591573fc0f82"))
+        uuid.uuid4 = mock.Mock(return_value=uuid.UUID("00000000000000000000000000000000"))
 
         policy = PolicyBean(
             id="edit_host",
@@ -1232,7 +1240,7 @@ class CreateDependingPolicyTests(TestCase):
                         type="biz",
                         condition=[
                             ConditionBean(
-                                id="fa17b2cbf38141d7a5a0591573fc0f82",
+                                id="00000000000000000000000000000000",
                                 instances=[
                                     InstanceBean(
                                         type="biz",
