@@ -74,6 +74,7 @@ export const m = {
         '详情': 'Detail',
         '共': 'Total',
         '点击收起': 'Collapse',
+        '点击展开': 'Expanded',
         '同意': 'Agree',
         '拒绝': 'Reject',
         '模板': 'Template',
