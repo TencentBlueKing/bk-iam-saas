@@ -143,7 +143,9 @@ class InstanceAproverHandler(PolicyProcessHandler):
         # 把原始的策略剔除拆分的部分
         for part_policy_process in policy_process_list:
             try:
-                policy_process.policy.remove_related_resource_types(part_policy_process.policy.related_resource_types)
+                policy_process.policy.resource_groups[0].remove_related_resource_types(
+                    part_policy_process.policy.resource_groups[0].related_resource_types
+                )
             except PolicyEmptyException:
                 # 如果原始的策略全部删完了, 直接返回拆分的部分
                 return policy_process_list
