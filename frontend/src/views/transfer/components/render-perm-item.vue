@@ -120,7 +120,7 @@
             cursor: pointer;
             .expanded-icon {
                 position: absolute;
-                top: 15px;
+                top: 13px;
                 left: 10px;
             }
             .title {

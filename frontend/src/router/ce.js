@@ -145,6 +145,9 @@ const OrgPermDetail = () => import(
     /* webpackChunkName: 'my-perm-org-perm' */'../views/perm/organization-perm/detail'
 )
 
+const PermTransfer = () => import(
+    /* webpackChunkName: 'perm-transfer' */'../views/transfer'
+)
 // no-perm
 const NoPerm = () => import(
     /* webpackChunkName: 'no-perm' */'../views/no-perm')
@@ -465,6 +468,15 @@ export const routes = [
                     headerTitle: ''
                 },
                 component: NoPerm
+            },
+            {
+                path: 'perm-transfer',
+                name: 'permTransfer',
+                meta: {
+                    headerTitle: il8n('permTransfer', '权限交接'),
+                    backRouter: 'myPerm'
+                },
+                component: PermTransfer
             }
         ]
     },

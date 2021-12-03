@@ -89,7 +89,7 @@
         // 权限申请 'permApply'
         [['applyCustomPerm', 'applyJoinUserGroup'], 'permApplyNav'],
         // 我的权限
-        [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal', 'groupPermRenewal'], 'myPermNav'],
+        [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal', 'groupPermRenewal', 'permTransfer'], 'myPermNav'],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
         // 管理员
