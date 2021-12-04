@@ -475,7 +475,7 @@ export const routes = [
                 name: 'permTransfer',
                 meta: {
                     headerTitle: il8n('permTransfer', '权限交接'),
-                    backRouter: ''
+                    backRouter: 'myPerm'
                 },
                 component: PermTransfer
             }
