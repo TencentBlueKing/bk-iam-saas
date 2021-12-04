@@ -1,6 +1,6 @@
-.iam-transfer-personal-group-wrapper {
+.iam-transfer-group-wrapper {
     min-height: 328px;
-    padding-bottom: 50px;
+    margin-bottom: 20px;
     .iam-perm-item {
         background: #fff;
         border-radius: 2px;

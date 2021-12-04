@@ -1,6 +1,8 @@
 <template>
     <div class="iam-transfer-wrapper">
-        <PersonalGroup @personal-group-selection-change="handlePersonalGroupSelection" />
+        <Group @group-selection-change="handleGroupSelection" />
+
+        <Custom />
         <!-- <div style="background: red; height: 800px;"></div> -->
         <div class="fixed-action" style="height: 50px;" :style="{ paddingLeft: fixedActionPaddingLeft }">
             <bk-button theme="primary" @click="submit">
@@ -12,17 +14,19 @@
 <script>
     import { bus } from '@/common/bus'
 
-    import PersonalGroup from './personal-group.vue'
+    import Group from './group.vue'
+    import Custom from './custom.vue'
 
     export default {
         name: '',
         components: {
-            PersonalGroup
+            Group,
+            Custom
         },
         data () {
             return {
                 fixedActionPaddingLeft: '284px',
-                personalGroupSelectData: []
+                groupSelectData: []
             }
         },
         created () {
@@ -37,11 +41,11 @@
             })
         },
         methods: {
-            handlePersonalGroupSelection (list) {
-                this.personalGroupSelectData.splice(0, this.personalGroupSelectData.length, ...list)
+            handleGroupSelection (list) {
+                this.groupSelectData.splice(0, this.groupSelectData.length, ...list)
             },
             submit () {
-                console.error(this.personalGroupSelectData)
+                console.error(this.groupSelectData)
             }
         }
     }

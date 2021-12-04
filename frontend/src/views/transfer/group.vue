@@ -1,21 +1,21 @@
 <template>
-    <div class="iam-transfer-personal-group-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+    <div class="iam-transfer-group-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
         <template v-if="!isLoading && !isEmpty">
             <div class="iam-perm-item">
-                <div class="header" @click="handlePersonalGroupExpanded">
-                    <Icon bk class="expanded-icon" :type="personalGroupExpanded ? 'down-shape' : 'right-shape'" />
+                <div class="header" @click="handleGroupExpanded">
+                    <Icon bk class="expanded-icon" :type="groupExpanded ? 'down-shape' : 'right-shape'" />
                     <label class="title">用户组权限交接</label>
-                    <div class="sub-title" v-if="personalGroupNotTransferCount > 0">
+                    <div class="sub-title" v-if="groupNotTransferCount > 0">
                         <i class="iam-icon iamcenter-warning-fill not-transfer-icon"></i>
-                        无法交接用户组：{{personalGroupNotTransferCount}}个
+                        无法交接用户组：{{groupNotTransferCount}}个
                         <span class="reason">（通过组织加入、已过期的组无法交接）</span>
                     </div>
                 </div>
-                <div class="content" v-if="personalGroupExpanded">
+                <div class="content" v-if="groupExpanded">
                     <div class="slot-content">
                         <bk-table
-                            ref="personalGroupTable"
-                            :data="personalGroupListRender"
+                            ref="groupTable"
+                            :data="gGroupListRender"
                             size="small"
                             :class="{ 'set-border': tableLoading }"
                             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -54,9 +54,9 @@
                             </bk-table-column>
                         </bk-table>
                     </div>
-                    <p class="expand-action" @click="handlePersonalGroupShowAll" v-if="personalGroupListAll.length > 5">
-                        <Icon :type="personalGroupShowAll ? 'up-angle' : 'down-angle'" />
-                        <template v-if="!personalGroupShowAll">{{ $t(`m.common['点击展开']`) }}</template>
+                    <p class="expand-action" @click="handleGroupShowAll" v-if="groupListAll.length > 5">
+                        <Icon :type="groupShowAll ? 'up-angle' : 'down-angle'" />
+                        <template v-if="!groupShowAll">{{ $t(`m.common['点击展开']`) }}</template>
                         <template v-else>{{ $t(`m.common['点击收起']`) }}</template>
                     </p>
                 </div>
@@ -79,13 +79,13 @@
             return {
                 isEmpty: false,
                 isLoading: false,
-                personalGroupListAll: [], // 用户组权限交接所有数据
-                personalGroupListRender: [], // 用户组权限交接所有数据
-                personalGroupExpanded: true,
-                personalGroupShowAll: false,
-                personalGroupNotTransferCount: 0,
+                groupListAll: [], // 用户组权限交接所有数据
+                gGroupListRender: [], // 用户组权限交接所有数据
+                groupExpanded: true,
+                groupShowAll: false,
+                groupNotTransferCount: 0,
                 isSelectAllChecked: false,
-                personalGroupSelectData: []
+                groupSelectData: []
             }
         },
         mounted () {
@@ -96,23 +96,23 @@
                 this.isLoading = true
                 try {
                     const res = await this.$store.dispatch('perm/getPersonalGroups')
-                    const personalGroupListAll = res.data || []
-                    personalGroupListAll.forEach(item => {
+                    const groupListAll = res.data || []
+                    groupListAll.forEach(item => {
                         if (String(item.department_id) !== '0' || item.expired_at_display === '已过期') {
-                            this.personalGroupNotTransferCount += 1
+                            this.groupNotTransferCount += 1
                             item.isNotTransfer = true
                         }
                     })
 
-                    this.personalGroupListAll.splice(0, this.personalGroupListAll.length, ...personalGroupListAll)
-                    const personalGroupListRender = res.data.slice(0, 5) || []
-                    this.personalGroupListRender.splice(
+                    this.groupListAll.splice(0, this.groupListAll.length, ...groupListAll)
+                    const gGroupListRender = res.data.slice(0, 5) || []
+                    this.gGroupListRender.splice(
                         0,
-                        this.personalGroupListRender.length,
-                        ...personalGroupListRender
+                        this.gGroupListRender.length,
+                        ...gGroupListRender
                     )
 
-                    this.isEmpty = personalGroupListAll.length < 1
+                    this.isEmpty = groupListAll.length < 1
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -127,42 +127,51 @@
                 }
             },
 
-            handlePersonalGroupExpanded () {
-                this.personalGroupExpanded = !this.personalGroupExpanded
+            handleGroupExpanded () {
+                this.groupExpanded = !this.groupExpanded
             },
 
             handleSelectAll (selection) {
                 this.isSelectAllChecked = !!selection.length
-                this.personalGroupSelectData.splice(0, this.personalGroupSelectData.length, ...selection)
-                this.$emit('personal-group-selection-change', this.personalGroupSelectData)
+
+                if (this.isSelectAllChecked) {
+                    const validGroupList = this.groupListAll.filter(item => !item.isNotTransfer)
+                    this.groupSelectData.splice(
+                        0,
+                        this.groupSelectData.length,
+                        ...validGroupList
+                    )
+                }
+
+                this.$emit('group-selection-change', this.groupSelectData)
             },
 
-            handlePersonalGroupShowAll () {
-                this.personalGroupShowAll = !this.personalGroupShowAll
-                if (this.personalGroupShowAll) {
-                    this.personalGroupListRender.splice(
+            handleGroupShowAll () {
+                this.groupShowAll = !this.groupShowAll
+                if (this.groupShowAll) {
+                    this.gGroupListRender.splice(
                         0,
-                        this.personalGroupListRender.length,
-                        ...this.personalGroupListAll
+                        this.gGroupListRender.length,
+                        ...this.groupListAll
                     )
                 } else {
-                    this.personalGroupListRender.splice(
+                    this.gGroupListRender.splice(
                         0,
-                        this.personalGroupListRender.length,
-                        ...this.personalGroupListAll.slice(0, 5)
+                        this.gGroupListRender.length,
+                        ...this.groupListAll.slice(0, 5)
                     )
                 }
                 if (this.isSelectAllChecked) {
-                    this.$refs.personalGroupTable.clearSelection()
-                    this.$refs.personalGroupTable.toggleAllSelection()
+                    this.$refs.groupTable.clearSelection()
+                    this.$refs.groupTable.toggleAllSelection()
                 }
             },
 
             handleSelectionChange (selection) {
-                const validPersonalGroupList = this.personalGroupListAll.filter(item => !item.isNotTransfer)
-                this.isSelectAllChecked = selection.length === validPersonalGroupList.length
-                this.personalGroupSelectData.splice(0, this.personalGroupSelectData.length, ...selection)
-                this.$emit('personal-group-selection-change', this.personalGroupSelectData)
+                const validGroupList = this.groupListAll.filter(item => !item.isNotTransfer)
+                this.isSelectAllChecked = selection.length === validGroupList.length
+                this.groupSelectData.splice(0, this.groupSelectData.length, ...selection)
+                this.$emit('group-selection-change', this.groupSelectData)
             },
 
             tableRowKey (row) {
@@ -172,5 +181,5 @@
     }
 </script>
 <style lang="postcss">
-    @import './personal-group.css';
+    @import './group.css';
 </style>
