@@ -2,9 +2,12 @@
     <div class="iam-system-access-wrapper">
         <render-search>
             <bk-button theme="primary" @click="goCreate">{{ $t(`m.common['新增']`) }}</bk-button>
-            <!-- <div slot="right" class="right">
-                <bk-link theme="primary" :href="'http://www.qq.com'" target="_blank">{{ $t(`m.access['1分钟了解蓝鲸权限中心']`) }}</bk-link>
-            </div> -->
+            <div slot="right" class="right">
+                <bk-button theme="primary" class="right" text @click="showHelpDialog">
+                    <!-- {{ $t(`m.common['编辑']`) }} -->
+                    接入帮助
+                </bk-button>
+            </div>
         </render-search>
         <bk-table
             :data="tableList"
@@ -78,6 +81,32 @@
                 </template>
             </bk-table-column>
         </bk-table>
+        <bk-dialog
+            v-model="helpDialog"
+            :show-footer="noFooter"
+            title="接入帮助"
+            width="1000"
+            header-position="left"
+            ext-cls="showHelp">
+            <div class="help-main">
+                <div class="help-info">
+                    <img src="../../images/boot-page/one2x2.jpg" alt="" style="width:384px;height:216px">
+                    <div class="info-right ml20">
+                        <p class="info-title">{{$t(`m.nav['系统接入']`)}}</p>
+                        <p class="info">蓝鲸各平台或 SaaS 已经内置到权限中心，企业开箱即用，针对企业第三方系统或者在蓝鲸开发的 SaaS 同样可以快速对接到蓝鲸权限中心。</p>
+                        <bk-button theme="primary">快速接入</bk-button>
+                    </div>
+                </div>
+                <div class="help-list">
+                    <div v-for="item in helpList" :key="item.name">
+                        <div>{{item.name}}</div>
+                        <p class="pt10" v-for="e in item.urlInfo" :key="e.text">
+                            <bk-link theme="primary" :href="e.url" target="_blank">{{e.text}}</bk-link>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 <script>
@@ -95,7 +124,44 @@
                     limit: 10
                 },
                 currentBackup: 1,
-                currentSelectList: []
+                currentSelectList: [],
+                helpDialog: false,
+                noFooter: false,
+                helpList: [
+                    {
+                        name: '接入前准备',
+                        urlInfo: [
+                            {
+                                'text': '工作原理', url: 'http://www.qq.com'
+                            },
+                            {
+                                'text': '什么是蓝鲸权限中心', url: 'http://www.qq.com'
+                            },
+                            {
+                                'text': '了解概念', url: 'http://www.qq.com'
+                            }
+                        ]
+                    },
+                    {
+                        name: '接入教程',
+                        urlInfo: [
+                            {
+                                'text': '接入开发文档', url: 'http://www.qq.com'
+                            }
+                        ]
+                    },
+                    {
+                        name: 'DEMO',
+                        urlInfo: [
+                            {
+                                'text': '立即体验', url: 'http://www.qq.com'
+                            },
+                            {
+                                'text': '前往下载', url: 'http://www.qq.com'
+                            }
+                        ]
+                    }
+                ]
             }
         },
         watch: {
@@ -207,6 +273,10 @@
 
             handlerChange (selection, row) {
                 this.currentSelectList = [...selection]
+            },
+
+            showHelpDialog () {
+                this.helpDialog = true
             }
         }
     }
@@ -243,6 +313,30 @@
             .lock-status {
                 font-size: 12px;
                 color: #fe9c00;
+            }
+        }
+    }
+    .showHelp {
+        .help-main{
+            .help-info{
+                display: flex;
+                justify-content: space-between;
+                padding-bottom: 28px;
+                border-bottom: 1px solid #DCDEE5;
+                .info-title{
+                    color: #313238;
+                    font-size: 18px;
+                    font-weight: 700;
+                }
+                .info{
+                    padding: 17px 0 40px 0;
+                }
+            }
+            .help-list{
+                padding-top: 28px;
+                display: flex;
+                justify-content: space-between;
+                width: 70%;
             }
         }
     }
