@@ -578,6 +578,7 @@ export const m = {
         '分级管理员': 'Grading Manager',
         '创建人': 'Creator',
         '分级管理员名称': 'Grading Manager Name',
+        '系统管理员名称': 'System Manager Name',
         '搜索提示': 'Input grading manager name, press Enter to search',
         '退出提示': 'Will lose this role and related permission management',
         '删除提示': 'Need to confirm all permission templates and groups have been deleted',
