@@ -186,10 +186,7 @@
             // 权限交接
             handleGoPermTransfer () {
                 this.$router.push({
-                    name: 'permRenewal',
-                    query: {
-                        tab: 'custom'
-                    }
+                    name: 'permTransfer'
                 })
             }
         }
