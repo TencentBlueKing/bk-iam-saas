@@ -1,7 +1,8 @@
 <template>
-    <div class="iam-transfer-group-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+    <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
+        v-bkloading="{ isLoading, opacity: 1 }">
         <template v-if="!isLoading && !isEmpty">
-            <div class="iam-perm-item">
+            <div class="transfer-group-content">
                 <div class="header" @click="handleGroupExpanded">
                     <Icon bk class="expanded-icon" :type="groupExpanded ? 'down-shape' : 'right-shape'" />
                     <label class="title">用户组权限交接</label>
@@ -14,15 +15,19 @@
                 <div class="content" v-if="groupExpanded">
                     <div class="slot-content">
                         <bk-table
+                            border
                             ref="groupTable"
                             :data="gGroupListRender"
                             size="small"
                             :class="{ 'set-border': tableLoading }"
                             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
                             :row-key="tableRowKey"
+                            :header-cell-class-name="getCellClass"
+                            :cell-class-name="getCellClass"
                             @selection-change="handleSelectionChange"
                             @select-all="handleSelectAll">
-                            <bk-table-column type="selection" align="center" :selectable="row => !row.isNotTransfer"
+                            <bk-table-column type="selection" align="center"
+                                :selectable="row => !row.isNotTransfer"
                                 :reserve-selection="true">
                             </bk-table-column>
                             <bk-table-column :label="$t(`m.userGroup['用户组名']`)" width="300">
@@ -176,6 +181,16 @@
 
             tableRowKey (row) {
                 return row.id + '__' + row.name
+            },
+
+            /**
+             * getCellClass
+             */
+            getCellClass ({ row, column, rowIndex, columnIndex }) {
+                if (columnIndex === 0) {
+                    return 'checkbox-cell-wrapper'
+                }
+                return ''
             }
         }
     }
