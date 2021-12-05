@@ -23,8 +23,8 @@
             line-height: 40px;
             font-size: 14px;
             color: #63656e;
-            border-radius: 2px;
             cursor: pointer;
+            user-select: none;
             .expanded-icon {
                 position: absolute;
                 top: 13px;

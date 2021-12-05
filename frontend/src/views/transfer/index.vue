@@ -4,11 +4,11 @@
 
         <Custom />
 
-        <RatingManager />
+        <!-- <RatingManager />
 
         <SystemManager />
 
-        <SuperManager />
+        <SuperManager /> -->
 
         <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -55,6 +55,8 @@
     </div>
 </template>
 <script>
+    /* eslint-disable vue/no-unused-components */
+
     import { bus } from '@/common/bus'
     import BkUserSelector from '@blueking/user-selector'
     import Group from './group.vue'
