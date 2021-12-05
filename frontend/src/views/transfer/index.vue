@@ -2,7 +2,7 @@
     <div class="iam-transfer-wrapper">
         <Group @group-selection-change="handleGroupSelection" />
 
-        <Custom />
+        <Custom @custom-selection-change="handleCustomSelection" />
 
         <!-- <RatingManager />
 
@@ -78,6 +78,7 @@
             return {
                 fixedActionPaddingLeft: '284px',
                 groupSelectData: [],
+                customSelectData: [],
                 formData: { members: [], reason: '' },
                 isShowMemberError: false,
                 userApi: window.BK_USER_API
@@ -98,8 +99,12 @@
             handleGroupSelection (list) {
                 this.groupSelectData.splice(0, this.groupSelectData.length, ...list)
             },
+            handleCustomSelection (list) {
+                this.customSelectData.splice(0, this.customSelectData.length, ...list)
+            },
             submit () {
                 console.error(this.groupSelectData)
+                console.error(this.customSelectData)
             },
             handleRtxFocus () {
                 this.isShowMemberError = false

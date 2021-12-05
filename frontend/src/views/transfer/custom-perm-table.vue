@@ -14,9 +14,6 @@
             <bk-table-column :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
                     <span :title="row.name">{{ row.name }}</span>
-                    <!-- <bk-checkbox v-model="row.transferChecked" @change="handleCheckbox(row)">
-
-                    </bk-checkbox> -->
                 </template>
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
@@ -77,10 +74,6 @@
             // },
 
             handleSelect (selection) {
-                console.warn(selection)
-                // selection.forEach(item => {
-                //     item.transferChecked = true
-                // })
                 this.$emit('custom-selection-change', selection)
             },
 

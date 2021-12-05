@@ -65,7 +65,8 @@
                 isLoading: false,
                 systemPolicyList: [],
                 customExpanded: true,
-                groupNotTransferCount: 1
+                groupNotTransferCount: 1,
+                customSelectDataMap: {}
             }
         },
         mounted () {
@@ -158,6 +159,20 @@
                     })
                 }
                 sys.policyList.splice(0, sys.policyList.length, ...policyList)
+
+                // 组装 customSelectData
+                const customSelectDataMap = Object.assign({}, this.customSelectDataMap)
+                if (!customSelectDataMap[sys.id]) {
+                    customSelectDataMap[sys.id] = []
+                }
+                const selectedPolicyList = policyList.filter(p => p.transferChecked)
+                customSelectDataMap[sys.id].splice(0, customSelectDataMap[sys.id].length, ...selectedPolicyList)
+                this.customSelectDataMap = Object.assign({}, customSelectDataMap)
+                const customSelectData = []
+                Object.values(this.customSelectDataMap).forEach(v => {
+                    customSelectData.push(...v)
+                })
+                this.$emit('custom-selection-change', customSelectData)
             }
         }
     }
