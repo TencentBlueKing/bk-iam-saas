@@ -17,7 +17,7 @@
                         <bk-table
                             border
                             ref="groupTable"
-                            :data="gGroupListRender"
+                            :data="groupListRender"
                             size="small"
                             :class="{ 'set-border': tableLoading }"
                             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -85,7 +85,7 @@
                 isEmpty: false,
                 isLoading: false,
                 groupListAll: [], // 用户组权限交接所有数据
-                gGroupListRender: [], // 用户组权限交接所有数据
+                groupListRender: [], // 用户组权限交接所有数据
                 groupExpanded: true,
                 groupShowAll: false,
                 groupNotTransferCount: 0,
@@ -110,11 +110,11 @@
                     })
 
                     this.groupListAll.splice(0, this.groupListAll.length, ...groupListAll)
-                    const gGroupListRender = res.data.slice(0, 5) || []
-                    this.gGroupListRender.splice(
+                    const groupListRender = res.data.slice(0, 5) || []
+                    this.groupListRender.splice(
                         0,
-                        this.gGroupListRender.length,
-                        ...gGroupListRender
+                        this.groupListRender.length,
+                        ...groupListRender
                     )
 
                     this.isEmpty = groupListAll.length < 1
@@ -154,15 +154,15 @@
             handleGroupShowAll () {
                 this.groupShowAll = !this.groupShowAll
                 if (this.groupShowAll) {
-                    this.gGroupListRender.splice(
+                    this.groupListRender.splice(
                         0,
-                        this.gGroupListRender.length,
+                        this.groupListRender.length,
                         ...this.groupListAll
                     )
                 } else {
-                    this.gGroupListRender.splice(
+                    this.groupListRender.splice(
                         0,
-                        this.gGroupListRender.length,
+                        this.groupListRender.length,
                         ...this.groupListAll.slice(0, 5)
                     )
                 }
