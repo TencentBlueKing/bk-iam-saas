@@ -1,14 +1,12 @@
 <template>
     <div class="iam-transfer-wrapper">
-        <!-- <Group @group-selection-change="handleGroupSelection" /> -->
+        <Group @group-selection-change="handleGroupSelection" />
 
-        <!-- <Custom @custom-selection-change="handleCustomSelection" /> -->
+        <Custom @custom-selection-change="handleCustomSelection" />
 
-        <!-- <RatingManager @rate-selection-change="handleRateSelection" /> -->
+        <RatingManager @rate-selection-change="handleRateSelection" />
 
-        <SystemManager @system-selection-change="handleSystemSelection" />
-
-        <!-- <SuperManager /> -->
+        <SystemSuperManager @system-selection-change="handleSystemSelection" @get-super-manager="getSuperManager" />
 
         <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -21,6 +19,7 @@
                         <bk-form :model="formData" form-type="vertical" ref="basicInfoForm">
                             <iam-form-item :label="$t(`m.permTransfer['交接人']`)" required>
                                 <bk-user-selector
+                                    :multiple="false"
                                     :value="formData.members"
                                     :api="userApi"
                                     :placeholder="$t(`m.verify['请输入']`)"
@@ -55,23 +54,21 @@
     </div>
 </template>
 <script>
-    /* eslint-disable vue/no-unused-components */
+    import BkUserSelector from '@blueking/user-selector'
 
     import { bus } from '@/common/bus'
-    import BkUserSelector from '@blueking/user-selector'
     import Group from './group.vue'
     import Custom from './custom.vue'
     import RatingManager from './rating-manager.vue'
-    import SystemManager from './system-manager.vue'
-    import SuperManager from './super-manager.vue'
+    import SystemSuperManager from './system-super-manager.vue'
+
     export default {
         name: '',
         components: {
             Group,
             Custom,
             RatingManager,
-            SystemManager,
-            SuperManager,
+            SystemSuperManager,
             BkUserSelector
         },
         data () {
@@ -81,6 +78,7 @@
                 customSelectData: [],
                 rateSelectData: [],
                 systemSelectData: [],
+                superManagerData: {},
                 formData: { members: [], reason: '' },
                 isShowMemberError: false,
                 userApi: window.BK_USER_API
@@ -107,6 +105,9 @@
             handleRateSelection (list) {
                 this.rateSelectData.splice(0, this.rateSelectData.length, ...list)
             },
+            getSuperManager (data) {
+                this.superManagerData = Object.assign({}, data)
+            },
             handleSystemSelection (list) {
                 this.systemSelectData.splice(0, this.systemSelectData.length, ...list)
             },
@@ -115,6 +116,7 @@
                 console.error('custom', this.customSelectData)
                 console.error('rate', this.rateSelectData)
                 console.error('system', this.systemSelectData)
+                console.error('super', this.superManagerData)
             },
             handleRtxFocus () {
                 this.isShowMemberError = false
