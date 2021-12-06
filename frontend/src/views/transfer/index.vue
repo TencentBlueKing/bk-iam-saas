@@ -4,9 +4,9 @@
 
         <Custom @custom-selection-change="handleCustomSelection" />
 
-        <!-- <RatingManager />
+        <RatingManager />
 
-        <SystemManager />
+        <!-- <SystemManager />
 
         <SuperManager /> -->
 

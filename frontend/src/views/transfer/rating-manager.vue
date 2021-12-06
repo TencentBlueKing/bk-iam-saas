@@ -1,8 +1,8 @@
 <template>
-    <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
+    <div class="iam-transfer-rating-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
         v-bkloading="{ isLoading, opacity: 1 }">
         <template v-if="!isLoading && !isEmpty">
-            <div class="transfer-group-content">
+            <div class="transfer-rating-content">
                 <div class="header" @click="handlerateExpanded">
                     <Icon bk class="expanded-icon" :type="rateExpanded ? 'down-shape' : 'right-shape'" />
                     <label class="title">分级管理员权限交接</label>
@@ -17,6 +17,8 @@
                             :class="{ 'set-border': tableLoading }"
                             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
                             :row-key="tableRowKey"
+                            :header-cell-class-name="getCellClass"
+                            :cell-class-name="getCellClass"
                             @selection-change="handleSelectionChange"
                             @select-all="handleSelectAll">
                             <bk-table-column type="selection" align="center"
@@ -24,7 +26,7 @@
                             </bk-table-column>
                             <bk-table-column :label="$t(`m.grading['分级管理员名称']`)" width="300">
                                 <template slot-scope="{ row }">
-                                    <bk-button text>{{row.name}}</bk-button>
+                                    {{row.name}}
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t(`m.common['描述']`)" width="300">
@@ -70,18 +72,15 @@
             this.fetchData()
         },
         methods: {
+            // roleList
             async fetchData () {
                 this.isLoading = true
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', {
-                        limit: 1024, // 接口是分页接口...需要确认
-                        offset: '',
-                        name: ''
-                    })
-                    const rateListAll = res.data.results || []
+                    const res = await this.$store.dispatch('roleList')
+                    console.error(res)
+                    const rateListAll = res || []
                     this.rateListAll.splice(0, this.rateListAll.length, ...rateListAll)
-                    const rateListRender = res.data.results.length > 5
-                        ? res.data.results.slice(0, 5) : res.data.results
+                    const rateListRender = rateListAll.length > 5 ? rateListAll.slice(0, 5) : rateListAll
                     this.rateListRender.splice(0, this.rateListRender.length, ...rateListRender)
                     this.isEmpty = rateListAll.length < 1
                 } catch (e) {
@@ -112,7 +111,7 @@
                         ...this.rateListAll
                     )
                 }
-                
+
                 this.$emit('rate-selection-change', this.rateSelectData)
             },
 
@@ -146,13 +145,23 @@
 
             tableRowKey (row) {
                 return row.id + '__' + row.name
+            },
+
+            /**
+             * getCellClass
+             */
+            getCellClass ({ row, column, rowIndex, columnIndex }) {
+                if (columnIndex === 0) {
+                    return 'checkbox-cell-wrapper'
+                }
+                return ''
             }
         }
     }
 </script>
 <style lang="postcss">
-    @import './group.css';
-    .member-item {
+    @import './rating-manager.css';
+    /* .member-item {
             position: relative;
             display: inline-block;
             margin: 0 6px 6px 0;
@@ -174,5 +183,5 @@
                     color: #c4c6cc;
                 }
             }
-        }
+        } */
 </style>
