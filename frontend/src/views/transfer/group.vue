@@ -15,7 +15,7 @@
                 <div class="content" v-if="groupExpanded">
                     <div class="slot-content">
                         <bk-table
-                            :style="{ height: groupShowAll ? 'auto' : '254px' }"
+                            :style="{ maxHeight: groupShowAll ? 'none' : '254px' }"
                             border
                             ref="groupTable"
                             :data="groupList"

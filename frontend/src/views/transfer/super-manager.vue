@@ -40,7 +40,7 @@
             async fetchData () {
                 this.isLoading = true
                 try {
-                    const res = await this.$store.dispatch('role/getSuperManager') // 普通用户没有获取超级管理员接口数据的权限...需要确认
+                    const res = await this.$store.dispatch('getSuperAndSystemManager') // 普通用户没有获取超级管理员接口数据的权限...需要确认
                     const superListAll = res.data || []
                     this.superListAll.splice(0, this.superListAll.length, ...superListAll)
                     this.isEmpty = superListAll.length < 1

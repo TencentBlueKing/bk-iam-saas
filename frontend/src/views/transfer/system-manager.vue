@@ -1,26 +1,27 @@
 <template>
-    <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
+    <div class="iam-transfer-rating-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
         v-bkloading="{ isLoading, opacity: 1 }">
         <template v-if="!isLoading && !isEmpty">
-            <div class="transfer-group-content">
-                <div class="header" @click="handlesystemExpanded">
+            <div class="transfer-rating-content" ref="transferSystemContent">
+                <div class="header" @click="handleSystemExpanded">
                     <Icon bk class="expanded-icon" :type="systemExpanded ? 'down-shape' : 'right-shape'" />
                     <label class="title">系统管理员权限交接</label>
                 </div>
                 <div class="content" v-if="systemExpanded">
                     <div class="slot-content">
                         <bk-table
+                            :style="{ maxHeight: systemShowAll ? 'none' : '254px' }"
                             border
                             ref="systemTable"
-                            :data="systemListRender"
+                            :data="systemList"
                             size="small"
                             :class="{ 'set-border': tableLoading }"
                             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-                            :row-key="tableRowKey"
-                            @selection-change="handleSelectionChange"
+                            :header-cell-class-name="getCellClass"
+                            :cell-class-name="getCellClass"
+                            @select="handleSelect"
                             @select-all="handleSelectAll">
-                            <bk-table-column type="selection" align="center"
-                                :reserve-selection="true">
+                            <bk-table-column type="selection" align="center">
                             </bk-table-column>
                             <bk-table-column :label="$t(`m.grading['系统管理员名称']`)" width="300">
                                 <template slot-scope="{ row }">
@@ -34,7 +35,7 @@
                             </bk-table-column>
                         </bk-table>
                     </div>
-                    <p class="expand-action" @click="handlesystemShowAll" v-if="systemListAll.length > 5">
+                    <p class="expand-action" @click="handleSystemShowAll" v-if="systemList.length > 5">
                         <Icon :type="systemShowAll ? 'up-angle' : 'down-angle'" />
                         <template v-if="!systemShowAll">{{ $t(`m.common['点击展开']`) }}</template>
                         <template v-else>{{ $t(`m.common['点击收起']`) }}</template>
@@ -59,27 +60,27 @@
             return {
                 isEmpty: false,
                 isLoading: false,
-                systemListRender: [],
-                systemListAll: [], // 分级管理员权限交接
+                systemList: [],
                 systemExpanded: true,
+                systemShowAll: false,
                 isSelectAllChecked: false,
-                systemSelectData: []
+                systemSelectData: [],
+                pageContainer: null
             }
         },
         mounted () {
+            this.pageContainer = document.querySelector('.main-scroller')
             this.fetchData()
         },
         methods: {
             async fetchData () {
                 this.isLoading = true
                 try {
-                    const res = await this.$store.dispatch('role/getSystemManager')
-                    const systemListAll = res.data || []
-                    this.systemListAll.splice(0, this.systemListAll.length, ...systemListAll)
-                    const systemListRender = res.data.length > 5
-                        ? res.data.slice(0, 5) : res.data
-                    this.systemListRender.splice(0, this.systemListRender.length, ...systemListRender)
-                    this.isEmpty = systemListAll.length < 1
+                    const res = await this.$store.dispatch('getSuperAndSystemManager')
+                    const systemList = res.data || []
+                    this.systemList.splice(0, this.systemList.length, ...systemList)
+
+                    this.isEmpty = systemList.length < 1
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -94,58 +95,62 @@
                 }
             },
 
-            handlesystemExpanded () {
+            handleSystemExpanded () {
                 this.systemExpanded = !this.systemExpanded
+            },
+
+            handleSystemShowAll () {
+                this.systemShowAll = !this.systemShowAll
+                if (!this.systemShowAll) {
+                    setTimeout(() => {
+                        const top = this.$refs.transferSystemContent.getBoundingClientRect().top
+                            + this.pageContainer.scrollTop
+
+                        this.pageContainer.scrollTo({
+                            top: top - 61, // 减去顶导的高度 61
+                            behavior: 'smooth'
+                        })
+                        // this.$refs.transferSystemContent.scrollIntoView({
+                        //     behavior: 'smooth'
+                        // })
+                    }, 10)
+                }
             },
 
             handleSelectAll (selection) {
                 this.isSelectAllChecked = !!selection.length
-
                 if (this.isSelectAllChecked) {
                     this.systemSelectData.splice(
                         0,
                         this.systemSelectData.length,
-                        ...this.systemListAll
+                        ...this.systemList
                     )
+                } else {
+                    this.systemSelectData.splice(0, this.systemSelectData.length, ...[])
                 }
-                
+
                 this.$emit('system-selection-change', this.systemSelectData)
             },
 
-            handleSelectionChange (selection) {
-                this.isSelectAllChecked = selection.length === this.systemListAll.length
+            handleSelect (selection) {
+                this.isSelectAllChecked = selection.length === this.systemList.length
                 this.systemSelectData.splice(0, this.systemSelectData.length, ...selection)
 
                 this.$emit('system-selection-change', this.systemSelectData)
             },
 
-            handlesystemShowAll () {
-                this.systemShowAll = !this.systemShowAll
-                if (this.systemShowAll) {
-                    this.systemListRender.splice(
-                        0,
-                        this.systemListRender.length,
-                        ...this.systemListAll
-                    )
-                } else {
-                    this.systemListRender.splice(
-                        0,
-                        this.systemListRender.length,
-                        ...(this.systemListAll.length > 5 ? this.systemListAll.slice(0, 5) : this.systemListAll)
-                    )
+            /**
+             * getCellClass
+             */
+            getCellClass ({ row, column, rowIndex, columnIndex }) {
+                if (columnIndex === 0) {
+                    return 'checkbox-cell-wrapper'
                 }
-                if (this.isSelectAllChecked) {
-                    this.$refs.systemTable.clearSelection()
-                    this.$refs.systemTable.toggleAllSelection()
-                }
-            },
-
-            tableRowKey (row) {
-                return row.id + '__' + row.name
+                return ''
             }
         }
     }
 </script>
 <style lang="postcss">
-    @import './group.css';
+    @import './rating-manager.css';
 </style>

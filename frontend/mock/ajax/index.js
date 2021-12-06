@@ -109,6 +109,72 @@ export async function response (getArgs, postArgs, req) {
             },
             message: 'ok'
         }
+    } else if (invoke === 'getSuperAndSystemManager') {
+        return {
+            data: [
+                {
+                    id: 1,
+                    type: 'super_manager',
+                    name: '超级管理员',
+                    members: [
+                        'admin',
+                        'jackliang',
+                        'chace'
+                    ]
+                },
+                {
+                    id: 10,
+                    type: 'system_manager',
+                    name: '标准运维',
+                    members: [
+                        'chace'
+                    ]
+                },
+                {
+                    id: 8,
+                    type: 'system_manager',
+                    name: 'qweqew',
+                    members: [
+                        'chace'
+                    ]
+                },
+                {
+                    id: 48,
+                    type: 'system_manager',
+                    name: 'asdsda',
+                    members: [
+                        'chace'
+                    ]
+                },
+                {
+                    id: 18,
+                    type: 'system_manager',
+                    name: 'qxcxc',
+                    members: [
+                        'chace'
+                    ]
+                },
+                {
+                    id: 28,
+                    type: 'system_manager',
+                    name: '配置平台',
+                    members: [
+                        'chace'
+                    ]
+                },
+                {
+                    id: 248,
+                    type: 'system_manager',
+                    name: '配置平台的',
+                    members: [
+                        'chace'
+                    ]
+                }
+            ],
+            result: true,
+            code: 0,
+            message: 'OK'
+        }
     }
     return {
         code: 0,

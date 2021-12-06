@@ -556,6 +556,25 @@ const store = new Vuex.Store({
         },
 
         /**
+         *  权限交接，系统管理员交接/超级管理员交接
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getSuperAndSystemManager ({ commit, state, dispatch }, config) {
+            return http.get(
+                // `${AJAX_URL_PREFIX}/accounts/user/roles/details/`,
+                '/accounts/user/roles/details/?mock-file=/index&invoke=getSuperAndSystemManager',
+                {},
+                config
+            )
+        },
+
+        /**
          * get 请求
          *
          * @param {Function} commit store commit mutation handler

@@ -1,14 +1,14 @@
 <template>
     <div class="iam-transfer-wrapper">
-        <Group @group-selection-change="handleGroupSelection" />
+        <!-- <Group @group-selection-change="handleGroupSelection" /> -->
 
-        <Custom @custom-selection-change="handleCustomSelection" />
+        <!-- <Custom @custom-selection-change="handleCustomSelection" /> -->
 
-        <RatingManager />
+        <!-- <RatingManager @rate-selection-change="handleRateSelection" /> -->
 
-        <!-- <SystemManager />
+        <SystemManager @system-selection-change="handleSystemSelection" />
 
-        <SuperManager /> -->
+        <!-- <SuperManager /> -->
 
         <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -79,6 +79,8 @@
                 fixedActionPaddingLeft: '284px',
                 groupSelectData: [],
                 customSelectData: [],
+                rateSelectData: [],
+                systemSelectData: [],
                 formData: { members: [], reason: '' },
                 isShowMemberError: false,
                 userApi: window.BK_USER_API
@@ -102,9 +104,17 @@
             handleCustomSelection (list) {
                 this.customSelectData.splice(0, this.customSelectData.length, ...list)
             },
+            handleRateSelection (list) {
+                this.rateSelectData.splice(0, this.rateSelectData.length, ...list)
+            },
+            handleSystemSelection (list) {
+                this.systemSelectData.splice(0, this.systemSelectData.length, ...list)
+            },
             submit () {
-                console.error(this.groupSelectData)
-                console.error(this.customSelectData)
+                console.error('group', this.groupSelectData)
+                console.error('custom', this.customSelectData)
+                console.error('rate', this.rateSelectData)
+                console.error('system', this.systemSelectData)
             },
             handleRtxFocus () {
                 this.isShowMemberError = false
@@ -125,7 +135,7 @@
 </script>
 <style lang="postcss">
     @import './index.css';
-    .input-header{
+    .input-header {
         position: absolute;
         padding: 0 30px;
         height: 40px;
@@ -139,7 +149,7 @@
             color: #313238;
         }
     }
-    .input-content{
+    .input-content {
         padding: 5px 30px 20px 180px;
     }
     .name-empty-error {
