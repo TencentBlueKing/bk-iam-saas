@@ -14,7 +14,7 @@ from typing import List
 
 from django.db import transaction
 from django.utils.translation import gettext as _
-from pydantic import BaseModel, parse_obj_as
+from pydantic import BaseModel, Field, parse_obj_as
 
 from backend.apps.role.models import (
     Role,
@@ -37,8 +37,11 @@ logger = logging.getLogger("app")
 
 
 class AuthScopeAction(BaseModel):
-    id: str
+    id: str = Field(alias="action_id")
     related_resource_types: List[RelatedResource]
+
+    class Config:
+        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
 
 class AuthScopeSystem(BaseModel):
