@@ -162,17 +162,22 @@
 
                 // 组装 customSelectData
                 const customSelectDataMap = Object.assign({}, this.customSelectDataMap)
-                if (!customSelectDataMap[sys.id]) {
-                    customSelectDataMap[sys.id] = []
+                const key = sys.id + '|||' + sys.name
+                if (!customSelectDataMap[key]) {
+                    customSelectDataMap[key] = []
                 }
                 const selectedPolicyList = policyList.filter(p => p.transferChecked)
-                customSelectDataMap[sys.id].splice(0, customSelectDataMap[sys.id].length, ...selectedPolicyList)
+                if (selectedPolicyList.length) {
+                    customSelectDataMap[key].splice(0, customSelectDataMap[key].length, ...selectedPolicyList)
+                } else {
+                    delete customSelectDataMap[key]
+                }
                 this.customSelectDataMap = Object.assign({}, customSelectDataMap)
-                const customSelectData = []
-                Object.values(this.customSelectDataMap).forEach(v => {
-                    customSelectData.push(...v)
-                })
-                this.$emit('custom-selection-change', customSelectData)
+                // const customSelectData = []
+                // Object.values(this.customSelectDataMap).forEach(v => {
+                //     customSelectData.push(...v)
+                // })
+                this.$emit('custom-selection-change', customSelectDataMap)
             }
         }
     }

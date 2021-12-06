@@ -1,19 +1,18 @@
 <template>
-    <div class="iam-transfer-rating-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
+    <div class="iam-transfer-manager-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
         v-bkloading="{ isLoading, opacity: 1 }">
         <template v-if="!isLoading && !isEmpty">
-            <div class="transfer-rating-content" ref="transferRatingContent">
+            <div class="transfer-manager-content" ref="transferManagerContent">
                 <div class="header" @click="handleRateExpanded">
                     <Icon bk class="expanded-icon" :type="rateExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">分级管理员权限交接</label>
+                    <label class="title">管理员权限交接</label>
                 </div>
                 <div class="content" v-if="rateExpanded">
                     <div class="slot-content">
                         <bk-table
-                            :style="{ maxHeight: rateShowAll ? 'none' : '254px' }"
+                            :style="{ maxHeight: managerShowAll ? 'none' : '254px' }"
                             border
-                            ref="rateTable"
-                            :data="rateList"
+                            :data="managerList"
                             size="small"
                             :class="{ 'set-border': tableLoading }"
                             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -28,6 +27,20 @@
                                     {{row.name}}
                                 </template>
                             </bk-table-column>
+                            <bk-table-column :label="$t(`m.common['类型']`)" width="300">
+                                <template slot-scope="{ row }">
+                                    <template v-if="row.type === 'super_manager'">
+                                        {{$t(`m.myApproval['超级管理员']`)}}
+                                    </template>
+                                    <template v-else-if="row.type === 'system_manager'">
+                                        {{$t(`m.nav['系统管理员']`)}}
+                                    </template>
+                                    <template v-else-if="row.type === 'rating_manager'">
+                                        {{$t(`m.userGroup['分级管理员']`)}}
+                                    </template>
+                                    <template v-else>--</template>
+                                </template>
+                            </bk-table-column>
                             <bk-table-column :label="$t(`m.common['描述']`)" width="300">
                                 <template slot-scope="{ row }">
                                     {{row.description || '--'}}
@@ -35,9 +48,9 @@
                             </bk-table-column>
                         </bk-table>
                     </div>
-                    <p class="expand-action" @click="handleRateShowAll" v-if="rateList.length > 5">
-                        <Icon :type="rateShowAll ? 'up-angle' : 'down-angle'" />
-                        <template v-if="!rateShowAll">{{ $t(`m.common['点击展开']`) }}</template>
+                    <p class="expand-action" @click="handleManagerShowAll" v-if="managerList.length > 5">
+                        <Icon :type="managerShowAll ? 'up-angle' : 'down-angle'" />
+                        <template v-if="!managerShowAll">{{ $t(`m.common['点击展开']`) }}</template>
                         <template v-else>{{ $t(`m.common['点击收起']`) }}</template>
                     </p>
                 </div>
@@ -60,11 +73,11 @@
             return {
                 isEmpty: false,
                 isLoading: false,
-                rateList: [], // 分级管理员权限交接
+                managerList: [],
                 rateExpanded: true,
-                rateShowAll: false,
+                managerShowAll: false,
                 isSelectAllChecked: false,
-                rateSelectData: [],
+                managerSelectData: [],
                 pageContainer: null
             }
         },
@@ -77,10 +90,10 @@
                 this.isLoading = true
                 try {
                     const res = await this.$store.dispatch('roleList')
-                    const rateList = res || []
-                    this.rateList.splice(0, this.rateList.length, ...rateList)
+                    const managerList = res || []
+                    this.managerList.splice(0, this.managerList.length, ...managerList)
 
-                    this.isEmpty = rateList.length < 1
+                    this.isEmpty = managerList.length < 1
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -99,18 +112,18 @@
                 this.rateExpanded = !this.rateExpanded
             },
 
-            handleRateShowAll () {
-                this.rateShowAll = !this.rateShowAll
-                if (!this.rateShowAll) {
+            handleManagerShowAll () {
+                this.managerShowAll = !this.managerShowAll
+                if (!this.managerShowAll) {
                     setTimeout(() => {
-                        const top = this.$refs.transferRatingContent.getBoundingClientRect().top
+                        const top = this.$refs.transferManagerContent.getBoundingClientRect().top
                             + this.pageContainer.scrollTop
 
                         this.pageContainer.scrollTo({
                             top: top - 61, // 减去顶导的高度 61
                             behavior: 'smooth'
                         })
-                        // this.$refs.transferRatingContent.scrollIntoView({
+                        // this.$refs.transferManagerContent.scrollIntoView({
                         //     behavior: 'smooth'
                         // })
                     }, 10)
@@ -120,23 +133,23 @@
             handleSelectAll (selection) {
                 this.isSelectAllChecked = !!selection.length
                 if (this.isSelectAllChecked) {
-                    this.rateSelectData.splice(
+                    this.managerSelectData.splice(
                         0,
-                        this.rateSelectData.length,
-                        ...this.rateList
+                        this.managerSelectData.length,
+                        ...this.managerList
                     )
                 } else {
-                    this.rateSelectData.splice(0, this.rateSelectData.length, ...[])
+                    this.managerSelectData.splice(0, this.managerSelectData.length, ...[])
                 }
 
-                this.$emit('rate-selection-change', this.rateSelectData)
+                this.$emit('manager-selection-change', this.managerSelectData)
             },
 
             handleSelect (selection) {
-                this.isSelectAllChecked = selection.length === this.rateList.length
-                this.rateSelectData.splice(0, this.rateSelectData.length, ...selection)
+                this.isSelectAllChecked = selection.length === this.managerList.length
+                this.managerSelectData.splice(0, this.managerSelectData.length, ...selection)
 
-                this.$emit('rate-selection-change', this.rateSelectData)
+                this.$emit('manager-selection-change', this.managerSelectData)
             },
 
             /**
@@ -152,28 +165,5 @@
     }
 </script>
 <style lang="postcss">
-    @import './rating-manager.css';
-    /* .member-item {
-            position: relative;
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 0 10px;
-            line-height: 22px;
-            background: #f5f6fa;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            font-size: 12px;
-            .member-name {
-                display: inline-block;
-                max-width: 200px;
-                line-height: 17px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: text-top;
-                .count {
-                    color: #c4c6cc;
-                }
-            }
-        } */
+    @import './manager.css';
 </style>

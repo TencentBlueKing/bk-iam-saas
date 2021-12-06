@@ -1,7 +1,7 @@
-.iam-transfer-system-wrapper {
+.iam-transfer-manager-wrapper {
     /* min-height: 328px; */
     margin-bottom: 20px;
-    .transfer-system-content {
+    .transfer-manager-content {
         background-color: #fff;
         border-radius: 2px;
         border: 1px solid #fff;
@@ -63,28 +63,40 @@
                 min-height: 60px;
             }
         }
-        .member-item {
+    }
+
+    /* position: relative;
+    min-height: calc(100vh - 145px);
+    .iam-perm-ext-cls {
+        margin-top: 10px;
+    }
+    .iam-perm-ext-reset-cls {
+        margin-bottom: 20px;
+    }
+    .empty-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        img {
+            width: 160px;
+        }
+        .text {
             position: relative;
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 0 10px;
-            line-height: 22px;
-            background: #f5f6fa;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
+            top: -30px;
             font-size: 12px;
-            .member-name {
-                display: inline-block;
-                max-width: 200px;
-                line-height: 17px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: text-top;
-                .count {
-                    color: #c4c6cc;
-                }
-            }
+            color: #979ba5;
+            text-align: center;
         }
     }
+    .info-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        line-height: 24px;
+        .tips,
+        .text {
+            line-height: 20px;
+            font-size: 12px;
+        }
+    } */
 }

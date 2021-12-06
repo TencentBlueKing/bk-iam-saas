@@ -519,6 +519,25 @@ export default {
                 {},
                 config
             )
+        },
+
+        /**
+         * 权限交接
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        permTransfer ({ commit, state, dispatch }, params = {}, config) {
+            return http.post(
+                `${AJAX_URL_PREFIX}/handover/`,
+                params,
+                config
+            )
         }
     }
 }

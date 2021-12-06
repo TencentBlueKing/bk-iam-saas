@@ -17,11 +17,17 @@
                 {{ $t(`m.renewal['批量续期']`) }}
             </bk-button>
             <bk-button
-                data-test-id="myPerm_btn_applyPerm"
+                data-test-id="myPerm_btn_transferPerm"
                 type="button"
                 style="margin-bottom: 16px;"
                 @click="handleGoPermTransfer">
                 {{ $t(`m.permTransfer['权限交接']`) }}
+            </bk-button>
+            <bk-button
+                data-test-id="myPerm_btn_applyPerm"
+                text
+                style="position: absolute; top: 5px; right: 0;">
+                {{ $t(`m.permTransfer['交接历史']`) }}
             </bk-button>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
@@ -195,6 +201,9 @@
 <style lang="postcss">
     .iam-my-perm-wrapper {
         position: relative;
+        .header {
+            position: relative;
+        }
         .content-wrapper {
             /* 20 + 20 + 42 + 24 + 24 + 61 + 48 */
             min-height: calc(100vh - 239px);
