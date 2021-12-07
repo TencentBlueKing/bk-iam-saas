@@ -100,7 +100,7 @@ ThinResourceType = namedtuple("ThinResourceType", ["system_id", "type"])
 class ResourceGroupList(ListModel):
     __root__: List[ResourceGroup]
 
-    def list_thin_resource_type(self) -> List[ThinResourceType]:
+    def get_thin_resource_types(self) -> List[ThinResourceType]:
         """
         获取资源类型列表
         """
@@ -185,7 +185,7 @@ class Policy(BaseModel):
         """
         获取权限关联的资源类型列表
         """
-        return self.resource_groups.list_thin_resource_type()
+        return self.resource_groups.get_thin_resource_types()
 
 
 class BackendThinPolicy(BaseModel):
