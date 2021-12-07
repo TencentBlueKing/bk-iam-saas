@@ -214,7 +214,7 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
         operation_description="Policy删除资源组",
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
-        tags=["policy"],
+        tags=["subject"],
     )
     @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
