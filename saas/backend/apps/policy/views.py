@@ -162,6 +162,38 @@ class PolicyViewSet(GenericViewSet):
         return Response({})
 
 
+class PolicyResourceGroupDeleteViewSet(GenericViewSet):
+
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="Policy删除资源组",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["policy"],
+    )
+    @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        policy_id = kwargs["pk"]
+        resource_group_id = kwargs["resource_group_id"]
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+
+        permission_logger.info("policy delete by user: %s", request.user.username)
+
+        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
+        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        # 删除权限
+        update_policy = self.policy_operation_biz.delete_by_resource_group_id(
+            system_id, subject, policy_id, resource_group_id
+        )
+
+        # 写入审计上下文
+        audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
+
+        return Response()
+
+
 class PolicySystemViewSet(GenericViewSet):
 
     paginator = None  # 去掉swagger中的limit offset参数
