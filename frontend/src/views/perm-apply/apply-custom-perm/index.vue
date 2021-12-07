@@ -967,6 +967,9 @@
                     const differenceSetIds = temps.filter(v => !this.tableData.map(sub => sub.id).includes(v))
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v)
+                        if (!data.resource_groups || !data.resource_groups.length) {
+                            data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                     })
                 } else {
@@ -1143,6 +1146,9 @@
                     const differenceSetIds = allActionIds.filter(v => !this.tableData.map(sub => sub.id).includes(v))
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v)
+                        if (!data.resource_groups || !data.resource_groups.length) {
+                            data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                     })
                 }
@@ -1200,6 +1206,9 @@
                 )
                 differenceSetIds.forEach(v => {
                     const data = this.linearActionList.find(act => act.id === v)
+                    if (!data.resource_groups || !data.resource_groups.length) {
+                        data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                    }
                     this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                 })
 
@@ -1256,6 +1265,9 @@
                 )
                 differenceSetIds.forEach(item => {
                     const data = this.linearActionList.find(act => act.id === item)
+                    if (!data.resource_groups || !data.resource_groups.length) {
+                        data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                    }
                     this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                 })
 
@@ -1696,8 +1708,6 @@
                 if (!data.resource_groups || !data.resource_groups.length) {
                     data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
                 }
-                console.log('data111', data)
-                console.log('actData111', actData)
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)

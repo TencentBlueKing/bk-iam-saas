@@ -56,6 +56,7 @@ export default class Policy {
         this.initExpired(payload)
         this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled)
         this.initAttachActions(payload)
+        console.log('payload', payload)
     }
 
     initExpired (payload) {

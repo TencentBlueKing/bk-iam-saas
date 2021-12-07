@@ -41,9 +41,9 @@
                             @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
                             @on-click="showAggregateResourceInstance(row, $index)" />
                     </div>
-                    <div class="relation-content-wrapper" v-else>
+                    <div class="relation-content-wrapper" :class="tableList.length > 1 ? 'pr40' : ''" v-else>
                         <template v-if="!row.isEmpty">
-                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
+                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id" class="group-container">
                                 <div class="relation-content-item" v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
                                     <div class="content-name">
                                         {{ content.name }}
@@ -64,18 +64,21 @@
                                             :is-error="content.isLimitExceeded || content.isError"
                                             @on-mouseover="handlerConditionMouseover(content)"
                                             @on-mouseleave="handlerConditionMouseleave(content)"
-                                            @on-view="handlerOnView(row, content, contentIndex)"
+                                            @on-view="handlerOnView(row, content, contentIndex, groIndex)"
                                             @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
                                             @on-paste="handlerOnPaste(...arguments, row, content)"
                                             @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
                                             @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
                                     </div>
                                     <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
+                                    <Icon v-if="tableList.length > 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
+                                    <Icon v-if="tableList.length > 1" :class="row.resource_groups.length <= 1 ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
+                                        @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                 </div>
                             </div>
                         </template>
                         <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
+                            <div style="padding-bottom: 17px;">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </div>
                 </template>
@@ -310,6 +313,8 @@
                 if (!this.originalList.some(item => item.id === curId)) {
                     return []
                 }
+                console.log('this.originalList', this.originalList)
+                console.log('this.curGroupIndex', this.curGroupIndex)
                 const curResTypeData = this.originalList.find(item => item.id === curId)
                     .resource_groups[this.curGroupIndex]
                 console.log('curResTypeData', curResTypeData)
@@ -817,7 +822,7 @@
                 payload.canPaste = false
             },
 
-            handlerOnView (payload, item, itemIndex) {
+            handlerOnView (payload, item, itemIndex, groupIndex) {
                 const { system_id, type, name } = item
                 const condition = []
                 item.condition.forEach(item => {
@@ -830,7 +835,7 @@
                 })
                 this.previewResourceParams = {
                     policy_id: payload.policy_id,
-                    resource_group_id: payload.resource_groups[this.curGroupIndex].id,
+                    resource_group_id: payload.resource_groups[groupIndex].id,
                     related_resource_type: {
                         system_id,
                         type,
@@ -1302,6 +1307,25 @@
                     actions: actionList,
                     aggregations
                 }
+            },
+
+            handlerAddCondition (data, index, resIndex) {
+                // this.tableList
+                console.log('111', data, index, resIndex)
+                const dataClone = _.cloneDeep(data)
+                dataClone.related_resource_types[resIndex].condition = ['none']
+                dataClone.related_resource_types[resIndex].conditionBackup = ['none']
+                console.log('dataClone', dataClone)
+                const relatedResourceTypes = _.cloneDeep({ id: '', related_resource_types: dataClone.related_resource_types })
+                this.tableList[index].resource_groups.push(relatedResourceTypes)
+                console.log('this.tableList', this.tableList)
+                this.originalList = _.cloneDeep(this.tableList)
+                // console.log('add condition', data, index, groupIndex)
+            },
+
+            handlerReduceCondition (data, index, resIndex, groupIndex) {
+                console.log('index, resIndex', index, resIndex)
+                this.tableList[index].resource_groups.splice(groupIndex, 1)
             }
         }
     }
