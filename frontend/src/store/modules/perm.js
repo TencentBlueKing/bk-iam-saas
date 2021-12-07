@@ -519,6 +519,66 @@ export default {
                 {},
                 config
             )
+        },
+
+        /**
+         * 权限交接
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        permTransfer ({ commit, state, dispatch }, params = {}, config) {
+            return http.post(
+                `${AJAX_URL_PREFIX}/handover/`,
+                params,
+                config
+            )
+        },
+
+        /**
+         * 权限交接历史记录
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getTransferHistory ({ commit, state, dispatch }, config) {
+            return http.get(
+                `${AJAX_URL_PREFIX}/handover/records/`,
+                // `/handover/records/?mock-file=index&invoke=getTransferHistory`,
+                {},
+                config
+            )
+        },
+
+        /**
+         * 权限交接历史记录详情
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getTransferHistoryDetail ({ commit, state, dispatch }, params = {}, config) {
+            const id = params.id
+            delete params.id
+            return http.get(
+                `${AJAX_URL_PREFIX}/handover/records/${id}/tasks/?${json2Query(params)}`,
+                // `/handover/records/?mock-file=index&invoke=getTransferHistoryDetail&id=${id}`,
+                {},
+                config
+            )
         }
     }
 }

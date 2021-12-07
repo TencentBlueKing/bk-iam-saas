@@ -31,7 +31,8 @@
                                 <div class="system-list-item-content" v-if="sys.expanded">
                                     <custom-perm-table
                                         :key="sys.id"
-                                        :system="sys"
+                                        :policy-list="sys.policyList"
+                                        :loading="sys.loading"
                                         @custom-selection-change="handleCustomSelection(...arguments, sys)" />
                                 </div>
                             </div>
@@ -39,22 +40,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- <custom-perm-system-policy
-                v-for="(sys, sysIndex) in systemPolicyList"
-                :key="sys.id"
-                :expanded.sync="sys.expanded"
-                :ext-cls="sysIndex > 0 ? 'iam-perm-ext-cls' : ''"
-                :class="sysIndex === systemPolicyList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
-                :title="sys.name"
-                :perm-length="sys.count"
-                :one-perm="onePerm"
-                @on-expanded="handleExpanded(...arguments, sys)">
-                <custom-perm-table
-                    :key="sys.id"
-                    :system-id="sys.id"
-                    @after-delete="handleAfterDelete(...arguments, sysIndex)" />
-            </custom-perm-system-policy> -->
         </template>
         <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
@@ -80,7 +65,8 @@
                 isLoading: false,
                 systemPolicyList: [],
                 customExpanded: true,
-                groupNotTransferCount: 1
+                groupNotTransferCount: 1,
+                customSelectDataMap: {}
             }
         },
         mounted () {
@@ -168,20 +154,30 @@
                             policy => policy.id === p.id && policy.policy_id === p.policy_id
                         )
                         if (foundPolicy) {
-                            p.transferChecked = foundPolicy.transferChecked
+                            p.transferChecked = true
                         }
                     })
-
-                    // policySelectionList.forEach(policy => {
-                    //     const foundPolicy = policyList.find(
-                    //         p => p.id === policy.id && p.policy_id === policy.policy_id
-                    //     )
-                    //     if (foundPolicy) {
-                    //         foundPolicy.transferChecked = true
-                    //     }
-                    // })
                 }
                 sys.policyList.splice(0, sys.policyList.length, ...policyList)
+
+                // 组装 customSelectData
+                const customSelectDataMap = Object.assign({}, this.customSelectDataMap)
+                const key = sys.id + '|||' + sys.name
+                if (!customSelectDataMap[key]) {
+                    customSelectDataMap[key] = []
+                }
+                const selectedPolicyList = policyList.filter(p => p.transferChecked)
+                if (selectedPolicyList.length) {
+                    customSelectDataMap[key].splice(0, customSelectDataMap[key].length, ...selectedPolicyList)
+                } else {
+                    delete customSelectDataMap[key]
+                }
+                this.customSelectDataMap = Object.assign({}, customSelectDataMap)
+                // const customSelectData = []
+                // Object.values(this.customSelectDataMap).forEach(v => {
+                //     customSelectData.push(...v)
+                // })
+                this.$emit('custom-selection-change', customSelectDataMap)
             }
         }
     }

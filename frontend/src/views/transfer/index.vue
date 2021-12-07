@@ -1,14 +1,10 @@
 <template>
-    <div class="iam-transfer-wrapper">
+    <div class="iam-transfer-wrapper" v-bkloading="{ isLoading: submitLoading, opacity: 1 }">
         <Group @group-selection-change="handleGroupSelection" />
 
-        <Custom />
+        <Custom @custom-selection-change="handleCustomSelection" />
 
-        <RatingManager />
-
-        <SystemManager />
-
-        <SuperManager />
+        <Manager @manager-selection-change="handleManagerSelection" />
 
         <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -17,10 +13,11 @@
                     <label class="title">{{ $t(`m.permTransfer['将以上权限交接给']`) }}</label>
                 </div>
                 <div class="content">
-                    <div class="input-content">
-                        <bk-form :model="formData" form-type="vertical" ref="basicInfoForm">
+                    <div class="input-content" ref="formWrapper">
+                        <bk-form :model="formData" form-type="vertical" :rules="rules" ref="permTransferForm">
                             <iam-form-item :label="$t(`m.permTransfer['交接人']`)" required>
                                 <bk-user-selector
+                                    :multiple="false"
                                     :value="formData.members"
                                     :api="userApi"
                                     :placeholder="$t(`m.verify['请输入']`)"
@@ -37,8 +34,13 @@
                                     type="textarea"
                                     v-model="formData.reason"
                                     :maxlength="100"
+                                    :class="isShowReasonError ? 'group-name-error' : ''"
+                                    @input="handleReasonInput"
+                                    @blur="handleReasonBlur"
+                                    @change="handleReasonChange"
                                     :placeholder="$t(`m.verify['请输入']`)">
                                 </bk-input>
+                                <p class="name-empty-error" v-if="isShowReasonError">{{ reasonValidateText }}</p>
                             </iam-form-item>
                         </bk-form>
                     </div>
@@ -55,37 +57,42 @@
     </div>
 </template>
 <script>
-    import { bus } from '@/common/bus'
+    // import _ from 'lodash'
     import BkUserSelector from '@blueking/user-selector'
 
+    import { bus } from '@/common/bus'
     import Group from './group.vue'
     import Custom from './custom.vue'
-    import RatingManager from './rating-manager.vue'
-    import SystemManager from './system-manager.vue'
-    import SuperManager from './super-manager.vue'
+    import Manager from './manager.vue'
 
     export default {
         name: '',
         components: {
             Group,
             Custom,
-            RatingManager,
-            SystemManager,
-            SuperManager,
+            Manager,
             BkUserSelector
         },
         data () {
             return {
                 fixedActionPaddingLeft: '284px',
                 groupSelectData: [],
+                customSelectData: [],
+                managerSelectData: [],
                 formData: { members: [], reason: '' },
                 isShowMemberError: false,
-                userApi: window.BK_USER_API
+                isShowReasonError: false,
+                reasonValidateText: '',
+                userApi: window.BK_USER_API,
+                pageContainer: null,
+                submitLoading: false
             }
         },
         created () {
+            // this.fetchCategories()
         },
         mounted () {
+            this.pageContainer = document.querySelector('.main-scroller')
             bus.$on('nav-resize', flag => {
                 if (flag) {
                     this.fixedActionPaddingLeft = '284px'
@@ -95,35 +102,230 @@
             })
         },
         methods: {
+            // async fetchCategories () {
+            //     try {
+            //         const res = await this.$store.dispatch('organization/getCategories')
+            //         const categories = [...res.data]
+            //         categories.forEach((item, index) => {
+            //             item.visiable = true
+            //             item.level = 0
+            //             item.showRadio = false
+            //             item.selected = false
+            //             item.expanded = index === 0
+            //             item.count = 0
+            //             item.disabled = !item.departments || item.departments.length < 1
+            //             item.type = 'depart'
+            //             item.showCount = false
+            //             item.async = item.departments && item.departments.length > 0
+            //             item.isNewMember = false
+            //             item.loading = false
+            //             item.is_selected = false
+            //             item.parentNodeId = ''
+            //             item.id = `${item.id}&${item.level}`
+            //             if (item.departments && item.departments.length > 0) {
+            //                 item.departments.forEach((child, childIndex) => {
+            //                     child.visiable = false
+            //                     child.level = 1
+            //                     child.loading = false
+            //                     child.showRadio = false
+            //                     child.selected = false
+            //                     child.expanded = false
+            //                     child.disabled = false
+            //                     child.type = 'depart'
+            //                     child.count = child.recursive_member_count
+            //                     child.showCount = true
+            //                     child.async = child.child_count > 0 || child.member_count > 0
+            //                     child.isNewMember = false
+            //                     child.parentNodeId = item.id
+            //                 })
+            //                 item.children = _.cloneDeep(item.departments)
+            //             }
+            //         })
+            //         // 默认展开第一个目录下的节点且选中第一个子节点
+            //         const firstIndex = 0
+            //         const children = categories[firstIndex].children
+            //         children.forEach(item => {
+            //             item.visiable = true
+            //         })
+            //         categories.splice(firstIndex + 1, 0, ...children)
+            //         // this.treeList = _.cloneDeep(categories)
+            //         console.warn(categories)
+            //     } catch (e) {
+            //         console.error(e)
+            //         this.bkMessageInstance = this.$bkMessage({
+            //             theme: 'error',
+            //             message: e.message || e.data.msg || e.statusText
+            //         })
+            //     } finally {
+            //         this.treeLoading = false
+            //     }
+            // },
             handleGroupSelection (list) {
                 this.groupSelectData.splice(0, this.groupSelectData.length, ...list)
             },
-            submit () {
-                console.error(this.groupSelectData)
+            handleCustomSelection (data) {
+                // this.customSelectData.splice(0, this.customSelectData.length, ...list)
+                this.customSelectData = Object.assign({}, data)
+            },
+            handleManagerSelection (list) {
+                this.managerSelectData.splice(0, this.managerSelectData.length, ...list)
             },
             handleRtxFocus () {
                 this.isShowMemberError = false
             },
-
             handleRtxBlur () {
                 this.isShowMemberError = this.formData.members.length < 1
             },
-
-            handleNameInput (payload) {
-                this.isShowNameError = false
-                this.nameValidateText = ''
+            handleReasonInput () {
+                this.isShowReasonError = false
+                this.reasonValidateText = ''
             },
-
             handleRtxChange (payload) {
                 this.isShowMemberError = false
                 this.formData.members = payload
+            },
+
+            handleReasonBlur (payload) {
+                if (payload === '') {
+                    this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`)
+                    this.isShowReasonError = true
+                }
+                if (!this.isShowReasonError) {
+                    const maxLength = 100
+                    if (payload.trim().length > maxLength) {
+                        this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`)
+                        this.isShowReasonError = true
+                    }
+                }
+            },
+
+            handleReasonChange (value) {
+                this.formData.reason = value
+            },
+
+            handleValidator () {
+                const maxLength = 32
+                const { reason, members } = this.formData
+                if (reason === '') {
+                    this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`)
+                    this.isShowReasonError = true
+                }
+                if (!this.isShowNameError) {
+                    if (reason.trim().length > maxLength) {
+                        this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`)
+                        this.isShowReasonError = true
+                    }
+                }
+
+                this.isShowMemberError = members.length < 1
+
+                return !this.isShowReasonError && !this.isShowMemberError
+            },
+
+            async submit () {
+                if (!this.groupSelectData.length
+                    && !Object.keys(this.customSelectData).length
+                    && !this.managerSelectData.length
+                ) {
+                    this.$bkMessage({
+                        limit: 1,
+                        delay: 1500,
+                        theme: 'error',
+                        message: this.$t(`m.permTransfer['还未选择权限']`)
+                    })
+                    return
+                }
+                if (!this.handleValidator()) {
+                    const top = this.$refs.formWrapper.getBoundingClientRect().top
+                        + this.pageContainer.scrollTop
+
+                    this.pageContainer.scrollTo({
+                        top: top - 61, // 减去顶导的高度 61
+                        behavior: 'smooth'
+                    })
+                    return
+                }
+
+                const customData = []
+                Object.keys(this.customSelectData).forEach(key => {
+                    this.customSelectData[key].forEach(policyInfo => {
+                        const arr = key.split('|||')
+                        customData.push({
+                            id: arr[0],
+                            name: arr[1],
+                            policy_info: {
+                                id: policyInfo.id,
+                                related_resource_types: policyInfo.related_resource_types,
+                                policy_id: policyInfo.policy_id,
+                                expired_at: policyInfo.expired_at,
+                                type: policyInfo.type,
+                                name: policyInfo.name,
+                                description: policyInfo.description,
+                                expired_display: policyInfo.expired_display
+                            }
+                        })
+                    })
+                })
+
+                const groupData = []
+                this.groupSelectData.forEach(item => {
+                    groupData.push({
+                        id: item.id,
+                        name: item.name,
+                        expired_at: item.expired_at,
+                        expired_at_display: item.expired_at_display,
+                        department_id: item.department_id
+                    })
+                })
+
+                const superManager = this.managerSelectData.filter(item => item.type === 'super_manager')
+                const systemManager = this.managerSelectData.filter(item => item.type === 'system_manager')
+                const gradeManager = this.managerSelectData.filter(item => item.type === 'grade_manager')
+                const submitData = {
+                    transferor: this.formData.members[0],
+                    reason: this.formData.reason,
+                    handover_info: {
+                        super_manager: superManager,
+                        system_manager: systemManager,
+                        grade_manager: gradeManager,
+                        custom: customData,
+                        group: groupData
+                    }
+                }
+
+                try {
+                    this.submitLoading = true
+                    await this.$store.dispatch('perm/permTransfer', submitData)
+                    this.$bkMessage({
+                        theme: 'success',
+                        delay: 500,
+                        message: this.$t(`m.permTransfer['权限交接成功']`),
+                        onClose: () => {
+                            this.$router.push({
+                                name: 'myPerm'
+                            })
+                        }
+                    })
+                } catch (e) {
+                    console.error(e)
+                    this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        delay: 1500,
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    })
+                } finally {
+                    this.submitLoading = false
+                }
             }
         }
     }
 </script>
 <style lang="postcss">
     @import './index.css';
-    .input-header{
+    .input-header {
         position: absolute;
         padding: 0 30px;
         height: 40px;
@@ -137,10 +339,9 @@
             color: #313238;
         }
     }
-    .input-content{
+    .input-content {
         padding: 5px 30px 20px 180px;
     }
-
     .name-empty-error {
         font-size: 12px;
         color: #ff4d4d;
@@ -148,6 +349,11 @@
     .is-member-empty-cls {
         .user-selector-container {
             border-color: #ff4d4d !important;
+        }
+    }
+    .group-name-error {
+        .bk-textarea-wrapper {
+            border-color: #ff5656;
         }
     }
 </style>

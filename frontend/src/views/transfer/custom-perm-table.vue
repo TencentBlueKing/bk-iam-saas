@@ -1,21 +1,19 @@
 <template>
-    <div class="my-perm-custom-perm-table" v-bkloading="{ isLoading: sys.loading, opacity: 1 }">
+    <div class="my-perm-custom-perm-table" v-bkloading="{ isLoading: loading, opacity: 1 }">
         <bk-table
-            v-if="!sys.loading"
+            v-if="!loading"
             ref="customTable"
             :data="renderPolicyList"
             border
             :header-cell-class-name="getCellClass"
             :cell-class-name="getCellClass"
-            @selection-change="handleSelectionChange">
+            @select="handleSelect"
+            @select-all="handleSelect">
             <bk-table-column type="selection" align="center" :selectable="row => String(row.expired_at) !== '0'">
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
                     <span :title="row.name">{{ row.name }}</span>
-                    <!-- <bk-checkbox v-model="row.transferChecked" @change="handleCheckbox(row)">
-
-                    </bk-checkbox> -->
                 </template>
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
@@ -39,30 +37,35 @@
 <script>
     export default {
         props: {
-            system: {
-                type: Object,
-                default: () => ({})
+            policyList: {
+                type: Array,
+                default: () => ([])
+            },
+            loading: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
             return {
-                renderPolicyList: [],
-                sys: null
+                renderPolicyList: []
             }
         },
         watch: {
-            system: {
+            loading: {
                 handler (v) {
-                    this.sys = Object.assign({}, v || {})
-                    this.renderPolicyList.splice(0, this.renderPolicyList.length, ...(v.policyList || []))
+                    if (v) {
+                        return
+                    }
+                    this.renderPolicyList.splice(0, this.renderPolicyList.length, ...(this.policyList || []))
                     this.renderPolicyList.forEach(p => {
                         this.$nextTick(() => {
                             this.$refs.customTable && this.$refs.customTable.toggleRowSelection(p, !!p.transferChecked)
                         })
                     })
-                },
-                immediate: true,
-                deep: true
+                }
+                // immediate: true
+                // deep: true
             }
         },
         methods: {
@@ -70,11 +73,7 @@
             //     this.$emit('custom-selection-change', this.renderPolicyList)
             // },
 
-            handleSelectionChange (selection) {
-                console.warn(selection)
-                // const validGroupList = this.renderPolicyList.filter(item => String(item.expired_at) !== '0')
-                // this.isSelectAllChecked = selection.length === validGroupList.length
-                // this.groupSelectData.splice(0, this.groupSelectData.length, ...selection)
+            handleSelect (selection) {
                 this.$emit('custom-selection-change', selection)
             },
 

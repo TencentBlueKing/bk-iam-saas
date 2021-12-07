@@ -109,6 +109,158 @@ export async function response (getArgs, postArgs, req) {
             },
             message: 'ok'
         }
+    } else if (invoke === 'getTransferHistory') {
+        return {
+            data: {
+                counts: 3,
+                results: [
+                    { handover_record_id: 1, created_time: '2021-11-27 06:59:39', transferor: 'lisi', status: 'success' },
+                    { handover_record_id: 2, created_time: '2021-11-27 08:20:39', transferor: 'xiaoming', status: 'failed' },
+                    { handover_record_id: 3, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 4, created_time: '2021-12-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 5, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
+                    { handover_record_id: 6, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'running' },
+                    { handover_record_id: 7, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 8, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 9, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
+                    { handover_record_id: 10, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 11, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 12, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'running' },
+                    { handover_record_id: 13, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
+                    { handover_record_id: 14, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 15, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 16, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' }
+                ]
+            },
+            result: true,
+            code: 0,
+            message: 'OK'
+        }
+    } else if (invoke === 'getTransferHistoryDetail') {
+        return {
+            message: 'OK',
+            code: 0,
+            result: 'true',
+            data: [
+                {
+                    object_type: 'group',
+                    created_time: '2021-11-27 06:59:39',
+                    status: 'succeed',
+                    object_detail: {
+                        id: '1',
+                        name: 'paas用户组',
+                        expired_at: 1651663822,
+                        expired_at_display: '156 天',
+                        department_id: 0
+                    },
+                    error_info: ''
+                },
+                {
+                    object_type: 'group',
+                    created_time: '2021-11-27 06:59:39',
+                    status: 'succeed',
+                    object_detail: {
+                        id: '2',
+                        name: '阿萨达是用户组',
+                        expired_at: 1651663822,
+                        expired_at_display: '156 天',
+                        department_id: 0
+                    },
+                    error_info: ''
+                },
+                {
+                    object_type: 'custom',
+                    created_time: '2021-11-27 06:59:39',
+                    status: 'succeed',
+                    object_detail: {
+                        id: 'app-mgmt',
+                        name: '应用配置中心',
+                        policy_info: {
+                            id: 'package_version_create',
+                            related_resource_types: [],
+                            policy_id: 1408,
+                            expired_at: 1651990820,
+                            type: 'create',
+                            name: '程序包版本新建',
+                            description: '',
+                            expired_display: '163 天'
+                        }
+                    },
+                    error_info: ''
+                },
+                {
+                    object_type: 'custom',
+                    created_time: '2021-11-27 06:59:39',
+                    status: 'succeed',
+                    object_detail: {
+                        id: 'qwqweapp-mgmt',
+                        name: '敖德萨多撒所多应用配置中心',
+                        policy_info: {
+                            id: 'package_version_create',
+                            related_resource_types: [],
+                            policy_id: 1408,
+                            expired_at: 1651990820,
+                            type: 'create',
+                            name: '程序包版本新建',
+                            description: '',
+                            expired_display: '163 天'
+                        }
+                    },
+                    error_info: ''
+                },
+                {
+                    created_time: '2021-11-27 06:59:39',
+                    object_type: 'super_manager',
+                    status: 'succeed',
+                    object_detail: {
+                        id: 1,
+                        name: '超级管理员',
+                        members: ['admin', 'jackliang', 'chace']
+                    },
+                    error_info: ''
+                },
+                {
+                    created_time: '2021-11-27 06:59:39',
+                    object_type: 'system_manager',
+                    status: 'succeed',
+                    object_detail: {
+                        id: 2,
+                        name: '系统管理员A',
+                        members: ['admin', 'jackliang', 'chace']
+                    }
+                },
+                {
+                    created_time: '2021-11-27 06:59:39',
+                    object_type: 'system_manager',
+                    status: 'succeed',
+                    object_detail: {
+                        id: 3,
+                        name: 'asdas系统管理员A',
+                        members: ['admin', 'jackliang', 'chace']
+                    }
+                },
+                {
+                    object_type: 'rating_manager',
+                    created_time: '2021-11-27 06:59:39',
+                    status: 'failed',
+                    object_detail: {
+                        id: 4,
+                        name: '分级管理员C'
+                    },
+                    error_info: 'handover error.'
+                },
+                {
+                    object_type: 'rating_manager',
+                    created_time: '2021-11-27 06:59:39',
+                    status: 'succeed',
+                    object_detail: {
+                        id: 5,
+                        name: '啊飒飒大多所是分级管理员C'
+                    },
+                    error_info: 'handover error.'
+                }
+            ]
+        }
     }
     return {
         code: 0,
