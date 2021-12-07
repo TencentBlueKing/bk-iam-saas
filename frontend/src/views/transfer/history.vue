@@ -1,5 +1,6 @@
 <template>
     <div class="iam-transfer-history-wrapper">
+        <!-- { handover_record_id: 1, created_time: '2021-11-27 06:59:39', transferor: 'lisi', status: 'success' }, -->
         <bk-table
             :data="tableList"
             size="small"
@@ -9,36 +10,55 @@
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.permTransfer['交接时间']`)">
+            <bk-table-column :label="$t(`m.permTransfer['交接时间']`)" :width="300">
                 <template slot-scope="{ row }">
-                    <span :title="row.updated_time">{{ row.updated_time }}</span>
+                    <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.permTransfer['目标交接人']`)">
+            <bk-table-column :label="$t(`m.permTransfer['目标交接人']`)" :width="300">
                 <template slot-scope="{ row }">
-                    <span class="grading-admin-name" :title="row.name">{{ row.name }}</span>
+                    <span :title="row.transferor">{{ row.transferor }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.permTransfer['交接状态']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
+                    <span v-if="row.status === 'success'">
+                        <span class="status-icon success"></span>{{$t(`m.permTransfer['交接成功']`)}}
+                    </span>
+                    <span v-else-if="row.status === 'failed'">
+                        <span class="status-icon failed"></span>{{$t(`m.permTransfer['交接失败']`)}}
+                    </span>
+                    <span v-else-if="row.status === 'partial_succeed'">
+                        <span class="status-icon partial-succeed"></span>{{$t(`m.permTransfer['部分失败']`)}}
+                    </span>
+                    <span v-else-if="row.status === 'running'">
+                        <span class="status-icon running"></span>{{$t(`m.permTransfer['交接中']`)}}
+                    </span>
+                    <span v-else>--</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="150">
-                <!-- eslint-disable-next-line vue/no-unused-vars -->
                 <template slot-scope="{ row }">
-                    <bk-button theme="primary" text>{{ $t(`m.common['详情']`) }}</bk-button>
+                    <bk-button theme="primary" text @click="showDetail(row)">{{ $t(`m.common['详情']`) }}</bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
+
+        <history-detail
+            :show="isShowDetailSidesilder"
+            :cur-history="curHistory"
+            @animation-end="handleAnimationEnd" />
     </div>
 </template>
 <script>
     import { buildURLParams } from '@/common/url'
 
+    import HistoryDetail from './history-detail.vue'
+
     export default {
         name: '',
         components: {
+            HistoryDetail
         },
         data () {
             return {
@@ -50,7 +70,9 @@
                     limit: 10
                 },
                 currentBackup: 1,
-                tableLoading: false
+                tableLoading: false,
+                curHistory: null,
+                isShowDetailSidesilder: false
             }
         },
         watch: {
@@ -135,6 +157,16 @@
                 this.pagination.limit = currentLimit
                 this.pagination.current = 1
                 this.fetchTransferHistory(true)
+            },
+
+            showDetail (row) {
+                this.curHistory = Object.assign(row)
+                this.isShowDetailSidesilder = true
+            },
+
+            handleAnimationEnd () {
+                this.curHistory = null
+                this.isShowDetailSidesilder = false
             }
         }
     }

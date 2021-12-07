@@ -754,7 +754,16 @@ export const m = {
         '交接历史': 'Transfer history',
         '交接时间': 'Transfer Time',
         '目标交接人': 'TransferTarget',
-        '交接状态': 'TransferStatus'
+        '交接状态': 'TransferStatus',
+        '交接成功': 'Success',
+        '交接失败': 'Failed',
+        '部分失败': 'Partial Succeed',
+        '交接中': 'Running',
+        '用户组权限交接：': 'group permission transfer:',
+        '自定义权限交接：': 'custom permission transfer:',
+        '超级管理员交接：': 'super manager transfer:',
+        '系统管理员交接：': 'system manager transfer:',
+        '分级管理员交接：': 'rating manager transfer:'
     }
 }
 export default {
