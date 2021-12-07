@@ -808,7 +808,7 @@ class TestResourceGroupBeanList:
         assert policy_bean.resource_groups.is_unrelated()
 
     def test_list_thin_resource_type(self, policy_bean: PolicyBean):
-        assert policy_bean.resource_groups.list_thin_resource_type()
+        assert policy_bean.resource_groups.get_thin_resource_types()
 
     def test_contains(self, policy_bean: PolicyBean):
         assert policy_bean.resource_groups[0] in policy_bean.resource_groups
