@@ -8,26 +8,21 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 import json
-from celery import task
-from backend.apps.handover.models import HandOverTask, HandOverRecord
-from backend.biz.handover import (
-    GroupHandover,
-    CustomHandover,
-    SuperManHandover,
-    SystemManHandover,
-    GradeManHandover
-)
-from .constants import HandoverObjectType, HandoverStatus
 
+from celery import task
+
+from backend.apps.handover.models import HandOverRecord, HandOverTask
+from backend.biz.handover import CustomHandover, GradeManHandover, GroupHandover, SuperManHandover, SystemManHandover
+
+from .constants import HandoverObjectType, HandoverStatus
 
 EXECUTE_HANDOVER_MAP = {
     HandoverObjectType.GROUP.value: GroupHandover,
     HandoverObjectType.CUSTOM.value: CustomHandover,
     HandoverObjectType.SUPER_MANAGER.value: SuperManHandover,
     HandoverObjectType.SYSTEM_MANAGER.value: SystemManHandover,
-    HandoverObjectType.Grade_Manager.value: GradeManHandover
+    HandoverObjectType.GRADE_MANAGER.value: GradeManHandover,
 }
 
 
@@ -66,9 +61,8 @@ def calculate_record_status(success_task_count, total_task_count):
     获取交接任务执行状态
     """
     if success_task_count == 0:
-        status = HandoverStatus.Failed.value
+        return HandoverStatus.FAILED.value
     elif success_task_count == total_task_count:
-        status = HandoverStatus.Succeed.value
+        return HandoverStatus.SUCCEED.value
     else:
-        status = HandoverStatus.PartialFailed.value
-    return status
+        return HandoverStatus.PARTIAL_FAILED.value

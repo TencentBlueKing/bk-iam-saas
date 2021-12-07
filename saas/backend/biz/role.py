@@ -107,13 +107,11 @@ class RoleBiz:
     get_role_by_group_id = RoleService.__dict__["get_role_by_group_id"]
     list_system_common_actions = RoleService.__dict__["list_system_common_actions"]
     list_user_role = RoleService.__dict__["list_user_role"]
-    user_role_with_members = RoleService.__dict__["user_role_with_members"]
     list_user_role_for_system = RoleService.__dict__["list_user_role_for_system"]
     add_grade_manager_members = RoleService.__dict__["add_grade_manager_members"]
     list_subject_scope = RoleService.__dict__["list_subject_scope"]
     list_auth_scope = RoleService.__dict__["list_auth_scope"]
     list_by_ids = RoleService.__dict__["list_by_ids"]
-    list_by_ids_and_types = RoleService.__dict__["list_by_ids_and_types"]
     list_members_by_role_id = RoleService.__dict__["list_members_by_role_id"]
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]

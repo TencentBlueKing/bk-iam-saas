@@ -10,18 +10,19 @@ specific language governing permissions and limitations under the License.
 """
 from django.db import models
 
+from backend.apps.handover.constants import HandoverObjectType, HandoverStatus, HandoverTaskStatus
 from backend.common.models import TimestampedModel
-from backend.apps.handover.constants import HandoverStatus, HandoverObjectType, HandoverTaskStatus
 
 
 class HandOverRecord(TimestampedModel):
     """
     交接记录
     """
+
     handover_from = models.CharField("交接人", max_length=64)
     handover_to = models.CharField("被交接人", max_length=64)
     status = models.CharField(
-        "交接状态", choices=HandoverStatus.get_choices(), default=HandoverStatus.Running.value, max_length=16
+        "交接状态", choices=HandoverStatus.get_choices(), default=HandoverStatus.RUNNING.value, max_length=16
     )
     reason = models.CharField("交接原因", max_length=255)
 
@@ -34,6 +35,7 @@ class HandOverTask(TimestampedModel):
     """
     交接任务明细
     """
+
     handover_record_id = models.IntegerField("交接记录ID")
     object_type = models.CharField("权限类别", choices=HandoverObjectType.get_choices(), max_length=16)
 
@@ -41,7 +43,7 @@ class HandOverTask(TimestampedModel):
     object_id = models.CharField("交接对象ID", max_length=60)  # 用户组ID/系统ID/角色ID
     object_detail = models.TextField("所交接权限的详情")
     status = models.CharField(
-        "交接状态", choices=HandoverTaskStatus.get_choices(), default=HandoverTaskStatus.Running.value, max_length=16
+        "交接状态", choices=HandoverTaskStatus.get_choices(), default=HandoverTaskStatus.RUNNING.value, max_length=16
     )
     error_info = models.TextField("交接异常信息", default="")
 

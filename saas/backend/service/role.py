@@ -103,34 +103,17 @@ class RoleService:
         role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
         return self.list_by_ids(role_ids)
 
-    def user_role_with_members(self, user_id: str, role_type: List[RoleType]) -> List[UserRole]:
-        """查询用户的角色-成员"""
-        role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
-        roles = self.list_by_ids_and_types(role_ids, role_type)
-        data = []
-        for role in roles:
-            members = self.list_members_by_role_id(role_id=role.id)
-            user_role_member = UserRoleMember(id=role.id, type=role.type, name=role.name, members=members)
-            data.append(user_role_member)
-
-        # 按超级管理员 - 系统管理员 - 分级管理员排序
-        sort_index = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]
-        sorted_data = sorted(data, key=lambda r: sort_index.index(r.type))
-        return sorted_data
-
     def list_members_by_role_id(self, role_id: int):
         """查询指定角色的成员列表"""
         members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
         return members
 
-    def list_by_ids_and_types(self, role_ids: List[int], role_type: List[RoleType]) -> List[UserRole]:
-        roles = Role.objects.filter(id__in=role_ids, type__in=role_type)
-        return roles
-
     def list_by_ids(self, role_ids: List[int]) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
-        data = [UserRole(id=role.id, type=role.type, name=role.name, name_en=role.name_en,
-                         description=role.description) for role in roles]
+        data = [
+            UserRole(id=role.id, type=role.type, name=role.name, name_en=role.name_en, description=role.description)
+            for role in roles
+        ]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
         sort_index = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]

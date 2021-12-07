@@ -8,31 +8,44 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import StrEnum, auto, skip, LowerStrEnum
+from aenum import LowerStrEnum, auto, skip
 from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
 
-class HandoverStatus(ChoicesEnum, StrEnum):
+
+class HandoverStatus(ChoicesEnum, LowerStrEnum):
     """权限交接的执行状态"""
 
-    Running = auto()
-    Succeed = auto()
-    Failed = auto()
-    PartialFailed = auto()
+    RUNNING = auto()
+    SUCCEED = auto()
+    FAILED = auto()
+    PARTIAL_FAILED = auto()
 
     _choices_labels = skip(
-        ((Running, _("正在交接")), (Succeed, _("交接成功")), (Failed, _("交接失败")), (PartialFailed, _("部分失败"))))
+        (
+            (RUNNING, _("正在交接")),
+            (SUCCEED, _("交接成功")),
+            (FAILED, _("交接失败")),
+            (PARTIAL_FAILED, _("部分失败")),
+        )
+    )
 
 
-class HandoverTaskStatus(ChoicesEnum, StrEnum):
+class HandoverTaskStatus(ChoicesEnum, LowerStrEnum):
     """权限交接具体任务的执行状态"""
 
-    Running = auto()
-    Succeed = auto()
-    Failed = auto()
+    RUNNING = auto()
+    SUCCEED = auto()
+    FAILED = auto()
 
-    _choices_labels = skip(((Running, _("正在交接")), (Succeed, _("交接成功")), (Failed, _("交接失败"),)))
+    _choices_labels = skip(
+        (
+            (RUNNING, _("正在交接")),
+            (SUCCEED, _("交接成功")),
+            (FAILED, _("交接失败"),),
+        )
+    )
 
 
 class HandoverObjectType(ChoicesEnum, LowerStrEnum):
@@ -42,8 +55,14 @@ class HandoverObjectType(ChoicesEnum, LowerStrEnum):
     CUSTOM = auto()
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    Grade_Manager = "rating_manager"
+    GRADE_MANAGER = auto()
 
-    _choices_labels = skip(((GROUP, _("用户组权限")), (CUSTOM, _("自定义权限")), (SUPER_MANAGER, _("超级管理员权限")),
-                            (SYSTEM_MANAGER, _("系统管理员权限")), (Grade_Manager, _("分级管理员权限"))))
-
+    _choices_labels = skip(
+        (
+            (GROUP, _("用户组权限")),
+            (CUSTOM, _("自定义权限")),
+            (SUPER_MANAGER, _("超级管理员权限")),
+            (SYSTEM_MANAGER, _("系统管理员权限")),
+            (GRADE_MANAGER, _("分级管理员权限")),
+        )
+    )

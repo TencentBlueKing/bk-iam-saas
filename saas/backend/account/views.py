@@ -19,12 +19,11 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.apps.role.models import RoleUser
 from backend.biz.role import RoleBiz
-from backend.service.constants import RoleType
 from backend.common.error_codes import error_codes
 from backend.common.swagger import ResponseSwaggerAutoSchema
 
 from .role_auth import ROLE_SESSION_KEY
-from .serializers import AccountRoleSLZ, AccountRoleSwitchSLZ, AccountUserSLZ, AccountRoleMemberSLZ
+from .serializers import AccountRoleSLZ, AccountRoleSwitchSLZ, AccountUserSLZ
 
 
 class UserViewSet(GenericViewSet):
@@ -83,21 +82,3 @@ class RoleViewSet(GenericViewSet):
         request.session[ROLE_SESSION_KEY] = role_id
 
         return Response({})
-
-
-class RoleDetailViewSet(GenericViewSet):
-
-    paginator = None  # 去掉swagger中的limit offset参数
-
-    role_biz = RoleBiz()
-
-    @swagger_auto_schema(
-        operation_description="系统/超级 管理员角色列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: AccountRoleMemberSLZ(label="角色成员", many=True)},
-        tags=["account"],
-    )
-    def list(self, request, *args, **kwargs):
-        role_type = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value]
-        data = self.role_biz.user_role_with_members(request.user.username, role_type)
-        return Response([one.dict() for one in data])

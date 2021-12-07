@@ -9,21 +9,23 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-import json
-from backend.apps.handover.constants import HandoverStatus
 
 from django.core.cache import cache
+from drf_yasg.openapi import Response as yasg_response
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.openapi import Response as yasg_response
-from backend.common.swagger import ResponseSwaggerAutoSchema
-from backend.apps.handover.models import HandOverRecord, HandOverTask
 
-from .serializers import HandOverSLZ, HandOverRecordSLZ, HandOverTaskSLZ, HandOverTaskSLZ
+from backend.apps.handover.constants import HandoverStatus
+from backend.apps.handover.models import HandOverRecord, HandOverTask
+from backend.apps.application.views import admin_not_need_apply_check
+from backend.biz.handover import create_handover_task
+from backend.common.swagger import ResponseSwaggerAutoSchema
+from backend.common.error_codes import error_codes
+
+from .serializers import HandOverRecordSLZ, HandOverSLZ, HandOverTaskSLZ
 from .tasks import execute_handover_task
-from ...biz.handover import create_handover_task
 
 handover_logger = logging.getLogger("handover")
 
@@ -37,6 +39,7 @@ class HandOverViewSet(GenericViewSet):
         responses={status.HTTP_200_OK: yasg_response({})},
         tags=["handover"],
     )
+    @admin_not_need_apply_check
     def create(self, request, *args, **kwargs):
         serializer = HandOverSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -51,31 +54,35 @@ class HandOverViewSet(GenericViewSet):
         try:
             with cache.lock(handover_from, timeout=10):
                 record = HandOverRecord.objects.filter(
-                    handover_from=handover_from,
-                    status=HandoverStatus.Running.value
-                )
+                    handover_from=handover_from, status=HandoverStatus.RUNNING.value
+                ).first()
                 if record is not None:
-                    return Response({"id": record.id})
+                    error_msg = "running task exist."
+                    handover_logger.info(error_msg)
+                    data = {
+                        "data": {},
+                        "result": False,
+                        "code": error_codes.TASK_EXIST.code,
+                        "message": error_msg,
+                    }
+                    return Response(data)
 
                 handover_record = HandOverRecord.objects.create(
-                    handover_from=handover_from,
-                    handover_to=handover_to,
-                    reason=reason
+                    handover_from=handover_from, handover_to=handover_to, reason=reason
                 )
                 create_handover_task(handover_record_id=handover_record.id, handover_info=handover_info)
 
         except Exception:
-            exception_msg = "handover cache lock error"
+            exception_msg = "handover cache lock error."
             handover_logger.exception(exception_msg)
             handover_record = HandOverRecord.objects.create(
-                handover_from=handover_from,
-                handover_to=handover_to,
-                reason=reason,
-                status=HandoverStatus.Failed.value
+                handover_from=handover_from, handover_to=handover_to, reason=reason, status=HandoverStatus.FAILED.value
             )
             return Response({"id": handover_record.id})
 
-        execute_handover_task.delay(handover_from=handover_from, handover_to=handover_to, record_id=handover_record_id)
+        execute_handover_task.delay(
+            handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
+        )
         return Response({"id": handover_record.id})
 
 
@@ -97,7 +104,6 @@ class HandOverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class HandOverTasksViewSet(mixins.ListModelMixin, GenericViewSet):
-
     @swagger_auto_schema(
         operation_description="交接任务-查询",
         auto_schema=ResponseSwaggerAutoSchema,

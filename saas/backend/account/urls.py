@@ -15,5 +15,4 @@ from . import views
 urlpatterns = [
     path("user/", views.UserViewSet.as_view({"get": "retrieve"}), name="account.retrieve_user"),
     path("user/roles/", views.RoleViewSet.as_view({"get": "list", "post": "create"}), name="account.user_role"),
-    path("user/roles/details/", views.RoleDetailViewSet.as_view({"get": "list"}, name="account.user_role_members"))
 ]
