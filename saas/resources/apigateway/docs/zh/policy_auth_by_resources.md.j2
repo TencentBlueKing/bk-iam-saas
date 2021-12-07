@@ -1,0 +1,103 @@
+### 2. policy auth by resources
+
+鉴权场景: 查看一个 `用户` 有没有 100 台 `资源A` 的 `编辑`  权限
+限制: resources_list 最大能传 100 个资源
+
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system |string | 是 | 系统唯一标识  |
+| subject | string | 是 | subject |
+| action | object | 是 | 操作 |
+| resources_list | Array(resources) | 是 | 资源实例列表, 资源类型的顺序必须操作注册时的顺序一致 |
+
+action
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id    |  字符串  | 是   | 操作 ID |
+
+subject
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| type    |  字符串  | 是   | 授权对象类型, 当前只支持 user |
+| id    |  字符串  | 是   | 授权对象 ID |
+
+resources
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| resources |  Array(resource_node)  | 是   | 一个资源 |
+
+resource_node
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system |  字符串  | 是   | 资源系统 ID |
+| type |  字符串  | 是   | 资源类型 ID |
+| id | 字符串 | 是 | 资源实例 ID |
+| attribute | 对象 | 是 | 资源属性 |
+
+#### Request
+
+```json
+{
+	"system": "bk_job",
+	"subject": {
+		"type": "user",
+		"id": "admin"
+	},
+	"action": {
+		"id": "execute"
+	},
+	"resources_list": [
+		[{   // 第一个资源
+			"system": "bk_job",
+			"type": "job",
+			"id": "ping",
+			"attribute": {
+				"os": "linux",
+				"_bk_iam_path_": ["/biz,1/set,2/"],
+				"is_ready": true,
+				"area_id": 200
+			}
+		}, {
+			"system": "bk_cmdb",
+			"type": "host",
+			"id": "192.168.1.1",
+			"attribute": {}
+		}],
+		[{    // 第二个资源
+			"system": "bk_job",
+			"type": "job",
+			"id": "ping2",
+			"attribute": {
+				"os": "linux",
+				"_bk_iam_path_": ["/biz,1/set,2/"],
+				"is_ready": true,
+				"area_id": 200
+			}
+		}, {
+			"system": "bk_cmdb",
+			"type": "host2",
+			"id": "192.168.2.2",
+			"attribute": {}
+		}]
+	]
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": {
+        "bk_job,job,ping/bk_cmdb,host,192.168.1.1": false,
+        "bk_job,job,ping2/bk_cmdb,host2,192.168.2.2": false
+    }
+}
+```

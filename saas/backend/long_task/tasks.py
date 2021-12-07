@@ -203,7 +203,7 @@ class TaskFactory(Task):
 
         params = handler.get_params()
 
-        celery_id = self.request.id
+        celery_id = self.request.id or ""
         TaskDetail.objects.filter(pk=id).update(
             celery_id=celery_id,
             status=TaskStatus.RUNNING.value,  # type: ignore[attr-defined]
@@ -232,4 +232,4 @@ def retry_long_task():
         status__in=[TaskStatus.PENDING.value, TaskStatus.RUNNING.value], created_time__lt=day_before
     )
     for t in qs:
-        TaskFactory().delay(t.id)
+        TaskFactory()(t.id)

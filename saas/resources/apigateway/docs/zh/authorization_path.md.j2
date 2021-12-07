@@ -1,0 +1,116 @@
+### 资源拓扑授权/回收
+
+对单个资源拓扑, 单个操作的授权与回收接口
+
+`注意`:
+
+- `resources.type`的是操作关联的资源类型, `resources.path`是资源类型能选择的拓扑层级
+- `resources.path`的路径必须与接入系统注册的资源实例选择视图的拓扑层级一致, 否则授权的拓扑层级在权限中心会出现在视图中选择不中(打不上勾)的情况
+
+{% include '_api_v1_open_authorization_path.md.j2' %}
+
+#### Parameters
+
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| asynchronous |  布尔  | 是   | 是否异步调用, 默认 否, 当前只支持同步 |
+| operate |  字符串   | 是   | grant 或 revoke |
+| system |  字符串  | 是   | 系统 id |
+| action |  字符串   | 是   | 操作 |
+| subject |  字符串   | 是   | 授权对象 |
+| resources |  数组[对象]   | 是   | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致 |
+
+action
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id    |  字符串  | 是   | 操作 ID |
+
+subject
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| type    |  字符串  | 是   | 授权对象类型, 当前只支持 user |
+| id    |  字符串  | 是   | 授权对象 ID |
+
+resources
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system |  字符串  | 是   | 资源系统 ID |
+| type |  字符串  | 是   | 资源类型 ID |
+| path | 数组[对象] | 是 | 资源的拓扑 |
+
+resources.path
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| type |  字符串  | 是   | 拓扑节点类型 ID |
+| id | 字符串 | 是 | 拓扑节点实例 ID |
+| name | 字符串 | 是 | 拓扑节点实例名称 |
+
+#### Request
+
+```json
+{
+  "asynchronous": false,  # 默认false, 当前只支持同步
+  "operate": "grant",   # grant 授权 revoke 回收
+  "system": "bk_cmdb",
+  "action": {
+    "id": "edit_host"
+  },
+  "subject": {  # 当前只能对user授权
+    "type": "user",
+    "id": "admin"
+  },
+  "resources": [  # 操作依赖多个资源类型的情况下, 表示一个组合资源, 资源类型的顺序必须操作注册时的顺序一致
+    {
+      "system": "bk_cmdb",
+      "type": "host",
+      "path": [
+        {
+          "type": "biz",
+          "id": "1",
+          "name": "biz1"
+        },{
+          "type": "set",
+          "id": "*",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Response
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| policy_id   | 数值     | 权限策略 id |
+
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "policy_id": 1
+  }
+}
+```
+
+#### Response when async (暂未实现)
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "task_id": 1  // 任务id
+  }
+}
+```

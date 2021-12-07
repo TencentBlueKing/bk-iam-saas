@@ -1,6 +1,6 @@
 <template>
-    <div :class="['iam-template-item', extCls, { 'is-not-expanded': !isExpanded }]" @mouseleave="concealShowEditFill">
-        <div class="header" @click="handleExpanded" @mousemove="isShowEditFill">
+    <div :class="['iam-template-item', extCls, { 'is-not-expanded': !isExpanded }]">
+        <div class="header" @click="handleExpanded" @mousemove="isShowEditFill" @mouseleave="cancelShowEditFill">
             <section>
                 <Icon class="expanded-icon" :type="isExpanded ? 'down-angle' : 'right-angle'" />
                 <span>
@@ -9,9 +9,9 @@
                         ({{ count }})
                     </template>
                 </span>
-                <template v-if="isExpanded || ShowEditFill && !isUser">
+                <template v-if="(isExpanded || ShowEditFill) && !isUser">
                     <section class="edit-action" @click.stop="handleEdit">
-                        <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isUser ? false : true" />
+                        <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail ? false : true" />
                     </section>
                 </template>
                 <bk-popconfirm
@@ -21,7 +21,7 @@
                     v-if="isStaff || isPermTemplateDetail || isUser ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
                         <section class="delete-action" @click.stop="toDeletePolicyCount">
-                            <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail || isUser ? false : true" />
+                            <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
                         </section>
                     </template>
                 </bk-popconfirm>
@@ -79,26 +79,10 @@
                 type: Boolean,
                 default: false
             },
-            deleteLoading: {
-                type: Boolean,
-                default: false
-            },
             // mode: edit，detail
             mode: {
                 type: String,
                 default: 'edit'
-            },
-            policyCount: {
-                type: Number,
-                default: 0
-            },
-            templateCount: {
-                type: Number,
-                default: 0
-            },
-            groupSystemListLength: {
-                type: Number,
-                default: 0
             }
         },
         data () {
@@ -173,7 +157,7 @@
                 this.ShowEditFill = true
             },
 
-            concealShowEditFill () {
+            cancelShowEditFill () {
                 this.ShowEditFill = false
             }
         }

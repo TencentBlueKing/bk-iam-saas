@@ -63,7 +63,7 @@ urlpatterns = [
     ),
     # healthz
     url("", include("backend.healthz.urls")),
-    # promethus
+    # prometheus
     url("", include("django_prometheus.urls")),
 ]
 
