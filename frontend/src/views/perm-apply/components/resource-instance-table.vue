@@ -71,13 +71,14 @@
                                             @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
                                     </div>
                                     <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
-                                    <Icon v-if="tableList.length > 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex)" />
-                                    <Icon v-if="tableList.length > 1" :class="row.resource_groups.length <= 1 ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon" />
+                                    <Icon v-if="tableList.length > 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
+                                    <Icon v-if="tableList.length > 1" :class="row.resource_groups.length <= 1 ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
+                                        @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                 </div>
                             </div>
                         </template>
                         <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
+                            <div style="padding-bottom: 17px;">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </div>
                 </template>
@@ -1320,6 +1321,11 @@
                 console.log('this.tableList', this.tableList)
                 this.originalList = _.cloneDeep(this.tableList)
                 // console.log('add condition', data, index, groupIndex)
+            },
+
+            handlerReduceCondition (data, index, resIndex, groupIndex) {
+                console.log('index, resIndex', index, resIndex)
+                this.tableList[index].resource_groups.splice(groupIndex, 1)
             }
         }
     }
