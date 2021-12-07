@@ -57,7 +57,7 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
+    // import _ from 'lodash'
     import BkUserSelector from '@blueking/user-selector'
 
     import { bus } from '@/common/bus'
@@ -89,7 +89,7 @@
             }
         },
         created () {
-            this.fetchCategories()
+            // this.fetchCategories()
         },
         mounted () {
             this.pageContainer = document.querySelector('.main-scroller')
@@ -102,64 +102,64 @@
             })
         },
         methods: {
-            async fetchCategories () {
-                try {
-                    const res = await this.$store.dispatch('organization/getCategories')
-                    const categories = [...res.data]
-                    categories.forEach((item, index) => {
-                        item.visiable = true
-                        item.level = 0
-                        item.showRadio = false
-                        item.selected = false
-                        item.expanded = index === 0
-                        item.count = 0
-                        item.disabled = !item.departments || item.departments.length < 1
-                        item.type = 'depart'
-                        item.showCount = false
-                        item.async = item.departments && item.departments.length > 0
-                        item.isNewMember = false
-                        item.loading = false
-                        item.is_selected = false
-                        item.parentNodeId = ''
-                        item.id = `${item.id}&${item.level}`
-                        if (item.departments && item.departments.length > 0) {
-                            item.departments.forEach((child, childIndex) => {
-                                child.visiable = false
-                                child.level = 1
-                                child.loading = false
-                                child.showRadio = false
-                                child.selected = false
-                                child.expanded = false
-                                child.disabled = false
-                                child.type = 'depart'
-                                child.count = child.recursive_member_count
-                                child.showCount = true
-                                child.async = child.child_count > 0 || child.member_count > 0
-                                child.isNewMember = false
-                                child.parentNodeId = item.id
-                            })
-                            item.children = _.cloneDeep(item.departments)
-                        }
-                    })
-                    // 默认展开第一个目录下的节点且选中第一个子节点
-                    const firstIndex = 0
-                    const children = categories[firstIndex].children
-                    children.forEach(item => {
-                        item.visiable = true
-                    })
-                    categories.splice(firstIndex + 1, 0, ...children)
-                    // this.treeList = _.cloneDeep(categories)
-                    console.warn(categories)
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
-                    })
-                } finally {
-                    this.treeLoading = false
-                }
-            },
+            // async fetchCategories () {
+            //     try {
+            //         const res = await this.$store.dispatch('organization/getCategories')
+            //         const categories = [...res.data]
+            //         categories.forEach((item, index) => {
+            //             item.visiable = true
+            //             item.level = 0
+            //             item.showRadio = false
+            //             item.selected = false
+            //             item.expanded = index === 0
+            //             item.count = 0
+            //             item.disabled = !item.departments || item.departments.length < 1
+            //             item.type = 'depart'
+            //             item.showCount = false
+            //             item.async = item.departments && item.departments.length > 0
+            //             item.isNewMember = false
+            //             item.loading = false
+            //             item.is_selected = false
+            //             item.parentNodeId = ''
+            //             item.id = `${item.id}&${item.level}`
+            //             if (item.departments && item.departments.length > 0) {
+            //                 item.departments.forEach((child, childIndex) => {
+            //                     child.visiable = false
+            //                     child.level = 1
+            //                     child.loading = false
+            //                     child.showRadio = false
+            //                     child.selected = false
+            //                     child.expanded = false
+            //                     child.disabled = false
+            //                     child.type = 'depart'
+            //                     child.count = child.recursive_member_count
+            //                     child.showCount = true
+            //                     child.async = child.child_count > 0 || child.member_count > 0
+            //                     child.isNewMember = false
+            //                     child.parentNodeId = item.id
+            //                 })
+            //                 item.children = _.cloneDeep(item.departments)
+            //             }
+            //         })
+            //         // 默认展开第一个目录下的节点且选中第一个子节点
+            //         const firstIndex = 0
+            //         const children = categories[firstIndex].children
+            //         children.forEach(item => {
+            //             item.visiable = true
+            //         })
+            //         categories.splice(firstIndex + 1, 0, ...children)
+            //         // this.treeList = _.cloneDeep(categories)
+            //         console.warn(categories)
+            //     } catch (e) {
+            //         console.error(e)
+            //         this.bkMessageInstance = this.$bkMessage({
+            //             theme: 'error',
+            //             message: e.message || e.data.msg || e.statusText
+            //         })
+            //     } finally {
+            //         this.treeLoading = false
+            //     }
+            // },
             handleGroupSelection (list) {
                 this.groupSelectData.splice(0, this.groupSelectData.length, ...list)
             },

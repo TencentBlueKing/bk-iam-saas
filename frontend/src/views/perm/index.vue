@@ -26,7 +26,8 @@
             <bk-button
                 data-test-id="myPerm_btn_applyPerm"
                 text
-                style="position: absolute; top: 5px; right: 0;">
+                style="position: absolute; top: 5px; right: 0;"
+                @click="goPermTransferHistory">
                 {{ $t(`m.permTransfer['交接历史']`) }}
             </bk-button>
         </div>
@@ -193,6 +194,12 @@
             handleGoPermTransfer () {
                 this.$router.push({
                     name: 'permTransfer'
+                })
+            },
+            // 权限交接历史
+            goPermTransferHistory () {
+                this.$router.push({
+                    name: 'permTransferHistory'
                 })
             }
         }

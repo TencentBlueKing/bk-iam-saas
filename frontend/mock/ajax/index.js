@@ -109,68 +109,29 @@ export async function response (getArgs, postArgs, req) {
             },
             message: 'ok'
         }
-    } else if (invoke === 'getSuperAndSystemManager') {
+    } else if (invoke === 'getTransferHistory') {
         return {
-            data: [
-                {
-                    id: 1,
-                    type: 'super_manager',
-                    name: '超级管理员',
-                    members: [
-                        'admin',
-                        'jackliang',
-                        'chace'
-                    ]
-                },
-                {
-                    id: 10,
-                    type: 'system_manager',
-                    name: '标准运维',
-                    members: [
-                        'chace'
-                    ]
-                },
-                {
-                    id: 8,
-                    type: 'system_manager',
-                    name: 'qweqew',
-                    members: [
-                        'chace'
-                    ]
-                },
-                {
-                    id: 48,
-                    type: 'system_manager',
-                    name: 'asdsda',
-                    members: [
-                        'chace'
-                    ]
-                },
-                {
-                    id: 18,
-                    type: 'system_manager',
-                    name: 'qxcxc',
-                    members: [
-                        'chace'
-                    ]
-                },
-                {
-                    id: 28,
-                    type: 'system_manager',
-                    name: '配置平台',
-                    members: [
-                        'chace'
-                    ]
-                },
-                {
-                    id: 248,
-                    type: 'system_manager',
-                    name: '配置平台的',
-                    members: [
-                        'chace'
-                    ]
-                }
-            ],
+            data: {
+                counts: 3,
+                results: [
+                    { handover_record_id: 1, created_time: '2021-11-27 06:59:39', transferor: 'lisi', status: 'success' },
+                    { handover_record_id: 2, created_time: '2021-11-27 08:20:39', transferor: 'xiaoming', status: 'failed' },
+                    { handover_record_id: 3, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 4, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 5, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
+                    { handover_record_id: 6, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 7, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 8, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 9, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
+                    { handover_record_id: 10, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 11, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 12, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 13, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
+                    { handover_record_id: 14, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 15, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
+                    { handover_record_id: 16, create_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' }
+                ]
+            },
             result: true,
             code: 0,
             message: 'OK'

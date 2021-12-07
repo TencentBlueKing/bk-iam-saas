@@ -538,6 +538,25 @@ export default {
                 params,
                 config
             )
+        },
+
+        /**
+         * 权限交接历史记录
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getTransferHistory ({ commit, state, dispatch }, config) {
+            return http.get(
+                `${AJAX_URL_PREFIX}/handover/records/`,
+                // `/handover/records/?mock-file=index&invoke=getTransferHistory`,
+                {},
+                config
+            )
         }
     }
 }

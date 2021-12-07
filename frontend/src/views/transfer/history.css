@@ -1,0 +1,18 @@
+.iam-transfer-history-wrapper {
+    .transfer-history-table {
+        margin-top: 16px;
+        border-right: none;
+        border-bottom: none;
+        &.set-border {
+            border-right: 1px solid #dfe0e5;
+            border-bottom: 1px solid #dfe0e5;
+        }
+        .grading-admin-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
+            }
+        }
+    }
+}

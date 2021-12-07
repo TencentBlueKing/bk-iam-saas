@@ -751,7 +751,10 @@ export const m = {
         '权限交接理由必填': 'The reason for the transfer of rights is required',
         '权限交接理由最长不超过100个字符': 'The reason for the transfer of rights can be no longer than 32 characters',
         '权限交接成功': 'Transfer rights success',
-        '交接历史': 'Transfer history'
+        '交接历史': 'Transfer history',
+        '交接时间': 'Transfer Time',
+        '目标交接人': 'TransferTarget',
+        '交接状态': 'TransferStatus'
     }
 }
 export default {
