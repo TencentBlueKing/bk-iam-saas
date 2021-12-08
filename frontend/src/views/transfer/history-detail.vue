@@ -67,6 +67,10 @@
                     })
                     const list = res.data || []
                     list.forEach(item => {
+                        // 2021-12-08 06:28:15.384996+00:00
+                        const timeArr = item.created_time.split('.')
+                        item.created_time = timeArr[0]
+
                         item.objectDetail = JSON.parse(item.object_detail)
                         if (item.object_type === 'group') {
                             item.title = this.$t(`m.permTransfer['用户组权限交接：']`)
