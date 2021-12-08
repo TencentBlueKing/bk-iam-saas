@@ -74,20 +74,20 @@
                         item.objectDetail = JSON.parse(item.object_detail)
                         if (item.object_type === 'group') {
                             item.title = this.$t(`m.permTransfer['用户组权限交接：']`)
-                            item.info = item.object_detail.name
+                            item.info = item.objectDetail.name
                         } else if (item.object_type === 'custom') {
                             item.title = this.$t(`m.permTransfer['自定义权限交接：']`)
-                            item.info = `[${this.$t(`m.common['系统']`)}:${item.object_detail.name}]`
-                                + `[${this.$t(`m.common['操作']`)}:${item.object_detail.policy_info.name}]`
+                            item.info = `[${this.$t(`m.common['系统']`)}:${item.objectDetail.name}]`
+                                + `[${this.$t(`m.common['操作']`)}:${item.objectDetail.policy_info.name}]`
                         } else if (item.object_type === 'super_manager') {
                             item.title = this.$t(`m.permTransfer['超级管理员交接：']`)
                             item.info = ''
                         } else if (item.object_type === 'system_manager') {
                             item.title = this.$t(`m.permTransfer['系统管理员交接：']`)
-                            item.info = item.object_detail.name
+                            item.info = item.objectDetail.name
                         } else if (item.object_type === 'rating_manager') {
                             item.title = this.$t(`m.permTransfer['分级管理员交接：']`)
-                            item.info = item.object_detail.name
+                            item.info = item.objectDetail.name
                         } else {
                             item.title = '--'
                         }
