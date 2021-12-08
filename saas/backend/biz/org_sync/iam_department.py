@@ -67,4 +67,4 @@ class IAMBackendDepartmentSyncService(BaseSyncIAMBackendService):
         # 新增部门
         self.created_handler()
         # 删除部门
-        self.deleted_handler()
+        # self.deleted_handler()

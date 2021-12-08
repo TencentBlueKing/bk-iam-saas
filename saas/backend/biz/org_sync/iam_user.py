@@ -65,4 +65,4 @@ class IAMBackendUserSyncService(BaseSyncIAMBackendService):
         # 新增用户
         self.created_handler()
         # 删除用户
-        self.deleted_handler()
+        # self.deleted_handler()
