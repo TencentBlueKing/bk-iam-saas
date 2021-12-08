@@ -63,7 +63,7 @@
             async fetchTransferHistoryDetail () {
                 try {
                     const res = await this.$store.dispatch('perm/getTransferHistoryDetail', {
-                        id: this.curHistory.handover_record_id
+                        id: this.curHistory.id
                     })
                     const list = res.data || []
                     list.forEach(item => {
@@ -87,10 +87,10 @@
                             item.title = '--'
                         }
 
-                        if (item.status === 'succeed') {
+                        if ((item.status || '').toLowerCase() === 'succeed') {
                             item.ret = this.$t(`m.user['成功']`)
                         }
-                        if (item.status === 'failed') {
+                        if ((item.status || '').toLowerCase() === 'failed') {
                             item.ret = this.$t(`m.user['失败']`)
                         }
                     })
