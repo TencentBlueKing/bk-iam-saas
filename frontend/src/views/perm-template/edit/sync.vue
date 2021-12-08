@@ -29,26 +29,28 @@
                     <template slot-scope="{ row, $index }">
                         <div class="relation-content-wrapper">
                             <template v-if="!row.add_actions[index].isEmpty">
-                                <div class="relation-content-item"
-                                    v-for="(content, contentIndex) in row.add_actions[index].related_resource_types"
-                                    :key="`${index}${contentIndex}`">
-                                    <div class="content-name">{{ content.name }}</div>
-                                    <div class="content">
-                                        <render-condition
-                                            :ref="`condition_${index}_${$index}_${contentIndex}_ref`"
-                                            :value="content.value"
-                                            :params="curCopyParams"
-                                            :is-empty="content.empty"
-                                            :can-view="row.canView"
-                                            :can-paste="content.canPaste"
-                                            :is-error="content.isError"
-                                            @on-mouseover="handlerConditionMouseover(content, row)"
-                                            @on-mouseleave="handlerConditionMouseleave(content)"
-                                            @on-restore="handlerOnRestore(content)"
-                                            @on-copy="handlerOnCopy(content, $index, contentIndex, index, row.add_actions[index])"
-                                            @on-paste="handlerOnPaste(...arguments, content)"
-                                            @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex, index)"
-                                            @on-click="showResourceInstance(row, content, contentIndex, $index, index)" />
+                                <div v-for="(_, groIndex) in row.add_actions[index].resource_groups" :key="_.id">
+                                    <div class="relation-content-item"
+                                        v-for="(content, contentIndex) in _.related_resource_types"
+                                        :key="`${index}${contentIndex}`">
+                                        <div class="content-name">{{ content.name }}</div>
+                                        <div class="content">
+                                            <render-condition
+                                                :ref="`condition_${index}_${$index}_${contentIndex}_ref`"
+                                                :value="content.value"
+                                                :params="curCopyParams"
+                                                :is-empty="content.empty"
+                                                :can-view="row.canView"
+                                                :can-paste="content.canPaste"
+                                                :is-error="content.isError"
+                                                @on-mouseover="handlerConditionMouseover(content, row)"
+                                                @on-mouseleave="handlerConditionMouseleave(content)"
+                                                @on-restore="handlerOnRestore(content)"
+                                                @on-copy="handlerOnCopy(content, $index, contentIndex, index, row.add_actions[index])"
+                                                @on-paste="handlerOnPaste(...arguments, content)"
+                                                @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex, index)"
+                                                @on-click="showResourceInstance(row, content, contentIndex, $index, index, groIndex)" />
+                                        </div>
                                     </div>
                                 </div>
                                 <bk-popover
@@ -95,17 +97,19 @@
                     <template slot-scope="{ row }">
                         <div class="relation-content-wrapper">
                             <template v-if="!row.delete_actions[index].isEmpty">
-                                <p class="related-resource-item"
-                                    v-for="subItem in row.delete_actions[index].related_resource_types"
-                                    :key="subItem.type"
-                                    @click.stop="handleViewResource(row, index)">
-                                    <render-resource-popover
+                                <div v-for="(_, groIndex) in row.delete_actions[index].resource_groups" :key="_.id">
+                                    <p class="related-resource-item"
+                                        v-for="subItem in _.related_resource_types"
                                         :key="subItem.type"
-                                        :data="subItem.condition"
-                                        :value="`${subItem.name}：${subItem.value}`"
-                                        :max-width="185"
-                                        @on-view="handleViewResource(row, index)" />
-                                </p>
+                                        @click.stop="handleViewResource(row, index, groIndex)">
+                                        <render-resource-popover
+                                            :key="subItem.type"
+                                            :data="subItem.condition"
+                                            :value="`${subItem.name}：${subItem.value}`"
+                                            :max-width="185"
+                                            @on-view="handleViewResource(row, index, groIndex)" />
+                                    </p>
+                                </div>
                             </template>
                             <template v-else>
                                 {{ $t(`m.common['无需关联实例']`) }}
@@ -227,6 +231,7 @@
                 curIndex: -1,
                 curActionIndex: -1,
                 curResIndex: -1,
+                curGroupIndex: -1,
                 originalList: [],
                 params: {},
                 curScopeAction: {},
@@ -249,11 +254,12 @@
             condition () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
-                    || this.curActionIndex === -1) {
+                    || this.curActionIndex === -1
+                    || this.curGroupIndex === -1) {
                     return []
                 }
                 const curData = this.tableList[this.curIndex]
-                    .add_actions[this.curActionIndex]
+                    .add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
 
                 if (!curData) {
@@ -265,6 +271,7 @@
                 if (this.curIndex === -1
                     || this.curResIndex === -1
                     || this.curActionIndex === -1
+                    || this.curGroupIndex === -1
                     || this.originalList.length < 1) {
                     return []
                 }
@@ -272,6 +279,7 @@
 
                 const curType = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
+                    .resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
                     .type
 
@@ -282,7 +290,7 @@
                 if (!curData) {
                     return []
                 }
-                const curActionData = curData.add_actions[this.curActionIndex]
+                const curActionData = curData.add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
                 if (!curActionData.related_resource_types.some(item => item.type === curType)) {
                     return []
                 }
@@ -295,11 +303,13 @@
             curDisabled () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
-                    || this.curActionIndex === -1) {
+                    || this.curActionIndex === -1
+                    || this.curGroupIndex === -1) {
                     return false
                 }
                 const curData = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
+                    .resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
 
                 return curData.isDefaultLimit
@@ -307,11 +317,13 @@
             curFlag () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
-                    || this.curActionIndex === -1) {
+                    || this.curActionIndex === -1
+                    || this.curGroupIndex === -1) {
                     return 'add'
                 }
                 const curData = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
+                    .resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
 
                 return curData.flag
@@ -319,11 +331,13 @@
             curSelectionMode () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
-                    || this.curActionIndex === -1) {
+                    || this.curActionIndex === -1
+                    || this.curGroupIndex === -1) {
                     return 'all'
                 }
                 const curData = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
+                    .resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
 
                 return curData.selectionMode
@@ -349,6 +363,12 @@
                 if (value.length < 1) {
                     this.$emit('on-ready')
                 }
+            },
+            addAction: {
+                handler (value) {
+                    console.log('value', value)
+                },
+                immediate: true
             }
         },
         created () {
@@ -371,9 +391,19 @@
                     this.tableList.forEach((item, index) => {
                         if (this.addAction.length > 0) {
                             this.$set(item, 'add_actions', _.cloneDeep(this.addAction))
-                            item.add_actions = item.add_actions.map(act => new SyncPolicy({ ...act, tag: 'add' }, 'add'))
+                            item.add_actions = item.add_actions.map(act => {
+                                if (!act.resource_groups || !act.resource_groups.length) {
+                                    act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : []
+                                }
+                                return new SyncPolicy({ ...act, tag: 'add' }, 'add')
+                            })
                         }
-                        item.delete_actions = item.delete_actions.map(act => new SyncPolicy({ ...act, tag: 'add' }, 'add'))
+                        item.delete_actions = item.delete_actions.map(act => {
+                            if (!act.resource_groups || !act.resource_groups.length) {
+                                act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : []
+                            }
+                            return new SyncPolicy({ ...act, tag: 'add' }, 'add')
+                        })
                     })
                     this.setTableProps()
                     this.originalList = _.cloneDeep(this.tableList)
@@ -461,61 +491,70 @@
                     ;(groupItem.add_actions || []).forEach(item => {
                         const { type, id, name, environment, description } = item
                         const relatedResourceTypes = []
-                        if (item.related_resource_types.length > 0) {
-                            item.related_resource_types.forEach(resItem => {
-                                if (resItem.empty) {
-                                    resItem.isError = true
-                                    flag = true
-                                }
-                                const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-                                    ? resItem.condition.map(conItem => {
-                                        const { id, instance, attribute } = conItem
-                                        const attributeList = (attribute && attribute.length > 0)
-                                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                                            : []
-
-                                        const instanceList = (instance && instance.length > 0)
-                                            ? instance.map(({ name, type, paths }) => {
-                                                const tempPath = _.cloneDeep(paths)
-                                                tempPath.forEach(pathItem => {
-                                                    pathItem.forEach(pathSubItem => {
-                                                        delete pathSubItem.disabled
+                        const groupResourceTypes = []
+                        if (item.resource_groups.length > 0) {
+                            item.resource_groups.forEach(groupItem => {
+                                if (groupItem.related_resource_types.length > 0) {
+                                    groupItem.related_resource_types.forEach(resItem => {
+                                        if (resItem.empty) {
+                                            resItem.isError = true
+                                            flag = true
+                                        }
+                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                            ? resItem.condition.map(conItem => {
+                                                const { id, instance, attribute } = conItem
+                                                const attributeList = (attribute && attribute.length > 0)
+                                                    ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                                                    : []
+        
+                                                const instanceList = (instance && instance.length > 0)
+                                                    ? instance.map(({ name, type, paths }) => {
+                                                        const tempPath = _.cloneDeep(paths)
+                                                        tempPath.forEach(pathItem => {
+                                                            pathItem.forEach(pathSubItem => {
+                                                                delete pathSubItem.disabled
+                                                            })
+                                                        })
+                                                        return {
+                                                            name,
+                                                            type,
+                                                            path: tempPath
+                                                        }
                                                     })
-                                                })
+                                                    : []
+        
                                                 return {
-                                                    name,
-                                                    type,
-                                                    path: tempPath
+                                                    id,
+                                                    instances: instanceList,
+                                                    attributes: attributeList
                                                 }
                                             })
                                             : []
-
-                                        return {
-                                            id,
-                                            instances: instanceList,
-                                            attributes: attributeList
-                                        }
+        
+                                        relatedResourceTypes.push({
+                                            type: resItem.type,
+                                            system_id: resItem.system_id,
+                                            name: resItem.name,
+                                            condition: conditionList.filter(
+                                                item => item.instances.length > 0 || item.attributes.length > 0
+                                            )
+                                        })
                                     })
-                                    : []
-
-                                relatedResourceTypes.push({
-                                    type: resItem.type,
-                                    system_id: resItem.system_id,
-                                    name: resItem.name,
-                                    condition: conditionList.filter(
-                                        item => item.instances.length > 0 || item.attributes.length > 0
-                                    )
+                                }
+                                groupResourceTypes.push({
+                                    id: groupItem.id,
+                                    related_resource_types: relatedResourceTypes
                                 })
                             })
                             // 强制刷新下
-                            item.related_resource_types = _.cloneDeep(item.related_resource_types)
+                            item.resource_groups = _.cloneDeep(item.resource_groups)
                         }
                         const params = {
                             type,
                             name,
                             id,
                             description,
-                            related_resource_types: relatedResourceTypes,
+                            resource_groups: groupResourceTypes,
                             environment
                         }
                         actionList.push(params)
@@ -598,10 +637,12 @@
                     const referList = res.data
                     this.tableList.forEach(item => {
                         const temp = referList.find(sub => sub.group_id === item.id)
+                        console.log('temp', temp)
                         if (temp) {
                             item.add_actions.splice(index, 1, new SyncPolicy({ ...temp.policy, tag: 'add' }, 'detail'))
                         }
                     })
+                    console.log('this.tableList', this.tableList)
                     this.$refs[`popover_${index}_${$index}_ref`][0]
                         && this.$refs[`popover_${index}_${$index}_ref`][0].hideHandler()
                 } catch (e) {
@@ -674,6 +715,7 @@
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curActionIndex = -1
+                this.curGroupIndex = -1
                 this.params = {}
                 this.instanceSidesliderTitle = ''
             },
@@ -700,6 +742,7 @@
                 this.isShowInstanceSideslider = false
                 const resItem = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
+                    .resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
 
                 const isConditionEmpty = data.length === 1 && data[0] === 'none'
@@ -713,6 +756,7 @@
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curActionIndex = -1
+                this.curGroupIndex = -1
                 window.changeDialog = true
             },
 
@@ -789,7 +833,7 @@
                 this.showMessage(this.$t(`m.info['批量粘贴成功']`))
             },
 
-            showResourceInstance (data, resItem, resIndex, $index, index) {
+            showResourceInstance (data, resItem, resIndex, $index, index, groupIndex) {
                 this.params = {
                     system_id: this.$route.params.systemId,
                     action_id: data.add_actions[index].id,
@@ -799,16 +843,19 @@
                 this.curScopeAction = this.authorizationScopeActions.find(
                     item => item.id === data.add_actions[index].id
                 )
+
+                console.log('this.curScopeAction', this.curScopeAction)
                 this.curIndex = $index
                 this.curActionIndex = index
                 this.curResIndex = resIndex
+                this.curGroupIndex = groupIndex
                 this.instanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.add_actions[index].name}】${this.$t(`m.common['的资源实例']`)}`
                 window.changeAlert = 'iamSidesider'
                 this.isShowInstanceSideslider = true
             },
 
-            handleViewResource (payload, index) {
-                const data = payload.delete_actions[index]
+            handleViewResource (payload, index, groIndex) {
+                const data = payload.delete_actions[index].resource_groups[groIndex]
                 const params = []
                 if (data.related_resource_types.length > 0) {
                     data.related_resource_types.forEach(item => {

@@ -267,6 +267,7 @@
              * @return {*}
              */
             async handleTemplateExpanded (flag, item) {
+                console.log('详情', item)
                 if (!flag) {
                     this.$set(item, 'isEdit', false)
                     return
@@ -286,6 +287,14 @@
                         id: this.groupId,
                         templateId: item.id
                     })
+
+                    // // mock数据
+                    // res.data.actions.forEach(element => {
+                    //     element.resource_groups = [{
+                    //         id: 1,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
                     const tableData = res.data.actions.map(row => new GroupPolicy(
                         { ...row, policy_id: 1 },
                         'detail',
@@ -299,6 +308,7 @@
                         { system: res.data.system }
                     ))
                     this.$set(item, 'tableData', tableData)
+                    console.log('item.tableData', item.tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
                 } catch (e) {
                     console.error(e)
@@ -322,6 +332,13 @@
                         systemId: item.system.id
                     })
 
+                    // // mock数据
+                    // res.data.forEach(element => {
+                    //     element.resource_groups = [{
+                    //         id: 1,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
                     const tableData = res.data.map(row => {
                         return new GroupPolicy(
                             row,
@@ -338,6 +355,8 @@
                     ))
                     this.$set(item, 'tableData', tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
+
+                    console.log('itemTableData', item)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({

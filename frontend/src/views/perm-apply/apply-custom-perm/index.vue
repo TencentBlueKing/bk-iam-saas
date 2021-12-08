@@ -855,6 +855,9 @@
                 if (flag) {
                     if (!isExist) {
                         ++item.count
+                        if (!payload.resource_groups || !payload.resource_groups.length) {
+                            payload.resource_groups = payload.related_resource_types.length ? [{ id: '', related_resource_types: payload.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...payload, tag: 'add' }, 'custom'))
                     }
                 } else {
@@ -964,6 +967,9 @@
                     const differenceSetIds = temps.filter(v => !this.tableData.map(sub => sub.id).includes(v))
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v)
+                        if (!data.resource_groups || !data.resource_groups.length) {
+                            data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                     })
                 } else {
@@ -1062,6 +1068,8 @@
                     })
                     this.aggregationsBackup = _.cloneDeep(aggregations)
                     this.aggregations = aggregations
+
+                    console.log('this.originalCustomTmplList', this.originalCustomTmplList)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -1138,6 +1146,9 @@
                     const differenceSetIds = allActionIds.filter(v => !this.tableData.map(sub => sub.id).includes(v))
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v)
+                        if (!data.resource_groups || !data.resource_groups.length) {
+                            data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                     })
                 }
@@ -1195,6 +1206,9 @@
                 )
                 differenceSetIds.forEach(v => {
                     const data = this.linearActionList.find(act => act.id === v)
+                    if (!data.resource_groups || !data.resource_groups.length) {
+                        data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                    }
                     this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                 })
 
@@ -1251,6 +1265,9 @@
                 )
                 differenceSetIds.forEach(item => {
                     const data = this.linearActionList.find(act => act.id === item)
+                    if (!data.resource_groups || !data.resource_groups.length) {
+                        data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                    }
                     this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                 })
 
@@ -1335,7 +1352,7 @@
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(item.id)) {
                             if (item.tag === 'unchanged') {
-                                item.related_resource_types.forEach(subItem => {
+                                item.resource_groups[0].related_resource_types.forEach(subItem => {
                                     subItem.condition.forEach(conditionItem => {
                                         conditionItem.instance.forEach(instanceItem => {
                                             if (instanceItem.type === instances[0].type) {
@@ -1352,7 +1369,7 @@
                                     })
                                 })
                             } else {
-                                item.related_resource_types.forEach(subItem => {
+                                item.resource_groups[0].related_resource_types.forEach(subItem => {
                                     subItem.condition = [new Condition({ instances }, '', 'add')]
                                 })
                             }
@@ -1410,16 +1427,13 @@
                             }
                             if (item.tag === 'add') {
                                 const conditions = existTableData.map(
-                                    subItem => subItem.related_resource_types[0].condition
+                                    subItem => subItem.resource_groups[0].related_resource_types[0].condition
                                 )
                                 // 是否都选择了实例
                                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none') // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
                                 console.log('isAllHasInstance', isAllHasInstance)
                                 if (isAllHasInstance) {
-                                    console.log('conditions', conditions)
-                                    const instances = conditions.map(subItem => subItem.map(v => v.instance))
-                                    console.log('instances', instances)
-                                    console.log('instances[0]', instances[0][0])
+                                    const instances = conditions.map(subItem => subItem.map(v => v.instance || []))
                                     let isAllEqual = true
                                     for (let i = 0; i < instances.length - 1; i++) {
                                         if (!_.isEqual(instances[i], instances[i + 1])) {
@@ -1432,13 +1446,14 @@
                                     console.log('isAllEqual: ', isAllEqual)
                                     if (isAllEqual) {
                                         const instanceData = instances[0][0][0]
-                                        item.instances = instanceData.path.map(pathItem => {
-                                            return {
-                                                id: pathItem[0].id,
-                                                name: pathItem[0].name
-                                            }
-                                        })
-                                        console.log('this.tableData: ', this.tableData)
+                                        if (instanceData && instanceData.path) {
+                                            item.instances = instanceData.path.map(pathItem => {
+                                                return {
+                                                    id: pathItem[0].id,
+                                                    name: pathItem[0].name
+                                                }
+                                            })
+                                        }
                                     } else {
                                         console.log('instances', instances)
                                         item.instances = []
@@ -1454,6 +1469,7 @@
                     this.tableData.unshift(...aggregations)
                     return
                 }
+
                 const aggregationData = []
                 const newTableData = []
                 this.tableData.forEach(item => {
@@ -1507,7 +1523,7 @@
                                 return arr
                             })()
                             if (instances.length > 0) {
-                                curData.related_resource_types.forEach(subItem => {
+                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
                                     subItem.condition = [new Condition({ instances }, '', 'add')]
                                 })
                             }
@@ -1586,6 +1602,7 @@
                         }
                     }
 
+                    console.log('actData', actData)
                     this.handleRelatedActions(actData, false)
                     payload.count--
                     return
@@ -1599,6 +1616,9 @@
                     payload.actionsAllChecked = payload.allChecked
                 }
 
+                if (!data.resource_groups || !data.resource_groups.length) {
+                    data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                }
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)
@@ -1661,7 +1681,7 @@
                                             curData.expired_at = item.expired_at
                                             curData.expired_display = item.expired_display
                                             if (instances.length > 0) {
-                                                curData.related_resource_types.forEach(subItem => {
+                                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
                                                     subItem.condition = [new Condition({ instances }, '', 'add')]
                                                 })
                                             }
@@ -1685,6 +1705,9 @@
                     return v.actions.every(act => act.checked)
                 })
 
+                if (!data.resource_groups || !data.resource_groups.length) {
+                    data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                }
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)

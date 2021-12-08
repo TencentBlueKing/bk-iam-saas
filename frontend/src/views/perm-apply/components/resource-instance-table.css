@@ -73,7 +73,7 @@
         .relation-content-wrapper,
         .conditions-wrapper {
             height: 100%;
-            padding: 17px 0;
+            padding-top: 17px;
             color: #63656e;
             .resource-type-name {
                 display: block;
@@ -128,6 +128,28 @@
         }
         .cell {
             overflow:visible
+        }
+
+        .group-container{
+            position: relative;
+            padding-bottom: 17px;
+            .add-icon,
+            .reduce-icon {
+                font-size: 16px;
+                color: #979ba5;
+                position: absolute;
+                top: 35px;
+                right: -23px;
+                cursor: pointer;
+                &.disabled {
+                    color: #dcdee5;
+                    cursor: not-allowed;
+                }
+            }
+
+            .reduce-icon {
+                right: -47px;
+            }
         }
     }
 
