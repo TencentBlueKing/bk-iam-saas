@@ -119,9 +119,9 @@
                             policy.transferChecked = foundPolicy ? foundPolicy.transferChecked : false
 
                             // test
-                            if (policy.policy_id % 2 === 0) {
-                                policy.expired_at = 0
-                            }
+                            // if (policy.policy_id % 2 === 0) {
+                            //     policy.expired_at = 0
+                            // }
                             return policy
                         })
                     } catch (e) {
