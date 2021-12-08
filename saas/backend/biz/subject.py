@@ -60,7 +60,9 @@ class SubjectInfoList:
         # 遍历填充相关字段
         for subject in subjects:
             subject_info = SubjectInfo.parse_obj(subject)
+            # 默认值
             subject_info.name = subject.id
+            subject_info.full_name = subject.id
 
             obj = object_dict.get((subject.type, subject.id), None)
             if not obj:
@@ -68,12 +70,12 @@ class SubjectInfoList:
                 continue
 
             if subject.type == SubjectType.USER.value:
-                subject_info.name = obj.display_name if obj else subject.id
+                subject_info.name = obj.display_name
 
             elif subject.type == SubjectType.DEPARTMENT.value:
-                subject_info.name = obj.name if obj else subject.id
-                subject_info.full_name = obj.full_name if obj else subject.id
-                subject_info.member_count = obj.recursive_member_count if obj else 0
+                subject_info.name = obj.name
+                subject_info.full_name = obj.full_name
+                subject_info.member_count = obj.recursive_member_count
 
             elif subject.type == SubjectType.GROUP.value:
                 subject_info.name = obj.name
