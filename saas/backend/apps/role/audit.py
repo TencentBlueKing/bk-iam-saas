@@ -66,7 +66,7 @@ class UserRoleDeleteAuditProvider(DataProvider):
     def object_name(self):
         username = self.request.user.username
         user = User.objects.filter(username=username).only("display_name").first()
-        return user.display_name if user else ""
+        return user.display_name if user else username
 
 
 class RoleMemberUpdateAuditProvider(BaseRoleDataProvider):
