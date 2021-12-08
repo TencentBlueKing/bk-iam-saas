@@ -282,7 +282,7 @@
                 const systemManager = this.managerSelectData.filter(item => item.type === 'system_manager')
                 const gradeManager = this.managerSelectData.filter(item => item.type === 'grade_manager')
                 const submitData = {
-                    transferor: this.formData.members[0],
+                    handover_to: this.formData.members[0],
                     reason: this.formData.reason,
                     handover_info: {
                         super_manager: superManager,

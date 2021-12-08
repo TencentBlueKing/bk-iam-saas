@@ -1,6 +1,5 @@
 <template>
     <div class="iam-transfer-history-wrapper">
-        <!-- { handover_record_id: 1, created_time: '2021-11-27 06:59:39', transferor: 'lisi', status: 'success' }, -->
         <bk-table
             :data="tableList"
             size="small"
@@ -17,24 +16,12 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.permTransfer['目标交接人']`)" :width="300">
                 <template slot-scope="{ row }">
-                    <span :title="row.transferor">{{ row.transferor }}</span>
+                    <span :title="row.handover_to">{{ row.handover_to }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.permTransfer['交接状态']`)">
                 <template slot-scope="{ row }">
-                    <span v-if="row.status === 'success'">
-                        <span class="status-icon success"></span>{{$t(`m.permTransfer['交接成功']`)}}
-                    </span>
-                    <span v-else-if="row.status === 'failed'">
-                        <span class="status-icon failed"></span>{{$t(`m.permTransfer['交接失败']`)}}
-                    </span>
-                    <span v-else-if="row.status === 'partial_succeed'">
-                        <span class="status-icon partial-succeed"></span>{{$t(`m.permTransfer['部分失败']`)}}
-                    </span>
-                    <span v-else-if="row.status === 'running'">
-                        <span class="status-icon running"></span>{{$t(`m.permTransfer['交接中']`)}}
-                    </span>
-                    <span v-else>--</span>
+                    <span class="status-icon" :class="row.statusCls"></span>{{row.statusStr}}
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="150">
@@ -122,6 +109,26 @@
                         offset: (this.pagination.current - 1) * this.pagination.limit
                     })
                     this.pagination.count = res.data.count
+
+                    const list = res.data.results || []
+                    list.forEach(item => {
+                        const status = (item.status || '').toLowerCase()
+                        if (status === 'success') {
+                            item.statusStr = this.$t(`m.permTransfer['交接成功']`)
+                            item.statusCls = 'success'
+                        } else if (status === 'failed') {
+                            item.statusStr = this.$t(`m.permTransfer['交接失败']`)
+                            item.statusCls = 'failed'
+                        } else if (status === 'partial_succeed') {
+                            item.statusStr = this.$t(`m.permTransfer['部分失败']`)
+                            item.statusCls = 'partial-succeed'
+                        } else if (status === 'running') {
+                            item.statusStr = this.$t(`m.permTransfer['交接中']`)
+                            item.statusCls = 'running'
+                        } else {
+                            item.statusStr = '--'
+                        }
+                    })
                     this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
                 } catch (e) {
                     console.error(e)
