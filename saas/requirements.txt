@@ -54,7 +54,7 @@ ruamel.yaml.clib==0.2.6; platform_python_implementation == "CPython" and python_
 ruamel.yaml==0.17.10; python_version >= "3" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3"
 six==1.15.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.3.0")
 sqlparse==0.4.2; python_version >= "3.5"
-typing-extensions==3.10.0.0; python_full_version >= "3.6.1" and python_full_version < "4.0.0"
+typing-extensions==3.7.4.3
 uritemplate==3.0.1; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0"
 urllib3==1.26.6; python_full_version >= "3.6.1" and python_version < "4" and python_full_version < "4.0.0" and (python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version < "4")
 werkzeug==1.0.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0")
