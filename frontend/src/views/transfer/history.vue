@@ -115,6 +115,7 @@
                         // 2021-12-08 06:28:15.384996+00:00
                         const timeArr = item.created_time.split('.')
                         item.created_time = timeArr[0]
+
                         const status = (item.status || '').toLowerCase()
                         if (status === 'success') {
                             item.statusStr = this.$t(`m.permTransfer['交接成功']`)
