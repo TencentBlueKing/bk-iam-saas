@@ -68,12 +68,12 @@ class SubjectInfoList:
                 continue
 
             if subject.type == SubjectType.USER.value:
-                subject_info.name = obj.display_name
+                subject_info.name = obj.display_name if obj else subject.id
 
             elif subject.type == SubjectType.DEPARTMENT.value:
-                subject_info.name = obj.name
-                subject_info.full_name = obj.full_name
-                subject_info.member_count = obj.recursive_member_count
+                subject_info.name = obj.name if obj else subject.id
+                subject_info.full_name = obj.full_name if obj else subject.id
+                subject_info.member_count = obj.recursive_member_count if obj else 0
 
             elif subject.type == SubjectType.GROUP.value:
                 subject_info.name = obj.name
