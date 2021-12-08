@@ -280,17 +280,31 @@
 
                 const superManager = this.managerSelectData.filter(item => item.type === 'super_manager')
                 const systemManager = this.managerSelectData.filter(item => item.type === 'system_manager')
-                const gradeManager = this.managerSelectData.filter(item => item.type === 'grade_manager')
+                const gradeManager = this.managerSelectData.filter(item =>
+                    item.type === 'grade_manager' || item.type === 'rating_manager'
+                )
+
+                const handoverInfo = {}
+                if (superManager.length) {
+                    handoverInfo.super_manager = superManager
+                }
+                if (systemManager.length) {
+                    handoverInfo.system_manager = systemManager
+                }
+                if (gradeManager.length) {
+                    handoverInfo.grade_manager = gradeManager
+                }
+                if (customData.length) {
+                    handoverInfo.custom = customData
+                }
+                if (groupData.length) {
+                    handoverInfo.group = groupData
+                }
+
                 const submitData = {
                     handover_to: this.formData.members[0],
                     reason: this.formData.reason,
-                    handover_info: {
-                        super_manager: superManager,
-                        system_manager: systemManager,
-                        grade_manager: gradeManager,
-                        custom: customData,
-                        group: groupData
-                    }
+                    handover_info: handoverInfo
                 }
 
                 try {
