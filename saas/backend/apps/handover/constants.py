@@ -43,7 +43,10 @@ class HandoverTaskStatus(ChoicesEnum, LowerStrEnum):
         (
             (RUNNING, _("正在交接")),
             (SUCCEED, _("交接成功")),
-            (FAILED, _("交接失败"),),
+            (
+                FAILED,
+                _("交接失败"),
+            ),
         )
     )
 
@@ -51,18 +54,14 @@ class HandoverTaskStatus(ChoicesEnum, LowerStrEnum):
 class HandoverObjectType(ChoicesEnum, LowerStrEnum):
     """交接的权限类型"""
 
-    GROUP = auto()
-    CUSTOM = auto()
-    SUPER_MANAGER = auto()
-    SYSTEM_MANAGER = auto()
-    GRADE_MANAGER = auto()
+    GROUP_IDS = auto()
+    CUSTOM_POLICIES = auto()
+    ROLE_IDS = auto()
 
     _choices_labels = skip(
         (
-            (GROUP, _("用户组权限")),
-            (CUSTOM, _("自定义权限")),
-            (SUPER_MANAGER, _("超级管理员权限")),
-            (SYSTEM_MANAGER, _("系统管理员权限")),
-            (GRADE_MANAGER, _("分级管理员权限")),
+            (GROUP_IDS, _("用户组权限")),
+            (CUSTOM_POLICIES, _("自定义权限")),
+            (ROLE_IDS, _("管理员权限")),
         )
     )

@@ -10,45 +10,47 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.apps.handover.constants import (
-    HandoverStatus,
-    HandoverTaskStatus,
-    HandoverObjectType
-)
+from backend.apps.handover.constants import HandoverStatus, HandoverTaskStatus
 from backend.service.constants import ADMIN_USER
 
 
-class HandOverSLZ(serializers.Serializer):
+class CustomPolicy(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+    policy_ids = serializers.ListField(label="ids", child=serializers.IntegerField(), allow_empty=False)
+
+
+class HandoverInfo(serializers.Serializer):
+    group_ids = serializers.ListField(label="用户ids", child=serializers.IntegerField(), required=False, default=list)
+    custom_policies = serializers.ListField(
+        label="用户ids", child=CustomPolicy(label="自定权限"), required=False, default=list
+    )
+    role_ids = serializers.ListField(label="管理员ids", child=serializers.IntegerField(), required=False, default=list)
+
+    def validate(self, data):
+        if all([not value for value in data.values()]):
+            raise serializers.ValidationError("交接的权限内容不可为空")
+        return data
+
+
+class HandoverSLZ(serializers.Serializer):
     handover_to = serializers.CharField(label="目标交接人")
     reason = serializers.CharField(label="交接原因")
-    handover_info = serializers.DictField(label="交接信息")
+    handover_info = HandoverInfo(label="交接信息")
 
     def validate_handover_to(self, value):
         if value == ADMIN_USER:
             raise serializers.ValidationError("Can not hand over to admin!")
         return value
 
-    def validate_handover_info(self, value):
-        handover_obj_type = dict(HandoverObjectType.get_choices())
-        for obj_type in value.keys():
-            if obj_type not in handover_obj_type:
-                raise serializers.ValidationError("权限交接类型错误")
 
-        for obj_content in value.values():
-            if not obj_content:
-                raise serializers.ValidationError("交接的权限内容不可为空")
-
-        return value
-
-
-class HandOverRecordSLZ(serializers.Serializer):
+class HandoverRecordSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="交接记录ID")
     created_time = serializers.CharField(label="时间")
     handover_to = serializers.CharField(label="目标交接人")
     status = serializers.CharField(label="交接状态", help_text=f"{HandoverStatus.get_choices()}")
 
 
-class HandOverTaskSLZ(serializers.Serializer):
+class HandoverTaskSLZ(serializers.Serializer):
     object_type = serializers.CharField(label="交接类型")
     created_time = serializers.CharField(label="时间")
     status = serializers.CharField(label="交接状态", help_text=f"{HandoverTaskStatus.get_choices()}")
