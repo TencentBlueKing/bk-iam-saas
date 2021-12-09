@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import sys
+
 from django.conf import settings
 from rest_framework import serializers
 
@@ -21,8 +23,11 @@ class ValueFiled(serializers.Field):
         return value
 
     def to_internal_value(self, data):
-        if not isinstance(data, (bool, int, float, str)):
+        if not isinstance(data, (bool, int, str)):
             raise serializers.ValidationError("value only support (bool, int, float, str)")
+
+        if isinstance(data, int) and (data > sys.maxsize or data < -sys.maxsize - 1):
+            raise serializers.ValidationError(f"int value must be in range [{-sys.maxsize - 1}:{sys.maxsize}]")
         return data
 
 

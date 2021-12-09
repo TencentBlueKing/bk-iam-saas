@@ -60,7 +60,9 @@ class SubjectInfoList:
         # 遍历填充相关字段
         for subject in subjects:
             subject_info = SubjectInfo.parse_obj(subject)
+            # 默认值
             subject_info.name = subject.id
+            subject_info.full_name = subject.id
 
             obj = object_dict.get((subject.type, subject.id), None)
             if not obj:
