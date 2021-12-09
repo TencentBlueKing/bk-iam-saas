@@ -901,7 +901,7 @@
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
 
-                this.$emit('on-resource-select', this.curIndex, this.curGroupIndex, resItem.condition, this.curResIndex)
+                this.$emit('on-resource-select', this.curIndex, resItem.condition, this.curResIndex, this.curGroupIndex)
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curGroupIndex = -1
