@@ -114,6 +114,8 @@ class RoleHandoverHandler(BaseHandoverHandler):
             self.biz.add_super_manager_member(username=self.handover_to, need_sync_backend_role=True)
         elif self.role_type == RoleType.SYSTEM_MANAGER.value:
             members = self._get_system_manager_members()
+            if self.handover_to in members:
+                return
             members.append(self.handover_to)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
         elif self.role_type == RoleType.RATING_MANAGER.value:

@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
+
 from rest_framework import serializers
 
 from backend.apps.handover.constants import HandoverStatus, HandoverTaskStatus
@@ -55,4 +57,7 @@ class HandoverTaskSLZ(serializers.Serializer):
     created_time = serializers.CharField(label="时间")
     status = serializers.CharField(label="交接状态", help_text=f"{HandoverTaskStatus.get_choices()}")
     object_detail = serializers.CharField(label="交接权限详情")
-    error_info = serializers.CharField(label="交接异常信息")
+    error_info = serializers.SerializerMethodField(label="交接异常信息")
+
+    def get_object_detail(self, obj):
+        return json.loads(obj.object_detail)

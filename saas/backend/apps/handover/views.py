@@ -21,7 +21,7 @@ from rest_framework.viewsets import GenericViewSet, mixins
 from backend.apps.application.views import admin_not_need_apply_check
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
-from backend.common.error_codes import error_codes
+from backend.common.error_codes import APIException, error_codes
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.util.json import json_dumps
 
@@ -66,10 +66,10 @@ class HandoverViewSet(GenericViewSet):
             raise error_codes.TASK_EXIST
 
         try:
-            record = HandoverRecord.objects.filter(
+            handover_record = HandoverRecord.objects.filter(
                 handover_from=handover_from, status=HandoverStatus.RUNNING.value
             ).first()
-            if record is not None:
+            if handover_record is not None:
                 # 已存在正在运行的任务, 不能新建任务
                 raise error_codes.TASK_EXIST
 
@@ -103,6 +103,9 @@ class HandoverViewSet(GenericViewSet):
             execute_handover_task.delay(
                 handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
             )
+        except APIException as e:
+            HandoverRecord.objects.filter(id=handover_record.id).delete()
+            raise e
         finally:
             # 释放锁
             lock.release()
