@@ -54,10 +54,7 @@ class GroupInfoValidator(BaseValidator):
     def get_info(self):
         groups = Group.objects.filter(id__in=self.group_ids)
         group_expired_at = {g.id: g.expired_at for g in self.subject_groups}
-        return [
-            {"id": group.id, "name": group.name, "name_en": group.name_en, "expired_at": group_expired_at[group.id]}
-            for group in groups
-        ]
+        return [{"id": group.id, "name": group.name, "expired_at": group_expired_at[group.id]} for group in groups]
 
     @cached_property
     def subject_groups(self) -> List[SubjectGroupBean]:
