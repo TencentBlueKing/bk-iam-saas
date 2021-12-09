@@ -9,27 +9,26 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+from typing import Dict, Type
 
 from celery import task
 
-from backend.apps.handover.models import HandOverRecord, HandOverTask
-from backend.biz.handover import CustomHandover, GradeManHandover, GroupHandover, SuperManHandover, SystemManHandover
+from backend.apps.handover.models import HandoverRecord, HandoverTask
+from backend.biz.handover import BaseHandoverHandler, CustomHandoverHandler, GroupHandoverhandler, RoleHandoverHandler
 
 from .constants import HandoverObjectType, HandoverStatus
 
-EXECUTE_HANDOVER_MAP = {
-    HandoverObjectType.GROUP.value: GroupHandover,
-    HandoverObjectType.CUSTOM.value: CustomHandover,
-    HandoverObjectType.SUPER_MANAGER.value: SuperManHandover,
-    HandoverObjectType.SYSTEM_MANAGER.value: SystemManHandover,
-    HandoverObjectType.GRADE_MANAGER.value: GradeManHandover,
+EXECUTE_HANDOVER_MAP: Dict[str, Type[BaseHandoverHandler]] = {
+    HandoverObjectType.GROUP_IDS.value: GroupHandoverhandler,
+    HandoverObjectType.CUSTOM_POLICIES.value: CustomHandoverHandler,
+    HandoverObjectType.ROLE_IDS.value: RoleHandoverHandler,
 }
 
 
 @task(ignore_result=True)
 def execute_handover_task(handover_from, handover_to, handover_record_id):
 
-    handover_task_list = HandOverTask.objects.filter(handover_record_id=handover_record_id)
+    handover_task_list = HandoverTask.objects.filter(handover_record_id=handover_record_id)
 
     # 用于整个交接的最终状态判断
     total_task_count = handover_task_list.count()
@@ -45,18 +44,16 @@ def execute_handover_task(handover_from, handover_to, handover_record_id):
             handover_task_id, handover_from, handover_to, object_detail
         )
 
-        is_pass = handover_handler.verify_permission()
-        if is_pass:
-            is_success = handover_handler.handler()
-            if is_success:
-                success_task_count += 1
+        is_success = handover_handler.handler()
+        if is_success:
+            success_task_count += 1
 
-    HandOverRecord.objects.filter(id=handover_record_id).update(
-        status=calculate_record_status(success_task_count, total_task_count)
+    HandoverRecord.objects.filter(id=handover_record_id).update(
+        status=_calculate_record_status(success_task_count, total_task_count)
     )
 
 
-def calculate_record_status(success_task_count, total_task_count):
+def _calculate_record_status(success_task_count, total_task_count):
     """
     获取交接任务执行状态
     """

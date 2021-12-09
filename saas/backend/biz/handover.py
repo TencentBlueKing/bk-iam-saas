@@ -8,86 +8,49 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import abc
-import json
+
 import logging
+from abc import ABC, abstractmethod
+from typing import List
 
 from backend.apps.handover.constants import HandoverTaskStatus
-from backend.apps.handover.models import HandOverTask
-from backend.apps.role.models import RoleUser
+from backend.apps.handover.models import HandoverTask
 from backend.biz.group import GroupBiz
-from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
+from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
-from backend.service.constants import SubjectType
+from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("celery")
 
 
-def create_handover_task(handover_record_id, handover_info):
-
-    # 批量创建交接明细记录
-    handover_task_details = []
-    for object_type in handover_info:
-        for obj in handover_info[object_type]:
-            handover_task_details.append(
-                HandOverTask(
-                    handover_record_id=handover_record_id,
-                    object_type=object_type,
-                    object_id=obj["id"],
-                    object_detail=json.dumps(obj),
-                )
-            )
-    HandOverTask.objects.bulk_create(handover_task_details, batch_size=500)
-    logger.info("created handover task.")
-
-
-def verify_group_permission(subject, group_id):
-    subject_groups = GroupBiz().list_subject_group(subject=subject)
-
-    for subject_group in subject_groups:
-        if (subject_group.id == group_id) and (subject_group.department_id == 0) and (subject_group.expired_at != 0):
-            return True
-
-
-def verify_custom_permission(subject, system_id, policy_id):
-    subject_polices = PolicyQueryBiz().list_by_subject(system_id=system_id, subject=subject)
-    for subject_police in subject_polices:
-        if subject_police.action_id == policy_id and subject_police.expired_at != 0:
-            return True
-
-
-def verify_role_permission(username, role_id):
-    return RoleUser.objects.user_role_exists(username, role_id)
-
-
-class BaseHandover(object):
-    @abc.abstractmethod
+class BaseHandoverHandler(ABC):
     def handler(self):
         try:
             self.grant_permission()
-
-        except Exception:
-            error_info = "授权失败"
-            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=error_info)
-            return False
-
-        try:
             self.revoke_permission()
-
-        except Exception:
-            error_info = "权限移除失败"
-            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=error_info)
+        except Exception as e:  # pylint: disable=broad-except
+            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=str(e))
             return False
 
         self._set_status(status=HandoverTaskStatus.SUCCEED.value)
         return True
 
     def _set_status(self, status, error_info=""):
-        HandOverTask.objects.filter(id=self.handover_task_id).update(status=status, error_info=error_info)
+        HandoverTask.objects.filter(id=self.handover_task_id).update(status=status, error_info=error_info)
+
+    @abstractmethod
+    def grant_permission(self):
+        pass
+
+    @abstractmethod
+    def revoke_permission(self):
+        pass
 
 
-class GroupHandover(BaseHandover):
+class GroupHandoverhandler(BaseHandoverHandler):
+    biz = GroupBiz()
+
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
 
@@ -97,25 +60,20 @@ class GroupHandover(BaseHandover):
         self.group_id = object_detail["id"]
         self.expired_at = object_detail["expired_at"]
 
-    def verify_permission(self):
-        is_pass = verify_group_permission(subject=self.remove_subject, group_id=self.group_id)
-        if not is_pass:
-            error_info = "所交接的用户组权限校验失败"
-            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=error_info)
-            return False
-        return True
-
     def grant_permission(self):
         # TODO 需不需要校验？
         # GroupCheckBiz().check_member_count(group_id, len(grant_subject))    # 检查用户组成员数量未超限
         # GroupCheckBiz().check_subject_group_limit()   # 检查subject授权的group数量是否超限
-        GroupBiz().add_members(group_id=int(self.group_id), members=[self.grant_subject], expired_at=self.expired_at)
+        self.biz.add_members(group_id=int(self.group_id), members=[self.grant_subject], expired_at=self.expired_at)
 
     def revoke_permission(self):
-        GroupBiz().remove_members(group_id=str(self.group_id), subjects=[self.remove_subject])
+        self.biz.remove_members(group_id=str(self.group_id), subjects=[self.remove_subject])
 
 
-class CustomHandover(BaseHandover):
+class CustomHandoverHandler(BaseHandoverHandler):
+    query_biz = PolicyQueryBiz()
+    operation_biz = PolicyOperationBiz()
+
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
 
@@ -123,100 +81,57 @@ class CustomHandover(BaseHandover):
         self.remove_subject = Subject(type=SubjectType.USER.value, id=handover_from)
 
         self.system_id = object_detail["id"]
-        self.policy_info = object_detail["policy_info"]
-        self.policy_id = self.policy_info["id"]
-        self.policies = [PolicyBean(**self.policy_info)]
+        self.policy_ids = object_detail["policy_ids"]
 
-    def verify_permission(self):
-
-        is_pass = verify_custom_permission(
-            system_id=self.system_id, subject=self.remove_subject, policy_id=self.policy_id
-        )
-        if not is_pass:
-            error_info = "所交接的自定义权限权校验失败"
-            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=error_info)
-            return False
-        return True
+    def _get_subject_policies(self):
+        policies = self.query_biz.list_by_subject(self.system_id, self.remove_subject)
+        return [p for p in policies if p.policy_id in self.policy_ids]
 
     def grant_permission(self):
-        PolicyOperationBiz().alter(system_id=self.system_id, subject=self.grant_subject, policies=self.policies)
+        self.operation_biz.alter(
+            system_id=self.system_id, subject=self.grant_subject, policies=self._get_subject_policies()
+        )
 
     def revoke_permission(self):
-        PolicyOperationBiz().revoke(
-            system_id=self.system_id, subject=self.remove_subject, delete_policies=self.policies
+        self.operation_biz.delete_by_ids(
+            system_id=self.system_id, subject=self.remove_subject, policy_ids=self.policy_ids
         )
 
 
-class SuperManHandover(BaseHandover):
+class RoleHandoverHandler(BaseHandoverHandler):
+    biz = RoleBiz()
+
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
         self.handover_from = handover_from
         self.handover_to = handover_to
 
         self.role_id = object_detail["id"]
-
-    def verify_permission(self):
-        is_pass = verify_role_permission(username=self.handover_from, role_id=self.role_id)
-        if not is_pass:
-            error_info = "所交接的超级管理员权限权校验失败"
-            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=error_info)
-            return False
-        return True
+        self.role_type = object_detail["type"]
 
     def grant_permission(self):
-        RoleBiz().add_super_manager_member(username=self.handover_to, need_sync_backend_role=True)
+        if self.role_type == RoleType.SUPER_MANAGER.value:
+            self.biz.add_super_manager_member(username=self.handover_to, need_sync_backend_role=True)
+        elif self.role_type == RoleType.SYSTEM_MANAGER.value:
+            members = self._get_system_manager_members()
+            if self.handover_to in members:
+                return
+            members.append(self.handover_to)
+            self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
+        elif self.role_type == RoleType.RATING_MANAGER.value:
+            self.biz.add_grade_manager_members(self.role_id, [self.handover_to])
 
     def revoke_permission(self):
-        RoleBiz().delete_super_manager_member(username=self.handover_from)
+        if self.role_type == RoleType.SUPER_MANAGER.value:
+            self.biz.delete_super_manager_member(username=self.handover_from)
+        elif self.role_type == RoleType.SYSTEM_MANAGER.value:
+            members = self._get_system_manager_members()
+            members.remove(self.handover_from)
+            self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
+        elif self.role_type == RoleType.RATING_MANAGER.value:
+            self.biz.delete_member(self.role_id, self.handover_from)
 
-
-class SystemManHandover(BaseHandover):
-    def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
-        self.handover_task_id = handover_task_id
-        self.handover_from = handover_from
-        self.handover_to = handover_to
-
-        self.grant_subject = Subject(type=SubjectType.USER.value, id=handover_to)
-        self.remove_subject = Subject(type=SubjectType.USER.value, id=handover_from)
-
-        self.role_id = object_detail["id"]
-        self.members = RoleBiz().list_members_by_role_id(self.role_id)  # 获取指定角色的成员列表
-
-    def verify_permission(self):
-        is_pass = verify_role_permission(username=self.handover_from, role_id=self.role_id)
-        if not is_pass:
-            error_info = "所交接的系统管理员权限权校验失败"
-            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=error_info)
-            return False
-        return True
-
-    def grant_permission(self):
-        self.members.append(self.handover_to)
-        RoleBiz().modify_system_manager_members(role_id=self.role_id, members=self.members)
-
-    def revoke_permission(self):
-        self.members.remove(self.handover_from)
-        RoleBiz().modify_system_manager_members(role_id=self.role_id, members=self.members)
-
-
-class GradeManHandover(BaseHandover):
-    def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
-        self.handover_task_id = handover_task_id
-        self.handover_from = handover_from
-        self.handover_to = handover_to
-
-        self.role_id = object_detail["id"]
-
-    def verify_permission(self):
-        is_pass = verify_role_permission(username=self.handover_from, role_id=self.role_id)
-        if not is_pass:
-            error_info = "所交接的分级管理员权限权校验失败"
-            self._set_status(status=HandoverTaskStatus.FAILED.value, error_info=error_info)
-            return False
-        return True
-
-    def grant_permission(self):
-        RoleBiz().add_grade_manager_members(self.role_id, [self.handover_to])
-
-    def revoke_permission(self):
-        RoleBiz().delete_member(self.role_id, self.handover_from)
+    def _get_system_manager_members(self) -> List[str]:
+        if self.role_type != RoleType.SYSTEM_MANAGER.value:
+            return []
+        return self.biz.list_members_by_role_id(self.role_id)

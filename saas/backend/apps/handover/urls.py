@@ -13,11 +13,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.HandOverViewSet.as_view({"post": "create"}), name="handover.handover"),
-    path("records/", views.HandOverRecordsViewSet.as_view({"get": "list"}), name="handover.handover_records"),
+    path("", views.HandoverViewSet.as_view({"post": "create"}), name="handover.handover"),
+    path("records/", views.HandoverRecordsViewSet.as_view({"get": "list"}), name="handover.handover_records"),
     path(
         "records/<int:handover_record_id>/tasks/",
-        views.HandOverTasksViewSet.as_view({"get": "list"}),
+        views.HandoverTasksViewSet.as_view({"get": "list"}),
         name="handover.handover_task",
     ),
 ]

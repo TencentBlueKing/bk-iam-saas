@@ -14,7 +14,7 @@ from backend.apps.handover.constants import HandoverObjectType, HandoverStatus, 
 from backend.common.models import TimestampedModel
 
 
-class HandOverRecord(TimestampedModel):
+class HandoverRecord(TimestampedModel):
     """
     交接记录
     """
@@ -27,11 +27,11 @@ class HandOverRecord(TimestampedModel):
     reason = models.CharField("交接原因", max_length=255)
 
     def detail(self):
-        handover_record_details = HandOverTask.objects.filter(handover_record_id=self.id)
+        handover_record_details = HandoverTask.objects.filter(handover_record_id=self.id)
         return handover_record_details
 
 
-class HandOverTask(TimestampedModel):
+class HandoverTask(TimestampedModel):
     """
     交接任务明细
     """
