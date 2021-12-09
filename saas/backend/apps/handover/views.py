@@ -109,7 +109,7 @@ class HandoverViewSet(GenericViewSet):
 
         return Response({"id": handover_record.id})
 
-    def _get_handover_lock(handover_from: str):
+    def _get_handover_lock(self, handover_from: str):
         lock_key = f"bk_iam:lock:handover:{handover_from}"
         return cache.lock(lock_key)
 
