@@ -16,15 +16,15 @@ from backend.apps.handover.constants import HandoverStatus, HandoverTaskStatus
 from backend.service.constants import ADMIN_USER
 
 
-class CustomPolicy(serializers.Serializer):
+class CustomPolicySLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     policy_ids = serializers.ListField(label="ids", child=serializers.IntegerField(), allow_empty=False)
 
 
-class HandoverInfo(serializers.Serializer):
+class HandoverInfoSLZ(serializers.Serializer):
     group_ids = serializers.ListField(label="用户ids", child=serializers.IntegerField(), required=False, default=list)
     custom_policies = serializers.ListField(
-        label="用户ids", child=CustomPolicy(label="自定权限"), required=False, default=list
+        label="用户ids", child=CustomPolicySLZ(label="自定权限"), required=False, default=list
     )
     role_ids = serializers.ListField(label="管理员ids", child=serializers.IntegerField(), required=False, default=list)
 
@@ -37,7 +37,7 @@ class HandoverInfo(serializers.Serializer):
 class HandoverSLZ(serializers.Serializer):
     handover_to = serializers.CharField(label="目标交接人")
     reason = serializers.CharField(label="交接原因")
-    handover_info = HandoverInfo(label="交接信息")
+    handover_info = HandoverInfoSLZ(label="交接信息")
 
     def validate_handover_to(self, value):
         if value == ADMIN_USER:
