@@ -77,7 +77,7 @@
             return {
                 fixedActionPaddingLeft: '284px',
                 groupSelectData: [],
-                customSelectData: [],
+                customSelectData: {},
                 managerSelectData: [],
                 formData: { members: [], reason: '' },
                 isShowMemberError: false,
@@ -246,65 +246,36 @@
                     return
                 }
 
-                const customData = []
-                Object.keys(this.customSelectData).forEach(key => {
-                    this.customSelectData[key].forEach(policyInfo => {
-                        const arr = key.split('|||')
-                        customData.push({
-                            id: arr[0],
-                            name: arr[1],
-                            policy_info: {
-                                id: policyInfo.id,
-                                related_resource_types: policyInfo.related_resource_types,
-                                policy_id: policyInfo.policy_id,
-                                expired_at: policyInfo.expired_at,
-                                type: policyInfo.type,
-                                name: policyInfo.name,
-                                description: policyInfo.description,
-                                expired_display: policyInfo.expired_display
-                            }
-                        })
-                    })
-                })
-
-                const groupData = []
+                const groupIds = []
                 this.groupSelectData.forEach(item => {
-                    groupData.push({
-                        id: item.id,
-                        name: item.name,
-                        expired_at: item.expired_at,
-                        expired_at_display: item.expired_at_display,
-                        department_id: item.department_id
-                    })
+                    groupIds.push(item.id)
                 })
 
-                const superManager = this.managerSelectData.filter(item => item.type === 'super_manager')
-                const systemManager = this.managerSelectData.filter(item => item.type === 'system_manager')
-                const gradeManager = this.managerSelectData.filter(item =>
-                    item.type === 'grade_manager' || item.type === 'rating_manager'
-                )
+                const roleIds = []
+                this.managerSelectData.forEach(item => {
+                    roleIds.push(item.id)
+                })
 
-                const handoverInfo = {}
-                if (superManager.length) {
-                    handoverInfo.super_manager = superManager
-                }
-                if (systemManager.length) {
-                    handoverInfo.system_manager = systemManager
-                }
-                if (gradeManager.length) {
-                    handoverInfo.grade_manager = gradeManager
-                }
-                if (customData.length) {
-                    handoverInfo.custom = customData
-                }
-                if (groupData.length) {
-                    handoverInfo.group = groupData
-                }
+                const customPolicies = []
+                Object.keys(this.customSelectData).forEach(key => {
+                    const customPolicy = {
+                        system_id: key,
+                        policy_ids: []
+                    }
+                    this.customSelectData[key].forEach(policyInfo => {
+                        customPolicy.policy_ids.push(policyInfo.policy_id)
+                    })
+                    customPolicies.push(customPolicy)
+                })
 
                 const submitData = {
                     handover_to: this.formData.members[0],
                     reason: this.formData.reason,
-                    handover_info: handoverInfo
+                    handover_info: {
+                        group_ids: groupIds,
+                        role_ids: roleIds,
+                        custom_policies: customPolicies
+                    }
                 }
 
                 try {
@@ -333,6 +304,96 @@
                 } finally {
                     this.submitLoading = false
                 }
+
+                // const customData = []
+                // Object.keys(this.customSelectData).forEach(key => {
+                //     this.customSelectData[key].forEach(policyInfo => {
+                //         const arr = key.split('|||')
+                //         customData.push({
+                //             id: arr[0],
+                //             name: arr[1],
+                //             policy_info: {
+                //                 id: policyInfo.id,
+                //                 related_resource_types: policyInfo.related_resource_types,
+                //                 policy_id: policyInfo.policy_id,
+                //                 expired_at: policyInfo.expired_at,
+                //                 type: policyInfo.type,
+                //                 name: policyInfo.name,
+                //                 description: policyInfo.description,
+                //                 expired_display: policyInfo.expired_display
+                //             }
+                //         })
+                //     })
+                // })
+
+                // const groupData = []
+                // this.groupSelectData.forEach(item => {
+                //     groupData.push({
+                //         id: item.id,
+                //         name: item.name,
+                //         expired_at: item.expired_at,
+                //         expired_at_display: item.expired_at_display,
+                //         department_id: item.department_id
+                //     })
+                // })
+
+                // const superManager = this.managerSelectData.filter(item => item.type === 'super_manager')
+                // const systemManager = this.managerSelectData.filter(item => item.type === 'system_manager')
+                // const gradeManager = this.managerSelectData.filter(item =>
+                //     item.type === 'grade_manager' || item.type === 'rating_manager'
+                // )
+
+                // const handoverInfo = {}
+                // if (superManager.length) {
+                //     handoverInfo.super_manager = superManager
+                // }
+                // if (systemManager.length) {
+                //     handoverInfo.system_manager = systemManager
+                // }
+                // if (gradeManager.length) {
+                //     handoverInfo.grade_manager = gradeManager
+                // }
+                // if (customData.length) {
+                //     handoverInfo.custom = customData
+                // }
+                // if (groupData.length) {
+                //     handoverInfo.group = groupData
+                // }
+
+                // const submitData = {
+                //     handover_to: this.formData.members[0],
+                //     reason: this.formData.reason,
+                //     handover_info: handoverInfo
+                // }
+
+                // console.error(submitData)
+
+                // try {
+                //     this.submitLoading = true
+                //     await this.$store.dispatch('perm/permTransfer', submitData)
+                //     this.$bkMessage({
+                //         theme: 'success',
+                //         delay: 500,
+                //         message: this.$t(`m.permTransfer['权限交接成功']`),
+                //         onClose: () => {
+                //             this.$router.push({
+                //                 name: 'myPerm'
+                //             })
+                //         }
+                //     })
+                // } catch (e) {
+                //     console.error(e)
+                //     this.$bkMessage({
+                //         limit: 1,
+                //         theme: 'error',
+                //         delay: 1500,
+                //         message: e.message || e.data.msg || e.statusText,
+                //         ellipsisLine: 2,
+                //         ellipsisCopy: true
+                //     })
+                // } finally {
+                //     this.submitLoading = false
+                // }
             }
         }
     }

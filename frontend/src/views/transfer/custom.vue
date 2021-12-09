@@ -162,7 +162,7 @@
 
                 // 组装 customSelectData
                 const customSelectDataMap = Object.assign({}, this.customSelectDataMap)
-                const key = sys.id + '|||' + sys.name
+                const key = sys.id // + '|||' + sys.name
                 if (!customSelectDataMap[key]) {
                     customSelectDataMap[key] = []
                 }
