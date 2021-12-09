@@ -1,5 +1,5 @@
 <template>
-    <div class="my-perm-custom-perm-table" v-bkloading="{ isLoading: loading, opacity: 1 }">
+    <div class="iam-transfer-custom-table" v-bkloading="{ isLoading: loading, opacity: 1 }">
         <bk-table
             v-if="!loading"
             ref="customTable"
@@ -90,7 +90,7 @@
     }
 </script>
 <style lang='postcss'>
-    .my-perm-custom-perm-table {
+    .iam-transfer-custom-table {
         min-height: 101px;
     }
 </style>
