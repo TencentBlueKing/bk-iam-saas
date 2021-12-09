@@ -123,7 +123,7 @@
                         } else if (status === 'failed') {
                             item.statusStr = this.$t(`m.permTransfer['交接失败']`)
                             item.statusCls = 'failed'
-                        } else if (status === 'partial_succeed') {
+                        } else if (status === 'partial_succeed' || status === 'partial_failed') {
                             item.statusStr = this.$t(`m.permTransfer['部分失败']`)
                             item.statusCls = 'partial-succeed'
                         } else if (status === 'running') {
