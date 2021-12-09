@@ -28,15 +28,15 @@ from backend.util.json import json_dumps
 from .constants import HandoverObjectType
 from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
 from .tasks import execute_handover_task
-from .validation import BaseValidator, GroupInfoValidator, GustomPolicyValidator, RoleInfoValidator
+from .validation import BaseHandoverDataProcessor, GroupInfoProcessor, GustomPolicyProcessor, RoleInfoProcessor
 
 logger = logging.getLogger("app")
 
 
-HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseValidator]] = {
-    HandoverObjectType.GROUP_IDS.value: GroupInfoValidator,
-    HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyValidator,
-    HandoverObjectType.ROLE_IDS.value: RoleInfoValidator,
+HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverDataProcessor]] = {
+    HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
+    HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
+    HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
 }
 
 

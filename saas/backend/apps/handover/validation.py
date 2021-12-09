@@ -25,7 +25,7 @@ from backend.service.constants import SubjectType
 from backend.service.models.subject import Subject
 
 
-class BaseValidator(ABC):
+class BaseHandoverDataProcessor(ABC):
     @abstractmethod
     def validate(self):
         pass
@@ -35,7 +35,7 @@ class BaseValidator(ABC):
         pass
 
 
-class GroupInfoValidator(BaseValidator):
+class GroupInfoProcessor(BaseHandoverDataProcessor):
     biz = GroupBiz()
 
     def __init__(self, handover_from: str, group_ids: List[int]) -> None:
@@ -62,7 +62,7 @@ class GroupInfoValidator(BaseValidator):
         return self.biz.list_subject_group(subject)
 
 
-class GustomPolicyValidator(BaseValidator):
+class GustomPolicyProcessor(BaseHandoverDataProcessor):
     biz = PolicyQueryBiz()
     system_biz = SystemBiz()
 
@@ -101,7 +101,7 @@ class GustomPolicyValidator(BaseValidator):
         return infos
 
 
-class RoleInfoValidator(BaseValidator):
+class RoleInfoProcessor(BaseHandoverDataProcessor):
     def __init__(self, handover_from: str, role_ids: List[int]) -> None:
         self.handover_from = handover_from
         self.role_ids = role_ids
