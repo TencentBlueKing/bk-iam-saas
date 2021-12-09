@@ -56,8 +56,8 @@ class HandoverTaskSLZ(serializers.Serializer):
     object_type = serializers.CharField(label="交接类型")
     created_time = serializers.CharField(label="时间")
     status = serializers.CharField(label="交接状态", help_text=f"{HandoverTaskStatus.get_choices()}")
-    object_detail = serializers.CharField(label="交接权限详情")
-    error_info = serializers.SerializerMethodField(label="交接异常信息")
+    object_detail = serializers.SerializerMethodField(label="交接权限详情")
+    error_info = serializers.CharField(label="交接异常信息")
 
     def get_object_detail(self, obj):
         return json.loads(obj.object_detail)
