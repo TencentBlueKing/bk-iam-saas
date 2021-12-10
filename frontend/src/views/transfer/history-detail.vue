@@ -101,6 +101,9 @@
                         if ((item.status || '').toLowerCase() === 'failed') {
                             item.ret = this.$t(`m.user['失败']`)
                         }
+                        if ((item.status || '').toLowerCase() === 'running') {
+                            item.ret = this.$t(`m.permTransfer['交接中']`)
+                        }
                     })
                     this.logList.splice(0, this.logList.length, ...list)
                 } catch (e) {

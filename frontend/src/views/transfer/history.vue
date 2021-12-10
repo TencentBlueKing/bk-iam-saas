@@ -117,15 +117,15 @@
                         item.created_time = timeArr[0]
 
                         const status = (item.status || '').toLowerCase()
-                        if (status === 'success') {
+                        if (status === 'succeed') {
                             item.statusStr = this.$t(`m.permTransfer['交接成功']`)
-                            item.statusCls = 'success'
+                            item.statusCls = 'succeed'
                         } else if (status === 'failed') {
                             item.statusStr = this.$t(`m.permTransfer['交接失败']`)
                             item.statusCls = 'failed'
-                        } else if (status === 'partial_succeed' || status === 'partial_failed') {
+                        } else if (status === 'partial_failed') {
                             item.statusStr = this.$t(`m.permTransfer['部分失败']`)
-                            item.statusCls = 'partial-succeed'
+                            item.statusCls = 'partial-failed'
                         } else if (status === 'running') {
                             item.statusStr = this.$t(`m.permTransfer['交接中']`)
                             item.statusCls = 'running'

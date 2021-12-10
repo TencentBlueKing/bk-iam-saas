@@ -24,12 +24,12 @@
             border: 1px solid;
             margin-right: 6px;
             border-radius: 50%;
-            &.success {
+            &.succeed {
                 background-color: #e5f6ea;
                 border-color: #3fc06d;
             }
             &.failed,
-            &.partial-succeed {
+            &.partial-failed {
                 background-color: #ffe6e6;
                 border-color: #ea3636;
             }

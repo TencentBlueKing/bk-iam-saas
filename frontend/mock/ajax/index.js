@@ -114,22 +114,22 @@ export async function response (getArgs, postArgs, req) {
             data: {
                 counts: 3,
                 results: [
-                    { handover_record_id: 1, created_time: '2021-11-27 06:59:39', transferor: 'lisi', status: 'success' },
+                    { handover_record_id: 1, created_time: '2021-11-27 06:59:39', transferor: 'lisi', status: 'succeed' },
                     { handover_record_id: 2, created_time: '2021-11-27 08:20:39', transferor: 'xiaoming', status: 'failed' },
-                    { handover_record_id: 3, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 3, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_failed' },
                     { handover_record_id: 4, created_time: '2021-12-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
-                    { handover_record_id: 5, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
+                    { handover_record_id: 5, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'succeed' },
                     { handover_record_id: 6, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'running' },
                     { handover_record_id: 7, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
-                    { handover_record_id: 8, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
-                    { handover_record_id: 9, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
-                    { handover_record_id: 10, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 8, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_failed' },
+                    { handover_record_id: 9, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'succeed' },
+                    { handover_record_id: 10, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_failed' },
                     { handover_record_id: 11, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
                     { handover_record_id: 12, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'running' },
-                    { handover_record_id: 13, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'success' },
-                    { handover_record_id: 14, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' },
+                    { handover_record_id: 13, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'succeed' },
+                    { handover_record_id: 14, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_failed' },
                     { handover_record_id: 15, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'failed' },
-                    { handover_record_id: 16, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_succeed' }
+                    { handover_record_id: 16, created_time: '2021-11-27 10:20:39', transferor: 'xiaohong', status: 'partial_failed' }
                 ]
             },
             result: true,
@@ -191,7 +191,7 @@ export async function response (getArgs, postArgs, req) {
                 {
                     object_type: 'custom',
                     created_time: '2021-11-27 06:59:39',
-                    status: 'succeed',
+                    status: 'running',
                     object_detail: {
                         id: 'qwqweapp-mgmt',
                         name: '敖德萨多撒所多应用配置中心',
@@ -211,7 +211,7 @@ export async function response (getArgs, postArgs, req) {
                 {
                     created_time: '2021-11-27 06:59:39',
                     object_type: 'super_manager',
-                    status: 'succeed',
+                    status: 'running',
                     object_detail: {
                         id: 1,
                         name: '超级管理员',
