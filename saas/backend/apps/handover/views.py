@@ -122,7 +122,7 @@ class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         request = self.request
-        return HandoverRecord.objects.filter(handover_from=request.user.username)
+        return HandoverRecord.objects.filter(handover_from=request.user.username).order_by("-created_time")
 
     @swagger_auto_schema(
         operation_description="交接记录-查询",
