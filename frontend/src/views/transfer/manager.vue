@@ -56,12 +56,12 @@
                 </div>
             </div>
         </template>
-        <template v-if="!isLoading && isEmpty">
+        <!-- <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
                 <iam-svg />
                 <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
             </div>
-        </template>
+        </template> -->
     </div>
 </template>
 <script>

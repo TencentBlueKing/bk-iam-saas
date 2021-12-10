@@ -65,6 +65,23 @@
         }
     }
 
+    .empty-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        img {
+            width: 120px;
+        }
+        .empty-tips {
+            position: relative;
+            top: -25px;
+            font-size: 12px;
+            color: #c4c6cc;
+            text-align: center;
+        }
+    }
+
     /* position: relative;
     min-height: calc(100vh - 145px);
     .iam-perm-ext-cls {
