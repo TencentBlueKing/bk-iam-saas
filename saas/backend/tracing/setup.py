@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-
 from django.conf import settings
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -20,11 +18,7 @@ def setup_trace_config():
         # local environment, use jaeger as trace service
         # docker run -p 16686:16686 -p 6831:6831/udp jaegertracing/all-in-one
         trace.set_tracer_provider(
-            TracerProvider(
-                resource=Resource.create(
-                    {SERVICE_NAME: os.getenv("BKAPP_OTEL_SERVICE_NAME") or settings.OTEL_SERVICE_NAME}
-                )
-            )
+            TracerProvider(resource=Resource.create({SERVICE_NAME: settings.BKAPP_OTEL_SERVICE_NAME}))
         )
         jaeger_exporter = JaegerExporter(
             agent_host_name="localhost", agent_port=6831, udp_split_oversized_batches=True
@@ -35,14 +29,14 @@ def setup_trace_config():
             tracer_provider=TracerProvider(
                 resource=Resource.create(
                     {
-                        "service.name": os.getenv("BKAPP_OTEL_SERVICE_NAME") or settings.OTEL_SERVICE_NAME,
-                        "bk_data_id": int(os.getenv("BKAPP_OTEL_BK_DATA_ID")),
+                        "service.name": settings.BKAPP_OTEL_SERVICE_NAME,
+                        "bk_data_id": settings.BKAPP_OTEL_BK_DATA_ID,
                     },
                 ),
-                sampler=_KNOWN_SAMPLERS[os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")],
+                sampler=_KNOWN_SAMPLERS[settings.BKAPP_OTEL_SAMPLER],
             )
         )
-        otlp_exporter = OTLPSpanExporter(endpoint=os.getenv("BKAPP_OTEL_GRPC_HOST"))
+        otlp_exporter = OTLPSpanExporter(endpoint=settings.BKAPP_OTEL_GRPC_HOST)
         span_processor = BatchSpanProcessor(otlp_exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
 

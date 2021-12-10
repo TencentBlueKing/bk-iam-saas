@@ -73,7 +73,7 @@ class BKAppInstrumentor(BaseInstrumentor):
         if getattr(settings, "IS_USE_CELERY", False):
             CeleryInstrumentor().instrument()
 
-        if getattr(settings, "OTEL_INSTRUMENT_DB_API", False):
+        if getattr(settings, "BKAPP_OTEL_INSTRUMENT_DB_API", False):
             import MySQLdb  # noqa
 
             dbapi.wrap_connect(
