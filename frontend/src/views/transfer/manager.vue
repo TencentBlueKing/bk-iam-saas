@@ -5,7 +5,7 @@
             <div class="transfer-manager-content" ref="transferManagerContent">
                 <div class="header" @click="handleRateExpanded">
                     <Icon bk class="expanded-icon" :type="rateExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">管理员权限交接</label>
+                    <label class="title">管理员交接</label>
                 </div>
                 <div class="content" v-if="rateExpanded">
                     <div class="slot-content">
@@ -22,7 +22,7 @@
                             @select-all="handleSelectAll">
                             <bk-table-column type="selection" align="center">
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.grading['分级管理员名称']`)" width="300">
+                            <bk-table-column :label="$t(`m.permTransfer['管理员名称']`)" width="300">
                                 <template slot-scope="{ row }">
                                     {{row.name}}
                                 </template>

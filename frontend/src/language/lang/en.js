@@ -763,7 +763,8 @@ export const m = {
         '自定义权限交接：': 'custom permission transfer:',
         '超级管理员交接：': 'super manager transfer:',
         '系统管理员交接：': 'system manager transfer:',
-        '分级管理员交接：': 'rating manager transfer:'
+        '分级管理员交接：': 'rating manager transfer:',
+        '管理员名称': 'ManagerName'
     }
 }
 export default {

@@ -550,9 +550,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getTransferHistory ({ commit, state, dispatch }, config) {
+        getTransferHistory ({ commit, state, dispatch }, params = {}, config) {
             return http.get(
-                `${AJAX_URL_PREFIX}/handover/records/`,
+                `${AJAX_URL_PREFIX}/handover/records/?${json2Query(params)}`,
                 // `/handover/records/?mock-file=index&invoke=getTransferHistory`,
                 {},
                 config
