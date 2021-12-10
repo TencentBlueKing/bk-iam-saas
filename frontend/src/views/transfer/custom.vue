@@ -6,9 +6,9 @@
                 <div class="header" @click="handleCustomExpanded">
                     <Icon bk class="expanded-icon" :type="customExpanded ? 'down-shape' : 'right-shape'" />
                     <label class="title">自定义权限交接</label>
-                    <div class="sub-title" v-if="groupNotTransferCount > 0">
+                    <div class="sub-title" v-if="customNotTransferCount > 0">
                         <i class="iam-icon iamcenter-warning-fill not-transfer-icon"></i>
-                        无法交接自定义权限：{{groupNotTransferCount}}个
+                        无法交接自定义权限：{{customNotTransferCount}}个
                         <span class="reason">（已过期的自定义权限无法交接）</span>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
                 isLoading: false,
                 systemPolicyList: [],
                 customExpanded: true,
-                groupNotTransferCount: 1,
+                customNotTransferCount: 0,
                 customSelectDataMap: {}
             }
         },
@@ -112,6 +112,9 @@
                         const res = await this.$store.dispatch('permApply/getPolicies', { system_id: sys.id })
                         const alreadyLoadedList = sys.policyList
                         sys.policyList = res.data.map(item => {
+                            if (item.expired_display === '已过期') {
+                                this.customNotTransferCount += 1
+                            }
                             const policy = new PermPolicy(item)
                             const foundPolicy = alreadyLoadedList.find(
                                 p => p.id === policy.id && p.policy_id === policy.policy_id
