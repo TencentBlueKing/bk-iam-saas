@@ -362,3 +362,9 @@ INSTALLED_APPS += ("apigw_manager.apigw",)
 BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
+
+# tracing 相关配置
+ENABLE_OTEL_TRACE = True
+OTEL_INSTRUMENT_DB_API = True
+OTEL_SERVICE_NAME = "bk-iam"
+INSTALLED_APPS += ("backend.tracing",)
