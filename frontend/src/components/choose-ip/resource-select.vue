@@ -38,6 +38,7 @@
         },
         computed: {
             isSingle () {
+                // 如果大于1 则为下拉框
                 return this.list.length === 1
             }
         },

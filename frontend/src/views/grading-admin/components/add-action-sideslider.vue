@@ -217,6 +217,7 @@
                 immediate: true
             },
             keyword (newVal, oldVal) {
+                // 清除keyword时数据重置
                 if (newVal === '' && oldVal !== '' && this.isFilter) {
                     this.isFilter = false
                     this.curSystemList.splice(0, this.curSystemList.length, ...this.systemList)
@@ -442,7 +443,9 @@
                         this.systemData[item.id].system_name = item.name
                         this.$set(this.systemData[item.id], 'count', 0)
                         this.$set(this.systemData[item.id], 'list', [])
+                        console.log('this.defaultData', this.defaultData)
                         const isExistSys = this.defaultData.find(sys => sys.system_id === item.id)
+                        console.log(isExistSys)
                         if (isExistSys) {
                             isExistSys.list.forEach(act => {
                                 this.$set(act, 'checked', this.defaultValue.includes(act.$id))

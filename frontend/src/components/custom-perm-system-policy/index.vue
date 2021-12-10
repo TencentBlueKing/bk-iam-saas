@@ -23,7 +23,7 @@
 </template>
 <script>
     export default {
-        name: '',
+        name: 'CustomPermSystemPolicy',
         props: {
             expanded: {
                 type: Boolean,
@@ -40,6 +40,10 @@
             extCls: {
                 type: String,
                 default: ''
+            },
+            onePerm: {
+                type: Number,
+                default: 0
             }
         },
         data () {
@@ -50,6 +54,13 @@
         watch: {
             expanded (value) {
                 this.isExpanded = !!value
+            }
+        },
+        created () {
+            if (this.onePerm === 1) {
+                this.$nextTick(() => {
+                    this.handleExpanded()
+                })
             }
         },
         methods: {

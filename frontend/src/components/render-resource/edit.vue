@@ -61,11 +61,11 @@
 </template>
 <script>
     import _ from 'lodash'
-    import renderResourceInstance from './instance-edit'
-    import renderOrderNumber from './order-number'
-    import InstanceItem from './instance-item-edit'
-    import propertyItem from './property-item'
-    import OrStatusBar from '../render-status/bar'
+    import renderResourceInstance from './instance-edit.vue'
+    import renderOrderNumber from './order-number.vue'
+    import InstanceItem from './instance-item-edit.vue'
+    import propertyItem from './property-item.vue'
+    import OrStatusBar from '../render-status/bar.vue'
 
     export default {
         name: '',

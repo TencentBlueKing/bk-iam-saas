@@ -1,23 +1,21 @@
 <template>
     <div class="my-perm-custom-perm">
         <template v-if="hasPerm">
-            <render-perm-item
-                data-test-id="myPerm_list_system"
-                v-for="(sys, sysIndex) in systemList"
+            <custom-perm-system-policy
+                v-for="(sys, sysIndex) in systemPolicyList"
                 :key="sys.id"
                 :expanded.sync="sys.expanded"
                 :ext-cls="sysIndex > 0 ? 'iam-perm-ext-cls' : ''"
-                :class="sysIndex === systemList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
+                :class="sysIndex === systemPolicyList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
                 :title="sys.name"
                 :perm-length="sys.count"
                 :one-perm="onePerm"
                 @on-expanded="handleExpanded(...arguments, sys)">
-                <perm-table
-                    data-test-id="myPerm_table_actionPerm"
+                <custom-perm-table
                     :key="sys.id"
                     :system-id="sys.id"
                     @after-delete="handleAfterDelete(...arguments, sysIndex)" />
-            </render-perm-item>
+            </custom-perm-system-policy>
         </template>
         <template v-else>
             <div class="my-perm-custom-perm-empty-wrapper">
@@ -28,28 +26,45 @@
     </div>
 </template>
 <script>
-    import RenderPermItem from '../components/render-perm'
-    import PermTable from '../components/perm-table-edit'
+    import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue'
     import PermSystem from '@/model/my-perm-system'
+    import CustomPermTable from './custom-perm-table.vue'
+
     export default {
-        name: '',
+        name: 'CustomPerm',
         components: {
-            RenderPermItem,
-            PermTable
+            CustomPermSystemPolicy,
+            CustomPermTable
+        },
+        props: {
+            systemList: {
+                type: Array,
+                default: () => []
+            }
         },
         data () {
             return {
-                systemList: [],
-                onePerm: ''
+                onePerm: 0,
+                systemPolicyList: []
             }
         },
         computed: {
             hasPerm () {
-                return this.systemList.length > 0
+                return this.systemPolicyList.length > 0
             }
         },
-        async created () {
-            await this.fetchSystems()
+        watch: {
+            systemList: {
+                handler (v) {
+                    const systemPolicyList = v.map(item => new PermSystem(item))
+                    this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList)
+                    this.onePerm = systemPolicyList.length
+                },
+                immediate: true,
+                deep: true
+            }
+        },
+        created () {
         },
         methods: {
             /**
@@ -60,32 +75,10 @@
              */
             handleExpanded (value, payload) {},
 
-            /**
-             * 获取系统列表
-             */
-            async fetchSystems () {
-                try {
-                    const res = await this.$store.dispatch('permApply/getHasPermSystem')
-                    this.systemList = (res.data || []).map(item => new PermSystem(item))
-                    this.onePerm = this.systemList.length
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    })
-                } finally {
-                    this.$emit('toggle-loading', false)
-                }
-            },
-
-            handleAfterDelete (payload, sysIndex) {
-                --this.systemList[sysIndex].count
-                if (this.systemList[sysIndex].count < 1) {
-                    this.systemList.splice(sysIndex, 1)
+            handleAfterDelete (policyListLen, sysIndex) {
+                --this.systemPolicyList[sysIndex].count
+                if (this.systemPolicyList[sysIndex].count < 1) {
+                    this.systemPolicyList.splice(sysIndex, 1)
                 }
             }
         }

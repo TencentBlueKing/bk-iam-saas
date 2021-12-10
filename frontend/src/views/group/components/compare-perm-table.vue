@@ -86,10 +86,6 @@
             }
         },
         methods: {
-            handleViewCondition (row) {
-                console.warn('view')
-            },
-
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
                     return 'iam-perm-table-cell-cls'

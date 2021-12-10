@@ -1,7 +1,7 @@
 <template>
     <div class="iam-custom-perm-wrapper" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
         <template v-if="hasPerm">
-            <render-perm-item
+            <custom-perm-system-policy
                 v-for="(sys, sysIndex) in systemList"
                 :key="sys.id"
                 :expanded.sync="sys.expanded"
@@ -15,7 +15,7 @@
                     :params="data"
                     :data="data"
                     @after-delete="handleAfterDelete(...arguments, sysIndex)" />
-            </render-perm-item>
+            </custom-perm-system-policy>
         </template>
         <template v-if="isEmpty">
             <div class="iam-custom-perm-empty-wrapper">
@@ -25,13 +25,13 @@
     </div>
 </template>
 <script>
-    import RenderPermItem from '../../perm/components/render-perm'
+    import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue'
     import PermTable from './perm-table-edit'
     import PermSystem from '@/model/my-perm-system'
     export default {
         name: '',
         components: {
-            RenderPermItem,
+            CustomPermSystemPolicy,
             PermTable
         },
         props: {

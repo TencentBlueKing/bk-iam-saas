@@ -123,7 +123,8 @@ class ErrorCodes:
     ACTION_VALIDATE_ERROR = APIException(1902417, _("操作检查错误"))
     GROUP_TRANSFER_ERROR = APIException(1902418, _("用户组转出错误"))
     VALUE_ERROR = APIException(1902419, _("数值错误"))
-
+    # 任务重复错误
+    TASK_EXIST = APIException(1902420, _("存在重复任务"))
     # [ESB错误/component的公共错误(网络错误等等): 19020xx]
     REMOTE_REQUEST_ERROR = RemoteAPIException(1902000, _("请求第三方API错误"))
     ESB_REQUEST_ERROR = RemoteAPIException(1902001, _("ESB请求返回码非0"))
