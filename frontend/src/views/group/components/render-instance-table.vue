@@ -845,9 +845,12 @@
                 }
                 
                 payload.forEach(item => {
-                    const curIndex = this.tableList.findIndex(sub => sub.id === item.id
-                        && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
-                            .related_resource_types[0].system_id)
+                    let curIndex
+                    if (item.resource_groups.length) {
+                        curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                            && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
+                                .related_resource_types[0].system_id)
+                    }
                     if (curIndex > -1) {
                         const old = this.tableList[curIndex]
                         this.tableList.splice(curIndex, 1, new GroupPolicy(
