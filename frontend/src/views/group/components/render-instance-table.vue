@@ -797,6 +797,7 @@
                     .related_resource_types[this.curResIndex]]
                 curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
+                    if (!item.resource_groups.length) return false
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
                         && curData.detail.system.id === item.detail.system.id
