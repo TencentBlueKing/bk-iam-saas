@@ -8,23 +8,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework import serializers
+from django.urls import path
 
-from backend.service.constants import RoleType
+from . import views
 
-
-class AccountRoleSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="角色唯一标识")
-    type = serializers.CharField(label="角色类型", help_text=f"{RoleType.get_choices()}")
-    name = serializers.CharField()
-    description = serializers.CharField()
-
-
-class AccountUserSLZ(serializers.Serializer):
-    username = serializers.CharField(label="用户名")
-    name = serializers.CharField(label="名称")
-    role = AccountRoleSLZ(label="角色")
-
-
-class AccountRoleSwitchSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="角色唯一标识")
+urlpatterns = [
+    path("", views.HandoverViewSet.as_view({"post": "create"}), name="handover.handover"),
+    path("records/", views.HandoverRecordsViewSet.as_view({"get": "list"}), name="handover.handover_records"),
+    path(
+        "records/<int:handover_record_id>/tasks/",
+        views.HandoverTasksViewSet.as_view({"get": "list"}),
+        name="handover.handover_task",
+    ),
+]
