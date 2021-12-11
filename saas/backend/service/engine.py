@@ -67,6 +67,10 @@ class EngineService:
         resp_data = batch_query_subjects(query_data)
         return resp_data["results"]
 
+    def query_subjects_by_resources(self, query_data):
+        resp_data = batch_query_subjects(query_data)
+        return resp_data["results"]
+
     def gen_search_policy_resources(self, policies: List[Policy]) -> List[PolicyResource]:
         """
         生成用于搜索的PolicyResource
