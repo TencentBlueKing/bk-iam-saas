@@ -148,6 +148,14 @@ const currentNav = [
         disabled: false
     },
     {
+        icon: 'grade-admin',
+        id: 'resourcePermissNav',
+        rkey: 'resourcePermiss',
+        name: il8n('nav', '资源权限管理'),
+        path: `${SITE_URL}resource-permiss`,
+        disabled: false
+    },
+    {
         icon: 'perm-manage',
         name: il8n('common', '设置'),
         rkey: 'set',
