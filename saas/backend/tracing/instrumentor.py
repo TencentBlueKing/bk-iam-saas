@@ -31,19 +31,53 @@ def requests_callback(span: Span, response):
         json_result = response.json()
     except Exception:  # pylint: disable=broad-except
         return
+
     if not isinstance(json_result, dict):
         return
-    result = json_result.get("result")
-    if result is None:
-        return
-    span.set_attribute("result_code", json_result.get("code", 0))
-    span.set_attribute("blueking_esb_request_id", json_result.get("request_id", ""))
+
+    # esb
+    # {
+    #     "message": "",
+    #     "code": "00",
+    #     "data": ,
+    #     "result": true
+    # }
+    # iam backend
+    # {
+    #     "code": 0,
+    #     "message": "",
+    #     "data": {}
+    # }
+
+    # NOTE: esb got a result, but apigateway  /iam backend / search-engine got not result
+    code = json_result.get("code", 0)
+    try:
+        code = int(code)
+    except Exception:  # pylint: disable=broad-except
+        pass
+
+    span.set_attribute("result_code", code)
     span.set_attribute("result_message", json_result.get("message", ""))
-    span.set_attribute("result_errors", str(json_result.get("errors", "")))
-    if result:
+
+    errors = str(json_result.get("errors", ""))
+    if errors:
+        span.set_attribute("result_errors", errors)
+
+    request_id = (
+        # new esb and apigateway
+        response.headers.get("x-bkapi-request-id")
+        # iam backend
+        or response.headers.get("x-request-id")
+        # old esb
+        or json_result.get("request_id", "")
+    )
+    if request_id:
+        span.set_attribute("request_id", request_id)
+
+    if code in [0, "0", "00"]:
         span.set_status(Status(StatusCode.OK))
-        return
-    span.set_status(Status(StatusCode.ERROR))
+    else:
+        span.set_status(Status(StatusCode.ERROR))
 
 
 def django_response_hook(span, request, response):
@@ -59,14 +93,24 @@ def django_response_hook(span, request, response):
             return
     if not isinstance(result, dict):
         return
-    span.set_attribute("result_code", result.get("code", 0))
+
+    code = result.get("code", 0)
+    try:
+        code = int(code)
+    except Exception:  # pylint: disable=broad-except
+        pass
+
+    span.set_attribute("result_code", code)
     span.set_attribute("result_message", result.get("message", ""))
-    span.set_attribute("result_errors", result.get("errors", ""))
-    result = result.get("result", True)
-    if result:
+
+    errors = result.get("errors", "")
+    if errors:
+        span.set_attribute("result_errors", errors)
+
+    if code in [0, "0", "00"]:
         span.set_status(Status(StatusCode.OK))
-        return
-    span.set_status(Status(StatusCode.ERROR))
+    else:
+        span.set_status(Status(StatusCode.ERROR))
 
 
 class BKAppInstrumentor(BaseInstrumentor):
