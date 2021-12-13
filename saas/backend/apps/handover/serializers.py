@@ -12,7 +12,7 @@ import json
 
 from rest_framework import serializers
 
-from backend.apps.handover.constants import HandoverStatus, HandoverTaskStatus
+from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.service.constants import ADMIN_USER
 
 
@@ -45,19 +45,18 @@ class HandoverSLZ(serializers.Serializer):
         return value
 
 
-class HandoverRecordSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="交接记录ID")
-    created_time = serializers.CharField(label="时间")
-    handover_to = serializers.CharField(label="目标交接人")
-    status = serializers.CharField(label="交接状态", help_text=f"{HandoverStatus.get_choices()}")
+class HandoverRecordSLZ(serializers.ModelSerializer):
+    class Meta:
+        model = HandoverRecord
+        fields = ("id", "handover_to", "created_time", "status")
 
 
-class HandoverTaskSLZ(serializers.Serializer):
-    object_type = serializers.CharField(label="交接类型")
-    created_time = serializers.CharField(label="时间")
-    status = serializers.CharField(label="交接状态", help_text=f"{HandoverTaskStatus.get_choices()}")
+class HandoverTaskSLZ(serializers.ModelSerializer):
     object_detail = serializers.SerializerMethodField(label="交接权限详情")
-    error_info = serializers.CharField(label="交接异常信息")
+
+    class Meta:
+        model = HandoverTask
+        fields = ("id", "object_type", "created_time", "status", "object_detail", "error_info")
 
     def get_object_detail(self, obj):
         return json.loads(obj.object_detail)
