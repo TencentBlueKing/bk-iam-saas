@@ -55,8 +55,12 @@ def requests_callback(span: Span, response):
         code = int(code)
     except Exception:  # pylint: disable=broad-except
         pass
-
     span.set_attribute("result_code", code)
+    if code in [0, "0", "00"]:
+        span.set_status(Status(StatusCode.OK))
+    else:
+        span.set_status(Status(StatusCode.ERROR))
+
     span.set_attribute("result_message", json_result.get("message", ""))
 
     errors = str(json_result.get("errors", ""))
@@ -73,11 +77,6 @@ def requests_callback(span: Span, response):
     )
     if request_id:
         span.set_attribute("request_id", request_id)
-
-    if code in [0, "0", "00"]:
-        span.set_status(Status(StatusCode.OK))
-    else:
-        span.set_status(Status(StatusCode.ERROR))
 
 
 def django_response_hook(span, request, response):
@@ -99,6 +98,10 @@ def django_response_hook(span, request, response):
         code = int(code)
     except Exception:  # pylint: disable=broad-except
         pass
+    if code in [0, "0", "00"]:
+        span.set_status(Status(StatusCode.OK))
+    else:
+        span.set_status(Status(StatusCode.ERROR))
 
     span.set_attribute("result_code", code)
     span.set_attribute("result_message", result.get("message", ""))
@@ -106,11 +109,6 @@ def django_response_hook(span, request, response):
     errors = result.get("errors", "")
     if errors:
         span.set_attribute("result_errors", errors)
-
-    if code in [0, "0", "00"]:
-        span.set_status(Status(StatusCode.OK))
-    else:
-        span.set_status(Status(StatusCode.ERROR))
 
 
 class BKAppInstrumentor(BaseInstrumentor):
