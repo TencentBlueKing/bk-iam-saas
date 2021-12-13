@@ -13,5 +13,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("members/", views.PremissoinManageViewSet.as_view({"get": "list"}), name=""),
+    path("resource_subjects/", views.PermissionResourceSubjectsViewSet.as_view({"get": "list"}), name=""),
+    path("resource_subjects/export", views.PermissionResourceSubjectsViewSet.as_view({"get": "export"}), name=""),
 ]
