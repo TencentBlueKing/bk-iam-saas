@@ -190,7 +190,8 @@ export const beforeEach = async (to, from, next) => {
 }
 
 export const afterEach = async (to, from) => {
-    store.commit('setMainContentLoading', true && to.name !== 'permTemplateDetail')
+    // permTemplateDetail 和 permTransfer 不需要统一处理 mainContentLoading
+    store.commit('setMainContentLoading', true && to.name !== 'permTemplateDetail' && to.name !== 'permTransfer')
     store.commit('setBackRouter', '')
     preloading = true
     await preload()
