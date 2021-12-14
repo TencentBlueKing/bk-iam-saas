@@ -8,12 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework import serializers
 
-
-class PermissionManageSLZ(serializers.Serializer):
-    system_id = serializers.CharField()
-    action_id = serializers.CharField()
-    limit = serializers.IntegerField()
-    resource_info = serializers.DictField()
-    permission_type = serializers.CharField()
+from .permission_audit import *  # noqa
+from .role import *  # noqa

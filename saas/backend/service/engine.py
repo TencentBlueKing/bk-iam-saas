@@ -67,7 +67,10 @@ class EngineService:
         resp_data = batch_query_subjects(query_data)
         return resp_data["results"]
 
-    def query_subjects_by_resources(self, query_data):
+    def query_subjects_by_resource_instance(self, query_data):
+        """
+        使用资源实例信息查询相关有权限的subjects
+        """
         resp_data = batch_query_subjects(query_data)
         return resp_data["results"]
 

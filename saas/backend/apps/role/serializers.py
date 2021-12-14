@@ -28,6 +28,8 @@ from backend.service.constants import (
     SubjectType,
 )
 
+from .constants import PermissionTypeEnum
+
 
 class RoleScopeSubjectSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=RoleScopeSubjectType.get_choices())
@@ -289,3 +291,23 @@ class RoleGroupMemberRenewSLZ(serializers.Serializer):
 
 class RoleGroupMembersRenewSLZ(serializers.Serializer):
     members = serializers.ListField(label="续期成员", child=RoleGroupMemberRenewSLZ(), allow_empty=False)
+
+
+class ResourceInstanceSLZ(serializers.Serializer):
+    id = serializers.CharField(label="资源实例ID")
+    type = serializers.CharField(label="资源实例类型")
+    name = serializers.CharField(label="资源实例名")
+
+
+class PermissionManageSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+    action_id = serializers.CharField(label="操作ID")
+    limit = serializers.IntegerField(label="返回结果数", max_value=1000)
+    resource_instance = ResourceInstanceSLZ(label="资源实例信息", required=False)
+    permission_type = serializers.ChoiceField(label="权限类型", choices=PermissionTypeEnum.get_choices())
+
+
+class SubjectsWithPermissionSLZ(serializers.Serializer):
+    type = serializers.CharField(label="Subject对象类型")
+    id = serializers.CharField(label="Subject对象ID")
+    name = serializers.CharField(label="Subject对象名称")

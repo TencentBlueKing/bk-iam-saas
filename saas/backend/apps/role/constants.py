@@ -8,7 +8,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from aenum import LowerStrEnum, auto, skip
+from django.utils.translation import gettext as _
+
 from backend.service.constants import PermissionCodeEnum, RoleType
+from backend.util.enum import ChoicesEnum
 
 # 角色默认权限
 DEFAULT_ROLE_PERMISSIONS = {
@@ -31,4 +35,24 @@ DEFAULT_ROLE_PERMISSIONS = {
         PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value,
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
     ],
+}
+
+
+class PermissionTypeEnum(ChoicesEnum, LowerStrEnum):
+    """权限类型"""
+
+    CUSTOM = auto()
+    TEMPLATE = auto()
+
+    _choices_labels = skip(
+        (
+            (CUSTOM, _("自定义权限")),
+            (TEMPLATE, _("模板权限")),
+        )
+    )
+
+
+SUBJECT_TYPE_DISPLAY_NAME = {
+    "user": "用户",
+    "group": "用户组"
 }
