@@ -541,6 +541,7 @@
                     }
                     const totalPage = Math.ceil(res.data.count / this.limit)
                     const isAsync = this.curChain.length > 1
+                    console.log('this.curChain', this.curChain)
                     this.treeData = res.data.results.map(item => {
                         let checked = false
                         let disabled = false
@@ -590,6 +591,7 @@
                         }
                         this.treeData.push(new Node(loadItem, 0, isAsync, 'load'))
                     }
+                    console.log('this.treeData', this.treeData)
                 } catch (e) {
                     console.error(e)
                     if (!ERROR_CODE_LIST.includes(e.code)) {
