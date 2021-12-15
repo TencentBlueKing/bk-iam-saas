@@ -207,7 +207,8 @@ export const m = {
         '确定退出分级管理员': 'Determine the exit level administrator',
         '用户组': 'user group',
         '是否删除该自定义权限': 'Whether to delete the custom permission',
-        '确定删除': 'Sure to delete'
+        '确定删除': 'Sure to delete',
+        '类型': 'Type'
     },
     // 校验
     verify: {
@@ -745,7 +746,25 @@ export const m = {
         '请输入实例视图英文名': 'Please enter the English name of the instance view'
     },
     permTransfer: {
-        '权限交接': 'Authority transfer'
+        '权限交接': 'Authority transfer',
+        '还未选择权限': 'No permissions have been selected',
+        '权限交接理由必填': 'The reason for the transfer of rights is required',
+        '权限交接理由最长不超过100个字符': 'The reason for the transfer of rights can be no longer than 32 characters',
+        '权限交接成功': 'Transfer rights success',
+        '交接历史': 'Transfer history',
+        '交接时间': 'Transfer Time',
+        '目标交接人': 'TransferTarget',
+        '交接状态': 'TransferStatus',
+        '交接成功': 'Success',
+        '交接失败': 'Failed',
+        '部分失败': 'Partial Succeed',
+        '交接中': 'Running',
+        '用户组权限交接：': 'group permission transfer:',
+        '自定义权限交接：': 'custom permission transfer:',
+        '超级管理员交接：': 'super manager transfer:',
+        '系统管理员交接：': 'system manager transfer:',
+        '分级管理员交接：': 'rating manager transfer:',
+        '管理员名称': 'ManagerName'
     }
 }
 export default {

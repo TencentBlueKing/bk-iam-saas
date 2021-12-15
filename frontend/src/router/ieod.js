@@ -149,6 +149,10 @@ const PermTransfer = () => import(
     /* webpackChunkName: 'perm-transfer' */'../views/transfer'
 )
 
+const PermTransferHistory = () => import(
+    /* webpackChunkName: 'perm-transfer' */'../views/transfer/history'
+)
+
 // no-perm
 const NoPerm = () => import(
     /* webpackChunkName: 'no-perm' */'../views/no-perm')
@@ -478,6 +482,15 @@ export const routes = [
                     backRouter: 'myPerm'
                 },
                 component: PermTransfer
+            },
+            {
+                path: 'perm-transfer-history',
+                name: 'permTransferHistory',
+                meta: {
+                    headerTitle: il8n('permTransfer', '交接历史'),
+                    backRouter: 'myPerm'
+                },
+                component: PermTransferHistory
             }
         ]
     },

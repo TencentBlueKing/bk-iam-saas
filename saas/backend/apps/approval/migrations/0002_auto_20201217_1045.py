@@ -16,13 +16,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('approval', '0001_initial'),
+        ("approval", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='approvalprocessglobalconfig',
-            name='application_type',
-            field=models.CharField(choices=[('grant_action', '自定义权限申请'), ('renew_action', '自定义权限续期'), ('join_group', '加入用户组'), ('renew_group', '用户组续期'), ('join_rating_manager', '加入分级管理员'), ('create_rating_manager', '创建分级管理员'), ('update_rating_manager', '修改分级管理员')], max_length=32, unique=True, verbose_name='申请类型'),
+            model_name="approvalprocessglobalconfig",
+            name="application_type",
+            field=models.CharField(
+                choices=[
+                    ("grant_action", "自定义权限申请"),
+                    ("renew_action", "自定义权限续期"),
+                    ("join_group", "加入用户组"),
+                    ("renew_group", "用户组续期"),
+                    ("join_rating_manager", "加入分级管理员"),
+                    ("create_rating_manager", "创建分级管理员"),
+                    ("update_rating_manager", "修改分级管理员"),
+                ],
+                max_length=32,
+                unique=True,
+                verbose_name="申请类型",
+            ),
         ),
     ]
