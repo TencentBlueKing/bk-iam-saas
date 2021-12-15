@@ -307,7 +307,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     # 用户组单次授权模板数
     "group_auth_template_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", 10)),
     # 用户组单次授权的系统数
-    "group_auth_system_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 5)),
+    "group_auth_system_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 10)),
 }
 
 # 授权的实例最大数量限制
