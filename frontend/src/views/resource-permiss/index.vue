@@ -1,4 +1,5 @@
 <template>
+    <!-- eslint-disable max-len -->
     <div class="iam-system-access-wrapper">
         <render-search>
             <bk-form
@@ -23,14 +24,14 @@
                         :clearable="true"
                         @selected="handleSelected">
                         <bk-option v-for="option in processesList"
-                            :key="option.action_id"
-                            :id="option.action_id"
-                            :name="option.action_name">
+                            :key="option.id"
+                            :id="option.id"
+                            :name="option.name">
                         </bk-option>
                     </bk-select>
                 </iam-form-item>
-                <iam-form-item :label="$t(`m.common['资源实例']`)" class="pb10">
-                    <iam-cascade
+                <iam-form-item v-if="!resourceTypeData.isEmpty" :label="$t(`m.common['资源实例']`)" class="pb10">
+                    <!-- <iam-cascade
                         :disabled="!resourceActionId || !actionId || !resourceList.length"
                         v-bk-tooltips.right="(!resourceActionId || !actionId || !resourceList.length) ? '无资源实例' : ''"
                         style="width: 200px;"
@@ -46,7 +47,27 @@
                             style="cursor: pointer;" @click="fetchMoreInstance">
                             加载更多
                         </div>
-                    </iam-cascade>
+                    </iam-cascade> -->
+
+                    <div class="resource-container">
+                        <div class="relation-content-item" v-for="(content, contentIndex) in
+                            resourceTypeData.related_resource_types" :key="contentIndex">
+                            <!-- <div class="content-name">
+                            {{ content.name }}
+                        </div> -->
+                            <div class="content">
+                                <render-condition
+                                    :ref="`condition_${$index}_${contentIndex}_ref`"
+                                    :value="content.value"
+                                    :is-empty="content.empty"
+                                    :params="curCopyParams"
+                                    :is-error="content.isLimitExceeded || content.isError"
+                                    @on-click="showResourceInstance(resourceTypeData, content, contentIndex)" />
+                            </div>
+                            <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
+                        </div>
+                    </div>
+
                 </iam-form-item>
                 <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb10">
                     <bk-select
@@ -90,18 +111,48 @@
                     {{row.user || 'admin'}}
                 </template>
             </bk-table-column>
-
         </bk-table>
+
+        <bk-sideslider
+            :is-show="isShowResourceInstanceSideslider"
+            :title="resourceInstanceSidesliderTitle"
+            :width="720"
+            quick-close
+            transfer
+            :ext-cls="'relate-instance-sideslider'"
+            @update:isShow="handleResourceCancel">
+            <div slot="content" class="sideslider-content">
+                <render-resource
+                    ref="renderResourceRef"
+                    :data="condition"
+                    :original-data="originalCondition"
+                    :flag="curFlag"
+                    :selection-mode="curSelectionMode"
+                    :disabled="curDisabled"
+                    :params="params"
+                    @on-limit-change="handleLimitChange"
+                    @on-init="handleOnInit" />
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 <script>
     import { buildURLParams } from '@/common/url'
+    import Policy from '@/model/policy'
     import _ from 'lodash'
-    import iamCascade from '@/components/cascade'
+    import RenderCondition from './components/render-condition.vue'
+    import { leaveConfirm } from '@/common/leave-confirm'
+    // import iamCascade from '@/components/cascade'
     export default {
         name: 'resource-permiss',
         components: {
-            iamCascade
+            RenderCondition
+            // iamCascade
         },
         data () {
             return {
@@ -133,7 +184,42 @@
                 resourceType: '',
                 parentId: '',
                 resourceInstance: {},
-                resourceListChilder: []
+                resourceListChilder: [],
+                resourceTypeData: { isEmpty: true },
+                isShowResourceInstanceSideslider: false,
+                curResIndex: -1
+            }
+        },
+        computed: {
+            condition () {
+                if (this.curResIndex === -1) {
+                    return []
+                }
+                const curData = this.resourceTypeData.related_resource_types[this.curResIndex]
+                if (!curData) {
+                    return []
+                }
+                if (curData.condition.length === 0) curData.condition = ['none']
+                return _.cloneDeep(curData.condition)
+            },
+            originalCondition () {
+                // if (this.curResIndex === -1) {
+                //     return []
+                // }
+                // const curId = this.tableList[this.curIndex].id
+                // const curType = this.tableList[this.curIndex].related_resource_types[this.curResIndex].type
+                // if (!this.originalList.some(item => item.id === curId)) {
+                //     return []
+                // }
+                // const curResTypeData = this.originalList.find(item => item.id === curId)
+                // if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
+                //     return []
+                // }
+                // const curData = curResTypeData.related_resource_types.find(item => item.type === curType)
+                // if (!curData) {
+                //     return []
+                // }
+                return _.cloneDeep(this.condition)
             }
         },
         created () {
@@ -237,6 +323,7 @@
 
             async handleCascadeChange () {
                 this.resourceActionData = []
+                this.processesList = []
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 1,
@@ -246,7 +333,7 @@
                 this.actionId = ''
                 this.resourceId = []
                 this.instancePagination = { current: 0, offset: 0, limit: 100 }
-                this.fetchActionProcessesList()
+                // this.fetchActionProcessesList()
                 const systemId = this.systemId[0]
                 try {
                     const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId })
@@ -263,20 +350,8 @@
                 }
             },
             handleSelected () {
-                console.log('this.resourceActionData', this.resourceActionData)
-                console.log('this.actionId', this.actionId)
-                const resourceAction = this.resourceActionData.find(e => e.id === this.actionId)
-                console.log('resourceAction', resourceAction)
-                this.resourceActionId = resourceAction && resourceAction.related_resource_types.length
-                    && resourceAction.related_resource_types[0].id
-
-                this.resourceActionSystemId = resourceAction && resourceAction.related_resource_types.length
-                    && resourceAction.related_resource_types[0].system_id
-
-                // 操作需要清空资源实例的值
-                this.resourceId = []
-                this.instancePagination = { current: 0, offset: 0, limit: 100 }
-                this.fetchInstanceSelection()
+                this.resourceTypeData = this.processesList.find(e => e.id === this.actionId)
+                console.log('resourceTypeData', this.resourceTypeData)
             },
 
             async handleSearchAndExport (isExport = false) {
@@ -448,7 +523,36 @@
                     }
                 })
                 this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index)
+                this.resourceActionData.forEach(item => {
+                    this.processesList.push(new Policy({ ...item, tag: 'add' }))
+                })
                 console.log('this.resourceActionData', this.resourceActionData)
+                console.log('this.processesList', this.processesList)
+            },
+
+            showResourceInstance (data, resItem, resIndex) {
+                this.params = {
+                    system_id: this.systemId,
+                    action_id: data.id,
+                    resource_type_system: resItem.system_id,
+                    resource_type_id: resItem.type
+                }
+
+                this.curResIndex = resIndex
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
+                window.changeAlert = 'iamSidesider'
+                this.isShowResourceInstanceSideslider = true
+            },
+
+            handleResourceCancel () {
+                let cancelHandler = Promise.resolve()
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm()
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceSideslider = false
+                    this.resetDataAfterClose()
+                }, _ => _)
             }
             
         }
@@ -496,7 +600,12 @@
             overflow-y: scroll;
         }
     }
-    .resource-cascade-extension {
-        padding-left: 40px;
+    .resource-container {
+        display: flex;
+        justify-content: space-between;
+        .relation-content-item{
+            width: 200px;
+            /* margin-right: 20px; */
+        }
     }
 </style>
