@@ -8,7 +8,7 @@
                     <bk-cascade
                         v-model="systemId"
                         :list="systemList"
-                        is-remote
+                        :is-remote="false"
                         check-any-level
                         :remote-method="remoteMethod"
                         style="width: 200px;"
@@ -235,7 +235,8 @@
                 return queryParams
             },
 
-            handleCascadeChange () {
+            async handleCascadeChange () {
+                this.resourceActionData = []
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 1,
@@ -246,6 +247,20 @@
                 this.resourceId = []
                 this.instancePagination = { current: 0, offset: 0, limit: 100 }
                 this.fetchActionProcessesList()
+                const systemId = this.systemId[0]
+                try {
+                    const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId })
+                    // item.children = res.data || []
+                    console.log('res', res)
+                    this.recursionFunc(res.data)
+                } catch (e) {
+                    console.error(e)
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText
+                    })
+                }
             },
             handleSelected () {
                 console.log('this.resourceActionData', this.resourceActionData)
@@ -414,31 +429,26 @@
             },
 
             // 求值
-            recursionFunc (data) {
-                console.log('data', data)
-                if (data.actions && data.actions.length) {
-                    data.actions.forEach(e => {
-                        this.resourceActionData.push(e)
-                    })
-                }
-                if (data.children && data.children.length) {
-                    data.children.forEach(item => {
-                        if (item.actions && item.actions.length) {
-                            item.actions.forEach(e => {
-                                this.resourceActionData.push(e)
-                            })
-                        }
-
-                        if (item.sub_groups && item.sub_groups.length) {
-                            item.sub_groups.forEach(e => {
-                                e.actions.forEach(ele => {
-                                    this.resourceActionData.push(ele)
+            recursionFunc (list) {
+                console.log('data', list)
+                list.forEach(data => {
+                    if (data.actions && data.actions.length) {
+                        data.actions.forEach(e => {
+                            this.resourceActionData.push(e)
+                        })
+                    }
+                    if (data.sub_groups && data.sub_groups.length) {
+                        data.sub_groups.forEach(item => {
+                            if (item.actions && item.actions.length) {
+                                item.actions.forEach(e => {
+                                    this.resourceActionData.push(e)
                                 })
-                            })
-                        }
-                    })
-                }
+                            }
+                        })
+                    }
+                })
                 this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index)
+                console.log('this.resourceActionData', this.resourceActionData)
             }
             
         }
