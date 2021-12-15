@@ -17,6 +17,7 @@
                 {{ $t(`m.renewal['批量续期']`) }}
             </bk-button>
             <bk-button
+                v-if="enablePermissionHandover.toLowerCase() === 'true'"
                 data-test-id="myPerm_btn_transferPerm"
                 type="button"
                 style="margin-bottom: 16px;"
@@ -24,6 +25,7 @@
                 {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
             <bk-button
+                v-if="enablePermissionHandover.toLowerCase() === 'true'"
                 data-test-id="myPerm_btn_applyPerm"
                 text
                 style="position: absolute; top: 5px; right: 0;"
@@ -90,7 +92,8 @@
                 soonGroupLength: 0,
                 soonPermLength: 0,
                 personalGroupList: [],
-                systemList: []
+                systemList: [],
+                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
             }
         },
         created () {
