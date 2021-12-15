@@ -73,6 +73,9 @@ import audit from './modules/audit'
 // 系统接入模块
 import access from './modules/access'
 
+// 资源权限模块
+import resourcePermiss from './modules/resource-permiss'
+
 Vue.use(Vuex)
 
 const SITE_URL = window.SITE_URL
@@ -214,7 +217,8 @@ const store = new Vuex.Store({
         aggregate,
         renewal,
         audit,
-        access
+        access,
+        resourcePermiss
     },
     state: {
         mainContentLoading: false,

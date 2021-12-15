@@ -4,7 +4,7 @@
             <bk-form
                 :model="formData"
                 form-type="inline">
-                <iam-form-item :label="$t(`m.common['系统']`)">
+                <iam-form-item :label="$t(`m.common['系统']`)" class="pb10">
                     <bk-cascade
                         v-model="systemId"
                         :list="systemList"
@@ -16,7 +16,7 @@
                         @change="handleCascadeChange">
                     </bk-cascade>
                 </iam-form-item>
-                <iam-form-item :label="$t(`m.common['操作']`)">
+                <iam-form-item :label="$t(`m.common['操作']`)" class="pb10">
                     <bk-select
                         style="width: 200px"
                         v-model="actionId"
@@ -29,9 +29,10 @@
                         </bk-option>
                     </bk-select>
                 </iam-form-item>
-                <iam-form-item :label="$t(`m.common['资源实例']`)">
+                <iam-form-item :label="$t(`m.common['资源实例']`)" class="pb10">
                     <iam-cascade
-                        :disabled="!resourceActionId || !actionId"
+                        :disabled="!resourceActionId || !actionId || !resourceList.length"
+                        v-bk-tooltips.right="(!resourceActionId || !actionId || !resourceList.length) ? '无资源实例' : ''"
                         style="width: 200px;"
                         v-model="resourceId"
                         :list="resourceList"
@@ -47,12 +48,11 @@
                         </div> -->
                     </iam-cascade>
                 </iam-form-item>
-                <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)">
+                <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb10">
                     <bk-select
                         style="width: 200px"
                         v-model="permissionType"
-                        :clearable="true"
-                        @selected="handleSelected">
+                        :clearable="true">
                         <bk-option v-for="option in typeList"
                             :key="option.value"
                             :id="option.value"
@@ -60,12 +60,11 @@
                         </bk-option>
                     </bk-select>
                 </iam-form-item>
-                <iam-form-item :label="$t(`m.resourcePermiss['结果数展示']`)">
+                <iam-form-item :label="$t(`m.resourcePermiss['结果数展示']`)" class="pb10">
                     <bk-select
                         style="width: 200px"
                         v-model="limit"
-                        :clearable="true"
-                        @selected="handleSelected">
+                        :clearable="true">
                         <bk-option v-for="option in limitList"
                             :key="option"
                             :id="option"
@@ -73,9 +72,11 @@
                         </bk-option>
                     </bk-select>
                 </iam-form-item>
-                <bk-button class="mr10 ml10" theme="primary" @click="handleSearch">
+                <bk-button class="ml10 mb10" theme="default" @click="handleReset">{{ $t(`m.common['重置']`) }}</bk-button>
+                <bk-button class="mr10 ml10 mb10" theme="primary" @click="handleSearchAndExport(false)">
                     {{ $t(`m.common['查询']`) }}</bk-button>
-                <bk-button theme="default" @click="handleExport">{{ $t(`m.common['导出']`) }}</bk-button>
+                <bk-button class="mb10" theme="default" @click="handleSearchAndExport(true)">
+                    {{ $t(`m.common['导出']`) }}</bk-button>
             </bk-form>
         </render-search>
         <bk-table
@@ -118,38 +119,24 @@
                 cacheSystemId: '',
                 systemList: [],
                 resourceList: [],
-                resourceId: '',
-                systemId: '',
-                processesList: [],
+                resourceId: [],
+                systemId: [],
                 actionId: '',
+                processesList: [],
                 typeList: [{ name: '自定义权限', value: 'custom' }, { name: '模板权限', value: 'template' }],
                 permissionType: '',
                 groupValue: '1-1',
-                groupList: [
-                    {
-                        id: 1,
-                        name: '爬山',
-                        children: [
-                            { id: '1-1', name: '爬山-1' },
-                            { id: '1-2', name: '爬山-2' }
-                        ]
-                    },
-                    {
-                        id: 2,
-                        name: '跑步',
-                        children: [
-                            { id: '2-1', name: '跑步-1' },
-                            { id: '2-2', name: '跑步-2' }
-                        ]
-                    }
-                ],
-                limit: 10,
-                limitList: [10, 20, 50, 100, 200],
+                limit: '',
+                limitList: [10, 20, 50, 100, 200, 500],
                 resourceActionId: 0,
+                resourceActionSystemId: '',
+                resourceSystemId: '',
                 resourceActionData: [],
                 hasMore: false,
                 resourceType: '',
-                parentId: ''
+                parentId: '',
+                resourceInstance: {},
+                resourceListChilder: []
             }
         },
         watch: {
@@ -158,16 +145,7 @@
             }
         },
         created () {
-            this.isFilter = false
-            this.cacheSystemId = ''
-            const currentQueryCache = this.getCurrentQueryCache()
-            if (currentQueryCache && Object.keys(currentQueryCache).length) {
-                if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
-                }
-                this.cacheSystemId = currentQueryCache.system_id
-            }
+            this.handleSearchAndExport(false)
             this.fetchSystemList()
         },
         methods: {
@@ -175,15 +153,6 @@
                 try {
                     const res = await this.$store.dispatch('system/getSystems')
                     this.systemList = res.data
-                    console.log('this.systemList', this.systemList)
-                    setTimeout(() => {
-                        if (this.cacheSystemId) {
-                            this.systemId = [this.cacheSystemId]
-                        } else {
-                            this.systemId = [this.systemList[0].id]
-                        }
-                        this.fetchActionProcessesList()
-                    })
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -199,7 +168,6 @@
             },
 
             async fetchActionProcessesList () {
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
                 const systemId = this.systemId[0]
                 let actionGroupId = ''
                 if (this.systemId.length > 1) {
@@ -263,14 +231,6 @@
                 this.recursionFunc(item)
             },
 
-            resetPagination () {
-                this.pagination = Object.assign({}, {
-                    limit: 10000,
-                    current: 1,
-                    count: 0
-                })
-            },
-
             refreshCurrentQuery () {
                 const { limit, current } = this.pagination
                 const queryParams = {
@@ -283,14 +243,6 @@
                 return queryParams
             },
 
-            setCurrentQueryCache (payload) {
-                window.localStorage.setItem('resourcePermissParams', JSON.stringify(payload))
-            },
-
-            getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('resourcePermissParams'))
-            },
-
             handleCascadeChange () {
                 this.pagination = Object.assign({}, {
                     current: 1,
@@ -299,33 +251,80 @@
                 })
                 if (!this.systemId[0]) return
                 this.actionId = ''
+                this.resourceId = []
                 this.fetchActionProcessesList()
             },
             handleSelected () {
+                console.log('this.resourceActionData', this.resourceActionData)
+                console.log('this.actionId', this.actionId)
                 const resourceAction = this.resourceActionData.find(e => e.id === this.actionId)
+                console.log('resourceAction', resourceAction)
                 this.resourceActionId = resourceAction && resourceAction.related_resource_types.length
                     && resourceAction.related_resource_types[0].id
+
+                this.resourceActionSystemId = resourceAction && resourceAction.related_resource_types.length
+                    && resourceAction.related_resource_types[0].system_id
+
+                // 操作需要清空资源实例的值
+                this.resourceId = []
                 this.fetchInstanceSelection()
             },
 
-            handleSearch () {
+            async handleSearchAndExport (isExport = false) {
+                this.tableLoading = true
                 const params = {
-                    system_id: this.systemId,
+                    system_id: this.systemId[0] || '',
                     action_id: this.actionId,
-                    resource_instance: {
-                        'id': 'cmdb',
-                        'type': 'app',
-                        'name': '配置平台'
-                    },
+                    resource_instance: this.resourceInstance,
                     permission_type: this.permissionType,
                     limit: this.limit
                 }
                 console.log('params', params)
+                try {
+                    const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager'
+                    const res = await this.$store.dispatch(fetchUrl, params)
+                    console.log('res', res)
+                    if (!isExport) {
+                        this.tableList = res.data
+                    }
+                } catch (e) {
+                    console.error(e)
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    })
+                } finally {
+                    this.tableLoading = false
+                }
             },
 
-            handleExport () {},
+            handleReset () {
+                this.resourceId = []
+                this.systemId = []
+                this.actionId = ''
+                this.resourceInstance = {}
+                this.permissionType = ''
+                this.limit = ''
+            },
 
-            handleResourceCascadeChange () {},
+            handleResourceCascadeChange () {
+                console.log('this.resourceId', this.resourceId)
+                // if(this.resourceId)
+                const resourceList = this.resourceId.length > 1 ? [...this.resourceListChilder] : [...this.resourceList]
+                console.log('resourceList', resourceList)
+                const resourceId = this.resourceId[this.resourceId.length - 1]
+                console.log('resourceId', resourceId)
+                const resourceData = resourceList.find(e => e.id === resourceId)
+                console.log('resourceData', resourceData)
+                this.resourceInstance = {
+                    id: resourceData.id,
+                    name: resourceData.name,
+                    type: this.resourceType
+                }
+            },
 
             async resourceRemoteMethod (item, resolve) {
                 console.log('item', item)
@@ -341,12 +340,12 @@
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params)
-                    const resourceList = res.data && res.data.results.map(item => {
+                    const resourceListChilder = res.data && res.data.results.map(item => {
                         item.name = item.display_name
-                        item.child_type = true
                         return item
                     })
-                    item.children = _.cloneDeep(resourceList)
+                    item.children = _.cloneDeep(resourceListChilder)
+                    if (item.children.length) this.resourceListChilder = _.cloneDeep(item.children)
                     resolve(item)
                 } catch (error) {
                     
@@ -359,11 +358,12 @@
                     const params = {
                         system_id: this.systemId[0],
                         action_id: this.actionId,
-                        resource_type_system: this.systemId[0],
+                        resource_type_system: this.resourceActionSystemId,
                         resource_type_id: this.resourceActionId
                     }
                     const res = await this.$store.dispatch('permApply/getInstanceSelection', params)
                     this.resourceType = res.data && res.data.length && res.data[0].resource_type_chain[0].id
+                    this.resourceSystemId = res.data && res.data.length && res.data[0].resource_type_chain[0].system_id
                     this.hasMore = res.data && res.data.length && res.data[0].resource_type_chain.length > 1
                     console.log('this.resourceType', this.resourceType)
                     this.firstFetchResources()
@@ -386,7 +386,7 @@
                 const params = {
                     limit: 100,
                     offset: 0,
-                    system_id: this.systemId[0],
+                    system_id: this.resourceSystemId,
                     type: this.resourceType,
                     parent_type: '',
                     parent_id: '',
