@@ -41,11 +41,11 @@
                         clearable
                         :dropdown-content-cls="'system-access-cascade-dropdown-content'"
                         @change="handleResourceCascadeChange">
-                        <!-- <div slot="extension" class="system-access-cascade-extension"
-                            style="cursor: pointer;">
-                            <i class="bk-icon icon-plus-circle"></i>
-                            1111
-                        </div> -->
+                        <div slot="extension" class="resource-cascade-extension"
+                            v-bkloading="{ isLoading: instanceLoading, opacity: 1, size: 'small', theme: 'default' }"
+                            style="cursor: pointer;" @click="fetchMoreInstance">
+                            加载更多
+                        </div>
                     </iam-cascade>
                 </iam-form-item>
                 <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb10">
@@ -84,7 +84,6 @@
             size="small"
             :class="{ 'set-border': tableLoading }"
             ext-cls="system-access-table"
-            :pagination="pagination"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
                 <template slot-scope="{ row }">
@@ -113,10 +112,8 @@
                     count: 0,
                     limit: 10000
                 },
-                currentBackup: 1,
-                logDetailLoading: false,
-                exceptionMsg: '',
-                cacheSystemId: '',
+                instancePagination: { current: 0, offset: 0, limit: 100 },
+                instanceLoading: false,
                 systemList: [],
                 resourceList: [],
                 resourceId: [],
@@ -137,11 +134,6 @@
                 parentId: '',
                 resourceInstance: {},
                 resourceListChilder: []
-            }
-        },
-        watch: {
-            'pagination.current' (value) {
-                this.currentBackup = value
             }
         },
         created () {
@@ -252,6 +244,7 @@
                 if (!this.systemId[0]) return
                 this.actionId = ''
                 this.resourceId = []
+                this.instancePagination = { current: 0, offset: 0, limit: 100 }
                 this.fetchActionProcessesList()
             },
             handleSelected () {
@@ -267,6 +260,7 @@
 
                 // 操作需要清空资源实例的值
                 this.resourceId = []
+                this.instancePagination = { current: 0, offset: 0, limit: 100 }
                 this.fetchInstanceSelection()
             },
 
@@ -275,7 +269,7 @@
                 const params = {
                     system_id: this.systemId[0] || '',
                     action_id: this.actionId,
-                    resource_instance: this.resourceInstance,
+                    resource_instance: this.resourceInstance || {},
                     permission_type: this.permissionType,
                     limit: this.limit
                 }
@@ -302,6 +296,7 @@
             },
 
             handleReset () {
+                this.instancePagination = { current: 0, offset: 0, limit: 100 }
                 this.resourceId = []
                 this.systemId = []
                 this.actionId = ''
@@ -384,8 +379,8 @@
             // 资源实例接口
             async firstFetchResources () {
                 const params = {
-                    limit: 100,
-                    offset: 0,
+                    limit: this.instancePagination.limit,
+                    offset: this.instancePagination.offset,
                     system_id: this.resourceSystemId,
                     type: this.resourceType,
                     parent_type: '',
@@ -394,15 +389,28 @@
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params)
-                    this.resourceList = res.data && res.data.results
-                    console.log('this.resourceList', this.resourceList)
+                    // this.resourceList = res.data && res.data.results
+                    if (res.data && res.data.results.length) {
+                        this.resourceList.push(...res.data.results)
+                    }
                     this.resourceList = this.resourceList.map(item => {
                         item.name = item.display_name
                         return item
                     })
                 } catch (error) {
                     
+                } finally {
+                    // this.requestQueue.shift()
+                    this.instanceLoading = false
                 }
+            },
+
+            // 加载更多资源实例
+            fetchMoreInstance () {
+                this.instanceLoading = true
+                this.instancePagination.current = ++this.instancePagination.current
+                this.instancePagination.offset = this.instancePagination.limit * (this.instancePagination.current)
+                this.firstFetchResources()
             },
 
             // 求值
@@ -477,5 +485,8 @@
             max-height: 1200px;
             overflow-y: scroll;
         }
+    }
+    .resource-cascade-extension {
+        padding-left: 40px;
     }
 </style>
