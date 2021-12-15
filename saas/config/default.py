@@ -363,3 +363,15 @@ INSTALLED_APPS += ("apigw_manager.apigw",)
 BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
+
+# tracing 相关配置
+# if enable, default false
+ENABLE_OTEL_TRACE = os.environ.get("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
+BKAPP_OTEL_INSTRUMENT_DB_API = os.environ.get("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
+BKAPP_OTEL_SERVICE_NAME = os.environ.get("BKAPP_OTEL_SERVICE_NAME", "") or "bk-iam"
+BKAPP_OTEL_SAMPLER = os.environ.get("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
+BKAPP_OTEL_BK_DATA_ID = int(os.environ.get("BKAPP_OTEL_BK_DATA_ID", "-1"))
+BKAPP_OTEL_GRPC_HOST = os.environ.get("BKAPP_OTEL_GRPC_HOST")
+
+if ENABLE_OTEL_TRACE:
+    INSTALLED_APPS += ("backend.tracing",)
