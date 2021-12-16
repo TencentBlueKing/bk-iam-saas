@@ -573,19 +573,26 @@
             async handleResourceSumit () {
                 const conditionData = this.$refs.renderResourceRef.handleGetValue()
                 console.log('conditionData', conditionData)
-                debugger
                 const { isEmpty, data } = conditionData
                 if (isEmpty) {
                     return
                 }
-
+                console.log('this.resourceTypeData', this.resourceTypeData)
                 const resItem = this.resourceTypeData.related_resource_types[this.curResIndex]
                 const isConditionEmpty = data.length === 1 && data[0] === 'none'
                 if (isConditionEmpty) {
                     resItem.condition = ['none']
                     resItem.isLimitExceeded = false
-                    this.resource_instances = {}
+                    this.resourceInstances = []
                 } else {
+                    resItem.condition = data
+                    data.forEach(item => {
+                        item.instance.forEach(e => {
+                            resItem.resourceInstancesPath = e.path[0]
+                        })
+                    })
+                    console.log('resItem', resItem)
+                    console.log('this.resourceInstancesPath', this.resourceInstancesPath)
                     // const { isMainAction, related_actions } = this.tableList[this.curIndex]
                     // // 如果为主操作
                     // if (isMainAction) {
@@ -594,7 +601,7 @@
                     // resItem.condition = data
                     // resItem.isError = false
                 }
-
+                debugger
                 window.changeAlert = false
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false

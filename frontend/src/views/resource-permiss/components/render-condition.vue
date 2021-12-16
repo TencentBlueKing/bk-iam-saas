@@ -8,46 +8,6 @@
                 {{ curValue }}
             </section>
         </div>
-        <!-- 预览 -->
-        <div class="operate-icon"
-            :title="$t(`m.common['预览']`)"
-            v-if="canView && canOperate"
-            @click.stop="handleView">
-            <Icon type="see-details" />
-        </div>
-        <!-- 粘贴 -->
-        <div class="operate-icon"
-            :title="$t(`m.common['粘贴']`)"
-            v-if="canOperate && canPaste"
-            @click.stop="handlePaste">
-            <spin-loading v-if="pasteLoading" />
-            <Icon v-else type="paste" />
-        </div>
-        <!-- 复制 -->
-        <div class="operate-icon"
-            :title="$t(`m.common['复制']`)"
-            v-if="!isEmpty && canOperate && canCopy"
-            @click.stop="handleCopy">
-            <Icon type="copy" />
-        </div>
-
-        <div class="iam-condition-batch-paste"
-            v-if="(canOperate && canPaste) || immediatelyShow">
-            <section class="batch-paste-wrapper">
-                <section class="batch-paste-action">
-                    <spin-loading v-if="isLoading" />
-                    <bk-button
-                        v-else
-                        text
-                        theme="primary"
-                        @click.native.stop
-                        @click="handleBatchPaste">
-                        {{ $t(`m.common['批量粘贴']`) }}
-                    </bk-button>
-                </section>
-                <div class="triangle"></div>
-            </section>
-        </div>
     </div>
 </template>
 <script>
