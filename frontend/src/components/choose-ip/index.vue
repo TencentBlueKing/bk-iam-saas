@@ -140,6 +140,10 @@
             treeValue: {
                 type: Array,
                 default: () => []
+            },
+            resourceValue: {
+                type: Boolean,
+                default: () => false
             }
         },
         data () {
@@ -161,7 +165,9 @@
                 isFilter: false,
                 curSearchObj: {},
                 curPlaceholder: '',
-                searchDisplayText: ''
+                searchDisplayText: '',
+                resourceNeedDisable: false,
+                resourceNode: {}
             }
         },
         watch: {
@@ -389,6 +395,10 @@
                         this.treeData.splice((index + loadNodes.length + 1), 0, loadData)
                         parentNode.children.push(loadData)
                     }
+
+                    if (this.resourceValue) {
+                        this.handlerResourceNode()
+                    }
                 } catch (e) {
                     console.error(e)
                     if (!ERROR_CODE_LIST.includes(e.code)) {
@@ -541,7 +551,6 @@
                     }
                     const totalPage = Math.ceil(res.data.count / this.limit)
                     const isAsync = this.curChain.length > 1
-                    console.log('this.curChain', this.curChain)
                     this.treeData = res.data.results.map(item => {
                         let checked = false
                         let disabled = false
@@ -591,7 +600,10 @@
                         }
                         this.treeData.push(new Node(loadItem, 0, isAsync, 'load'))
                     }
-                    console.log('this.treeData', this.treeData)
+
+                    if (this.resourceValue) {
+                        this.handlerResourceNode()
+                    }
                 } catch (e) {
                     console.error(e)
                     if (!ERROR_CODE_LIST.includes(e.code)) {
@@ -693,6 +705,33 @@
                 }
 
                 this.$emit('on-tree-select', value, node, params)
+                // 针对资源权限特殊处理
+                if (this.resourceValue) {
+                    if (value) {
+                        this.treeData.forEach(item => {
+                            if (item.id !== node.id) {
+                                item.disabled = true
+                            }
+                        })
+                        this.resourceNode = node
+                        this.resourceNeedDisable = true
+                    } else {
+                        this.treeData.forEach(item => {
+                            item.disabled = false
+                        })
+                        this.resourceNode = {}
+                        this.resourceNeedDisable = false
+                    }
+                }
+            },
+
+            // 针对资源权限特殊处理
+            handlerResourceNode () {
+                if (this.treeData.some(item => item.checked)) {
+                    this.treeData.forEach(item => {
+                        item.disabled = !item.checked
+                    })
+                }
             },
 
             async handleAsyncNodes (node, index, flag) {
@@ -1009,6 +1048,15 @@
                         if (parentNode.children.length > 0) {
                             parentNode.children.push(...loadNodes)
                         }
+                    }
+
+                    // 针对资源权限特殊处理
+                    if (this.resourceValue && this.resourceNeedDisable) {
+                        this.treeData.forEach(item => {
+                            if (item.id !== this.resourceNode.id) {
+                                item.disabled = true
+                            }
+                        })
                     }
                 } catch (e) {
                     console.error(e)

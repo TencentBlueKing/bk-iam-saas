@@ -46,8 +46,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getResourceManager ({ commit, state, dispatch }, params, config) {
-            console.log('params11', params)
-            return http.get(`${AJAX_URL_PREFIX}/api/v1/roles/subjects_with_permission/?${json2Query(params)}`, config)
+            console.log('params11', json2Query(params))
+            return http.post(`${AJAX_URL_PREFIX}/api/v1/roles/query_authorized_subjects/`, params, config)
         },
 
         /**
@@ -61,7 +61,7 @@ export default {
          * @return {Promise} promise 对象
          */
         exportResourceManager ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}//api/v1/roles/subjects_with_permission/export/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/api/v1/roles/query_authorized_subjects/export/`, params, config)
         }
     }
 }

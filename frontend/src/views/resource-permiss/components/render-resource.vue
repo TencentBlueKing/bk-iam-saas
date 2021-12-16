@@ -42,6 +42,7 @@
                             <div class="left-layout" :style="leftLayoutStyle">
                                 <choose-ip
                                     :ref="`${index}TreeRef`"
+                                    :resource-value="true"
                                     :tree-value="condition.instance"
                                     :select-list="selectList"
                                     :select-value="selectValue"
@@ -710,6 +711,7 @@
             },
 
             handlePathSelect (value, node, payload, index) {
+                console.log('value', value, node, payload, this.selectList)
                 window.changeAlert = true
                 const { type, path, paths } = payload[0]
                 const tempPath = path[0]

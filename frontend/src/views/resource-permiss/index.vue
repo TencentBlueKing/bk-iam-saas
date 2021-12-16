@@ -5,6 +5,19 @@
             <bk-form
                 :model="formData"
                 form-type="inline">
+                <iam-form-item :label="$t(`m.common['查询类型']`)" class="pb10">
+                    <bk-select
+                        style="width: 200px; background: #fff"
+                        v-model="searchType"
+                        :clearable="true"
+                        @change="handlSearchChange">
+                        <bk-option v-for="option in searchTypeList"
+                            :key="option.value"
+                            :id="option.value"
+                            :name="option.name">
+                        </bk-option>
+                    </bk-select>
+                </iam-form-item>
                 <iam-form-item :label="$t(`m.common['系统']`)" class="pb10">
                     <bk-cascade
                         v-model="systemId"
@@ -12,14 +25,14 @@
                         :is-remote="false"
                         check-any-level
                         :remote-method="remoteMethod"
-                        style="width: 200px;"
+                        style="width: 200px; background: #fff"
                         class="iam-custom-process-cascade-cls"
                         @change="handleCascadeChange">
                     </bk-cascade>
                 </iam-form-item>
                 <iam-form-item :label="$t(`m.common['操作']`)" class="pb10">
                     <bk-select
-                        style="width: 200px"
+                        style="width: 200px; background: #fff"
                         v-model="actionId"
                         :clearable="true"
                         @selected="handleSelected">
@@ -30,24 +43,7 @@
                         </bk-option>
                     </bk-select>
                 </iam-form-item>
-                <iam-form-item v-if="!resourceTypeData.isEmpty" :label="$t(`m.common['资源实例']`)" class="pb10">
-                    <!-- <iam-cascade
-                        :disabled="!resourceActionId || !actionId || !resourceList.length"
-                        v-bk-tooltips.right="(!resourceActionId || !actionId || !resourceList.length) ? '无资源实例' : ''"
-                        style="width: 200px;"
-                        v-model="resourceId"
-                        :list="resourceList"
-                        :is-remote="hasMore"
-                        :remote-method="resourceRemoteMethod"
-                        clearable
-                        :dropdown-content-cls="'system-access-cascade-dropdown-content'"
-                        @change="handleResourceCascadeChange">
-                        <div slot="extension" class="resource-cascade-extension"
-                            v-bkloading="{ isLoading: instanceLoading, opacity: 1, size: 'small', theme: 'default' }"
-                            style="cursor: pointer;" @click="fetchMoreInstance">
-                            加载更多
-                        </div>
-                    </iam-cascade> -->
+                <iam-form-item v-if="!resourceTypeData.isEmpty && searchType !== 'operate'" :label="$t(`m.common['资源实例']`)" class="pb10">
 
                     <div class="resource-container">
                         <div class="relation-content-item" v-for="(content, contentIndex) in
@@ -69,9 +65,9 @@
                     </div>
 
                 </iam-form-item>
-                <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb10">
+                <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb10" v-if="searchType === 'operate'">
                     <bk-select
-                        style="width: 200px"
+                        style="width: 200px; background: #fff"
                         v-model="permissionType"
                         :clearable="true">
                         <bk-option v-for="option in typeList"
@@ -83,7 +79,7 @@
                 </iam-form-item>
                 <iam-form-item :label="$t(`m.resourcePermiss['结果数展示']`)" class="pb10">
                     <bk-select
-                        style="width: 200px"
+                        style="width: 200px; background: #fff"
                         v-model="limit"
                         :clearable="true">
                         <bk-option v-for="option in limitList"
@@ -99,6 +95,16 @@
                 <bk-button class="mb10" theme="default" @click="handleSearchAndExport(true)">
                     {{ $t(`m.common['导出']`) }}</bk-button>
             </bk-form>
+            <!-- 先屏蔽 -->
+            <div slot="right">
+                <iam-search-select
+                    placeholder="请输入用户、用户名搜索"
+                    @on-change="handleSearch"
+                    :data="searchData"
+                    :value="searchValue"
+                    :quick-search-method="quickSearchMethod"
+                    style="width: 420px;" />
+            </div>
         </render-search>
         <bk-table
             :data="tableList"
@@ -108,7 +114,7 @@
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
                 <template slot-scope="{ row }">
-                    {{row.user || 'admin'}}
+                    {{row.name || 'admin'}}
                 </template>
             </bk-table-column>
         </bk-table>
@@ -134,19 +140,20 @@
             </div>
             <div slot="footer" style="margin-left: 25px;">
                 <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
-                <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
                 <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
         </bk-sideslider>
     </div>
 </template>
 <script>
+    import IamSearchSelect from '@/components/iam-search-select'
     import { buildURLParams } from '@/common/url'
     import Policy from '@/model/policy'
     import _ from 'lodash'
     import RenderCondition from './components/render-condition.vue'
     import RenderResource from './components/render-resource.vue'
     import { leaveConfirm } from '@/common/leave-confirm'
+    import { fuzzyRtxSearch } from '@/common/rtx'
     // import iamCascade from '@/components/cascade'
 
     // 单次申请的最大实例数
@@ -155,7 +162,8 @@
         name: 'resource-permiss',
         components: {
             RenderCondition,
-            RenderResource
+            RenderResource,
+            IamSearchSelect
             // iamCascade
         },
         data () {
@@ -167,7 +175,6 @@
                     count: 0,
                     limit: 10000
                 },
-                instancePagination: { current: 0, offset: 0, limit: 100 },
                 instanceLoading: false,
                 systemList: [],
                 resourceList: [],
@@ -178,7 +185,7 @@
                 typeList: [{ name: '自定义权限', value: 'custom' }, { name: '模板权限', value: 'template' }],
                 permissionType: '',
                 groupValue: '1-1',
-                limit: '',
+                limit: 100,
                 limitList: [10, 20, 50, 100, 200, 500],
                 resourceActionId: 0,
                 resourceActionSystemId: '',
@@ -187,12 +194,15 @@
                 hasMore: false,
                 resourceType: '',
                 parentId: '',
-                resourceInstance: {},
                 resourceListChilder: [],
                 resourceTypeData: { isEmpty: true },
                 isShowResourceInstanceSideslider: false,
                 curResIndex: -1,
-                params: {}
+                params: {},
+                resourceInstances: [],
+                searchTypeList: [{ name: '实例权限', value: 'resource_instance' }, { name: '操作权限', value: 'operate' }],
+                searchType: '',
+                searchValue: []
             }
         },
         computed: {
@@ -217,28 +227,24 @@
                 return curData.selectionMode
             },
             originalCondition () {
-                // if (this.curResIndex === -1) {
-                //     return []
-                // }
-                // const curId = this.tableList[this.curIndex].id
-                // const curType = this.tableList[this.curIndex].related_resource_types[this.curResIndex].type
-                // if (!this.originalList.some(item => item.id === curId)) {
-                //     return []
-                // }
-                // const curResTypeData = this.originalList.find(item => item.id === curId)
-                // if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
-                //     return []
-                // }
-                // const curData = curResTypeData.related_resource_types.find(item => item.type === curType)
-                // if (!curData) {
-                //     return []
-                // }
                 return _.cloneDeep(this.condition)
             }
         },
         created () {
             this.handleSearchAndExport(false)
             this.fetchSystemList()
+            this.searchData = [
+                {
+                    id: 'name',
+                    name: this.$t(`m.userGroup['用户组名']`),
+                    default: true
+                },
+                {
+                    id: 'username',
+                    name: this.$t(`m.common['用户']`),
+                    remoteMethod: this.handleRemoteRtx
+                }
+            ]
         },
         methods: {
             async fetchSystemList () {
@@ -346,7 +352,7 @@
                 if (!this.systemId[0]) return
                 this.actionId = ''
                 this.resourceId = []
-                this.instancePagination = { current: 0, offset: 0, limit: 100 }
+                this.resourceTypeData = { isEmpty: true }
                 // this.fetchActionProcessesList()
                 const systemId = this.systemId[0]
                 try {
@@ -363,21 +369,50 @@
                     })
                 }
             },
+
+            // 查询类型选择
+            handlSearchChange () {
+                console.log('this.searchType', this.searchType)
+                this.resourceInstances = []
+            },
+
+            // 操作选择
             handleSelected () {
+                this.resourceInstances = []
+                // if(this.searchType === 'operate') return
                 this.resourceTypeData = this.processesList.find(e => e.id === this.actionId)
                 console.log('resourceTypeData', this.resourceTypeData)
             },
 
+            // 查询和导入
             async handleSearchAndExport (isExport = false) {
                 this.tableLoading = true
+                let resourceInstances = _.cloneDeep(this.resourceInstances)
+                resourceInstances = resourceInstances.reduce((prev, item) => {
+                    prev.push({
+                        system_id: item.system_id,
+                        id: item.id || item.type,
+                        type: item.type,
+                        name: item.name,
+                        path: item.resourceInstancesPath.reduce((p, e) => {
+                            p.push({
+                                type: e.type,
+                                id: e.id,
+                                name: e.name
+                            })
+                            return p
+                        }, [])
+                    })
+                    return prev
+                }, [])
+                console.log('resourceInstances', resourceInstances)
                 const params = {
                     system_id: this.systemId[0] || '',
                     action_id: this.actionId,
-                    resource_instance: this.resourceInstance || {},
-                    permission_type: this.permissionType,
+                    resource_instances: resourceInstances || [],
+                    permission_type: this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType,
                     limit: this.limit
                 }
-                console.log('params', params)
                 try {
                     const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager'
                     const res = await this.$store.dispatch(fetchUrl, params)
@@ -400,29 +435,12 @@
             },
 
             handleReset () {
-                this.instancePagination = { current: 0, offset: 0, limit: 100 }
                 this.resourceId = []
                 this.systemId = []
                 this.actionId = ''
-                this.resourceInstance = {}
+                this.resourceInstances = []
                 this.permissionType = ''
                 this.limit = ''
-            },
-
-            handleResourceCascadeChange () {
-                console.log('this.resourceId', this.resourceId)
-                // if(this.resourceId)
-                const resourceList = this.resourceId.length > 1 ? [...this.resourceListChilder] : [...this.resourceList]
-                console.log('resourceList', resourceList)
-                const resourceId = this.resourceId[this.resourceId.length - 1]
-                console.log('resourceId', resourceId)
-                const resourceData = resourceList.find(e => e.id === resourceId)
-                console.log('resourceData', resourceData)
-                this.resourceInstance = {
-                    id: resourceData.id,
-                    name: resourceData.name,
-                    type: this.resourceType
-                }
             },
 
             async resourceRemoteMethod (item, resolve) {
@@ -451,71 +469,63 @@
                 }
             },
 
-            async fetchInstanceSelection () {
-                if (!this.resourceActionId) return
-                try {
-                    const params = {
-                        system_id: this.systemId[0],
-                        action_id: this.actionId,
-                        resource_type_system: this.resourceActionSystemId,
-                        resource_type_id: this.resourceActionId
-                    }
-                    const res = await this.$store.dispatch('permApply/getInstanceSelection', params)
-                    this.resourceType = res.data && res.data.length && res.data[0].resource_type_chain[0].id
-                    this.resourceSystemId = res.data && res.data.length && res.data[0].resource_type_chain[0].system_id
-                    this.hasMore = res.data && res.data.length && res.data[0].resource_type_chain.length > 1
-                    console.log('this.resourceType', this.resourceType)
-                    this.firstFetchResources()
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    })
-                } finally {
-                    // this.requestQueue.shift()
-                }
-            },
+            // async fetchInstanceSelection () {
+            //     if (!this.resourceActionId) return
+            //     try {
+            //         const params = {
+            //             system_id: this.systemId[0],
+            //             action_id: this.actionId,
+            //             resource_type_system: this.resourceActionSystemId,
+            //             resource_type_id: this.resourceActionId
+            //         }
+            //         const res = await this.$store.dispatch('permApply/getInstanceSelection', params)
+            //         this.resourceType = res.data && res.data.length && res.data[0].resource_type_chain[0].id
+            //         this.resourceSystemId = res.data && res.data.length && res.data[0].resource_type_chain[0].system_id
+            //         this.hasMore = res.data && res.data.length && res.data[0].resource_type_chain.length > 1
+            //         console.log('this.resourceType', this.resourceType)
+            //         this.firstFetchResources()
+            //     } catch (e) {
+            //         console.error(e)
+            //         this.bkMessageInstance = this.$bkMessage({
+            //             limit: 1,
+            //             theme: 'error',
+            //             message: e.message || e.data.msg || e.statusText,
+            //             ellipsisLine: 2,
+            //             ellipsisCopy: true
+            //         })
+            //     } finally {
+            //         // this.requestQueue.shift()
+            //     }
+            // },
 
-            // 资源实例接口
-            async firstFetchResources () {
-                const params = {
-                    limit: this.instancePagination.limit,
-                    offset: this.instancePagination.offset,
-                    system_id: this.resourceSystemId,
-                    type: this.resourceType,
-                    parent_type: '',
-                    parent_id: '',
-                    keyword: ''
-                }
-                try {
-                    const res = await this.$store.dispatch('permApply/getResources', params)
-                    // this.resourceList = res.data && res.data.results
-                    if (res.data && res.data.results.length) {
-                        this.resourceList.push(...res.data.results)
-                    }
-                    this.resourceList = this.resourceList.map(item => {
-                        item.name = item.display_name
-                        return item
-                    })
-                } catch (error) {
+            // // 资源实例接口
+            // async firstFetchResources () {
+            //     const params = {
+            //         limit: this.instancePagination.limit,
+            //         offset: this.instancePagination.offset,
+            //         system_id: this.resourceSystemId,
+            //         type: this.resourceType,
+            //         parent_type: '',
+            //         parent_id: '',
+            //         keyword: ''
+            //     }
+            //     try {
+            //         const res = await this.$store.dispatch('permApply/getResources', params)
+            //         // this.resourceList = res.data && res.data.results
+            //         if (res.data && res.data.results.length) {
+            //             this.resourceList.push(...res.data.results)
+            //         }
+            //         this.resourceList = this.resourceList.map(item => {
+            //             item.name = item.display_name
+            //             return item
+            //         })
+            //     } catch (error) {
                     
-                } finally {
-                    // this.requestQueue.shift()
-                    this.instanceLoading = false
-                }
-            },
-
-            // 加载更多资源实例
-            fetchMoreInstance () {
-                this.instanceLoading = true
-                this.instancePagination.current = ++this.instancePagination.current
-                this.instancePagination.offset = this.instancePagination.limit * (this.instancePagination.current)
-                this.firstFetchResources()
-            },
+            //     } finally {
+            //         // this.requestQueue.shift()
+            //         this.instanceLoading = false
+            //     }
+            // },
 
             // 求值
             recursionFunc (list) {
@@ -570,6 +580,12 @@
                 }, _ => _)
             },
 
+            resetDataAfterClose () {
+                this.curResIndex = -1
+                this.params = {}
+                this.resourceInstanceSidesliderTitle = ''
+            },
+
             async handleResourceSumit () {
                 const conditionData = this.$refs.renderResourceRef.handleGetValue()
                 console.log('conditionData', conditionData)
@@ -591,51 +607,40 @@
                             resItem.resourceInstancesPath = e.path[0]
                         })
                     })
+                    if (this.curResIndex !== -1) {
+                        this.resourceInstances.splice(this.curResIndex, 1, resItem)
+                    }
+                    console.log('this.resourceInstances', this.resourceInstances)
                     console.log('resItem', resItem)
-                    console.log('this.resourceInstancesPath', this.resourceInstancesPath)
-                    // const { isMainAction, related_actions } = this.tableList[this.curIndex]
-                    // // 如果为主操作
-                    // if (isMainAction) {
-                    //     await this.handleMainActionSubmit(data, related_actions)
-                    // }
-                    // resItem.condition = data
-                    // resItem.isError = false
                 }
-                debugger
                 window.changeAlert = false
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
                 this.curResIndex = -1
+            },
+            
+            // 搜索
+            handleSearch (payload, result) {
+                this.searchParams = payload
+                this.searchList = result
+                // this.resetPagination()
+                // this.fetchUserGroupList(true)
+            },
 
-                // if (!isConditionEmpty && resItem.isLimitExceeded) {
-                //     let newResourceCount = 0
-                //     const conditionList = resItem.condition
-                //     conditionList.forEach(item => {
-                //         item.instance.forEach(instanceItem => {
-                //             instanceItem.paths.forEach(v => {
-                //                 // 是否带有下一层级的无限制
-                //                 const isHasNoLimit = v.some(({ id }) => id === '*')
-                //                 const isDisabled = v.some(_ => !!_.disabled)
-                //                 // 可编辑的才会计数
-                //                 if (!isHasNoLimit && !isDisabled) {
-                //                     ++newResourceCount
-                //                 }
-                //             })
-                //         })
-                //     })
-                //     console.warn('newResourceCount: ' + newResourceCount)
-                //     if (newResourceCount <= RESOURCE_MAX_LEN) {
-                //         resItem.isLimitExceeded = false
-                //     }
-                // }
+            quickSearchMethod (value) {
+                return {
+                    name: this.$t(`m.common['关键字']`),
+                    id: 'keyword',
+                    values: [value]
+                }
+            },
 
-                // this.curIndex = -1
-                // this.curResIndex = -1
-
-                // // 主操作的实例映射到了具体的依赖操作上，需更新到父级的缓存数据中
-                // if (this.needEmitFlag) {
-                //     this.$emit('on-realted-change', this.tableList)
-                // }
+            handleRemoteRtx (value) {
+                console.log('value', value)
+                return fuzzyRtxSearch(value)
+                    .then(data => {
+                        return data.results
+                    })
             }
             
         }
@@ -687,8 +692,13 @@
         display: flex;
         justify-content: space-between;
         .relation-content-item{
+
             width: 200px;
-            /* margin-right: 20px; */
+            
+        }
+
+        .relation-content-item:nth-child(2){
+            margin-left: 20px;
         }
     }
 </style>
