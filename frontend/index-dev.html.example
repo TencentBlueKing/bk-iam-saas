@@ -36,6 +36,8 @@
 
                 const ENABLE_MODEL_BUILD = 'True' || ''
 
+                const ENABLE_PERMISSION_HANDOVER = 'True' || ''
+
                 const CUR_LANGUAGE = handleLanguage()
                 window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
                 window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
@@ -48,6 +50,7 @@
                 window.PRODUCT_DOC_URL = PRODUCT_DOC_URL
                 window.CE_URL = CE_URL
                 window.ENABLE_MODEL_BUILD = ENABLE_MODEL_BUILD
+                window.ENABLE_PERMISSION_HANDOVER = ENABLE_PERMISSION_HANDOVER
             })()
 
             function handleLanguage () {

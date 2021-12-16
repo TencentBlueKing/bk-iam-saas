@@ -144,8 +144,9 @@ class ResourceProviderClient:
         # 回调请求的详细信息
         request_detail_info = (
             f"call {self.system_id}'s API fail! "
-            f"you should check the network/{self.system_id} is available and {self.system_id}'s log for more info. "
-            f"request: [POST {urlparse(self.url).path} body.data.method={data['method']}]"
+            f"you should check: "
+            f"1.the network is ok 2.{self.system_id} is available 3.get details from {self.system_id}'s log. "
+            f"[POST {urlparse(self.url).path} body.data.method={data['method']}]"
             f"(system_id={self.system_id}, resource_type_id={self.resource_type_id})"
         )
 
@@ -187,7 +188,7 @@ class ResourceProviderClient:
             trace_func(exc=traceback.format_exc())
             # 接口状态码异常
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"{self.system_id}'s API response status code is `{resp.status_code}`, should be 200! "
+                f"{self.system_id}'s API response status code is `{resp.status_code}`, should be `200`! "
                 f"{request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
