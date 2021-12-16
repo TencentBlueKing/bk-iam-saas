@@ -9,5 +9,36 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from .permission_audit import *  # noqa
-from .role import *  # noqa
+from .permission_audit import QueryAuthorizedSubjectsViewSet
+from .role import (
+    AuthScopeIncludeUserRoleView,
+    GradeManagerViewSet,
+    MemberSystemPermissionView,
+    RoleAuthorizationScopeView,
+    RoleCommonActionViewSet,
+    RoleGroupMembersRenewViewSet,
+    RoleGroupRenewViewSet,
+    RoleMemberView,
+    RoleSubjectScopeView,
+    SuperManagerMemberViewSet,
+    SystemManagerMemberView,
+    SystemManagerViewSet,
+    UserView,
+)
+
+__all__ = [
+    "QueryAuthorizedSubjectsViewSet",
+    "AuthScopeIncludeUserRoleView",
+    "GradeManagerViewSet",
+    "MemberSystemPermissionView",
+    "RoleAuthorizationScopeView",
+    "RoleCommonActionViewSet",
+    "RoleGroupMembersRenewViewSet",
+    "RoleGroupRenewViewSet",
+    "RoleMemberView",
+    "RoleSubjectScopeView",
+    "SuperManagerMemberViewSet",
+    "SystemManagerMemberView",
+    "SystemManagerViewSet",
+    "UserView",
+]

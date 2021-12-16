@@ -43,16 +43,6 @@ class PermissionTypeEnum(ChoicesEnum, LowerStrEnum):
 
     CUSTOM = auto()
     TEMPLATE = auto()
+    RESOURCE_INSTANCE = auto()
 
-    _choices_labels = skip(
-        (
-            (CUSTOM, _("自定义权限")),
-            (TEMPLATE, _("模板权限")),
-        )
-    )
-
-
-SUBJECT_TYPE_DISPLAY_NAME = {
-    "user": "用户",
-    "group": "用户组"
-}
+    _choices_labels = skip(((CUSTOM, _("自定义权限")), (TEMPLATE, _("模板权限")), (RESOURCE_INSTANCE, _("资源实例"))))

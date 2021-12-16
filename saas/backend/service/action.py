@@ -13,6 +13,7 @@ from typing import List, Optional
 from pydantic import parse_obj_as
 
 from backend.component import iam
+from backend.component.iam import get_action
 from backend.util.cache import region
 
 from .models import Action
@@ -52,3 +53,10 @@ class ActionService:
         生成ActionList
         """
         return ActionList(self.list(system_id))
+
+    def get_action_name(self, system_id: str, action_id: str) -> str:
+        """
+        根据操作ID获取操作名称
+        """
+        action_name = get_action(system_id, action_id)["name"]
+        return action_name

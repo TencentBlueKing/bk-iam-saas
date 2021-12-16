@@ -77,13 +77,13 @@ urlpatterns = [
         name="role.auth_scope_include_user_roles",
     ),
     path(
-        "subjects_with_permission/",
-        views.SubjectsWithPermissionViewSet.as_view({"get": "list"}),
-        name="management.resource_subjects",
+        "query_authorized_subjects/",
+        views.QueryAuthorizedSubjectsViewSet.as_view({"post": "post"}),
+        name="role.query_authorized_subjects",
     ),
     path(
-        "subjects_with_permission/export/",
-        views.SubjectsWithPermissionViewSet.as_view({"get": "export"}),
-        name="management.resource_subjects.export",
+        "query_authorized_subjects/export/",
+        views.QueryAuthorizedSubjectsViewSet.as_view({"post": "export"}),
+        name="role.query_authorized_subjects.export",
     ),
 ]

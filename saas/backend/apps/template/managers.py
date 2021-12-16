@@ -23,9 +23,7 @@ class PermTemplateManager(models.Manager):
 
     def query_template_ids(self, system_id: str, action_id: str):
         query_action_id = f'"{action_id}"'
-        template_ids = self.filter(
-            system_id=system_id,
-            _action_ids__contains=query_action_id).values_list("id")
+        template_ids = self.filter(system_id=system_id, _action_ids__contains=query_action_id).values_list("id")
         return template_ids
 
 

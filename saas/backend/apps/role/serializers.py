@@ -293,21 +293,41 @@ class RoleGroupMembersRenewSLZ(serializers.Serializer):
     members = serializers.ListField(label="续期成员", child=RoleGroupMemberRenewSLZ(), allow_empty=False)
 
 
-class ResourceInstanceSLZ(serializers.Serializer):
+class ResourceInstancePathSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源实例ID")
     type = serializers.CharField(label="资源实例类型")
     name = serializers.CharField(label="资源实例名")
 
 
-class PermissionManageSLZ(serializers.Serializer):
+class ResourceInstanceSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID", required=True)
+    id = serializers.CharField(label="资源实例ID", required=True)
+    type = serializers.CharField(label="资源实例类型", required=True)
+    name = serializers.CharField(label="资源实例名", required=True)
+    path = serializers.ListField(
+        label="资源实例路径", required=False, child=ResourceInstancePathSLZ(label="资源实例路径"), default=list
+    )
+
+
+class QueryAuthorizedSubjectsSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     action_id = serializers.CharField(label="操作ID")
-    limit = serializers.IntegerField(label="返回结果数", max_value=1000)
-    resource_instance = ResourceInstanceSLZ(label="资源实例信息", required=False)
+    limit = serializers.IntegerField(label="返回结果数", min_value=10, max_value=1000)
+    resource_instances = serializers.ListField(
+        label="资源实例", required=False, child=ResourceInstanceSLZ(label="资源实例信息"), default=list
+    )
     permission_type = serializers.ChoiceField(label="权限类型", choices=PermissionTypeEnum.get_choices())
 
+    def validate(self, data):
+        if data["permission_type"] == PermissionTypeEnum.RESOURCE_INSTANCE.value:
+            if not data.get("resource_instances"):
+                raise serializers.ValidationError("实例资源信息不可为空")
+            return data
 
-class SubjectsWithPermissionSLZ(serializers.Serializer):
+        return data
+
+
+class AuthorizedSubjectsSLZ(serializers.Serializer):
     type = serializers.CharField(label="Subject对象类型")
     id = serializers.CharField(label="Subject对象ID")
     name = serializers.CharField(label="Subject对象名称")

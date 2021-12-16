@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from typing import List, Optional
 
 from backend.component import iam
+from backend.component.iam import get_system
 from backend.util.cache import region
 
 from .models import System
@@ -46,3 +47,10 @@ class SystemService:
 
     def new_system_list(self) -> SystemList:
         return SystemList(self.list())
+
+    def get_system_name(self, system_id: str) -> str:
+        """
+        根据系统ID获取系统名称
+        """
+        system_name = get_system(system_id)["name"]
+        return system_name
