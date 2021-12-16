@@ -74,6 +74,7 @@ export const m = {
         '详情': 'Detail',
         '共': 'Total',
         '点击收起': 'Collapse',
+        '点击展开': 'Expanded',
         '同意': 'Agree',
         '拒绝': 'Reject',
         '模板': 'Template',
@@ -206,7 +207,8 @@ export const m = {
         '确定退出分级管理员': 'Determine the exit level administrator',
         '用户组': 'user group',
         '是否删除该自定义权限': 'Whether to delete the custom permission',
-        '确定删除': 'Sure to delete'
+        '确定删除': 'Sure to delete',
+        '类型': 'Type'
     },
     // 校验
     verify: {
@@ -577,6 +579,7 @@ export const m = {
         '分级管理员': 'Grading Manager',
         '创建人': 'Creator',
         '分级管理员名称': 'Grading Manager Name',
+        '系统管理员名称': 'System Manager Name',
         '搜索提示': 'Input grading manager name, press Enter to search',
         '退出提示': 'Will lose this role and related permission management',
         '删除提示': 'Need to confirm all permission templates and groups have been deleted',
@@ -769,7 +772,29 @@ export const m = {
         '什么是常用操作？': 'What are common operations?',
         '常用操作可以让用户在申请权限时可以一次性选择某一类角色需要的操作。': 'Common operations allow users to select the operations required by a certain type of role at one time when applying for permissions.',
         '什么是实例视图？': 'What is an instance view?',
-        '实例视图代表一种资源类型的实例数据获取途径，一种资源类型的实例视图可以有多种。': 'An instance view represents a way to obtain instance data of a resource type, and there can be multiple instance views of a resource type.'
+        '实例视图代表一种资源类型的实例数据获取途径，一种资源类型的实例视图可以有多种。': 'An instance view represents a way to obtain instance data of a resource type, and there can be multiple instance views of a resource type.',
+        '请输入实例视图英文名': 'Please enter the English name of the instance view'
+    },
+    permTransfer: {
+        '权限交接': 'Authority transfer',
+        '还未选择权限': 'No permissions have been selected',
+        '权限交接理由必填': 'The reason for the transfer of rights is required',
+        '权限交接理由最长不超过100个字符': 'The reason for the transfer of rights can be no longer than 32 characters',
+        '权限交接成功': 'Transfer rights success',
+        '交接历史': 'Transfer history',
+        '交接时间': 'Transfer Time',
+        '目标交接人': 'TransferTarget',
+        '交接状态': 'TransferStatus',
+        '交接成功': 'Success',
+        '交接失败': 'Failed',
+        '部分失败': 'Partial Succeed',
+        '交接中': 'Running',
+        '用户组权限交接：': 'group permission transfer:',
+        '自定义权限交接：': 'custom permission transfer:',
+        '超级管理员交接：': 'super manager transfer:',
+        '系统管理员交接：': 'system manager transfer:',
+        '分级管理员交接：': 'rating manager transfer:',
+        '管理员名称': 'ManagerName'
     }
 }
 export default {

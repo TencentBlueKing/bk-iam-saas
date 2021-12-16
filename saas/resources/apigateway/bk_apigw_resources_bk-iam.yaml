@@ -1,0 +1,1737 @@
+swagger: '2.0'
+basePath: /
+info:
+  version: '0.1'
+  title: API Gateway Resources
+  description: ''
+schemes:
+- http
+paths:
+  /api/v1/engine/batch-search:
+    post:
+      operationId: engine_batch_search
+      description: 批量检索
+      tags:
+      - engine
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/batch-search
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.engine}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/engine/healthz:
+    get:
+      operationId: engine_healthz
+      description: 检查engine服务是否健康
+      tags:
+      - engine
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /healthz
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.engine}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/engine/ping:
+    get:
+      operationId: engine_ping
+      description: 检查engine连通性
+      tags:
+      - engine
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /ping
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.engine}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/engine/search:
+    post:
+      operationId: engine_search
+      description: 检索
+      tags:
+      - engine
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/search
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.engine}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/engine/version:
+    get:
+      operationId: engine_version
+      description: 检查engine程序版本
+      tags:
+      - engine
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /version
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.engine}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems:
+    post:
+      operationId: system_create
+      description: 新增 system
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/model/systems
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}:
+    get:
+      operationId: system_get
+      description: 查询 system
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/model/systems/{system_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    put:
+      operationId: system_update
+      description: 更新 system
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/model/systems/{system_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/actions:
+    delete:
+      operationId: system_batch_delete_actions
+      description: 批量删除actions
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/actions
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    post:
+      operationId: system_add_actions
+      description: 新增actions
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/model/systems/{system_id}/actions
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/actions/{action_id}:
+    delete:
+      operationId: system_delete_action
+      description: 删除action
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/actions/{action_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    put:
+      operationId: system_update_action
+      description: 更新action
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/model/systems/{system_id}/actions/{action_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/actions/{action_id}/policies:
+    delete:
+      operationId: system_delete_action_policies
+      description: 删除action的policies
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/actions/{action_id}/policies
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/clients:
+    get:
+      operationId: system_get_clients
+      description: 查询 system clients
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/model/systems/{system_id}/clients
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/configs/{name}:
+    post:
+      operationId: system_add_configs
+      description: 配置新增name=common_actions/feature_shield_rules/resource_creator_actions
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/model/systems/{system_id}/configs/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    put:
+      operationId: system_update_configs
+      description: 配置更新name=common_actions/feature_shield_rules/resource_creator_actions
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/model/systems/{system_id}/configs/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/instance-selections:
+    delete:
+      operationId: system_batch_delete_instance_selections
+      description: 批量删除 instance-selections
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/instance-selections
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    post:
+      operationId: system_add_instance_selections
+      description: 新增instance_selections
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/model/systems/{system_id}/instance-selections
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/instance-selections/{instance_selection_id}:
+    delete:
+      operationId: system_delete_instance_selection
+      description: 删除 instance_selection
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/instance-selections/{instance_selection_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    put:
+      operationId: system_update_instance_selection
+      description: 更新 instance_selection
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/model/systems/{system_id}/instance-selections/{instance_selection_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/query:
+    get:
+      operationId: system_query
+      description: 查询 system 通用信息
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/model/systems/{system_id}/query
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/resource-types:
+    delete:
+      operationId: system_batch_delete_resource_types
+      description: 批量删除 resource_type
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/resource-types
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    post:
+      operationId: system_add_resource_types
+      description: 新增resource_type
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/model/systems/{system_id}/resource-types
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/resource-types/{resource_type_id}:
+    delete:
+      operationId: system_delete_resource_types
+      description: 删除 resource_type
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/resource-types/{resource_type_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    put:
+      operationId: system_update_resource_types
+      description: 更新 resource_type
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/model/systems/{system_id}/resource-types/{resource_type_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/token:
+    get:
+      operationId: system_get_token
+      description: 查询 system token
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/model/systems/{system_id}/token
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/application/:
+    post:
+      operationId: application
+      description: 接入系统权限申请
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/application/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/authorization/batch_instance/:
+    post:
+      operationId: authorization_batch_instance
+      description: 批量操作批量资源授权回收, deprecated
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/batch_instance/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/authorization/batch_path/:
+    post:
+      operationId: authorization_batch_path
+      description: 批量操作批量拓扑层级授权/回收
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/batch_path/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/authorization/batch_resource_creator_action/:
+    post:
+      operationId: authorization_batch_resource_creator_action
+      description: 新建关联授权
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/batch_resource_creator_action/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/authorization/instance/:
+    post:
+      operationId: authorization_instance
+      description: 单个资源授权回收, deprecated
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/instance/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/authorization/path/:
+    post:
+      operationId: authorization_path
+      description: 单个拓扑层级授权/回收
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/path/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/authorization/resource_creator_action/:
+    post:
+      operationId: authorization_resource_creator_action
+      description: 新建关联授权
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/resource_creator_action/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/authorization/resource_creator_action_attribute/:
+    post:
+      operationId: authorization_resource_creator_action_attribute
+      description: 新建关联授权-属性授权
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/authorization/resource_creator_action_attribute/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/grade_managers/:
+    post:
+      operationId: management_grade_managers
+      description: 创建分级管理员
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/management/grade_managers/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/grade_managers/{id}/groups/:
+    get:
+      operationId: management_grade_manager_groups
+      description: 分级管理员的用户组列表
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/management/grade_managers/{id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    post:
+      operationId: management_grade_manager_create_groups
+      description: 分级管理员批量创建用户组
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/management/grade_managers/{id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/grade_managers/{id}/members/:
+    delete:
+      operationId: management_delete_grade_manager_members
+      description: 批量删除分级管理员成员
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/management/grade_managers/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    get:
+      operationId: management_grade_manager_members
+      description: 分级管理员成员列表
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/management/grade_managers/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    post:
+      operationId: management_add_grade_manager_members
+      description: 批量添加分级管理员成员
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/management/grade_managers/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/groups/applications/:
+    post:
+      operationId: management_groups_applications
+      description: 创建用户组申请单
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/management/groups/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/groups/{id}/:
+    delete:
+      operationId: management_grade_manager_delete_group
+      description: 分级管理员删除用户组
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/management/groups/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    put:
+      operationId: management_grade_manager_update_group
+      description: 分级管理员更新用户组
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/open/management/groups/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/groups/{id}/members/:
+    delete:
+      operationId: management_delete_group_members
+      description: 用户组删除成员
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/management/groups/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    get:
+      operationId: management_group_members
+      description: 用户组成员列表
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/management/groups/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+    post:
+      operationId: management_add_group_members
+      description: 用户组添加成员
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/management/groups/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/groups/{id}/policies/:
+    post:
+      operationId: management_groups_policies
+      description: 用户组授权
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/management/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/users/grade_managers/:
+    get:
+      operationId: management_users_grade_managers
+      description: 用户加入的分级管理员列表
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/management/users/grade_managers/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/management/users/grade_managers/{id}/groups/:
+    get:
+      operationId: management_users_grade_managers_groups
+      description: 用户在某个分级管理员下加入的用户组列表
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/management/users/grade_managers/{id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/policy/auth:
+    post:
+      operationId: policy_auth
+      description: 直接鉴权
+      tags:
+      - policy
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/policy/auth
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/policy/auth_by_actions:
+    post:
+      operationId: policy_auth_by_actions
+      description: 批量action直接鉴权
+      tags:
+      - policy
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/policy/auth_by_actions
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/policy/auth_by_resources:
+    post:
+      operationId: policy_auth_by_resources
+      description: 批量资源直接鉴权
+      tags:
+      - policy
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/policy/auth_by_resources
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/policy/query:
+    post:
+      operationId: policy_query
+      description: 策略查询
+      tags:
+      - policy
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/policy/query
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/policy/query_by_actions:
+    post:
+      operationId: policy_query_by_actions
+      description: 批量拉取一批操作的权限策略
+      tags:
+      - policy
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/policy/query_by_actions
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/policy/query_by_ext_resources:
+    post:
+      operationId: policy_query_by_ext_resources
+      description: 批量第三方依赖鉴权策略查询
+      tags:
+      - policy
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/policy/query_by_ext_resources
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/systems/{system_id}/policies:
+    get:
+      operationId: system_policies
+      description: 拉取系统下某个操作的策略列表
+      tags:
+      - system
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/systems/{system_id}/policies
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/systems/{system_id}/policies/-/subjects:
+    get:
+      operationId: system_policies_subjects
+      description: 根据策略 ID 拉群策略对应的用户信息
+      tags:
+      - system
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/systems/{system_id}/policies/-/subjects
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/systems/{system}/policies/{policy_id}:
+    get:
+      operationId: system_get_policy
+      description: 获取某条策略详情
+      tags:
+      - system
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/systems/{system}/policies/{policy_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/web/:
+    x-bk-apigateway-method-any:
+      operationId: api_v1_web_any
+      description: SaaS调用后台 API 入口
+      tags:
+      - web
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /api/v1/web/
+          matchSubpath: true
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /healthz:
+    get:
+      operationId: healthz
+      description: 接口检查服务是否健康
+      tags:
+      - basic
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /healthz
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /metrics:
+    get:
+      operationId: metrics
+      description: 接口暴露程序metrics
+      tags:
+      - basic
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /metrics
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /ping:
+    get:
+      operationId: ping
+      description: 接口检查连通性
+      tags:
+      - basic
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /ping
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /version:
+    get:
+      operationId: version
+      description: 接口检查程序版本
+      tags:
+      - basic
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /version
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []

@@ -32,6 +32,7 @@ import TerserPlugin from 'terser-webpack-plugin'
 import OptimizeCSSPlugin from 'optimize-css-assets-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import CopyWebpackPlugin from 'copy-webpack-plugin'
+import FilterWarningsPlugin from 'webpack-filter-warnings-plugin'
 import bundleAnalyzer from 'webpack-bundle-analyzer'
 
 import config from './config'
@@ -205,6 +206,10 @@ const prodConf = merge(baseConf, {
                 ignore: ['.*']
             }
         ]),
+
+        new FilterWarningsPlugin({
+            exclude: /mini-css-extract-plugin[^]*Conflicting order between:/
+        }),
 
         // new ReplaceCssStaticUrl({})
         // new ReplaceJSStaticUrlPlugin({}),

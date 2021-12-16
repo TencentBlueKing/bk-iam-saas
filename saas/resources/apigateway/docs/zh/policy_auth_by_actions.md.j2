@@ -1,0 +1,81 @@
+### policy auth by actions
+
+鉴权场景: 查看一个`用户`有没有`资源A`的`查看`/`编辑`/`删除`权限
+限制: actions 最大能传 10 个操作
+
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system |string | 是 | 系统唯一标识  |
+| subject | string | 是 | subject |
+| actions | Array(action) | 是 | 操作 |
+| resources | Array(resource_node) | 是 | 资源实例, 资源类型的顺序必须操作注册时的顺序一致 |
+
+action
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id    |  字符串  | 是   | 操作 ID |
+
+subject
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| type    |  字符串  | 是   | 授权对象类型, 当前只支持 user |
+| id    |  字符串  | 是   | 授权对象 ID |
+
+resource_node
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system |  字符串  | 是   | 资源系统 ID |
+| type |  字符串  | 是   | 资源类型 ID |
+| id | 字符串 | 是 | 资源实例 ID |
+| attribute | 对象 | 是 | 资源属性 |
+
+#### Request
+
+```json
+{
+	"system": "bk_job",
+	"subject": {
+		"type": "user",
+		"id": "admin"
+	},
+	"actions": [{
+		"id": "execute"
+	}, {
+		"id": "view"
+	}],
+	"resources": [{   // 资源类型的顺序必须操作注册时的顺序一致, 否则会导致鉴权失败!
+		"system": "bk_job",
+		"type": "job",
+		"id": "ping",
+		"attribute": {  // 资源的属性值可能有多个, 目前支持string/int/boolean, 以及路径stringList
+			"os": "linux",
+			"_bk_iam_path_": ["/biz,1/set,2/"],
+			"is_ready": true,
+			"area_id": 200
+		}
+	}, {
+		"system": "bk_cmdb",
+		"type": "host",
+		"id": "192.168.1.1",
+		"attribute": {}  // 外部资源的属性由iam负责查询属性, 接入方不需要传入
+	}]
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": {
+        "execute": true,
+        "view": false
+    }
+}
+```
