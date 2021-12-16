@@ -169,6 +169,7 @@
         data () {
             return {
                 tableList: [],
+                tableListClone: [],
                 tableLoading: false,
                 pagination: {
                     current: 1,
@@ -235,12 +236,12 @@
             this.fetchSystemList()
             this.searchData = [
                 {
-                    id: 'name',
+                    id: 'group',
                     name: this.$t(`m.userGroup['用户组名']`),
                     default: true
                 },
                 {
-                    id: 'username',
+                    id: 'user',
                     name: this.$t(`m.common['用户']`),
                     remoteMethod: this.handleRemoteRtx
                 }
@@ -419,6 +420,7 @@
                     console.log('res', res)
                     if (!isExport) {
                         this.tableList = res.data
+                        this.tableListClone = res.data
                     }
                 } catch (e) {
                     console.error(e)
@@ -620,11 +622,15 @@
             },
             
             // 搜索
-            handleSearch (payload, result) {
-                this.searchParams = payload
-                this.searchList = result
-                // this.resetPagination()
-                // this.fetchUserGroupList(true)
+            handleSearch (payload) {
+                if (Object.keys(payload).length) {
+                    const type = Object.keys(payload).join('')
+                    this.tableList = _.cloneDeep(this.tableListClone).filter(item => item.type === type
+                        && item.name === payload[type])
+                } else {
+                    this.tableList = _.cloneDeep(this.tableListClone)
+                }
+                console.log('tableList', this.tableList)
             },
 
             quickSearchMethod (value) {
