@@ -128,10 +128,9 @@
                     :original-data="originalCondition"
                     :flag="curFlag"
                     :selection-mode="curSelectionMode"
-                    :disabled="curDisabled"
                     :params="params"
                     @on-limit-change="handleLimitChange"
-                    @on-init="handleOnInit" />
+                />
             </div>
             <div slot="footer" style="margin-left: 25px;">
                 <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
@@ -146,12 +145,17 @@
     import Policy from '@/model/policy'
     import _ from 'lodash'
     import RenderCondition from './components/render-condition.vue'
+    import RenderResource from './components/render-resource.vue'
     import { leaveConfirm } from '@/common/leave-confirm'
     // import iamCascade from '@/components/cascade'
+
+    // 单次申请的最大实例数
+    // const RESOURCE_MAX_LEN = 20
     export default {
         name: 'resource-permiss',
         components: {
-            RenderCondition
+            RenderCondition,
+            RenderResource
             // iamCascade
         },
         data () {
@@ -187,7 +191,8 @@
                 resourceListChilder: [],
                 resourceTypeData: { isEmpty: true },
                 isShowResourceInstanceSideslider: false,
-                curResIndex: -1
+                curResIndex: -1,
+                params: {}
             }
         },
         computed: {
@@ -201,6 +206,15 @@
                 }
                 if (curData.condition.length === 0) curData.condition = ['none']
                 return _.cloneDeep(curData.condition)
+            },
+            curSelectionMode () {
+                if (this.curResIndex === -1) {
+                    return 'all'
+                }
+                console.log('this.curResIndex', this.curResIndex)
+                console.log('this.resourceTypeData.related_resource_types[this.curResIndex]', this.resourceTypeData.related_resource_types[this.curResIndex])
+                const curData = this.resourceTypeData.related_resource_types[this.curResIndex]
+                return curData.selectionMode
             },
             originalCondition () {
                 // if (this.curResIndex === -1) {
@@ -524,7 +538,7 @@
                 })
                 this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index)
                 this.resourceActionData.forEach(item => {
-                    this.processesList.push(new Policy({ ...item, tag: 'add' }))
+                    this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'))
                 })
                 console.log('this.resourceActionData', this.resourceActionData)
                 console.log('this.processesList', this.processesList)
@@ -532,7 +546,7 @@
 
             showResourceInstance (data, resItem, resIndex) {
                 this.params = {
-                    system_id: this.systemId,
+                    system_id: this.systemId[0],
                     action_id: data.id,
                     resource_type_system: resItem.system_id,
                     resource_type_id: resItem.type
@@ -541,6 +555,7 @@
                 this.curResIndex = resIndex
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
                 window.changeAlert = 'iamSidesider'
+                console.log(this.params)
                 this.isShowResourceInstanceSideslider = true
             },
 
@@ -553,6 +568,67 @@
                     this.isShowResourceInstanceSideslider = false
                     this.resetDataAfterClose()
                 }, _ => _)
+            },
+
+            async handleResourceSumit () {
+                const conditionData = this.$refs.renderResourceRef.handleGetValue()
+                console.log('conditionData', conditionData)
+                debugger
+                const { isEmpty, data } = conditionData
+                if (isEmpty) {
+                    return
+                }
+
+                const resItem = this.resourceTypeData.related_resource_types[this.curResIndex]
+                const isConditionEmpty = data.length === 1 && data[0] === 'none'
+                if (isConditionEmpty) {
+                    resItem.condition = ['none']
+                    resItem.isLimitExceeded = false
+                    this.resource_instances = {}
+                } else {
+                    // const { isMainAction, related_actions } = this.tableList[this.curIndex]
+                    // // 如果为主操作
+                    // if (isMainAction) {
+                    //     await this.handleMainActionSubmit(data, related_actions)
+                    // }
+                    // resItem.condition = data
+                    // resItem.isError = false
+                }
+
+                window.changeAlert = false
+                this.resourceInstanceSidesliderTitle = ''
+                this.isShowResourceInstanceSideslider = false
+                this.curResIndex = -1
+
+                // if (!isConditionEmpty && resItem.isLimitExceeded) {
+                //     let newResourceCount = 0
+                //     const conditionList = resItem.condition
+                //     conditionList.forEach(item => {
+                //         item.instance.forEach(instanceItem => {
+                //             instanceItem.paths.forEach(v => {
+                //                 // 是否带有下一层级的无限制
+                //                 const isHasNoLimit = v.some(({ id }) => id === '*')
+                //                 const isDisabled = v.some(_ => !!_.disabled)
+                //                 // 可编辑的才会计数
+                //                 if (!isHasNoLimit && !isDisabled) {
+                //                     ++newResourceCount
+                //                 }
+                //             })
+                //         })
+                //     })
+                //     console.warn('newResourceCount: ' + newResourceCount)
+                //     if (newResourceCount <= RESOURCE_MAX_LEN) {
+                //         resItem.isLimitExceeded = false
+                //     }
+                // }
+
+                // this.curIndex = -1
+                // this.curResIndex = -1
+
+                // // 主操作的实例映射到了具体的依赖操作上，需更新到父级的缓存数据中
+                // if (this.needEmitFlag) {
+                //     this.$emit('on-realted-change', this.tableList)
+                // }
             }
             
         }

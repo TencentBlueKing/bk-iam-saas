@@ -225,9 +225,7 @@
         watch: {
             params: {
                 handler (value) {
-                    console.log('value', value)
                     if (Object.keys(value).length > 0) {
-                        this.$emit('on-init', false)
                         if (this.selectionMode === 'all') {
                             this.requestQueue = ['instanceSelection', 'resourceAttr']
                             this.fetchInstanceSelection(value)
