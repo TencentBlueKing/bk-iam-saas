@@ -27,9 +27,7 @@
                         <bk-cascade
                             v-model="systemId"
                             :list="systemList"
-                            :is-remote="false"
                             check-any-level
-                            :remote-method="remoteMethod"
                             style="width: 200px; background: #fff"
                             class="iam-custom-process-cascade-cls"
                             @change="handleCascadeChange">
@@ -173,7 +171,6 @@
 </template>
 <script>
     import IamSearchSelect from '@/components/iam-search-select'
-    import { buildURLParams } from '@/common/url'
     import Policy from '@/model/policy'
     import _ from 'lodash'
     import RenderCondition from './components/render-condition.vue'
@@ -197,15 +194,9 @@
                 tableList: [],
                 tableListClone: [],
                 tableLoading: false,
-                pagination: {
-                    current: 1,
-                    count: 0,
-                    limit: 10000
-                },
                 instanceLoading: false,
                 systemList: [],
                 resourceList: [],
-                resourceId: [],
                 systemId: [],
                 actionId: '',
                 processesList: [],
@@ -292,99 +283,15 @@
                 }
             },
 
-            async fetchActionProcessesList () {
-                const systemId = this.systemId[0]
-                let actionGroupId = ''
-                if (this.systemId.length > 1) {
-                    actionGroupId = this.systemId[this.systemId.length - 1]
-                }
-                const params = {
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1),
-                    system_id: systemId,
-                    action_group_id: actionGroupId
-                }
-                console.log('params', params)
-                try {
-                    const res = await this.$store.dispatch('approvalProcess/getActionProcessesList', params)
-                    this.$nextTick(() => {
-                        this.processesList = res.data.results
-                        console.log('this.processesList', this.processesList)
-                    })
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    })
-                } finally {
-                    // this.requestQueue.shift()
-                }
-            },
-
-            async remoteMethod (item, resolve) {
-                console.log('22222', item)
-                this.resourceActionId = ''
-                this.resourceActionData = []
-                
-                const flag = this.systemList.some(v => v.id === item.id)
-                if (item.isLoading === false || !flag) {
-                    if (!flag && item.sub_groups && item.sub_groups.length > 0) {
-                        item.children = _.cloneDeep(item.sub_groups)
-                        resolve(item)
-                    } else {
-                        resolve(item)
-                    }
-                } else {
-                    this.$set(item, 'isLoading', true)
-                    try {
-                        const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: item.id })
-                        item.children = res.data || []
-                        resolve(item)
-                    } catch (e) {
-                        console.error(e)
-                        this.bkMessageInstance = this.$bkMessage({
-                            limit: 1,
-                            theme: 'error',
-                            message: e.message || e.data.msg || e.statusText
-                        })
-                    }
-                }
-                this.recursionFunc(item)
-            },
-
-            refreshCurrentQuery () {
-                const { limit, current } = this.pagination
-                const queryParams = {
-                    limit,
-                    current,
-                    system_id: this.systemId[0]
-                }
-                console.log('queryParams', queryParams)
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
-                return queryParams
-            },
-
             async handleCascadeChange () {
                 this.resourceActionData = []
                 this.processesList = []
-                this.pagination = Object.assign({}, {
-                    current: 1,
-                    count: 1,
-                    limit: 10000
-                })
                 if (!this.systemId[0]) return
                 this.actionId = ''
-                this.resourceId = []
                 this.resourceTypeData = { isEmpty: true }
-                // this.fetchActionProcessesList()
                 const systemId = this.systemId[0]
                 try {
                     const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId })
-                    // item.children = res.data || []
                     console.log('res', res)
                     this.recursionFunc(res.data)
                 } catch (e) {
@@ -406,7 +313,6 @@
             // 操作选择
             handleSelected () {
                 this.resourceInstances = []
-                // if(this.searchType === 'operate') return
                 this.resourceTypeData = this.processesList.find(e => e.id === this.actionId)
                 console.log('resourceTypeData', this.resourceTypeData)
             },
@@ -462,102 +368,19 @@
                 }
             },
 
+            // 重置
             handleReset () {
-                this.resourceId = []
+                this.searchType = ''
                 this.systemId = []
                 this.actionId = ''
                 this.resourceInstances = []
                 this.permissionType = ''
-                this.limit = ''
+                this.limit = 100
             },
-
-            async resourceRemoteMethod (item, resolve) {
-                console.log('item', item)
-                this.parentId = item.id
-                const params = {
-                    limit: 100,
-                    offset: 0,
-                    system_id: this.systemId[0],
-                    type: this.resourceActionId,
-                    parent_type: this.resourceType,
-                    parent_id: this.parentId,
-                    keyword: ''
-                }
-                try {
-                    const res = await this.$store.dispatch('permApply/getResources', params)
-                    const resourceListChilder = res.data && res.data.results.map(item => {
-                        item.name = item.display_name
-                        return item
-                    })
-                    item.children = _.cloneDeep(resourceListChilder)
-                    if (item.children.length) this.resourceListChilder = _.cloneDeep(item.children)
-                    resolve(item)
-                } catch (error) {
-                    
-                }
-            },
-
-            // async fetchInstanceSelection () {
-            //     if (!this.resourceActionId) return
-            //     try {
-            //         const params = {
-            //             system_id: this.systemId[0],
-            //             action_id: this.actionId,
-            //             resource_type_system: this.resourceActionSystemId,
-            //             resource_type_id: this.resourceActionId
-            //         }
-            //         const res = await this.$store.dispatch('permApply/getInstanceSelection', params)
-            //         this.resourceType = res.data && res.data.length && res.data[0].resource_type_chain[0].id
-            //         this.resourceSystemId = res.data && res.data.length && res.data[0].resource_type_chain[0].system_id
-            //         this.hasMore = res.data && res.data.length && res.data[0].resource_type_chain.length > 1
-            //         console.log('this.resourceType', this.resourceType)
-            //         this.firstFetchResources()
-            //     } catch (e) {
-            //         console.error(e)
-            //         this.bkMessageInstance = this.$bkMessage({
-            //             limit: 1,
-            //             theme: 'error',
-            //             message: e.message || e.data.msg || e.statusText,
-            //             ellipsisLine: 2,
-            //             ellipsisCopy: true
-            //         })
-            //     } finally {
-            //         // this.requestQueue.shift()
-            //     }
-            // },
-
-            // // 资源实例接口
-            // async firstFetchResources () {
-            //     const params = {
-            //         limit: this.instancePagination.limit,
-            //         offset: this.instancePagination.offset,
-            //         system_id: this.resourceSystemId,
-            //         type: this.resourceType,
-            //         parent_type: '',
-            //         parent_id: '',
-            //         keyword: ''
-            //     }
-            //     try {
-            //         const res = await this.$store.dispatch('permApply/getResources', params)
-            //         // this.resourceList = res.data && res.data.results
-            //         if (res.data && res.data.results.length) {
-            //             this.resourceList.push(...res.data.results)
-            //         }
-            //         this.resourceList = this.resourceList.map(item => {
-            //             item.name = item.display_name
-            //             return item
-            //         })
-            //     } catch (error) {
-                    
-            //     } finally {
-            //         // this.requestQueue.shift()
-            //         this.instanceLoading = false
-            //     }
-            // },
 
             // 求值
             recursionFunc (list) {
-                console.log('data', list)
+                console.log('list', list)
                 list.forEach(data => {
                     if (data.actions && data.actions.length) {
                         data.actions.forEach(e => {
@@ -582,6 +405,7 @@
                 console.log('this.processesList', this.processesList)
             },
 
+            // 显示资源实例
             showResourceInstance (data, resItem, resIndex) {
                 this.params = {
                     system_id: this.systemId[0],
