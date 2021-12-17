@@ -53,10 +53,3 @@ class ActionService:
         生成ActionList
         """
         return ActionList(self.list(system_id))
-
-    def get_action_name(self, system_id: str, action_id: str) -> str:
-        """
-        根据操作ID获取操作名称
-        """
-        action_name = get_action(system_id, action_id)["name"]
-        return action_name

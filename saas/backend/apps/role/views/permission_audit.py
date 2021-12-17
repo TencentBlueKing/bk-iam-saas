@@ -16,15 +16,24 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.account.permissions import RolePermission
 from backend.apps.role.serializers import AuthorizedSubjectsSLZ, QueryAuthorizedSubjectsSLZ
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.common.swagger import ResponseSwaggerAutoSchema
-from backend.util.time import trans_localtime_format
+from backend.service.constants import PermissionCodeEnum
+from backend.util.time import format_localtime
 
 logger = logging.getLogger("app")
 
 
 class QueryAuthorizedSubjectsViewSet(GenericViewSet):
+
+    permission_classes = [RolePermission]
+    method_permission = {
+        "post": PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,
+        "export": PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,
+    }
+
     @swagger_auto_schema(
         operation_description="查询-权限所属成员列表",
         request_body=QueryAuthorizedSubjectsSLZ(label="权限信息"),
@@ -51,7 +60,7 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        exported_file_name = f'{data["system_id"]}_{trans_localtime_format()}'
+        exported_file_name = f'{data["system_id"]}_{format_localtime()}'
         response = QueryAuthorizedSubjects(data).export(exported_file_name)
 
         return response

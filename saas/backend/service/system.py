@@ -47,10 +47,3 @@ class SystemService:
 
     def new_system_list(self) -> SystemList:
         return SystemList(self.list())
-
-    def get_system_name(self, system_id: str) -> str:
-        """
-        根据系统ID获取系统名称
-        """
-        system_name = get_system(system_id)["name"]
-        return system_name

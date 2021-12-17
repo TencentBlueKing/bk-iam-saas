@@ -42,7 +42,7 @@ def timestamp_to_local(ts):
     return utc_to_local(t)
 
 
-def trans_localtime_format(fmt="%Y%m%d%H%M%S"):
+def format_localtime(fmt="%Y%m%d%H%M%S"):
     """
     转换当前时间为指定格式
     """

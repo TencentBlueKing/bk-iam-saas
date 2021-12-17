@@ -299,7 +299,7 @@ class ResourceInstancePathSLZ(serializers.Serializer):
     name = serializers.CharField(label="资源实例名")
 
 
-class ResourceInstanceSLZ(serializers.Serializer):
+class ResourceInstancesSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID", required=True)
     id = serializers.CharField(label="资源实例ID", required=True)
     type = serializers.CharField(label="资源实例类型", required=True)
@@ -314,7 +314,7 @@ class QueryAuthorizedSubjectsSLZ(serializers.Serializer):
     action_id = serializers.CharField(label="操作ID")
     limit = serializers.IntegerField(label="返回结果数", min_value=10, max_value=1000)
     resource_instances = serializers.ListField(
-        label="资源实例", required=False, child=ResourceInstanceSLZ(label="资源实例信息"), default=list
+        label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
     )
     permission_type = serializers.ChoiceField(label="权限类型", choices=PermissionTypeEnum.get_choices())
 

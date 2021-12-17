@@ -64,7 +64,11 @@ class QueryAuthorizedSubjects(object):
         """
         根据系统和操作查询有自定义权限的成员
         """
-        policies = Policy.objects.filter(system_id=self.system_id, action_id=self.action_id).distinct()[0 : self.limit]
+        policies = (
+            Policy.objects.filter(system_id=self.system_id, action_id=self.action_id)
+            .values("subject_id", "subject_type")
+            .distinct()[0 : self.limit]
+        )
         return self._trans_subjects(policies)
 
     def _query_subjects_by_template(self):
@@ -72,12 +76,17 @@ class QueryAuthorizedSubjects(object):
         根据系统和操作查询模板关联的成员
         """
         template_ids = PermTemplate.objects.query_template_ids(system_id=self.system_id, action_id=self.action_id)
-        policies = PermTemplatePolicyAuthorized.objects.filter(template_id__in=template_ids).distinct()[0 : self.limit]
+        policies = (
+            PermTemplatePolicyAuthorized.objects.filter(template_id__in=template_ids)
+            .values("subject_id", "subject_type")
+            .distinct()[0 : self.limit]
+        )
+
         return self._trans_subjects(policies)
 
     @staticmethod
     def _trans_subjects(policies):
-        subject_list = [Subject(type=policy.subject_type, id=policy.subject_id) for policy in policies]
+        subject_list = [Subject(type=policy["subject_type"], id=policy["subject_id"]) for policy in policies]
         subject_info_list = SubjectInfoList(subject_list)._to_subject_infos(subject_list)
         return [
             {"name": subject_info.name, "type": subject_info.type, "id": subject_info.id}
@@ -134,8 +143,8 @@ class QueryAuthorizedSubjects(object):
         """
         生成导出数据
         """
-        system_name = SystemService().get_system_name(self.system_id)
-        action_name = ActionService().get_action_name(self.system_id, self.action_id)
+        system_name = SystemService().get(self.system_id).name
+        action_name = ActionService().get(self.system_id, self.action_id).name
         subjects = self._query_by_permission_type()
         export_data = [["系统名", "系统ID", "操作名", "操作ID", "资源实例", "有权限成员", "成员ID", "成员类型"]]
 
