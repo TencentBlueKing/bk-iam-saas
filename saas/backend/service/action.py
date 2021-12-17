@@ -13,7 +13,6 @@ from typing import List, Optional
 from pydantic import parse_obj_as
 
 from backend.component import iam
-from backend.component.iam import get_action
 from backend.util.cache import region
 
 from .models import Action
