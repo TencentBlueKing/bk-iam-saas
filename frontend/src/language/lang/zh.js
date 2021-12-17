@@ -978,7 +978,7 @@ export const m = {
     resourcePermiss: {
         '有权限的成员': '有权限的成员',
         '权限类型': '权限类型',
-        '结果数展示': '结果数展示'
+        '条数展示': '条数展示'
     }
 }
 export default {

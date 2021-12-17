@@ -73,7 +73,7 @@
                         </div>
                     </render-resource-instance>
                     <!-- 属性 -->
-                    <render-resource-instance
+                    <!-- <render-resource-instance
                         v-if="condition.hasOwnProperty('attribute')"
                         type="property"
                         mode="edit"
@@ -93,12 +93,12 @@
                             :params="attributeParams"
                             ref="attributeRef"
                             @on-change="handleAttrValueChange(...arguments, condition)" />
-                    </render-resource-instance>
+                    </render-resource-instance> -->
                 </div>
                 <or-status-bar v-if="conditionData.length > 1 && index !== conditionData.length - 1" />
             </div>
         </template>
-        <bk-button
+        <!-- <bk-button
             text
             size="small"
             v-if="!isHide && !isLoading && selectionMode !== 'instance'"
@@ -107,7 +107,7 @@
             icon="plus-circle-shape"
             @click="handleAddInstance">
             {{ $t(`m.resource['添加一组实例']`) }}
-        </bk-button>
+        </bk-button> -->
         <!-- <p class="resource-error-tips" v-if="isEmptyResource">{{ $t(`m.resource['请至少选择一组实例']`) }}</p> -->
     </div>
 </template>
@@ -120,7 +120,7 @@
     import OrStatusBar from '@/components/render-status/bar'
     import ChooseIp from '@/components/choose-ip'
     import InstanceView from '@/components/choose-ip/view'
-    import Attribute from './attribute'
+    // import Attribute from './attribute'
     import Instance from '@/model/instance'
     import Condition from '@/model/condition'
 
@@ -141,7 +141,7 @@
             renderResourceInstance,
             renderOrderNumber,
             OrStatusBar,
-            Attribute,
+            // Attribute,
             ChooseIp,
             InstanceView
         },

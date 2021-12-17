@@ -2,110 +2,136 @@
     <!-- eslint-disable max-len -->
     <div class="iam-system-access-wrapper">
         <render-search>
-            <bk-form
-                :model="formData"
-                form-type="inline">
-                <iam-form-item :label="$t(`m.common['查询类型']`)" class="pb10">
-                    <bk-select
-                        style="width: 200px; background: #fff"
-                        v-model="searchType"
-                        :clearable="true"
-                        @change="handlSearchChange">
-                        <bk-option v-for="option in searchTypeList"
-                            :key="option.value"
-                            :id="option.value"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                </iam-form-item>
-                <iam-form-item :label="$t(`m.common['系统']`)" class="pb10">
-                    <bk-cascade
-                        v-model="systemId"
-                        :list="systemList"
-                        :is-remote="false"
-                        check-any-level
-                        :remote-method="remoteMethod"
-                        style="width: 200px; background: #fff"
-                        class="iam-custom-process-cascade-cls"
-                        @change="handleCascadeChange">
-                    </bk-cascade>
-                </iam-form-item>
-                <iam-form-item :label="$t(`m.common['操作']`)" class="pb10">
-                    <bk-select
-                        style="width: 200px; background: #fff"
-                        v-model="actionId"
-                        :clearable="true"
-                        @selected="handleSelected">
-                        <bk-option v-for="option in processesList"
-                            :key="option.id"
-                            :id="option.id"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                </iam-form-item>
-                <iam-form-item v-if="!resourceTypeData.isEmpty && searchType !== 'operate'" :label="$t(`m.common['资源实例']`)" class="pb10">
-
-                    <div class="resource-container">
-                        <div class="relation-content-item" v-for="(content, contentIndex) in
-                            resourceTypeData.related_resource_types" :key="contentIndex">
-                            <!-- <div class="content-name">
-                            {{ content.name }}
-                        </div> -->
-                            <div class="content">
-                                <render-condition
-                                    :ref="`condition_${$index}_${contentIndex}_ref`"
-                                    :value="content.value"
-                                    :is-empty="content.empty"
-                                    :params="curCopyParams"
-                                    :is-error="content.isLimitExceeded || content.isError"
-                                    @on-click="showResourceInstance(resourceTypeData, content, contentIndex)" />
-                            </div>
-                            <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
-                        </div>
-                    </div>
-
-                </iam-form-item>
-                <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb10" v-if="searchType === 'operate'">
-                    <bk-select
-                        style="width: 200px; background: #fff"
-                        v-model="permissionType"
-                        :clearable="true">
-                        <bk-option v-for="option in typeList"
-                            :key="option.value"
-                            :id="option.value"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                </iam-form-item>
-                <iam-form-item :label="$t(`m.resourcePermiss['结果数展示']`)" class="pb10">
-                    <bk-select
-                        style="width: 200px; background: #fff"
-                        v-model="limit"
-                        :clearable="true">
-                        <bk-option v-for="option in limitList"
-                            :key="option"
-                            :id="option"
-                            :name="option">
-                        </bk-option>
-                    </bk-select>
-                </iam-form-item>
-                <bk-button class="ml10 mb10" theme="default" @click="handleReset">{{ $t(`m.common['重置']`) }}</bk-button>
-                <bk-button class="mr10 ml10 mb10" theme="primary" @click="handleSearchAndExport(false)">
-                    {{ $t(`m.common['查询']`) }}</bk-button>
-                <bk-button class="mb10" theme="default" @click="handleSearchAndExport(true)">
-                    {{ $t(`m.common['导出']`) }}</bk-button>
-            </bk-form>
-            <!-- 先屏蔽 -->
-            <div slot="right">
-                <iam-search-select
-                    placeholder="请输入用户、用户名搜索"
-                    @on-change="handleSearch"
-                    :data="searchData"
-                    :value="searchValue"
-                    :quick-search-method="quickSearchMethod"
-                    style="width: 420px;" />
+            <div>
+                <bk-form form-type="inline">
+                    <iam-form-item :label="$t(`m.common['查询类型']`)" class="pb20">
+                        <bk-select
+                            style="width: 504px; background: #fff"
+                            v-model="searchType"
+                            :clearable="true"
+                            @change="handlSearchChange">
+                            <bk-option v-for="option in searchTypeList"
+                                :key="option.value"
+                                :id="option.value"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </iam-form-item>
+                </bk-form>
             </div>
+            <div>
+                <bk-form
+                    :model="formData"
+                    form-type="inline">
+                    <iam-form-item :label="$t(`m.permApply['选择系统']`)" class="pb20 pr20">
+                        <bk-cascade
+                            v-model="systemId"
+                            :list="systemList"
+                            :is-remote="false"
+                            check-any-level
+                            :remote-method="remoteMethod"
+                            style="width: 200px; background: #fff"
+                            class="iam-custom-process-cascade-cls"
+                            @change="handleCascadeChange">
+                        </bk-cascade>
+                    </iam-form-item>
+                    <iam-form-item :label="$t(`m.permApply['选择操作']`)" class="pb20">
+                        <bk-select
+                            style="width: 200px; background: #fff"
+                            v-model="actionId"
+                            :clearable="true"
+                            @selected="handleSelected">
+                            <bk-option v-for="option in processesList"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </iam-form-item>
+                </bk-form>
+            </div>
+
+            <div v-if="searchType === 'operate'">
+                <bk-form form-type="inline">
+                    <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb20">
+                        <bk-select
+                            style="width: 200px; background: #fff"
+                            v-model="permissionType"
+                            :clearable="true">
+                            <bk-option v-for="option in typeList"
+                                :key="option.value"
+                                :id="option.value"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </iam-form-item>
+                </bk-form>
+            </div>
+
+            <div v-if="!resourceTypeData.isEmpty && searchType !== 'operate'">
+                <bk-form form-type="inline">
+                    <iam-form-item class="pb20" :label="$t(`m.common['资源实例']`)">
+                        <div class="resource-container">
+                            <div class="relation-content-item" v-for="(content, contentIndex) in
+                                resourceTypeData.related_resource_types" :key="contentIndex">
+                                <!-- v-if="resourceTypeData.related_resource_types.length > 1" -->
+                                <!-- <div class="content-name">
+                                    {{ content.name }}
+                                </div> -->
+                                <div class="content">
+                                    <render-condition
+                                        :ref="`condition_${$index}_${contentIndex}_ref`"
+                                        :value="content.value"
+                                        :is-empty="content.empty"
+                                        :params="curCopyParams"
+                                        :is-error="content.isLimitExceeded || content.isError"
+                                        @on-click="showResourceInstance(resourceTypeData, content, contentIndex)" />
+                                </div>
+                                <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
+                            </div>
+                        </div>
+
+                    </iam-form-item>
+
+                </bk-form>
+            </div>
+
+            <div>
+                <bk-form form-type="inline">
+                    <iam-form-item :label="$t(`m.resourcePermiss['条数展示']`)" class="pb20 pr20">
+                        <bk-select
+                            style="width: 200px; background: #fff"
+                            v-model="limit"
+                            :clearable="true">
+                            <bk-option v-for="option in limitList"
+                                :key="option"
+                                :id="option"
+                                :name="option">
+                            </bk-option>
+                        </bk-select>
+                    </iam-form-item>
+                    <bk-button class="mr10 ml10 mb20" theme="primary" @click="handleSearchAndExport(false)">
+                        {{ $t(`m.common['查询']`) }}</bk-button>
+                </bk-form>
+            </div>
+
         </render-search>
+
+        <div class="resource-flex">
+            <div>
+                <bk-button class="mr10" theme="default" @click="handleReset">{{ $t(`m.common['重置']`) }}</bk-button>
+                <bk-button theme="default" @click="handleSearchAndExport(true)">
+                    {{ $t(`m.common['导出']`) }}</bk-button>
+            </div>
+            <iam-search-select
+                placeholder="请输入用户、用户名搜索"
+                @on-change="handleSearch"
+                :data="searchData"
+                :value="searchValue"
+                :quick-search-method="quickSearchMethod"
+                style="width: 420px;" />
+        </div>
+        
         <bk-table
             :data="tableList"
             size="small"
@@ -698,13 +724,24 @@
         display: flex;
         justify-content: space-between;
         .relation-content-item{
-
-            width: 200px;
-            
+            display: flex;
+            /* width: 220px; */
+            .content-name{
+                font-size: 14px;
+                padding-right: 10px;
+            }
+            .content{
+                width: 200px;
+            }
         }
 
         .relation-content-item:nth-child(2){
-            margin-left: 20px;
+            margin-left: 32px;
         }
+    }
+
+    .resource-flex {
+        display: flex;
+        justify-content: space-between;
     }
 </style>
