@@ -321,7 +321,7 @@ class QueryAuthorizedSubjectsSLZ(serializers.Serializer):
     def validate(self, data):
         if data["permission_type"] == PermissionTypeEnum.RESOURCE_INSTANCE.value:
             if not data.get("resource_instances"):
-                raise serializers.ValidationError("实例资源信息不可为空")
+                data["resource_instances"] = []
             return data
 
         return data
