@@ -85,7 +85,7 @@
                                         :is-error="content.isLimitExceeded || content.isError"
                                         @on-click="showResourceInstance(resourceTypeData, content, contentIndex)" />
                                 </div>
-                                <p class="error-tips" v-if="resourceTypeError">请选择资源实例</p>
+                                <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
                             </div>
                         </div>
                     </iam-form-item>
@@ -358,7 +358,7 @@
                     return
                 }
                 console.log('resourceTypeData', this.resourceTypeData)
-                if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate' && !this.resourceInstances.length
+                if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
                     && this.resourceTypeData.related_resource_types.some(e => e.empty)) {
                     this.resourceTypeError = true
                     return
