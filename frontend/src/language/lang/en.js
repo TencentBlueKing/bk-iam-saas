@@ -766,6 +766,13 @@ export const m = {
         '系统管理员交接：': 'system manager transfer:',
         '分级管理员交接：': 'rating manager transfer:',
         '管理员名称': 'ManagerName'
+    },
+
+    resourcePermiss: {
+        '有权限的成员': 'Authorized members',
+        '权限类型': 'Permission type',
+        '条数展示': 'Number of impressions',
+        '用户类型': 'user type'
     }
 }
 export default {

@@ -24,14 +24,17 @@
                     :model="formData"
                     form-type="inline">
                     <iam-form-item :label="$t(`m.permApply['选择系统']`)" class="pb20 pr20">
-                        <bk-cascade
-                            v-model="systemId"
-                            :list="systemList"
-                            check-any-level
+                        <bk-select
                             style="width: 200px; background: #fff"
-                            class="iam-custom-process-cascade-cls"
+                            v-model="systemId"
+                            :clearable="true"
                             @change="handleCascadeChange">
-                        </bk-cascade>
+                            <bk-option v-for="option in systemList"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="`${option.name} (${option.id})`">
+                            </bk-option>
+                        </bk-select>
                     </iam-form-item>
                     <iam-form-item :label="$t(`m.permApply['选择操作']`)" class="pb20">
                         <bk-select
@@ -42,7 +45,7 @@
                             <bk-option v-for="option in processesList"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.name">
+                                :name="`${option.name} (${option.id})`">
                             </bk-option>
                         </bk-select>
                     </iam-form-item>
@@ -141,6 +144,11 @@
                     {{row.name}}
                 </template>
             </bk-table-column>
+            <bk-table-column :label="$t(`m.resourcePermiss['用户类型']`)">
+                <template slot-scope="{ row }">
+                    {{row.type === 'user' ? '用户' : '用户组'}}
+                </template>
+            </bk-table-column>
         </bk-table>
 
         <bk-sideslider
@@ -197,7 +205,7 @@
                 instanceLoading: false,
                 systemList: [],
                 resourceList: [],
-                systemId: [],
+                systemId: '',
                 actionId: '',
                 processesList: [],
                 typeList: [{ name: '自定义权限', value: 'custom' }, { name: '模板权限', value: 'template' }],
@@ -285,10 +293,10 @@
             async handleCascadeChange () {
                 this.resourceActionData = []
                 this.processesList = []
-                if (!this.systemId[0]) return
+                if (!this.systemId) return
                 this.actionId = ''
                 this.resourceTypeData = { isEmpty: true }
-                const systemId = this.systemId[0]
+                const systemId = this.systemId
                 try {
                     const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId })
                     console.log('res', res)
@@ -304,12 +312,15 @@
             },
 
             // 查询类型选择
-            handlSearchChange () {
+            handlSearchChange (value) {
                 console.log('this.searchType', this.searchType)
                 this.resourceTypeData = { isEmpty: true }
-                this.systemId = []
+                this.systemId = ''
                 this.actionId = ''
                 this.resourceInstances = []
+                if (value === 'operate') {
+                    this.permissionType = 'custom'
+                }
             },
 
             // 操作选择
@@ -343,7 +354,7 @@
                 }, [])
                 console.log('resourceInstances', resourceInstances)
                 const params = {
-                    system_id: this.systemId[0] || '',
+                    system_id: this.systemId || '',
                     action_id: this.actionId,
                     resource_instances: resourceInstances || [],
                     permission_type: this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType,
@@ -388,7 +399,7 @@
             // 重置
             handleReset () {
                 this.searchType = ''
-                this.systemId = []
+                this.systemId = ''
                 this.actionId = ''
                 this.resourceInstances = []
                 this.permissionType = ''
@@ -425,7 +436,7 @@
             // 显示资源实例
             showResourceInstance (data, resItem, resIndex) {
                 this.params = {
-                    system_id: this.systemId[0],
+                    system_id: this.systemId,
                     action_id: data.id,
                     resource_type_system: resItem.system_id,
                     resource_type_id: resItem.type
