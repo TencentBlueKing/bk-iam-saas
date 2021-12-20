@@ -204,7 +204,7 @@
                 permissionType: '',
                 groupValue: '1-1',
                 limit: 100,
-                limitList: [10, 20, 50, 100, 200, 500],
+                limitList: [10, 20, 50, 100, 200, 500, 1000],
                 resourceActionId: 0,
                 resourceActionSystemId: '',
                 resourceSystemId: '',
