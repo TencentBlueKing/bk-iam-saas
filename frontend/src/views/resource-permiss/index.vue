@@ -341,13 +341,6 @@
 
             // 查询和导入
             async handleSearchAndExport (isExport = false) {
-                if (!this.permissionType) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请选择权限类型'
-                    })
-                    return
-                }
                 if (!this.systemId) {
                     this.$bkMessage({
                         theme: 'error',
@@ -366,6 +359,13 @@
                     this.$bkMessage({
                         theme: 'error',
                         message: '请选择资源实例'
+                    })
+                    return
+                }
+                if (this.searchType === 'operate' && !this.permissionType) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '请选择权限类型'
                     })
                     return
                 }
