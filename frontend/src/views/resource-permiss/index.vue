@@ -204,7 +204,7 @@
                 permissionType: '',
                 groupValue: '1-1',
                 limit: 100,
-                limitList: [10, 20, 50, 100, 200, 500],
+                limitList: [10, 20, 50, 100, 200, 500, 1000],
                 resourceActionId: 0,
                 resourceActionSystemId: '',
                 resourceSystemId: '',
@@ -306,6 +306,9 @@
             // 查询类型选择
             handlSearchChange () {
                 console.log('this.searchType', this.searchType)
+                this.resourceTypeData = { isEmpty: true }
+                this.systemId = []
+                this.actionId = ''
                 this.resourceInstances = []
             },
 
