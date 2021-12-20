@@ -72,6 +72,6 @@ def batch_query_subjects(data: List[Dict[str, Any]]):
     return _call_engine_api(http_post, url_path, data=data)
 
 
-def query_subjects(data: List[Dict[str, Any]]):
+def query_subjects(data: Dict[str, Any]):
     url_path = "/search"
     return _call_engine_api(http_post, url_path, data=data)

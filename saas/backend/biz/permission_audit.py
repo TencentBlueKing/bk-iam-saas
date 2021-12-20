@@ -97,9 +97,8 @@ class QueryAuthorizedSubjects(object):
         """
         根据系统和操作和资源实例查询有权限的成员
         """
-
-        resources = (
-            [
+        if self.resource_instances:
+            resources = [
                 {
                     "system": self.system_id,
                     "type": resource_instance["type"],
@@ -110,13 +109,11 @@ class QueryAuthorizedSubjects(object):
                 }
                 for resource_instance in self.resource_instances
             ]
-            if self.resource_instances
-            else []
-        )
-
-        if resources:
             # 填充attribute
             fill_resources_attribute(resources=resources)
+
+        else:
+            resources = []
 
         # 调用Engine后台API搜索
         query_data = {
