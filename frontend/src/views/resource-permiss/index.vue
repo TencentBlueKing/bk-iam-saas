@@ -318,7 +318,7 @@
 
             // 查询和导入
             async handleSearchAndExport (isExport = false) {
-                this.tableLoading = true
+                this.tableLoading = !isExport
                 let resourceInstances = _.cloneDeep(this.resourceInstances)
                 resourceInstances = resourceInstances.reduce((prev, item) => {
                     prev.push({
