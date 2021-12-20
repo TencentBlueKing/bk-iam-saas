@@ -249,7 +249,7 @@
             }
         },
         created () {
-            this.handleSearchAndExport(false)
+            // this.handleSearchAndExport(false)
             this.fetchSystemList()
             this.searchData = [
                 {
@@ -259,8 +259,7 @@
                 },
                 {
                     id: 'user',
-                    name: this.$t(`m.common['用户']`),
-                    remoteMethod: this.handleRemoteRtx
+                    name: this.$t(`m.common['用户']`)
                 }
             ]
         },
@@ -349,8 +348,22 @@
                 try {
                     const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager'
                     const res = await this.$store.dispatch(fetchUrl, params)
-                    console.log('res', res)
-                    if (!isExport) {
+                    if (isExport) {
+                        if (res.ok) {
+                            const blob = await res.blob()
+                            const url = URL.createObjectURL(blob)
+                            const elment = document.createElement('a')
+                            elment.download = '资源权限管理.xlsx'
+                            elment.href = url
+                            elment.click()
+                            URL.revokeObjectURL(blob)
+
+                            this.$bkMessage({
+                                theme: 'success',
+                                message: '导出成功！'
+                            })
+                        }
+                    } else {
                         this.tableList = res.data
                         this.tableListClone = res.data
                     }
