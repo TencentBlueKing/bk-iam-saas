@@ -73,6 +73,9 @@ import audit from './modules/audit'
 // 系统接入模块
 import access from './modules/access'
 
+// 资源权限模块
+import resourcePermiss from './modules/resource-permiss'
+
 Vue.use(Vuex)
 
 const SITE_URL = window.SITE_URL
@@ -148,6 +151,14 @@ const currentNav = [
         disabled: false
     },
     {
+        icon: 'grade-admin',
+        id: 'resourcePermissNav',
+        rkey: 'resourcePermiss',
+        name: il8n('nav', '资源权限管理'),
+        path: `${SITE_URL}resource-permiss`,
+        disabled: false
+    },
+    {
         icon: 'perm-manage',
         name: il8n('common', '设置'),
         rkey: 'set',
@@ -206,7 +217,8 @@ const store = new Vuex.Store({
         aggregate,
         renewal,
         audit,
-        access
+        access,
+        resourcePermiss
     },
     state: {
         mainContentLoading: false,

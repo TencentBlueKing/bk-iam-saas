@@ -208,7 +208,8 @@ export const m = {
         '用户组': 'user group',
         '是否删除该自定义权限': 'Whether to delete the custom permission',
         '确定删除': 'Sure to delete',
-        '类型': 'Type'
+        '类型': 'Type',
+        '查询类型': 'Query type'
     },
     // 校验
     verify: {
