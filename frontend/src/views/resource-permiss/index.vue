@@ -121,7 +121,7 @@
         <div class="resource-flex">
             <div>
                 <bk-button class="mr10" theme="default" @click="handleReset">{{ $t(`m.common['重置']`) }}</bk-button>
-                <bk-button theme="default" @click="handleSearchAndExport(true)">
+                <bk-button theme="default" @click="handleSearchAndExport(true)" :disabled="!systemId || !actionId">
                     {{ $t(`m.common['导出']`) }}</bk-button>
             </div>
             <iam-search-select
@@ -503,12 +503,12 @@
             handleSearch (payload) {
                 if (Object.keys(payload).length) {
                     const type = Object.keys(payload).join('')
+                    console.log('payload', payload)
                     this.tableList = _.cloneDeep(this.tableListClone).filter(item => item.type === type
-                        && item.name === payload[type])
+                        && item.name.indexOf(payload[type]) !== -1)
                 } else {
                     this.tableList = _.cloneDeep(this.tableListClone)
                 }
-                console.log('tableList', this.tableList)
             },
 
             quickSearchMethod (value) {
