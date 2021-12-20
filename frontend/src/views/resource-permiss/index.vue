@@ -124,13 +124,15 @@
                 <bk-button theme="default" @click="handleSearchAndExport(true)" :disabled="!systemId || !actionId">
                     {{ $t(`m.common['导出']`) }}</bk-button>
             </div>
-            <iam-search-select
-                placeholder="请输入用户、用户名搜索"
-                @on-change="handleSearch"
-                :data="searchData"
-                :value="searchValue"
-                :quick-search-method="quickSearchMethod"
-                style="width: 420px;" />
+
+            <bk-input
+                :clearable="true"
+                v-model="searchValue"
+                placeholder="请输入用户、用户组，按Enter搜索"
+                :right-icon="'bk-icon icon-search'"
+                style="width: 420px;"
+                @enter="handleSearch">
+            </bk-input>
         </div>
         
         <bk-table
@@ -178,7 +180,7 @@
     </div>
 </template>
 <script>
-    import IamSearchSelect from '@/components/iam-search-select'
+    // import IamSearchSelect from '@/components/iam-search-select'
     import Policy from '@/model/policy'
     import _ from 'lodash'
     import RenderCondition from './components/render-condition.vue'
@@ -193,8 +195,8 @@
         name: 'resource-permiss',
         components: {
             RenderCondition,
-            RenderResource,
-            IamSearchSelect
+            RenderResource
+            // IamSearchSelect
             // iamCascade
         },
         data () {
@@ -228,7 +230,7 @@
                 resourceInstances: [],
                 searchTypeList: [{ name: '实例权限', value: 'resource_instance' }, { name: '操作权限', value: 'operate' }],
                 searchType: '',
-                searchValue: []
+                searchValue: ''
             }
         },
         computed: {
@@ -254,6 +256,13 @@
             },
             originalCondition () {
                 return _.cloneDeep(this.condition)
+            }
+        },
+        watch: {
+            searchValue (value) {
+                if (!value) {
+                    this.tableList = _.cloneDeep(this.tableListClone)
+                }
             }
         },
         created () {
@@ -332,6 +341,34 @@
 
             // 查询和导入
             async handleSearchAndExport (isExport = false) {
+                if (!this.permissionType) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '请选择权限类型'
+                    })
+                    return
+                }
+                if (!this.systemId) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '请选择系统'
+                    })
+                    return
+                }
+                if (!this.actionId) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '请选择操作'
+                    })
+                    return
+                }
+                if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate' && !this.resourceInstances.length) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '请选择资源实例'
+                    })
+                    return
+                }
                 this.tableLoading = !isExport
                 let resourceInstances = _.cloneDeep(this.resourceInstances)
                 resourceInstances = resourceInstances.reduce((prev, item) => {
@@ -500,14 +537,10 @@
             },
             
             // 搜索
-            handleSearch (payload) {
-                if (Object.keys(payload).length) {
-                    const type = Object.keys(payload).join('')
-                    console.log('payload', payload)
-                    this.tableList = _.cloneDeep(this.tableListClone).filter(item => item.type === type
-                        && item.name.indexOf(payload[type]) !== -1)
-                } else {
-                    this.tableList = _.cloneDeep(this.tableListClone)
+            handleSearch () {
+                if (this.searchValue) {
+                    this.tableList = _.cloneDeep(this.tableListClone).filter(item =>
+                        item.name.indexOf(this.searchValue) !== -1)
                 }
             },
 
