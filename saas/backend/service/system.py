@@ -11,7 +11,6 @@ specific language governing permissions and limitations under the License.
 from typing import List, Optional
 
 from backend.component import iam
-from backend.component.iam import get_system
 from backend.util.cache import region
 
 from .models import System
