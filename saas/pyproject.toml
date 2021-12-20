@@ -115,6 +115,7 @@ opentelemetry-instrumentation-requests = "^0.26b1"
 opentelemetry-instrumentation-celery = "^0.26b1"
 opentelemetry-instrumentation-logging = "^0.26b1"
 opentelemetry-exporter-jaeger = "1.7.1"
+openpyxl = "^3.0.9"
 
 [tool.poetry.dev-dependencies]
 # For flake8 support pyproject.toml
