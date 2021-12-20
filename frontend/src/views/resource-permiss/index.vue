@@ -128,7 +128,7 @@
             <bk-input
                 :clearable="true"
                 v-model="searchValue"
-                placeholder="请输入用户、用户名，按Enter搜索"
+                placeholder="请输入用户、用户组，按Enter搜索"
                 :right-icon="'bk-icon icon-search'"
                 style="width: 420px;"
                 @enter="handleSearch">
