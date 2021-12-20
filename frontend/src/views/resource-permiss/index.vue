@@ -138,7 +138,7 @@
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
                 <template slot-scope="{ row }">
-                    {{row.name || 'admin'}}
+                    {{row.name}}
                 </template>
             </bk-table-column>
         </bk-table>
@@ -326,14 +326,15 @@
                         id: item.id || item.type,
                         type: item.type,
                         name: item.name,
-                        path: item.resourceInstancesPath.reduce((p, e) => {
-                            p.push({
-                                type: e.type,
-                                id: e.id,
-                                name: e.name
-                            })
-                            return p
-                        }, [])
+                        path: item.resourceInstancesPath && item.resourceInstancesPath.length
+                            ? item.resourceInstancesPath.reduce((p, e) => {
+                                p.push({
+                                    type: e.type,
+                                    id: e.id,
+                                    name: e.name
+                                })
+                                return p
+                            }, []) : []
                     })
                     return prev
                 }, [])
