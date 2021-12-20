@@ -3,8 +3,8 @@
     <div class="iam-system-access-wrapper">
         <render-search>
             <div>
-                <bk-form form-type="inline">
-                    <iam-form-item :label="$t(`m.common['查询类型']`)" class="pb20">
+                <bk-form form-type="inline" class="pb10">
+                    <iam-form-item :label="$t(`m.common['查询类型']`)" class="pb20 form-item-resource">
                         <bk-select
                             style="width: 504px; background: #fff"
                             v-model="searchType"
@@ -16,14 +16,13 @@
                                 :name="option.name">
                             </bk-option>
                         </bk-select>
+                        <p class="error-tips" v-if="searchTypeError">请选择查询类型</p>
                     </iam-form-item>
                 </bk-form>
             </div>
             <div>
-                <bk-form
-                    :model="formData"
-                    form-type="inline">
-                    <iam-form-item :label="$t(`m.permApply['选择系统']`)" class="pb20 pr20">
+                <bk-form form-type="inline" class="pb10">
+                    <iam-form-item :label="$t(`m.permApply['选择系统']`)" class="pb20 pr20 form-item-resource">
                         <bk-select
                             style="width: 200px; background: #fff"
                             v-model="systemId"
@@ -35,8 +34,9 @@
                                 :name="`${option.name} (${option.id})`">
                             </bk-option>
                         </bk-select>
+                        <p class="error-tips" v-if="systemIdError">系统必填</p>
                     </iam-form-item>
-                    <iam-form-item :label="$t(`m.permApply['选择操作']`)" class="pb20">
+                    <iam-form-item :label="$t(`m.permApply['选择操作']`)" class="pb20 form-item-resourc">
                         <bk-select
                             style="width: 200px; background: #fff"
                             v-model="actionId"
@@ -48,6 +48,7 @@
                                 :name="`${option.name} (${option.id})`">
                             </bk-option>
                         </bk-select>
+                        <p class="error-tips" v-if="actionIdError">操作必填</p>
                     </iam-form-item>
                 </bk-form>
             </div>
@@ -70,8 +71,8 @@
             </div>
 
             <div v-if="!resourceTypeData.isEmpty && searchType !== 'operate'">
-                <bk-form form-type="inline">
-                    <iam-form-item class="pb20" :label="$t(`m.common['资源实例']`)">
+                <bk-form form-type="inline" class="pb10">
+                    <iam-form-item class="pb20 form-item-resource" :label="$t(`m.common['资源实例']`)">
                         <div class="resource-container">
                             <div class="relation-content-item" v-for="(content, contentIndex) in
                                 resourceTypeData.related_resource_types" :key="contentIndex">
@@ -90,8 +91,8 @@
                                 </div>
                                 <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
                             </div>
+                            <p class="error-tips" v-if="resourceTypeError">请选择资源实例</p>
                         </div>
-
                     </iam-form-item>
 
                 </bk-form>
@@ -230,7 +231,11 @@
                 resourceInstances: [],
                 searchTypeList: [{ name: '实例权限', value: 'resource_instance' }, { name: '操作权限', value: 'operate' }],
                 searchType: '',
-                searchValue: ''
+                searchValue: '',
+                systemIdError: false,
+                actionIdError: false,
+                searchTypeError: false,
+                resourceTypeError: false
             }
         },
         computed: {
@@ -300,6 +305,7 @@
             },
 
             async handleCascadeChange () {
+                this.systemIdError = false
                 this.resourceActionData = []
                 this.processesList = []
                 if (!this.systemId) return
@@ -323,6 +329,7 @@
             // 查询类型选择
             handlSearchChange (value) {
                 console.log('this.searchType', this.searchType)
+                this.searchTypeError = false
                 this.resourceTypeData = { isEmpty: true }
                 this.systemId = ''
                 this.actionId = ''
@@ -334,6 +341,7 @@
 
             // 操作选择
             handleSelected () {
+                this.actionIdError = false
                 this.resourceInstances = []
                 this.resourceTypeData = this.processesList.find(e => e.id === this.actionId)
                 console.log('resourceTypeData', this.resourceTypeData)
@@ -341,32 +349,20 @@
 
             // 查询和导入
             async handleSearchAndExport (isExport = false) {
+                if (!this.searchType) {
+                    this.searchTypeError = true
+                    return
+                }
                 if (!this.systemId) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请选择系统'
-                    })
+                    this.systemIdError = true
                     return
                 }
                 if (!this.actionId) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请选择操作'
-                    })
+                    this.actionIdError = true
                     return
                 }
                 if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate' && !this.resourceInstances.length) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请选择资源实例'
-                    })
-                    return
-                }
-                if (this.searchType === 'operate' && !this.permissionType) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请选择权限类型'
-                    })
+                    this.resourceTypeError = true
                     return
                 }
                 this.tableLoading = !isExport
@@ -534,6 +530,7 @@
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
                 this.curResIndex = -1
+                this.resourceTypeError = false
             },
             
             // 搜索
@@ -628,5 +625,19 @@
     .resource-flex {
         display: flex;
         justify-content: space-between;
+    }
+
+    .form-item-resource{
+        position: relative;
+    }
+
+    .error-tips {
+        font-size: 12px;
+        color: #ff4d4d;
+        position: absolute;
+        top: 25px;
+        &.mt {
+            margin-top: 10px;
+        }
     }
 </style>
