@@ -306,6 +306,9 @@
             // 查询类型选择
             handlSearchChange () {
                 console.log('this.searchType', this.searchType)
+                this.resourceTypeData = { isEmpty: true }
+                this.systemId = []
+                this.actionId = ''
                 this.resourceInstances = []
             },
 
