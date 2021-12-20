@@ -98,31 +98,34 @@ class QueryAuthorizedSubjects(object):
         根据系统和操作和资源实例查询有权限的成员
         """
 
-        resources = [
-            {
-                "system": self.system_id,
-                "type": resource_instance["type"],
-                "id": resource_instance["id"],
-                "attribute": {"_bk_iam_path_": translate_path(resource_instance["path"])}
-                if resource_instance.get("path")
-                else {},
-            }
-            for resource_instance in self.resource_instances
-        ]
+        resources = (
+            [
+                {
+                    "system": self.system_id,
+                    "type": resource_instance["type"],
+                    "id": resource_instance["id"],
+                    "attribute": {"_bk_iam_path_": translate_path(resource_instance["path"])}
+                    if resource_instance.get("path")
+                    else {},
+                }
+                for resource_instance in self.resource_instances
+            ]
+            if self.resource_instances
+            else []
+        )
 
-        # 填充attribute
-        fill_resources_attribute(resources=resources)
+        if resources:
+            # 填充attribute
+            fill_resources_attribute(resources=resources)
 
         # 调用Engine后台API搜索
-        query_data = [
-            {
-                "system": self.system_id,
-                "subject_type": "all",
-                "action": {"id": self.action_id},
-                "resource": resources,
-                "limit": self.limit,
-            }
-        ]
+        query_data = {
+            "system": self.system_id,
+            "subject_type": "all",
+            "action": {"id": self.action_id},
+            "resource": resources,
+            "limit": self.limit,
+        }
 
         data = self.engine_svc.query_subjects_by_resource_instance(query_data=query_data)
         return data

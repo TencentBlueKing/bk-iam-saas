@@ -70,3 +70,8 @@ def _call_engine_api(http_func, url_path, data, timeout=30):
 def batch_query_subjects(data: List[Dict[str, Any]]):
     url_path = "/batch-search"
     return _call_engine_api(http_post, url_path, data=data)
+
+
+def query_subjects(data: List[Dict[str, Any]]):
+    url_path = "/search"
+    return _call_engine_api(http_post, url_path, data=data)
