@@ -76,4 +76,14 @@ urlpatterns = [
         views.AuthScopeIncludeUserRoleView.as_view(),
         name="role.auth_scope_include_user_roles",
     ),
+    path(
+        "query_authorized_subjects/",
+        views.QueryAuthorizedSubjectsViewSet.as_view({"post": "post"}),
+        name="role.query_authorized_subjects",
+    ),
+    path(
+        "query_authorized_subjects/export/",
+        views.QueryAuthorizedSubjectsViewSet.as_view({"post": "export"}),
+        name="role.query_authorized_subjects.export",
+    ),
 ]

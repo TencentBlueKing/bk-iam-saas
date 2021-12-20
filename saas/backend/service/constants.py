@@ -153,6 +153,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_GLOBAL_SETTING = auto()
     MANAGE_ORGANIZATION = auto()
     MANAGE_COMMON_ACTION = auto()
+    VIEW_AUTHORIZED_SUBJECTS = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #

@@ -46,8 +46,8 @@ paths:
         default:
           description: ''
       x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
+        isPublic: true
+        allowApplyPermission: true
         matchSubpath: false
         backend:
           type: HTTP
@@ -76,8 +76,8 @@ paths:
         default:
           description: ''
       x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
+        isPublic: true
+        allowApplyPermission: true
         matchSubpath: false
         backend:
           type: HTTP
@@ -135,8 +135,8 @@ paths:
         default:
           description: ''
       x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
+        isPublic: true
+        allowApplyPermission: true
         matchSubpath: false
         backend:
           type: HTTP
@@ -229,35 +229,6 @@ paths:
           type: HTTP
           method: put
           path: /api/v1/model/systems/{system_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams:
-            loadbalance: roundrobin
-            hosts:
-            - host: http://{env.backend}
-              weight: 100
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: false
-          resourcePermissionRequired: false
-        disabledStages: []
-  /api/v1/model/systems/{system_id}/action/{action_id}/policies:
-    delete:
-      operationId: system_delete_action_policies
-      description: 删除action的policies
-      tags:
-      - model
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: delete
-          path: /api/v1/model/systems/{system_id}/action/{action_id}/policies
           matchSubpath: false
           timeout: 0
           upstreams:
@@ -372,6 +343,35 @@ paths:
           type: HTTP
           method: put
           path: /api/v1/model/systems/{system_id}/actions/{action_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/model/systems/{system_id}/actions/{action_id}/policies:
+    delete:
+      operationId: system_delete_action_policies
+      description: 删除action的policies
+      tags:
+      - model
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/model/systems/{system_id}/actions/{action_id}/policies
           matchSubpath: false
           timeout: 0
           upstreams:

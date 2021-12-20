@@ -208,7 +208,8 @@ export const m = {
         '用户组': 'user group',
         '是否删除该自定义权限': 'Whether to delete the custom permission',
         '确定删除': 'Sure to delete',
-        '类型': 'Type'
+        '类型': 'Type',
+        '查询类型': 'Query type'
     },
     // 校验
     verify: {
@@ -765,6 +766,13 @@ export const m = {
         '系统管理员交接：': 'system manager transfer:',
         '分级管理员交接：': 'rating manager transfer:',
         '管理员名称': 'ManagerName'
+    },
+
+    resourcePermiss: {
+        '有权限的成员': 'Authorized members',
+        '权限类型': 'Permission type',
+        '条数展示': 'Number of impressions',
+        '用户类型': 'user type'
     }
 }
 export default {
