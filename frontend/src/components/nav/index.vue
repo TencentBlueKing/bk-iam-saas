@@ -98,6 +98,8 @@
         ],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
+        // 资源权限
+        [['resourcePermiss'], 'resourcePermissNav'],
         // 管理员
         [['administrator'], 'settingNav'],
         // 审批流程

@@ -16,7 +16,7 @@ from django.utils.translation import gettext as _
 from pydantic import BaseModel
 from pydantic.tools import parse_obj_as
 
-from backend.common.error_codes import APIException, error_codes
+from backend.common.error_codes import error_codes
 from backend.service.models import (
     ResourceAttribute,
     ResourceAttributeValue,
@@ -135,42 +135,6 @@ class ResourceBiz:
         rp = self.new_resource_provider(system_id, resource_type_id)
         count, results = rp.search_instance(keyword, parent_type, parent_id, limit, offset)
         return count, parse_obj_as(List[ResourceInstanceBaseInfoBean], results)
-
-    def fetch_auth_attributes(
-        self, system_id: str, resource_type_id: str, ids: List[str], raise_api_exception=False
-    ) -> ResourceInfoDictBean:
-        """查询所有资源实例的用于鉴权的属性，同时如果查询有问题，则直接忽略错误"""
-        rp = self.new_resource_provider(system_id, resource_type_id)
-
-        # 鉴权属性，需要包括拓扑路径，这种由权限中心产生的
-        # TODO: _bk_iam_path_ 需要提取为常量，目前多处都直接裸写
-        attrs = ["_bk_iam_path_"]
-        # 查询支持该资源类型配置的属性
-        try:
-            resource_attrs = rp.list_attr()
-            attrs.extend([i.id for i in resource_attrs])
-        except APIException as error:
-            logging.info(
-                f"fetch_resource_all_auth_attributes({system_id}, {resource_type_id}) list_attr error: {error}"
-            )
-            # 判断是否忽略接口异常
-            if raise_api_exception:
-                raise error
-
-        # 查询资源实例的属性
-        try:
-            resource_infos = rp.fetch_instance_info(ids, attrs)
-        except APIException as error:
-            logging.info(
-                f"fetch_resource_all_auth_attributes({system_id}, {resource_type_id}) "
-                f"fetch_instance_info error: {error}"
-            )
-            # 不需要抛异常则直接返回
-            if not raise_api_exception:
-                return ResourceInfoDictBean(data={})
-            raise error
-
-        return ResourceInfoDictBean(data={i.id: ResourceInfoBean(**i.dict()) for i in resource_infos})
 
     def fetch_resource_name(
         self, resource_node_beans: List[ResourceNodeBean], raise_not_found_exception=False

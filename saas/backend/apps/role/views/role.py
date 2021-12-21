@@ -31,7 +31,39 @@ from backend.apps.group.serializers import GroupSLZ, MemberSLZ
 from backend.apps.group.views import GroupPermissionMixin
 from backend.apps.organization.models import User
 from backend.apps.organization.serializers import UserInfoSLZ, UserQuerySLZ
+from backend.apps.role.audit import (
+    CommonActionCreateAuditProvider,
+    CommonActionDeleteAuditProvider,
+    RoleCreateAuditProvider,
+    RoleGroupRenewAuditProvider,
+    RoleMemberCreateAuditProvider,
+    RoleMemberDeleteAuditProvider,
+    RoleMemberUpdateAuditProvider,
+    RolePolicyAuditProvider,
+    RoleUpdateAuditProvider,
+    UserRoleDeleteAuditProvider,
+)
+from backend.apps.role.filters import RatingMangerFilter, RoleCommonActionFilter
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleUser
+from backend.apps.role.serializers import (
+    GradeManagerActionSLZ,
+    MemberSystemPermissionUpdateSLZ,
+    RatingMangerBaseInfoSZL,
+    RatingMangerCreateSLZ,
+    RatingMangerDetailSchemaSLZ,
+    RatingMangerDetailSLZ,
+    RatingMangerListSchemaSLZ,
+    RatingMangerListSLZ,
+    RoleCommonActionSLZ,
+    RoleCommonCreateSLZ,
+    RoleGroupMembersRenewSLZ,
+    RoleIdSLZ,
+    RoleScopeSubjectSLZ,
+    SuperManagerMemberDeleteSLZ,
+    SuperManagerMemberSLZ,
+    SystemManagerMemberUpdateSLZ,
+    SystemManagerSLZ,
+)
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
@@ -51,39 +83,6 @@ from backend.common.time import get_soon_expire_ts
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
 from backend.trans.role import RoleTrans
-
-from .audit import (
-    CommonActionCreateAuditProvider,
-    CommonActionDeleteAuditProvider,
-    RoleCreateAuditProvider,
-    RoleGroupRenewAuditProvider,
-    RoleMemberCreateAuditProvider,
-    RoleMemberDeleteAuditProvider,
-    RoleMemberUpdateAuditProvider,
-    RolePolicyAuditProvider,
-    RoleUpdateAuditProvider,
-    UserRoleDeleteAuditProvider,
-)
-from .filters import RatingMangerFilter, RoleCommonActionFilter
-from .serializers import (
-    GradeManagerActionSLZ,
-    MemberSystemPermissionUpdateSLZ,
-    RatingMangerBaseInfoSZL,
-    RatingMangerCreateSLZ,
-    RatingMangerDetailSchemaSLZ,
-    RatingMangerDetailSLZ,
-    RatingMangerListSchemaSLZ,
-    RatingMangerListSLZ,
-    RoleCommonActionSLZ,
-    RoleCommonCreateSLZ,
-    RoleGroupMembersRenewSLZ,
-    RoleIdSLZ,
-    RoleScopeSubjectSLZ,
-    SuperManagerMemberDeleteSLZ,
-    SuperManagerMemberSLZ,
-    SystemManagerMemberUpdateSLZ,
-    SystemManagerSLZ,
-)
 
 
 class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):

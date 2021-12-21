@@ -115,6 +115,10 @@ const GradingAdminEdit = () => import(
 const GradingAdminUpdateTemplate = () => import(
     /* webpackChunkName: 'grading-admin' */'../views/grading-admin/update-template')
 
+// 资源权限管理
+const ResourcePermiss = () => import(
+    /* webpackChunkName: 'grading-admin' */'../views/resource-permiss')
+
 // 设置
 const Setting = () => import(
     /* webpackChunkName: 'set' */'../views/set')
@@ -449,6 +453,14 @@ export const routes = [
                     backRouter: 'gradingAdminEdit'
                 },
                 component: GradingAdminUpdateTemplate
+            },
+            {
+                path: 'resource-permiss',
+                name: 'resourcePermiss',
+                meta: {
+                    headerTitle: il8n('nav', '资源权限管理')
+                },
+                component: ResourcePermiss
             },
             {
                 path: 'administrator',
