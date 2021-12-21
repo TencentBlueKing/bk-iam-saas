@@ -72,8 +72,8 @@ class PolicyOperationService:
         执行对policies的创建, 更新, 删除操作, 调用后端批量操作接口
         """
         # 组装backend变更策略的数据
-        backend_create_policies = [p.to_backend_dict() for p in create_policies]
-        backend_update_policies = [p.to_backend_dict() for p in update_policies]
+        backend_create_policies = [p.to_backend_dict(system_id) for p in create_policies]
+        backend_update_policies = [p.to_backend_dict(system_id) for p in update_policies]
 
         return iam.alter_policies(
             system_id, subject.type, subject.id, backend_create_policies, backend_update_policies, delete_policy_ids

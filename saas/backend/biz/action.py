@@ -194,28 +194,38 @@ class RelatedResourceTypeForCheck(BaseModel):
         allow_population_by_field_name = True  # 支持alias字段同时传 type 与 id
 
 
+class Environment(BaseModel):
+    type: str
+
+
 class ResourceGroupForCheck(BaseModel):
     related_resource_types: List[RelatedResourceTypeForCheck]
+    environment: List[Environment] = []
 
 
 class ActionForCheck(BaseModel):
     id: str = Field(alias="action_id")
     related_resource_types: List[RelatedResourceTypeForCheck]
+    environment: List[Environment] = []
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
+    def get_env_types(self) -> List[str]:
+        return [e.type for e in self.environment]
+
 
 class ActionResourceGroupForCheck(BaseModel):
     id: str = Field(alias="action_id")
-    resource_groups: List[ResourceGroupForCheck]
+    resource_groups: List[ResourceGroupForCheck]  # TODO 增加检查环境属性类型的逻辑
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
     def to_action_for_check(self) -> List["ActionForCheck"]:
         return [
-            ActionForCheck(id=self.id, related_resource_types=rg.related_resource_types) for rg in self.resource_groups
+            ActionForCheck(id=self.id, related_resource_types=rg.related_resource_types, environment=rg.environment)
+            for rg in self.resource_groups
         ]
 
 
@@ -243,10 +253,18 @@ class ActionCheckBiz:
         return action_list
 
     def _check_action(self, action_list, action: ActionForCheck):
-        svc_action = action_list.get(action.id)
+        svc_action: Action = action_list.get(action.id)
         if not svc_action:
             raise error_codes.VALIDATE_ERROR.format("{} action not exists".format(action.id))
         self._check_action_related_resource_types(svc_action, action)
+
+        # check action environment
+        svc_env_type_set = svc_action.get_env_type_set()
+        for env_type in action.get_env_types():
+            if env_type not in svc_env_type_set:
+                raise error_codes.ACTION_VALIDATE_ERROR.format(
+                    "action `{}` related environment type {} not exists".format(action.id, env_type)
+                )
 
     def _check_action_related_resource_types(self, svc_action: Action, action: ActionForCheck):
         if len(action.related_resource_types) != len(svc_action.related_resource_types):

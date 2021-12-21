@@ -508,19 +508,24 @@ class TemplatePolicyCloneBiz:
 
         match_paths = []  # 能匹配实例视图前缀的资源路径
         match_path_hash_set = set()  # 用于去重
-        # NOTE: 针对只关联了一种资源类型的操作, 默认只有一组resource_group
-        for path_list in source_policy.resource_groups[0].related_resource_types[0].iter_path_list():
-            for chain in chain_list.chains:
-                if not chain.is_match_path(path_list.nodes):
-                    continue
 
-                _hash = path_list.to_path_string()
-                if _hash in match_path_hash_set:
+        for rg in source_policy.resource_groups:
+            # NOTE 有环境属性的资源组不能生成
+            if len(rg.environment) != 0:
+                continue
+
+            for path_list in rg.related_resource_types[0].iter_path_list():
+                for chain in chain_list.chains:
+                    if not chain.is_match_path(path_list.nodes):
+                        continue
+
+                    _hash = path_list.to_path_string()
+                    if _hash in match_path_hash_set:
+                        break
+
+                    match_path_hash_set.add(_hash)
+                    match_paths.append(path_list.nodes)
                     break
-
-                match_path_hash_set.add(_hash)
-                match_paths.append(path_list.nodes)
-                break
 
         if not match_paths:
             return None
@@ -542,7 +547,6 @@ class TemplatePolicyCloneBiz:
             RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
             for rrt in action.related_resource_types
         ]
-        # TODO 确认是否需要填充resource_group_id
         return PolicyBean(
             action_id=action.id,
             resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=related_resource_types)],
