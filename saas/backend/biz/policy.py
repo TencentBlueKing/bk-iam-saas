@@ -696,7 +696,7 @@ class ResourceGroupBeanList(ResourceGroupList):
         # 关联单资源类型的操作, 环境属性相同的情况下, 需要合并资源实例
         if len(self.get_thin_resource_types()) == 1:
             env_hash_rg = {}
-            self.__root__ = self._merge_resource_groups_to_dict(env_hash_rg, self)
+            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, self)
             return self
 
         # 如果resource_group存在包含关系, 移除被包含的resource_group
@@ -741,11 +741,11 @@ class ResourceGroupBeanList(ResourceGroupList):
         rg += resource_groups
         return rg
 
-    def _merge_resource_groups_to_dict(
+    def _merge_resource_groups_with_same_env(
         self, env_hash_rg: Dict[int, ResourceGroupBean], resource_groups: "ResourceGroupBeanList"
     ) -> List[ResourceGroupBean]:
         """
-        合并resource_groups到env_hash -> resource_group 中
+        合并相同env的resource_group
         """
         for rg in resource_groups:
             env_hash = rg.hash_environment()
@@ -766,7 +766,7 @@ class ResourceGroupBeanList(ResourceGroupList):
         # 处理单个资源类型的合并
         if len(self.get_thin_resource_types()) == 1:
             env_hash_rg = {rg.hash_environment(): rg for rg in self}
-            self.__root__ = self._merge_resource_groups_to_dict(env_hash_rg, resource_groups)
+            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, resource_groups)
             return self
 
         for rg in resource_groups:

@@ -174,10 +174,10 @@ class EnvironmentSLZ(serializers.Serializer):
 class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
     condition = serializers.ListField(label="生效条件", child=EnvConditionSLZ(label="条件"), min_length=2, max_length=3)
 
-    def validate(self, attrs):
-        condition_type_set = {c["type"] for c in attrs["condition"]}
+    def validate(self, data):
+        condition_type_set = {c["type"] for c in data["condition"]}
         # type不能重复
-        if len(attrs["condition"]) != len(condition_type_set):
+        if len(data["condition"]) != len(condition_type_set):
             raise serializers.ValidationError({"condition": ["type must not repeat"]})
 
         # TZ与HMS必填, WeekDay选填
@@ -194,13 +194,13 @@ class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
             PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvConditionSLZ,
         }
 
-        for c in attrs["condition"]:
+        for c in data["condition"]:
             if c["type"] not in type_slz_map:
                 raise serializers.ValidationError({"condition": ["type: {} not exists".format(c["type"])]})
 
             slz = type_slz_map[c["type"]](data=c)
             slz.is_valid(raise_exception=True)
-        return attrs
+        return data
 
 
 class ResourceGroupSLZ(serializers.Serializer):

@@ -17,7 +17,7 @@ from backend.util.json import json_dumps
 
 from .environment import BaseEnvCondition, HMSEnvCondition, TZEnvCondition, WeekdayEnvCondition
 
-TYPE_ENV_MAP: Dict[str, Type[BaseEnvCondition]] = {
+ENV_TYPE_CONDITION_MAP: Dict[str, Type[BaseEnvCondition]] = {
     PolicyEnvConditionTypeEnum.TZ.value: TZEnvCondition,
     PolicyEnvConditionTypeEnum.HMS.value: HMSEnvCondition,
     PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvCondition,
@@ -29,9 +29,9 @@ class ResourceExpressionTranslator:
     翻译资源条件到后端表达式
     """
 
-    def translate(self, system_id: str, resources: List[Dict]) -> str:
+    def translate(self, system_id: str, resource_groups: List[Dict]) -> str:
         """
-        resources: [
+        resource_groups: [
           {
             "id: "",
             "related_resource_types": [
@@ -77,13 +77,13 @@ class ResourceExpressionTranslator:
           }
         ]
         """
-        content = [self._translate_resource_group(system_id, r) for r in resources]
+        content = [self._translate_resource_group(system_id, r) for r in resource_groups]
         if len(content) == 1:
             expression = content[0]
         else:
             expression = {"OR": {"content": content}}
 
-        return json_dumps(expression)  # 去掉json自动生成的空格
+        return json_dumps(expression)
 
     def _translate_resource_group(self, system_id: str, resource_group: Dict[str, Any]) -> Dict[str, Any]:
         content = [self._translate_related_resource_types(resource_group["related_resource_types"])]
@@ -91,13 +91,16 @@ class ResourceExpressionTranslator:
         content.extend(env_expressions)
         if len(content) == 1:
             return content[0]
+
         return {"AND": {"content": content}}
 
     def _translate_environment(self, system_id: str, environment: List[Dict[str, Any]]) -> List[Dict]:
         expressions = []
         for env in environment:
             for condition in env["condition"]:
-                translator = TYPE_ENV_MAP[condition["type"]](system_id, [v["value"] for v in condition["values"]])
+                translator = ENV_TYPE_CONDITION_MAP[condition["type"]](
+                    system_id, [v["value"] for v in condition["values"]]
+                )
                 expressions.extend(translator.trans())
         return expressions
 

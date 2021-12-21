@@ -90,7 +90,6 @@ class RelatedPolicyBiz:
 
         new_rrt_list = []  # 遍历所有的resource_group后生成的用于创建关联操作policy的
 
-        # 如果有相同的资源类型
         for rg in policy.resource_groups:
             # NOTE 有环境属性的资源组不能生成依赖操作
             if len(rg.environment) != 0:

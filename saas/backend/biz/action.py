@@ -217,7 +217,7 @@ class ActionForCheck(BaseModel):
 
 class ActionResourceGroupForCheck(BaseModel):
     id: str = Field(alias="action_id")
-    resource_groups: List[ResourceGroupForCheck]  # TODO 增加检查环境属性类型的逻辑
+    resource_groups: List[ResourceGroupForCheck]
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
