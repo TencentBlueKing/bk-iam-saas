@@ -50,6 +50,8 @@
     </div>
 </template>
 <script>
+    import { mapGetters } from 'vuex'
+
     import PermPolicy from '@/model/my-perm-policy'
     import PermSystem from '@/model/my-perm-system'
     import CustomPermTable from './custom-perm-table.vue'
@@ -68,6 +70,9 @@
                 customNotTransferCount: 0,
                 customSelectDataMap: {}
             }
+        },
+        computed: {
+            ...mapGetters(['user'])
         },
         mounted () {
             this.fetchData()
@@ -112,8 +117,9 @@
                         const res = await this.$store.dispatch('permApply/getPolicies', { system_id: sys.id })
                         const alreadyLoadedList = sys.policyList
                         sys.policyList = res.data.map(item => {
-                            if (item.expired_display === '已过期') {
+                            if (item.expired_at < this.user.timestamp) {
                                 this.customNotTransferCount += 1
+                                item.isExpired = true
                             }
                             const policy = new PermPolicy(item)
                             const foundPolicy = alreadyLoadedList.find(
