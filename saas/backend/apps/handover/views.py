@@ -15,6 +15,7 @@ from django.core.cache import cache
 from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
@@ -103,7 +104,7 @@ class HandoverViewSet(GenericViewSet):
             execute_handover_task.delay(
                 handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
             )
-        except APIException as e:
+        except (APIException, ValidationError) as e:
             HandoverRecord.objects.filter(id=handover_record.id).delete()
             raise e
         finally:
