@@ -112,11 +112,8 @@ class RoleHandoverHandler(BaseHandoverHandler):
 
     def grant_permission(self):
         if self.role_type == RoleType.SUPER_MANAGER.value:
-            need_sync_backend_role = False
             role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-            if self.handover_from in role.system_permission_enabled_content.enabled_users:
-                need_sync_backend_role = True
-
+            need_sync_backend_role = self.handover_from in role.system_permission_enabled_content.enabled_users
             self.biz.add_super_manager_member(username=self.handover_to, need_sync_backend_role=need_sync_backend_role)
         elif self.role_type == RoleType.SYSTEM_MANAGER.value:
             members = self._get_system_manager_members()
