@@ -15,6 +15,7 @@ from typing import List
 
 from backend.apps.handover.constants import HandoverTaskStatus
 from backend.apps.handover.models import HandoverTask
+from backend.apps.role.models import Role
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
@@ -111,7 +112,12 @@ class RoleHandoverHandler(BaseHandoverHandler):
 
     def grant_permission(self):
         if self.role_type == RoleType.SUPER_MANAGER.value:
-            self.biz.add_super_manager_member(username=self.handover_to, need_sync_backend_role=True)
+            need_sync_backend_role = False
+            role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+            if self.handover_from in role.system_permission_enabled_content.enabled_users:
+                need_sync_backend_role = True
+
+            self.biz.add_super_manager_member(username=self.handover_to, need_sync_backend_role=need_sync_backend_role)
         elif self.role_type == RoleType.SYSTEM_MANAGER.value:
             members = self._get_system_manager_members()
             if self.handover_to in members:
