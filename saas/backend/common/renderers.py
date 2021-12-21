@@ -14,7 +14,7 @@ from rest_framework.renderers import JSONRenderer
 from backend.common.constants import DjangoLanguageEnum
 
 
-def handle_tranlate(data):
+def handle_translate(data):
     """处理翻译"""
     # 判断是否Dict或List
     if not isinstance(data, dict) and not isinstance(data, list):
@@ -22,7 +22,7 @@ def handle_tranlate(data):
 
     # 对于List，则进行遍历，并递归查询每个数据
     if isinstance(data, list):
-        return [handle_tranlate(i) for i in data]
+        return [handle_translate(i) for i in data]
 
     # 对于Dict，判断是否有_en结尾的
     ens = []
@@ -37,7 +37,7 @@ def handle_tranlate(data):
             data[k] = value_en
     # 对于其他字段，进行递归
     for k, v in data.items():
-        data[k] = handle_tranlate(v)
+        data[k] = handle_translate(v)
 
     return data
 
@@ -63,7 +63,7 @@ class BKAPIRenderer(JSONRenderer):
 
         translate_exempt = view and getattr(view, "translate_exempt", False)
         if not translate_exempt and isinstance(data, dict) and "data" in data:
-            data["data"] = handle_tranlate(data["data"])
+            data["data"] = handle_translate(data["data"])
 
         if renderer_context and "permissions" in renderer_context:
             data["permissions"] = renderer_context["permissions"]

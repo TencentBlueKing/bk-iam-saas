@@ -9,8 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from datetime import datetime
-from itertools import groupby
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.db import transaction
@@ -27,6 +26,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
+from backend.biz.utils import fill_resources_attribute
 from backend.common.error_codes import APIException, CodeException, error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
@@ -372,7 +372,7 @@ class GroupBiz:
             # 填充资源实例的属性
             for pr in policy_resources:
                 if len(pr.resources) != 0:
-                    self._fill_resources_attribute(pr.resources)
+                    fill_resources_attribute(pr.resources)
 
             results = self.engine_svc.query_subjects_by_policy_resources(
                 system_id, policy_resources, SubjectType.GROUP.value
@@ -390,36 +390,6 @@ class GroupBiz:
                 subject_id_set = subject_id_set & ids
 
         return [int(_id) for _id in subject_id_set] if subject_id_set else []
-
-    def _fill_resources_attribute(self, resources: List[Dict[str, Any]]):
-        """
-        用户组通过policy查询subjects的资源填充属性
-        """
-        need_fetch_resources = []
-        for resource in resources:
-            if resource["id"] != "*" and not resource["attribute"]:
-                need_fetch_resources.append(resource)
-
-        if not need_fetch_resources:
-            return
-
-        for key, parts in groupby(need_fetch_resources, key=lambda resource: (resource["system"], resource["type"])):
-            self._exec_fill_resources_attribute(key[0], key[1], list(parts))
-
-    def _exec_fill_resources_attribute(self, system_id, resource_type_id, resources):
-        # 查询属性
-        resource_ids = list({resource["id"] for resource in resources})
-        resource_info_dict = self.resource_biz.fetch_auth_attributes(
-            system_id, resource_type_id, resource_ids, raise_api_exception=False
-        )
-        # 填充属性
-        for resource in resources:
-            _id = resource["id"]
-            if not resource_info_dict.has(_id):
-                continue
-            attrs = resource_info_dict.get_attributes(_id, ignore_none_value=True)
-            # 填充
-            resource["attribute"] = attrs
 
     def _check_lock_before_grant(self, group: Group, templates: List[GroupTemplateGrantBean]):
         """
