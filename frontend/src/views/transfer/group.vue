@@ -74,8 +74,6 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-
     export default {
         name: '',
         components: {
@@ -93,9 +91,6 @@
                 pageContainer: null
             }
         },
-        computed: {
-            ...mapGetters(['user'])
-        },
         mounted () {
             this.pageContainer = document.querySelector('.main-scroller')
             this.fetchData()
@@ -107,7 +102,7 @@
                     const res = await this.$store.dispatch('perm/getPersonalGroups')
                     const groupList = res.data || []
                     groupList.forEach(item => {
-                        if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
+                        if (String(item.department_id) !== '0' || item.expired_at_display === '已过期') {
                             this.groupNotTransferCount += 1
                             item.canNotTransfer = true
                         }
