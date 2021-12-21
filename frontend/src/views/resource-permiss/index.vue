@@ -76,10 +76,6 @@
                         <div class="resource-container">
                             <div class="relation-content-item" v-for="(content, contentIndex) in
                                 resourceTypeData.related_resource_types" :key="contentIndex">
-                                <!-- v-if="resourceTypeData.related_resource_types.length > 1" -->
-                                <!-- <div class="content-name">
-                                    {{ content.name }}
-                                </div> -->
                                 <div class="content">
                                     <render-condition
                                         :ref="`condition_${$index}_${contentIndex}_ref`"
@@ -89,9 +85,8 @@
                                         :is-error="content.isLimitExceeded || content.isError"
                                         @on-click="showResourceInstance(resourceTypeData, content, contentIndex)" />
                                 </div>
-                                <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
+                                <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
                             </div>
-                            <p class="error-tips" v-if="resourceTypeError">请选择资源实例</p>
                         </div>
                     </iam-form-item>
 
@@ -342,6 +337,7 @@
             // 操作选择
             handleSelected () {
                 this.actionIdError = false
+                this.resourceTypeError = false
                 this.resourceInstances = []
                 this.resourceTypeData = this.processesList.find(e => e.id === this.actionId)
                 console.log('resourceTypeData', this.resourceTypeData)
@@ -361,7 +357,9 @@
                     this.actionIdError = true
                     return
                 }
-                if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate' && !this.resourceInstances.length) {
+                console.log('resourceTypeData', this.resourceTypeData)
+                if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
+                    && this.resourceTypeData.related_resource_types.some(e => e.empty)) {
                     this.resourceTypeError = true
                     return
                 }
@@ -635,7 +633,9 @@
         font-size: 12px;
         color: #ff4d4d;
         position: absolute;
-        top: 25px;
+        top: 33px;
+        height: 20px;
+        line-height: 20px;
         &.mt {
             margin-top: 10px;
         }
