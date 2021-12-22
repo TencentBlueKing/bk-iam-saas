@@ -36,11 +36,10 @@ def check_or_update_application_status():
     if not paginator.count:
         return
 
+    biz = ApplicationBiz()
     for i in paginator.page_range:
         applications = list(paginator.page(i))
 
-        # 查询状态
-        biz = ApplicationBiz()
         # 查询ITSM可能出错，若出错，则记录日志，继续执行其他的
         try:
             id_status_dict = biz.query_application_approval_status(applications)
