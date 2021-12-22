@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 
 from celery import task
+from django.core.paginator import Paginator
 
 from backend.biz.application import ApplicationBiz
 from backend.service.constants import ApplicationStatus
@@ -28,21 +29,32 @@ def check_or_update_application_status():
     """
     # 查询未结束的申请单据
     # TODO: 是否需要过滤超过多久没处理才查询，但也有可能导致某些单据无法快速回调
-    applications = Application.objects.filter(status=ApplicationStatus.PENDING.value)
-    if not applications:
+    qs = Application.objects.filter(status=ApplicationStatus.PENDING.value)
+
+    # 分页处理，避免调用ITSM查询超时问题
+    paginator = Paginator(qs, 20)
+    if not paginator.count:
         return
 
-    # 查询状态
-    biz = ApplicationBiz()
-    id_status_dict = biz.query_application_approval_status(applications)
+    for i in paginator.page_range:
+        applications = list(paginator.page(i))
 
-    # 遍历每个申请单，进行审批处理
-    for application in applications:
+        # 查询状态
+        biz = ApplicationBiz()
+        # 查询ITSM可能出错，若出错，则记录日志，继续执行其他的
         try:
-            status = id_status_dict.get(application.id)
-            # 若查询不到，则忽略
-            if status is None:
-                continue
-            biz.handle_application_result(application, status)
+            id_status_dict = biz.query_application_approval_status(applications)
         except Exception as error:  # pylint: disable=broad-except
             logger.exception(error)
+            continue
+
+        # 遍历每个申请单，进行审批处理
+        for application in applications:
+            try:
+                status = id_status_dict.get(application.id)
+                # 若查询不到，则忽略
+                if status is None:
+                    continue
+                biz.handle_application_result(application, status)
+            except Exception as error:  # pylint: disable=broad-except
+                logger.exception(error)
