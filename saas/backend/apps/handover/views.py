@@ -80,23 +80,7 @@ class HandoverViewSet(GenericViewSet):
                     handover_from=handover_from, handover_to=handover_to, reason=reason
                 )
 
-                handover_task_details = []
-                for key, value in handover_info.items():
-                    if not value:
-                        continue
-                    validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
-                    # 校验任务数据是否合法
-                    validator.validate()
-                    info = validator.get_info()
-                    for one in info:
-                        handover_task_details.append(
-                            HandoverTask(
-                                handover_record_id=handover_record.id,
-                                object_type=key,
-                                object_id=one["id"],
-                                object_detail=json_dumps(one),
-                            )
-                        )
+                handover_task_details = self._gen_handover_tasks(handover_from, handover_info, handover_record)
 
                 # 创建子任务信息
                 if handover_task_details:
@@ -110,6 +94,27 @@ class HandoverViewSet(GenericViewSet):
             lock.release()
 
         return Response({"id": handover_record.id})
+
+    def _gen_handover_tasks(self, handover_from, handover_info, handover_record):
+        handover_task_details = []
+        for key, value in handover_info.items():
+            if not value:
+                continue
+            validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
+            # 校验任务数据是否合法
+            validator.validate()
+            info = validator.get_info()
+            for one in info:
+                handover_task_details.append(
+                    HandoverTask(
+                        handover_record_id=handover_record.id,
+                        object_type=key,
+                        object_id=one["id"],
+                        object_detail=json_dumps(one),
+                    )
+                )
+
+        return handover_task_details
 
     def _get_handover_lock(self, handover_from: str):
         lock_key = f"bk_iam:lock:handover:{handover_from}"
