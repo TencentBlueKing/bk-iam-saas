@@ -12,17 +12,17 @@ import logging
 from typing import Dict, Type
 
 from django.core.cache import cache
+from django.db import transaction
 from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.apps.application.views import admin_not_need_apply_check
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
-from backend.common.error_codes import APIException, error_codes
+from backend.common.error_codes import error_codes
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.util.json import json_dumps
 
@@ -74,39 +74,37 @@ class HandoverViewSet(GenericViewSet):
                 # 已存在正在运行的任务, 不能新建任务
                 raise error_codes.TASK_EXIST
 
-            # 创建任务
-            handover_record = HandoverRecord.objects.create(
-                handover_from=handover_from, handover_to=handover_to, reason=reason
-            )
+            with transaction.atomic():
+                # 创建任务
+                handover_record = HandoverRecord.objects.create(
+                    handover_from=handover_from, handover_to=handover_to, reason=reason
+                )
 
-            handover_task_details = []
-            for key, value in handover_info.items():
-                if not value:
-                    continue
-                validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
-                # 校验任务数据是否合法
-                validator.validate()
-                info = validator.get_info()
-                for one in info:
-                    handover_task_details.append(
-                        HandoverTask(
-                            handover_record_id=handover_record.id,
-                            object_type=key,
-                            object_id=one["id"],
-                            object_detail=json_dumps(one),
+                handover_task_details = []
+                for key, value in handover_info.items():
+                    if not value:
+                        continue
+                    validator = HANDOVER_VALIDATOR_MAP[key](handover_from, value)
+                    # 校验任务数据是否合法
+                    validator.validate()
+                    info = validator.get_info()
+                    for one in info:
+                        handover_task_details.append(
+                            HandoverTask(
+                                handover_record_id=handover_record.id,
+                                object_type=key,
+                                object_id=one["id"],
+                                object_detail=json_dumps(one),
+                            )
                         )
-                    )
 
-            # 创建子任务信息
-            if handover_task_details:
-                HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
+                # 创建子任务信息
+                if handover_task_details:
+                    HandoverTask.objects.bulk_create(handover_task_details, batch_size=100)
 
-            execute_handover_task.delay(
-                handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
-            )
-        except (APIException, ValidationError) as e:
-            HandoverRecord.objects.filter(id=handover_record.id).delete()
-            raise e
+                execute_handover_task.delay(
+                    handover_from=handover_from, handover_to=handover_to, handover_record_id=handover_record.id
+                )
         finally:
             # 释放锁
             lock.release()
