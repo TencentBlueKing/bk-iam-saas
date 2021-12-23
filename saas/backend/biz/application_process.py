@@ -171,7 +171,7 @@ class InstanceAproverHandler(PolicyProcessHandler):
                                 **rrt.dict(exclude={"condition"}),
                             )
                         ],
-                        environment=resource_group.environment,
+                        environments=resource_group.environments,
                     )
                 ]
             ),

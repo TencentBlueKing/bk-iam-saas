@@ -245,7 +245,7 @@ class PolicySLZ(serializers.Serializer):
         # 校验一个policy中不能存在多个不同的时区环境属性
         tz_set = set()
         for rg in data["resource_groups"]:
-            for env in rg["environment"]:
+            for env in rg["environments"]:
                 if env["type"] != PolicyEnvTypeEnum.PERIOD_DAILY.value:
                     continue
 
@@ -257,7 +257,7 @@ class PolicySLZ(serializers.Serializer):
 
         if len(tz_set) > 1:
             raise serializers.ValidationError(
-                {"resource_groups": {"environment": ["all time zones must be consistent"]}}
+                {"resource_groups": {"environments": ["all time zones must be consistent"]}}
             )
 
         return data

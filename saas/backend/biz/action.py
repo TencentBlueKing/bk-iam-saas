@@ -224,7 +224,7 @@ class ActionResourceGroupForCheck(BaseModel):
 
     def to_action_for_check(self) -> List["ActionForCheck"]:
         return [
-            ActionForCheck(id=self.id, related_resource_types=rg.related_resource_types, environment=rg.environments)
+            ActionForCheck(id=self.id, related_resource_types=rg.related_resource_types, environments=rg.environments)
             for rg in self.resource_groups
         ]
 
