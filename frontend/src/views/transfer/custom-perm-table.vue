@@ -9,7 +9,7 @@
             :cell-class-name="getCellClass"
             @select="handleSelect"
             @select-all="handleSelect">
-            <bk-table-column type="selection" align="center" :selectable="row => String(row.expired_at) !== '0'">
+            <bk-table-column type="selection" align="center" :selectable="row => !row.isExpired">
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
