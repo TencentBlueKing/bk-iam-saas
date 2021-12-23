@@ -113,13 +113,13 @@ class Environment(BaseModel):
 class ResourceGroup(BaseModel):
     id: str = ""
     related_resource_types: List[RelatedResource]
-    environment: List[Environment] = []
+    environments: List[Environment] = []
 
-    def hash_environment(self) -> int:
+    def hash_environments(self) -> int:
         """
         计算环境属性hash值
         """
-        return hash(tuple(sorted([e.trim_for_hash() for e in self.environment], key=lambda e: e[0])))
+        return hash(tuple(sorted([e.trim_for_hash() for e in self.environments], key=lambda e: e[0])))
 
 
 ThinResourceType = namedtuple("ThinResourceType", ["system_id", "type"])

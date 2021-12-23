@@ -92,7 +92,7 @@ class RelatedPolicyBiz:
 
         for rg in policy.resource_groups:
             # NOTE 有环境属性的资源组不能生成依赖操作
-            if len(rg.environment) != 0:
+            if len(rg.environments) != 0:
                 continue
 
             if self._has_same_type(policy, action_rrt):

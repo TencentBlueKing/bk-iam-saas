@@ -200,19 +200,19 @@ class Environment(BaseModel):
 
 class ResourceGroupForCheck(BaseModel):
     related_resource_types: List[RelatedResourceTypeForCheck]
-    environment: List[Environment] = []
+    environments: List[Environment] = []
 
 
 class ActionForCheck(BaseModel):
     id: str = Field(alias="action_id")
     related_resource_types: List[RelatedResourceTypeForCheck]
-    environment: List[Environment] = []
+    environments: List[Environment] = []
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
     def get_env_types(self) -> List[str]:
-        return [e.type for e in self.environment]
+        return [e.type for e in self.environments]
 
 
 class ActionResourceGroupForCheck(BaseModel):
@@ -224,7 +224,7 @@ class ActionResourceGroupForCheck(BaseModel):
 
     def to_action_for_check(self) -> List["ActionForCheck"]:
         return [
-            ActionForCheck(id=self.id, related_resource_types=rg.related_resource_types, environment=rg.environment)
+            ActionForCheck(id=self.id, related_resource_types=rg.related_resource_types, environment=rg.environments)
             for rg in self.resource_groups
         ]
 

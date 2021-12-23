@@ -511,7 +511,7 @@ class TemplatePolicyCloneBiz:
 
         for rg in source_policy.resource_groups:
             # NOTE 有环境属性的资源组不能生成
-            if len(rg.environment) != 0:
+            if len(rg.environments) != 0:
                 continue
 
             for path_list in rg.related_resource_types[0].iter_path_list():

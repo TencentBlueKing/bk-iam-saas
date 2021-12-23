@@ -87,16 +87,16 @@ class ResourceExpressionTranslator:
 
     def _translate_resource_group(self, system_id: str, resource_group: Dict[str, Any]) -> Dict[str, Any]:
         content = [self._translate_related_resource_types(resource_group["related_resource_types"])]
-        env_expressions = self._translate_environment(system_id, resource_group["environment"])
+        env_expressions = self._translate_environments(system_id, resource_group["environments"])
         content.extend(env_expressions)
         if len(content) == 1:
             return content[0]
 
         return {"AND": {"content": content}}
 
-    def _translate_environment(self, system_id: str, environment: List[Dict[str, Any]]) -> List[Dict]:
+    def _translate_environments(self, system_id: str, environments: List[Dict[str, Any]]) -> List[Dict]:
         expressions = []
-        for env in environment:
+        for env in environments:
             for condition in env["condition"]:
                 translator = ENV_TYPE_CONDITION_MAP[condition["type"]](
                     system_id, [v["value"] for v in condition["values"]]

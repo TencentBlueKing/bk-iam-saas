@@ -276,6 +276,6 @@ class PolicyEnvConditionTypeEnum(ChoicesEnum, LowerStrEnum):
         (
             (TZ, _("时区")),
             (HMS, _("时分秒")),
-            (WEEKDAY, _("每周天")),
+            (WEEKDAY, _("WEEKDAY")),
         )
     )

@@ -103,22 +103,22 @@ class ResourceTypeSLZ(serializers.Serializer):
 
 class EnvConditionValueSLZ(serializers.Serializer):
     name = serializers.CharField(label="显示名称", required=False, allow_blank=True, default="")
-    value = ValueFiled(label="环境属性VALUE")
+    value = ValueFiled(label="环境属性值")
 
 
 # for validate
 class WeekdayEnvValueSLZ(EnvConditionValueSLZ):
-    value = serializers.IntegerField(label="环境属性VALUE", max_value=6, min_value=0)
+    value = serializers.IntegerField(label="环境属性值", max_value=6, min_value=0)
 
 
 # for validate
 class HMSEnvValueSLZ(EnvConditionValueSLZ):
-    value = serializers.RegexField(label="环境属性VALUE", regex=r"^([0-1][0-9]|(2[0-3])):([0-5][0-9]):([0-5][0-9])$")
+    value = serializers.RegexField(label="环境属性值", regex=r"^([0-1][0-9]|(2[0-3])):([0-5][0-9]):([0-5][0-9])$")
 
 
 # for validate
 class TZEnvValueSLZ(EnvConditionValueSLZ):
-    value = serializers.CharField(label="环境属性VALUE")
+    value = serializers.CharField(label="环境属性值")
 
     def validate(self, attrs):
         value = attrs["value"]
@@ -170,6 +170,13 @@ class EnvironmentSLZ(serializers.Serializer):
     condition = serializers.ListField(label="生效条件", child=EnvConditionSLZ(label="条件"))
 
 
+ENV_COND_TYPE_SLZ_MAP = {
+    PolicyEnvConditionTypeEnum.TZ.value: TZEnvConditionSLZ,
+    PolicyEnvConditionTypeEnum.HMS.value: HMSEnvConditionSLZ,
+    PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvConditionSLZ,
+}
+
+
 # for validate
 class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
     condition = serializers.ListField(label="生效条件", child=EnvConditionSLZ(label="条件"), min_length=2, max_length=3)
@@ -181,32 +188,28 @@ class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
             raise serializers.ValidationError({"condition": ["type must not repeat"]})
 
         # TZ与HMS必填, WeekDay选填
-        if (
-            PolicyEnvConditionTypeEnum.TZ.value not in condition_type_set
-            or PolicyEnvConditionTypeEnum.HMS.value not in condition_type_set
+        if not (
+            PolicyEnvConditionTypeEnum.TZ.value in condition_type_set
+            and PolicyEnvConditionTypeEnum.HMS.value in condition_type_set
         ):
             raise serializers.ValidationError({"condition": ["tz and hms must be exists"]})
 
-        # 独立校验condition
-        type_slz_map = {
-            PolicyEnvConditionTypeEnum.TZ.value: TZEnvConditionSLZ,
-            PolicyEnvConditionTypeEnum.HMS.value: HMSEnvConditionSLZ,
-            PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvConditionSLZ,
-        }
-
         for c in data["condition"]:
-            if c["type"] not in type_slz_map:
+            if c["type"] not in ENV_COND_TYPE_SLZ_MAP:
                 raise serializers.ValidationError({"condition": ["type: {} not exists".format(c["type"])]})
 
-            slz = type_slz_map[c["type"]](data=c)
+            slz = ENV_COND_TYPE_SLZ_MAP[c["type"]](data=c)
             slz.is_valid(raise_exception=True)
         return data
+
+
+ENV_TYPE_SLZ_MAP = {PolicyEnvTypeEnum.PERIOD_DAILY.value: PeriodDailyEnvironmentSLZ}
 
 
 class ResourceGroupSLZ(serializers.Serializer):
     id = serializers.CharField(label="ID", allow_blank=True)
     related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"))
-    environment = serializers.ListField(
+    environments = serializers.ListField(
         label="环境属性条件", child=EnvironmentSLZ(label="环境属性条件"), allow_empty=True, required=False, default=list
     )
 
@@ -218,13 +221,11 @@ class ResourceGroupSLZ(serializers.Serializer):
             data["id"] = gen_uuid()
 
         # validate environment
-        env_type_slz_map = {PolicyEnvTypeEnum.PERIOD_DAILY.value: PeriodDailyEnvironmentSLZ}
+        for e in data["environments"]:
+            if e["type"] not in ENV_TYPE_SLZ_MAP:
+                raise serializers.ValidationError({"environments": ["type: {} not exists".format(e["type"])]})
 
-        for e in data["environment"]:
-            if e["type"] not in env_type_slz_map:
-                raise serializers.ValidationError({"environment": ["type: {} not exists".format(e["type"])]})
-
-            slz = env_type_slz_map[e["type"]](data=e)
+            slz = ENV_TYPE_SLZ_MAP[e["type"]](data=e)
             slz.is_valid(raise_exception=True)
         return data
 

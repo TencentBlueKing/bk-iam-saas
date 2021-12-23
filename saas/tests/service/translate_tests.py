@@ -376,7 +376,7 @@ class TransferResourcesTests(TestCase):
 
         translator = ResourceExpressionTranslator()
 
-        expression = translator.translate("bk_cmdb", [{"related_resource_types": resources, "environment": []}])
+        expression = translator.translate("bk_cmdb", [{"related_resource_types": resources, "environments": []}])
         self.assertEqual(
             expression,
             json.dumps(
@@ -404,7 +404,7 @@ class TransferResourcesTests(TestCase):
         ]
 
         translator = ResourceExpressionTranslator()
-        exp = translator._translate_environment("bk_cmdb", env)
+        exp = translator._translate_environments("bk_cmdb", env)
         assert exp == [
             {"StringEquals": {"bk_cmdb._bk_iam_env_.tz": "Asia/Shanghai"}},
             {"NumericGte": {"bk_cmdb._bk_iam_env_.hms": 0}},
