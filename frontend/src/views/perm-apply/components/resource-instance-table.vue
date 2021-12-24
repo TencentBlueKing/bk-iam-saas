@@ -58,7 +58,7 @@
                                             :ref="`condition_${$index}_${contentIndex}_ref`"
                                             :value="content.value"
                                             :is-empty="content.empty"
-                                            :can-view="row.canView"
+                                            :can-view="row.canView && !!_.id"
                                             :params="curCopyParams"
                                             :can-paste="content.canPaste"
                                             :is-error="content.isLimitExceeded || content.isError"
@@ -361,9 +361,9 @@
         watch: {
             list: {
                 handler (value) {
-                    console.log('value', value)
                     this.tableList = value
                     console.log('this.tableList', this.tableList)
+                    this.originalList = _.cloneDeep(this.tableList)
                 },
                 immediate: true
             },
@@ -650,10 +650,28 @@
                 if (curData.expired_at !== PERMANENT_TIMESTAMP) {
                     curData.expired_at = curData.expired_at + this.user.timestamp
                 }
+
+                curData.resource_groups = curData.resource_groups.filter(groupItem => {
+                    groupItem.related_resource_types[0].condition.filter(e => {
+                        if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
+                            e.instances = e.instance || []
+                            e.attributes = e.attribute || []
+                            delete e.instance
+                            delete e.attribute
+                            return true
+                        }
+                        return false
+                    })
+                    return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
+                })
+
+                console.log('curData.resource_groups', curData.resource_groups)
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
-                        && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
+                        // && item.resource_groups[this.curGroupIndex]
+                        // && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
+                        && item.resource_groups.map(item => !item.related_resource_types.every(sub => sub.empty))[0]
                 }))
 
                 if (relatedList.length > 0) {
@@ -662,14 +680,24 @@
                             item.expired_at = item.expired_at + this.user.timestamp
                         }
                         delete item.policy_id
-                        item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
-                            resItem.condition.forEach(conditionItem => {
-                                conditionItem.instances = conditionItem.instance || []
-                                conditionItem.attributes = conditionItem.attribute || []
-                                delete conditionItem.instance
-                                delete conditionItem.attribute
+                        item.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(resItem => {
+                                resItem.condition.forEach(conditionItem => {
+                                    conditionItem.instances = conditionItem.instance || []
+                                    conditionItem.attributes = conditionItem.attribute || []
+                                    delete conditionItem.instance
+                                    delete conditionItem.attribute
+                                })
                             })
                         })
+                        // item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
+                        //     resItem.condition.forEach(conditionItem => {
+                        //         conditionItem.instances = conditionItem.instance || []
+                        //         conditionItem.attributes = conditionItem.attribute || []
+                        //         delete conditionItem.instance
+                        //         delete conditionItem.attribute
+                        //     })
+                        // })
                     })
                 }
                 try {
@@ -726,6 +754,8 @@
                 if (isEmpty) {
                     return
                 }
+
+                console.log('data', data)
 
                 const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
@@ -1182,6 +1212,7 @@
                 }
                 const actionList = []
                 const aggregations = []
+                console.log('this.tableList', this.tableList)
                 this.tableList.forEach(item => {
                     let tempExpiredAt = ''
                     if (item.expired_at === '' && item.expired_display) {
@@ -1190,10 +1221,11 @@
 
                     if (!item.isAggregate) {
                         const { type, id, name, environment, description, policy_id, isNew, isChanged } = item
-                        const relatedResourceTypes = []
+                        
                         const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
+                                const relatedResourceTypes = []
                                 if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         let newResourceCount = 0
@@ -1310,8 +1342,6 @@
             },
 
             handlerAddCondition (data, index, resIndex) {
-                // this.tableList
-                console.log('111', data, index, resIndex)
                 const dataClone = _.cloneDeep(data)
                 dataClone.related_resource_types[resIndex].condition = ['none']
                 dataClone.related_resource_types[resIndex].conditionBackup = ['none']
@@ -1320,12 +1350,13 @@
                 this.tableList[index].resource_groups.push(relatedResourceTypes)
                 console.log('this.tableList', this.tableList)
                 this.originalList = _.cloneDeep(this.tableList)
-                // console.log('add condition', data, index, groupIndex)
+                console.log('this.originalList', this.originalList)
             },
 
             handlerReduceCondition (data, index, resIndex, groupIndex) {
                 console.log('index, resIndex', index, resIndex)
                 this.tableList[index].resource_groups.splice(groupIndex, 1)
+                console.log('this.tableList', this.tableList)
             }
         }
     }

@@ -138,7 +138,7 @@
                 font-size: 16px;
                 color: #979ba5;
                 position: absolute;
-                top: 35px;
+                top: 45%;
                 right: -23px;
                 cursor: pointer;
                 &.disabled {
