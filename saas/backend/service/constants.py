@@ -154,6 +154,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_ORGANIZATION = auto()
     MANAGE_COMMON_ACTION = auto()
     VIEW_AUTHORIZED_SUBJECTS = auto()
+    MANAGE_API_WHITE_LIST = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
