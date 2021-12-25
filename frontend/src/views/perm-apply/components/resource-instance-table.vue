@@ -83,6 +83,12 @@
                     </div>
                 </template>
             </bk-table-column>
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效时间']`)" width="250">
+                <template slot-scope="{ row }">
+
+                    <effect-time :value="row.expired_display"></effect-time>
+                </template>
+            </bk-table-column>
             <bk-table-column :resizable="false" prop="description" :label="$t(`m.common['申请期限']`)" min-width="150">
                 <template slot-scope="{ row, $index }">
                     <!-- {{row.inOriginalList}}--++--{{row.isNew}}--{{row.expired_display}}--{{row.isExpired}}--{{row.tag}} -->
@@ -212,6 +218,7 @@
     import { PERMANENT_TIMESTAMP } from '@/common/constants'
     import RenderResource from './render-resource'
     import RenderCondition from './render-condition'
+    import EffectTime from './effect-time'
     import PreviewResourceDialog from './preview-resource-dialog'
 
     // 单次申请的最大实例数
@@ -226,7 +233,8 @@
             RenderAggregateSideslider,
             RenderResource,
             RenderCondition,
-            PreviewResourceDialog
+            PreviewResourceDialog,
+            EffectTime
         },
         props: {
             list: {

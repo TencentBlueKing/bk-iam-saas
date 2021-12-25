@@ -1,0 +1,182 @@
+<template>
+    <div :class="['iam-effect-time', { active: isActive }, { error: isError }]"
+        @mouseenter="handleMouseenter"
+        @mouseleave="handleMouseleave"
+        @click.stop="handleClick">
+        <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
+            <section :class="['iam-time-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
+                {{ curValue }}
+            </section>
+        </div>
+    </div>
+</template>
+<script>
+    export default {
+        name: '',
+        props: {
+            value: {
+                type: String,
+                default: ''
+            },
+            isEmpty: {
+                type: Boolean,
+                default: false
+            },
+            canView: {
+                type: Boolean,
+                default: false
+            },
+            canPaste: {
+                type: Boolean,
+                default: false
+            },
+            canOperate: {
+                type: Boolean,
+                default: true
+            },
+            canCopy: {
+                type: Boolean,
+                default: true
+            },
+            isError: {
+                type: Boolean,
+                default: false
+            },
+            params: {
+                type: Object,
+                default: () => {
+                    return {}
+                }
+            }
+        },
+        data () {
+            return {
+                curValue: '',
+                isActive: false,
+                immediatelyShow: false
+            }
+        },
+        computed: {
+            style () {
+                if (!this.canOperate) {
+                    return {
+                        width: '100%'
+                    }
+                }
+                if (this.isEmpty) {
+                    if (this.canPaste) {
+                        return {
+                            width: 'calc(100% - 30px)'
+                        }
+                    }
+                    return {
+                        width: '100%'
+                    }
+                }
+                const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length
+                return {
+                    width: `calc(100% - ${statusLen * 30}px)`
+                }
+            }
+        },
+        watch: {
+            value: {
+                handler (val) {
+                    console.log('val', val)
+                    this.curValue = val
+                },
+                immediate: true
+            }
+        },
+        methods: {
+
+            handleMouseenter () {
+                this.isActive = true
+                this.$emit('on-mouseover')
+            },
+
+            handleMouseleave () {
+                this.isActive = false
+                this.immediatelyShow = false
+                this.$emit('on-mouseleave')
+            },
+
+            handleRestore () {
+                this.$emit('on-restore')
+            }
+        }
+    }
+</script>
+<style lang="postcss" scoped>
+    .iam-effect-time {
+        display: flex;
+        justify-content: flex-start;
+        position: relative;
+        padding: 0 6px;
+        width: 97%;
+        line-height: 1;
+        vertical-align: middle;
+        border: 1px solid #c4c6cc;
+        border-radius: 2px;
+        font-size: 0;
+        color: #63656e;
+        background: #fff;
+        cursor: pointer;
+        &:hover {
+            border-color: #3a84ff;
+            .operate-icon {
+                display: inline-block;
+            }
+        }
+        &.active {
+            border-color: #3a84ff;
+        }
+        &.error {
+            border-color: #ff5656;
+        }
+        .iam-input-text {
+            .iam-time-input {
+                height: 32px;
+                line-height: 32px;
+                background-color: #fff;
+                width: 100%;
+                font-size: 12px;
+                box-sizing: border-box;
+                border: none;
+                text-align: left;
+                vertical-align: middle;
+                outline: none;
+                resize: none;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                cursor: pointer;
+                &.is-empty {
+                    color: #c4c6cc;
+                }
+            }
+        }
+        .operate-icon {
+            display: none;
+            margin: 6px 0 0 6px;
+            padding: 2px;
+            width: 20px;
+            height: 20px;
+            color: #979ba5;
+            outline: none;
+            cursor: pointer;
+            &:hover {
+                color: #3a84ff;
+                border-radius: 2px;
+                background: #e1ecff;
+                i {
+                    color: #3a84ff;
+                }
+            }
+            i {
+                font-size: 16px;
+                color: #979ba5;
+            }
+        }
+    }
+</style>

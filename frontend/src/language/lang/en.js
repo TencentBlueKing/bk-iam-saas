@@ -244,7 +244,8 @@ export const m = {
         '请输入正确的系统回调接口': 'Please enter the correct system callback interface',
         '请输入正确的系统健康检查地址': 'Please enter the correct system health check address',
         '资源类型ID已被占用': 'The resource type ID has been occupied',
-        '只允许输入英文': 'Only English is allowed'
+        '只允许输入英文': 'Only English is allowed',
+        '生效时间': 'Effective time'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
