@@ -37,6 +37,7 @@ from backend.service.models import (
     Policy,
     RelatedResource,
     RelatedResourceType,
+    ResourceGroup,
     ResourceGroupList,
     ResourceTypeDict,
     Subject,
@@ -568,7 +569,7 @@ class RelatedResourceBeanList:
         return self
 
 
-class ResourceGroupBean(BaseModel):
+class ResourceGroupBean(ResourceGroup):
     id: str = ""
     related_resource_types: List[RelatedResourceBean]
 
@@ -692,6 +693,12 @@ class ResourceGroupBeanList(ResourceGroupList):
         if len(self) <= 1:
             return self
 
+        # 关联单资源类型的操作, 环境属性相同的情况下, 需要合并资源实例
+        if len(self.get_thin_resource_types()) == 1:
+            env_hash_rg = {}
+            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, self)
+            return self
+
         # 如果resource_group存在包含关系, 移除被包含的resource_group
         for __ in range(len(self)):
             rg = self.pop(0)
@@ -719,7 +726,9 @@ class ResourceGroupBeanList(ResourceGroupList):
 
     def __contains__(self, resource_group: ResourceGroupBean) -> bool:
         for rg in self:
-            if rg.has_related_resource_types(resource_group.related_resource_types):
+            if resource_group.hash_environments() == rg.hash_environments() and rg.has_related_resource_types(
+                resource_group.related_resource_types
+            ):
                 return True
 
         return False
@@ -732,6 +741,21 @@ class ResourceGroupBeanList(ResourceGroupList):
         rg += resource_groups
         return rg
 
+    def _merge_resource_groups_with_same_env(
+        self, env_hash_rg: Dict[int, ResourceGroupBean], resource_groups: "ResourceGroupBeanList"
+    ) -> List[ResourceGroupBean]:
+        """
+        合并相同env的resource_group
+        """
+        for rg in resource_groups:
+            env_hash = rg.hash_environments()
+            if env_hash in env_hash_rg:
+                env_hash_rg[env_hash].add_related_resource_types(rg.related_resource_types)
+                continue
+
+            env_hash_rg[env_hash] = rg
+        return list(env_hash_rg.values())
+
     def __iadd__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
         """
         合并到本身
@@ -741,13 +765,13 @@ class ResourceGroupBeanList(ResourceGroupList):
         """
         # 处理单个资源类型的合并
         if len(self.get_thin_resource_types()) == 1:
-            for rg in resource_groups:
-                self[0].add_related_resource_types(rg.related_resource_types)
+            env_hash_rg = {rg.hash_environments(): rg for rg in self}
+            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, resource_groups)
             return self
 
         for rg in resource_groups:
             original_rg = self.get_by_id(rg.id)
-            if original_rg is not None:
+            if original_rg is not None and original_rg.hash_environments() == rg.hash_environments():
                 original_rg.add_related_resource_types(rg.related_resource_types)
             elif rg not in self:
                 self.__root__.append(rg)
@@ -775,7 +799,8 @@ class ResourceGroupBeanList(ResourceGroupList):
             for original_rg in self:
                 try:
                     for rg in resource_groups:
-                        original_rg.remove_related_resource_types(rg.related_resource_types)
+                        if rg.hash_environments() == original_rg.hash_environments():
+                            original_rg.remove_related_resource_types(rg.related_resource_types)
                     new_resource_groups.append(original_rg)
                 except PolicyEmptyException:
                     pass

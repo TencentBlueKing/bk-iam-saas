@@ -89,9 +89,37 @@ class RelatedResource(BaseModel):
     condition: List[Condition]
 
 
+class EnvValue(BaseModel):
+    name: str = ""
+    value: Any
+
+
+class EnvCondition(BaseModel):
+    type: str
+    values: List[EnvValue]
+
+    def trim_for_hash(self) -> Tuple[str, Any]:
+        return self.type, tuple(sorted([v.value for v in self.values]))
+
+
+class Environment(BaseModel):
+    type: str
+    condition: List[EnvCondition]
+
+    def trim_for_hash(self) -> Tuple[str, Any]:
+        return self.type, tuple(sorted([c.trim_for_hash() for c in self.condition], key=lambda c: c[0]))
+
+
 class ResourceGroup(BaseModel):
     id: str = ""
     related_resource_types: List[RelatedResource]
+    environments: List[Environment] = []
+
+    def hash_environments(self) -> int:
+        """
+        计算环境属性hash值
+        """
+        return hash(tuple(sorted([e.trim_for_hash() for e in self.environments], key=lambda e: e[0])))
 
 
 ThinResourceType = namedtuple("ThinResourceType", ["system_id", "type"])
@@ -171,11 +199,11 @@ class Policy(BaseModel):
         p.resources = self.resource_groups.dict()
         return p
 
-    def to_backend_dict(self):
+    def to_backend_dict(self, system_id: str):
         translator = ResourceExpressionTranslator()
         return {
             "action_id": self.action_id,
-            "resource_expression": translator.translate(self.resource_groups.dict()),
+            "resource_expression": translator.translate(system_id, self.resource_groups.dict()),
             "environment": "{}",
             "expired_at": self.expired_at,
             "id": self.policy_id,

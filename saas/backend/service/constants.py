@@ -256,3 +256,26 @@ class ApplicationStatus(ChoicesEnum, LowerStrEnum):
 
 
 DEAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Policy environment
+# ---------------------------------------------------------------------------------------------- #
+class PolicyEnvTypeEnum(ChoicesEnum, LowerStrEnum):
+    PERIOD_DAILY = auto()
+
+    _choices_labels = skip(((PERIOD_DAILY, _("时间")),))
+
+
+class PolicyEnvConditionTypeEnum(ChoicesEnum, LowerStrEnum):
+    TZ = auto()
+    HMS = auto()
+    WEEKDAY = auto()
+
+    _choices_labels = skip(
+        (
+            (TZ, _("时区")),
+            (HMS, _("时分秒")),
+            (WEEKDAY, _("WEEKDAY")),
+        )
+    )

@@ -63,7 +63,7 @@ class TemplateService:
             authorized_template.save(force_insert=True)
             PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") + 1)
             iam.create_and_delete_template_policies(
-                system_id, subject.type, subject.id, template_id, [p.to_backend_dict() for p in policies], []
+                system_id, subject.type, subject.id, template_id, [p.to_backend_dict(system_id) for p in policies], []
             )
 
     def alter_template_auth(
@@ -93,7 +93,7 @@ class TemplateService:
             policy_list.extend_without_repeated(create_policies)
 
         create_backend_policies = [
-            p.to_backend_dict() for p in create_policies if not backend_policy_list.get(p.action_id)
+            p.to_backend_dict(system_id) for p in create_policies if not backend_policy_list.get(p.action_id)
         ]
 
         with transaction.atomic():
@@ -138,7 +138,7 @@ class TemplateService:
             authorized_template.data = {"actions": [p.dict() for p in policy_list.policies]}
             authorized_template.save(update_fields=["_data"])
             iam.update_template_policies(
-                system_id, subject.type, subject.id, template_id, [p.to_backend_dict() for p in policies]
+                system_id, subject.type, subject.id, template_id, [p.to_backend_dict(system_id) for p in policies]
             )
 
     def direct_update_db_template_auth(self, subject: Subject, template_id: int, policies: List[Policy]):
