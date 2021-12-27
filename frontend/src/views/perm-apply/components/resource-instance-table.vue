@@ -85,8 +85,7 @@
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['生效时间']`)" width="250">
                 <template slot-scope="{ row }">
-
-                    <effect-time :value="row.expired_display"></effect-time>
+                    <effect-time :value="row.expired_display" @on-click="showTimeSlider(row)"></effect-time>
                 </template>
             </bk-table-column>
             <bk-table-column :resizable="false" prop="description" :label="$t(`m.common['申请期限']`)" min-width="150">
@@ -1365,7 +1364,10 @@
                 console.log('index, resIndex', index, resIndex)
                 this.tableList[index].resource_groups.splice(groupIndex, 1)
                 console.log('this.tableList', this.tableList)
-            }
+            },
+
+            // 生效时间侧边栏
+            showTimeSlider () {}
         }
     }
 </script>
