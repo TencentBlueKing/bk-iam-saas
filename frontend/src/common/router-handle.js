@@ -47,7 +47,8 @@ export const getRouterDiff = (payload) => {
             'audit',
             'permTemplateEdit',
             'permTemplateDiff',
-            'addGroupPerm'
+            'addGroupPerm',
+            'resourcePermiss'
         ]
     }
     if (payload === 'super_manager') {
