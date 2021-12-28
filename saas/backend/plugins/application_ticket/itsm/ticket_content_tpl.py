@@ -58,7 +58,7 @@ FORM_SCHEMES = {
             "column": [
                 {"name": "操作", "type": "text", "key": "action"},
                 {
-                    "name": "资源实例",
+                    "name": "资源组合",
                     "key": "resource_groups",
                     "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value,
                 },
@@ -71,7 +71,7 @@ FORM_SCHEMES = {
             "column": [
                 {"name": "操作", "type": "text", "key": "action"},
                 {
-                    "name": "资源实例",
+                    "name": "资源组合",
                     "key": "resource_groups",
                     "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value,
                 },

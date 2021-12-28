@@ -288,7 +288,7 @@ class ResourceGroupColumnValue(BaseModel):
 
 
 class ResourceGroupTable(BaseModel):
-    label: str = "资源组"
+    label: str = "资源组合"
     scheme: str = FormSchemeEnum.RESOURCE_GROUP_TABLE.value
     value: List[ResourceGroupColumnValue]
 
@@ -305,7 +305,7 @@ class ResourceGroupInfo(BaseModel):
 
     @classmethod
     def from_resource_groups(cls, resource_groups: ApplicationResourceGroupList) -> "ResourceGroupInfo":
-        value = [BaseDictStrValue(value=f"已设置 {len(resource_groups)} 个资源条件组合")]
+        value = [BaseDictStrValue(value=f"已设置 {len(resource_groups)} 个资源组合")]
         children = [ResourceGroupTable.from_resource_groups(resource_groups)]
         return ResourceGroupInfo(value=value, children=children)
 
