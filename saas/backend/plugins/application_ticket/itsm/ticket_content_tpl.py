@@ -23,10 +23,13 @@ class FormSchemeEnum(LowerStrEnum):
     # 操作相关
     ACTION_TABLE_WITHOUT_EXP = auto()  # Action的表格，不含有申请期限
     ACTION_TABLE = auto()  # Action的表格
+    RESOURCE_GROUP_TABLE = auto()  # 资源组的表格
     # 操作关联的资源
     RESOURCE_INSTANCE_TABLE = auto()  # 资源实例表格
     RESOURCE_ATTRIBUTE_TABLE = auto()  # 资源属性表格
     RESOURCE_BOTH_TABLE = auto()  # 资源属性和实例表格
+    # 环境属性
+    ENVIRONMENT_TABLE = auto()
 
 
 FORM_SCHEMES = {
@@ -54,7 +57,11 @@ FORM_SCHEMES = {
         "attrs": {
             "column": [
                 {"name": "操作", "type": "text", "key": "action"},
-                {"name": "资源实例", "key": "related_resource_types", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
+                {
+                    "name": "资源实例",
+                    "key": "resource_groups",
+                    "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value,
+                },
             ]
         },
     },
@@ -63,8 +70,21 @@ FORM_SCHEMES = {
         "attrs": {
             "column": [
                 {"name": "操作", "type": "text", "key": "action"},
-                {"name": "资源实例", "key": "related_resource_types", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
+                {
+                    "name": "资源实例",
+                    "key": "resource_groups",
+                    "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value,
+                },
                 {"name": "申请期限", "type": "text", "key": "expired_display"},
+            ]
+        },
+    },
+    FormSchemeEnum.RESOURCE_GROUP_TABLE.value: {
+        "type": "table",
+        "attrs": {
+            "column": [
+                {"name": "资源实例", "key": "related_resource_types", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
+                {"name": "环境属性", "key": "environments", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
             ]
         },
     },
@@ -88,6 +108,15 @@ FORM_SCHEMES = {
                 {"name": "拓扑实例分类", "type": "text", "key": "type"},
                 {"name": "拓扑实例", "key": "path", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
                 {"name": "属性条件", "key": "attributes", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
+            ]
+        },
+    },
+    FormSchemeEnum.ENVIRONMENT_TABLE.value: {
+        "type": "table",
+        "attrs": {
+            "column": [
+                {"name": "环境属性分类", "type": "text", "key": "type"},
+                {"name": "属性条件", "key": "condition", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
             ]
         },
     },

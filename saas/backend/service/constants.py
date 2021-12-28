@@ -279,3 +279,25 @@ class PolicyEnvConditionTypeEnum(ChoicesEnum, LowerStrEnum):
             (WEEKDAY, _("WEEKDAY")),
         )
     )
+
+
+class WeekDayEnum(ChoicesEnum):
+    0
+    1
+    2
+    3
+    4
+    5
+    6
+
+    _choices_labels = skip(
+        (
+            (0, _("星期天")),
+            (1, _("星期一")),
+            (2, _("星期二")),
+            (3, _("星期三")),
+            (4, _("星期四")),
+            (5, _("星期五")),
+            (6, _("星期六")),
+        )
+    )

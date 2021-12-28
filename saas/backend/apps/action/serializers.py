@@ -48,6 +48,10 @@ class RelatedResourceTypeSLZ(serializers.Serializer):
     selection_mode = serializers.ChoiceField(SelectionMode.get_choices(), label="资源选择模式")
 
 
+class RelatedEnvironmentSLZ(serializers.Serializer):
+    type = serializers.CharField()
+
+
 class ActionSLZ(serializers.Serializer):
     id = serializers.CharField(label="操作ID")
     tag = serializers.CharField(label="标签")
@@ -59,6 +63,7 @@ class ActionSLZ(serializers.Serializer):
     version = serializers.IntegerField()
     related_resource_types = serializers.ListField(label="关联资源类型", child=RelatedResourceTypeSLZ(label="资源类型"))
     related_actions = serializers.ListField(child=serializers.CharField())
+    related_environments = serializers.ListField(child=RelatedEnvironmentSLZ())
 
 
 class SystemsSLZ(serializers.Serializer):
