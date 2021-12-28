@@ -151,6 +151,50 @@
                 right: -47px;
             }
         }
+
+        .environ-group-one{
+            position: relative;
+            .add-icon,
+            .reduce-icon {
+                font-size: 16px;
+                color: #979ba5;
+                position: absolute;
+                top: 45%;
+                right: -23px;
+                cursor: pointer;
+                &.disabled {
+                    color: #dcdee5;
+                    cursor: not-allowed;
+                }
+            }
+
+            .reduce-icon {
+                right: -47px;
+            }
+        }
+
+        .environ-group-more{
+            position: relative;
+            padding-bottom: 17px;
+            padding-top: 25px;
+            .add-icon,
+            .reduce-icon {
+                font-size: 16px;
+                color: #979ba5;
+                position: absolute;
+                top: 45%;
+                right: -23px;
+                cursor: pointer;
+                &.disabled {
+                    color: #dcdee5;
+                    cursor: not-allowed;
+                }
+            }
+
+            .reduce-icon {
+                right: -47px;
+            }
+        }
     }
 
 }

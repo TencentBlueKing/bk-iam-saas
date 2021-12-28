@@ -41,7 +41,7 @@
                             @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
                             @on-click="showAggregateResourceInstance(row, $index)" />
                     </div>
-                    <div class="relation-content-wrapper" :class="tableList.length > 1 ? 'pr40' : ''" v-else>
+                    <div class="relation-content-wrapper" :class="tableList.length >= 1 ? 'pr40' : ''" v-else>
                         <template v-if="!row.isEmpty">
                             <div v-for="(_, groIndex) in row.resource_groups" :key="_.id" class="group-container">
                                 <div class="relation-content-item" v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
@@ -71,7 +71,7 @@
                                             @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
                                     </div>
                                     <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
-                                    <Icon v-if="tableList.length > 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
+                                    <Icon v-if="tableList.length >= 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
                                     <Icon v-if="tableList.length > 1" :class="row.resource_groups.length <= 1 ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                                         @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                 </div>
@@ -83,9 +83,19 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['生效时间']`)" width="250">
-                <template slot-scope="{ row }">
-                    <effect-time :value="row.expired_display" @on-click="showTimeSlider(row)"></effect-time>
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" width="250">
+                <template slot-scope="{ row, $index }">
+                    <div class="mt20" v-if="!!row.relatedEnvironments.length">
+                        <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                            :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                            <effect-time
+                                :value="_.environments"
+                                :is-empty="_.environments.length === 1 && _.environments[0].type === ''"
+                                @on-click="showTimeSlider(row, $index, groIndex)">
+                            </effect-time>
+                        </div>
+                    </div>
+                    <div v-else>{{ $t(`m.common['无需生效条件']`) }}</div>
                 </template>
             </bk-table-column>
             <bk-table-column :resizable="false" prop="description" :label="$t(`m.common['申请期限']`)" min-width="150">
@@ -193,6 +203,24 @@
             </div>
         </bk-sideslider>
 
+        <bk-sideslider :is-show="isShowResourceInstanceEffectTime"
+            :title="resourceInstanceEffectTimeTitle"
+            :width="720"
+            quick-close
+            @update:isShow="handleResourceEffectTimeCancel"
+            :ext-cls="'relate-instance-sideslider'">
+            <div slot="content" class="sideslider-content">
+                <sideslider-effect-time
+                    ref="sidesliderRef"
+                    :data="environmentsData"
+                ></sideslider-effect-time>
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceEffectTimeSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            </div>
+        </bk-sideslider>
+
         <preview-resource-dialog
             :show="isShowPreviewDialog"
             :title="previewDialogTitle"
@@ -218,6 +246,7 @@
     import RenderResource from './render-resource'
     import RenderCondition from './render-condition'
     import EffectTime from './effect-time'
+    import SidesliderEffectTime from './sideslider-effect-time'
     import PreviewResourceDialog from './preview-resource-dialog'
 
     // 单次申请的最大实例数
@@ -233,7 +262,8 @@
             RenderResource,
             RenderCondition,
             PreviewResourceDialog,
-            EffectTime
+            EffectTime,
+            SidesliderEffectTime
         },
         props: {
             list: {
@@ -290,7 +320,8 @@
                 curAggregateResourceType: {},
                 curCopyParams: {},
                 sliderLoading: false,
-                needEmitFlag: false
+                needEmitFlag: false,
+                isShowResourceInstanceEffectTime: false
             }
         },
         computed: {
@@ -320,11 +351,8 @@
                 if (!this.originalList.some(item => item.id === curId)) {
                     return []
                 }
-                console.log('this.originalList', this.originalList)
-                console.log('this.curGroupIndex', this.curGroupIndex)
                 const curResTypeData = this.originalList.find(item => item.id === curId)
                     .resource_groups[this.curGroupIndex]
-                console.log('curResTypeData', curResTypeData)
                 if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
                     return []
                 }
@@ -333,6 +361,21 @@
                     return []
                 }
                 return _.cloneDeep(curData.condition)
+            },
+            environmentsData () {
+                console.log(this.curIndex, this.curGroupIndex)
+                if (this.curIndex === -1 || this.curGroupIndex === -1) {
+                    return []
+                }
+                const environmentsData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .environments
+
+                console.log(2222, environmentsData)
+                if (!environmentsData) {
+                    return []
+                }
+                console.log(1111, _.cloneDeep(environmentsData))
+                return _.cloneDeep(environmentsData)
             },
             curDisabled () {
                 if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
@@ -1291,6 +1334,7 @@
                                     })
                                 }
                                 groupResourceTypes.push({
+                                    environments: groupItem.environments,
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
                                 })
@@ -1353,7 +1397,13 @@
                 dataClone.related_resource_types[resIndex].condition = ['none']
                 dataClone.related_resource_types[resIndex].conditionBackup = ['none']
                 console.log('dataClone', dataClone)
-                const relatedResourceTypes = _.cloneDeep({ id: '', related_resource_types: dataClone.related_resource_types })
+                const relatedResourceTypes = _.cloneDeep(
+                    {
+                        id: '',
+                        related_resource_types: dataClone.related_resource_types,
+                        environments: dataClone.environments
+                    }
+                )
                 this.tableList[index].resource_groups.push(relatedResourceTypes)
                 console.log('this.tableList', this.tableList)
                 this.originalList = _.cloneDeep(this.tableList)
@@ -1367,7 +1417,41 @@
             },
 
             // 生效时间侧边栏
-            showTimeSlider () {}
+            showTimeSlider (data, index, groupIndex) {
+                this.curIndex = index
+                this.curGroupIndex = groupIndex
+                this.isShowResourceInstanceEffectTime = true
+                this.resourceInstanceEffectTimeTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+            },
+
+            // 生效时间保存
+            handleResourceEffectTimeSumit () {
+                const environments = this.$refs.sidesliderRef.handleGetValue()
+                console.log(this.curIndex, this.curGroupIndex)
+
+                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                resItem.environments = environments
+                console.log(resItem)
+                console.log(environments)
+                console.log(this.tableList)
+
+                window.changeAlert = false
+                this.resourceInstanceEffectTimeTitle = ''
+                this.isShowResourceInstanceEffectTime = false
+                this.curIndex = -1
+                this.curGroupIndex = -1
+            },
+
+            handleResourceEffectTimeCancel () {
+                let cancelHandler = Promise.resolve()
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm()
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceEffectTime = false
+                    // this.resetDataAfterClose()
+                }, _ => _)
+            }
         }
     }
 </script>

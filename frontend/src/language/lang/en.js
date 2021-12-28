@@ -35,6 +35,7 @@ export const m = {
         '操作': 'Action',
         '申请期限': 'Expiration Date',
         '无需关联实例': 'No need to associate instances',
+        '无需生效条件': 'No need to effective condition',
         '无限制': 'Unlimited',
         '到期时间': 'Expiration Date',
         '基本信息': 'Summary',
@@ -248,7 +249,8 @@ export const m = {
         '请输入正确的系统健康检查地址': 'Please enter the correct system health check address',
         '资源类型ID已被占用': 'The resource type ID has been occupied',
         '只允许输入英文': 'Only English is allowed',
-        '生效时间': 'Effective time'
+        '生效时间': 'Effective time',
+        '生效条件': 'Effective condition'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
