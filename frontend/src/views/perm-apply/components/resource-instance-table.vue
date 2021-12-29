@@ -83,7 +83,7 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" width="250">
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="450">
                 <template slot-scope="{ row, $index }">
                     <div class="mt20" v-if="!!row.related_environments.length">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
