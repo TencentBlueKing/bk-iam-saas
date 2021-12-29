@@ -13,7 +13,9 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
                 <template slot-scope="{ row }">
                     <template v-if="!row.isEmpty">
-                        <div v-for="_ in row.resource_groups" :key="_.id">
+                        <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
+                            :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                                ? '' : 'related-resource-list-border'">
                             <p class="related-resource-item"
                                 v-for="item in _.related_resource_types"
                                 :key="item.type">
@@ -24,17 +26,40 @@
                                     :max-width="380"
                                     @on-view="handleViewResource(row)" />
                             </p>
+                            <Icon
+                                type="detail-new"
+                                class="view-icon"
+                                :title="$t(`m.common['详情']`)"
+                                v-if="isShowPreview(row)"
+                                @click.stop="handleViewResource(_, row)" />
                         </div>
                     </template>
                     <template v-else>
                         {{ $t(`m.common['无需关联实例']`) }}
                     </template>
-                    <Icon
-                        type="detail-new"
-                        class="view-icon"
-                        :title="$t(`m.common['详情']`)"
-                        v-if="isShowPreview(row)"
-                        @click.stop="handleViewResource(row)" />
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
+                <template slot-scope="{ row, $index }">
+                    <div v-if="!!row.related_environments.length">
+                        <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                            :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
+                                     row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
+                                         ? '' : 'related-resource-list-border']">
+                            <effect-conditon
+                                :value="_.environments"
+                                :is-empty="!_.environments.length"
+                                @on-click="showTimeSlider(row, $index, groIndex)">
+                            </effect-conditon>
+                            <Icon
+                                type="detail-new"
+                                class="view-icon"
+                                :title="$t(`m.common['详情']`)"
+                                v-if="isShowPreview(row)"
+                                @click.stop="handleEnvironmentsViewResource(_)" />
+                        </div>
+                    </div>
+                    <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div>
                 </template>
             </bk-table-column>
             <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
@@ -98,16 +123,33 @@
                     @on-change="handleChange" />
             </div>
         </bk-sideslider>
+
+        <bk-sideslider
+            :is-show="isShowEnvironmentsSideslider"
+            :title="environmentsSidesliderTitle"
+            :width="725"
+            quick-close
+            @update:isShow="handleResourceCancel"
+            ext-cls="effect-conditon-side">
+            <div slot="content">
+                <effect-conditon
+                    :value="environmentsSidesliderData"
+                    :is-empty="!environmentsSidesliderData.length"
+                >
+                </effect-conditon>
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 <script>
     import _ from 'lodash'
     import IamPopoverConfirm from '@/components/iam-popover-confirm'
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
+    import RenderResourcePopover from '../components/prem-view-resource-popover'
     import PermPolicy from '@/model/my-perm-policy'
     import { leaveConfirm } from '@/common/leave-confirm'
     import RenderDetail from '../components/render-detail-edit'
+    import EffectConditon from './effect-conditon'
 
     export default {
         name: 'CustomPermTable',
@@ -115,7 +157,8 @@
             IamPopoverConfirm,
             RenderDetail,
             RenderResourcePopover,
-            DeleteDialog
+            DeleteDialog,
+            EffectConditon
         },
         props: {
             systemId: {
@@ -145,7 +188,10 @@
                 isBatchDelete: true,
                 batchDisabled: false,
                 disabled: true,
-                canOperate: true
+                canOperate: true,
+                isShowEnvironmentsSideslider: false,
+                environmentsSidesliderTitle: this.$t(`m.common['生效条件']`),
+                environmentsSidesliderData: []
             }
         },
         computed: {
@@ -184,6 +230,7 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId })
                     this.policyList = res.data.map(item => new PermPolicy(item))
+                    console.log('this.policyList', this.policyList)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -202,7 +249,7 @@
              * getCellClass
              */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1) {
+                if (columnIndex === 1 || columnIndex === 2) {
                     return 'iam-perm-table-cell-cls'
                 }
                 return ''
@@ -283,6 +330,7 @@
                 }
                 cancelHandler.then(() => {
                     this.isShowSideslider = false
+                    this.isShowEnvironmentsSideslider = false
                     this.resetDataAfterClose()
                 }, _ => _)
             },
@@ -319,25 +367,22 @@
             /**
              * handleViewResource
              */
-            handleViewResource (payload) {
+            handleViewResource (groupItem, payload) {
                 this.curId = payload.id
                 this.curPolicyId = payload.policy_id
                 const params = []
-                if (payload.resource_groups.length > 0) {
-                    payload.resource_groups.forEach(groupItem => {
-                        if (groupItem.related_resource_types.length > 0) {
-                            groupItem.related_resource_types.forEach(item => {
-                                const { name, type, condition } = item
-                                params.push({
-                                    name: type,
-                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
-                                    tabType: 'resource',
-                                    data: condition,
-                                    systemId: item.system_id,
-                                    resource_group_id: groupItem.id
-                                })
-                            })
-                        }
+
+                if (groupItem.related_resource_types.length > 0) {
+                    groupItem.related_resource_types.forEach(item => {
+                        const { name, type, condition } = item
+                        params.push({
+                            name: type,
+                            label: `${name} ${this.$t(`m.common['实例']`)}`,
+                            tabType: 'resource',
+                            data: condition,
+                            systemId: item.system_id,
+                            resource_group_id: groupItem.id
+                        })
                     })
                 }
                 this.previewData = _.cloneDeep(params)
@@ -351,6 +396,16 @@
                 this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
                 window.changeAlert = 'iamSidesider'
                 this.isShowSideslider = true
+            },
+
+            /**
+             * handleEnvironmentsViewResource
+             */
+            handleEnvironmentsViewResource (payload) {
+                console.log('payload', payload)
+                this.environmentsSidesliderData = payload.environments
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
+                this.isShowEnvironmentsSideslider = true
             },
 
             /**
@@ -401,6 +456,28 @@
         .bk-table-enable-row-hover .bk-table-body tr:hover > td {
             background-color: #fff;
         }
+        .related-resource-list{
+            position: relative;
+            .related-resource-item{
+                margin: 20px !important;
+            }
+            .view-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .view-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            &-border{border-bottom: 1px solid #dfe0e5;}
+        }
         .bk-table {
             border-right: none;
             border-bottom: none;
@@ -412,21 +489,12 @@
             .bk-table-body-wrapper {
                 .cell {
                     padding: 20px !important;
-                    .view-icon {
-                        display: none;
-                        position: absolute;
-                        top: 50%;
-                        right: 10px;
-                        transform: translate(0, -50%);
-                        font-size: 18px;
-                        cursor: pointer;
-                    }
-                    &:hover {
-                        .view-icon {
-                            display: inline-block;
-                            color: #3a84ff;
-                        }
-                    }
+                }
+            }
+
+            .iam-perm-table-cell-cls {
+                .cell {
+                    padding: 0px !important;
                 }
             }
             tr:hover {
@@ -440,6 +508,13 @@
             .action-wrapper {
                 margin-right: 30px;
                 font-weight: normal;
+            }
+        }
+
+        .effect-conditon-side{
+            .text{
+                font-size: 14px;
+                color: #63656e;
             }
         }
     }

@@ -79,7 +79,7 @@
             data: {
                 handler (val) {
                     console.log('val1', val)
-                    if (val.length === 1 && !val[0].type) {
+                    if (!val.length) {
                         this.environmentsData = [{ type: 'period_daily', date: ['1', '2', '3', '4', '5', '6', '0'], TimeZone: 'Asia/Shanghai', initTimeRange: ['00:00:00', '23:59:59'] }]
                     } else {
                         this.environmentsData = val.map(e => {

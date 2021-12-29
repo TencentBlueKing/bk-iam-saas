@@ -57,12 +57,11 @@ export default class Policy {
         this.relatedEnvironments(payload)
         this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled)
         this.initAttachActions(payload)
-        console.log('payload', payload)
     }
 
     relatedEnvironments (payload) {
         const relatedEnvironments = payload.related_environments || []
-        this.relatedEnvironments = payload.resource_groups.reduce((prev, item) => {
+        this.related_environments = payload.resource_groups.reduce((prev, item) => {
             let environments = item.environments && item.environments.reduce((p, v) => {
                 p.push({ type: v.type })
                 return p
@@ -106,8 +105,12 @@ export default class Policy {
                 item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
             )
             
-            const environments = item.environments && item.environments.length ? item.environments : [{ type: '', condition: [] }]
-            prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments })
+            if ((this.related_environments && !!this.related_environments.length)) {
+                const environments = item.environments && item.environments.length ? item.environments : []
+                prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments })
+            } else {
+                prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+            }
             return prev
         }, [])
     }

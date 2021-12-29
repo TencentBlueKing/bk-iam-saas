@@ -15,8 +15,8 @@
         name: '',
         props: {
             value: {
-                type: String,
-                default: ''
+                type: Array,
+                default: []
             },
             isEmpty: {
                 type: Boolean,

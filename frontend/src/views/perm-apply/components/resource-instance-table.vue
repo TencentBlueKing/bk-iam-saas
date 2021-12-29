@@ -71,8 +71,8 @@
                                             @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
                                     </div>
                                     <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
-                                    <Icon v-if="tableList.length >= 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
-                                    <Icon v-if="tableList.length > 1" :class="row.resource_groups.length <= 1 ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
+                                    <Icon v-if="row.resource_groups.length >= 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
+                                    <Icon v-if="row.resource_groups.length >= 1" :class="row.resource_groups.length <= 1 ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                                         @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                 </div>
                             </div>
@@ -85,12 +85,12 @@
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" width="250">
                 <template slot-scope="{ row, $index }">
-                    <div class="mt20" v-if="!!row.relatedEnvironments.length">
+                    <div class="mt20" v-if="!!row.related_environments.length">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
                             :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
                             <effect-time
                                 :value="_.environments"
-                                :is-empty="_.environments.length === 1 && _.environments[0].type === ''"
+                                :is-empty="!_.environments.length"
                                 @on-click="showTimeSlider(row, $index, groIndex)">
                             </effect-time>
                         </div>
@@ -702,16 +702,19 @@
                 }
 
                 curData.resource_groups = curData.resource_groups.filter(groupItem => {
-                    groupItem.related_resource_types[0].condition.filter(e => {
-                        if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
-                            e.instances = e.instance || []
-                            e.attributes = e.attribute || []
-                            delete e.instance
-                            delete e.attribute
-                            return true
-                        }
-                        return false
+                    groupItem.related_resource_types.forEach(typeItem => {
+                        typeItem.condition.filter(e => {
+                            if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
+                                e.instances = e.instance || []
+                                e.attributes = e.attribute || []
+                                delete e.instance
+                                delete e.attribute
+                                return true
+                            }
+                            return false
+                        })
                     })
+                    // groupItem.related_resource_types[0]
                     return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
                 })
 
@@ -1191,6 +1194,7 @@
                 this.previewResourceParams = {}
                 this.params = {}
                 this.resourceInstanceSidesliderTitle = ''
+                this.resourceInstanceEffectTimeTitle = ''
             },
 
             handleResourceCancel () {
@@ -1393,17 +1397,25 @@
             },
 
             handlerAddCondition (data, index, resIndex) {
+                console.log('data', data, resIndex)
                 const dataClone = _.cloneDeep(data)
-                dataClone.related_resource_types[resIndex].condition = ['none']
-                dataClone.related_resource_types[resIndex].conditionBackup = ['none']
+                // dataClone.related_resource_types[resIndex].condition = ['none']
+                // dataClone.related_resource_types[resIndex].conditionBackup = ['none']
+                dataClone.related_resource_types = dataClone.related_resource_types.map(e => {
+                    e.condition = ['none']
+                    e.conditionBackup = ['none']
+                    return e
+                })
                 console.log('dataClone', dataClone)
                 const relatedResourceTypes = _.cloneDeep(
                     {
                         id: '',
-                        related_resource_types: dataClone.related_resource_types,
-                        environments: dataClone.environments
+                        related_resource_types: dataClone.related_resource_types
                     }
                 )
+                if (dataClone.environments) {
+                    relatedResourceTypes.environments = []
+                }
                 this.tableList[index].resource_groups.push(relatedResourceTypes)
                 console.log('this.tableList', this.tableList)
                 this.originalList = _.cloneDeep(this.tableList)
@@ -1449,7 +1461,7 @@
                 }
                 cancelHandler.then(() => {
                     this.isShowResourceInstanceEffectTime = false
-                    // this.resetDataAfterClose()
+                    this.resetDataAfterClose()
                 }, _ => _)
             }
         }

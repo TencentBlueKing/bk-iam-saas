@@ -154,6 +154,7 @@
 
         .environ-group-one{
             position: relative;
+            padding-top: 5px;
             .add-icon,
             .reduce-icon {
                 font-size: 16px;
@@ -175,7 +176,7 @@
 
         .environ-group-more{
             position: relative;
-            padding-bottom: 17px;
+            padding-bottom: 19px;
             padding-top: 25px;
             .add-icon,
             .reduce-icon {
