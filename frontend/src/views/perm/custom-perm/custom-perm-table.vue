@@ -56,7 +56,7 @@
                                 class="view-icon"
                                 :title="$t(`m.common['详情']`)"
                                 v-if="isShowPreview(row)"
-                                @click.stop="handleEnvironmentsViewResource(_)" />
+                                @click.stop="handleEnvironmentsViewResource(_, row)" />
                         </div>
                     </div>
                     <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div>
@@ -144,7 +144,7 @@
 
         <bk-sideslider
             :is-show="isShowResourceInstanceEffectTime"
-            :title="resourceInstanceEffectTimeTitle"
+            :title="environmentsSidesliderTitle"
             :width="725"
             quick-close
             @update:isShow="handleResourceEffectTimeCancel"
@@ -218,8 +218,7 @@
                 isShowEnvironmentsSideslider: false,
                 environmentsSidesliderTitle: this.$t(`m.common['生效条件']`),
                 environmentsSidesliderData: [],
-                isShowResourceInstanceEffectTime: false,
-                resourceInstanceEffectTimeTitle: ''
+                isShowResourceInstanceEffectTime: false
 
             }
         },
@@ -441,10 +440,11 @@
             /**
              * handleEnvironmentsViewResource
              */
-            handleEnvironmentsViewResource (payload) {
-                console.log('payload', payload)
+            handleEnvironmentsViewResource (payload, data) {
+                console.log('payload', payload, data)
                 this.environmentsSidesliderData = payload.environments
                 this.isShowEnvironmentsSideslider = true
+                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
             },
 
             /**
@@ -452,7 +452,6 @@
              */
             handleViewSidesliderCondition () {
                 this.isShowResourceInstanceEffectTime = true
-                this.resourceInstanceEffectTimeTitle = '生效条件'
             },
 
             /**
