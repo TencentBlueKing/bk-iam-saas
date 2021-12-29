@@ -133,10 +133,34 @@
             ext-cls="effect-conditon-side">
             <div slot="content">
                 <effect-conditon
+                    :is-detail="true"
                     :value="environmentsSidesliderData"
                     :is-empty="!environmentsSidesliderData.length"
+                    @on-view="handleViewSidesliderCondition"
                 >
                 </effect-conditon>
+            </div>
+        </bk-sideslider>
+
+        <bk-sideslider
+            :is-show="isShowResourceInstanceEffectTime"
+            :title="resourceInstanceEffectTimeTitle"
+            :width="725"
+            quick-close
+            @update:isShow="handleResourceEffectTimeCancel"
+            :ext-cls="'relate-instance-sideslider'">
+            <div slot="content" class="sideslider-content">
+                <sideslider-effect-conditon
+                    ref="sidesliderRef"
+                    :data="environmentsSidesliderData"
+                ></sideslider-effect-conditon>
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled"
+                    @click="handleResourceEffectTimeSumit">
+                    {{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="disabled"
+                    @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
         </bk-sideslider>
     </div>
@@ -150,6 +174,7 @@
     import { leaveConfirm } from '@/common/leave-confirm'
     import RenderDetail from '../components/render-detail-edit'
     import EffectConditon from './effect-conditon'
+    import SidesliderEffectConditon from './sideslider-effect-condition'
 
     export default {
         name: 'CustomPermTable',
@@ -158,7 +183,8 @@
             RenderDetail,
             RenderResourcePopover,
             DeleteDialog,
-            EffectConditon
+            EffectConditon,
+            SidesliderEffectConditon
         },
         props: {
             systemId: {
@@ -191,7 +217,10 @@
                 canOperate: true,
                 isShowEnvironmentsSideslider: false,
                 environmentsSidesliderTitle: this.$t(`m.common['生效条件']`),
-                environmentsSidesliderData: []
+                environmentsSidesliderData: [],
+                isShowResourceInstanceEffectTime: false,
+                resourceInstanceEffectTimeTitle: ''
+
             }
         },
         computed: {
@@ -335,6 +364,17 @@
                 }, _ => _)
             },
 
+            handleResourceEffectTimeCancel () {
+                let cancelHandler = Promise.resolve()
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm()
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceEffectTime = false
+                    this.resetDataAfterClose()
+                }, _ => _)
+            },
+
             /**
              * resetDataAfterClose
              */
@@ -404,8 +444,15 @@
             handleEnvironmentsViewResource (payload) {
                 console.log('payload', payload)
                 this.environmentsSidesliderData = payload.environments
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
                 this.isShowEnvironmentsSideslider = true
+            },
+
+            /**
+             * handleViewSidesliderCondition
+             */
+            handleViewSidesliderCondition () {
+                this.isShowResourceInstanceEffectTime = true
+                this.resourceInstanceEffectTimeTitle = '生效条件'
             },
 
             /**

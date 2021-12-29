@@ -1,10 +1,13 @@
 <template>
-    <div class="iam-effect-condition"
-        @click.stop="handleClick">
+    <div class="iam-effect-condition">
+        <div class="edit-text">
+            <bk-button v-if="isDetail" text @click="handleEdit">{{ $t(`m.common['编辑']`) }}</bk-button>
+        </div>
         <span class="text">{{ curValue }}</span>
     </div>
 </template>
 <script>
+    import _ from 'lodash'
     export default {
         name: '',
         props: {
@@ -13,6 +16,10 @@
                 default: []
             },
             isEmpty: {
+                type: Boolean,
+                default: false
+            },
+            isDetail: {
                 type: Boolean,
                 default: false
             }
@@ -87,18 +94,15 @@
                             p = `${this.effectType[v.type]}: ${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`
                             return p
                         }, '在')
+                        this.effectConditionData = _.cloneDeep(val)
                     }
                 },
                 immediate: true
             }
         },
         methods: {
-
-            handleClick () {
-                if (this.isDisabled) {
-                    return
-                }
-                this.$emit('on-click')
+            handleEdit () {
+                this.$emit('on-view')
             }
         }
     }
@@ -131,6 +135,10 @@
             vertical-align: middle; */
             height: 30px;
             line-height: 30px;
+        }
+
+        .edit-text{
+            text-align: right;
         }
     }
 </style>
