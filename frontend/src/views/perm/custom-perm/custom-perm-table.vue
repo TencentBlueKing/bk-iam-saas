@@ -385,19 +385,19 @@
              */
             handleResourceEffectTimeSumit () {
                 const environments = this.$refs.sidesliderRef.handleGetValue()
-                console.log(this.curIndex, this.curGroupIndex)
+                console.log(this.curIndex, this.curGroupIndex, environments)
 
-                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                resItem.environments = environments
-                console.log(resItem)
-                console.log(environments)
-                console.log(this.tableList)
+                // const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                // resItem.environments = environments
+                // console.log(resItem)
+                // console.log(environments)
+                // console.log(this.tableList)
 
                 window.changeAlert = false
-                this.resourceInstanceEffectTimeTitle = ''
-                this.isShowResourceInstanceEffectTime = false
-                this.curIndex = -1
-                this.curGroupIndex = -1
+                // this.resourceInstanceEffectTimeTitle = ''
+                // this.isShowResourceInstanceEffectTime = false
+                // this.curIndex = -1
+                // this.curGroupIndex = -1
             },
 
             /**
