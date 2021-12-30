@@ -32,6 +32,9 @@
                                 :title="$t(`m.common['详情']`)"
                                 v-if="isShowPreview(row)"
                                 @click.stop="handleViewResource(_, row)" />
+                            <Icon v-if="isShowPreview(row)"
+                                :title="$t(`m.common['删除']`)" class="effect-icon" type="reduce-hollow"
+                                @click.stop="handlerReduceInstance(_, row)" />
                         </div>
                     </template>
                     <template v-else>
@@ -53,7 +56,7 @@
                             </effect-conditon>
                             <Icon
                                 type="detail-new"
-                                class="view-icon"
+                                class="effect-icon"
                                 :title="$t(`m.common['详情']`)"
                                 v-if="isShowPreview(row)"
                                 @click.stop="handleEnvironmentsViewResource(_, row)" />
@@ -156,10 +159,10 @@
                 ></sideslider-effect-conditon>
             </div>
             <div slot="footer" style="margin-left: 25px;">
-                <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled"
+                <bk-button theme="primary" :loading="sliderLoading"
                     @click="handleResourceEffectTimeSumit">
                     {{ $t(`m.common['保存']`) }}</bk-button>
-                <bk-button style="margin-left: 10px;" :disabled="disabled"
+                <bk-button style="margin-left: 10px;"
                     @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
         </bk-sideslider>
@@ -218,7 +221,9 @@
                 isShowEnvironmentsSideslider: false,
                 environmentsSidesliderTitle: this.$t(`m.common['生效条件']`),
                 environmentsSidesliderData: [],
-                isShowResourceInstanceEffectTime: false
+                isShowResourceInstanceEffectTime: false,
+                resourceGrouParams: {},
+                params: ''
 
             }
         },
@@ -240,6 +245,7 @@
                         const params = {
                             systemId: value
                         }
+                        this.params = params
                         this.fetchData(params)
                     } else {
                         this.initRequestQueue = []
@@ -375,6 +381,26 @@
             },
 
             /**
+             * handleResourceEffectTimeSumit
+             */
+            handleResourceEffectTimeSumit () {
+                const environments = this.$refs.sidesliderRef.handleGetValue()
+                console.log(this.curIndex, this.curGroupIndex)
+
+                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                resItem.environments = environments
+                console.log(resItem)
+                console.log(environments)
+                console.log(this.tableList)
+
+                window.changeAlert = false
+                this.resourceInstanceEffectTimeTitle = ''
+                this.isShowResourceInstanceEffectTime = false
+                this.curIndex = -1
+                this.curGroupIndex = -1
+            },
+
+            /**
              * resetDataAfterClose
              */
             resetDataAfterClose () {
@@ -441,16 +467,29 @@
              * handleEnvironmentsViewResource
              */
             handleEnvironmentsViewResource (payload, data) {
-                console.log('payload', payload, data)
                 this.environmentsSidesliderData = payload.environments
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
                 this.isShowEnvironmentsSideslider = true
                 this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+            },
+
+            /**
+             * handlerReduceInstance
+             */
+            handlerReduceInstance (payload, data) {
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${data.name}】权限`
+                this.deleteDialog.visible = true
+                this.resourceGrouParams = {
+                    id: data.policy_id,
+                    resourceGroupId: payload.id
+                }
             },
 
             /**
              * handleViewSidesliderCondition
              */
             handleViewSidesliderCondition () {
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
                 this.isShowResourceInstanceEffectTime = true
             },
 
@@ -469,16 +508,22 @@
             async handleSumbitDelete () {
                 this.deleteDialog.loading = true
                 try {
-                    await this.$store.dispatch('permApply/deletePerm', {
-                        policyIds: this.curDeleteIds,
-                        systemId: this.systemId
-                    })
-                    const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0])
-                    if (index > -1) {
-                        this.policyList.splice(index, 1)
+                    if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
+                        await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams)
+                        this.fetchData(this.params)
+                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
+                    } else {
+                        await this.$store.dispatch('permApply/deletePerm', {
+                            policyIds: this.curDeleteIds,
+                            systemId: this.systemId
+                        })
+                        const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0])
+                        if (index > -1) {
+                            this.policyList.splice(index, 1)
+                        }
+                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
+                        this.$emit('after-delete', this.policyList.length)
                     }
-                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                    this.$emit('after-delete', this.policyList.length)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -511,13 +556,28 @@
                 display: none;
                 position: absolute;
                 top: 50%;
-                right: 10px;
+                right: 40px;
                 transform: translate(0, -50%);
                 font-size: 18px;
                 cursor: pointer;
             }
             &:hover {
                 .view-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            .effect-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-icon {
                     display: inline-block;
                     color: #3a84ff;
                 }

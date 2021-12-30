@@ -48,6 +48,7 @@
 </template>
 <script>
     import _ from 'lodash'
+    import { GLOBAL_TIME_ZONE } from '@/common/constants'
     export default {
         name: '',
         props: {
@@ -68,9 +69,7 @@
                     { name: '每周六', value: '6' },
                     { name: '每周日', value: '0' }
                 ],
-                effectWeekTimeZone: [
-                    { name: '(GMT+08:00) 中国标准时间 - 北京', value: 'Asia/Shanghai' }
-                ],
+                effectWeekTimeZone: GLOBAL_TIME_ZONE,
                 date: [],
                 environmentsData: []
             }

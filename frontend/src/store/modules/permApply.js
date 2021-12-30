@@ -167,6 +167,22 @@ export default {
         },
 
         /**
+         * 删除资源组权限
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { policyIds, systemId } policyIds 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+
+        deleteRosourceGroupPerm ({ commit, state, dispatch }, { id, resourceGroupId }, config) {
+            return http.delete(`${AJAX_URL_PREFIX}/policies/${id}/${resourceGroupId}/`, config)
+        },
+
+        /**
          * 组织架构删除权限
          *
          * @param {Function} commit store commit mutation handler

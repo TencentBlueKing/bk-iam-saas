@@ -8,6 +8,7 @@
 </template>
 <script>
     import _ from 'lodash'
+    import { GLOBAL_TIME_ZONE_ENUM } from '@/common/constants'
     export default {
         name: '',
         props: {
@@ -38,9 +39,7 @@
                     6: '每周六',
                     0: '每周日'
                 },
-                effectWeekTimeZone: {
-                    'Asia/Shanghai': '(GMT+08:00)'
-                },
+                effectWeekTimeZone: GLOBAL_TIME_ZONE_ENUM,
                 effectType: {
                     'period_daily': '时间'
                 }

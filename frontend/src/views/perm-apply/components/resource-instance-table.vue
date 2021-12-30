@@ -216,8 +216,8 @@
                 ></sideslider-effect-time>
             </div>
             <div slot="footer" style="margin-left: 25px;">
-                <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceEffectTimeSumit">{{ $t(`m.common['保存']`) }}</bk-button>
-                <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+                <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
         </bk-sideslider>
 
@@ -1439,19 +1439,7 @@
             // 生效时间保存
             handleResourceEffectTimeSumit () {
                 const environments = this.$refs.sidesliderRef.handleGetValue()
-                console.log(this.curIndex, this.curGroupIndex)
-
-                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                resItem.environments = environments
-                console.log(resItem)
-                console.log(environments)
-                console.log(this.tableList)
-
-                window.changeAlert = false
-                this.resourceInstanceEffectTimeTitle = ''
-                this.isShowResourceInstanceEffectTime = false
-                this.curIndex = -1
-                this.curGroupIndex = -1
+                console.log(this.curIndex, this.curGroupIndex, environments)
             },
 
             handleResourceEffectTimeCancel () {

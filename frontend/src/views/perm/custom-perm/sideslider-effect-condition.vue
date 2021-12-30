@@ -48,6 +48,7 @@
 </template>
 <script>
     import _ from 'lodash'
+    import { GLOBAL_TIME_ZONE } from '@/common/constants'
     export default {
         name: '',
         props: {
@@ -68,9 +69,7 @@
                     { name: '每周六', value: '6' },
                     { name: '每周日', value: '0' }
                 ],
-                effectWeekTimeZone: [
-                    { name: '(GMT+08:00) 中国标准时间 - 北京', value: 'Asia/Shanghai' }
-                ],
+                effectWeekTimeZone: GLOBAL_TIME_ZONE,
                 date: [],
                 environmentsData: []
             }
@@ -82,7 +81,7 @@
                     if (!val.length) {
                         this.environmentsData = [{ type: 'period_daily', date: ['1', '2', '3', '4', '5', '6', '0'], TimeZone: 'Asia/Shanghai', initTimeRange: ['00:00:00', '23:59:59'] }]
                     } else {
-                        this.environmentsData = val.map(e => {
+                        this.environmentsData = _.cloneDeep(val).map(e => {
                             if (e.condition && e.condition.length) {
                                 e.date = ['1', '2', '3', '4', '5', '6', '0']
                                 e.condition.forEach(item => {
