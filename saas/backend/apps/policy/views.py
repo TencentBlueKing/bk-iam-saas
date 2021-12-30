@@ -133,6 +133,7 @@ class PolicyViewSet(GenericViewSet):
         data = slz.validated_data
 
         policy_id = kwargs["pk"]
+        resource_group_id = data["resource_group_id"]
         resource_system_id = data["system_id"]
         resource_type = data["type"]
         condition_ids = data["ids"]
@@ -148,6 +149,7 @@ class PolicyViewSet(GenericViewSet):
             system_id,
             subject,
             policy_id,
+            resource_group_id,
             resource_system_id,
             resource_type,
             condition_ids,
@@ -158,6 +160,38 @@ class PolicyViewSet(GenericViewSet):
         audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
 
         return Response({})
+
+
+class PolicyResourceGroupDeleteViewSet(GenericViewSet):
+
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="Policy删除资源组",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["policy"],
+    )
+    @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        policy_id = kwargs["pk"]
+        resource_group_id = kwargs["resource_group_id"]
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+
+        permission_logger.info("policy delete by user: %s", request.user.username)
+
+        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
+        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        # 删除权限
+        update_policy = self.policy_operation_biz.delete_by_resource_group_id(
+            system_id, subject, policy_id, resource_group_id
+        )
+
+        # 写入审计上下文
+        audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
+
+        return Response()
 
 
 class PolicySystemViewSet(GenericViewSet):
@@ -244,7 +278,7 @@ class RelatedPolicyViewSet(GenericViewSet):
                 add_policy = add_policy_list.get(p.action_id)
                 if (
                     add_policy
-                    and not p.has_related_resource_types(add_policy.related_resource_types)
+                    and not p.has_resource_group_list(add_policy.resource_groups)
                     and p.tag != PolicyTag.ADD.value
                 ):
                     p.tag = PolicyTag.UPDATE.value

@@ -176,6 +176,7 @@
                     })
                     return
                 }
+
                 this.pasteLoading = true
                 const params = {
                     resource_type: this.params.resource_type,
@@ -183,12 +184,13 @@
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/resourceBatchCopy', params)
-                    console.warn(res)
-                    const condition = res.data[0].resource_type.condition
-                    this.$emit('on-paste', {
-                        flag: true,
-                        data: condition
-                    })
+                    if (res.data && res.data[0]) {
+                        const condition = res.data[0].resource_type.condition
+                        this.$emit('on-paste', {
+                            flag: true,
+                            data: condition
+                        })
+                    }
                 } catch (e) {
                     this.$emit('on-paste', {
                         flag: false,
@@ -257,7 +259,7 @@
         justify-content: flex-start;
         position: relative;
         padding: 0 6px;
-        width: 100%;
+        width: 97%;
         line-height: 1;
         vertical-align: middle;
         border: 1px solid #c4c6cc;

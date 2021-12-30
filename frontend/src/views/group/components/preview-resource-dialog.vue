@@ -76,7 +76,8 @@
                 const requestParams = {
                     id: this.params.groupId,
                     data: {
-                        related_resource_type: this.params.related_resource_type
+                        related_resource_type: this.params.related_resource_type,
+                        resource_group_id: this.params.resource_group_id
                     }
                 }
                 if (!isTemplate) {

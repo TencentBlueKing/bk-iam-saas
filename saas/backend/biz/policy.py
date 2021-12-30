@@ -19,12 +19,13 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from pydantic.main import BaseModel
 from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
-from backend.service.constants import ANY_ID, FETCH_MAX_LIMIT
+from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
 from backend.service.models import (
     Action,
     BackendThinPolicy,
@@ -36,6 +37,7 @@ from backend.service.models import (
     Policy,
     RelatedResource,
     RelatedResourceType,
+    ResourceGroupList,
     ResourceTypeDict,
     Subject,
     System,
@@ -47,6 +49,7 @@ from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
 from backend.util.model import ExcludeModel
+from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
 
@@ -565,43 +568,16 @@ class RelatedResourceBeanList:
         return self
 
 
-class PolicyBean(Policy):
+class ResourceGroupBean(BaseModel):
+    id: str = ""
     related_resource_types: List[RelatedResourceBean]
-    policy_id: int = 0
-    expired_at: int = 0
-
-    type: str = ""
-    name: str = ""
-    name_en: str = ""
-    description: str = ""
-    description_en: str = ""
-    expired_display: str = ""
-
-    def __init__(self, **data: Any):
-        if "expired_at" in data and (data["expired_at"] is not None) and ("expired_display" not in data):
-            data["expired_display"] = expired_at_display(data["expired_at"])
-
-        # NOTE 兼容数据传None的情况
-        if "expired_at" in data and not isinstance(data["expired_at"], int):
-            data.pop("expired_at")
-        if "expired_display" in data and not isinstance(data["expired_display"], str):
-            data.pop("expired_display")
-        if "type" in data and not isinstance(data["type"], str):
-            data.pop("type")
-
-        super().__init__(**data)
-
-    def dict(self, *args, **kwargs):
-        kwargs["by_alias"] = True
-        return super().dict(*args, **kwargs)
 
     def fill_empty_fields(self, action: Action, resource_type_dict: ResourceTypeDict):
         """
         填充默认为空的fields
         """
-        empty_fields = ["type", "name", "name_en", "description", "description_en"]
-        for field in empty_fields:
-            setattr(self, field, getattr(action, field))
+        if self.id == "":
+            self.id = gen_uuid()
 
         for related_resource_type in self.related_resource_types:
             action_related_resource_type = action.get_related_resource_type(
@@ -621,33 +597,6 @@ class PolicyBean(Policy):
             else set()
         )
 
-    def get_related_resource_type(self, system_id: str, resource_type_id: str) -> Optional[RelatedResourceBean]:
-        for related_resource_type in self.related_resource_types:
-            if related_resource_type.system_id == system_id and related_resource_type.type == resource_type_id:
-                return related_resource_type
-
-        return None
-
-    def is_expired(self):
-        """是否策略已过期"""
-        return self.expired_at < int(time.time())
-
-    def set_expired_at(self, expired_at: int):
-        self.expired_at = expired_at
-        self.expired_display = expired_at_display(expired_at)
-
-    def is_unrelated(self) -> bool:
-        return len(self.related_resource_types) == 0
-
-    def set_related_resource_type(self, resource_type: RelatedResourceBean):
-        for related_resource_type in self.related_resource_types:
-            if (
-                related_resource_type.system_id == resource_type.system_id
-                and related_resource_type.type == resource_type.type
-            ):
-                related_resource_type.condition = resource_type.condition
-                break
-
     def add_related_resource_types(self, related_resources: List[RelatedResourceBean]) -> "PolicyBean":
         """
         合并
@@ -664,9 +613,6 @@ class PolicyBean(Policy):
 
         新的Policy - 老的Policy = 空, 则老Policy包含新的
         """
-        if self.is_unrelated():
-            return True
-
         resource_type_list = RelatedResourceBeanList(deepcopy(related_resources))
         resource_type_list.sub(RelatedResourceBeanList(self.related_resource_types))
 
@@ -676,9 +622,6 @@ class PolicyBean(Policy):
         """
         裁剪
         """
-        if self.is_unrelated():
-            raise PolicyEmptyException
-
         resource_type_list = RelatedResourceBeanList(self.related_resource_types)
         resource_type_list.sub(RelatedResourceBeanList(related_resources))
 
@@ -702,6 +645,26 @@ class PolicyBean(Policy):
         """
         return sum([rrt.count_instance() for rrt in self.related_resource_types])
 
+    def get_related_resource_type(self, system_id: str, resource_type_id: str) -> Optional[RelatedResourceBean]:
+        for rrt in self.related_resource_types:
+            if rrt.system_id == system_id and rrt.type == resource_type_id:
+                return rrt
+
+        return None
+
+    def set_related_resource_type(self, resource_type: RelatedResourceBean):
+        for rrt in self.related_resource_types:
+            if rrt.system_id == resource_type.system_id and rrt.type == resource_type.type:
+                rrt.condition = resource_type.condition
+                break
+
+    def check_instance_selection(self, action: Action, ignore_path=False):
+        for rrt in self.related_resource_types:
+            resource_type = action.get_related_resource_type(rrt.system_id, rrt.type)
+            if not resource_type:
+                continue
+            rrt.check_selection(resource_type.instance_selections, ignore_path)
+
     def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
         """
         更新资源实例名称
@@ -710,6 +673,320 @@ class PolicyBean(Policy):
         for rrt in self.related_resource_types:
             # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
             if rrt.update_resource_name(renamed_resources):
+                is_changed = True
+
+        return is_changed
+
+
+class ResourceGroupBeanList(ResourceGroupList):
+    __root__: List[ResourceGroupBean]
+
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        super().__init__(**data)
+        __pydantic_self__._drop_duplicates()
+
+    def _drop_duplicates(self):
+        """
+        去重
+        """
+        if len(self) <= 1:
+            return self
+
+        # 如果resource_group存在包含关系, 移除被包含的resource_group
+        for __ in range(len(self)):
+            rg = self.pop(0)
+            if rg not in self:
+                self.append(rg)
+
+        return self
+
+    def get_by_id(self, id: str) -> Optional[ResourceGroupBean]:
+        index = self._index_by_id(id)
+        return self[index] if index != -1 else None
+
+    def is_super_set(self, resource_groups: "ResourceGroupBeanList") -> bool:
+        """
+        是否完全包含
+        """
+        for rg in resource_groups:
+            if rg not in self:
+                return False
+
+        return True
+
+    def is_unrelated(self) -> bool:
+        return len(self) == 0
+
+    def __contains__(self, resource_group: ResourceGroupBean) -> bool:
+        for rg in self:
+            if rg.has_related_resource_types(resource_group.related_resource_types):
+                return True
+
+        return False
+
+    def __add__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
+        """
+        合并到新的对象
+        """
+        rg = deepcopy(self)
+        rg += resource_groups
+        return rg
+
+    def __iadd__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
+        """
+        合并到本身
+
+        如果已有id相同的, 则直接合并id相同的
+        如果不存在id相同的, 判断范围是否已包含, 没有包含的合并
+        """
+        # 处理单个资源类型的合并
+        if len(self.get_thin_resource_types()) == 1:
+            for rg in resource_groups:
+                self[0].add_related_resource_types(rg.related_resource_types)
+            return self
+
+        for rg in resource_groups:
+            original_rg = self.get_by_id(rg.id)
+            if original_rg is not None:
+                original_rg.add_related_resource_types(rg.related_resource_types)
+            elif rg not in self:
+                self.__root__.append(rg)
+        return self
+
+    def __sub__(self, resource_groups: "ResourceGroupBeanList"):
+        """
+        移除返回新的对象
+        """
+        rg = deepcopy(self)
+        rg -= resource_groups
+        return rg
+
+    def __isub__(self, resource_groups: "ResourceGroupBeanList"):
+        """
+        移除部分条件
+
+        1. 如果是只关联1个资源类型的操作, 直接移除
+        2. 如果关联多个资源类型的操作
+           - 完整包含的一组才能移除
+        """
+        # 只关联1个资源类型的操作
+        if len(self.get_thin_resource_types()) == 1:
+            new_resource_groups: List[ResourceGroupBean] = []
+            for original_rg in self:
+                try:
+                    for rg in resource_groups:
+                        original_rg.remove_related_resource_types(rg.related_resource_types)
+                    new_resource_groups.append(original_rg)
+                except PolicyEmptyException:
+                    pass
+
+            if not new_resource_groups:
+                raise PolicyEmptyException
+
+            self.__root__ = new_resource_groups
+            return self
+
+        # 关联多个资源类型的操作
+        del_resource_group_ids: Set[str] = set()
+        for original_rg in self:
+            if original_rg in resource_groups:
+                del_resource_group_ids.add(original_rg.id)
+                continue
+
+        self.__root__ = [rg for rg in self if rg.id not in del_resource_group_ids]
+        if not self.__root__:
+            raise PolicyEmptyException
+
+        return self
+
+    def fill_empty_fields(self, action: Action, resource_type_dict: ResourceTypeDict):
+        for rg in self:
+            rg.fill_empty_fields(action, resource_type_dict)
+
+    def get_system_id_set(self) -> Set[str]:
+        """
+        获取所有node相关的system_id集合
+        """
+        return set.union(*[one.get_system_id_set() for one in self]) if self.__root__ else set()
+
+    def list_path_node(self) -> List[PathNodeBean]:
+        """查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点"""
+        nodes = []
+        for rg in self:
+            nodes.extend(rg.list_path_node())
+        return nodes
+
+    def count_all_type_instance(self) -> int:
+        """
+        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        """
+        return sum([rg.count_all_type_instance() for rg in self])
+
+    def pop_by_id(self, id: str) -> Optional[ResourceGroupBean]:
+        index = self._index_by_id(id)
+        if index == -1:
+            return None
+
+        return self.pop(index)
+
+    def _index_by_id(self, id: str) -> int:
+        for i, rg in enumerate(self):
+            if rg.id == id:
+                return i
+
+        return -1
+
+
+class ResourceTypeInstanceCount(BaseModel):
+    type: str
+    count: int
+
+
+class PolicyBean(Policy):
+    policy_id: int = 0
+    expired_at: int = 0
+    resource_groups: ResourceGroupBeanList
+
+    type: str = ""
+    name: str = ""
+    name_en: str = ""
+    description: str = ""
+    description_en: str = ""
+    expired_display: str = ""
+
+    def __init__(self, **data: Any):
+        if "expired_at" in data and (data["expired_at"] is not None) and ("expired_display" not in data):
+            data["expired_display"] = expired_at_display(data["expired_at"])
+
+        # NOTE 兼容数据传None的情况
+        if "expired_at" in data and not isinstance(data["expired_at"], int):
+            data.pop("expired_at")
+        if "expired_display" in data and not isinstance(data["expired_display"], str):
+            data.pop("expired_display")
+        if "type" in data and not isinstance(data["type"], str):
+            data.pop("type")
+
+        # NOTE 兼容 role, group授权信息的旧版结构
+        if "resource_groups" not in data and "related_resource_types" in data:
+            if not data["related_resource_types"]:
+                data["resource_groups"] = []
+            else:
+                data["resource_groups"] = [
+                    # NOTE: 固定resource_group_id方便删除逻辑
+                    {
+                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "related_resource_types": data.pop("related_resource_types"),
+                    }
+                ]
+
+        super().__init__(**data)
+
+    def dict(self, *args, **kwargs):
+        kwargs["by_alias"] = True
+        return super().dict(*args, **kwargs)
+
+    def fill_empty_fields(self, action: Action, resource_type_dict: ResourceTypeDict):
+        """
+        填充默认为空的fields
+        """
+        empty_fields = ["type", "name", "name_en", "description", "description_en"]
+        for field in empty_fields:
+            setattr(self, field, getattr(action, field))
+
+        self.resource_groups.fill_empty_fields(action, resource_type_dict)
+
+    def get_system_id_set(self) -> Set[str]:
+        """
+        获取所有node相关的system_id集合
+        """
+        return self.resource_groups.get_system_id_set()
+
+    def is_expired(self):
+        """是否策略已过期"""
+        return self.expired_at < int(time.time())
+
+    def set_expired_at(self, expired_at: int):
+        self.expired_at = expired_at
+        self.expired_display = expired_at_display(expired_at)
+
+    def add_resource_group_list(self, resource_group_list: ResourceGroupBeanList):
+        """
+        合并
+        """
+        self.resource_groups += resource_group_list
+
+    def has_resource_group_list(self, resource_group_list: ResourceGroupBeanList) -> bool:
+        """
+        包含
+        """
+        if self.resource_groups.is_unrelated():
+            return True
+
+        return self.resource_groups.is_super_set(resource_group_list)
+
+    def remove_resource_group_list(self, resource_group_list: ResourceGroupBeanList) -> "PolicyBean":
+        """
+        裁剪
+        """
+        if self.resource_groups.is_unrelated():
+            raise PolicyEmptyException
+
+        self.resource_groups -= resource_group_list
+        return self
+
+    def list_path_node(self) -> List[PathNodeBean]:
+        """查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点"""
+        return self.resource_groups.list_path_node()
+
+    def count_all_type_instance(self) -> int:
+        """
+        这里是统计所有实例总数，Action关联多种资源类型是一起计算的
+        """
+        return self.resource_groups.count_all_type_instance()
+
+    def get_related_resource_type(
+        self, resource_group_id: str, system_id: str, resource_type_id: str
+    ) -> Optional[RelatedResourceBean]:
+        """
+        获取指定resource_group_id下指定的资源类型的条件
+        """
+        resource_group = self.resource_groups.get_by_id(resource_group_id)
+        if resource_group is None:
+            return None
+        return resource_group.get_related_resource_type(system_id, resource_type_id)
+
+    def check_instance_selection(self, action: Action, ignore_path=False):
+        """
+        检查资源的实例视图是否匹配
+        """
+        for rg in self.resource_groups:
+            rg.check_instance_selection(action, ignore_path)
+
+    def list_resource_type_instance_count(self) -> List[ResourceTypeInstanceCount]:
+        """
+        查询资源类型的实例数量
+        """
+        if len(self.resource_groups) == 0:
+            return [ResourceTypeInstanceCount(type="", count=0)]
+
+        counts = []
+        for i, resource_type in enumerate(self.list_thin_resource_type()):
+            c = ResourceTypeInstanceCount(type=resource_type.type, count=0)
+
+            for rg in self.resource_groups:
+                c.count += rg.related_resource_types[i].count_instance()
+            counts.append(c)
+
+        return counts
+
+    def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
+        """
+        更新资源实例名称
+        """
+        is_changed = False
+        for rg in self.resource_groups:
+            # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
+            if rg.update_resource_name(renamed_resources):
                 is_changed = True
 
         return is_changed
@@ -799,7 +1076,7 @@ class PolicyBeanList:
                 continue
 
             # 已有的权限包含新的权限
-            if old_policy.has_related_resource_types(p.related_resource_types):
+            if old_policy.has_resource_group_list(p.resource_groups):
                 # 只有过期时间变更, 也需要更新
                 if p.expired_at > old_policy.expired_at:
                     old_policy.set_expired_at(p.expired_at)
@@ -807,7 +1084,7 @@ class PolicyBeanList:
                 continue
 
             # 已有的权限合并新的权限并更新
-            old_policy.add_related_resource_types(p.related_resource_types)
+            old_policy.add_resource_group_list(p.resource_groups)
             if p.expired_at > old_policy.expired_at:
                 old_policy.set_expired_at(p.expired_at)
             update_policies.append(old_policy)
@@ -829,12 +1106,12 @@ class PolicyBeanList:
             if not delete_policy:
                 continue
 
-            if p.is_unrelated():
+            if p.resource_groups.is_unrelated():
                 delete_policies.append(p)
                 continue
 
             try:
-                update_policies.append(p.remove_related_resource_types(delete_policy.related_resource_types))
+                update_policies.append(p.remove_resource_group_list(delete_policy.resource_groups))
             except PolicyEmptyException:
                 delete_policies.append(p)
 
@@ -851,7 +1128,7 @@ class PolicyBeanList:
                 self._policy_dict[p.action_id] = p
                 continue
 
-            old_policy.add_related_resource_types(p.related_resource_types)
+            old_policy.add_resource_group_list(p.resource_groups)
 
         return self
 
@@ -868,7 +1145,7 @@ class PolicyBeanList:
                 continue
 
             try:
-                subtraction.append(deepcopy(p).remove_related_resource_types(old_policy.related_resource_types))
+                subtraction.append(deepcopy(p).remove_resource_group_list(old_policy.resource_groups))
             except PolicyEmptyException:
                 pass
         return PolicyBeanList(self.system_id, subtraction)
@@ -886,11 +1163,8 @@ class PolicyBeanList:
             action = action_list.get(p.action_id)
             if not action:
                 continue
-            for rrt in p.related_resource_types:
-                resource_type = action.get_related_resource_type(rrt.system_id, rrt.type)
-                if not resource_type:
-                    continue
-                rrt.check_selection(resource_type.instance_selections, ignore_path)
+
+            p.check_instance_selection(action, ignore_path)
 
     def _list_path_node(self, is_ignore_big_policy=False) -> List[PathNodeBean]:
         """
@@ -935,11 +1209,11 @@ class PolicyBeanList:
         检查策略里的实例数量，避免大规模实例超限
         """
         for p in self.policies:
-            for rrt in p.related_resource_types:
-                if rrt.count_instance() > settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT:
+            for c in p.list_resource_type_instance_count():
+                if c.count > settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT:
                     raise error_codes.VALIDATE_ERROR.format(
-                        "操作[{}]关联的[{}]的实例数已达上限{}个，请改用范围或者属性授权。".format(
-                            p.action_id, rrt.type, settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT
+                        "操作 [{}] 关联的资源类型 [{}] 实例数已达上限{}个，请改用范围或者属性授权。".format(
+                            p.action_id, c.type, settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT
                         )
                     )
 
@@ -1075,13 +1349,13 @@ class PolicyQueryBiz:
         return system_count_beans
 
     def get_policy_resource_type_conditions(
-        self, subject: Subject, policy_id: int, resource_system: str, resource_type: str
+        self, subject: Subject, policy_id: int, resource_group_id: str, resource_system: str, resource_type: str
     ):
         """
         查询指定Policy的资源类型的condition
         """
         _, policy = self.get_system_policy(subject, policy_id)
-        related_resource_type = policy.get_related_resource_type(resource_system, resource_type)
+        related_resource_type = policy.get_related_resource_type(resource_group_id, resource_system, resource_type)
         if not related_resource_type:
             return []
         return related_resource_type.condition
@@ -1154,11 +1428,38 @@ class PolicyOperationBiz:
         self.svc.delete_by_ids(system_id, subject, policy_ids)
 
     @method_decorator(policy_change_lock)
+    def delete_by_resource_group_id(
+        self, system_id: str, subject: Subject, policy_id: int, resource_group_id: str
+    ) -> PolicyBean:
+        """
+        删除policy中指定resource_group_id的部分
+        """
+        # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
+        __, policy = self.query_biz.get_system_policy(subject, policy_id)
+        # 任意的policy不能删除
+        if len(policy.resource_groups) == 0:
+            raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
+
+        # resource_group不存在不能删除
+        resource_group = policy.resource_groups.pop_by_id(resource_group_id)
+        if resource_group is None:
+            raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
+
+        # 删空的情况直接整体删除
+        if len(policy.resource_groups) == 0:
+            self.svc.delete_by_ids(system_id, subject, [policy_id])
+        else:
+            self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy)])
+
+        return policy
+
+    @method_decorator(policy_change_lock)
     def delete_partial(
         self,
         system_id: str,
         subject: Subject,
         policy_id: int,
+        resource_group_id: str,
         resource_system_id: str,
         resource_type_id: str,
         condition_ids: List[str],
@@ -1170,7 +1471,7 @@ class PolicyOperationBiz:
         """
         # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
         __, policy = self.query_biz.get_system_policy(subject, policy_id)
-        resource_type = policy.get_related_resource_type(resource_system_id, resource_type_id)
+        resource_type = policy.get_related_resource_type(resource_group_id, resource_system_id, resource_type_id)
         if not resource_type:
             raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
 
@@ -1185,7 +1486,12 @@ class PolicyOperationBiz:
 
         # 更新修改后的条件
         resource_type.condition = condition_list.conditions
-        policy.set_related_resource_type(resource_type)
+        resource_group = policy.resource_groups.pop_by_id(resource_group_id)
+        resource_group.set_related_resource_type(resource_type)  # type: ignore
+
+        # 如果policy中其它的resource_group能包含删减后的resource_group, 则整体删除
+        policy.add_resource_group_list(ResourceGroupBeanList.parse_obj([resource_group]))
+
         self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy)])
 
         return policy

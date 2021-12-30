@@ -445,7 +445,8 @@
                         const isExistActions = this.aggregationsTableData.filter(subItem =>
                             item.actions.map(v => `${v.system_id}&${v.id}`).includes(`${subItem.system_id}&${subItem.id}`)
                         )
-                        const conditions = isExistActions.map(subItem => subItem.related_resource_types[0].condition)
+                        const conditions = isExistActions.map(subItem => subItem.resource_groups[0]
+                            .related_resource_types[0].condition)
                         // 是否都选择了实例
                         const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0)
                         if (isAllHasInstance) {
@@ -664,7 +665,11 @@
 
             handleSelectSubmit (payload) {
                 window.changeDialog = true
-
+                payload.forEach(e => {
+                    if (!e.resource_groups || !e.resource_groups.length) {
+                        e.resource_groups = e.related_resource_types.length ? [{ id: '', related_resource_types: e.related_resource_types }] : []
+                    }
+                })
                 this.originalList = _.cloneDeep(payload)
                 this.isShowActionEmptyError = false
                 this.isShowAddActionSideslider = false
@@ -752,6 +757,8 @@
                     reason: this.reason,
                     id: this.$route.params.id
                 }
+                console.log('params', params)
+                debugger
                 try {
                     await this.$store.dispatch('role/editRatingManagerWithGeneral', params)
                     await this.$store.dispatch('roleList')
@@ -830,6 +837,8 @@
                 }
                 this.submitLoading = true
                 window.changeDialog = false
+                console.log('params', params)
+                debugger
                 const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager'
                 try {
                     await this.$store.dispatch(`role/${dispatchMethod}`, params)

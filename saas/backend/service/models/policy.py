@@ -8,12 +8,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, List, Tuple
+from collections import namedtuple
+from typing import Any, Dict, List, Tuple
 
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
+from backend.service.constants import DEAULT_RESOURCE_GROUP_ID
 from backend.service.utils.translate import ResourceExpressionTranslator
+from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
 
 from .subject import Subject
@@ -86,22 +89,75 @@ class RelatedResource(BaseModel):
     condition: List[Condition]
 
 
+class ResourceGroup(BaseModel):
+    id: str = ""
+    related_resource_types: List[RelatedResource]
+
+
+ThinResourceType = namedtuple("ThinResourceType", ["system_id", "type"])
+
+
+class ResourceGroupList(ListModel):
+    __root__: List[ResourceGroup]
+
+    def get_thin_resource_types(self) -> List[ThinResourceType]:
+        """
+        获取资源类型列表
+        """
+        if len(self) == 0:
+            return []
+
+        return [ThinResourceType(rrt.system_id, rrt.type) for rrt in self[0].related_resource_types]
+
+
 class Policy(BaseModel):
     action_id: str = Field(alias="id")
-    related_resource_types: List[RelatedResource]
     policy_id: int
     expired_at: int
+    resource_groups: ResourceGroupList
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
+    def __init__(self, **data: Any):
+        # NOTE 兼容 role, group授权信息的旧版结构
+        if "resource_groups" not in data and "related_resource_types" in data:
+            if not data["related_resource_types"]:
+                data["resource_groups"] = []
+            else:
+                data["resource_groups"] = [
+                    # NOTE: 固定resource_group_id方便删除逻辑
+                    {
+                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "related_resource_types": data.pop("related_resource_types"),
+                    }
+                ]
+
+        super().__init__(**data)
+
+    @staticmethod
+    def _is_old_structure(resources: List[Dict[str, Any]]) -> bool:
+        """
+        是否是老的policy结构
+        """
+        for r in resources:
+            if "condition" in r and "system_id" in r and "type" in r:
+                return True
+        return False
+
     @classmethod
     def from_db_model(cls, policy: PolicyModel, expired_at: int) -> "Policy":
+        # 兼容新老结构
+        resource_groups = policy.resources
+        if cls._is_old_structure(policy.resources):
+            # NOTE: 固定resource_group_id, 方便删除逻辑
+            resource_groups = [ResourceGroup(id=DEAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
+
         return cls(
             action_id=policy.action_id,
-            related_resource_types=policy.resources,
             policy_id=policy.policy_id,
             expired_at=expired_at,
+            resource_groups=ResourceGroupList.parse_obj(resource_groups),
         )
 
     def to_db_model(self, system_id: str, subject: Subject) -> PolicyModel:
@@ -112,18 +168,24 @@ class Policy(BaseModel):
             action_type="",
             action_id=self.action_id,
         )
-        p.resources = [rt.dict() for rt in self.related_resource_types]
+        p.resources = self.resource_groups.dict()
         return p
 
     def to_backend_dict(self):
         translator = ResourceExpressionTranslator()
         return {
             "action_id": self.action_id,
-            "resource_expression": translator.translate([rt.dict() for rt in self.related_resource_types]),
+            "resource_expression": translator.translate(self.resource_groups.dict()),
             "environment": "{}",
             "expired_at": self.expired_at,
             "id": self.policy_id,
         }
+
+    def list_thin_resource_type(self) -> List[ThinResourceType]:
+        """
+        获取权限关联的资源类型列表
+        """
+        return self.resource_groups.get_thin_resource_types()
 
 
 class BackendThinPolicy(BaseModel):

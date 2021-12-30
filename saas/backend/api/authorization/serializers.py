@@ -39,7 +39,7 @@ class SubjectSLZ(serializers.Serializer):
 
 
 class ResourceInstanceSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID", required=True)
+    system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     id = serializers.CharField(label="资源ID")
     name = serializers.CharField(label="资源名称", trim_whitespace=False)
@@ -47,9 +47,9 @@ class ResourceInstanceSLZ(serializers.Serializer):
 
 class PathNodeSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID", default="", allow_blank=True, required=False)
-    type = serializers.CharField(label="资源类型", required=True)
-    id = serializers.CharField(label="资源实例ID", required=True)
-    name = serializers.CharField(label="资源实例ID名称", required=True, allow_blank=True, trim_whitespace=False)
+    type = serializers.CharField(label="资源类型")
+    id = serializers.CharField(label="资源实例ID")
+    name = serializers.CharField(label="资源实例ID名称", allow_blank=True, trim_whitespace=False)
 
     def validate(self, attrs):
         """
@@ -68,7 +68,7 @@ class PathNodeSLZ(serializers.Serializer):
 
 
 class ResourcePathSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID", required=True)
+    system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     path = serializers.ListField(label="拓扑层级", child=PathNodeSLZ(label="实例"), allow_empty=False)
 
@@ -116,7 +116,7 @@ class SimpleInstanceSLZ(serializers.Serializer):
 
 
 class BatchResourceInstanceSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID", required=True)
+    system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     instances = serializers.ListField(label="资源实例", child=SimpleInstanceSLZ(label="实例"), allow_empty=True)
 
@@ -140,7 +140,7 @@ class AuthBatchInstanceSLZ(BaseAuthSLZ, AuthActionsSLZ):
 
 
 class BatchResourcePathSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID", required=True)
+    system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     paths = serializers.ListField(
         label="批量层级",

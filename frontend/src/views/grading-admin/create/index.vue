@@ -318,9 +318,11 @@
                     const list = []
                     res.data.authorization_scopes.forEach(item => {
                         item.actions.forEach(act => {
-                            const tempResource = _.cloneDeep(act.related_resource_types)
-                            tempResource.forEach(subItem => {
-                                subItem.condition = null
+                            const tempResource = _.cloneDeep(act.resource_groups)
+                            tempResource.forEach(groupItem => {
+                                groupItem.related_resource_types.forEach(subItem => {
+                                    subItem.condition = null
+                                })
                             })
                             list.push({
                                 description: act.description,
@@ -332,7 +334,7 @@
                                 $id: `${item.system.id}&${act.id}`,
                                 tag: act.tag,
                                 type: act.type,
-                                related_resource_types: tempResource
+                                resource_groups: tempResource
                             })
                         })
                     })
@@ -529,7 +531,8 @@
                         const isExistActions = this.aggregationsTableData.filter(subItem =>
                             item.actions.map(v => `${v.system_id}&${v.id}`).includes(`${subItem.system_id}&${subItem.id}`)
                         )
-                        const conditions = isExistActions.map(subItem => subItem.related_resource_types[0].condition)
+                        const conditions = isExistActions.map(subItem => subItem.resource_groups[0]
+                            .related_resource_types[0].condition)
                         // 是否都选择了实例
                         const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0)
                         if (isAllHasInstance) {
@@ -675,6 +678,11 @@
             },
 
             handleSelectSubmit (payload) {
+                payload.forEach(item => {
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
+                    }
+                })
                 window.changeDialog = true
                 this.originalList = _.cloneDeep(payload)
                 this.isShowActionEmptyError = false

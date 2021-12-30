@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 
+from backend.util.model import ListModel
+
 from ..constants import ApplicationStatus, ApplicationTypeEnum, SubjectType
 
 
@@ -109,11 +111,20 @@ class ApplicationRelatedResource(BaseModel):
     name_en: str = ""
 
 
+class ApplicationResourceGroup(BaseModel):
+    id: str
+    related_resource_types: List[ApplicationRelatedResource]
+
+
+class ApplicationResourceGroupList(ListModel):
+    __root__: List[ApplicationResourceGroup]
+
+
 class ApplicationPolicyInfo(BaseModel):
     """申请内容里的策略"""
 
     action_id: str = Field(alias="id")
-    related_resource_types: List[ApplicationRelatedResource]
+    resource_groups: ApplicationResourceGroupList
     expired_at: int = 0
     expired_display: str = ""
     # Action名称

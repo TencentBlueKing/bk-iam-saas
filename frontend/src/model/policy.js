@@ -54,8 +54,21 @@ export default class Policy {
         this.isShowRelatedText = payload.isShowRelatedText || false
         this.inOriginalList = payload.inOriginalList || false
         this.initExpired(payload)
+        this.relatedEnvironments(payload)
         this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled)
         this.initAttachActions(payload)
+    }
+
+    relatedEnvironments (payload) {
+        const relatedEnvironments = payload.related_environments || []
+        this.related_environments = payload.resource_groups.reduce((prev, item) => {
+            let environments = item.environments && item.environments.reduce((p, v) => {
+                p.push({ type: v.type })
+                return p
+            }, [])
+            if (!environments) environments = []
+            return [...new Set([...prev, ...environments])]
+        }, relatedEnvironments)
     }
 
     initExpired (payload) {
@@ -73,13 +86,33 @@ export default class Policy {
     }
 
     initRelatedResourceTypes (payload, action, flag, instanceNotDisabled) {
-        if (!payload.related_resource_types) {
-            this.related_resource_types = []
+        // console.log('payload', payload)
+        // if (!payload.related_resource_types) {
+        //     this.related_resource_types = []
+        //     return
+        // }
+        // this.related_resource_types = payload.related_resource_types.map(
+        //     item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+        // )
+
+        if (!payload.resource_groups) {
+            this.resource_groups = []
             return
         }
-        this.related_resource_types = payload.related_resource_types.map(
-            item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
-        )
+
+        this.resource_groups = payload.resource_groups.reduce((prev, item) => {
+            const relatedRsourceTypes = item.related_resource_types.map(
+                item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+            )
+            
+            if ((this.related_environments && !!this.related_environments.length)) {
+                const environments = item.environments && item.environments.length ? item.environments : []
+                prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments })
+            } else {
+                prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+            }
+            return prev
+        }, [])
     }
 
     initAttachActions (payload) {
@@ -117,7 +150,13 @@ export default class Policy {
     }
 
     get isEmpty () {
-        return this.related_resource_types.length < 1
+        return this.resource_groups.length < 1
+        // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
+    }
+
+    get isEffectEmpty () {
+        return this.resource_groups.length < 1
+        // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
     }
 
     get isCreate () {

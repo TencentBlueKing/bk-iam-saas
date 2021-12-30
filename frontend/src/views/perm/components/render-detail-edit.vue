@@ -85,11 +85,12 @@
                     return {
                         ...data,
                         system_id: curActiveData.systemId,
-                        type: this.active
+                        type: this.active,
+                        resource_group_id: curActiveData.resource_group_id
                     }
                 }
 
-                return data
+                return { ...data, resource_group_id: curActiveData.resource_group_id }
             }
         }
     }

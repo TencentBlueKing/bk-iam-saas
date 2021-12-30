@@ -13,26 +13,56 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
                 <template slot-scope="{ row }">
                     <template v-if="!row.isEmpty">
-                        <p class="related-resource-item"
-                            v-for="item in row.related_resource_types"
-                            :key="item.type">
-                            <render-resource-popover
-                                :key="item.type"
-                                :data="item.condition"
-                                :value="`${item.name}：${item.value}`"
-                                :max-width="380"
-                                @on-view="handleViewResource(row)" />
-                        </p>
+                        <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
+                            :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                                ? '' : 'related-resource-list-border'">
+                            <p class="related-resource-item"
+                                v-for="item in _.related_resource_types"
+                                :key="item.type">
+                                <render-resource-popover
+                                    :key="item.type"
+                                    :data="item.condition"
+                                    :value="`${item.name}：${item.value}`"
+                                    :max-width="380"
+                                    @on-view="handleViewResource(row)" />
+                            </p>
+                            <Icon
+                                type="detail-new"
+                                class="view-icon"
+                                :title="$t(`m.common['详情']`)"
+                                v-if="isShowPreview(row)"
+                                @click.stop="handleViewResource(_, row)" />
+                            <Icon v-if="isShowPreview(row)"
+                                :title="$t(`m.common['删除']`)" class="effect-icon" type="reduce-hollow"
+                                @click.stop="handlerReduceInstance(_, row)" />
+                        </div>
                     </template>
                     <template v-else>
                         {{ $t(`m.common['无需关联实例']`) }}
                     </template>
-                    <Icon
-                        type="detail-new"
-                        class="view-icon"
-                        :title="$t(`m.common['详情']`)"
-                        v-if="isShowPreview(row)"
-                        @click.stop="handleViewResource(row)" />
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
+                <template slot-scope="{ row, $index }">
+                    <div v-if="!!row.related_environments.length">
+                        <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                            :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
+                                     row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
+                                         ? '' : 'related-resource-list-border']">
+                            <effect-conditon
+                                :value="_.environments"
+                                :is-empty="!_.environments.length"
+                                @on-click="showTimeSlider(row, $index, groIndex)">
+                            </effect-conditon>
+                            <Icon
+                                type="detail-new"
+                                class="effect-icon"
+                                :title="$t(`m.common['详情']`)"
+                                v-if="isShowPreview(row)"
+                                @click.stop="handleEnvironmentsViewResource(_, row)" />
+                        </div>
+                    </div>
+                    <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div>
                 </template>
             </bk-table-column>
             <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
@@ -96,16 +126,58 @@
                     @on-change="handleChange" />
             </div>
         </bk-sideslider>
+
+        <bk-sideslider
+            :is-show="isShowEnvironmentsSideslider"
+            :title="environmentsSidesliderTitle"
+            :width="725"
+            quick-close
+            @update:isShow="handleResourceCancel"
+            ext-cls="effect-conditon-side">
+            <div slot="content">
+                <effect-conditon
+                    :is-detail="true"
+                    :value="environmentsSidesliderData"
+                    :is-empty="!environmentsSidesliderData.length"
+                    @on-view="handleViewSidesliderCondition"
+                >
+                </effect-conditon>
+            </div>
+        </bk-sideslider>
+
+        <bk-sideslider
+            :is-show="isShowResourceInstanceEffectTime"
+            :title="environmentsSidesliderTitle"
+            :width="725"
+            quick-close
+            @update:isShow="handleResourceEffectTimeCancel"
+            :ext-cls="'relate-instance-sideslider'">
+            <div slot="content" class="sideslider-content">
+                <sideslider-effect-conditon
+                    ref="sidesliderRef"
+                    :data="environmentsSidesliderData"
+                ></sideslider-effect-conditon>
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :loading="sliderLoading"
+                    @click="handleResourceEffectTimeSumit">
+                    {{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;"
+                    @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 <script>
     import _ from 'lodash'
     import IamPopoverConfirm from '@/components/iam-popover-confirm'
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
+    import RenderResourcePopover from '../components/prem-view-resource-popover'
     import PermPolicy from '@/model/my-perm-policy'
     import { leaveConfirm } from '@/common/leave-confirm'
     import RenderDetail from '../components/render-detail-edit'
+    import EffectConditon from './effect-conditon'
+    import SidesliderEffectConditon from './sideslider-effect-condition'
 
     export default {
         name: 'CustomPermTable',
@@ -113,7 +185,9 @@
             IamPopoverConfirm,
             RenderDetail,
             RenderResourcePopover,
-            DeleteDialog
+            DeleteDialog,
+            EffectConditon,
+            SidesliderEffectConditon
         },
         props: {
             systemId: {
@@ -143,7 +217,14 @@
                 isBatchDelete: true,
                 batchDisabled: false,
                 disabled: true,
-                canOperate: true
+                canOperate: true,
+                isShowEnvironmentsSideslider: false,
+                environmentsSidesliderTitle: this.$t(`m.common['生效条件']`),
+                environmentsSidesliderData: [],
+                isShowResourceInstanceEffectTime: false,
+                resourceGrouParams: {},
+                params: ''
+
             }
         },
         computed: {
@@ -164,6 +245,7 @@
                         const params = {
                             systemId: value
                         }
+                        this.params = params
                         this.fetchData(params)
                     } else {
                         this.initRequestQueue = []
@@ -182,6 +264,7 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId })
                     this.policyList = res.data.map(item => new PermPolicy(item))
+                    console.log('this.policyList', this.policyList)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -200,7 +283,7 @@
              * getCellClass
              */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1) {
+                if (columnIndex === 1 || columnIndex === 2) {
                     return 'iam-perm-table-cell-cls'
                 }
                 return ''
@@ -238,14 +321,15 @@
 
             async handleDeletePerm (payload) {
                 const data = this.$refs.detailComRef.handleGetValue()
-                const { ids, condition, type } = data
+                const { ids, condition, type, resource_group_id } = data
                 const params = {
                     id: this.curPolicyId,
                     data: {
                         system_id: data.system_id,
                         type: type,
                         ids,
-                        condition
+                        condition,
+                        resource_group_id
                     }
                 }
                 try {
@@ -280,8 +364,40 @@
                 }
                 cancelHandler.then(() => {
                     this.isShowSideslider = false
+                    this.isShowEnvironmentsSideslider = false
                     this.resetDataAfterClose()
                 }, _ => _)
+            },
+
+            handleResourceEffectTimeCancel () {
+                let cancelHandler = Promise.resolve()
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm()
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceEffectTime = false
+                    this.resetDataAfterClose()
+                }, _ => _)
+            },
+
+            /**
+             * handleResourceEffectTimeSumit
+             */
+            handleResourceEffectTimeSumit () {
+                const environments = this.$refs.sidesliderRef.handleGetValue()
+                console.log(this.curIndex, this.curGroupIndex)
+
+                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                resItem.environments = environments
+                console.log(resItem)
+                console.log(environments)
+                console.log(this.tableList)
+
+                window.changeAlert = false
+                this.resourceInstanceEffectTimeTitle = ''
+                this.isShowResourceInstanceEffectTime = false
+                this.curIndex = -1
+                this.curGroupIndex = -1
             },
 
             /**
@@ -316,19 +432,21 @@
             /**
              * handleViewResource
              */
-            handleViewResource (payload) {
+            handleViewResource (groupItem, payload) {
                 this.curId = payload.id
                 this.curPolicyId = payload.policy_id
                 const params = []
-                if (payload.related_resource_types.length > 0) {
-                    payload.related_resource_types.forEach(item => {
+
+                if (groupItem.related_resource_types.length > 0) {
+                    groupItem.related_resource_types.forEach(item => {
                         const { name, type, condition } = item
                         params.push({
                             name: type,
                             label: `${name} ${this.$t(`m.common['实例']`)}`,
                             tabType: 'resource',
                             data: condition,
-                            systemId: item.system_id
+                            systemId: item.system_id,
+                            resource_group_id: groupItem.id
                         })
                     })
                 }
@@ -346,6 +464,36 @@
             },
 
             /**
+             * handleEnvironmentsViewResource
+             */
+            handleEnvironmentsViewResource (payload, data) {
+                this.environmentsSidesliderData = payload.environments
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
+                this.isShowEnvironmentsSideslider = true
+                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+            },
+
+            /**
+             * handlerReduceInstance
+             */
+            handlerReduceInstance (payload, data) {
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${data.name}】权限`
+                this.deleteDialog.visible = true
+                this.resourceGrouParams = {
+                    id: data.policy_id,
+                    resourceGroupId: payload.id
+                }
+            },
+
+            /**
+             * handleViewSidesliderCondition
+             */
+            handleViewSidesliderCondition () {
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
+                this.isShowResourceInstanceEffectTime = true
+            },
+
+            /**
              * handleDelete
              */
             handleDelete (payload) {
@@ -360,16 +508,22 @@
             async handleSumbitDelete () {
                 this.deleteDialog.loading = true
                 try {
-                    await this.$store.dispatch('permApply/deletePerm', {
-                        policyIds: this.curDeleteIds,
-                        systemId: this.systemId
-                    })
-                    const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0])
-                    if (index > -1) {
-                        this.policyList.splice(index, 1)
+                    if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
+                        await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams)
+                        this.fetchData(this.params)
+                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
+                    } else {
+                        await this.$store.dispatch('permApply/deletePerm', {
+                            policyIds: this.curDeleteIds,
+                            systemId: this.systemId
+                        })
+                        const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0])
+                        if (index > -1) {
+                            this.policyList.splice(index, 1)
+                        }
+                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
+                        this.$emit('after-delete', this.policyList.length)
                     }
-                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                    this.$emit('after-delete', this.policyList.length)
                 } catch (e) {
                     console.error(e)
                     this.bkMessageInstance = this.$bkMessage({
@@ -393,6 +547,43 @@
         .bk-table-enable-row-hover .bk-table-body tr:hover > td {
             background-color: #fff;
         }
+        .related-resource-list{
+            position: relative;
+            .related-resource-item{
+                margin: 20px !important;
+            }
+            .view-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 40px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .view-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            .effect-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            &-border{border-bottom: 1px solid #dfe0e5;}
+        }
         .bk-table {
             border-right: none;
             border-bottom: none;
@@ -404,21 +595,12 @@
             .bk-table-body-wrapper {
                 .cell {
                     padding: 20px !important;
-                    .view-icon {
-                        display: none;
-                        position: absolute;
-                        top: 50%;
-                        right: 10px;
-                        transform: translate(0, -50%);
-                        font-size: 18px;
-                        cursor: pointer;
-                    }
-                    &:hover {
-                        .view-icon {
-                            display: inline-block;
-                            color: #3a84ff;
-                        }
-                    }
+                }
+            }
+
+            .iam-perm-table-cell-cls {
+                .cell {
+                    padding: 0px !important;
                 }
             }
             tr:hover {
@@ -432,6 +614,13 @@
             .action-wrapper {
                 margin-right: 30px;
                 font-weight: normal;
+            }
+        }
+
+        .effect-conditon-side{
+            .text{
+                font-size: 14px;
+                color: #63656e;
             }
         }
     }

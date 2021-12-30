@@ -95,6 +95,14 @@
                     return
                 }
                 const { flag, groups, isNoAdd } = this.$refs.syncRef.getData()
+                console.log('groups', groups)
+                groups.forEach(e => {
+                    e.actions.forEach(_ => {
+                        if (!_.resource_groups || !_.resource_groups.length) {
+                            _.resource_groups = _.related_resource_types.length ? [{ id: '', related_resource_types: _.related_resource_types }] : []
+                        }
+                    })
+                })
                 if (flag) {
                     return
                 }
