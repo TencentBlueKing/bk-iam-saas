@@ -27,7 +27,7 @@
                         <template v-else>
                             <div
                                 :class="['user-wrapper', { 'is-hover': row.canEdit && row.user[0] !== 'admin' }]"
-                                @click.stop="handleOpenSuperEdit(row, $index)">
+                            >
                                 {{ row.user.join('；') }}
                             </div>
                         </template>
@@ -119,6 +119,8 @@
             ...mapGetters(['user']),
             isDisabled () {
                 return payload => {
+                    console.log('payload', payload)
+                    console.log('this.superUserList', this.superUserList)
                     if (payload.user.length !== 1) {
                         return true
                     }
