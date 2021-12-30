@@ -119,8 +119,6 @@
             ...mapGetters(['user']),
             isDisabled () {
                 return payload => {
-                    console.log('payload', payload)
-                    console.log('this.superUserList', this.superUserList)
                     if (payload.user.length !== 1) {
                         return true
                     }
