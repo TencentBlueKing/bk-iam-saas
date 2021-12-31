@@ -35,7 +35,9 @@
                 <template slot-scope="{ row, $index }">
                     <template v-if="!isEdit">
                         <template v-if="!row.isEmpty">
-                            <div v-for="_ in row.resource_groups" :key="_.id">
+                            <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
+                                :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                                    ? '' : 'related-resource-list-border'">
                                 <p class="related-resource-item"
                                     v-for="item in _.related_resource_types"
                                     :key="item.type">
@@ -46,17 +48,17 @@
                                         :max-width="380"
                                         @on-view="handleViewResource(row)" />
                                 </p>
+                                <Icon
+                                    type="detail-new"
+                                    class="view-icon"
+                                    :title="$t(`m.common['详情']`)"
+                                    v-if="isShowView(row)"
+                                    @click.stop="handleViewResource(_, row)" />
                             </div>
                         </template>
                         <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
+                            <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
                         </template>
-                        <Icon
-                            type="detail-new"
-                            class="view-icon"
-                            :title="$t(`m.common['详情']`)"
-                            v-if="isShowView(row)"
-                            @click.stop="handleViewResource(row)" />
                         <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
                             <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
                         </template>
@@ -404,7 +406,6 @@
             list: {
                 handler (value) {
                     this.tableList.splice(0, this.tableList.length, ...value)
-                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             },
@@ -497,22 +498,18 @@
                 this.$emit('on-delete', this.newRow)
             },
 
-            handleViewResource (payload) {
+            handleViewResource (groupItem, payload) {
                 this.curId = payload.id
                 const params = []
-                if (payload.resource_groups.length > 0) {
-                    payload.resource_groups.forEach(element => {
-                        if (element.related_resource_types.length > 0) {
-                            element.related_resource_types.forEach(item => {
-                                const { name, type, condition } = item
-                                params.push({
-                                    name: type,
-                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
-                                    tabType: 'resource',
-                                    data: condition
-                                })
-                            })
-                        }
+                if (groupItem.related_resource_types.length > 0) {
+                    groupItem.related_resource_types.forEach(item => {
+                        const { name, type, condition } = item
+                        params.push({
+                            name: type,
+                            label: `${name} ${this.$t(`m.common['实例']`)}`,
+                            tabType: 'resource',
+                            data: condition
+                        })
                     })
                 }
                 
@@ -1540,6 +1537,48 @@
                         padding: 20px !important;
                     }
                 }
+                .iam-perm-table-cell-cls {
+                    .cell {
+                        padding: 0px !important;
+                    }
+                }
+            }
+            .related-resource-list{
+                position: relative;
+                .related-resource-item{
+                    margin: 20px !important;
+                }
+                .view-icon {
+                    display: none;
+                    position: absolute;
+                    top: 50%;
+                    right: 40px;
+                    transform: translate(0, -50%);
+                    font-size: 18px;
+                    cursor: pointer;
+                }
+                &:hover {
+                    .view-icon {
+                        display: inline-block;
+                        color: #3a84ff;
+                    }
+                }
+                .effect-icon {
+                    display: none;
+                    position: absolute;
+                    top: 50%;
+                    right: 10px;
+                    transform: translate(0, -50%);
+                    font-size: 18px;
+                    cursor: pointer;
+                }
+                &:hover {
+                    .effect-icon {
+                        display: inline-block;
+                        color: #3a84ff;
+                    }
+                }
+                &-border{border-bottom: 1px solid #dfe0e5;}
             }
             .bk-table-header-wrapper {
                 th:first-child .cell {

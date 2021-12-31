@@ -281,7 +281,6 @@
                             })
                         }
                     })
-                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             },
@@ -1013,10 +1012,10 @@
                 this.tableList.forEach(item => {
                     const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id)
                     if (!item.isAggregate) {
-                        const relatedResourceTypes = []
                         const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
+                                const relatedResourceTypes = []
                                 if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {

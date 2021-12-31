@@ -80,6 +80,7 @@
                         break
                     }
                 }
+                console.log('com', com)
                 return com
             },
             canScrollLoad () {

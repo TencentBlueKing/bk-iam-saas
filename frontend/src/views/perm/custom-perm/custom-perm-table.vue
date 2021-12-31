@@ -38,7 +38,7 @@
                         </div>
                     </template>
                     <template v-else>
-                        {{ $t(`m.common['无需关联实例']`) }}
+                        <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
                     </template>
                 </template>
             </bk-table-column>
@@ -136,7 +136,6 @@
             ext-cls="effect-conditon-side">
             <div slot="content">
                 <effect-conditon
-                    :is-detail="true"
                     :value="environmentsSidesliderData"
                     :is-empty="!environmentsSidesliderData.length"
                     @on-view="handleViewSidesliderCondition"
@@ -145,6 +144,7 @@
             </div>
         </bk-sideslider>
 
+        <!-- 生效时间编辑功能需要产品确认 暂时隐藏 -->
         <bk-sideslider
             :is-show="isShowResourceInstanceEffectTime"
             :title="environmentsSidesliderTitle"

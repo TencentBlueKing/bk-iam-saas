@@ -21,7 +21,9 @@
                 <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
                     <template slot-scope="{ row }">
                         <template v-if="!row.isEmpty">
-                            <div v-for="_ in row.resource_groups" :key="_.id">
+                            <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
+                                :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                                    ? '' : 'related-resource-list-border'">
                                 <p class="related-resource-item"
                                     v-for="item in _.related_resource_types"
                                     :key="item.type">
@@ -32,17 +34,17 @@
                                         :max-width="380"
                                         @on-view="handleViewResource(row)" />
                                 </p>
+                                <Icon
+                                    type="detail-new"
+                                    class="view-icon"
+                                    :title="$t(`m.common['详情']`)"
+                                    v-if="!row.isEmpty"
+                                    @click.stop="handleViewResource(_, row)" />
                             </div>
                         </template>
                         <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
+                            <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
                         </template>
-                        <Icon
-                            type="detail-new"
-                            class="view-icon"
-                            :title="$t(`m.common['详情']`)"
-                            v-if="!row.isEmpty"
-                            @click.stop="handleViewResource(row)" />
                     </template>
                 </bk-table-column>
                 <bk-table-column prop="expired_dis" :label="$t(`m.common['申请期限']`)"></bk-table-column>
@@ -119,8 +121,8 @@
                 return ''
             },
 
-            handleViewResource (row) {
-                this.previewData = _.cloneDeep(this.handleDetailData(row))
+            handleViewResource (groupItem, row) {
+                this.previewData = _.cloneDeep(this.handleDetailData(groupItem))
                 this.renderDetailCom = 'DetailContent'
                 this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${row.name}】${this.$t(`m.common['的资源实例']`)}`
                 this.isShowSideslider = true
@@ -129,19 +131,15 @@
             handleDetailData (payload) {
                 this.curId = payload.id
                 const params = []
-                if (payload.resource_groups.length > 0) {
-                    payload.resource_groups.forEach(groupItem => {
-                        if (groupItem.related_resource_types.length > 0) {
-                            groupItem.related_resource_types.forEach(item => {
-                                const { name, type, condition } = item
-                                params.push({
-                                    name: type,
-                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
-                                    tabType: 'resource',
-                                    data: condition
-                                })
-                            })
-                        }
+                if (payload.related_resource_types.length > 0) {
+                    payload.related_resource_types.forEach(item => {
+                        const { name, type, condition } = item
+                        params.push({
+                            name: type,
+                            label: `${name} ${this.$t(`m.common['实例']`)}`,
+                            tabType: 'resource',
+                            data: condition
+                        })
                     })
                 }
                 return params
@@ -184,24 +182,53 @@
                     color: #3a84ff;
                 }
             }
+
+            .related-resource-list{
+                position: relative;
+                .related-resource-item{
+                    margin: 20px !important;
+                }
+                .view-icon {
+                    display: none;
+                    position: absolute;
+                    top: 50%;
+                    right: 10px;
+                    transform: translate(0, -50%);
+                    font-size: 18px;
+                    cursor: pointer;
+                }
+                &:hover {
+                    .view-icon {
+                        display: inline-block;
+                        color: #3a84ff;
+                    }
+                }
+                .effect-icon {
+                    display: none;
+                    position: absolute;
+                    top: 50%;
+                    right: 10px;
+                    transform: translate(0, -50%);
+                    font-size: 18px;
+                    cursor: pointer;
+                }
+                &:hover {
+                    .effect-icon {
+                        display: inline-block;
+                        color: #3a84ff;
+                    }
+                }
+                &-border{border-bottom: 1px solid #dfe0e5;}
+            }
             .bk-table-body-wrapper {
                 .cell {
                     padding: 20px !important;
-                    .view-icon {
-                        display: none;
-                        position: absolute;
-                        top: 50%;
-                        right: 10px;
-                        transform: translate(0, -50%);
-                        font-size: 18px;
-                        cursor: pointer;
-                    }
-                    &:hover {
-                        .view-icon {
-                            display: inline-block;
-                            color: #3a84ff;
-                        }
-                    }
+                }
+            }
+
+            .iam-perm-table-cell-cls {
+                .cell {
+                    padding: 0px !important;
                 }
             }
             tr:hover {
