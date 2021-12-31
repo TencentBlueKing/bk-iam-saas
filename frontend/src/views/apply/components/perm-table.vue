@@ -32,7 +32,7 @@
                                         :data="item.condition"
                                         :value="`${item.name}：${item.value}`"
                                         :max-width="380"
-                                        @on-view="handleViewResource(row)" />
+                                        @on-view="handleViewResource(_, row)" />
                                 </p>
                                 <Icon
                                     type="detail-new"
