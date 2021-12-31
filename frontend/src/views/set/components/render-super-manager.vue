@@ -27,7 +27,7 @@
                         <template v-else>
                             <div
                                 :class="['user-wrapper', { 'is-hover': row.canEdit && row.user[0] !== 'admin' }]"
-                                @click.stop="handleOpenSuperEdit(row, $index)">
+                            >
                                 {{ row.user.join('；') }}
                             </div>
                         </template>
