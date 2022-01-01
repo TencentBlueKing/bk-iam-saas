@@ -719,7 +719,6 @@
                     return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
                 })
 
-                console.log('curData.resource_groups', curData.resource_groups)
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
@@ -788,6 +787,10 @@
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
                     if (curIndex > -1) {
                         const curData = this.tableList[curIndex]
+                        // 记录原来数据的生效条件
+                        if (curData.related_environments && !!curData.related_environments.length) {
+                            item.related_environments = curData.related_environments
+                        }
                         this.needEmitFlag = true
                         const inOriginalList = !!this.originalList.filter(
                             original => String(original.id) === String(item.id)
@@ -1429,7 +1432,7 @@
                 console.log('this.tableList', this.tableList)
             },
 
-            // 生效时间侧边栏
+            // 生效条件侧边栏
             showTimeSlider (data, index, groupIndex) {
                 this.curIndex = index
                 this.curGroupIndex = groupIndex
@@ -1437,7 +1440,7 @@
                 this.resourceInstanceEffectTimeTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
             },
 
-            // 生效时间保存
+            // 生效条件保存
             handleResourceEffectTimeSumit () {
                 const environments = this.$refs.sidesliderRef.handleGetValue()
                 console.log(this.curIndex, this.curGroupIndex)

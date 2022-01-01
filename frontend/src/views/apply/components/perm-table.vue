@@ -47,6 +47,28 @@
                         </template>
                     </template>
                 </bk-table-column>
+                <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
+                    <template slot-scope="{ row, $index }">
+                        <div v-if="!!row.related_environments.length">
+                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                                :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
+                                         row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
+                                             ? '' : 'related-resource-list-border']">
+                                <effect-conditon
+                                    :value="_.environments"
+                                    @on-click="showTimeSlider(row, $index, groIndex)">
+                                </effect-conditon>
+                                <Icon
+                                    type="detail-new"
+                                    class="effect-icon"
+                                    :title="$t(`m.common['详情']`)"
+                                    v-if="isShowPreview(row)"
+                                    @click.stop="handleEnvironmentsViewResource(_, row)" />
+                            </div>
+                        </div>
+                        <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div>
+                    </template>
+                </bk-table-column>
                 <bk-table-column prop="expired_dis" :label="$t(`m.common['申请期限']`)"></bk-table-column>
             </bk-table>
         </render-vertical-block>
@@ -60,6 +82,22 @@
                 <component :is="renderDetailCom" :data="previewData" />
             </div>
         </bk-sideslider>
+        <bk-sideslider
+            :is-show="isShowEnvironmentsSideslider"
+            :title="environmentsSidesliderTitle"
+            :width="725"
+            quick-close
+            @update:isShow="handleResourceCancel"
+            ext-cls="effect-conditon-side">
+            <div slot="content">
+                <effect-conditon
+                    :value="environmentsSidesliderData"
+                    :is-empty="!environmentsSidesliderData.length"
+                    @on-view="handleViewSidesliderCondition"
+                >
+                </effect-conditon>
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 <script>
@@ -67,12 +105,16 @@
     import Resource from '@/components/render-resource/detail'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
     import DetailContent from './detail-content'
+    import EffectConditon from './effect-conditon'
+    import SidesliderEffectConditon from './sideslider-effect-condition'
     export default {
         name: '',
         components: {
             Resource,
             DetailContent,
-            RenderResourcePopover
+            RenderResourcePopover,
+            EffectConditon,
+            SidesliderEffectConditon
         },
         props: {
             data: {
@@ -97,18 +139,26 @@
                 isShowSideslider: false,
                 sidesliderTitle: '',
                 tableList: [],
-                curId: ''
+                curId: '',
+                environmentsSidesliderData: [],
+                isShowResourceInstanceEffectTime: false
             }
         },
         computed: {
             applyTitle () {
                 return `${this.$t(`m.myApply['申请内容']`)}（${this.system.system_name}）`
+            },
+            isShowPreview () {
+                return (payload) => {
+                    return !payload.isEmpty && payload.policy_id !== ''
+                }
             }
         },
         watch: {
             data: {
                 handler (value) {
                     this.tableList = _.cloneDeep(value)
+                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             }
@@ -143,6 +193,24 @@
                     })
                 }
                 return params
+            },
+
+            /**
+             * handleEnvironmentsViewResource
+             */
+            handleEnvironmentsViewResource (payload, data) {
+                this.environmentsSidesliderData = payload.environments
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
+                this.isShowEnvironmentsSideslider = true
+                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+            },
+
+            /**
+             * handleViewSidesliderCondition
+             */
+            handleViewSidesliderCondition () {
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
+                this.isShowResourceInstanceEffectTime = true
             }
         }
     }

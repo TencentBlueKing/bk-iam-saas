@@ -381,17 +381,24 @@
             /**
              * handleResSelect
              */
-            handleResSelect (index, resIndex, condition, groupIndex) {
+            handleResSelect (index, resIndex, condition, groupIndex, resItem) {
                 // debugger
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index]
                     const actions = this.curMap.get(item.aggregationId) || []
+                    console.log('actions', actions)
+                    console.log('item', item)
                     const len = actions.length
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
                             if (actions[i].id === item.id) {
                                 // eslint-disable-next-line max-len
-                                actions[i].resource_groups[groupIndex].related_resource_types[resIndex].condition = _.cloneDeep(condition)
+                                if (!actions[i].resource_groups[groupIndex]) {
+                                    actions[i].resource_groups.push({ id: '', related_resource_types: resItem })
+                                } else {
+                                    // eslint-disable-next-line max-len
+                                    actions[i].resource_groups[groupIndex].related_resource_types[resIndex].condition = _.cloneDeep(condition)
+                                }
                                 break
                             }
                         }

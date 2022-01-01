@@ -43,7 +43,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
-                <template slot-scope="{ row, $index }">
+                <template slot-scope="{ row }">
                     <div v-if="!!row.related_environments.length">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
                             :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
@@ -51,8 +51,7 @@
                                          ? '' : 'related-resource-list-border']">
                             <effect-conditon
                                 :value="_.environments"
-                                :is-empty="!_.environments.length"
-                                @on-click="showTimeSlider(row, $index, groIndex)">
+                                :is-empty="!_.environments.length">
                             </effect-conditon>
                             <Icon
                                 type="detail-new"

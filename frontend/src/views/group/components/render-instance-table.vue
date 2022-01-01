@@ -31,7 +31,7 @@
                     <span>{{ !!row.isAggregate ? row.system_name : row.detail.system.name }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
+            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="520">
                 <template slot-scope="{ row, $index }">
                     <template v-if="!isEdit">
                         <template v-if="!row.isEmpty">
@@ -83,7 +83,7 @@
                         </div>
                         <div class="relation-content-wrapper" v-else>
                             <template v-if="!row.isEmpty">
-                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
+                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id" class="group-container">
                                     <div class="relation-content-item"
                                         v-for="(content, contentIndex) in _.related_resource_types"
                                         :key="contentIndex">
@@ -114,6 +114,9 @@
                                                 @on-click="showResourceInstance(row, $index, content, contentIndex, groIndex)" />
                                             <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
                                         </div>
+                                        <Icon v-if="row.resource_groups.length >= 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
+                                        <Icon v-if="row.resource_groups.length >= 1" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
+                                            @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                     </div>
                                 </div>
                             </template>
@@ -125,6 +128,22 @@
                             <Icon type="close-small" />
                         </div> -->
                     </template>
+                </template>
+            </bk-table-column>
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="450">
+                <template slot-scope="{ row, $index }">
+                    <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                        :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                        <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                            :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                            <effect-condition
+                                :value="_.environments"
+                                :is-empty="!_.environments.length"
+                                @on-click="showTimeSlider(row, $index, groIndex)">
+                            </effect-condition>
+                        </div>
+                    </div>
+                    <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -155,6 +174,24 @@
                 <bk-button theme="primary" :disabled="disabled" :loading="sliderLoading" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
                 <bk-button style="margin-left: 10px;" :disabled="disabled" v-if="isShowPreview" @click="handleResourcePreview">{{ $t(`m.common['预览']`) }}</bk-button>
                 <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            </div>
+        </bk-sideslider>
+
+        <bk-sideslider :is-show="isShowResourceInstanceEffectTime"
+            :title="resourceInstanceEffectTimeTitle"
+            :width="720"
+            quick-close
+            @update:isShow="handleResourceEffectTimeCancel"
+            :ext-cls="'relate-instance-sideslider'">
+            <div slot="content" class="sideslider-content">
+                <sideslider-effect-condition
+                    ref="sidesliderRef"
+                    :data="environmentsData"
+                ></sideslider-effect-condition>
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
         </bk-sideslider>
 
@@ -205,6 +242,8 @@
     import PreviewResourceDialog from './preview-resource-dialog'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
     import RenderDetail from '../common/render-detail'
+    import EffectCondition from './effect-conditon'
+    import SidesliderEffectCondition from './sideslider-effect-condition'
     // import store from '@/store'
 
     export default {
@@ -215,7 +254,9 @@
             RenderCondition,
             PreviewResourceDialog,
             RenderResourcePopover,
-            RenderDetail
+            RenderDetail,
+            EffectCondition,
+            SidesliderEffectCondition
         },
         props: {
             list: {
@@ -315,7 +356,8 @@
                 showIcon: false,
                 footerPosition: 'center',
                 newRow: '',
-                role: ''
+                role: '',
+                isShowResourceInstanceEffectTime: false
             }
         },
         computed: {
@@ -359,6 +401,20 @@
                     return []
                 }
                 return _.cloneDeep(curData.condition)
+            },
+            environmentsData () {
+                if (this.curIndex === -1 || this.curGroupIndex === -1) {
+                    return []
+                }
+                const environmentsData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .environments
+
+                console.log(2222, environmentsData)
+                if (!environmentsData) {
+                    return []
+                }
+                console.log(1111, _.cloneDeep(environmentsData))
+                return _.cloneDeep(environmentsData)
             },
             curDisabled () {
                 if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
@@ -736,7 +792,7 @@
                 } else {
                     judgeIndex = 1
                 }
-                if (columnIndex === judgeIndex) {
+                if (columnIndex === judgeIndex || columnIndex === 4) {
                     return 'iam-perm-table-cell-cls'
                 }
                 return ''
@@ -793,22 +849,46 @@
                 curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]]
                 curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload
+
+                curData.resource_groups = curData.resource_groups.filter(groupItem => {
+                    groupItem.related_resource_types.forEach(typeItem => {
+                        typeItem.condition.filter(e => {
+                            if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
+                                e.instances = e.instance || []
+                                e.attributes = e.attribute || []
+                                delete e.instance
+                                delete e.attribute
+                                return true
+                            }
+                            return false
+                        })
+                    })
+                    // groupItem.related_resource_types[0]
+                    return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
+                })
+
+                console.log('curData.resource_groups', curData.resource_groups)
+
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
                     if (!item.resource_groups.length) return false
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
                         && curData.detail.system.id === item.detail.system.id
-                        && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
+                        && item.resource_groups.map(item => !item.related_resource_types.every(sub => sub.empty))[0]
                 }))
+
+                console.log('relatedList', relatedList)
                 if (relatedList.length > 0) {
                     relatedList.forEach(item => {
                         delete item.policy_id
-                        item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
-                            resItem.condition.forEach(conditionItem => {
-                                conditionItem.instances = conditionItem.instance || []
-                                conditionItem.attributes = conditionItem.attribute || []
-                                delete conditionItem.instance
-                                delete conditionItem.attribute
+                        item.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(resItem => {
+                                resItem.condition.forEach(conditionItem => {
+                                    conditionItem.instances = conditionItem.instance || []
+                                    conditionItem.attributes = conditionItem.attribute || []
+                                    delete conditionItem.instance
+                                    delete conditionItem.attribute
+                                })
                             })
                         })
                         item.expired_at = PERMANENT_TIMESTAMP
@@ -844,12 +924,19 @@
                 payload.forEach(item => {
                     let curIndex
                     if (item.resource_groups.length) {
-                        curIndex = this.tableList.findIndex(sub => sub.id === item.id
-                            && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
-                                .related_resource_types[0].system_id)
+                        item.resource_groups.forEach(e => {
+                            curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                                && sub.detail.system.id === e.related_resource_types[0].system_id)
+                        })
+                        // curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        //     && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
+                        //         .related_resource_types[0].system_id)
                     }
                     if (curIndex > -1) {
                         const old = this.tableList[curIndex]
+                        if (old.related_environments && !!old.related_environments.length) {
+                            item.related_environments = old.related_environments
+                        }
                         this.tableList.splice(curIndex, 1, new GroupPolicy(
                             {
                                 ...item,
@@ -902,7 +989,9 @@
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
 
-                this.$emit('on-resource-select', this.curIndex, resItem.condition, this.curResIndex, this.curGroupIndex)
+                console.log('111')
+                this.$emit('on-resource-select', this.curIndex, this.curResIndex, resItem.condition, this.curGroupIndex, resItem)
+                console.log('2222')
                 this.curIndex = -1
                 this.curResIndex = -1
                 this.curGroupIndex = -1
@@ -1286,10 +1375,10 @@
                     if (!item.isAggregate) {
                         const { type, id, name, environment, description } = item
                         systemId = item.detail.system.id
-                        const relatedResourceTypes = []
                         const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
+                                const relatedResourceTypes = []
                                 if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {
@@ -1427,10 +1516,10 @@
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
                         const { type, id, name, environment, description } = item
-                        const relatedResourceTypes = []
                         const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
+                                const relatedResourceTypes = []
                                 if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {
@@ -1517,6 +1606,73 @@
                     actions: actionList,
                     aggregations
                 }
+            },
+            
+            //  资源实例新增按钮
+            handlerAddCondition (data, index, resIndex) {
+                console.log('data', data, resIndex)
+                const dataClone = _.cloneDeep(data)
+                dataClone.related_resource_types = dataClone.related_resource_types.map(e => {
+                    e.condition = ['none']
+                    e.conditionBackup = ['none']
+                    return e
+                })
+                console.log('dataClone', dataClone)
+                const relatedResourceTypes = _.cloneDeep(
+                    {
+                        id: '',
+                        related_resource_types: dataClone.related_resource_types
+                    }
+                )
+                if (dataClone.environments) {
+                    relatedResourceTypes.environments = []
+                }
+                this.tableList[index].resource_groups.push(relatedResourceTypes)
+                console.log('this.tableList', this.tableList)
+                this.originalList = _.cloneDeep(this.tableList)
+                console.log('this.originalList', this.originalList)
+            },
+
+            //  资源实例删除
+            handlerReduceCondition (data, index, resIndex, groupIndex) {
+                this.tableList[index].resource_groups.splice(groupIndex, 1)
+            },
+
+            // 生效条件侧边栏
+            showTimeSlider (data, index, groupIndex) {
+                this.curIndex = index
+                this.curGroupIndex = groupIndex
+                this.isShowResourceInstanceEffectTime = true
+                this.resourceInstanceEffectTimeTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+            },
+
+            // 生效条件保存
+            handleResourceEffectTimeSumit () {
+                const environments = this.$refs.sidesliderRef.handleGetValue()
+                console.log(this.curIndex, this.curGroupIndex)
+
+                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                resItem.environments = environments
+                console.log(resItem)
+                console.log(environments)
+                console.log(this.tableList)
+
+                window.changeAlert = false
+                this.resourceInstanceEffectTimeTitle = ''
+                this.isShowResourceInstanceEffectTime = false
+                this.curIndex = -1
+                this.curGroupIndex = -1
+            },
+
+            handleResourceEffectTimeCancel () {
+                let cancelHandler = Promise.resolve()
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm()
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceEffectTime = false
+                    this.resetDataAfterClose()
+                }, _ => _)
             }
         }
     }
@@ -1539,8 +1695,34 @@
                 }
                 .iam-perm-table-cell-cls {
                     .cell {
+                        height: 100%;
                         padding: 0px !important;
                     }
+                    .condition-table-cell{
+                        height: 100%;
+                        flex-flow: column;
+                        display: flex;
+                        justify-content: space-evenly;
+                        padding: 15px 0;
+                    }
+                    .empty-text {
+                        padding-top: 35px;
+                    }
+                }
+            }
+            .iam-perm-table-cell-cls {
+                .cell {
+                    height: 100%;
+                }
+                .condition-table-cell{
+                    height: 100%;
+                    flex-flow: column;
+                    display: flex;
+                    justify-content: space-evenly;
+                    padding: 15px 0;
+                }
+                .empty-text {
+                    padding-top: 35px;
                 }
             }
             .related-resource-list{
@@ -1687,5 +1869,38 @@
             line-height: 16px;
             font-size: 10px;
             color: #ea3636;
+        }
+
+        .group-container{
+            position: relative;
+            padding-bottom: 17px;
+            .add-icon,
+            .reduce-icon {
+                font-size: 16px;
+                color: #979ba5;
+                position: absolute;
+                top: 45%;
+                right: 25px;
+                cursor: pointer;
+                &.disabled {
+                    color: #dcdee5;
+                    cursor: not-allowed;
+                }
+            }
+
+            .reduce-icon {
+                right: -2px;
+            }
+        }
+
+        .environ-group-one{
+            position: relative;
+            padding-top: 5px;
+        }
+
+        .environ-group-more{
+            position: relative;
+            padding-bottom: 19px;
+            padding-top: 25px;
         }
 </style>
