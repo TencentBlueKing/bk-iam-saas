@@ -69,6 +69,21 @@
                     font-size: 14px;
                 }
             } */
+            .iam-perm-table-cell-cls {
+                .cell {
+                    height: 100%;
+                    .condition-table-cell{
+                        height: 100%;
+                        flex-flow: column;
+                        display: flex;
+                        justify-content: space-evenly;
+                        padding: 15px 0;
+                    }
+                    .empty-text {
+                        padding-top: 35px;
+                    }
+                }
+            }
         }
         .relation-content-wrapper,
         .conditions-wrapper {

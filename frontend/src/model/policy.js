@@ -53,22 +53,10 @@ export default class Policy {
         this.related_actions = payload.related_actions || []
         this.isShowRelatedText = payload.isShowRelatedText || false
         this.inOriginalList = payload.inOriginalList || false
+        this.related_environments = payload.related_environments || []
         this.initExpired(payload)
-        this.relatedEnvironments(payload)
         this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled)
         this.initAttachActions(payload)
-    }
-
-    relatedEnvironments (payload) {
-        const relatedEnvironments = payload.related_environments || []
-        this.related_environments = payload.resource_groups.reduce((prev, item) => {
-            let environments = item.environments && item.environments.reduce((p, v) => {
-                p.push({ type: v.type })
-                return p
-            }, [])
-            if (!environments) environments = []
-            return [...new Set([...prev, ...environments])]
-        }, relatedEnvironments)
     }
 
     initExpired (payload) {

@@ -85,7 +85,8 @@
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="450">
                 <template slot-scope="{ row, $index }">
-                    <div class="mt20" v-if="!!row.related_environments.length">
+                    <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                        :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
                             :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
                             <effect-time
@@ -95,7 +96,7 @@
                             </effect-time>
                         </div>
                     </div>
-                    <div v-else>{{ $t(`m.common['无需生效条件']`) }}</div>
+                    <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
                 </template>
             </bk-table-column>
             <bk-table-column :resizable="false" prop="description" :label="$t(`m.common['申请期限']`)" min-width="150">
@@ -614,7 +615,7 @@
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1) {
+                if (columnIndex === 1 || columnIndex === 2) {
                     return 'iam-perm-table-cell-cls'
                 }
                 return ''

@@ -1855,6 +1855,8 @@
                     console.log(res.data, params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
+                        // eslint-disable-next-line max-len
+                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments
                         // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
