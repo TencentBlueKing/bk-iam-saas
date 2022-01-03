@@ -2,7 +2,7 @@
     <bk-sideslider
         :is-show.sync="isShowSideslider"
         :title="title"
-        :width="880"
+        :width="1400"
         ext-cls="iam-group-perm-sideslider"
         :quick-close="true"
         @animation-end="handleAnimationEnd">

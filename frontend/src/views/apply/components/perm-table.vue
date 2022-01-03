@@ -49,8 +49,9 @@
                 </bk-table-column>
                 <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
                     <template slot-scope="{ row, $index }">
-                        <div v-if="!!row.related_environments.length">
+                        <div class="condition-table-cell">
                             <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                                class="related-condition-list"
                                 :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
                                          row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
                                              ? '' : 'related-resource-list-border']">
@@ -66,7 +67,7 @@
                                     @click.stop="handleEnvironmentsViewResource(_, row)" />
                             </div>
                         </div>
-                        <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        <!-- <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div> -->
                     </template>
                 </bk-table-column>
                 <bk-table-column prop="expired_dis" :label="$t(`m.common['申请期限']`)"></bk-table-column>
@@ -158,14 +159,13 @@
             data: {
                 handler (value) {
                     this.tableList = _.cloneDeep(value)
-                    console.log('this.tableList', this.tableList)
                 },
                 immediate: true
             }
         },
         methods: {
             getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1) {
+                if (columnIndex === 1 || columnIndex === 2) {
                     return 'iam-perm-table-cell-cls'
                 }
                 return ''
@@ -251,6 +251,12 @@
                 }
             }
 
+            .related-condition-list{
+                flex: 1;
+                display: flex;
+                flex-flow: column;
+                justify-content: center;
+            }
             .related-resource-list{
                 position: relative;
                 .related-resource-item{
@@ -297,6 +303,14 @@
             .iam-perm-table-cell-cls {
                 .cell {
                     padding: 0px !important;
+                    height: 100%;
+                }
+                .condition-table-cell{
+                    height: 100%;
+                    flex-flow: column;
+                    display: flex;
+                    justify-content: center;
+                    /* padding: 15px 0; */
                 }
             }
             tr:hover {

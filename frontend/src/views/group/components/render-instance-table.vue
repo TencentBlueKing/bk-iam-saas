@@ -132,18 +132,33 @@
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="450">
                 <template slot-scope="{ row, $index }">
-                    <div class="condition-table-cell" v-if="!!row.related_environments.length"
-                        :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
-                        <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
-                            :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
-                            <effect-condition
-                                :value="_.environments"
-                                :is-empty="!_.environments.length"
-                                @on-click="showTimeSlider(row, $index, groIndex)">
-                            </effect-condition>
+                    <template v-if="!isEdit">
+                        <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                            :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                            <div v-for="_ in row.resource_groups" :key="_.id"
+                                :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                <effect-condition-detail
+                                    :value="_.environments"
+                                    :is-empty="!_.environments.length">
+                                </effect-condition-detail>
+                            </div>
                         </div>
-                    </div>
-                    <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                    </template>
+                    <template v-else>
+                        <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                            :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                                :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                <effect-condition
+                                    :value="_.environments"
+                                    :is-empty="!_.environments.length"
+                                    @on-click="showTimeSlider(row, $index, groIndex)">
+                                </effect-condition>
+                            </div>
+                        </div>
+                        <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                    </template>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -243,6 +258,7 @@
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
     import RenderDetail from '../common/render-detail'
     import EffectCondition from './effect-conditon'
+    import EffectConditionDetail from './effect-condition-detail'
     import SidesliderEffectCondition from './sideslider-effect-condition'
     // import store from '@/store'
 
@@ -256,6 +272,7 @@
             RenderResourcePopover,
             RenderDetail,
             EffectCondition,
+            EffectConditionDetail,
             SidesliderEffectCondition
         },
         props: {
@@ -357,7 +374,8 @@
                 footerPosition: 'center',
                 newRow: '',
                 role: '',
-                isShowResourceInstanceEffectTime: false
+                isShowResourceInstanceEffectTime: false,
+                linearActionList: []
             }
         },
         computed: {
@@ -462,6 +480,8 @@
             list: {
                 handler (value) {
                     this.tableList.splice(0, this.tableList.length, ...value)
+
+                    console.log('11111', this.tableList)
                 },
                 immediate: true
             },
@@ -1424,10 +1444,19 @@
                                         })
                                     })
                                 }
-                                groupResourceTypes.push({
-                                    id: groupItem.id,
-                                    related_resource_types: relatedResourceTypes
-                                })
+
+                                if (groupItem.environments) {
+                                    groupResourceTypes.push({
+                                        environments: groupItem.environments,
+                                        id: groupItem.id,
+                                        related_resource_types: relatedResourceTypes
+                                    })
+                                } else {
+                                    groupResourceTypes.push({
+                                        id: groupItem.id,
+                                        related_resource_types: relatedResourceTypes
+                                    })
+                                }
                             })
                             // 强制刷新下
                             item.resource_groups = _.cloneDeep(item.resource_groups)
@@ -1565,10 +1594,18 @@
                                         })
                                     })
                                 }
-                                groupResourceTypes.push({
-                                    id: groupItem.id,
-                                    related_resource_types: relatedResourceTypes
-                                })
+                                if (groupItem.environments) {
+                                    groupResourceTypes.push({
+                                        environments: groupItem.environments,
+                                        id: groupItem.id,
+                                        related_resource_types: relatedResourceTypes
+                                    })
+                                } else {
+                                    groupResourceTypes.push({
+                                        id: groupItem.id,
+                                        related_resource_types: relatedResourceTypes
+                                    })
+                                }
                             })
                             // 强制刷新下
                             item.resource_groups = _.cloneDeep(item.resource_groups)

@@ -94,10 +94,15 @@ export default class Policy {
             )
             
             if ((this.related_environments && !!this.related_environments.length)) {
-                const environments = item.environments && item.environments.length ? item.environments : []
+                const environments = item.environments && !!item.environments.length ? item.environments : []
                 prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments })
             } else {
-                prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+                if (item.environments && !!item.environments.length) {
+                    // eslint-disable-next-line max-len
+                    prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: item.environments })
+                } else {
+                    prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+                }
             }
             return prev
         }, [])

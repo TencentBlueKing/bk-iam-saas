@@ -44,8 +44,9 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
                 <template slot-scope="{ row }">
-                    <div v-if="!!row.related_environments.length">
+                    <div class="condition-table-cell" v-if="!!row.related_environments.length">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                            class="related-condition-list"
                             :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
                                      row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
                                          ? '' : 'related-resource-list-border']">
@@ -61,7 +62,7 @@
                                 @click.stop="handleEnvironmentsViewResource(_, row)" />
                         </div>
                     </div>
-                    <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div>
+                    <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
                 </template>
             </bk-table-column>
             <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
@@ -169,6 +170,7 @@
 </template>
 <script>
     import _ from 'lodash'
+    import { mapGetters } from 'vuex'
     import IamPopoverConfirm from '@/components/iam-popover-confirm'
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import RenderResourcePopover from '../components/prem-view-resource-popover'
@@ -222,11 +224,13 @@
                 environmentsSidesliderData: [],
                 isShowResourceInstanceEffectTime: false,
                 resourceGrouParams: {},
-                params: ''
+                params: '',
+                originalCustomTmplList: []
 
             }
         },
         computed: {
+            ...mapGetters(['user']),
             loading () {
                 return this.initRequestQueue.length > 0
             },
@@ -238,13 +242,14 @@
         },
         watch: {
             systemId: {
-                handler (value) {
+                async handler (value) {
                     if (value !== '') {
                         this.initRequestQueue = ['permTable']
                         const params = {
                             systemId: value
                         }
                         this.params = params
+                        await this.fetchActions(value)
                         this.fetchData(params)
                     } else {
                         this.initRequestQueue = []
@@ -257,12 +262,57 @@
         },
         methods: {
             /**
+             * 获取系统对应的自定义操作
+             *
+             * @param {String} systemId 系统id
+             * 执行handleActionLinearData方法
+             */
+            async fetchActions (systemId) {
+                const params = {
+                    system_id: systemId,
+                    user_id: this.user.username
+                }
+                try {
+                    const res = await this.$store.dispatch('permApply/getActions', params)
+                    this.originalCustomTmplList = _.cloneDeep(res.data)
+                    this.handleActionLinearData()
+                } catch (e) {
+                    console.error(e)
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    })
+                }
+            },
+            handleActionLinearData () {
+                const linearActions = []
+                this.originalCustomTmplList.forEach((item, index) => {
+                    item.actions.forEach(act => {
+                        linearActions.push(act)
+                    })
+                    ;(item.sub_groups || []).forEach(sub => {
+                        sub.actions.forEach(act => {
+                            linearActions.push(act)
+                        })
+                    })
+                })
+
+                this.linearActionList = _.cloneDeep(linearActions)
+            },
+            /**
              * fetchData
              */
             async fetchData (params) {
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId })
-                    this.policyList = res.data.map(item => new PermPolicy(item))
+                    this.policyList = res.data.map(item => {
+                        // eslint-disable-next-line max-len
+                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments
+                        return new PermPolicy(item)
+                    })
                     console.log('this.policyList', this.policyList)
                 } catch (e) {
                     console.error(e)
@@ -546,6 +596,12 @@
         .bk-table-enable-row-hover .bk-table-body tr:hover > td {
             background-color: #fff;
         }
+        .related-condition-list{
+            flex: 1;
+            display: flex;
+            flex-flow: column;
+            justify-content: center;
+        }
         .related-resource-list{
             position: relative;
             .related-resource-item{
@@ -600,6 +656,17 @@
             .iam-perm-table-cell-cls {
                 .cell {
                     padding: 0px !important;
+                    height: 100%;
+                }
+                .condition-table-cell{
+                    height: 100%;
+                    flex-flow: column;
+                    display: flex;
+                    justify-content: center;
+                    /* padding: 15px 0; */
+                }
+                .empty-text {
+                    padding-top: 35px;
                 }
             }
             tr:hover {
