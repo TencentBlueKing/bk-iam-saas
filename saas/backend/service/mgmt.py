@@ -8,29 +8,19 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.api.management.constants import ManagementAPIEnum
+from backend.api.admin.models import AdminAPIAllowListConfig
+from backend.api.authorization.models import AuthAPIAllowListConfig
 from backend.api.management.models import ManagementAPIAllowListConfig
 
 
-class WhiteListService:
-    def list_management_api(self):
-        """
-        管理类API列表
-        """
-        management_api = dict(ManagementAPIEnum.get_choices())
-        data = [{"api": api, "name": management_api[api]} for api in management_api]
-        return data
-
-    def add_management_api(self, username: str, system_id: str, api: str):
-        """
-        新增管理类API白名单
-        """
-        ManagementAPIAllowListConfig.objects.update_or_create(
-            defaults={"updater": username}, creator=username, system_id=system_id, api=api
-        )
-
-    def delete_management_api_by_id(self, id: int):
-        """
-        删除管理类API白名单
-        """
-        ManagementAPIAllowListConfig.objects.filter(id=id).delete()
+def list_api_msg_by_api_type(api_type: str):
+    """
+    根据api类型获取相关api信息
+    """
+    api_model_map = {
+        "management_api": ManagementAPIAllowListConfig,
+        "admin_api": AdminAPIAllowListConfig,
+        "authorization_api": AuthAPIAllowListConfig,
+    }
+    api_msg = api_model_map[api_type].objects.list_api_msg()
+    return api_msg

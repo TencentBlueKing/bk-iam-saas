@@ -16,28 +16,29 @@ from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import RolePermission
 from backend.api.management.models import ManagementAPIAllowListConfig
-from backend.apps.mgmt.serializers import ManagementApiAddWhiteListSLZ, ManagementApiSLZ, ManagementApiWhiteListSLZ
+from backend.apps.mgmt.serializers import ApiSLZ, ManagementApiAddWhiteListSLZ, ManagementApiWhiteListSLZ, QueryApiSLZ
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum
-from backend.service.mgmt import WhiteListService
+from backend.service.mgmt import list_api_msg_by_api_type
 
 
-class ManagementApiViewSet(mixins.ListModelMixin, GenericViewSet):
-
+class ApiViewSet(mixins.ListModelMixin, GenericViewSet):
     paginator = None  # 去掉swagger中的limit offset参数
 
     permission_classes = [RolePermission]
     action_permission = {"list": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value}
-    white_list_svc = WhiteListService()
 
     @swagger_auto_schema(
-        operation_description="管理类API列表",
+        operation_description="API列表",
         auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: ManagementApiSLZ(label="管理类API", many=True)},
-        tags=["mgmt.white_list"],
+        responses={status.HTTP_200_OK: ApiSLZ(label="API信息", many=True)},
+        tags=["mgmt.api"],
     )
     def list(self, request, *args, **kwargs):
-        data = self.white_list_svc.list_management_api()
+        slz = QueryApiSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+
+        data = list_api_msg_by_api_type(api_type=slz.validated_data["api_type"])
         return Response(data)
 
 
@@ -50,7 +51,6 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         "destroy": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
     }
 
-    white_list_svc = WhiteListService()
     queryset = ManagementAPIAllowListConfig.objects.all()
     serializer_class = ManagementApiWhiteListSLZ
 
@@ -79,8 +79,9 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         system_id = data["system_id"]
         api = data["api"]
 
-        self.white_list_svc.add_management_api(username=username, system_id=system_id, api=api)
-
+        ManagementAPIAllowListConfig.objects.update_or_create(
+            defaults={"updater": username}, creator=username, system_id=system_id, api=api
+        )
         return Response({}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
@@ -90,6 +91,5 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         tags=["mgmt.white_list"],
     )
     def destroy(self, request, *args, **kwargs):
-        self.white_list_svc.delete_management_api_by_id(kwargs["id"])
-
+        ManagementAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).delete()
         return Response({})

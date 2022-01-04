@@ -10,25 +10,11 @@ specific language governing permissions and limitations under the License.
 """
 from django.db import models
 
-from backend.common.models import BaseModel
-
-from .constants import AuthorizationAPIEnum
-from .managers import AuthAPIAllowListConfigManager
+from backend.api.authorization.constants import AuthorizationAPIEnum
 
 
-class AuthAPIAllowListConfig(BaseModel):
-    """
-    授权API白名单配置
-    """
-
-    type = models.CharField("API类型", choices=AuthorizationAPIEnum.get_choices(), max_length=32)
-    system_id = models.CharField("接入系统", max_length=32)
-    object_id = models.CharField("资源类型或操作ID", max_length=32, help_text="*代表任意")
-
-    objects = AuthAPIAllowListConfigManager()
-
-    class Meta:
-        verbose_name = "授权API白名单配置"
-        verbose_name_plural = "授权API白名单配置"
-        ordering = ["-id"]
-        index_together = ["system_id", "object_id"]
+class AuthAPIAllowListConfigManager(models.Manager):
+    def list_api_msg(self):
+        auth_api = dict(AuthorizationAPIEnum.get_choices())
+        api_msg = [{"api": api, "name": auth_api[api]} for api in auth_api]
+        return api_msg

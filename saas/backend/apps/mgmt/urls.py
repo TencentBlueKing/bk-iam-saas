@@ -14,9 +14,9 @@ from . import views
 
 urlpatterns = [
     path(
-        "management_api/",
-        views.ManagementApiViewSet.as_view({"get": "list"}),
-        name="mgmt.management_api",
+        "api/",
+        views.ApiViewSet.as_view({"get": "list"}),
+        name="mgmt.api",
     ),
     path(
         "management_api/white_list/",

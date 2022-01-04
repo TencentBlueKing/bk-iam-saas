@@ -14,6 +14,7 @@ from backend.api.constants import ALLOW_ANY
 from backend.common.models import BaseModel
 
 from .constants import ManagementAPIEnum
+from .managers import ManagementAPIAllowListConfigManager
 
 
 class ManagementAPIAllowListConfig(BaseModel):
@@ -21,6 +22,8 @@ class ManagementAPIAllowListConfig(BaseModel):
 
     api = models.CharField("API", choices=ManagementAPIEnum.get_choices(), max_length=32, help_text="*代表任意")
     system_id = models.CharField("接入系统", max_length=32)
+
+    objects = ManagementAPIAllowListConfigManager()
 
     class Meta:
         verbose_name = "管理类API允许系统白名单"
