@@ -10,7 +10,7 @@
                     <span :title="row.name">{{ row.name }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
+            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
                 <template slot-scope="{ row }">
                     <template v-if="!row.isEmpty">
                         <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
@@ -42,7 +42,7 @@
                     </template>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
+            <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="420">
                 <template slot-scope="{ row }">
                     <div class="condition-table-cell" v-if="!!row.related_environments.length">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
@@ -666,7 +666,7 @@
                     /* padding: 15px 0; */
                 }
                 .empty-text {
-                    padding-top: 35px;
+                    padding: 0 20px;
                 }
             }
             tr:hover {

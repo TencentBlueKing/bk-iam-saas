@@ -275,8 +275,8 @@
                     return
                 }
                 // count > 0 说明是自定义权限
+                await this.fetchActions(item)
                 if (item.count > 0) {
-                    await this.fetchActions(item)
                     this.getGroupCustomPolicy(item)
                     return
                 }

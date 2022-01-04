@@ -31,7 +31,7 @@
                     <span>{{ !!row.isAggregate ? row.system_name : row.detail.system.name }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="520">
+            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
                 <template slot-scope="{ row, $index }">
                     <template v-if="!isEdit">
                         <template v-if="!row.isEmpty">
@@ -130,34 +130,39 @@
                     </template>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="450">
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="420">
                 <template slot-scope="{ row, $index }">
-                    <template v-if="!isEdit">
-                        <div class="condition-table-cell" v-if="!!row.related_environments.length"
-                            :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
-                            <div v-for="_ in row.resource_groups" :key="_.id"
-                                :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
-                                <effect-condition-detail
-                                    :value="_.environments"
-                                    :is-empty="!_.environments.length">
-                                </effect-condition-detail>
+                    <template v-if="!!row.resource_groups.length">
+                        <template v-if="!isEdit">
+                            <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                                :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                                <div v-for="_ in row.resource_groups" :key="_.id"
+                                    :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                    <effect-condition-detail
+                                        :value="_.environments"
+                                        :is-empty="!_.environments.length">
+                                    </effect-condition-detail>
+                                </div>
                             </div>
-                        </div>
-                        <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        </template>
+                        <template v-else>
+                            <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                                :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                                    :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                    <effect-condition
+                                        :value="_.environments"
+                                        :is-empty="!_.environments.length"
+                                        @on-click="showTimeSlider(row, $index, groIndex)">
+                                    </effect-condition>
+                                </div>
+                            </div>
+                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        </template>
                     </template>
                     <template v-else>
-                        <div class="condition-table-cell" v-if="!!row.related_environments.length"
-                            :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
-                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
-                                :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
-                                <effect-condition
-                                    :value="_.environments"
-                                    :is-empty="!_.environments.length"
-                                    @on-click="showTimeSlider(row, $index, groIndex)">
-                                </effect-condition>
-                            </div>
-                        </div>
-                        <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
                     </template>
                 </template>
             </bk-table-column>
@@ -257,7 +262,7 @@
     import PreviewResourceDialog from './preview-resource-dialog'
     import RenderResourcePopover from '@/components/iam-view-resource-popover'
     import RenderDetail from '../common/render-detail'
-    import EffectCondition from './effect-conditon'
+    import EffectCondition from './effect-condition'
     import EffectConditionDetail from './effect-condition-detail'
     import SidesliderEffectCondition from './sideslider-effect-condition'
     // import store from '@/store'
@@ -807,12 +812,15 @@
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 let judgeIndex = columnIndex
+                let conditionIndex = columnIndex
                 if (this.isCreateMode) {
                     judgeIndex = 3
+                    conditionIndex = 4
                 } else {
                     judgeIndex = 1
+                    conditionIndex = 2
                 }
-                if (columnIndex === judgeIndex || columnIndex === 4) {
+                if (columnIndex === judgeIndex || columnIndex === conditionIndex) {
                     return 'iam-perm-table-cell-cls'
                 }
                 return ''
@@ -1732,7 +1740,7 @@
                 }
                 .iam-perm-table-cell-cls {
                     .cell {
-                        height: 100%;
+                        height: auto;
                         padding: 0px !important;
                     }
                     .condition-table-cell{
@@ -1743,13 +1751,13 @@
                         padding: 15px 0;
                     }
                     .empty-text {
-                        padding-top: 35px;
+                        padding-left: 20px;
                     }
                 }
             }
             .iam-perm-table-cell-cls {
                 .cell {
-                    height: 100%;
+                    /* height: 100%; */
                 }
                 .condition-table-cell{
                     height: 100%;
@@ -1759,7 +1767,7 @@
                     padding: 15px 0;
                 }
                 .empty-text {
-                    padding-top: 35px;
+                    /* padding-top: 35px; */
                 }
             }
             .related-resource-list{

@@ -8,7 +8,7 @@
             :row-class-name="handleRowClass"
             :cell-class-name="getCellClass"
             :empty-text="$t(`m.verify['请选择操作']`)">
-            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="250">
+            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="{ row }">
                     <div v-if="!!row.isAggregate" style="padding: 10px 0;">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
@@ -22,7 +22,7 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
+            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="420">
                 <template slot-scope="{ row, $index }">
                     <!-- isAggregate代表批量编辑状态 -->
                     <div class="relation-content-wrapper" v-if="!!row.isAggregate">
@@ -83,7 +83,7 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="450">
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="440">
                 <template slot-scope="{ row, $index }">
                     <div class="condition-table-cell" v-if="!!row.related_environments.length"
                         :class="row.resource_groups.length === 1 ? 'empty-text' : ''">

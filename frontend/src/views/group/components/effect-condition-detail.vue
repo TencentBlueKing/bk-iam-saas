@@ -49,7 +49,6 @@
         watch: {
             value: {
                 handler (val) {
-                    console.log('val111', val)
                     if (!val || !val.length) {
                         this.curValue = '无需生效条件'
                     } else {
@@ -111,7 +110,7 @@
         position: relative;
         color: #63656e;
         cursor: pointer;
-        margin: 0 20px !important;
+        /* margin: 0 20px !important; */
         
         &:hover {
             border-color: #3a84ff;
