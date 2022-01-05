@@ -1427,9 +1427,8 @@
             },
 
             handlerReduceCondition (data, index, resIndex, groupIndex) {
-                console.log('index, resIndex', index, resIndex)
+                if (data.id) return
                 this.tableList[index].resource_groups.splice(groupIndex, 1)
-                console.log('this.tableList', this.tableList)
             },
 
             // 生效条件侧边栏

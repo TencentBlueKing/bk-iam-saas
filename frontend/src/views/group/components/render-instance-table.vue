@@ -1680,6 +1680,7 @@
 
             //  资源实例删除
             handlerReduceCondition (data, index, resIndex, groupIndex) {
+                if (data.id) return
                 this.tableList[index].resource_groups.splice(groupIndex, 1)
             },
 
