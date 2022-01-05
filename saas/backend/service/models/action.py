@@ -62,6 +62,8 @@ class Action(BaseModel):
     def __init__(self, **data: Any):
         if "related_actions" in data and data["related_actions"] is None:
             data["related_actions"] = []
+        if "related_environments" in data and data["related_environments"] is None:
+            data["related_environments"] = []
         super().__init__(**data)
 
     def get_related_resource_type(self, system_id: str, resource_type_id: str) -> Optional[RelatedResourceType]:

@@ -119,7 +119,7 @@ class RelatedPolicyBiz:
 
         rg = ResourceGroupBean(id=gen_uuid(), related_resource_types=[new_rrt_list[0]])
         for new_rrt in new_rrt_list[1:]:
-            rg.add_related_resource_types(new_rrt)
+            rg.add_related_resource_types([new_rrt])
 
         return PolicyBean(
             action_id=action.id,

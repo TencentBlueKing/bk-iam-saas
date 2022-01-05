@@ -23,7 +23,7 @@ class BaseEnvCondition(ABC):
 
 class WeekdayEnvCondition(BaseEnvCondition):
     def trans(self) -> List[Dict[str, Any]]:
-        return [{"NumericEquals": {f"{self.system_id}._bk_iam_env_.weekday": self.values}}]
+        return [{"NumericEquals": {f"{self.system_id}._bk_iam_env_.weekday": [int(value) for value in self.values]}}]
 
 
 class HMSEnvCondition(BaseEnvCondition):

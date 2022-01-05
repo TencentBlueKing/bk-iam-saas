@@ -12,15 +12,18 @@ from typing import List
 
 from pydantic import BaseModel
 
-from backend.service.constants import SubjectType
+from backend.service.constants import PolicyEnvConditionTypeEnum, PolicyEnvTypeEnum, SubjectType, WeekDayEnum
 from backend.service.models import (
     ApplicationAuthorizationScope,
+    ApplicationEnvironment,
     ApplicationGroupInfo,
     ApplicationGroupPermTemplate,
     ApplicationPolicyInfo,
     ApplicationRelatedResource,
     ApplicationResourceAttribute,
     ApplicationResourceCondition,
+    ApplicationResourceGroup,
+    ApplicationResourceGroupList,
     ApplicationResourceInstance,
     GradeManagerApplicationContent,
     GrantActionApplicationContent,
@@ -210,10 +213,101 @@ class ActionRelatedResourceTypeInfo(BaseModel):
             for c in i.condition:
                 for ist in c.instances:
                     v.append(f"{len(ist.path)}个{ist.name}")
-            values.append(BaseDictStrValue(vallue=f"{i.name}: 已设置 {len_attr} 个属性条件; 已选择 {', '.join(v)}"))
+            values.append(BaseDictStrValue(value=f"{i.name}: 已设置 {len_attr} 个属性条件; 已选择 {', '.join(v)}"))
             children.append(ResourceBothTable.from_conditions(i.name, i.condition))
 
         return cls(value=values, children=children)
+
+
+class EnvironmentColumnValue(BaseModel):
+    """环境属性表格每一列的值"""
+
+    type: BaseDictStrValue
+    condition: BaseDictListValue
+
+    @classmethod
+    def from_environment(cls, environment: ApplicationEnvironment) -> "EnvironmentColumnValue":
+        type = BaseDictStrValue(value=dict(PolicyEnvTypeEnum.get_choices())[environment.type])
+        condition = BaseDictListValue(value=[])
+
+        cond_type_dict = dict(PolicyEnvConditionTypeEnum.get_choices())
+        for cond in environment.condition:
+            text = f"{cond_type_dict[cond.type]}: "
+            if cond.type == PolicyEnvConditionTypeEnum.TZ.value:
+                text += cond.values[0].value
+            elif cond.type == PolicyEnvConditionTypeEnum.HMS.value:
+                text += f"{cond.values[0].value} -- {cond.values[1].value}"
+            elif cond.type == PolicyEnvConditionTypeEnum.WEEKDAY.value:
+                week_day_dict = dict(WeekDayEnum.get_choices())
+                text += ", ".join([week_day_dict[int(v.value)] for v in cond.values])
+
+            condition.value.append(BaseDictStrValue(value=text))
+
+        return EnvironmentColumnValue(type=type, condition=condition)
+
+
+class EnvironmentTable(BaseModel):
+    """环境属性表格"""
+
+    label: str = "环境属性"
+    scheme: str = FormSchemeEnum.ENVIRONMENT_TABLE.value
+    value: List[EnvironmentColumnValue]
+
+    @classmethod
+    def from_environments(cls, environments: List[ApplicationEnvironment]) -> "EnvironmentTable":
+        return EnvironmentTable(value=[EnvironmentColumnValue.from_environment(env) for env in environments])
+
+
+class EnvironmentInfo(BaseModel):
+    value: List[BaseDictStrValue]
+    children: List[EnvironmentTable] = []
+
+    @classmethod
+    def from_environments(cls, environments: List[ApplicationEnvironment]) -> "EnvironmentInfo":
+        if not environments:
+            return EnvironmentInfo(value=[])
+
+        return EnvironmentInfo(
+            value=[BaseDictStrValue(value=f"已设置 {len(environments)} 个环境属性")],
+            children=[EnvironmentTable.from_environments(environments)],
+        )
+
+
+class ResourceGroupColumnValue(BaseModel):
+    related_resource_types: ActionRelatedResourceTypeInfo
+    environments: EnvironmentInfo
+
+    @classmethod
+    def from_resource_group(cls, resource_group: ApplicationResourceGroup) -> "ResourceGroupColumnValue":
+        return ResourceGroupColumnValue(
+            related_resource_types=ActionRelatedResourceTypeInfo.from_resource_types(
+                resource_group.related_resource_types
+            ),
+            environments=EnvironmentInfo.from_environments(resource_group.environments),
+        )
+
+
+class ResourceGroupTable(BaseModel):
+    label: str = "资源组合"
+    scheme: str = FormSchemeEnum.RESOURCE_GROUP_TABLE.value
+    value: List[ResourceGroupColumnValue]
+
+    @classmethod
+    def from_resource_groups(cls, resource_groups: ApplicationResourceGroupList) -> "ResourceGroupTable":
+        return ResourceGroupTable(value=[ResourceGroupColumnValue.from_resource_group(rg) for rg in resource_groups])
+
+
+class ResourceGroupInfo(BaseModel):
+    """资源组"""
+
+    value: List[BaseDictStrValue]
+    children: List[ResourceGroupTable] = []
+
+    @classmethod
+    def from_resource_groups(cls, resource_groups: ApplicationResourceGroupList) -> "ResourceGroupInfo":
+        value = [BaseDictStrValue(value=f"已设置 {len(resource_groups)} 个资源组合")]
+        children = [ResourceGroupTable.from_resource_groups(resource_groups)]
+        return ResourceGroupInfo(value=value, children=children)
 
 
 # ---------------------------- 自定义权限申请 ----------------------------
@@ -221,21 +315,18 @@ class ActionColumnValue(BaseModel):
     """权限表格每一列的值"""
 
     action: BaseDictStrValue
-    related_resource_types: ActionRelatedResourceTypeInfo
+    resource_groups: ResourceGroupInfo
     expired_display: BaseDictStrValue
 
     @classmethod
     def from_policy(cls, policy: ApplicationPolicyInfo):
         if len(policy.resource_groups) == 0:
-            related_resource_types = ActionRelatedResourceTypeInfo(value=[BaseDictStrValue(value="无需关联实例")])
+            resource_groups = ResourceGroupInfo(value=[BaseDictStrValue(value="无需关联实例")])
         else:
-            # NOTE: 当前默认只有一组
-            related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(
-                policy.resource_groups[0].related_resource_types
-            )
+            resource_groups = ResourceGroupInfo.from_resource_groups(policy.resource_groups)
         return cls(
             action=BaseDictStrValue(value=policy.name),
-            related_resource_types=related_resource_types,
+            resource_groups=resource_groups,
             expired_display=BaseDictStrValue(value=policy.expired_display),
         )
 
@@ -258,18 +349,15 @@ class GroupActionColumnValue(BaseModel):
     """用户组权限表格每一列的值"""
 
     action: BaseDictStrValue
-    related_resource_types: ActionRelatedResourceTypeInfo
+    resource_groups: ResourceGroupInfo
 
     @classmethod
     def from_policy(cls, policy: ApplicationPolicyInfo):
         if len(policy.resource_groups) == 0:
-            related_resource_types = ActionRelatedResourceTypeInfo(value=[BaseDictStrValue(value="无需关联实例")])
+            resource_groups = ResourceGroupInfo(value=[BaseDictStrValue(value="无需关联实例")])
         else:
-            # NOTE: 当前默认只有一组
-            related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(
-                policy.resource_groups[0].related_resource_types
-            )
-        return cls(action=BaseDictStrValue(value=policy.name), related_resource_types=related_resource_types)
+            resource_groups = ResourceGroupInfo.from_resource_groups(policy.resource_groups)
+        return cls(action=BaseDictStrValue(value=policy.name), resource_groups=resource_groups)
 
 
 class GroupActionTable(BaseModel):

@@ -35,8 +35,7 @@ class ActionService:
 
     full_fields = (
         "id,name,name_en,related_resource_types,version,type,description,description_en,"
-        # "related_actions,related_environments"
-        "related_actions"
+        "related_actions,related_environments"
     )
 
     @region.cache_on_arguments(expiration_time=60)
