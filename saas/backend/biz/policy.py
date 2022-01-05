@@ -33,7 +33,6 @@ from backend.service.models import (
     Instance,
     InstanceSelection,
     PathNode,
-    PathResourceType,
     Policy,
     RelatedResource,
     RelatedResourceType,
@@ -44,6 +43,7 @@ from backend.service.models import (
     System,
     SystemCounter,
 )
+from backend.service.models.policy import PathNodeList
 from backend.service.policy.operation import PolicyOperationService
 from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
@@ -76,52 +76,19 @@ class PathNodeBean(PathNode):
         """
         return self.system_id == resource_system_id and self.type == resource_type_id
 
-    def to_path_resource_type(self) -> PathResourceType:
-        return PathResourceType(system_id=self.system_id, id=self.type)
 
-
-class PathNodeBeanList:
-    def __init__(self, nodes: List[PathNodeBean]) -> None:
-        self.nodes = nodes
-
-    def dict(self) -> List[Dict[str, Any]]:
-        return [node.dict() for node in self.nodes]
+class PathNodeBeanList(PathNodeList):
+    __root__: List[PathNodeBean]
 
     def to_path_string(self):
         return translate_path(self.dict())
 
-    def _to_path_resource_types(self) -> List[PathResourceType]:
-        return [one.to_path_resource_type() for one in self.nodes]
-
-    def match_selection(self, resource_system_id: str, resource_type_id: str, selection: InstanceSelection) -> bool:
-        """
-        检查是否匹配实例视图
-        """
-        # 链路只有一层, 并且与资源类型匹配
-        if len(self.nodes) == 1 and self.nodes[0].match_resource_type(resource_system_id, resource_type_id):
-            return True
-
-        return selection.match_path(self._to_path_resource_types())
-
-    def ignore_path(self, selection: InstanceSelection) -> List[PathNodeBean]:
-        """
-        根据实例视图, 返回忽略路径后的链路
-        """
-        if (
-            selection.ignore_iam_path
-            and len(self.nodes) == len(selection.resource_type_chain)
-            and self.nodes[-1].id != ANY_ID
-        ):
-            return [self.nodes[-1]]
-
-        return self.nodes
-
     def display(self) -> str:
-        return "/".join(["{}:{}".format(node.type, node.name) for node in self.nodes])
+        return "/".join(["{}:{}".format(node.type, node.name) for node in self])
 
 
 class InstanceBean(Instance):
-    path: List[List[PathNodeBean]]
+    path: List[PathNodeBeanList]
 
     name: str = ""
     name_en: str = ""
@@ -145,29 +112,29 @@ class InstanceBean(Instance):
         return {node.system_id for node in self.iter_path_node()}
 
     # For Operation
-    def add_paths(self, paths: List[List[PathNodeBean]]) -> "InstanceBean":
+    def add_paths(self, paths: List[PathNodeBeanList]) -> "InstanceBean":
         """
         合并
         """
         path_set = self._get_path_set()
         for path in paths:
-            if PathNodeBeanList(path).to_path_string() in path_set:
+            if path.to_path_string() in path_set:
                 continue
 
             self.path.append(path)
 
         return self
 
-    def remove_paths(self, paths: List[List[PathNodeBean]]) -> "InstanceBean":
+    def remove_paths(self, paths: List[PathNodeBeanList]) -> "InstanceBean":
         """
         裁剪
         """
-        path_set = {PathNodeBeanList(path).to_path_string() for path in paths}
-        self.path = [path for path in self.path if PathNodeBeanList(path).to_path_string() not in path_set]
+        path_set = {path.to_path_string() for path in paths}
+        self.path = [path for path in self.path if path.to_path_string() not in path_set]
         return self
 
     def _get_path_set(self):
-        return {PathNodeBeanList(path).to_path_string() for path in self.path}
+        return {path.to_path_string() for path in self.path}
 
     @property
     def is_empty(self) -> bool:
@@ -181,10 +148,9 @@ class InstanceBean(Instance):
         """
         new_paths = []
         for p in self.path:
-            node_list = PathNodeBeanList(p)
             for selection in selections:
-                if node_list.match_selection(resource_system_id, resource_type_id, selection):
-                    new_paths.append(node_list.nodes)
+                if p.match_selection(resource_system_id, resource_type_id, selection):
+                    new_paths.append(p)
                     break
 
         if not new_paths:
@@ -193,22 +159,19 @@ class InstanceBean(Instance):
         return InstanceBean(path=new_paths, **self.dict(exclude={"path"}))
 
     def check_instance_selection(
-        self, resource_system_id: str, resource_type_id: str, selections: List[InstanceSelection], ignore_path=False
+        self, resource_system_id: str, resource_type_id: str, selections: List[InstanceSelection]
     ):
         """
         检查实例视图
         """
-        for i in range(len(self.path)):
-            node_list = PathNodeBeanList(self.path[i])
+        for p in self.path:
             for selection in selections:
-                if node_list.match_selection(resource_system_id, resource_type_id, selection):
-                    if ignore_path:
-                        self.path[i] = node_list.ignore_path(selection)
+                if p.match_selection(resource_system_id, resource_type_id, selection):
                     break
             else:
                 # 所有的实例视图都不匹配
                 raise error_codes.VALIDATE_ERROR.format(
-                    "{} could not match any instance selection".format(node_list.display())
+                    "{} could not match any instance selection".format(p.display())
                 )
 
     def count(self) -> int:
@@ -452,7 +415,7 @@ class RelatedResourceBean(RelatedResource):
         system_id_set.add(self.system_id)
         return system_id_set
 
-    def check_selection(self, selections: List[InstanceSelection], ignore_path=False):
+    def check_selection(self, selections: List[InstanceSelection]):
         """
         校验条件中的实例拓扑是否满足实例视图
         """
@@ -461,7 +424,7 @@ class RelatedResourceBean(RelatedResource):
                 continue
 
             for instance in c.instances:
-                instance.check_instance_selection(self.system_id, self.type, selections, ignore_path)
+                instance.check_instance_selection(self.system_id, self.type, selections)
 
     def count_instance(self) -> int:
         """
@@ -508,7 +471,7 @@ class RelatedResourceBean(RelatedResource):
 
             for instance in condition.instances:
                 for path in instance.path:
-                    yield PathNodeBeanList(path)
+                    yield path
 
     def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
         is_changed = False
@@ -637,7 +600,7 @@ class ResourceGroupBean(ResourceGroup):
         nodes = []
         for rrt in self.related_resource_types:
             for path_list in rrt.iter_path_list():
-                nodes.extend(path_list.nodes)
+                nodes.extend(list(path_list))
         return nodes
 
     def count_all_type_instance(self) -> int:
@@ -659,12 +622,12 @@ class ResourceGroupBean(ResourceGroup):
                 rrt.condition = resource_type.condition
                 break
 
-    def check_instance_selection(self, action: Action, ignore_path=False):
+    def check_instance_selection(self, action: Action):
         for rrt in self.related_resource_types:
             resource_type = action.get_related_resource_type(rrt.system_id, rrt.type)
             if not resource_type:
                 continue
-            rrt.check_selection(resource_type.instance_selections, ignore_path)
+            rrt.check_selection(resource_type.instance_selections)
 
     def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
         """
@@ -980,12 +943,12 @@ class PolicyBean(Policy):
             return None
         return resource_group.get_related_resource_type(system_id, resource_type_id)
 
-    def check_instance_selection(self, action: Action, ignore_path=False):
+    def check_instance_selection(self, action: Action):
         """
         检查资源的实例视图是否匹配
         """
         for rg in self.resource_groups:
-            rg.check_instance_selection(action, ignore_path)
+            rg.check_instance_selection(action)
 
     def list_resource_type_instance_count(self) -> List[ResourceTypeInstanceCount]:
         """
@@ -1028,14 +991,12 @@ class PolicyBeanList:
         policies: List[PolicyBean],
         need_fill_empty_fields: bool = False,
         need_check_instance_selection: bool = False,
-        need_ignore_path: bool = False,
     ) -> None:
         """
         system_id: policies的系统id
         policies: 策略列表
         need_fill_empty_fields: 是否需要填充空白字段, 默认否
         need_check_instance_selection: 是否需要检查实例视图, 默认否
-        need_ignore_path: 是否需要忽略路径， 默认否
         """
         self.system_id = system_id
         self.policies = policies
@@ -1045,8 +1006,8 @@ class PolicyBeanList:
         if need_fill_empty_fields:
             self.fill_empty_fields()
 
-        if need_check_instance_selection or need_ignore_path:
-            self.check_instance_selection(need_ignore_path)
+        if need_check_instance_selection:
+            self.check_instance_selection()
 
     def fill_empty_fields(self):
         """
@@ -1178,7 +1139,7 @@ class PolicyBeanList:
     def to_svc_policies(self):
         return parse_obj_as(List[Policy], self.policies)
 
-    def check_instance_selection(self, ignore_path=False):
+    def check_instance_selection(self):
         """
         检查实例视图
         如果视图需要忽略路径, 则修改路径
@@ -1189,7 +1150,7 @@ class PolicyBeanList:
             if not action:
                 continue
 
-            p.check_instance_selection(action, ignore_path)
+            p.check_instance_selection(action)
 
     def _list_path_node(self, is_ignore_big_policy=False) -> List[PathNodeBean]:
         """
@@ -1444,6 +1405,7 @@ class PolicyOperationBiz:
     query_biz = PolicyQueryBiz()
 
     svc = PolicyOperationService()
+    action_svc = ActionService()
 
     @method_decorator(policy_change_lock)
     def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
@@ -1540,7 +1502,12 @@ class PolicyOperationBiz:
         # 检查策略里的实例数量，避免大规模实例超限
         update_policy_list.check_instance_count_limit()
 
-        self.svc.alter(system_id, subject, update_policies=update_policy_list.to_svc_policies())
+        self.svc.alter(
+            system_id,
+            subject,
+            update_policies=update_policy_list.to_svc_policies(),
+            action_list=self.action_svc.new_action_list(system_id),
+        )
 
         return update_policy_list.policies
 
@@ -1565,6 +1532,7 @@ class PolicyOperationBiz:
             subject,
             create_policies=create_policy_list.to_svc_policies(),
             update_policies=update_policy_list.to_svc_policies(),
+            action_list=self.action_svc.new_action_list(system_id),
         )
 
     @method_decorator(policy_change_lock)

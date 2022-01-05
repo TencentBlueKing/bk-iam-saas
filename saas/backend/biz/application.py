@@ -151,7 +151,7 @@ class ApprovedPassApplicationBiz:
         system_id = data["system"]["id"]
         actions = data["actions"]
 
-        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], actions), need_ignore_path=True)
+        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], actions))
         self.policy_operation_biz.alter(system_id=system_id, subject=subject, policies=policy_list.policies)
 
     def _renew_action(self, subject: Subject, data: Dict):

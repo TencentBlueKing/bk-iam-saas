@@ -1,3 +1,12 @@
+"""
+TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
 from copy import deepcopy
 from typing import List
 
@@ -69,7 +78,7 @@ def path_node_bean_list(path_node_bean: PathNodeBean):
     path_node_bean1.type_name = "type_name1"
     path_node_bean1.type_name_en = "type_name_en1"
     return PathNodeBeanList(
-        nodes=[
+        __root__=[
             path_node_bean.copy(deep=True),
             path_node_bean1,
         ]
@@ -121,7 +130,7 @@ class TestPathNodeBeanList:
         assert path_node_bean_list.display() == "type:name/type1:name1"
 
     def test_match_selection_one_node(self, path_node_bean_list: PathNodeBeanList):
-        path_node_bean_list.nodes.pop()
+        path_node_bean_list.__root__.pop()
         assert path_node_bean_list.match_selection("system_id", "type", None)
 
     @pytest.mark.parametrize(
@@ -154,7 +163,7 @@ class TestPathNodeBeanList:
         ],
     )
     def test_ignore_path(self, path_node_bean_list: PathNodeBeanList, instance_selection, start, end):
-        assert path_node_bean_list.ignore_path(instance_selection) == path_node_bean_list.nodes[start:end]
+        assert path_node_bean_list.ignore_path(instance_selection).__root__ == path_node_bean_list.__root__[start:end]
 
 
 @pytest.fixture()
@@ -202,7 +211,7 @@ class TestInstanceBean:
         assert instance_bean.path[0][1].type_name_en == ""
 
     def test_iter_path_node(self, instance_bean: InstanceBean):
-        assert list(instance_bean.iter_path_node()) == instance_bean.path[0]
+        assert list(instance_bean.iter_path_node()) == instance_bean.path[0].__root__
 
     def test_get_system_id_set(self, instance_bean: InstanceBean):
         assert instance_bean.get_system_id_set() == {"system_id"}
@@ -215,7 +224,7 @@ class TestInstanceBean:
         ],
     )
     def test_add_paths(self, instance_bean: InstanceBean, paths, length):
-        instance_bean.add_paths(paths)
+        instance_bean.add_paths([PathNodeBeanList(__root__=p) for p in paths])
         assert len(instance_bean.path) == length
 
     @pytest.mark.parametrize(
@@ -226,7 +235,7 @@ class TestInstanceBean:
         ],
     )
     def test_remove_paths(self, instance_bean: InstanceBean, paths, length):
-        instance_bean.remove_paths(paths)
+        instance_bean.remove_paths([PathNodeBeanList(__root__=p) for p in paths])
         assert len(instance_bean.path) == length
 
     def test_is_empty(self, instance_bean: InstanceBean):
@@ -276,21 +285,6 @@ class TestInstanceBean:
             assert not raise_exception
         except APIException:
             assert raise_exception
-
-    def test_check_instance_selection_ignore_path(self, instance_bean: InstanceBean):
-        instance_selection = gen_instance_selection(
-            [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}], ignore_iam_path=True
-        )
-        instance_bean.check_instance_selection("system_id", "type", [instance_selection], ignore_path=True)
-        assert len(instance_bean.path[0]) == 1
-
-    def test_check_instance_selection_ignore_path_any(self, instance_bean: InstanceBean):
-        instance_selection = gen_instance_selection(
-            [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}], ignore_iam_path=True
-        )
-        instance_bean.path[0][-1].id = "*"
-        instance_bean.check_instance_selection("system_id", "type", [instance_selection], ignore_path=True)
-        assert len(instance_bean.path[0]) == 2
 
 
 @pytest.fixture()
@@ -436,13 +430,6 @@ class TestRelatedResourceBean:
             assert not raise_exception
         except APIException:
             assert raise_exception
-
-    def test_check_selection_ignore_path(self, related_resource_bean: RelatedResourceBean):
-        instance_selection = gen_instance_selection(
-            [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}], ignore_iam_path=True
-        )
-        related_resource_bean.check_selection([instance_selection], ignore_path=True)
-        assert len(related_resource_bean.condition[0].instances[0].path[0]) == 1
 
     def test_count_instance(self, related_resource_bean: RelatedResourceBean):
         assert related_resource_bean.count_instance() == 1

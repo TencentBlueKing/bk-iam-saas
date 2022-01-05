@@ -218,7 +218,7 @@ class RelatedPolicyBiz:
             return []
 
         # 重新分组
-        new_instances = group_paths([PathNodeBeanList(one).dict() for one in checked_path])
+        new_instances = group_paths([PathNodeBeanList(__root__=one).dict() for one in checked_path])
         return [ConditionBean(**{"id": gen_uuid(), "instances": new_instances, "attributes": []})]
 
     @staticmethod
@@ -307,13 +307,14 @@ class RelatedPolicyBiz:
 
     # 特殊的截断逻辑, 不能复用PathNodeList的方法
     def _check_path_by_instance_selection(
-        self, path: List[PathNodeBean], instance_selections: List[InstanceSelection]
+        self, path: PathNodeBeanList, instance_selections: List[InstanceSelection]
     ) -> Optional[List[PathNodeBean]]:
         """
         校验拓扑链路是否满足实例视图
 
         不同类型的实例视图匹配使用前缀匹配
         """
+        path = path[:]
         for selection in instance_selections:
             # 资源类型不同时, 截取视图长度的拓扑
             if len(path) > len(selection.resource_type_chain):
