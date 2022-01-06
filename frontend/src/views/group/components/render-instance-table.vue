@@ -132,37 +132,42 @@
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="420">
                 <template slot-scope="{ row, $index }">
-                    <template v-if="!!row.resource_groups.length">
-                        <template v-if="!isEdit">
-                            <div class="condition-table-cell" v-if="!!row.related_environments.length"
-                                :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
-                                <div v-for="_ in row.resource_groups" :key="_.id"
-                                    :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
-                                    <effect-condition-detail
-                                        :value="_.environments"
-                                        :is-empty="!_.environments.length">
-                                    </effect-condition-detail>
-                                </div>
-                            </div>
-                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
-                        </template>
-                        <template v-else>
-                            <div class="condition-table-cell" v-if="!!row.related_environments.length"
-                                :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
-                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
-                                    :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
-                                    <effect-condition
-                                        :value="_.environments"
-                                        :is-empty="!_.environments.length"
-                                        @on-click="showTimeSlider(row, $index, groIndex)">
-                                    </effect-condition>
-                                </div>
-                            </div>
-                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
-                        </template>
+                    <template v-if="!!row.isAggregate">
+                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
                     </template>
                     <template v-else>
-                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        <template v-if="!!row.resource_groups.length">
+                            <template v-if="!isEdit">
+                                <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                                    :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                                    <div v-for="_ in row.resource_groups" :key="_.id"
+                                        :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                        <effect-condition-detail
+                                            :value="_.environments"
+                                            :is-empty="!_.environments.length">
+                                        </effect-condition-detail>
+                                    </div>
+                                </div>
+                                <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                            </template>
+                            <template v-else>
+                                <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                                    :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                                    <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                                        :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                        <effect-condition
+                                            :value="_.environments"
+                                            :is-empty="!_.environments.length"
+                                            @on-click="showTimeSlider(row, $index, groIndex)">
+                                        </effect-condition>
+                                    </div>
+                                </div>
+                                <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                            </template>
+                        </template>
+                        <template v-else>
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        </template>
                     </template>
                 </template>
             </bk-table-column>
@@ -550,6 +555,7 @@
             handlerSelectAggregateRes (payload) {
                 // debugger
                 window.changeDialog = true
+                console.log('this.tableList', this.tableList)
                 this.tableList[this.aggregateIndex].instances = payload.map(item => {
                     return {
                         id: item.id,
@@ -619,8 +625,9 @@
                 const scopeAction = this.authorization[systemId]
                 const actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))
 
+                console.log('actions', actions)
                 const conditions = actions.map(
-                    item => item.related_resource_types[0].condition
+                    item => item.resource_groups[0].related_resource_types[0].condition
                 ).filter(_ => _.length > 0)
 
                 if (conditions.length < 1) {
@@ -628,8 +635,8 @@
                 }
                 const instances = actions.map(item =>
                     (
-                        item.related_resource_types[0].condition[0]
-                        && item.related_resource_types[0].condition[0].instances
+                        item.resource_groups[0].related_resource_types[0].condition[0]
+                        && item.resource_groups[0].related_resource_types[0].condition[0].instances
                     ) || []
                 )
                 const tempData = []
@@ -794,6 +801,7 @@
                         display_name: item.name
                     }
                 }))
+                console.log('1111', data)
                 this.defaultSelectList = this.getScopeActionResource(
                     data.actions,
                     data.aggregateResourceType.id,
@@ -895,10 +903,10 @@
                     return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
                 })
 
-                console.log('curData.resource_groups', curData.resource_groups)
-
+                console.log('curData.resource_groups1', curData.resource_groups)
+                console.log('this.tableList', this.tableList)
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
-                    if (!item.resource_groups.length) return false
+                    if (!item.resource_groups || !item.resource_groups.length) return false
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
                         && curData.detail.system.id === item.detail.system.id
