@@ -56,7 +56,7 @@
                             </effect-conditon>
                             <Icon
                                 type="detail-new"
-                                class="effect-icon"
+                                class="effect-detail-icon"
                                 :title="$t(`m.common['详情']`)"
                                 v-if="isShowPreview(row)"
                                 @click.stop="handleEnvironmentsViewResource(_, row)" />
@@ -601,6 +601,22 @@
             display: flex;
             flex-flow: column;
             justify-content: center;
+            position: relative;
+            .effect-detail-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-detail-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
         }
         .related-resource-list{
             position: relative;
