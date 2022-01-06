@@ -1741,6 +1741,22 @@
             border-right: none;
             border-bottom: none;
             font-size: 12px;
+            .iam-perm-table-cell-cls {
+                .cell {
+                    /* 用户组需要 */
+                    height: 100%;
+                }
+                .condition-table-cell{
+                    height: 100%;
+                    flex-flow: column;
+                    display: flex;
+                    justify-content: space-evenly;
+                    padding: 15px 0;
+                }
+                .empty-text {
+                    /* padding-top: 35px; */
+                }
+            }
             &.is-detail-view {
                 .bk-table-body-wrapper {
                     .cell {
@@ -1762,21 +1778,6 @@
                     .empty-text {
                         padding-left: 20px;
                     }
-                }
-            }
-            .iam-perm-table-cell-cls {
-                .cell {
-                    /* height: 100%; */
-                }
-                .condition-table-cell{
-                    height: 100%;
-                    flex-flow: column;
-                    display: flex;
-                    justify-content: space-evenly;
-                    padding: 15px 0;
-                }
-                .empty-text {
-                    /* padding-top: 35px; */
                 }
             }
             .related-resource-list{

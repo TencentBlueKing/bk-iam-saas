@@ -27,19 +27,21 @@
                     <!-- isAggregate代表批量编辑状态 -->
                     <div class="relation-content-wrapper" v-if="!!row.isAggregate">
                         <label class="resource-type-name">{{ row.aggregateResourceType.name }}</label>
-                        <render-condition
-                            :ref="`condition_${$index}_aggregateRef`"
-                            :value="row.value"
-                            :is-empty="row.empty"
-                            :can-view="false"
-                            :can-paste="row.canPaste"
-                            :is-error="row.isError"
-                            @on-mouseover="handlerAggregateConditionMouseover(row)"
-                            @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                            @on-copy="handlerAggregateOnCopy(row, $index)"
-                            @on-paste="handlerAggregateOnPaste(row)"
-                            @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                            @on-click="showAggregateResourceInstance(row, $index)" />
+                        <div class="group-container">
+                            <render-condition
+                                :ref="`condition_${$index}_aggregateRef`"
+                                :value="row.value"
+                                :is-empty="row.empty"
+                                :can-view="false"
+                                :can-paste="row.canPaste"
+                                :is-error="row.isError"
+                                @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                @on-copy="handlerAggregateOnCopy(row, $index)"
+                                @on-paste="handlerAggregateOnPaste(row)"
+                                @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                @on-click="showAggregateResourceInstance(row, $index)" />
+                        </div>
                     </div>
                     <div class="relation-content-wrapper" :class="tableList.length >= 1 ? 'pr40' : ''" v-else>
                         <template v-if="!row.isEmpty">
@@ -85,18 +87,28 @@
             </bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="440">
                 <template slot-scope="{ row, $index }">
-                    <div class="condition-table-cell" v-if="!!row.related_environments.length"
-                        :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
-                        <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
-                            :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
-                            <effect-time
-                                :value="_.environments"
-                                :is-empty="!_.environments.length"
-                                @on-click="showTimeSlider(row, $index, groIndex)">
-                            </effect-time>
-                        </div>
-                    </div>
-                    <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                    <template v-if="!!row.isAggregate">
+                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                    </template>
+                    <template v-else>
+                        <template v-if="!!row.resource_groups.length">
+                            <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                                :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                                    :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                    <effect-time
+                                        :value="_.environments"
+                                        :is-empty="!_.environments.length"
+                                        @on-click="showTimeSlider(row, $index, groIndex)">
+                                    </effect-time>
+                                </div>
+                            </div>
+                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        </template>
+                        <template v-else>
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        </template>
+                    </template>
                 </template>
             </bk-table-column>
             <bk-table-column :resizable="false" prop="description" :label="$t(`m.common['申请期限']`)" min-width="150">
@@ -1114,11 +1126,13 @@
                             if (!item.isAggregate) {
                                 const curPasteData = payload.data.find(_ => _.id === item.id)
                                 if (curPasteData) {
-                                    item.related_resource_types.forEach(resItem => {
-                                        if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
-                                            resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'))
-                                            resItem.isError = false
-                                        }
+                                    item.resource_groups.forEach(groupItem => {
+                                        groupItem.related_resource_types.forEach(resItem => {
+                                            if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                                resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'))
+                                                resItem.isError = false
+                                            }
+                                        })
                                     })
                                 }
                             } else {
