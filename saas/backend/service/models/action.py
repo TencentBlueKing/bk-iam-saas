@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from pydantic import BaseModel
 from pydantic.fields import Field
@@ -44,6 +44,10 @@ class RelatedResourceType(BaseModel):
             )
 
 
+class RelatedEnvironment(BaseModel):
+    type: str
+
+
 class Action(BaseModel):
     id: str
     name: str
@@ -53,10 +57,13 @@ class Action(BaseModel):
     type: str = ""
     related_resource_types: List[RelatedResourceType] = []
     related_actions: List[str] = []  # 依赖操作
+    related_environments: List[RelatedEnvironment] = []
 
     def __init__(self, **data: Any):
         if "related_actions" in data and data["related_actions"] is None:
             data["related_actions"] = []
+        if "related_environments" in data and data["related_environments"] is None:
+            data["related_environments"] = []
         super().__init__(**data)
 
     def get_related_resource_type(self, system_id: str, resource_type_id: str) -> Optional[RelatedResourceType]:
@@ -76,6 +83,9 @@ class Action(BaseModel):
         是否是非关联
         """
         return len(self.related_resource_types) == 0
+
+    def get_env_type_set(self) -> Set[str]:
+        return {e.type for e in self.related_environments}
 
 
 def _filter_error_instance_selection(

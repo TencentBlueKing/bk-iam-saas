@@ -87,40 +87,52 @@ class RelatedPolicyBiz:
 
         # 申请操作关联的资源类型与依赖操作关联的资源类型相同
         action_rrt = action.related_resource_types[0]
-        # NOTE: 对于只关联一种资源类型的操作, 这里默认只有一组resource_group
-        for rrt in policy.resource_groups[0].related_resource_types:
-            if rrt.type == action_rrt.id and rrt.system_id == action_rrt.system_id:
-                # 如果申请操作时任意, 创建任意的依赖操作
-                if len(rrt.condition) == 0:
-                    return PolicyBean(
-                        action_id=action.id,
-                        expired_at=policy.expired_at,
-                        resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=[deepcopy(rrt)])],
-                    )
 
-                # 遍历申请的操作的实例拓扑, 匹配依赖操作的实例视图
-                new_rrt = self._filter_condition_of_same_type(rrt, action_rrt)
+        new_rrt_list = []  # 遍历所有的resource_group后生成的用于创建关联操作policy的
+
+        for rg in policy.resource_groups:
+            # NOTE 有环境属性的资源组不能生成依赖操作
+            if len(rg.environments) != 0:
+                continue
+
+            if self._has_same_type(policy, action_rrt):
+                # 如果有相同的资源类型
+                for rrt in rg.related_resource_types:
+                    if rrt.type != action_rrt.id or rrt.system_id != action_rrt.system_id:
+                        continue
+
+                    # 如果申请操作时任意, 创建任意的依赖操作
+                    if len(rrt.condition) == 0:
+                        new_rrt_list.append(deepcopy(rrt))
+                        continue
+
+                    new_rrt = self._filter_condition_of_same_type(rrt, action_rrt)
+                    if new_rrt:
+                        new_rrt_list.append(new_rrt)
+            else:
+                new_rrt = self._filter_condition_of_different_type(rg.related_resource_types, action_rrt)
                 if new_rrt:
-                    return PolicyBean(
-                        action_id=action.id,
-                        expired_at=policy.expired_at,
-                        resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=[new_rrt])],
-                    )
+                    new_rrt_list.append(new_rrt)
 
-                return None
+        if not new_rrt_list:
+            return None
 
-        # 申请操作关联的资源类型与依赖操作关联的资源类型不同
-        new_rrt = self._filter_condition_of_different_type(
-            policy.resource_groups[0].related_resource_types, action_rrt
+        rg = ResourceGroupBean(id=gen_uuid(), related_resource_types=[new_rrt_list[0]])
+        for new_rrt in new_rrt_list[1:]:
+            rg.add_related_resource_types([new_rrt])
+
+        return PolicyBean(
+            action_id=action.id,
+            resource_groups=[rg],
+            expired_at=policy.expired_at,
         )
-        if new_rrt:
-            return PolicyBean(
-                action_id=action.id,
-                resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=[new_rrt])],
-                expired_at=policy.expired_at,
-            )
 
-        return None
+    def _has_same_type(self, policy: PolicyBean, action_rrt: RelatedResourceType) -> bool:
+        for rt in policy.list_thin_resource_type():
+            if rt.system_id == action_rrt.system_id and rt.type == action_rrt.id:
+                return True
+
+        return False
 
     def _filter_condition_of_different_type(
         self, policy_rrts: List[RelatedResourceBean], action_rrt: RelatedResourceType

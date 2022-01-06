@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from typing import List, Optional, Tuple
 
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.common.error_codes import error_codes
@@ -127,7 +128,9 @@ class PolicyQueryService:
         """
         获取指定的Policy
         """
-        db_policy = PolicyModel.objects.get(policy_id=policy_id, subject_type=subject.type, subject_id=subject.id)
+        db_policy = get_object_or_404(
+            PolicyModel, policy_id=policy_id, subject_type=subject.type, subject_id=subject.id
+        )
 
         backend_policy_list = new_backend_policy_list_by_subject(db_policy.system_id, subject)
 

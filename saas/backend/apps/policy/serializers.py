@@ -10,11 +10,13 @@ specific language governing permissions and limitations under the License.
 """
 import sys
 
+import pytz
 from django.conf import settings
 from rest_framework import serializers
 
 from backend.common.serializers import BaseAction
 from backend.common.time import PERMANENT_SECONDS
+from backend.service.constants import PolicyEnvConditionTypeEnum, PolicyEnvTypeEnum
 from backend.util.uuid import gen_uuid
 
 
@@ -99,9 +101,117 @@ class ResourceTypeSLZ(serializers.Serializer):
         return data
 
 
+class EnvConditionValueSLZ(serializers.Serializer):
+    name = serializers.CharField(label="显示名称", required=False, allow_blank=True, default="")
+    value = ValueFiled(label="环境属性值")
+
+
+# for validate
+class WeekdayEnvValueSLZ(EnvConditionValueSLZ):
+    value = serializers.IntegerField(label="环境属性值", max_value=6, min_value=0)
+
+
+# for validate
+class HMSEnvValueSLZ(EnvConditionValueSLZ):
+    value = serializers.RegexField(label="环境属性值", regex=r"^([0-1][0-9]|(2[0-3])):([0-5][0-9]):([0-5][0-9])$")
+
+
+# for validate
+class TZEnvValueSLZ(EnvConditionValueSLZ):
+    value = serializers.CharField(label="环境属性值")
+
+    def validate(self, attrs):
+        value = attrs["value"]
+        if value not in pytz.all_timezones:
+            serializers.ValidationError({"value": ["{} is not a legal time zone representation".format(value)]})
+
+        return attrs
+
+
+class EnvConditionSLZ(serializers.Serializer):
+    type = serializers.ChoiceField(label="环境属性条件类型", choices=PolicyEnvConditionTypeEnum.get_choices())
+    values = serializers.ListField(label="条件的值", child=EnvConditionValueSLZ(label="VALUE"))
+
+
+# for validate
+class WeekdayEnvConditionSLZ(EnvConditionSLZ):
+    values = serializers.ListField(
+        label="条件的值", child=WeekdayEnvValueSLZ(label="VALUE"), allow_empty=False, min_length=1, max_length=7
+    )
+
+    def validate(self, attrs):
+        if len(attrs["values"]) != len({v["value"] for v in attrs["values"]}):
+            raise serializers.ValidationError({"values": ["must not repeat"]})
+        return attrs
+
+
+# for validate
+class HMSEnvConditionSLZ(EnvConditionSLZ):
+    values = serializers.ListField(
+        label="条件的值", child=HMSEnvValueSLZ(label="VALUE"), allow_empty=False, min_length=2, max_length=2
+    )
+
+    def validate(self, attrs):
+        # 比较第一个时间要小于第二个时间, 格式正确的情况下, 直接使用字符串比较是可以
+        if attrs["values"][0]["value"] >= attrs["values"][1]["value"]:
+            raise serializers.ValidationError({"values": ["first hms must be smaller than the second"]})
+        return attrs
+
+
+# for validate
+class TZEnvConditionSLZ(EnvConditionSLZ):
+    values = serializers.ListField(
+        label="条件的值", child=TZEnvValueSLZ(label="VALUE"), allow_empty=False, min_length=1, max_length=1
+    )
+
+
+class EnvironmentSLZ(serializers.Serializer):
+    type = serializers.ChoiceField(label="环境属性类型", choices=PolicyEnvTypeEnum.get_choices())
+    condition = serializers.ListField(label="生效条件", child=EnvConditionSLZ(label="条件"))
+
+
+ENV_COND_TYPE_SLZ_MAP = {
+    PolicyEnvConditionTypeEnum.TZ.value: TZEnvConditionSLZ,
+    PolicyEnvConditionTypeEnum.HMS.value: HMSEnvConditionSLZ,
+    PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvConditionSLZ,
+}
+
+
+# for validate
+class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
+    condition = serializers.ListField(label="生效条件", child=EnvConditionSLZ(label="条件"), min_length=2, max_length=3)
+
+    def validate(self, data):
+        condition_type_set = {c["type"] for c in data["condition"]}
+        # type不能重复
+        if len(data["condition"]) != len(condition_type_set):
+            raise serializers.ValidationError({"condition": ["type must not repeat"]})
+
+        # TZ与HMS必填, WeekDay选填
+        if not (
+            PolicyEnvConditionTypeEnum.TZ.value in condition_type_set
+            and PolicyEnvConditionTypeEnum.HMS.value in condition_type_set
+        ):
+            raise serializers.ValidationError({"condition": ["tz and hms must be exists"]})
+
+        for c in data["condition"]:
+            if c["type"] not in ENV_COND_TYPE_SLZ_MAP:
+                raise serializers.ValidationError({"condition": ["type: {} not exists".format(c["type"])]})
+
+            slz = ENV_COND_TYPE_SLZ_MAP[c["type"]](data=c)
+            slz.is_valid(raise_exception=True)
+        return data
+
+
+ENV_TYPE_SLZ_MAP = {PolicyEnvTypeEnum.PERIOD_DAILY.value: PeriodDailyEnvironmentSLZ}
+
+
 class ResourceGroupSLZ(serializers.Serializer):
     id = serializers.CharField(label="ID", allow_blank=True)
     related_resource_types = serializers.ListField(label="资源类型条件", child=ResourceTypeSLZ(label="资源类型"))
+    environments = serializers.ListField(
+        label="环境属性条件", child=EnvironmentSLZ(label="环境属性条件"), allow_empty=True, required=False, default=list
+    )
 
     def validate(self, data):
         """
@@ -110,6 +220,13 @@ class ResourceGroupSLZ(serializers.Serializer):
         if not isinstance(data["id"], str) or not data["id"]:
             data["id"] = gen_uuid()
 
+        # validate environment
+        for e in data["environments"]:
+            if e["type"] not in ENV_TYPE_SLZ_MAP:
+                raise serializers.ValidationError({"environments": ["type: {} not exists".format(e["type"])]})
+
+            slz = ENV_TYPE_SLZ_MAP[e["type"]](data=e)
+            slz.is_valid(raise_exception=True)
         return data
 
 
@@ -123,6 +240,27 @@ class PolicySLZ(serializers.Serializer):
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     expired_display = serializers.CharField()
     resource_groups = serializers.ListField(label="资源条件组", child=ResourceGroupSLZ(label="资源条件组"))
+
+    def validate(self, data):
+        # 校验一个policy中不能存在多个不同的时区环境属性
+        tz_set = set()
+        for rg in data["resource_groups"]:
+            for env in rg["environments"]:
+                if env["type"] != PolicyEnvTypeEnum.PERIOD_DAILY.value:
+                    continue
+
+                for c in env["condition"]:
+                    if c["type"] != PolicyEnvConditionTypeEnum.TZ.value:
+                        continue
+
+                    tz_set.add(c["values"][0]["value"])
+
+        if len(tz_set) > 1:
+            raise serializers.ValidationError(
+                {"resource_groups": {"environments": ["all time zones must be consistent"]}}
+            )
+
+        return data
 
 
 class PolicySystemSLZ(serializers.Serializer):

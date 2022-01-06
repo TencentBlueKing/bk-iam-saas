@@ -20,7 +20,6 @@ class ExcludeModelMetaclass(ModelMetaclass):
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
         for field_name in exclude:
             cls.__fields__.pop(field_name)
-            cls.__field_defaults__.pop(field_name, None)
         return cls
 
 

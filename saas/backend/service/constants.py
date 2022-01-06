@@ -256,3 +256,48 @@ class ApplicationStatus(ChoicesEnum, LowerStrEnum):
 
 
 DEAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Policy environment
+# ---------------------------------------------------------------------------------------------- #
+class PolicyEnvTypeEnum(ChoicesEnum, LowerStrEnum):
+    PERIOD_DAILY = auto()
+
+    _choices_labels = skip(((PERIOD_DAILY, _("时间")),))
+
+
+class PolicyEnvConditionTypeEnum(ChoicesEnum, LowerStrEnum):
+    TZ = auto()
+    HMS = auto()
+    WEEKDAY = auto()
+
+    _choices_labels = skip(
+        (
+            (TZ, _("时区")),
+            (HMS, _("时分秒")),
+            (WEEKDAY, _("WEEKDAY")),
+        )
+    )
+
+
+class WeekDayEnum(ChoicesEnum):
+    SUN = 0
+    MON = 1
+    TUE = 2
+    WED = 3
+    THU = 4
+    FRI = 5
+    SAT = 6
+
+    _choices_labels = skip(
+        (
+            (SUN, _("星期天")),
+            (MON, _("星期一")),
+            (TUE, _("星期二")),
+            (WED, _("星期三")),
+            (THU, _("星期四")),
+            (FRI, _("星期五")),
+            (SAT, _("星期六")),
+        )
+    )
