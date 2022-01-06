@@ -78,7 +78,7 @@
                             </div>
                         </template>
                         <template v-else>
-                            <div style="padding-bottom: 17px;">{{ $t(`m.common['无需关联实例']`) }}</div>
+                            <div style="margin-bottom: 15px;">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </div>
                 </template>

@@ -1900,6 +1900,17 @@
             }
         }
 
+        .environ-group-one{
+            position: relative;
+            padding-top: 5px;
+        }
+
+        .environ-group-more{
+            position: relative;
+            padding-bottom: 19px;
+            padding-top: 25px;
+        }
+
     }
     .relate-instance-sideslider {
         .sideslider-content {
@@ -1939,14 +1950,4 @@
             }
         }
 
-        .environ-group-one{
-            position: relative;
-            padding-top: 5px;
-        }
-
-        .environ-group-more{
-            position: relative;
-            padding-bottom: 19px;
-            padding-top: 25px;
-        }
 </style>

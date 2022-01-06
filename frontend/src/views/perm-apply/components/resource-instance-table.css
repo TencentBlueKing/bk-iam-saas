@@ -77,10 +77,10 @@
                         flex-flow: column;
                         display: flex;
                         justify-content: space-evenly;
-                        padding: 15px 0;
+                        padding-top: 20px;
                     }
                     .empty-text {
-                        padding-top: 35px;
+                        padding-top: 0px;
                     }
                 }
             }
@@ -174,8 +174,11 @@
 
         .environ-group-more{
             position: relative;
-            padding-bottom: 19px;
-            padding-top: 25px;
+            display: flex;
+            flex: 1;
+            flex-flow: column;
+            justify-content: center;
+            padding-top: 5px;
         }
     }
 
