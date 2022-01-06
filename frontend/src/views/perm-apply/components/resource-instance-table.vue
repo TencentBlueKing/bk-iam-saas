@@ -1427,7 +1427,7 @@
             },
 
             handlerReduceCondition (data, index, resIndex, groupIndex) {
-                if (data.id) return
+                if (data.id || this.tableList[index].resource_groups.length === 1) return
                 this.tableList[index].resource_groups.splice(groupIndex, 1)
             },
 
