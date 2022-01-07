@@ -52,7 +52,7 @@
                                     v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
                                     <div class="content-name">
                                         {{ content.name }}
-                                        <template v-if="row.isShowRelatedText">
+                                        <template v-if="row.isShowRelatedText && _.id">
                                             <div style="display: inline-block; color: #979ba5;">
                                                 ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
                                             </div>

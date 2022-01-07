@@ -35,7 +35,7 @@ export const m = {
         '操作': 'Action',
         '申请期限': 'Expiration Date',
         '无需关联实例': 'No need to associate instances',
-        '无需生效条件': 'No need to effective condition',
+        '无生效条件': 'No effective condition',
         '无限制': 'Unlimited',
         '到期时间': 'Expiration Date',
         '基本信息': 'Summary',
