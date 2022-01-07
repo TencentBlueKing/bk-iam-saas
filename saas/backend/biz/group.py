@@ -229,20 +229,19 @@ class GroupBiz:
             system_id, [ActionResourceGroupForCheck.parse_obj(p.dict()) for p in policies]
         )
 
-        policy_list = PolicyBeanList(system_id, policies)
         # 设置过期时间为永久
-        for p in policy_list.policies:
+        for p in policies:
             p.set_expired_at(PERMANENT_SECONDS)
 
         # 自定义权限
         if template_id == 0:
-            self.policy_operation_biz.update(system_id, subject, policy_list.policies)
+            self.policy_operation_biz.update(system_id, subject, policies)
         # 权限模板权限
         else:
             self.template_svc.update_template_auth(
                 subject,
                 template_id,
-                parse_obj_as(List[Policy], policy_list.policies),
+                parse_obj_as(List[Policy], policies),
                 action_list=self.action_svc.new_action_list(system_id),
             )
 

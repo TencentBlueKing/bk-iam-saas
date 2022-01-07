@@ -151,8 +151,9 @@ class ApprovedPassApplicationBiz:
         system_id = data["system"]["id"]
         actions = data["actions"]
 
-        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], actions))
-        self.policy_operation_biz.alter(system_id=system_id, subject=subject, policies=policy_list.policies)
+        self.policy_operation_biz.alter(
+            system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
+        )
 
     def _renew_action(self, subject: Subject, data: Dict):
         """用户自定义权限续期"""
