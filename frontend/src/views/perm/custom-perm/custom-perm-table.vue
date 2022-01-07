@@ -32,8 +32,9 @@
                                 :title="$t(`m.common['详情']`)"
                                 v-if="isShowPreview(row)"
                                 @click.stop="handleViewResource(_, row)" />
-                            <Icon v-if="isShowPreview(row) && row.resource_groups.length > 1"
-                                :title="$t(`m.common['删除']`)" class="effect-icon" type="reduce-hollow"
+                            <Icon v-if="isShowPreview(row)"
+                                :title="$t(`m.common['删除']`)" type="reduce-hollow"
+                                :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
                                 @click.stop="handlerReduceInstance(_, row)" />
                         </div>
                     </template>
@@ -526,7 +527,7 @@
              * handlerReduceInstance
              */
             handlerReduceInstance (payload, data) {
-                if (data.length < 2) return
+                if (data.resource_groups.length < 2) return
                 this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}一组实例权限`
                 this.deleteDialog.visible = true
                 this.resourceGrouParams = {
@@ -652,6 +653,21 @@
                 .effect-icon {
                     display: inline-block;
                     color: #3a84ff;
+                }
+            }
+            .effect-icon-disabled{
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-icon-disabled {
+                    display: inline-block;
+                    color: #dcdee5;
                 }
             }
             &-border{border-bottom: 1px solid #dfe0e5;}
