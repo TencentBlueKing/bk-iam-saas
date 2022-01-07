@@ -133,7 +133,7 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="420">
                 <template slot-scope="{ row, $index }">
                     <template v-if="!!row.isAggregate">
-                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                     </template>
                     <template v-else>
                         <template v-if="!!row.resource_groups.length">
@@ -148,7 +148,7 @@
                                         </effect-condition-detail>
                                     </div>
                                 </div>
-                                <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                                <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                             </template>
                             <template v-else>
                                 <div class="condition-table-cell" v-if="!!row.related_environments.length"
@@ -162,11 +162,11 @@
                                         </effect-condition>
                                     </div>
                                 </div>
-                                <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                                <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                             </template>
                         </template>
                         <template v-else>
-                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                         </template>
                     </template>
                 </template>

@@ -49,7 +49,7 @@
                                 <div class="relation-content-item" v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
                                     <div class="content-name">
                                         {{ content.name }}
-                                        <template v-if="row.isShowRelatedText">
+                                        <template v-if="row.isShowRelatedText && _.id">
                                             <div style="display: inline-block; color: #979ba5;">
                                                 ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
                                             </div>
@@ -88,7 +88,7 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="440">
                 <template slot-scope="{ row, $index }">
                     <template v-if="!!row.isAggregate">
-                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                     </template>
                     <template v-else>
                         <template v-if="!!row.resource_groups.length">
@@ -103,10 +103,10 @@
                                     </effect-time>
                                 </div>
                             </div>
-                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                         </template>
                         <template v-else>
-                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                         </template>
                     </template>
                 </template>
@@ -715,7 +715,7 @@
                 }
 
                 curData.resource_groups = curData.resource_groups.filter(groupItem => {
-                    groupItem.related_resource_types.forEach(typeItem => {
+                    groupItem.related_resource_types = groupItem.related_resource_types.filter(typeItem => {
                         typeItem.condition.filter(e => {
                             if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
                                 e.instances = e.instance || []
@@ -726,8 +726,9 @@
                             }
                             return false
                         })
+                        console.log('typeItem.condition', typeItem.condition, !(typeItem.condition.length === 1 && typeItem.condition[0] === 'none'))
+                        return !(typeItem.condition.length === 1 && typeItem.condition[0] === 'none')
                     })
-                    // groupItem.related_resource_types[0]
                     return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
                 })
 
@@ -745,13 +746,18 @@
                             item.expired_at = item.expired_at + this.user.timestamp
                         }
                         delete item.policy_id
-                        item.resource_groups.forEach(groupItem => {
+                        item.resource_groups = item.resource_groups.filter(groupItem => {
                             groupItem.related_resource_types.forEach(resItem => {
-                                resItem.condition.forEach(conditionItem => {
-                                    conditionItem.instances = conditionItem.instance || []
-                                    conditionItem.attributes = conditionItem.attribute || []
-                                    delete conditionItem.instance
-                                    delete conditionItem.attribute
+                                resItem.condition.filter(conditionItem => {
+                                    // eslint-disable-next-line max-len
+                                    if ((conditionItem.instance && conditionItem.instance.length > 0) || (conditionItem.attribute && conditionItem.attribute.length > 0)) {
+                                        conditionItem.instances = conditionItem.instance || []
+                                        conditionItem.attributes = conditionItem.attribute || []
+                                        delete conditionItem.instance
+                                        delete conditionItem.attribute
+                                        return true
+                                    }
+                                    return false
                                 })
                             })
                         })

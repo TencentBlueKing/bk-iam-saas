@@ -62,7 +62,7 @@
                                 @click.stop="handleEnvironmentsViewResource(_, row)" />
                         </div>
                     </div>
-                    <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无需生效条件']`) }}</div>
+                    <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                 </template>
             </bk-table-column>
             <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
@@ -519,14 +519,15 @@
                 this.environmentsSidesliderData = payload.environments
                 console.log('environmentsSidesliderData', this.environmentsSidesliderData)
                 this.isShowEnvironmentsSideslider = true
-                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+                this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`
             },
 
             /**
              * handlerReduceInstance
              */
             handlerReduceInstance (payload, data) {
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${data.name}】权限`
+                if (data.length < 2) return
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}一组实例权限`
                 this.deleteDialog.visible = true
                 this.resourceGrouParams = {
                     id: data.policy_id,

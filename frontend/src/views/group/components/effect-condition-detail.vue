@@ -50,7 +50,7 @@
             value: {
                 handler (val) {
                     if (!val || !val.length) {
-                        this.curValue = '无需生效条件'
+                        this.curValue = '无生效条件'
                     } else {
                         this.curValue = val.reduce((p, v) => {
                             let curValue = ''
