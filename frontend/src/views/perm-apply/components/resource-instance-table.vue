@@ -77,6 +77,8 @@
                                     <Icon v-if="row.resource_groups.length >= 1" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                                         @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                 </div>
+                                <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1" class="group-line"
+                                    :class="_.related_resource_types.length > 1 ? 'group-line-more' : ''"></div>
                             </div>
                         </template>
                         <template v-else>
@@ -101,6 +103,8 @@
                                         :is-empty="!_.environments.length"
                                         @on-click="showTimeSlider(row, $index, groIndex)">
                                     </effect-time>
+
+                                    <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1" class="condition-line"></div>
                                 </div>
                             </div>
                             <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>

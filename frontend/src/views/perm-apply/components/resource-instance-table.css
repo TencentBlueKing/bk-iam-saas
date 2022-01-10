@@ -96,6 +96,21 @@
             }
         }
 
+        .relation-content-wrapper{
+            position: relative;
+            .group-line {
+                height: 1px;
+                background: #dfe0e5;
+                width: calc(100% + 70px);
+                position: absolute;
+                top: 90%;
+                left: -15px;
+            }
+            .group-line-more{
+                top: 95%;
+            }
+        }
+
         .renewal-action {
             display: block;
             width: 100px;
@@ -179,6 +194,14 @@
             flex-flow: column;
             justify-content: center;
             padding-top: 5px;
+            .condition-line{
+                height: 1px;
+                background: #dfe0e5;
+                width: calc(100% + 30px);
+                position: absolute;
+                top: calc(93% + 2px);
+                left: -15px;
+            }
         }
     }
 
