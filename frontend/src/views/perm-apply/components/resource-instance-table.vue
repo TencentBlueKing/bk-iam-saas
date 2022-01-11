@@ -104,7 +104,8 @@
                                         @on-click="showTimeSlider(row, $index, groIndex)">
                                     </effect-time>
 
-                                    <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1" class="condition-line"></div>
+                                    <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1"
+                                        class="condition-line" :class="_.related_resource_types.length > 1 ? 'condition-line-more' : ''"></div>
                                 </div>
                             </div>
                             <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
@@ -733,7 +734,10 @@
                         console.log('typeItem.condition', typeItem.condition, !(typeItem.condition.length === 1 && typeItem.condition[0] === 'none'))
                         return !(typeItem.condition.length === 1 && typeItem.condition[0] === 'none')
                     })
-                    return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
+                    console.log('groupItem.related_resource_types', groupItem.related_resource_types)
+                    // eslint-disable-next-line max-len
+                    return !(groupItem.related_resource_types[0] && groupItem.related_resource_types[0].condition.length === 1
+                        && groupItem.related_resource_types[0] && groupItem.related_resource_types[0].condition[0] === 'none')
                 })
 
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
