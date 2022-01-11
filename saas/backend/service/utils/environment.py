@@ -29,8 +29,8 @@ class WeekdayEnvCondition(BaseEnvCondition):
 class HMSEnvCondition(BaseEnvCondition):
     def trans(self) -> List[Dict[str, Any]]:
         return [
-            {"NumericGte": {f"{self.system_id}._bk_iam_env_.hms": self._time_str_to_int(self.values[0])}},
-            {"NumericLte": {f"{self.system_id}._bk_iam_env_.hms": self._time_str_to_int(self.values[1])}},
+            {"NumericGte": {f"{self.system_id}._bk_iam_env_.hms": [self._time_str_to_int(self.values[0])]}},
+            {"NumericLte": {f"{self.system_id}._bk_iam_env_.hms": [self._time_str_to_int(self.values[1])]}},
         ]
 
     def _time_str_to_int(self, time: str) -> int:
@@ -40,4 +40,4 @@ class HMSEnvCondition(BaseEnvCondition):
 
 class TZEnvCondition(BaseEnvCondition):
     def trans(self) -> List[Dict[str, Any]]:
-        return [{"StringEquals": {f"{self.system_id}._bk_iam_env_.tz": self.values[0]}}]
+        return [{"StringEquals": {f"{self.system_id}._bk_iam_env_.tz": self.values}}]
