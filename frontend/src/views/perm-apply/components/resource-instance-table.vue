@@ -737,7 +737,7 @@
                     console.log('groupItem.related_resource_types', groupItem.related_resource_types)
                     // eslint-disable-next-line max-len
                     return !(groupItem.related_resource_types[0] && groupItem.related_resource_types[0].condition.length === 1
-                        && groupItem.related_resource_types[0] && groupItem.related_resource_types[0].condition[0] === 'none')
+                        && groupItem.related_resource_types[0].condition[0] === 'none')
                 })
 
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {

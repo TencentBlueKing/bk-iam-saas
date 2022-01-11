@@ -899,8 +899,9 @@
                             return false
                         })
                     })
-                    // groupItem.related_resource_types[0]
-                    return !(groupItem.related_resource_types[0].condition.length === 1 && groupItem.related_resource_types[0].condition[0] === 'none')
+                    // eslint-disable-next-line max-len
+                    return !(groupItem.related_resource_types[0] && groupItem.related_resource_types[0].condition.length === 1
+                        && groupItem.related_resource_types[0].condition[0] === 'none')
                 })
 
                 console.log('curData.resource_groups1', curData.resource_groups)
