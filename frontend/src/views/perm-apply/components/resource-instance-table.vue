@@ -754,7 +754,7 @@
                             item.expired_at = item.expired_at + this.user.timestamp
                         }
                         delete item.policy_id
-                        item.resource_groups = item.resource_groups.filter(groupItem => {
+                        item.resource_groups.forEach(groupItem => {
                             groupItem.related_resource_types.forEach(resItem => {
                                 resItem.condition.filter(conditionItem => {
                                     // eslint-disable-next-line max-len
