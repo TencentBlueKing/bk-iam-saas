@@ -199,8 +199,11 @@
                 background: #dfe0e5;
                 width: calc(100% + 30px);
                 position: absolute;
-                top: calc(93% + 2px);
+                top: calc(87% + 1px);
                 left: -15px;
+            }
+            .condition-line-more{
+                top: calc(93% + 2px);
             }
         }
     }
