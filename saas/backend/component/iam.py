@@ -592,3 +592,9 @@ def delete_action(system_id: str, action_id: str):
     """删除Action权限模型"""
     url_path = f"/api/v1/web/systems/{system_id}/actions/{action_id}"
     return _call_iam_api(http_delete, url_path, data={})
+
+
+def delete_unquoted_expressions():
+    """删除未被引用的expression"""
+    url_path = "/api/v1/web/unquoted-expressions"
+    return _call_iam_api(http_delete, url_path, data={})

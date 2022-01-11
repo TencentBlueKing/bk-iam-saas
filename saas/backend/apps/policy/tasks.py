@@ -176,3 +176,9 @@ def _delete_action_from_role_scope(system_id: str, action_id: str):
     # 批量更新分级管理员授权范围
     if len(updated_role_scopes) > 0:
         RoleScope.objects.bulk_update(updated_role_scopes, fields=["content"], batch_size=10)
+
+
+@task(ignore_result=True)
+def delete_unquoted_expressions():
+    """删除未被引用的expression"""
+    iam.delete_unquoted_expressions()
