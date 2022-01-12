@@ -19,11 +19,15 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
                 <template slot-scope="{ row }">
                     <template v-if="!row.isEmpty">
-                        <p class="related-resource-item"
-                            v-for="item in row.related_resource_types"
-                            :key="item.type">
-                            {{`${item.name}：${item.value}`}}
-                        </p>
+                        <template v-for="(relatedGroup, relatedGroupIndex) in row.resource_groups">
+                            <div :key="relatedGroupIndex" style="display: inline-block;padding: 5px 0;">
+                                <p class="related-resource-item"
+                                    v-for="item in relatedGroup.related_resource_types"
+                                    :key="item.type">
+                                    {{`${item.name}：${item.value}`}}
+                                </p>
+                            </div>
+                        </template>
                     </template>
                     <template v-else>
                         {{ $t(`m.common['无需关联实例']`) }}
