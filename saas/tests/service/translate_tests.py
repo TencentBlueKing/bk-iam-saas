@@ -406,8 +406,8 @@ class TransferResourcesTests(TestCase):
         translator = ResourceExpressionTranslator()
         exp = translator._translate_environments("bk_cmdb", env)
         assert exp == [
-            {"StringEquals": {"bk_cmdb._bk_iam_env_.tz": "Asia/Shanghai"}},
-            {"NumericGte": {"bk_cmdb._bk_iam_env_.hms": 0}},
-            {"NumericLte": {"bk_cmdb._bk_iam_env_.hms": 120000}},
+            {"StringEquals": {"bk_cmdb._bk_iam_env_.tz": ["Asia/Shanghai"]}},
+            {"NumericGte": {"bk_cmdb._bk_iam_env_.hms": [0]}},
+            {"NumericLte": {"bk_cmdb._bk_iam_env_.hms": [120000]}},
             {"NumericEquals": {"bk_cmdb._bk_iam_env_.weekday": [0, 1, 3]}},
         ]
