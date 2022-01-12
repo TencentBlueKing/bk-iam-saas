@@ -594,7 +594,7 @@ def delete_action(system_id: str, action_id: str):
     return _call_iam_api(http_delete, url_path, data={})
 
 
-def delete_unquoted_expressions():
+def delete_unreferenced_expressions():
     """删除未被引用的expression"""
-    url_path = "/api/v1/web/unquoted-expressions"
+    url_path = "/api/v1/web/unreferenced-expressions"
     return _call_iam_api(http_delete, url_path, data={})

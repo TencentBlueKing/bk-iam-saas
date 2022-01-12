@@ -179,6 +179,6 @@ def _delete_action_from_role_scope(system_id: str, action_id: str):
 
 
 @task(ignore_result=True)
-def delete_unquoted_expressions():
+def delete_unreferenced_expressions():
     """删除未被引用的expression"""
-    iam.delete_unquoted_expressions()
+    iam.delete_unreferenced_expressions()
