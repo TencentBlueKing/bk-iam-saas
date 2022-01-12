@@ -376,7 +376,7 @@ class TransferResourcesTests(TestCase):
 
         translator = ResourceExpressionTranslator()
 
-        expression = translator.translate([{"related_resource_types": resources}])
+        expression = translator.translate("bk_cmdb", [{"related_resource_types": resources, "environments": []}])
         self.assertEqual(
             expression,
             json.dumps(
@@ -391,3 +391,23 @@ class TransferResourcesTests(TestCase):
                 separators=(",", ":"),
             ),
         )
+
+    def test_environment_ok(self):
+        env = [
+            {
+                "condition": [
+                    {"type": "tz", "values": [{"value": "Asia/Shanghai"}]},
+                    {"type": "hms", "values": [{"value": "00:00:00"}, {"value": "12:00:00"}]},
+                    {"type": "weekday", "values": [{"value": 0}, {"value": 1}, {"value": 3}]},
+                ]
+            }
+        ]
+
+        translator = ResourceExpressionTranslator()
+        exp = translator._translate_environments("bk_cmdb", env)
+        assert exp == [
+            {"StringEquals": {"bk_cmdb._bk_iam_env_.tz": ["Asia/Shanghai"]}},
+            {"NumericGte": {"bk_cmdb._bk_iam_env_.hms": [0]}},
+            {"NumericLte": {"bk_cmdb._bk_iam_env_.hms": [120000]}},
+            {"NumericEquals": {"bk_cmdb._bk_iam_env_.weekday": [0, 1, 3]}},
+        ]

@@ -35,6 +35,11 @@ urlpatterns = [
                     views.SubjectPolicyViewSet.as_view({"put": "update"}),
                     name="subject.policy_detail",
                 ),
+                path(
+                    "policies/<int:pk>/<str:resource_group_id>/",
+                    views.SubjectPolicyResourceGroupDeleteViewSet.as_view({"delete": "destroy"}),
+                    name="subject.resource_group_delete",
+                ),
             ]
         ),
     )

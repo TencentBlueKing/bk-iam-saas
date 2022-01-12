@@ -69,7 +69,8 @@
     </div>
 </template>
 <script>
-    // import _ from 'lodash'
+    import _ from 'lodash'
+    import { mapGetters } from 'vuex'
     import GroupPolicy from '@/model/group-policy'
     import RenderPermItem from '../common/render-perm-item-new.vue'
     import RenderTemplateItem from '../common/render-template-item.vue'
@@ -108,6 +109,7 @@
             }
         },
         computed: {
+            ...mapGetters(['user']),
             isEmpty () {
                 return this.groupSystemList.length < 1
             },
@@ -273,11 +275,55 @@
                     return
                 }
                 // count > 0 说明是自定义权限
+                await this.fetchActions(item)
                 if (item.count > 0) {
                     this.getGroupCustomPolicy(item)
                     return
                 }
                 this.getGroupTemplateDetail(item)
+            },
+
+            /**
+             * 获取系统对应的自定义操作
+             *
+             * @param {String} systemId 系统id
+             * 执行handleActionLinearData方法
+             */
+            async fetchActions (item) {
+                const params = {
+                    system_id: item.system.id,
+                    user_id: this.user.username
+                }
+                try {
+                    const res = await this.$store.dispatch('permApply/getActions', params)
+                    this.originalCustomTmplList = _.cloneDeep(res.data)
+                    this.handleActionLinearData()
+                } catch (e) {
+                    console.error(e)
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    })
+                }
+            },
+
+            handleActionLinearData () {
+                const linearActions = []
+                this.originalCustomTmplList.forEach((item, index) => {
+                    item.actions.forEach(act => {
+                        linearActions.push(act)
+                    })
+                    ;(item.sub_groups || []).forEach(sub => {
+                        sub.actions.forEach(act => {
+                            linearActions.push(act)
+                        })
+                    })
+                })
+
+                this.linearActionList = _.cloneDeep(linearActions)
             },
 
             async getGroupTemplateDetail (item) {
@@ -295,18 +341,26 @@
                     //         related_resource_types: element.related_resource_types
                     //     }]
                     // })
-                    const tableData = res.data.actions.map(row => new GroupPolicy(
-                        { ...row, policy_id: 1 },
-                        'detail',
-                        'template',
-                        { system: res.data.system }
-                    ))
-                    const tableDataBackup = res.data.actions.map(row => new GroupPolicy(
-                        { ...row, policy_id: 1 },
-                        'detail',
-                        'template',
-                        { system: res.data.system }
-                    ))
+                    const tableData = res.data.actions.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments
+                        return new GroupPolicy(
+                            { ...row, policy_id: 1 },
+                            'detail',
+                            'template',
+                            { system: res.data.system }
+                        )
+                    })
+                    const tableDataBackup = res.data.actions.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments
+                        return new GroupPolicy(
+                            { ...row, policy_id: 1 },
+                            'detail',
+                            'template',
+                            { system: res.data.system }
+                        )
+                    })
                     this.$set(item, 'tableData', tableData)
                     console.log('item.tableData', item.tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
@@ -331,15 +385,9 @@
                         id: this.groupId,
                         systemId: item.system.id
                     })
-
-                    // // mock数据
-                    // res.data.forEach(element => {
-                    //     element.resource_groups = [{
-                    //         id: 1,
-                    //         related_resource_types: element.related_resource_types
-                    //     }]
-                    // })
                     const tableData = res.data.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments
                         return new GroupPolicy(
                             row,
                             'detail', // 此属性为flag，会在related-resource-types赋值为add
@@ -347,12 +395,16 @@
                             { system: item.system }
                         )
                     })
-                    const tableDataBackup = res.data.map(row => new GroupPolicy(
-                        row,
-                        'detail',
-                        'custom',
-                        { system: item.system }
-                    ))
+                    const tableDataBackup = res.data.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments
+                        return new GroupPolicy(
+                            row,
+                            'detail',
+                            'custom',
+                            { system: item.system }
+                        )
+                    })
                     this.$set(item, 'tableData', tableData)
                     this.$set(item, 'tableDataBackup', tableDataBackup)
 

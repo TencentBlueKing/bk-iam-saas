@@ -43,7 +43,7 @@ class BaseSubjectProvider(DataProvider):
 
         if self.subject.type == SubjectType.USER.value:
             user = User.objects.filter(username=self.subject.id).first()
-            return user.display_name if user else ""
+            return user.display_name if user else self.subject.id
 
         return ""
 

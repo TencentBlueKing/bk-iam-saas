@@ -53,6 +53,7 @@ export default class Policy {
         this.related_actions = payload.related_actions || []
         this.isShowRelatedText = payload.isShowRelatedText || false
         this.inOriginalList = payload.inOriginalList || false
+        this.related_environments = payload.related_environments || []
         this.initExpired(payload)
         this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled)
         this.initAttachActions(payload)
@@ -91,8 +92,18 @@ export default class Policy {
             const relatedRsourceTypes = item.related_resource_types.map(
                 item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
             )
-
-            prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+            
+            if ((this.related_environments && !!this.related_environments.length)) {
+                const environments = item.environments && !!item.environments.length ? item.environments : []
+                prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments })
+            } else {
+                if (item.environments && !!item.environments.length) {
+                    // eslint-disable-next-line max-len
+                    prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: item.environments })
+                } else {
+                    prev.push({ id: item.id, related_resource_types: relatedRsourceTypes })
+                }
+            }
             return prev
         }, [])
     }
@@ -132,6 +143,11 @@ export default class Policy {
     }
 
     get isEmpty () {
+        return this.resource_groups.length < 1
+        // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
+    }
+
+    get isEffectEmpty () {
         return this.resource_groups.length < 1
         // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
     }

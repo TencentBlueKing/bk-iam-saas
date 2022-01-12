@@ -21,6 +21,11 @@ class PermTemplateManager(models.Manager):
     def get_or_404(self, id: int):
         return get_object_or_404(self.all(), id=id)
 
+    def query_template_ids(self, system_id: str, action_id: str):
+        query_action_id = f'"{action_id}"'
+        template_ids = self.filter(system_id=system_id, _action_ids__contains=query_action_id).values_list("id")
+        return template_ids
+
 
 class PermTemplatePolicyAuthorizedManager(models.Manager):
     def filter_by_subject(self, subject: Subject) -> QuerySet:

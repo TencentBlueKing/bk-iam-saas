@@ -13,7 +13,7 @@ from typing import Any, Dict, List
 from pydantic import BaseModel
 
 from backend.common.error_codes import error_codes
-from backend.component.engine import batch_query_subjects
+from backend.component.engine import batch_query_subjects, query_subjects
 
 from .models import Condition, PathNode, Policy, RelatedResource
 from .utils.translate import translate_path
@@ -67,6 +67,13 @@ class EngineService:
         resp_data = batch_query_subjects(query_data)
         return resp_data["results"]
 
+    def query_subjects_by_resource_instance(self, query_data):
+        """
+        使用资源实例信息查询相关有权限的subjects
+        """
+        resp_data = query_subjects(query_data)
+        return resp_data
+
     def gen_search_policy_resources(self, policies: List[Policy]) -> List[PolicyResource]:
         """
         生成用于搜索的PolicyResource
@@ -86,7 +93,7 @@ class EngineService:
             # 生成无关联操作的查询条件
             return PolicyResource(action_id=policy.action_id, resources=[])
 
-        if len(policy.list_thin_resource_type()) > 1:
+        if len(policy.list_thin_resource_type()) != 1:
             raise error_codes.ENGINE_REQUEST_ERROR.format("不支持关联多个资源类型的查询")
 
         rrt = policy.resource_groups[0].related_resource_types[0]

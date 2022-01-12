@@ -111,9 +111,31 @@ class ApplicationRelatedResource(BaseModel):
     name_en: str = ""
 
 
+class ApplicationEnvironValue(BaseModel):
+    """环境属性值"""
+
+    name: str = ""
+    value: str
+
+
+class ApplicationEnvironCondition(BaseModel):
+    """环境属性条件"""
+
+    type: str
+    values: List[ApplicationEnvironValue]
+
+
+class ApplicationEnvironment(BaseModel):
+    """环境属性"""
+
+    type: str
+    condition: List[ApplicationEnvironCondition]
+
+
 class ApplicationResourceGroup(BaseModel):
     id: str
     related_resource_types: List[ApplicationRelatedResource]
+    environments: List[ApplicationEnvironment]
 
 
 class ApplicationResourceGroupList(ListModel):

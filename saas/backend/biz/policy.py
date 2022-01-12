@@ -37,6 +37,7 @@ from backend.service.models import (
     Policy,
     RelatedResource,
     RelatedResourceType,
+    ResourceGroup,
     ResourceGroupList,
     ResourceTypeDict,
     Subject,
@@ -568,7 +569,7 @@ class RelatedResourceBeanList:
         return self
 
 
-class ResourceGroupBean(BaseModel):
+class ResourceGroupBean(ResourceGroup):
     id: str = ""
     related_resource_types: List[RelatedResourceBean]
 
@@ -692,6 +693,13 @@ class ResourceGroupBeanList(ResourceGroupList):
         if len(self) <= 1:
             return self
 
+        # 关联单资源类型的操作, 环境属性相同的情况下, 需要合并资源实例
+        if len(self.get_thin_resource_types()) == 1:
+            env_hash_rg = {}
+            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, self)
+            return self
+
+        # 如果resource_group存在包含关系, 移除被包含的resource_group
         for __ in range(len(self)):
             rg = self.pop(0)
             if rg not in self:
@@ -718,7 +726,9 @@ class ResourceGroupBeanList(ResourceGroupList):
 
     def __contains__(self, resource_group: ResourceGroupBean) -> bool:
         for rg in self:
-            if rg.has_related_resource_types(resource_group.related_resource_types):
+            if resource_group.hash_environments() == rg.hash_environments() and rg.has_related_resource_types(
+                resource_group.related_resource_types
+            ):
                 return True
 
         return False
@@ -731,6 +741,21 @@ class ResourceGroupBeanList(ResourceGroupList):
         rg += resource_groups
         return rg
 
+    def _merge_resource_groups_with_same_env(
+        self, env_hash_rg: Dict[int, ResourceGroupBean], resource_groups: "ResourceGroupBeanList"
+    ) -> List[ResourceGroupBean]:
+        """
+        合并相同env的resource_group
+        """
+        for rg in resource_groups:
+            env_hash = rg.hash_environments()
+            if env_hash in env_hash_rg:
+                env_hash_rg[env_hash].add_related_resource_types(rg.related_resource_types)
+                continue
+
+            env_hash_rg[env_hash] = rg
+        return list(env_hash_rg.values())
+
     def __iadd__(self, resource_groups: "ResourceGroupBeanList") -> "ResourceGroupBeanList":
         """
         合并到本身
@@ -739,14 +764,14 @@ class ResourceGroupBeanList(ResourceGroupList):
         如果不存在id相同的, 判断范围是否已包含, 没有包含的合并
         """
         # 处理单个资源类型的合并
-        if len(self.list_thin_resource_type()) == 1:
-            for rg in resource_groups:
-                self[0].add_related_resource_types(rg.related_resource_types)
+        if len(self.get_thin_resource_types()) == 1:
+            env_hash_rg = {rg.hash_environments(): rg for rg in self}
+            self.__root__ = self._merge_resource_groups_with_same_env(env_hash_rg, resource_groups)
             return self
 
         for rg in resource_groups:
             original_rg = self.get_by_id(rg.id)
-            if original_rg is not None:
+            if original_rg is not None and original_rg.hash_environments() == rg.hash_environments():
                 original_rg.add_related_resource_types(rg.related_resource_types)
             elif rg not in self:
                 self.__root__.append(rg)
@@ -769,12 +794,13 @@ class ResourceGroupBeanList(ResourceGroupList):
            - 完整包含的一组才能移除
         """
         # 只关联1个资源类型的操作
-        if len(self.list_thin_resource_type()) == 1:
+        if len(self.get_thin_resource_types()) == 1:
             new_resource_groups: List[ResourceGroupBean] = []
             for original_rg in self:
                 try:
                     for rg in resource_groups:
-                        original_rg.remove_related_resource_types(rg.related_resource_types)
+                        if rg.hash_environments() == original_rg.hash_environments():
+                            original_rg.remove_related_resource_types(rg.related_resource_types)
                     new_resource_groups.append(original_rg)
                 except PolicyEmptyException:
                     pass
@@ -1425,6 +1451,32 @@ class PolicyOperationBiz:
         删除policies
         """
         self.svc.delete_by_ids(system_id, subject, policy_ids)
+
+    @method_decorator(policy_change_lock)
+    def delete_by_resource_group_id(
+        self, system_id: str, subject: Subject, policy_id: int, resource_group_id: str
+    ) -> PolicyBean:
+        """
+        删除policy中指定resource_group_id的部分
+        """
+        # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
+        __, policy = self.query_biz.get_system_policy(subject, policy_id)
+        # 任意的policy不能删除
+        if len(policy.resource_groups) == 0:
+            raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
+
+        # resource_group不存在不能删除
+        resource_group = policy.resource_groups.pop_by_id(resource_group_id)
+        if resource_group is None:
+            raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
+
+        # 删空的情况直接整体删除
+        if len(policy.resource_groups) == 0:
+            self.svc.delete_by_ids(system_id, subject, [policy_id])
+        else:
+            self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy)])
+
+        return policy
 
     @method_decorator(policy_change_lock)
     def delete_partial(

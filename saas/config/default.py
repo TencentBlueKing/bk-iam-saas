@@ -63,6 +63,7 @@ INSTALLED_APPS += (
     "backend.long_task",
     "backend.audit",
     "backend.debug",
+    "backend.apps.handover",
 )
 
 # 这里是默认的中间件，大部分情况下，不需要改动
@@ -306,7 +307,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     # 用户组单次授权模板数
     "group_auth_template_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", 10)),
     # 用户组单次授权的系统数
-    "group_auth_system_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 5)),
+    "group_auth_system_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 10)),
 }
 
 # 授权的实例最大数量限制
@@ -348,7 +349,9 @@ PUB_SUB_REDIS_DB = os.environ.get("BKAPP_PUB_SUB_REDIS_DB", 0)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true"
+    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
+    "enable_permission_handover": os.environ.get("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower()
+    == "true",
 }
 
 # 是否是smart部署方式
@@ -357,8 +360,20 @@ IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "tr
 # apigateway 相关配置
 # NOTE: it sdk will read settings.BK_APP_CODE and settings.BK_APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = ""
+BK_API_URL_TMPL = os.environ.get("BK_APIGATEWAY_URL", "") + "/api/{api_name}/"
 INSTALLED_APPS += ("apigw_manager.apigw",)
 BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
+
+# tracing 相关配置
+# if enable, default false
+ENABLE_OTEL_TRACE = os.environ.get("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
+BKAPP_OTEL_INSTRUMENT_DB_API = os.environ.get("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
+BKAPP_OTEL_SERVICE_NAME = os.environ.get("BKAPP_OTEL_SERVICE_NAME", "") or "bk-iam"
+BKAPP_OTEL_SAMPLER = os.environ.get("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
+BKAPP_OTEL_BK_DATA_ID = int(os.environ.get("BKAPP_OTEL_BK_DATA_ID", "-1"))
+BKAPP_OTEL_GRPC_HOST = os.environ.get("BKAPP_OTEL_GRPC_HOST")
+
+if ENABLE_OTEL_TRACE:
+    INSTALLED_APPS += ("backend.tracing",)

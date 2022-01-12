@@ -259,7 +259,7 @@
         justify-content: flex-start;
         position: relative;
         padding: 0 6px;
-        width: 100%;
+        width: 97%;
         line-height: 1;
         vertical-align: middle;
         border: 1px solid #c4c6cc;

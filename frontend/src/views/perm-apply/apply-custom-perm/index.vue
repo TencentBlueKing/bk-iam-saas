@@ -967,6 +967,9 @@
                     const differenceSetIds = temps.filter(v => !this.tableData.map(sub => sub.id).includes(v))
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v)
+                        if (!data.resource_groups || !data.resource_groups.length) {
+                            data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                     })
                 } else {
@@ -1143,6 +1146,9 @@
                     const differenceSetIds = allActionIds.filter(v => !this.tableData.map(sub => sub.id).includes(v))
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v)
+                        if (!data.resource_groups || !data.resource_groups.length) {
+                            data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                        }
                         this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                     })
                 }
@@ -1200,6 +1206,9 @@
                 )
                 differenceSetIds.forEach(v => {
                     const data = this.linearActionList.find(act => act.id === v)
+                    if (!data.resource_groups || !data.resource_groups.length) {
+                        data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                    }
                     this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                 })
 
@@ -1256,6 +1265,9 @@
                 )
                 differenceSetIds.forEach(item => {
                     const data = this.linearActionList.find(act => act.id === item)
+                    if (!data.resource_groups || !data.resource_groups.length) {
+                        data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
+                    }
                     this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
                 })
 
@@ -1269,7 +1281,6 @@
                 let aggregationAction = []
                 const curSelectActions = (() => {
                     const tempAction = []
-                    console.log('this.tableData', this.tableData)
                     this.tableData.forEach(item => {
                         if (item.isAggregate) {
                             tempAction.push(...item.actions.map(_ => _.id))
@@ -1279,7 +1290,6 @@
                     })
                     return tempAction
                 })()
-                console.log('curSelectActions', curSelectActions)
                 console.log('this.aggregationsBackup', this.aggregationsBackup)
                 this.aggregationsBackup.forEach((item, index) => {
                     const tempObj = _.cloneDeep(item)
@@ -1396,7 +1406,6 @@
                         })
                         return !existData
                     }).map((item, index) => {
-                        console.log('item', item)
                         const existTableData = this.aggregationsTableData.filter(
                             subItem => item.actions.map(act => act.id).includes(subItem.id)
                         )
@@ -1696,8 +1705,6 @@
                 if (!data.resource_groups || !data.resource_groups.length) {
                     data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : []
                 }
-                console.log('data111', data)
-                console.log('actData111', actData)
                 this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom'))
 
                 this.handleRelatedActions(actData, true)
@@ -1845,6 +1852,8 @@
                     console.log(res.data, params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
+                        // eslint-disable-next-line max-len
+                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments
                         // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
