@@ -17,6 +17,7 @@
                     :clearable="false"
                     show-select-all
                     multiple
+                    disabled
                     ext-cls="effect-select-week"
                     placeholder="请选择日期">
                     <bk-option v-for="option in effectWeekList"

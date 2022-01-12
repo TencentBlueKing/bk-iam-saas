@@ -133,6 +133,7 @@
             vertical-align: middle; */
             height: 30px;
             line-height: 30px;
+            padding-left: 20px;
         }
 
         .edit-text{
