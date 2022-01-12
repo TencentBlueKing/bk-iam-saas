@@ -118,6 +118,8 @@
                                         <Icon v-if="row.resource_groups.length >= 1" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                                             @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                     </div>
+                                    <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1" class="group-line"
+                                        :class="_.related_resource_types.length > 1 ? 'group-line-more' : ''"></div>
                                 </div>
                             </template>
                             <template v-else>
@@ -138,17 +140,18 @@
                     <template v-else>
                         <template v-if="!!row.resource_groups.length">
                             <template v-if="!isEdit">
-                                <div class="condition-table-cell" v-if="!!row.related_environments.length"
-                                    :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
-                                    <div v-for="_ in row.resource_groups" :key="_.id"
-                                        :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                <div class="condition-table-cell-detail" v-if="!!row.related_environments.length"
+                                >
+                                    <div v-for="(_, _index) in row.resource_groups" :key="_.id"
+                                        :class="[row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one', row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                                            ? '' : 'related-resource-list-border']">
                                         <effect-condition-detail
                                             :value="_.environments"
                                             :is-empty="!_.environments.length">
                                         </effect-condition-detail>
                                     </div>
                                 </div>
-                                <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
+                                <div v-else class="condition-table-cell-detail">{{ $t(`m.common['无生效条件']`) }}</div>
                             </template>
                             <template v-else>
                                 <div class="condition-table-cell" v-if="!!row.related_environments.length"
@@ -160,6 +163,8 @@
                                             :is-empty="!_.environments.length"
                                             @on-click="showTimeSlider(row, $index, groIndex)">
                                         </effect-condition>
+                                        <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1"
+                                            class="condition-line" :class="_.related_resource_types.length > 1 ? 'condition-line-more' : ''"></div>
                                     </div>
                                 </div>
                                 <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
@@ -887,7 +892,7 @@
                 curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload
 
                 curData.resource_groups = curData.resource_groups.filter(groupItem => {
-                    groupItem.related_resource_types.forEach(typeItem => {
+                    groupItem.related_resource_types = groupItem.related_resource_types.filter(typeItem => {
                         typeItem.condition.filter(e => {
                             if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
                                 e.instances = e.instance || []
@@ -898,6 +903,7 @@
                             }
                             return false
                         })
+                        return !(typeItem.condition.length === 1 && typeItem.condition[0] === 'none')
                     })
                     // eslint-disable-next-line max-len
                     return !(groupItem.related_resource_types[0] && groupItem.related_resource_types[0].condition.length === 1
@@ -1766,18 +1772,14 @@
                 }
                 .iam-perm-table-cell-cls {
                     .cell {
-                        height: auto;
+                        height: 100%;
                         padding: 0px !important;
                     }
-                    .condition-table-cell{
+                    .condition-table-cell-detail{
                         height: 100%;
                         flex-flow: column;
                         display: flex;
                         justify-content: space-evenly;
-                        padding: 15px 0;
-                    }
-                    .empty-text {
-                        padding-left: 20px;
                     }
                 }
             }
@@ -1873,6 +1875,22 @@
                     margin-bottom: 9px;
                 }
             }
+
+            .relation-content-wrapper{
+                position: relative;
+                .group-line {
+                    height: 1px;
+                    background: #dfe0e5;
+                    width: calc(100% + 70px);
+                    position: absolute;
+                    top: 90%;
+                    left: -15px;
+                }
+                .group-line-more{
+                    top: 95%;
+                }
+            }
+
             .remove-icon {
                 position: absolute;
                 right: 2px;
@@ -1917,8 +1935,22 @@
 
         .environ-group-more{
             position: relative;
-            padding-bottom: 19px;
-            padding-top: 25px;
+            display: flex;
+            flex: 1;
+            flex-flow: column;
+            justify-content: center;
+            padding-top: 5px;
+            .condition-line{
+                height: 1px;
+                background: #dfe0e5;
+                width: calc(100% + 30px);
+                position: absolute;
+                top: calc(87% + 2px);
+                left: -15px;
+            }
+            .condition-line-more{
+                top: calc(93% + 3px);
+            }
         }
 
     }
