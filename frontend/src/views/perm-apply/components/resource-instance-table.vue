@@ -127,9 +127,11 @@
                     <!-- tag update 需要比较过期时间，过期时，显示续期，点击续期然后操作下拉框；不过期时，下拉框禁用 -->
                     <template v-if="row.isShowRenewal">
                         <!-- 11 -->
-                        <bk-button theme="primary" class="renewal-action" outline @click="handleOpenRenewal(row, $index)">
-                            {{ $t(`m.renewal['续期']`) }}
-                        </bk-button>
+                        <div class="renewal-action-warp">
+                            <bk-button theme="primary" class="renewal-action" outline @click="handleOpenRenewal(row, $index)">
+                                {{ $t(`m.renewal['续期']`) }}
+                            </bk-button>
+                        </div>
                     </template>
                     <template v-else>
                         <!-- 22 -->

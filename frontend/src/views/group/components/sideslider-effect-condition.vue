@@ -79,7 +79,8 @@
                 ],
                 effectWeekTimeZone: GLOBAL_TIME_ZONE,
                 date: [],
-                environmentsData: []
+                environmentsData: [],
+                timeRangeEmpty: false
             }
         },
         watch: {
@@ -87,7 +88,7 @@
                 handler (val) {
                     console.log('val1', val)
                     if (!val.length) {
-                        this.environmentsData = [{ type: 'period_daily', date: ['1', '2', '3', '4', '5', '6', '0'], TimeZone: 'Asia/Shanghai', initTimeRange: ['00:00:00', '23:59:59'] }]
+                        this.environmentsData = [{ type: 'period_daily', date: ['1', '2', '3', '4', '5', '6', '0'], TimeZone: 'Asia/Shanghai', initTimeRange: [] }]
                     } else {
                         this.environmentsData = val.map(e => {
                             if (e.condition && e.condition.length) {
