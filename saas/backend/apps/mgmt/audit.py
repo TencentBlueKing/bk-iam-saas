@@ -48,3 +48,19 @@ class ManagementApiWhiteListDeleteAuditProvider(BaseMgmtWhiteListProvider):
     @property
     def system_id(self):
         return self.white_list.system_id
+
+
+class AdminApiWhiteListCreateAuditProvider(BaseMgmtWhiteListProvider):
+    type = AuditType.ADMIN_API_WHITE_LIST_CREATE.value
+
+    @property
+    def extra(self):
+        return {"app_code": self.white_list.app_code}
+
+
+class AdminApiWhiteListDeleteAuditProvider(BaseMgmtWhiteListProvider):
+    type = AuditType.ADMIN_API_WHITE_LIST_DELETE.value
+
+    @property
+    def extra(self):
+        return {"app_code": self.white_list.app_code}

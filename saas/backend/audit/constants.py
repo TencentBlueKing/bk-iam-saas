@@ -90,3 +90,6 @@ class AuditType(ChoicesEnum, StrEnum):
 
     MANAGEMENT_API_WHITE_LIST_CREATE = auto()
     MANAGEMENT_API_WHITE_LIST_DELETE = auto()
+
+    ADMIN_API_WHITE_LIST_CREATE = auto()
+    ADMIN_API_WHITE_LIST_DELETE = auto()

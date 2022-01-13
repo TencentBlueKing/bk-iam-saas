@@ -17,13 +17,23 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import RolePermission
+from backend.api.admin.models import AdminAPIAllowListConfig
 from backend.api.management.models import ManagementAPIAllowListConfig
 from backend.apps.mgmt.audit import (
+    AdminApiWhiteListCreateAuditProvider,
+    AdminApiWhiteListDeleteAuditProvider,
     ManagementApiWhiteListCreateAuditProvider,
     ManagementApiWhiteListDeleteAuditProvider,
 )
 from backend.apps.mgmt.constants import ENUM_MAP
-from backend.apps.mgmt.serializers import ApiSLZ, ManagementApiAddWhiteListSLZ, ManagementApiWhiteListSLZ, QueryApiSLZ
+from backend.apps.mgmt.serializers import (
+    AdminApiAddWhiteListSLZ,
+    AdminApiWhiteListSLZ,
+    ApiSLZ,
+    ManagementApiAddWhiteListSLZ,
+    ManagementApiWhiteListSLZ,
+    QueryApiSLZ,
+)
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum
@@ -106,6 +116,72 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     @view_audit_decorator(ManagementApiWhiteListDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         white_list = ManagementAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).first()
+        white_list_copy = deepcopy(white_list)
+        if not white_list:
+            return Response({})
+
+        white_list.delete()
+
+        # 写入审计上下文
+        audit_context_setter(white_list=white_list_copy)
+        return Response({})
+
+
+class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
+    permission_classes = [RolePermission]
+    action_permission = {
+        "list": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
+        "create": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
+        "destroy": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
+    }
+
+    queryset = AdminAPIAllowListConfig.objects.all()
+    serializer_class = AdminApiWhiteListSLZ
+
+    @swagger_auto_schema(
+        operation_description="管理类API白名单列表",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: AdminApiWhiteListSLZ(label="超级管理类API白名单", many=True)},
+        tags=["mgmt.white_list"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(self, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="新增-超级管理类API白名单",
+        request_body=AdminApiAddWhiteListSLZ(label="管理类API白名单信息"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: yasg_response({})},
+        tags=["mgmt.white_list"],
+    )
+    @view_audit_decorator(AdminApiWhiteListCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = AdminApiAddWhiteListSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        username = request.user.username
+        app_code = data["app_code"]
+        api = data["api"]
+
+        white_list = AdminAPIAllowListConfig.objects.update_or_create(
+            defaults={"updater": username}, creator=username, app_code=app_code, api=api
+        )
+
+        # 写入审计上下文
+        audit_context_setter(white_list=white_list[0])
+
+        return Response({}, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        operation_description="删除-超级管理类API白名单",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: yasg_response({})},
+        tags=["mgmt.white_list"],
+    )
+    @view_audit_decorator(AdminApiWhiteListDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        white_list = AdminAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).first()
         white_list_copy = deepcopy(white_list)
         if not white_list:
             return Response({})
