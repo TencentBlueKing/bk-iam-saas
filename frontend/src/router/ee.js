@@ -115,6 +115,10 @@ const GradingAdminEdit = () => import(
 const GradingAdminUpdateTemplate = () => import(
     /* webpackChunkName: 'grading-admin' */'../views/grading-admin/update-template')
 
+// 资源权限管理
+const ResourcePermiss = () => import(
+    /* webpackChunkName: 'grading-admin' */'../views/resource-permiss')
+
 // 设置
 const Setting = () => import(
     /* webpackChunkName: 'set' */'../views/set')
@@ -143,6 +147,14 @@ const GroupPermDetail = () => import(
 )
 const OrgPermDetail = () => import(
     /* webpackChunkName: 'my-perm-org-perm' */'../views/perm/organization-perm/detail'
+)
+
+const PermTransfer = () => import(
+    /* webpackChunkName: 'perm-transfer' */'../views/transfer'
+)
+
+const PermTransferHistory = () => import(
+    /* webpackChunkName: 'perm-transfer' */'../views/transfer/history'
 )
 
 // no-perm
@@ -443,6 +455,14 @@ export const routes = [
                 component: GradingAdminUpdateTemplate
             },
             {
+                path: 'resource-permiss',
+                name: 'resourcePermiss',
+                meta: {
+                    headerTitle: il8n('nav', '资源权限管理')
+                },
+                component: ResourcePermiss
+            },
+            {
                 path: 'administrator',
                 name: 'administrator',
                 meta: {
@@ -465,6 +485,24 @@ export const routes = [
                     headerTitle: ''
                 },
                 component: NoPerm
+            },
+            {
+                path: 'perm-transfer',
+                name: 'permTransfer',
+                meta: {
+                    headerTitle: il8n('permTransfer', '权限交接'),
+                    backRouter: 'myPerm'
+                },
+                component: PermTransfer
+            },
+            {
+                path: 'perm-transfer-history',
+                name: 'permTransferHistory',
+                meta: {
+                    headerTitle: il8n('permTransfer', '交接历史'),
+                    backRouter: 'myPerm'
+                },
+                component: PermTransferHistory
             }
         ]
     },

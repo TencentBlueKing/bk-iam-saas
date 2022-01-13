@@ -28,6 +28,8 @@ from backend.service.constants import (
     SubjectType,
 )
 
+from .constants import PermissionTypeEnum
+
 
 class RoleScopeSubjectSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=RoleScopeSubjectType.get_choices())
@@ -200,7 +202,8 @@ class RatingMangerDetailSLZ(RatingMangerListSLZ):
         )
 
     def get_authorization_scopes(self, obj):
-        scope_systems = RoleBiz().list_auth_scope_bean(obj.id)
+        # ResourceNameAutoUpdate
+        scope_systems = RoleBiz().list_auth_scope_bean(obj.id, should_auto_update_resource_name=True)
         return [one.dict() for one in scope_systems]
 
     def get_subject_scopes(self, obj):
@@ -288,3 +291,43 @@ class RoleGroupMemberRenewSLZ(serializers.Serializer):
 
 class RoleGroupMembersRenewSLZ(serializers.Serializer):
     members = serializers.ListField(label="续期成员", child=RoleGroupMemberRenewSLZ(), allow_empty=False)
+
+
+class ResourceInstancePathSLZ(serializers.Serializer):
+    id = serializers.CharField(label="资源实例ID")
+    type = serializers.CharField(label="资源实例类型")
+    name = serializers.CharField(label="资源实例名")
+
+
+class ResourceInstancesSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID", required=True)
+    id = serializers.CharField(label="资源实例ID", required=True)
+    type = serializers.CharField(label="资源实例类型", required=True)
+    name = serializers.CharField(label="资源实例名", required=True)
+    path = serializers.ListField(
+        label="资源实例路径", required=False, child=ResourceInstancePathSLZ(label="资源实例路径"), default=list
+    )
+
+
+class QueryAuthorizedSubjectsSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+    action_id = serializers.CharField(label="操作ID")
+    limit = serializers.IntegerField(label="返回结果数", min_value=10, max_value=1000)
+    resource_instances = serializers.ListField(
+        label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
+    )
+    permission_type = serializers.ChoiceField(label="权限类型", choices=PermissionTypeEnum.get_choices())
+
+    def validate(self, data):
+        if data["permission_type"] == PermissionTypeEnum.RESOURCE_INSTANCE.value:
+            if not data.get("resource_instances"):
+                data["resource_instances"] = []
+            return data
+
+        return data
+
+
+class AuthorizedSubjectsSLZ(serializers.Serializer):
+    type = serializers.CharField(label="Subject对象类型")
+    id = serializers.CharField(label="Subject对象ID")
+    name = serializers.CharField(label="Subject对象名称")

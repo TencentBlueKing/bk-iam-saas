@@ -40,12 +40,14 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
     ok, data = http_func(**kwargs)
+    # remove sensitive info
+    kwargs["headers"] = {}
 
     # process result
     if not ok:
         message = "esb api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
         logger.error(message)
-        raise error_codes.REMOTE_REQUEST_ERROR.format("request esb api error")
+        raise error_codes.REMOTE_REQUEST_ERROR.format(f'request esb api error: {data["error"]}')
 
     code = data["code"]
     message = data["message"]
@@ -61,7 +63,12 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
         code,
         message,
     )
-    raise error_codes.ESB_REQUEST_ERROR.format(message)
+
+    error_message = (
+        f"Request=[{http_func.__name__} {url_path} request_id={local.request_id}],"
+        f"Response[code={code}, message={message}]"
+    )
+    raise error_codes.ESB_REQUEST_ERROR.format(error_message)
 
 
 def get_api_public_key() -> Dict:

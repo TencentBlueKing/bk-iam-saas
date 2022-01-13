@@ -94,6 +94,11 @@
             }
         },
         methods: {
+            /**
+             * @description: fetchPageData 进入页面时在路由文件中统一请求 @/router/index.js
+             * @param {*}
+             * @return {*}
+             */
             async fetchPageData () {
                 await this.fetchRatingManagerDetail()
             },
@@ -135,7 +140,8 @@
                     if (item.type === 'department') {
                         departments.push({
                             name: item.name,
-                            count: item.member_count
+                            count: item.member_count,
+                            fullName: item.full_name
                         })
                     }
                     if (item.type === 'user') {

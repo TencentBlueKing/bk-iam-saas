@@ -43,7 +43,7 @@
     </div>
 </template>
 <script>
-    import DeleteDialog from '@/components/iam-confirm-dialog'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
     import PermSideslider from '../components/render-group-perm-sideslider'
     export default {
         name: '',

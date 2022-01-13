@@ -563,6 +563,7 @@
             },
 
             handleDetailData (payload) {
+                console.log('payload', payload)
                 const { name, description, members } = payload
                 this.formData = Object.assign({}, {
                     name,
@@ -577,6 +578,7 @@
                             id: Number(item.id),
                             type: 'depart',
                             name: item.name,
+                            fullName: item.full_name,
                             count: item.member_count
                         })
                     }
@@ -609,7 +611,12 @@
 
                 this.originalList = _.cloneDeep(tempActions)
             },
-
+            /**
+             * @description: 处理 base-info数据
+             * @param {*} field
+             * @param {*} data
+             * @return {*}
+             */
             handleBasicInfoChange (field, data) {
                 window.changeDialog = true
                 this.formData[field] = data

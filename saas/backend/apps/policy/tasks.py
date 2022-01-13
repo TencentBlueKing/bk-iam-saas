@@ -49,25 +49,38 @@ def execute_model_change_event():
         return
 
     # 2. 遍历每个事件，执行对应任务
+    # 记录失败事件
+    failed_events = set()
     for event in events:
-        if event["type"] not in [
+        event_type, system_id, action_id = event["type"], event["system_id"], event["model_id"]
+
+        if event_type not in [
             ModelChangeEventTypeEnum.ActionPolicyDeleted.value,
             ModelChangeEventTypeEnum.ActionDeleted.value,
         ]:
-            logger.info(f"The model change event of type({event['type']}) not supported yet")
+            logger.info(f"The model change event of type({event_type}) not supported yet")
             continue
 
-        system_id, action_id = event["system_id"], event["model_id"]
         # 记录执行过的事件，以防需要排查
         logger.info(f"execute model change event: f{event}")
-        # 删除Action相关的所有策略
-        if event["type"] == ModelChangeEventTypeEnum.ActionPolicyDeleted.value:
-            delete_action_policies(system_id, action_id)
-        elif event["type"] == ModelChangeEventTypeEnum.ActionDeleted.value:
-            # 删除Action模型
-            delete_action(system_id, action_id)
-        # 执行完事件后，更新事件状态
-        iam.update_model_change_event(event["pk"], ModelChangeEventStatusEnum.Finished.value)
+        try:
+            # 删除Action相关的所有策略
+            if event_type == ModelChangeEventTypeEnum.ActionPolicyDeleted.value:
+                delete_action_policies(system_id, action_id)
+            elif event_type == ModelChangeEventTypeEnum.ActionDeleted.value:
+                # 若依赖事件失败了，则当前事件不可执行
+                # Note: 这里只处理关于Action删除和Action相关Policy删除的顺序问题
+                if (ModelChangeEventTypeEnum.ActionPolicyDeleted.value, system_id, action_id) in failed_events:
+                    continue
+
+                # 删除Action模型
+                delete_action(system_id, action_id)
+            # 执行完事件后，更新事件状态
+            iam.update_model_change_event(event["pk"], ModelChangeEventStatusEnum.Finished.value)
+        except Exception as error:
+            logger.exception(error)
+            # 记录失败事件
+            failed_events.add((event_type, system_id, action_id))
 
 
 def delete_action_policies(system_id: str, action_id: str):

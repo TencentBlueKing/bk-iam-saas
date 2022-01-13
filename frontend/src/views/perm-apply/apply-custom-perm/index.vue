@@ -248,6 +248,17 @@
                                             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                                                 <template slot-scope="{ row }">
                                                     <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                                                    <template v-if="!setDefaultSelect(row)">
+                                                        <Icon type="error-fill" class="error-icon" />
+                                                        <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                                                        <bk-button
+                                                            text
+                                                            theme="primary"
+                                                            style="font-size: 12px;"
+                                                            @click="handleBatchRenewal">
+                                                            {{ $t(`m.permApply['去续期']`) }}
+                                                        </bk-button>
+                                                    </template>
                                                 </template>
                                             </bk-table-column>
                                             <bk-table-column :label="$t(`m.userGroup['描述']`)">
@@ -1253,6 +1264,7 @@
                 let aggregationAction = []
                 const curSelectActions = (() => {
                     const tempAction = []
+                    console.log('this.tableData', this.tableData)
                     this.tableData.forEach(item => {
                         if (item.isAggregate) {
                             tempAction.push(...item.actions.map(_ => _.id))
@@ -1262,6 +1274,8 @@
                     })
                     return tempAction
                 })()
+                console.log('curSelectActions', curSelectActions)
+                console.log('this.aggregationsBackup', this.aggregationsBackup)
                 this.aggregationsBackup.forEach((item, index) => {
                     const tempObj = _.cloneDeep(item)
                     const tempAction = tempObj.actions.map(_ => _.id)
@@ -1273,6 +1287,7 @@
                 })
                 aggregationAction = aggregationAction.filter(item => item.actions.length > 1)
                 this.aggregations = _.cloneDeep(aggregationAction)
+                console.log('this.aggregations', this.aggregations)
             },
 
             handleAggregateActionChange (payload) {
@@ -1352,6 +1367,8 @@
                 aggregationAction.forEach(item => {
                     actionIds.push(...item.actions.map(_ => _.id))
                 })
+                console.log('this.tableData', this.tableData)
+                console.log('this.aggregationsTableData', this.aggregationsTableData)
                 if (payload) {
                     // 缓存新增加的操作权限数据
                     aggregationAction.forEach(item => {
@@ -1359,6 +1376,7 @@
                             subItem => item.actions.map(_ => _.id).includes(subItem.id)
                         )
 
+                        console.log('filterArray', filterArray)
                         const addArray = _.cloneDeep(filterArray.filter(
                             subItem => !this.aggregationsTableData.map(_ => _.id).includes(subItem.id)
                         ))
@@ -1373,13 +1391,16 @@
                         })
                         return !existData
                     }).map((item, index) => {
+                        console.log('item', item)
                         const existTableData = this.aggregationsTableData.filter(
                             subItem => item.actions.map(act => act.id).includes(subItem.id)
                         )
 
+                        console.log('existTableData', existTableData)
                         if (existTableData.length > 0) {
                             item.tag = existTableData.every(subItem => subItem.tag === 'unchanged') ? 'unchanged' : 'add'
                             const tempObj = existTableData.find(subItem => subItem.tag === 'add')
+                            console.log('tempObj', tempObj)
                             if (tempObj) {
                                 item.expired_at = tempObj.expired_at || 15552000
                                 item.expired_display = tempObj.expired_display || this.$t(`m.common['6个月']`)
@@ -1392,9 +1413,13 @@
                                     subItem => subItem.related_resource_types[0].condition
                                 )
                                 // 是否都选择了实例
-                                const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none')
+                                const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none') // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
+                                console.log('isAllHasInstance', isAllHasInstance)
                                 if (isAllHasInstance) {
+                                    console.log('conditions', conditions)
                                     const instances = conditions.map(subItem => subItem.map(v => v.instance))
+                                    console.log('instances', instances)
+                                    console.log('instances[0]', instances[0][0])
                                     let isAllEqual = true
                                     for (let i = 0; i < instances.length - 1; i++) {
                                         if (!_.isEqual(instances[i], instances[i + 1])) {
@@ -1402,9 +1427,9 @@
                                             break
                                         }
                                     }
-                                    console.log('instances: ')
-                                    console.log(instances)
-                                    console.log('isAllEqual: ' + isAllEqual)
+                                    // console.log('instances: ')
+                                    // console.log(instances)
+                                    console.log('isAllEqual: ', isAllEqual)
                                     if (isAllEqual) {
                                         const instanceData = instances[0][0][0]
                                         item.instances = instanceData.path.map(pathItem => {
@@ -1413,7 +1438,9 @@
                                                 name: pathItem[0].name
                                             }
                                         })
+                                        console.log('this.tableData: ', this.tableData)
                                     } else {
+                                        console.log('instances', instances)
                                         item.instances = []
                                     }
                                 } else {
@@ -1488,7 +1515,7 @@
                     }
                 })
             },
-
+            
             handleActionChecked (newVal, oldVal, val, actData, payload) {
                 const data = this.linearActionList.find(item => item.id === actData.id)
                 this.isShowActionError = false
@@ -1546,7 +1573,7 @@
                                             curData.expired_display = item.expired_display
                                             if (instances.length > 0) {
                                                 curData.related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')]
+                                                    subItem.condition = [new Condition({ instances }, '', 'add')] // 选择的时候flag为add 代表为新增数据  侧边栏数据disabled为false可选择
                                                 })
                                             }
                                             this.tableData.splice(i, 1, curData)
@@ -1663,7 +1690,12 @@
                 this.handleRelatedActions(actData, true)
                 item.count++
             },
-
+            
+            /**
+             *
+             * @param {Boolean} setChecked
+             * 此方法获取数据赋值给this.linearActionList
+             */
             handleActionLinearData (setChecked = false) {
                 const linearActions = []
                 const hasCheckedList = []
@@ -1785,6 +1817,8 @@
              * 获取系统下的权限列表
              *
              * @param {String} systemId 系统id
+             * 此方法获取数据，继承处理赋值给this.tableData
+             * this.linearActionList 在handleActionLinearData获取并处理
              */
             async fetchPolicies (systemId) {
                 const params = {
@@ -1798,6 +1832,7 @@
                     console.log(res.data, params)
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions
+                        // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
                             related_actions: relatedActions,
@@ -1856,6 +1891,7 @@
              * 获取系统对应的自定义操作
              *
              * @param {String} systemId 系统id
+             * 执行handleActionLinearData方法
              */
             async fetchActions (systemId) {
                 const params = {
@@ -2062,6 +2098,18 @@
             handleCancel () {
                 this.$router.push({
                     name: 'applyJoinUserGroup'
+                })
+            },
+
+            /**
+             * 去续期
+             */
+            handleBatchRenewal () {
+                this.$router.push({
+                    name: 'permRenewal',
+                    query: {
+                        tab: 'custom'
+                    }
                 })
             }
         }

@@ -10,30 +10,24 @@
             <p>{{ $t(`m.userGroup['用户组']`) }}【{{ name }}】{{ $t(`m.common['的详情']`) }}</p>
             <p class="group-id">ID: {{ groupId }}</p>
         </div>
-        <div
-            slot="content"
-            class="content-wrapper"
+        <div slot="content" class="content-wrapper" data-test-id="myPerm_sideslider_groupPermContentWrapper"
             v-bkloading="{ isLoading, opacity: 1 }">
-            <render-tab
-                v-if="!isLoading && showMember"
-                :active="'perm'"
-                ext-cls="set-tab-margin-bottom" />
+            <div class="iam-group-perm-sideslider-tab set-tab-margin-bottom" v-if="!isLoading && showMember">
+                <section class="tab-item active">{{$t(`m.perm['组权限']`)}}</section>
+            </div>
             <section>
-                <render-group-perm :id="groupId" mode="detail" @on-init="handleOnInit" />
+                <group-perm-new :id="groupId" mode="detail" />
             </section>
         </div>
     </bk-sideslider>
 </template>
 <script>
-    // import RenderPermItem from '../group-perm/render-perm'
-    // import DetailTable from '../group-perm/detail-table'
-    import RenderTab from '../group-perm/render-tab'
-    import renderGroupPerm from '../../group/detail/group-perm-new'
+    import GroupPermNew from '@/views/group/detail/group-perm-new.vue'
+
     export default {
         name: '',
         components: {
-            RenderTab,
-            renderGroupPerm
+            GroupPermNew
         },
         props: {
             show: {
@@ -59,14 +53,9 @@
         },
         data () {
             return {
-                groupTemplateList: [],
+                tabActive: 'perm',
                 isShowSideslider: false,
-                requestQueue: ['list']
-            }
-        },
-        computed: {
-            isLoading () {
-                return this.requestQueue.length > 0
+                isLoading: true
             }
         },
         watch: {
@@ -74,48 +63,16 @@
                 handler (value) {
                     this.isShowSideslider = !!value
                     if (this.isShowSideslider) {
-                        // this.fetchPermList()
+                        setTimeout(() => {
+                            this.isLoading = false
+                        }, 300)
                     }
                 },
                 immediate: true
             }
         },
         methods: {
-            async fetchPermList () {
-                try {
-                    const res = await this.$store.dispatch('perm/getGroupTemplates', {
-                        id: this.groupId
-                    })
-                    const data = res.data || []
-                    data.forEach(item => {
-                        item.displayName = `${item.name}（${item.system.name}）`
-                        item.expanded = false
-                    })
-                    this.groupTemplateList.splice(0, this.groupTemplateList.length, ...data)
-                } catch (e) {
-                    console.error(e)
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    })
-                } finally {
-                    this.requestQueue.shift()
-                }
-            },
-
-            handleOnInit (flag) {
-                if (!flag) {
-                    this.requestQueue.shift()
-                }
-                // this.isLoading = flag
-            },
-
             handleAnimationEnd () {
-                // this.groupTemplateList = []
-                this.requestQueue = ['list']
                 this.$emit('animation-end')
             }
         }
@@ -138,20 +95,27 @@
             padding: 30px;
             min-height: calc(100vh - 60px);
         }
-        .iam-perm-ext-cls {
-            margin-top: 1px;
-        }
         .set-tab-margin-bottom {
             margin-bottom: 10px;
         }
-        .iam-group-member-empty-wrapper,
-        .iam-my-perm-empty-wrapper {
-            img {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 120px;
+        .iam-group-perm-sideslider-tab {
+            display: flex;
+            justify-content: flex-start;
+            padding: 0 20px;
+            width: 100%;
+            height: 42px;
+            line-height: 42px;
+            background: #fff;
+            border-radius: 2px;
+            box-shadow: 0px 1px 2px 0px rgba(247, 220, 220, .05);
+            color: #63656e;
+            .tab-item {
+                font-size: 14px;
+                cursor: pointer;
+                &.active {
+                    color: #3a84ff;
+                    border-bottom: 2px solid #3a84ff;
+                }
             }
         }
     }

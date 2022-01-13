@@ -57,12 +57,13 @@ urlpatterns = [
                 url(r"^modeling/", include("backend.apps.model_builder.urls")),
                 url(r"^audits/", include("backend.audit.urls")),
                 url(r"^debug/", include("backend.debug.urls")),
+                url(r"^handover/", include("backend.apps.handover.urls")),
             ]
         ),
     ),
     # healthz
     url("", include("backend.healthz.urls")),
-    # promethus
+    # prometheus
     url("", include("django_prometheus.urls")),
 ]
 

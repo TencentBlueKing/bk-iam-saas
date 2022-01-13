@@ -40,6 +40,13 @@ class SubjectRelationType(ChoicesEnum, LowerStrEnum):
 
 
 # ---------------------------------------------------------------------------------------------- #
+# Resource Provider
+# ---------------------------------------------------------------------------------------------- #
+# fetch_instance_info 接口的批量限制
+FETCH_MAX_LIMIT = 1000
+
+
+# ---------------------------------------------------------------------------------------------- #
 # Group Constants
 # ---------------------------------------------------------------------------------------------- #
 class GroupMemberType(ChoicesEnum, LowerStrEnum):
@@ -146,6 +153,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_GLOBAL_SETTING = auto()
     MANAGE_ORGANIZATION = auto()
     MANAGE_COMMON_ACTION = auto()
+    VIEW_AUTHORIZED_SUBJECTS = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #

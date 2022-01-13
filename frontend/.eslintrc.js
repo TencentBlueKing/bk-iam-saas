@@ -523,9 +523,9 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/valid-v-text.md
         // v-text 指令必须合法
-        'vue/valid-v-text': 'error'
+        'vue/valid-v-text': 'error',
 
-        // 'codecc/comment-ratio': ['error', 10]
+        'codecc/comment-ratio': 'off'
     },
     overrides: [
         {

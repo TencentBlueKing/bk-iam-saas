@@ -45,7 +45,7 @@ export default class Instance {
         payload.path.forEach(item => {
             const isDefaultFetch = item.some(v => v.tag === 'add')
             item.forEach(subItem => {
-                if (instanceNotDisabled) {
+                if (instanceNotDisabled) { // 如果instanceNotDisabled被传入了true, 所有的数据disabled都会变成false
                     subItem.disabled = false
                 } else {
                     // subItem.disabled = isDefaultFetch ? false : flag === ''

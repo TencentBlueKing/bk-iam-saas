@@ -9,8 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from datetime import datetime
-from itertools import groupby
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.db import transaction
@@ -27,6 +26,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
+from backend.biz.utils import fill_resources_attribute
 from backend.common.error_codes import APIException, CodeException, error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
@@ -239,6 +239,24 @@ class GroupBiz:
                 subject, template_id, parse_obj_as(List[Policy], policy_list.policies)
             )
 
+    def update_template_due_to_renamed_resource(
+        self, group_id: int, template_id: int, policy_list: PolicyBeanList
+    ) -> List[PolicyBean]:
+        """
+        更新用户组被授权模板里的资源实例名称
+        返回的数据包括完全的模板授权信息，包括未被更新的授权策略
+        """
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+
+        updated_policies = policy_list.auto_update_resource_name()
+        # 只有存在更新，才修改DB数据
+        if len(updated_policies) > 0:
+            # 只修改DB数据，由于权限模板授权信息是完整一个json数据，所以只能使用policy_list.policies完整更新，不可使用updated_policies
+            self.template_svc.direct_update_db_template_auth(subject, template_id, policy_list.policies)
+
+        # 返回完整的模板授权信息，包括未被更新资源实例名称的策略
+        return policy_list.policies
+
     def _convert_to_subject_group_beans(self, relations: List[SubjectGroup]) -> List[SubjectGroupBean]:
         """
         转换类型
@@ -352,7 +370,7 @@ class GroupBiz:
             # 填充资源实例的属性
             for pr in policy_resources:
                 if len(pr.resources) != 0:
-                    self._fill_resources_attribute(pr.resources)
+                    fill_resources_attribute(pr.resources)
 
             results = self.engine_svc.query_subjects_by_policy_resources(
                 system_id, policy_resources, SubjectType.GROUP.value
@@ -370,36 +388,6 @@ class GroupBiz:
                 subject_id_set = subject_id_set & ids
 
         return [int(_id) for _id in subject_id_set] if subject_id_set else []
-
-    def _fill_resources_attribute(self, resources: List[Dict[str, Any]]):
-        """
-        用户组通过policy查询subjects的资源填充属性
-        """
-        need_fetch_resources = []
-        for resource in resources:
-            if resource["id"] != "*" and not resource["attribute"]:
-                need_fetch_resources.append(resource)
-
-        if not need_fetch_resources:
-            return
-
-        for key, parts in groupby(need_fetch_resources, key=lambda resource: (resource["system"], resource["type"])):
-            self._exec_fill_resources_attribute(key[0], key[1], list(parts))
-
-    def _exec_fill_resources_attribute(self, system_id, resource_type_id, resources):
-        # 查询属性
-        resource_ids = list({resource["id"] for resource in resources})
-        resource_info_dict = self.resource_biz.fetch_auth_attributes(
-            system_id, resource_type_id, resource_ids, raise_api_exception=False
-        )
-        # 填充属性
-        for resource in resources:
-            _id = resource["id"]
-            if not resource_info_dict.has(_id):
-                continue
-            attrs = resource_info_dict.get_attributes(_id, ignore_none_value=True)
-            # 填充
-            resource["attribute"] = attrs
 
     def _check_lock_before_grant(self, group: Group, templates: List[GroupTemplateGrantBean]):
         """
@@ -501,7 +489,7 @@ class GroupBiz:
             task = TaskDetail.create(TaskType.GROUP_AUTHORIZATION.value, [subject.dict(), uuid])
 
         # 执行授权流程
-        TaskFactory().delay(task.id)
+        TaskFactory()(task.id)
 
     def get_group_role_dict_by_ids(self, group_ids: List[int]) -> GroupRoleDict:
         """
