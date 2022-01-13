@@ -8,24 +8,31 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
 urlpatterns = [
     path(
-        "api/",
-        views.ApiViewSet.as_view({"get": "list"}),
-        name="mgmt.api",
-    ),
-    path(
-        "management_api/white_list/",
-        views.ManagementApiWhiteListViewSet.as_view({"get": "list", "post": "create"}),
-        name="mgmt.management_api.white_list",
-    ),
-    path(
-        "management_api/white_list/<int:id>/",
-        views.ManagementApiWhiteListViewSet.as_view({"delete": "destroy"}),
-        name="mgmt.management_api.delete_white_list",
+        "white_list/",
+        include(
+            [
+                path(
+                    "api/",
+                    views.ApiViewSet.as_view({"get": "list"}),
+                    name="mgmt.api",
+                ),
+                path(
+                    "management_api/",
+                    views.ManagementApiWhiteListViewSet.as_view({"get": "list", "post": "create"}),
+                    name="mgmt.management_api.white_list",
+                ),
+                path(
+                    "management_api/<int:id>/",
+                    views.ManagementApiWhiteListViewSet.as_view({"delete": "destroy"}),
+                    name="mgmt.management_api.delete_white_list",
+                ),
+            ]
+        ),
     ),
 ]

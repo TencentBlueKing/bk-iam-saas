@@ -13,7 +13,6 @@ from django.db import models
 from backend.common.models import BaseModel
 
 from .constants import AuthorizationAPIEnum
-from .managers import AuthAPIAllowListConfigManager
 
 
 class AuthAPIAllowListConfig(BaseModel):
@@ -24,8 +23,6 @@ class AuthAPIAllowListConfig(BaseModel):
     type = models.CharField("API类型", choices=AuthorizationAPIEnum.get_choices(), max_length=32)
     system_id = models.CharField("接入系统", max_length=32)
     object_id = models.CharField("资源类型或操作ID", max_length=32, help_text="*代表任意")
-
-    objects = AuthAPIAllowListConfigManager()
 
     class Meta:
         verbose_name = "授权API白名单配置"

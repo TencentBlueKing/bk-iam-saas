@@ -14,7 +14,6 @@ from backend.api.constants import ALLOW_ANY
 from backend.common.models import BaseModel
 
 from .constants import AdminAPIEnum
-from .managers import AdminAPIAllowListConfigManager
 
 
 class AdminAPIAllowListConfig(BaseModel):
@@ -22,8 +21,6 @@ class AdminAPIAllowListConfig(BaseModel):
 
     api = models.CharField("API", choices=AdminAPIEnum.get_choices(), max_length=32, help_text="*代表任意")
     app_code = models.CharField("API调用者", max_length=32)
-
-    objects = AdminAPIAllowListConfigManager()
 
     class Meta:
         verbose_name = "Admin API允许的应用白名单"

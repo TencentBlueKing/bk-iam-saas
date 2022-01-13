@@ -8,12 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import LowerStrEnum, auto, skip
+from aenum import auto, skip
 
-from backend.util.enum import ChoicesEnum
+from backend.api.constants import APIEnumMsgHandler
 
 
-class AdminAPIEnum(ChoicesEnum, LowerStrEnum):
+class AdminAPIEnum(APIEnumMsgHandler):
     """枚举每个Admin API"""
 
     # 用户组

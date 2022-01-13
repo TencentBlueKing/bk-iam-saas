@@ -11,6 +11,9 @@ specific language governing permissions and limitations under the License.
 from aenum import LowerStrEnum, auto, skip
 from django.utils.translation import gettext as _
 
+from backend.api.admin.constants import AdminAPIEnum
+from backend.api.authorization.constants import AuthorizationAPIEnum
+from backend.api.management.constants import ManagementAPIEnum
 from backend.util.enum import ChoicesEnum
 
 
@@ -24,3 +27,10 @@ class ApiType(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(
         ((MANAGEMENT_API, _("管理类API")), (ADMIN_API, _("超级管理类API")), (AUTHORIZATION_API, _("授权类API")))
     )
+
+
+ENUM_MAP = {
+    ApiType.MANAGEMENT_API.value: ManagementAPIEnum,
+    ApiType.ADMIN_API.value: AdminAPIEnum,
+    ApiType.AUTHORIZATION_API: AuthorizationAPIEnum,
+}

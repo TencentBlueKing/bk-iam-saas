@@ -29,6 +29,7 @@ class AuditObjectType(ChoicesEnum, LowerStrEnum):
     EVENT = auto()
     COMMONACTION = auto()
     ACTION = auto()
+    WHITE_LIST = auto()
 
 
 class AuditStatus(ChoicesEnum):
@@ -86,3 +87,6 @@ class AuditType(ChoicesEnum, StrEnum):
     APPROVAL_GROUP_UPDATE = auto()
 
     EVENT_ROLLBACK = auto()
+
+    MANAGEMENT_API_WHITE_LIST_CREATE = auto()
+    MANAGEMENT_API_WHITE_LIST_DELETE = auto()
