@@ -16,8 +16,6 @@ from typing import Optional, Type
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 
-from backend.common.local import local
-
 
 class CodeException(Exception):
     """A common error with code_name and description"""
@@ -52,7 +50,9 @@ class CodeException(Exception):
         return new_obj
 
     def as_json(self):
-        return {"result": False, "code": self.code, "message": self.message, "data": None}
+        # append the code_name
+        message = "%s (%s)" % (self.message, self.code_name)
+        return {"result": False, "code": self.code, "message": message, "data": None}
 
     def __str__(self):
         return "<ErrorCode %s:(%s)>" % (self.code, self.message)
@@ -73,24 +73,14 @@ class APIException(CodeException):
 class RemoteAPIException(CodeException):
     """Remote API Request Error"""
 
-    def format(self, message: Optional[str] = None, code: Optional[int] = None, **kwargs):
-        """Using a customized message for this ErrorCode
-
-        :param str message: if not given, default message will be used
-        :param str code: from remote service return, if not given, default iam define code will be used
-        """
-        # Note: the type of `err` is `RemoteAPIError`
-        err = super()._format_message(message, replace=True, **kwargs)
-        if code is not None:
-            code = err.code
-        err.message = f"code: {code}, message: {err.message}, request_id: {local.request_id}"
-        return err
+    def format(self, message: Optional[str] = None, replace: bool = False, **kwargs):
+        return super()._format_message(message, replace, **kwargs)
 
 
 def auto_configure_codenames(cls: Type):
     """Auto replace code_name fields"""
     for key, value in cls.__dict__.items():
-        if isinstance(value, APIException):
+        if isinstance(value, APIException) or isinstance(value, RemoteAPIException):
             # Set code_name attribute
             value.code_name = key
     return cls
@@ -147,10 +137,10 @@ class ErrorCodes:
     RESOURCE_PROVIDER_DATA_INVALID = APIException(1902250, _("接入系统自身接口返回数据不符合要求"))
 
     # [用户管理请求或同步等错误 19023xx]
-    USERMGR_REQUEST_ERROR = RemoteAPIException(1902301, _("用户管理请求返回码非0"))
+    # USERMGR_REQUEST_ERROR = RemoteAPIException(1902301, _("用户管理请求返回码非0"))
 
     # [ITSM请求或处理等错误 19025xx]
-    ITSM_REQUEST_ERROR = RemoteAPIException(1902501, _("ITSM请求返回码非0"))
+    # ITSM_REQUEST_ERROR = RemoteAPIException(1902501, _("ITSM请求返回码非0"))
     ITSM_PROCESSOR_NOT_SUPPORT = RemoteAPIException(1902502, _("ITSM流程里存在IAM不支持的流程处理者"))
 
 

@@ -1,2 +1,3 @@
 libssl-dev
 default-libmysqlclient-dev
+build-essential

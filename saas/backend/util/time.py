@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import datetime
+import time
 
 from django.utils import timezone
 
@@ -39,3 +40,11 @@ def utc_to_local(utc_time):
 def timestamp_to_local(ts):
     t = datetime.datetime.fromtimestamp(ts)
     return utc_to_local(t)
+
+
+def format_localtime(fmt="%Y%m%d%H%M%S"):
+    """
+    转换当前时间为指定格式
+    """
+    t = time.strftime(fmt, time.localtime())
+    return t
