@@ -43,7 +43,7 @@
                     </template>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="420">
+            <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="360">
                 <template slot-scope="{ row }">
                     <div class="condition-table-cell" v-if="!!row.related_environments.length">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
@@ -436,18 +436,7 @@
             handleResourceEffectTimeSumit () {
                 const environments = this.$refs.sidesliderRef.handleGetValue()
                 console.log(this.curIndex, this.curGroupIndex, environments)
-
-                // const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                // resItem.environments = environments
-                // console.log(resItem)
-                // console.log(environments)
-                // console.log(this.tableList)
-
                 window.changeAlert = false
-                // this.resourceInstanceEffectTimeTitle = ''
-                // this.isShowResourceInstanceEffectTime = false
-                // this.curIndex = -1
-                // this.curGroupIndex = -1
             },
 
             /**

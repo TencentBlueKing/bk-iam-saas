@@ -47,7 +47,7 @@
                         </template>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t(`m.common['生效条件']`)" width="580">
+                <bk-table-column :label="$t(`m.common['生效条件']`)" width="500">
                     <template slot-scope="{ row, $index }">
                         <div class="condition-table-cell">
                             <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
