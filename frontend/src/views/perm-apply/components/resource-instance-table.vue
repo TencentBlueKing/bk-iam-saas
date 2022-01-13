@@ -8,7 +8,7 @@
             :row-class-name="handleRowClass"
             :cell-class-name="getCellClass"
             :empty-text="$t(`m.verify['请选择操作']`)">
-            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="250">
+            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="{ row }">
                     <div v-if="!!row.isAggregate" style="padding: 10px 0;">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
@@ -22,32 +22,34 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
+            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="420">
                 <template slot-scope="{ row, $index }">
                     <!-- isAggregate代表批量编辑状态 -->
                     <div class="relation-content-wrapper" v-if="!!row.isAggregate">
                         <label class="resource-type-name">{{ row.aggregateResourceType.name }}</label>
-                        <render-condition
-                            :ref="`condition_${$index}_aggregateRef`"
-                            :value="row.value"
-                            :is-empty="row.empty"
-                            :can-view="false"
-                            :can-paste="row.canPaste"
-                            :is-error="row.isError"
-                            @on-mouseover="handlerAggregateConditionMouseover(row)"
-                            @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                            @on-copy="handlerAggregateOnCopy(row, $index)"
-                            @on-paste="handlerAggregateOnPaste(row)"
-                            @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                            @on-click="showAggregateResourceInstance(row, $index)" />
+                        <div class="group-container">
+                            <render-condition
+                                :ref="`condition_${$index}_aggregateRef`"
+                                :value="row.value"
+                                :is-empty="row.empty"
+                                :can-view="false"
+                                :can-paste="row.canPaste"
+                                :is-error="row.isError"
+                                @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                @on-copy="handlerAggregateOnCopy(row, $index)"
+                                @on-paste="handlerAggregateOnPaste(row)"
+                                @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                @on-click="showAggregateResourceInstance(row, $index)" />
+                        </div>
                     </div>
-                    <div class="relation-content-wrapper" :class="tableList.length > 1 ? 'pr40' : ''" v-else>
+                    <div class="relation-content-wrapper" :class="tableList.length >= 1 ? 'pr40' : ''" v-else>
                         <template v-if="!row.isEmpty">
                             <div v-for="(_, groIndex) in row.resource_groups" :key="_.id" class="group-container">
                                 <div class="relation-content-item" v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
                                     <div class="content-name">
                                         {{ content.name }}
-                                        <template v-if="row.isShowRelatedText">
+                                        <template v-if="row.isShowRelatedText && _.id">
                                             <div style="display: inline-block; color: #979ba5;">
                                                 ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
                                             </div>
@@ -58,7 +60,7 @@
                                             :ref="`condition_${$index}_${contentIndex}_ref`"
                                             :value="content.value"
                                             :is-empty="content.empty"
-                                            :can-view="row.canView"
+                                            :can-view="row.canView && !!_.id"
                                             :params="curCopyParams"
                                             :can-paste="content.canPaste"
                                             :is-error="content.isLimitExceeded || content.isError"
@@ -71,16 +73,47 @@
                                             @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
                                     </div>
                                     <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
-                                    <Icon v-if="tableList.length > 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
-                                    <Icon v-if="tableList.length > 1" :class="row.resource_groups.length <= 1 ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
+                                    <Icon v-if="row.resource_groups.length >= 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
+                                    <Icon v-if="row.resource_groups.length >= 1" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                                         @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                 </div>
+                                <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1" class="group-line"
+                                    :class="_.related_resource_types.length > 1 ? 'group-line-more' : ''"></div>
                             </div>
                         </template>
                         <template v-else>
-                            <div style="padding-bottom: 17px;">{{ $t(`m.common['无需关联实例']`) }}</div>
+                            <div style="margin-bottom: 15px;">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="440">
+                <template slot-scope="{ row, $index }">
+                    <template v-if="!!row.isAggregate">
+                        <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
+                    </template>
+                    <template v-else>
+                        <template v-if="!!row.resource_groups.length">
+                            <div class="condition-table-cell" v-if="!!row.related_environments.length"
+                                :class="row.resource_groups.length === 1 ? 'empty-text' : ''">
+                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                                    :class="row.resource_groups.length > 1 ? 'environ-group-more' : 'environ-group-one'">
+                                    <effect-time
+                                        :value="_.environments"
+                                        :is-empty="!_.environments.length"
+                                        @on-click="showTimeSlider(row, $index, groIndex)">
+                                    </effect-time>
+
+                                    <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1"
+                                        class="condition-line" :class="_.related_resource_types.length > 1 ? 'condition-line-more' : ''"></div>
+                                </div>
+                            </div>
+                            <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
+                        </template>
+                        <template v-else>
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
+                        </template>
+                    </template>
                 </template>
             </bk-table-column>
             <bk-table-column :resizable="false" prop="description" :label="$t(`m.common['申请期限']`)" min-width="150">
@@ -188,6 +221,24 @@
             </div>
         </bk-sideslider>
 
+        <bk-sideslider :is-show="isShowResourceInstanceEffectTime"
+            :title="resourceInstanceEffectTimeTitle"
+            :width="720"
+            quick-close
+            @update:isShow="handleResourceEffectTimeCancel"
+            :ext-cls="'relate-instance-sideslider'">
+            <div slot="content" class="sideslider-content">
+                <sideslider-effect-time
+                    ref="sidesliderRef"
+                    :data="environmentsData"
+                ></sideslider-effect-time>
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button style="margin-left: 10px;" @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            </div>
+        </bk-sideslider>
+
         <preview-resource-dialog
             :show="isShowPreviewDialog"
             :title="previewDialogTitle"
@@ -212,6 +263,8 @@
     import { PERMANENT_TIMESTAMP } from '@/common/constants'
     import RenderResource from './render-resource'
     import RenderCondition from './render-condition'
+    import EffectTime from './effect-time'
+    import SidesliderEffectTime from './sideslider-effect-time'
     import PreviewResourceDialog from './preview-resource-dialog'
 
     // 单次申请的最大实例数
@@ -226,7 +279,9 @@
             RenderAggregateSideslider,
             RenderResource,
             RenderCondition,
-            PreviewResourceDialog
+            PreviewResourceDialog,
+            EffectTime,
+            SidesliderEffectTime
         },
         props: {
             list: {
@@ -283,7 +338,8 @@
                 curAggregateResourceType: {},
                 curCopyParams: {},
                 sliderLoading: false,
-                needEmitFlag: false
+                needEmitFlag: false,
+                isShowResourceInstanceEffectTime: false
             }
         },
         computed: {
@@ -313,11 +369,8 @@
                 if (!this.originalList.some(item => item.id === curId)) {
                     return []
                 }
-                console.log('this.originalList', this.originalList)
-                console.log('this.curGroupIndex', this.curGroupIndex)
                 const curResTypeData = this.originalList.find(item => item.id === curId)
                     .resource_groups[this.curGroupIndex]
-                console.log('curResTypeData', curResTypeData)
                 if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
                     return []
                 }
@@ -326,6 +379,21 @@
                     return []
                 }
                 return _.cloneDeep(curData.condition)
+            },
+            environmentsData () {
+                console.log(this.curIndex, this.curGroupIndex)
+                if (this.curIndex === -1 || this.curGroupIndex === -1) {
+                    return []
+                }
+                const environmentsData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .environments
+
+                console.log(2222, environmentsData)
+                if (!environmentsData) {
+                    return []
+                }
+                console.log(1111, _.cloneDeep(environmentsData))
+                return _.cloneDeep(environmentsData)
             },
             curDisabled () {
                 if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
@@ -361,9 +429,9 @@
         watch: {
             list: {
                 handler (value) {
-                    console.log('value', value)
                     this.tableList = value
                     console.log('this.tableList', this.tableList)
+                    this.originalList = _.cloneDeep(this.tableList)
                 },
                 immediate: true
             },
@@ -564,7 +632,7 @@
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1) {
+                if (columnIndex === 1 || columnIndex === 2) {
                     return 'iam-perm-table-cell-cls'
                 }
                 return ''
@@ -650,10 +718,34 @@
                 if (curData.expired_at !== PERMANENT_TIMESTAMP) {
                     curData.expired_at = curData.expired_at + this.user.timestamp
                 }
+
+                curData.resource_groups = curData.resource_groups.filter(groupItem => {
+                    groupItem.related_resource_types = groupItem.related_resource_types.filter(typeItem => {
+                        typeItem.condition.filter(e => {
+                            if ((e.instance && e.instance.length > 0) || (e.attribute && e.attribute.length > 0)) {
+                                e.instances = e.instance || []
+                                e.attributes = e.attribute || []
+                                delete e.instance
+                                delete e.attribute
+                                return true
+                            }
+                            return false
+                        })
+                        console.log('typeItem.condition', typeItem.condition, !(typeItem.condition.length === 1 && typeItem.condition[0] === 'none'))
+                        return !(typeItem.condition.length === 1 && typeItem.condition[0] === 'none')
+                    })
+                    console.log('groupItem.related_resource_types', groupItem.related_resource_types)
+                    // eslint-disable-next-line max-len
+                    return !(groupItem.related_resource_types[0] && groupItem.related_resource_types[0].condition.length === 1
+                        && groupItem.related_resource_types[0].condition[0] === 'none')
+                })
+
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
-                        && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
+                        // && item.resource_groups[this.curGroupIndex]
+                        // && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty)
+                        && item.resource_groups.map(item => !item.related_resource_types.every(sub => sub.empty))[0]
                 }))
 
                 if (relatedList.length > 0) {
@@ -662,14 +754,29 @@
                             item.expired_at = item.expired_at + this.user.timestamp
                         }
                         delete item.policy_id
-                        item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
-                            resItem.condition.forEach(conditionItem => {
-                                conditionItem.instances = conditionItem.instance || []
-                                conditionItem.attributes = conditionItem.attribute || []
-                                delete conditionItem.instance
-                                delete conditionItem.attribute
+                        item.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(resItem => {
+                                resItem.condition.filter(conditionItem => {
+                                    // eslint-disable-next-line max-len
+                                    if ((conditionItem.instance && conditionItem.instance.length > 0) || (conditionItem.attribute && conditionItem.attribute.length > 0)) {
+                                        conditionItem.instances = conditionItem.instance || []
+                                        conditionItem.attributes = conditionItem.attribute || []
+                                        delete conditionItem.instance
+                                        delete conditionItem.attribute
+                                        return true
+                                    }
+                                    return false
+                                })
                             })
                         })
+                        // item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
+                        //     resItem.condition.forEach(conditionItem => {
+                        //         conditionItem.instances = conditionItem.instance || []
+                        //         conditionItem.attributes = conditionItem.attribute || []
+                        //         delete conditionItem.instance
+                        //         delete conditionItem.attribute
+                        //     })
+                        // })
                     })
                 }
                 try {
@@ -706,6 +813,10 @@
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id)
                     if (curIndex > -1) {
                         const curData = this.tableList[curIndex]
+                        // 记录原来数据的生效条件
+                        if (curData.related_environments && !!curData.related_environments.length) {
+                            item.related_environments = curData.related_environments
+                        }
                         this.needEmitFlag = true
                         const inOriginalList = !!this.originalList.filter(
                             original => String(original.id) === String(item.id)
@@ -726,6 +837,8 @@
                 if (isEmpty) {
                     return
                 }
+
+                console.log('data', data)
 
                 const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
@@ -1027,11 +1140,13 @@
                             if (!item.isAggregate) {
                                 const curPasteData = payload.data.find(_ => _.id === item.id)
                                 if (curPasteData) {
-                                    item.related_resource_types.forEach(resItem => {
-                                        if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
-                                            resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'))
-                                            resItem.isError = false
-                                        }
+                                    item.resource_groups.forEach(groupItem => {
+                                        groupItem.related_resource_types.forEach(resItem => {
+                                            if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                                resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'))
+                                                resItem.isError = false
+                                            }
+                                        })
                                     })
                                 }
                             } else {
@@ -1111,6 +1226,7 @@
                 this.previewResourceParams = {}
                 this.params = {}
                 this.resourceInstanceSidesliderTitle = ''
+                this.resourceInstanceEffectTimeTitle = ''
             },
 
             handleResourceCancel () {
@@ -1182,6 +1298,7 @@
                 }
                 const actionList = []
                 const aggregations = []
+                console.log('this.tableList', this.tableList)
                 this.tableList.forEach(item => {
                     let tempExpiredAt = ''
                     if (item.expired_at === '' && item.expired_display) {
@@ -1190,10 +1307,11 @@
 
                     if (!item.isAggregate) {
                         const { type, id, name, environment, description, policy_id, isNew, isChanged } = item
-                        const relatedResourceTypes = []
+                        
                         const groupResourceTypes = []
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
+                                const relatedResourceTypes = []
                                 if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         let newResourceCount = 0
@@ -1252,6 +1370,7 @@
                                     })
                                 }
                                 groupResourceTypes.push({
+                                    environments: groupItem.environments,
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
                                 })
@@ -1310,22 +1429,71 @@
             },
 
             handlerAddCondition (data, index, resIndex) {
-                // this.tableList
-                console.log('111', data, index, resIndex)
+                console.log('data', data, resIndex)
                 const dataClone = _.cloneDeep(data)
-                dataClone.related_resource_types[resIndex].condition = ['none']
-                dataClone.related_resource_types[resIndex].conditionBackup = ['none']
+                // dataClone.related_resource_types[resIndex].condition = ['none']
+                // dataClone.related_resource_types[resIndex].conditionBackup = ['none']
+                dataClone.related_resource_types = dataClone.related_resource_types.map(e => {
+                    e.condition = ['none']
+                    e.conditionBackup = ['none']
+                    return e
+                })
                 console.log('dataClone', dataClone)
-                const relatedResourceTypes = _.cloneDeep({ id: '', related_resource_types: dataClone.related_resource_types })
+                const relatedResourceTypes = _.cloneDeep(
+                    {
+                        id: '',
+                        related_resource_types: dataClone.related_resource_types
+                    }
+                )
+                if (dataClone.environments) {
+                    relatedResourceTypes.environments = []
+                }
                 this.tableList[index].resource_groups.push(relatedResourceTypes)
                 console.log('this.tableList', this.tableList)
                 this.originalList = _.cloneDeep(this.tableList)
-                // console.log('add condition', data, index, groupIndex)
+                console.log('this.originalList', this.originalList)
             },
 
             handlerReduceCondition (data, index, resIndex, groupIndex) {
-                console.log('index, resIndex', index, resIndex)
+                if (data.id || this.tableList[index].resource_groups.length === 1) return
                 this.tableList[index].resource_groups.splice(groupIndex, 1)
+            },
+
+            // 生效条件侧边栏
+            showTimeSlider (data, index, groupIndex) {
+                this.curIndex = index
+                this.curGroupIndex = groupIndex
+                this.isShowResourceInstanceEffectTime = true
+                this.resourceInstanceEffectTimeTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+            },
+
+            // 生效条件保存
+            handleResourceEffectTimeSumit () {
+                const environments = this.$refs.sidesliderRef.handleGetValue()
+                console.log(this.curIndex, this.curGroupIndex)
+
+                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                resItem.environments = environments
+                console.log(resItem)
+                console.log(environments)
+                console.log(this.tableList)
+
+                window.changeAlert = false
+                this.resourceInstanceEffectTimeTitle = ''
+                this.isShowResourceInstanceEffectTime = false
+                this.curIndex = -1
+                this.curGroupIndex = -1
+            },
+
+            handleResourceEffectTimeCancel () {
+                let cancelHandler = Promise.resolve()
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm()
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceEffectTime = false
+                    this.resetDataAfterClose()
+                }, _ => _)
             }
         }
     }

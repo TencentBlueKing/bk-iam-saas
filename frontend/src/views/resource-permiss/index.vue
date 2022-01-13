@@ -74,18 +74,20 @@
                 <bk-form form-type="inline" class="pb10">
                     <iam-form-item class="pb20 form-item-resource" :label="$t(`m.common['资源实例']`)">
                         <div class="resource-container">
-                            <div class="relation-content-item" v-for="(content, contentIndex) in
-                                resourceTypeData.related_resource_types" :key="contentIndex">
-                                <div class="content">
-                                    <render-condition
-                                        :ref="`condition_${$index}_${contentIndex}_ref`"
-                                        :value="content.value"
-                                        :is-empty="content.empty"
-                                        :params="curCopyParams"
-                                        :is-error="content.isLimitExceeded || content.isError"
-                                        @on-click="showResourceInstance(resourceTypeData, content, contentIndex)" />
+                            <div v-for="(_, _index) in resourceTypeData.resource_groups" :key="_.id">
+                                <div class="relation-content-item" v-for="(content, contentIndex) in
+                                    _.related_resource_types" :key="contentIndex">
+                                    <div class="content">
+                                        <render-condition
+                                            :ref="`condition_${$index}_${contentIndex}_ref`"
+                                            :value="content.value"
+                                            :is-empty="content.empty"
+                                            :params="curCopyParams"
+                                            :is-error="content.isLimitExceeded || content.isError"
+                                            @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
+                                    </div>
+                                    <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
                                 </div>
-                                <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
                             </div>
                         </div>
                     </iam-form-item>
@@ -222,6 +224,7 @@
                 resourceTypeData: { isEmpty: true },
                 isShowResourceInstanceSideslider: false,
                 curResIndex: -1,
+                groupIndex: -1,
                 params: {},
                 resourceInstances: [],
                 searchTypeList: [{ name: '实例权限', value: 'resource_instance' }, { name: '操作权限', value: 'operate' }],
@@ -235,10 +238,11 @@
         },
         computed: {
             condition () {
-                if (this.curResIndex === -1) {
+                if (this.curResIndex === -1 || this.groupIndex === -1) {
                     return []
                 }
-                const curData = this.resourceTypeData.related_resource_types[this.curResIndex]
+                const curData = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex]
                 if (!curData) {
                     return []
                 }
@@ -246,12 +250,13 @@
                 return _.cloneDeep(curData.condition)
             },
             curSelectionMode () {
-                if (this.curResIndex === -1) {
+                if (this.curResIndex === -1 || this.groupIndex === -1) {
                     return 'all'
                 }
-                console.log('this.curResIndex', this.curResIndex)
-                console.log('this.resourceTypeData.related_resource_types[this.curResIndex]', this.resourceTypeData.related_resource_types[this.curResIndex])
-                const curData = this.resourceTypeData.related_resource_types[this.curResIndex]
+                console.log('this.resourceTypeData.related_resource_types[this.curResIndex]', this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex])
+                const curData = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex]
                 return curData.selectionMode
             },
             originalCondition () {
@@ -359,7 +364,8 @@
                 }
                 console.log('resourceTypeData', this.resourceTypeData)
                 if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
-                    && this.resourceTypeData.related_resource_types.some(e => e.empty)) {
+                    && this.resourceTypeData.resource_groups[this.groupIndex]
+                        .related_resource_types.some(e => e.empty)) {
                     this.resourceTypeError = true
                     return
                 }
@@ -439,7 +445,6 @@
 
             // 求值
             recursionFunc (list) {
-                console.log('list', list)
                 list.forEach(data => {
                     if (data.actions && data.actions.length) {
                         data.actions.forEach(e => {
@@ -458,14 +463,15 @@
                 })
                 this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index)
                 this.resourceActionData.forEach(item => {
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : []
+                    }
                     this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'))
                 })
-                console.log('this.resourceActionData', this.resourceActionData)
-                console.log('this.processesList', this.processesList)
             },
 
             // 显示资源实例
-            showResourceInstance (data, resItem, resIndex) {
+            showResourceInstance (data, resItem, resIndex, groupIndex) {
                 this.params = {
                     system_id: this.systemId,
                     action_id: data.id,
@@ -474,9 +480,10 @@
                 }
 
                 this.curResIndex = resIndex
+                this.groupIndex = groupIndex
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
                 window.changeAlert = 'iamSidesider'
-                console.log(this.params)
+                console.log('1111', this.params)
                 this.isShowResourceInstanceSideslider = true
             },
 
@@ -493,6 +500,7 @@
 
             resetDataAfterClose () {
                 this.curResIndex = -1
+                this.groupIndex = -1
                 this.params = {}
                 this.resourceInstanceSidesliderTitle = ''
             },
@@ -504,8 +512,8 @@
                 if (isEmpty) {
                     return
                 }
-                console.log('this.resourceTypeData', this.resourceTypeData)
-                const resItem = this.resourceTypeData.related_resource_types[this.curResIndex]
+                const resItem = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex]
                 const isConditionEmpty = data.length === 1 && data[0] === 'none'
                 if (isConditionEmpty) {
                     resItem.condition = ['none']

@@ -69,6 +69,21 @@
                     font-size: 14px;
                 }
             } */
+            .iam-perm-table-cell-cls {
+                .cell {
+                    height: 100%;
+                    .condition-table-cell{
+                        height: 100%;
+                        flex-flow: column;
+                        display: flex;
+                        justify-content: space-evenly;
+                        padding-top: 20px;
+                    }
+                    .empty-text {
+                        padding-top: 0px;
+                    }
+                }
+            }
         }
         .relation-content-wrapper,
         .conditions-wrapper {
@@ -78,6 +93,21 @@
             .resource-type-name {
                 display: block;
                 margin-bottom: 9px;
+            }
+        }
+
+        .relation-content-wrapper{
+            position: relative;
+            .group-line {
+                height: 1px;
+                background: #dfe0e5;
+                width: calc(100% + 70px);
+                position: absolute;
+                top: 90%;
+                left: -15px;
+            }
+            .group-line-more{
+                top: 95%;
             }
         }
 
@@ -138,7 +168,7 @@
                 font-size: 16px;
                 color: #979ba5;
                 position: absolute;
-                top: 35px;
+                top: 45%;
                 right: -23px;
                 cursor: pointer;
                 &.disabled {
@@ -149,6 +179,31 @@
 
             .reduce-icon {
                 right: -47px;
+            }
+        }
+
+        .environ-group-one{
+            position: relative;
+            padding-top: 5px;
+        }
+
+        .environ-group-more{
+            position: relative;
+            display: flex;
+            flex: 1;
+            flex-flow: column;
+            justify-content: center;
+            padding-top: 5px;
+            .condition-line{
+                height: 1px;
+                background: #dfe0e5;
+                width: calc(100% + 30px);
+                position: absolute;
+                top: calc(87% + 1px);
+                left: -15px;
+            }
+            .condition-line-more{
+                top: calc(93% + 2px);
             }
         }
     }

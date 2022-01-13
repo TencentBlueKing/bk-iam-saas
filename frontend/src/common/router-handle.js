@@ -91,7 +91,8 @@ export const getRouterDiff = (payload) => {
             'systemAccessAccess',
             'systemAccessRegistry',
             'systemAccessOptimize',
-            'systemAccessComplete'
+            'systemAccessComplete',
+            'resourcePermiss'
         ]
     }
     if (payload === 'rating_manager') {
@@ -117,7 +118,8 @@ export const getRouterDiff = (payload) => {
             'systemAccessAccess',
             'systemAccessRegistry',
             'systemAccessOptimize',
-            'systemAccessComplete'
+            'systemAccessComplete',
+            'resourcePermiss'
         ]
     }
     // payload其它取值默认返回全部菜单
