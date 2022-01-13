@@ -257,3 +257,10 @@
         }
     }
 }
+
+.help-icon {
+    position: absolute;
+    right: -45px;
+    top: -10px;
+    font-size: 16px;
+}
