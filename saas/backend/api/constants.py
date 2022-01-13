@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import List
+
 from aenum import LowerStrEnum, auto, skip
 
 from backend.util.enum import ChoicesEnum
@@ -34,3 +36,13 @@ class BKNonEntityUser(ChoicesEnum, LowerStrEnum):
             (BK__ANONYMOUS_USER, "匿名用户，即空用户"),
         )
     )
+
+
+class APIEnumMsgHandler(ChoicesEnum, LowerStrEnum):
+    """获取管理类API、超级管理类API、授权类API 的枚举信息"""
+
+    @classmethod
+    def list_api_msg(cls) -> List:
+        enum_msg = dict(cls.get_choices())
+        api_msg = [{"api": api, "name": enum_msg[api]} for api in enum_msg]
+        return api_msg

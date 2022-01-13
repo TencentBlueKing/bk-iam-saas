@@ -8,25 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import auto, skip
+from .white_list import AdminApiWhiteListViewSet, ApiViewSet
 
-from backend.api.constants import APIEnumMsgHandler
-
-
-class AdminAPIEnum(APIEnumMsgHandler):
-    """枚举每个Admin API"""
-
-    # 用户组
-    GROUP_LIST = auto()
-    # 用户组成员
-    GROUP_MEMBER_LIST = auto()
-    # Subject
-    SUBJECT_JOINED_GROUP_LIST = auto()
-
-    _choices_labels = skip(
-        (
-            (GROUP_LIST, "获取用户组列表"),
-            (GROUP_MEMBER_LIST, "获取用户组成员列表"),
-            (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
-        )
-    )
+__all__ = [
+    "ApiViewSet",
+    "AdminApiWhiteListViewSet",
+]
