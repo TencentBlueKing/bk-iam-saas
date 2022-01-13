@@ -1,6 +1,8 @@
 <template>
     <div class="effect-wrap">
-        <div class="effect-item" v-for="(environmentsItem, index) in environmentsData" :key="index">
+        <div class="effect-item"
+            :class="timeRangeEmpty ? 'effect-item-empty' : ''"
+            v-for="(environmentsItem, index) in environmentsData" :key="index">
             <bk-select
                 v-model="environmentsItem.type"
                 :clearable="false"
@@ -39,10 +41,15 @@
                     >
                     </bk-option>
                 </bk-select>
-                <bk-time-picker
-                    v-model="environmentsItem.initTimeRange"
-                    :placeholder="'选择时间范围'"
-                    :type="'timerange'"></bk-time-picker>
+                <div class="initTimeWarp">
+                    <bk-time-picker
+                        v-model="environmentsItem.initTimeRange"
+                        :placeholder="'选择时间范围'"
+                        :type="'timerange'"></bk-time-picker>
+                    <p class="error-tips pt5" v-if="timeRangeEmpty &&
+                        (!environmentsItem.initTimeRange[0] || !environmentsItem.initTimeRange[1])">
+                        请选择时间范围</p>
+                </div>
             </div>
         </div>
     </div>
@@ -72,7 +79,8 @@
                 ],
                 effectWeekTimeZone: GLOBAL_TIME_ZONE,
                 date: [],
-                environmentsData: []
+                environmentsData: [],
+                timeRangeEmpty: false
             }
         },
         watch: {
@@ -116,8 +124,10 @@
         },
         methods: {
             handleGetValue () {
-                console.log(this.date)
-                console.log('this.environmentsData', this.environmentsData)
+                if (this.environmentsData.some(e => !e.initTimeRange[0] || !e.initTimeRange[1])) {
+                    this.timeRangeEmpty = true
+                    return false
+                }
                 const environments = _.cloneDeep(this.environmentsData).map(item => {
                     item.condition = []
                     if (!!item.date.length && item.date.length !== 7) {
@@ -147,12 +157,17 @@
 <style lang="postcss">
     .effect-wrap{
         padding: 20px 30px 0 30px;
-        
     }
     .effect-item{
         padding: 10px;
         margin-bottom: 20px;
         border: 1px solid #dcdee5;
+    }
+    .effect-item-empty{
+        padding: 10px 10px 30px 10px !important;
+    }
+    .initTimeWarp{
+        position: relative;
     }
     .effect-select-daily{
         width: 200px;

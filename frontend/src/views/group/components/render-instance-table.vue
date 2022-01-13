@@ -132,7 +132,7 @@
                     </template>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="420">
+            <bk-table-column :resizable="false" :label="$t(`m.common['生效条件']`)" min-width="360">
                 <template slot-scope="{ row, $index }">
                     <template v-if="!!row.isAggregate">
                         <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
@@ -1708,6 +1708,7 @@
             // 生效条件保存
             handleResourceEffectTimeSumit () {
                 const environments = this.$refs.sidesliderRef.handleGetValue()
+                if (!environments) return
                 console.log(this.curIndex, this.curGroupIndex)
 
                 const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
