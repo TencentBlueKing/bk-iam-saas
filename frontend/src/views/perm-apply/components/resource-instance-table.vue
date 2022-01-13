@@ -73,8 +73,8 @@
                                             @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
                                     </div>
                                     <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
-                                    <Icon v-if="row.resource_groups.length >= 1" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
-                                    <Icon v-if="row.resource_groups.length >= 1" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
+                                    <Icon v-if="_.related_resource_types.length > 1 || !!row.related_environments.length" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
+                                    <Icon v-if="_.related_resource_types.length > 1 || !!row.related_environments.length" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                                         @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
                                 </div>
                                 <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1" class="group-line"
@@ -127,9 +127,11 @@
                     <!-- tag update 需要比较过期时间，过期时，显示续期，点击续期然后操作下拉框；不过期时，下拉框禁用 -->
                     <template v-if="row.isShowRenewal">
                         <!-- 11 -->
-                        <bk-button theme="primary" class="renewal-action" outline @click="handleOpenRenewal(row, $index)">
-                            {{ $t(`m.renewal['续期']`) }}
-                        </bk-button>
+                        <div class="renewal-action-warp">
+                            <bk-button theme="primary" class="renewal-action" outline @click="handleOpenRenewal(row, $index)">
+                                {{ $t(`m.renewal['续期']`) }}
+                            </bk-button>
+                        </div>
                     </template>
                     <template v-else>
                         <!-- 22 -->
