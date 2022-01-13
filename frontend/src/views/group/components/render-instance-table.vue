@@ -151,7 +151,7 @@
                                         </effect-condition-detail>
                                     </div>
                                 </div>
-                                <div v-else class="condition-table-cell-detail">{{ $t(`m.common['无生效条件']`) }}</div>
+                                <div v-else class="condition-table-cell-detail pl20">{{ $t(`m.common['无生效条件']`) }}</div>
                             </template>
                             <template v-else>
                                 <div class="condition-table-cell" v-if="!!row.related_environments.length"
@@ -495,8 +495,6 @@
             list: {
                 handler (value) {
                     this.tableList.splice(0, this.tableList.length, ...value)
-
-                    console.log('11111', this.tableList)
                 },
                 immediate: true
             },
