@@ -76,6 +76,7 @@
                                     <Icon v-if="_.related_resource_types.length > 1 || !!row.related_environments.length" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
                                     <Icon v-if="_.related_resource_types.length > 1 || !!row.related_environments.length" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                                         @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />
+                                    <Icon v-if="_.related_resource_types.length > 1" type="help-fill-2" class="help-icon" v-bk-tooltips="tipsContent" />
                                 </div>
                                 <div v-if="row.resource_groups.length > 1 && groIndex !== row.resource_groups.length - 1" class="group-line"
                                     :class="_.related_resource_types.length > 1 ? 'group-line-more' : ''"></div>
@@ -341,7 +342,11 @@
                 curCopyParams: {},
                 sliderLoading: false,
                 needEmitFlag: false,
-                isShowResourceInstanceEffectTime: false
+                isShowResourceInstanceEffectTime: false,
+                tipsContent: {
+                    content: '提示信息',
+                    html: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>'
+                }
             }
         },
         computed: {

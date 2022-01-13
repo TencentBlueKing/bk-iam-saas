@@ -57,7 +57,7 @@
                             </div>
                         </template>
                         <template v-else>
-                            <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
+                            <div class="pl20 pt20">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                         <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
                             <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
@@ -171,7 +171,7 @@
                             </template>
                         </template>
                         <template v-else>
-                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
+                            <div class="condition-table-cell pl20">{{ $t(`m.common['无生效条件']`) }}</div>
                         </template>
                     </template>
                 </template>
