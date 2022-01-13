@@ -32,16 +32,6 @@ urlpatterns = [
                     views.ManagementApiWhiteListViewSet.as_view({"delete": "destroy"}),
                     name="mgmt.management_api.delete_white_list",
                 ),
-                path(
-                    "admin_api/",
-                    views.AdminApiWhiteListViewSet.as_view({"get": "list", "post": "create"}),
-                    name="mgmt.admin_api.white_list",
-                ),
-                path(
-                    "admin_api/<int:id>/",
-                    views.AdminApiWhiteListViewSet.as_view({"get": "destroy"}),
-                    name="mgmt.admin_api.delete_white_list",
-                ),
             ]
         ),
     ),

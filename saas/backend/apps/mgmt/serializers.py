@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.api.admin.constants import AdminAPIEnum
 from backend.api.management.constants import ManagementAPIEnum
 
 from .constants import ApiType
@@ -34,14 +33,3 @@ class ManagementApiWhiteListSLZ(serializers.Serializer):
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     api = serializers.ChoiceField(label="管理类API", choices=ManagementAPIEnum.get_choices())
-
-
-class AdminApiWhiteListSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="白名单记录ID")
-    api = serializers.ChoiceField(label="超级管理类API", choices=AdminAPIEnum.get_choices())
-    app_code = serializers.CharField(label="应用TOKEN")
-
-
-class AdminApiAddWhiteListSLZ(serializers.Serializer):
-    app_code = serializers.CharField(label="应用TOKEN")
-    api = serializers.ChoiceField(label="超级管理类API", choices=AdminAPIEnum.get_choices())
