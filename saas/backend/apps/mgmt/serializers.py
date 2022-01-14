@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.api.management.constants import ManagementAPIEnum
+from backend.service.system import SystemService
 
 from .constants import ApiType
 
@@ -27,7 +28,17 @@ class ApiSLZ(serializers.Serializer):
 class ManagementApiWhiteListSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="白名单记录ID")
     api = serializers.ChoiceField(label="管理类API", choices=ManagementAPIEnum.get_choices())
+    api_name = serializers.SerializerMethodField(label="API名称")
     system_id = serializers.CharField(label="系统ID")
+    system_name = serializers.SerializerMethodField(label="系统名字")
+
+    def get_api_name(self, obj):
+        if obj.api == "*":
+            return "*"
+        return dict(ManagementAPIEnum.get_choices())[obj.api]
+
+    def get_system_name(self, obj):
+        return SystemService().get(obj.system_id).name
 
 
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):

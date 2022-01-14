@@ -38,11 +38,11 @@ class BKNonEntityUser(ChoicesEnum, LowerStrEnum):
     )
 
 
-class APIEnumMsgHandler(ChoicesEnum, LowerStrEnum):
+class BaseAPIEnum(ChoicesEnum, LowerStrEnum):
     """获取管理类API、超级管理类API、授权类API 的枚举信息"""
 
     @classmethod
-    def list_api_msg(cls) -> List:
-        enum_msg = dict(cls.get_choices())
-        api_msg = [{"api": api, "name": enum_msg[api]} for api in enum_msg]
-        return api_msg
+    def list_api(cls) -> List:
+        enum_dict = dict(cls.get_choices())
+        api_info = [{"api": api, "name": enum_dict[api]} for api in enum_dict]
+        return api_info

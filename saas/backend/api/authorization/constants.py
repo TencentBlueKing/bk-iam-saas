@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from aenum import LowerStrEnum, auto, skip
 
-from backend.api.constants import APIEnumMsgHandler
+from backend.api.constants import BaseAPIEnum
 from backend.util.enum import ChoicesEnum
 
 
@@ -21,7 +21,7 @@ class OperateEnum(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((GRANT, "授权"), (REVOKE, "回收")))
 
 
-class AuthorizationAPIEnum(APIEnumMsgHandler):
+class AuthorizationAPIEnum(BaseAPIEnum):
     # 实例授权API，白名单控制时主要是控制System+Action
     AUTHORIZATION_INSTANCE = auto()
     # 新建关联实例授权API，白名单控制时主要是控制System+ResourceType

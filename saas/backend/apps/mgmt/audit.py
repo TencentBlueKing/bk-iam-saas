@@ -35,7 +35,7 @@ class BaseMgmtWhiteListProvider(DataProvider):
 
 
 class ManagementApiWhiteListCreateAuditProvider(BaseMgmtWhiteListProvider):
-    type = AuditType.MANAGEMENT_API_WHITE_LIST_CREATE.value
+    type = AuditType.MANAGEMENT_API_ALLOW_LIST_CONFIG_CREATE.value
 
     @property
     def system_id(self):
@@ -43,7 +43,7 @@ class ManagementApiWhiteListCreateAuditProvider(BaseMgmtWhiteListProvider):
 
 
 class ManagementApiWhiteListDeleteAuditProvider(BaseMgmtWhiteListProvider):
-    type = AuditType.MANAGEMENT_API_WHITE_LIST_DELETE.value
+    type = AuditType.MANAGEMENT_API_ALLOW_LIST_CONFIG_DELETE.value
 
     @property
     def system_id(self):

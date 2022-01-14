@@ -46,7 +46,7 @@ class ApiViewSet(mixins.ListModelMixin, GenericViewSet):
         slz = QueryApiSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         api_type = slz.validated_data["api_type"]
-        data = ENUM_MAP[api_type].list_api_msg()
+        data = ENUM_MAP[api_type].list_api()
         return Response(data)
 
 
@@ -88,12 +88,12 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         system_id = data["system_id"]
         api = data["api"]
 
-        white_list = ManagementAPIAllowListConfig.objects.update_or_create(
+        conf = ManagementAPIAllowListConfig.objects.update_or_create(
             defaults={"updater": username}, creator=username, system_id=system_id, api=api
         )
 
         # 写入审计上下文
-        audit_context_setter(white_list=white_list[0])
+        audit_context_setter(white_list=conf[0])
 
         return Response({}, status=status.HTTP_201_CREATED)
 
@@ -105,13 +105,14 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     @view_audit_decorator(ManagementApiWhiteListDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
-        white_list = ManagementAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).first()
-        white_list_copy = deepcopy(white_list)
-        if not white_list:
+        conf = ManagementAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).first()
+        if not conf:
             return Response({})
 
-        white_list.delete()
+        copied_conf = deepcopy(conf)
+        conf.delete()
 
         # 写入审计上下文
-        audit_context_setter(white_list=white_list_copy)
+        audit_context_setter(white_list=copied_conf)
+
         return Response({})
