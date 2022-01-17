@@ -42,7 +42,7 @@ class BaseAPIEnum(ChoicesEnum, LowerStrEnum):
     """获取管理类API、超级管理类API、授权类API 的枚举信息"""
 
     @classmethod
-    def list_api(cls) -> List:
+    def info(cls) -> List:
         enum_dict = dict(cls.get_choices())
         api_info = [{"api": api, "name": enum_dict[api]} for api in enum_dict]
         return api_info

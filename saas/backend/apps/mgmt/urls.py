@@ -18,17 +18,17 @@ urlpatterns = [
         include(
             [
                 path(
-                    "api/",
+                    "apis/",
                     views.ApiViewSet.as_view({"get": "list"}),
                     name="mgmt.api",
                 ),
                 path(
-                    "management_api/",
+                    "management_apis/",
                     views.ManagementApiWhiteListViewSet.as_view({"get": "list", "post": "create"}),
                     name="mgmt.management_api.white_list",
                 ),
                 path(
-                    "management_api/<int:id>/",
+                    "management_apis/<int:id>/",
                     views.ManagementApiWhiteListViewSet.as_view({"delete": "destroy"}),
                     name="mgmt.management_api.delete_white_list",
                 ),

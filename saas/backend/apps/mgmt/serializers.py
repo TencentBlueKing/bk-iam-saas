@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.api.management.constants import ManagementAPIEnum
-from backend.service.system import SystemService
+from backend.biz.system import SystemBiz
 
 from .constants import ApiType
 
@@ -27,18 +27,30 @@ class ApiSLZ(serializers.Serializer):
 
 class ManagementApiWhiteListSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="白名单记录ID")
-    api = serializers.ChoiceField(label="管理类API", choices=ManagementAPIEnum.get_choices())
-    api_name = serializers.SerializerMethodField(label="API名称")
-    system_id = serializers.CharField(label="系统ID")
-    system_name = serializers.SerializerMethodField(label="系统名字")
+    api_msg = serializers.SerializerMethodField(label="API信息")
+    system = serializers.SerializerMethodField(label="系统信息")
 
-    def get_api_name(self, obj):
-        if obj.api == "*":
-            return "*"
-        return dict(ManagementAPIEnum.get_choices())[obj.api]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._system_list = SystemBiz().new_system_list()
 
-    def get_system_name(self, obj):
-        return SystemService().get(obj.system_id).name
+    def get_api_msg(self, obj):
+        api = obj.api
+
+        return {
+            "api": api,
+            "name": "*" if api == "*" else dict(ManagementAPIEnum.get_choices())[obj.api]
+        }
+
+    def get_system(self, obj):
+        system_id = obj.system_id
+        system = self._system_list.get(system_id)
+
+        return {
+            "id": system_id,
+            "name": system.name if system else "",
+            "name_en": system.name_en if system else "",
+        }
 
 
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):
