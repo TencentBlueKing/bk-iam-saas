@@ -88,5 +88,5 @@ class AuditType(ChoicesEnum, StrEnum):
 
     EVENT_ROLLBACK = auto()
 
-    ADMIN_API_WHITE_LIST_CREATE = auto()
-    ADMIN_API_WHITE_LIST_DELETE = auto()
+    ADMIN_API_ALLOW_LIST_CONFIG_CREATE = auto()
+    ADMIN_API_ALLOW_LIST_CONFIG_DELETE = auto()

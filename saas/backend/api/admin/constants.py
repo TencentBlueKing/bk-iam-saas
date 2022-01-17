@@ -10,10 +10,10 @@ specific language governing permissions and limitations under the License.
 """
 from aenum import auto, skip
 
-from backend.api.constants import APIEnumMsgHandler
+from backend.api.constants import BaseAPIEnum
 
 
-class AdminAPIEnum(APIEnumMsgHandler):
+class AdminAPIEnum(BaseAPIEnum):
     """枚举每个Admin API"""
 
     # 用户组

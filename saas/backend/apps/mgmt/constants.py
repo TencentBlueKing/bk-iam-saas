@@ -32,5 +32,5 @@ class ApiType(ChoicesEnum, LowerStrEnum):
 ENUM_MAP = {
     ApiType.MANAGEMENT_API.value: ManagementAPIEnum,
     ApiType.ADMIN_API.value: AdminAPIEnum,
-    ApiType.AUTHORIZATION_API: AuthorizationAPIEnum,
+    ApiType.AUTHORIZATION_API.value: AuthorizationAPIEnum,
 }

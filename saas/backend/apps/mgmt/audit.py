@@ -35,7 +35,7 @@ class BaseMgmtWhiteListProvider(DataProvider):
 
 
 class AdminApiWhiteListCreateAuditProvider(BaseMgmtWhiteListProvider):
-    type = AuditType.ADMIN_API_WHITE_LIST_CREATE.value
+    type = AuditType.ADMIN_API_ALLOW_LIST_CONFIG_CREATE.value
 
     @property
     def extra(self):
@@ -43,7 +43,7 @@ class AdminApiWhiteListCreateAuditProvider(BaseMgmtWhiteListProvider):
 
 
 class AdminApiWhiteListDeleteAuditProvider(BaseMgmtWhiteListProvider):
-    type = AuditType.ADMIN_API_WHITE_LIST_DELETE.value
+    type = AuditType.ADMIN_API_ALLOW_LIST_CONFIG_DELETE.value
 
     @property
     def extra(self):
