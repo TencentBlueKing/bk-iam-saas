@@ -1,6 +1,7 @@
 <template>
-    <div class="iam-system-access-wrapper">
+    <div class="iam-record-list-wrapper">
         <render-search>
+            <Icon type="arrows-left" class="breadcrumbs-back" @click="handleBackClick" />
             <span class="display-name">同步记录</span>
             <div slot="right">
                 <bk-date-picker
@@ -255,13 +256,17 @@
                     endTime: `${date[1]}` ? `${date[1]} 23:59:59` : ''
                 }
                 this.fetchModelingList(true)
+            },
+
+            handleBackClick () {
+                this.$emit('handleBack')
             }
             
         }
     }
 </script>
 <style lang="postcss">
-    .iam-system-access-wrapper {
+    .iam-record-list-wrapper {
         .detail-link {
             color: #3a84ff;
             cursor: pointer;
@@ -300,6 +305,18 @@
             padding: 10px;
             max-height: 1200px;
             overflow-y: scroll;
+        }
+
+        .breadcrumbs-back{
+            cursor: pointer;
+            display: inline-block;
+            vertical-align: middle;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            font-size: 24px;
+            color: #3c96ff;
         }
     }
 </style>

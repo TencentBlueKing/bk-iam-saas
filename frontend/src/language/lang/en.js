@@ -209,7 +209,9 @@ export const m = {
         '是否删除该自定义权限': 'Whether to delete the custom permission',
         '确定删除': 'Sure to delete',
         '类型': 'Type',
-        '查询类型': 'Query type'
+        '查询类型': 'Query type',
+        '确定同步': 'Confirm sync',
+        '新增模板': 'Add a template'
     },
     // 校验
     verify: {
