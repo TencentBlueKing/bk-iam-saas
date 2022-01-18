@@ -16,7 +16,6 @@ from itertools import chain, groupby
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from django.conf import settings
-from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from pydantic.tools import parse_obj_as
@@ -46,6 +45,7 @@ from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
+from backend.util.lock import LockTypeEnum, RedisLock
 from backend.util.model import ExcludeModel
 
 from .resource import ResourceBiz, ResourceNodeBean
@@ -1132,10 +1132,9 @@ def policy_change_lock(func):
         # Note: 必须保证被装饰的函数有参数system_id和subject
         system_id = kwargs["system_id"] if "system_id" in kwargs else args[0]
         subject = kwargs["subject"] if "subject" in kwargs else args[1]
-        # TODO: 后面重构cache模块时统一定义前缀
-        lock_key = f"bk_iam:lock:{system_id}:{subject.type}:{subject.id}"
+
         # 加 system + subject 锁
-        with cache.lock(lock_key, timeout=10):
+        with RedisLock(LockTypeEnum.POLICY_ALETER.value, obj=f"{system_id}:{subject.type}:{subject.id}", timeout=10):
             return func(*args, **kwargs)
 
     return wrapper

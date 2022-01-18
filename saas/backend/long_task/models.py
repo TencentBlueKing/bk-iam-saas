@@ -11,11 +11,11 @@ specific language governing permissions and limitations under the License.
 import json
 from typing import Any, List
 
-from django.core.cache import cache
 from django.db import models
 
 from backend.common.error_codes import error_codes
 from backend.common.models import BaseModel
+from backend.util.lock import LockTypeEnum, RedisLock
 
 from .constants import TaskStatus
 
@@ -71,7 +71,7 @@ class TaskDetail(BaseModel):
             if cls.exists(type_, sign):
                 raise EXISTS_TASK_ERROR
 
-            with cache.lock(f"bk_iam:lock:{cls._gen_unique_sign(type_, sign)}", timeout=10):
+            with RedisLock(LockTypeEnum.LONG_TASK_CREATE.value, obj=cls._gen_unique_sign(type_, sign), timeout=10):
                 if not cls.exists(type_, sign):
                     return cls._create(type_, args, sign)
 

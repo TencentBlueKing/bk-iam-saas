@@ -11,7 +11,6 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Dict, Type
 
-from django.core.cache import cache
 from django.db import transaction
 from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
@@ -25,6 +24,7 @@ from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.common.error_codes import error_codes
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.util.json import json_dumps
+from backend.util.lock import LockTypeEnum, RedisLock
 
 from .constants import HandoverObjectType
 from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
@@ -61,7 +61,7 @@ class HandoverViewSet(GenericViewSet):
         reason = data["reason"]
         handover_info = data["handover_info"]
 
-        lock = self._get_handover_lock(handover_from)
+        lock = RedisLock(LockTypeEnum.PERMISSION_HANDOVER.value, suffix=handover_from)
         if not lock.acquire(blocking=False):
             # 拿不到锁, 直接返回
             raise error_codes.TASK_EXIST
@@ -115,10 +115,6 @@ class HandoverViewSet(GenericViewSet):
                 )
 
         return handover_task_details
-
-    def _get_handover_lock(self, handover_from: str):
-        lock_key = f"bk_iam:lock:handover:{handover_from}"
-        return cache.lock(lock_key)
 
 
 class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
