@@ -305,7 +305,6 @@ class GroupBiz:
         """
         删除用户组
         """
-        # TODO 只是判断有没有
         if GroupAuthorizeLock.objects.filter(group_id=group_id).exists():
             raise error_codes.VALIDATE_ERROR.format(_("用户组正在授权, 不能删除!"))
 
