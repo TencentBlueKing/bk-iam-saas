@@ -1134,7 +1134,7 @@ def policy_change_lock(func):
         subject = kwargs["subject"] if "subject" in kwargs else args[1]
 
         # 加 system + subject 锁
-        with RedisLock(LockTypeEnum.POLICY_ALETER.value, obj=f"{system_id}:{subject.type}:{subject.id}", timeout=10):
+        with RedisLock(LockTypeEnum.POLICY_ALETER.value, suffix=f"{system_id}:{subject.type}:{subject.id}", timeout=10):
             return func(*args, **kwargs)
 
     return wrapper

@@ -71,7 +71,7 @@ class TaskDetail(BaseModel):
             if cls.exists(type_, sign):
                 raise EXISTS_TASK_ERROR
 
-            with RedisLock(LockTypeEnum.LONG_TASK_CREATE.value, obj=cls._gen_unique_sign(type_, sign), timeout=10):
+            with RedisLock(LockTypeEnum.LONG_TASK_CREATE.value, suffix=cls._gen_unique_sign(type_, sign), timeout=10):
                 if not cls.exists(type_, sign):
                     return cls._create(type_, args, sign)
 
