@@ -26,13 +26,14 @@ class RedisLock:
     基于redis实现的分布式锁
     """
 
-    def __init__(self, type_: str, suffix: Any = None, timeout: Optional[int] = None) -> None:
+    def __init__(self, type_: str, suffix: Any = None, timeout: Optional[int] = None, blocking=True) -> None:
         """
         type: 锁类型, LockTypeEnum 中的值
         suffix: 实现__str__方法的对象
         """
         key = self._get_key(type_, suffix)
         self._lock = cache.lock(key, timeout=timeout)
+        self._blocking = blocking
 
     def _get_key(self, type_: str, suffix: Any) -> str:
         """
@@ -44,14 +45,31 @@ class RedisLock:
         return key
 
     def __enter__(self):
-        self._lock.acquire(blocking=True)
+        assert self._blocking
+        self.acquire()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._lock.release()
+        self.release()
 
-    def acquire(self, blocking=None) -> bool:
-        return self._lock.acquire(blocking=blocking)
+    def acquire(self) -> bool:
+        return self._lock.acquire(blocking=self._blocking)
 
     def release(self):
         self._lock.release()
+
+
+def gen_permission_handover_lock(key: str) -> RedisLock:
+    return RedisLock(LockTypeEnum.PERMISSION_HANDOVER.value, suffix=key, blocking=False)
+
+
+def gen_organization_sync_lock() -> RedisLock:
+    return RedisLock(LockTypeEnum.ORGANIZATION_SYNC.value, timeout=10)
+
+
+def gen_policy_alert_lock(key: str) -> RedisLock:
+    return RedisLock(LockTypeEnum.POLICY_ALETER.value, suffix=key, timeout=10)
+
+
+def gen_long_task_create_lock(key: str) -> RedisLock:
+    return RedisLock(LockTypeEnum.LONG_TASK_CREATE.value, suffix=key, timeout=10)

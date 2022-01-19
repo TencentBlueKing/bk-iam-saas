@@ -15,7 +15,7 @@ from django.db import models
 
 from backend.common.error_codes import error_codes
 from backend.common.models import BaseModel
-from backend.util.lock import LockTypeEnum, RedisLock
+from backend.util.lock import gen_long_task_create_lock
 
 from .constants import TaskStatus
 
@@ -71,7 +71,7 @@ class TaskDetail(BaseModel):
             if cls.exists(type_, sign):
                 raise EXISTS_TASK_ERROR
 
-            with RedisLock(LockTypeEnum.LONG_TASK_CREATE.value, suffix=cls._gen_unique_sign(type_, sign), timeout=10):
+            with gen_long_task_create_lock(cls._gen_unique_sign(type_, sign)):
                 if not cls.exists(type_, sign):
                     return cls._create(type_, args, sign)
 

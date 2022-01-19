@@ -45,7 +45,7 @@ from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
-from backend.util.lock import LockTypeEnum, RedisLock
+from backend.util.lock import gen_policy_alert_lock
 from backend.util.model import ExcludeModel
 
 from .resource import ResourceBiz, ResourceNodeBean
@@ -1134,9 +1134,7 @@ def policy_change_lock(func):
         subject = kwargs["subject"] if "subject" in kwargs else args[1]
 
         # 加 system + subject 锁
-        with RedisLock(
-            LockTypeEnum.POLICY_ALETER.value, suffix=f"{system_id}:{subject.type}:{subject.id}", timeout=10
-        ):
+        with gen_policy_alert_lock(f"{system_id}:{subject.type}:{subject.id}"):
             return func(*args, **kwargs)
 
     return wrapper

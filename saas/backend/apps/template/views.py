@@ -545,7 +545,7 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
         if add_action_ids:
             self.template_check_biz.check_group_pre_commit_complete(template.id)
 
-        if PermTemplatePreUpdateLock.objects.update_waiting_to_running(template.id):
+        if not PermTemplatePreUpdateLock.objects.update_waiting_to_running(template.id):
             # 任务已经开始运行了
             raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在, 禁止提交!"))
 

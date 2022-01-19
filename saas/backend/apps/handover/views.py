@@ -24,7 +24,7 @@ from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.common.error_codes import error_codes
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.util.json import json_dumps
-from backend.util.lock import LockTypeEnum, RedisLock
+from backend.util.lock import gen_permission_handover_lock
 
 from .constants import HandoverObjectType
 from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
@@ -61,8 +61,8 @@ class HandoverViewSet(GenericViewSet):
         reason = data["reason"]
         handover_info = data["handover_info"]
 
-        lock = RedisLock(LockTypeEnum.PERMISSION_HANDOVER.value, suffix=handover_from)
-        if not lock.acquire(blocking=False):
+        lock = gen_permission_handover_lock(handover_from)
+        if not lock.acquire():
             # 拿不到锁, 直接返回
             raise error_codes.TASK_EXIST
 

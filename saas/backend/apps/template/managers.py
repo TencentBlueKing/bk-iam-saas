@@ -83,7 +83,7 @@ class PermTemplatePreUpdateLockManager(models.Manager):
     def filter_exists_template_ids(self, template_ids: List[int]) -> List[int]:
         return list(self.filter(template_id__in=template_ids).values_list("template_id", flat=True))
 
-    def get_lock_not_running_or_raise(self, tempate_id: int):
+    def acquire_lock_not_running_or_raise(self, tempate_id: int):
         """
         获取非running状态的锁, 如果锁是running则raise
         """
@@ -92,7 +92,7 @@ class PermTemplatePreUpdateLockManager(models.Manager):
             raise error_codes.VALIDATE_ERROR.format(_("更新任务正在运行!"))
         return lock
 
-    def get_lock_waiting_or_raise(self, tempate_id: int):
+    def acquire_lock_waiting_or_raise(self, tempate_id: int):
         """
         获取waiting状态的锁, 如果锁不是waiting则raise
         """
@@ -100,6 +100,16 @@ class PermTemplatePreUpdateLockManager(models.Manager):
         if not lock or lock.status != TemplatePreUpdateStatus.WAITING.value:
             raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在!"))
         return lock
+
+    def acquire_lock_or_raise(self, tempate_id: int):
+        lock = self.filter(template_id=tempate_id).first()
+        if not lock:
+            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在!"))
+        return lock
+
+    def raise_if_exists(self, template_id: int):
+        if self.filter(template_id=template_id).exists():
+            raise error_codes.VALIDATE_ERROR.format(_("权限模板正在更新, 不能进行下一步操作!"))
 
     def update_waiting_to_running(self, tempate_id: int) -> bool:
         """
@@ -110,13 +120,3 @@ class PermTemplatePreUpdateLockManager(models.Manager):
             status=TemplatePreUpdateStatus.RUNNING.value
         )
         return bool(count)
-
-    def get_lock_or_raise(self, tempate_id: int):
-        lock = self.filter(template_id=tempate_id).first()
-        if not lock:
-            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在!"))
-        return lock
-
-    def raise_if_exists(self, template_id: int):
-        if self.filter(template_id=template_id).exists():
-            raise error_codes.VALIDATE_ERROR.format(_("权限模板正在更新, 不能进行下一步操作!"))
