@@ -69,13 +69,6 @@ class PathNodeBean(PathNode):
     def fill_empty_fields(self, resource_type_dict: ResourceTypeDict):
         self.type_name, self.type_name_en = resource_type_dict.get_name(self.system_id, self.type)
 
-    # For Operation
-    def match_resource_type(self, resource_system_id: str, resource_type_id: str) -> bool:
-        """
-        是否匹配资源类型
-        """
-        return self.system_id == resource_system_id and self.type == resource_type_id
-
 
 class PathNodeBeanList(PathNodeList):
     __root__: List[PathNodeBean]

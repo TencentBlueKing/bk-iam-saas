@@ -39,6 +39,12 @@ class PathNode(BaseModel):
     def to_path_resource_type(self) -> PathResourceType:
         return PathResourceType(system_id=self.system_id, id=self.type)
 
+    def match_resource_type(self, resource_system_id: str, resource_type_id: str) -> bool:
+        """
+        是否匹配资源类型
+        """
+        return self.system_id == resource_system_id and self.type == resource_type_id
+
 
 class PathNodeList(ListModel):
     __root__: List[PathNode]
