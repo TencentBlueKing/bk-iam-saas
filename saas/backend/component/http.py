@@ -82,9 +82,9 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
             status=resp.status_code,
         ).observe(latency)
 
-        # greater than 500ms
-        if latency > 500:
-            logger.warning("http slow request! method: %s, url: %s, data: %s, latency: %d", method, url, latency)
+        # greater than 100ms
+        if latency > 100:
+            logger.warning("http slow request! method: %s, url: %s, latency: %d", method, url, latency)
 
         if resp.status_code != 200:
             content = resp.content[:100] if resp.content else ""

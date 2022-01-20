@@ -85,9 +85,9 @@ class ComponentAPI(object):
             raise ComponentAPIException(self, "Request component error, Exception: %s" % str(e))
 
         latency = int((time.time() - st) * 1000)
-        if latency > 500:
+        if latency > 100:
             logger.warning(
-                "http slow request! method: %s, url: %s, data: %s, latency: %d", self.method, self.url, latency
+                "http slow request! method: %s, url: %s, latency: %d", self.method, self.url, latency
             )
 
         # Parse result
