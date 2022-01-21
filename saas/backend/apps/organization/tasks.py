@@ -24,7 +24,7 @@ from backend.biz.org_sync.iam_user_department import IAMBackendUserDepartmentSyn
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.org_sync.user import DBUserSyncService
 from backend.biz.org_sync.user_leader import DBUserLeaderSyncService
-from backend.util.lock import gen_organization_sync_lock
+from backend.common.lock import gen_organization_sync_lock
 
 from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 

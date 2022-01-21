@@ -21,6 +21,7 @@ from django.utils.translation import gettext as _
 from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_policy_alert_lock
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
 from backend.service.constants import ANY_ID, FETCH_MAX_LIMIT
@@ -45,7 +46,6 @@ from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
 from backend.service.system import SystemService
 from backend.service.utils.translate import translate_path
-from backend.util.lock import gen_policy_alert_lock
 from backend.util.model import ExcludeModel
 
 from .resource import ResourceBiz, ResourceNodeBean

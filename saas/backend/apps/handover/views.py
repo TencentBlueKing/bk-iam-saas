@@ -22,9 +22,9 @@ from backend.apps.application.views import admin_not_need_apply_check
 from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_permission_handover_lock
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.util.json import json_dumps
-from backend.util.lock import gen_permission_handover_lock
 
 from .constants import HandoverObjectType
 from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ

@@ -14,8 +14,8 @@ from typing import Any, List
 from django.db import models
 
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_long_task_create_lock
 from backend.common.models import BaseModel
-from backend.util.lock import gen_long_task_create_lock
 
 from .constants import TaskStatus
 
