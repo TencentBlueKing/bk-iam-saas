@@ -361,7 +361,7 @@ IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "tr
 # apigateway 相关配置
 # NOTE: it sdk will read settings.BK_APP_CODE and settings.BK_APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = ""
+BK_API_URL_TMPL = os.environ.get("BK_API_URL_TMPL", "")
 INSTALLED_APPS += ("apigw_manager.apigw",)
 BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
