@@ -16,7 +16,12 @@ from backend.common.models import BaseModel, CompressedJSONField
 from backend.service.constants import SubjectType, TemplatePreUpdateStatus
 from backend.util.json import json_dumps
 
-from .managers import PermTemplateManager, PermTemplatePolicyAuthorizedManager, PermTemplatePreGroupSyncManager
+from .managers import (
+    PermTemplateManager,
+    PermTemplatePolicyAuthorizedManager,
+    PermTemplatePreGroupSyncManager,
+    PermTemplatePreUpdateLockManager,
+)
 
 
 class PermTemplate(BaseModel):
@@ -99,6 +104,8 @@ class PermTemplatePreUpdateLock(BaseModel):
         default=TemplatePreUpdateStatus.WAITING.value,
     )
     action_ids = CompressedJSONField("操作列表", default=None)
+
+    objects = PermTemplatePreUpdateLockManager()
 
     class Meta:
         verbose_name = "权限模板更新预提交"
