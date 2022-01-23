@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from django.db import transaction
 from django.db.models import Count, F
@@ -20,6 +20,7 @@ from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS
 from backend.component import iam
 
+from .action import ActionList
 from .models import Policy, Subject, SystemCounter
 from .policy.query import PolicyList, new_backend_policy_list_by_subject
 
@@ -50,7 +51,14 @@ class TemplateService:
                 # 调用后端删除权限
                 iam.delete_template_policies(system_id, subject.type, subject.id, template_id)
 
-    def grant_subject(self, system_id: str, template_id: int, subject: Subject, policies: List[Policy]):
+    def grant_subject(
+        self,
+        system_id: str,
+        template_id: int,
+        subject: Subject,
+        policies: List[Policy],
+        action_list: Optional[ActionList] = None,
+    ):
         """
         模板增加成员
         """
@@ -58,6 +66,9 @@ class TemplateService:
             template_id=template_id, subject_type=subject.type, subject_id=subject.id, system_id=system_id
         )
         authorized_template.data = {"actions": [p.dict() for p in policies]}
+
+        # 处理忽略路径
+        self._ignore_path(policies, action_list)
 
         with transaction.atomic():
             authorized_template.save(force_insert=True)
@@ -112,7 +123,9 @@ class TemplateService:
                 system_id, subject.type, subject.id, template_id, create_backend_policies, delete_policy_ids
             )
 
-    def update_template_auth(self, subject: Subject, template_id: int, policies: List[Policy]):
+    def update_template_auth(
+        self, subject: Subject, template_id: int, policies: List[Policy], action_list: Optional[ActionList] = None
+    ):
         """
         跟新subject的模板授权信息
         """
@@ -137,9 +150,22 @@ class TemplateService:
             )
             authorized_template.data = {"actions": [p.dict() for p in policy_list.policies]}
             authorized_template.save(update_fields=["_data"])
+
+            # 处理忽略路径
+            self._ignore_path(policies, action_list)
+
             iam.update_template_policies(
                 system_id, subject.type, subject.id, template_id, [p.to_backend_dict(system_id) for p in policies]
             )
+
+    def _ignore_path(self, policies: List[Policy], action_list: Optional[ActionList]):
+        """policies忽略路径"""
+        if action_list is not None:
+            for p in policies:
+                action = action_list.get(p.action_id)
+                if not action:
+                    continue
+                p.ignore_path(action)
 
     def direct_update_db_template_auth(self, subject: Subject, template_id: int, policies: List[Policy]):
         """

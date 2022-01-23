@@ -189,7 +189,6 @@ class OpenCommonTrans:
             policies=policies,
             need_fill_empty_fields=True,  # 填充相关字段
             need_check_instance_selection=True,  # 校验实例视图
-            need_ignore_path=False,
         )
 
         return policy_list

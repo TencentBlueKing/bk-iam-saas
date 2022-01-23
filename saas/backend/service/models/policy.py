@@ -14,11 +14,13 @@ from typing import Any, Dict, List, Tuple
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
-from backend.service.constants import DEAULT_RESOURCE_GROUP_ID
+from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
 
+from .action import Action, InstanceSelection
+from .instance_selection import PathResourceType
 from .subject import Subject
 
 
@@ -34,10 +36,60 @@ class PathNode(BaseModel):
     def __eq__(self, other):
         return self.system_id == other.system_id and self.type == other.type and self.id == other.id
 
+    def to_path_resource_type(self) -> PathResourceType:
+        return PathResourceType(system_id=self.system_id, id=self.type)
+
+    def match_resource_type(self, resource_system_id: str, resource_type_id: str) -> bool:
+        """
+        是否匹配资源类型
+        """
+        return self.system_id == resource_system_id and self.type == resource_type_id
+
+
+class PathNodeList(ListModel):
+    __root__: List[PathNode]
+
+    def match_selection(self, resource_system_id: str, resource_type_id: str, selection: InstanceSelection) -> bool:
+        """
+        检查是否匹配实例视图
+        """
+        # 链路只有一层, 并且与资源类型匹配
+        if len(self.__root__) == 1 and self.__root__[0].match_resource_type(resource_system_id, resource_type_id):
+            return True
+
+        return selection.match_path(self._to_path_resource_types())
+
+    def _to_path_resource_types(self) -> List[PathResourceType]:
+        return [one.to_path_resource_type() for one in self.__root__]
+
+    def ignore_path(self, selection: InstanceSelection) -> "PathNodeList":
+        """
+        根据实例视图, 返回忽略路径后的链路
+        """
+        if (
+            selection.ignore_iam_path
+            and len(self.__root__) == len(selection.resource_type_chain)
+            and self.__root__[-1].id != ANY_ID
+        ):
+            return PathNodeList(__root__=[self.__root__[-1]])
+
+        return self
+
 
 class Instance(BaseModel):
     type: str
-    path: List[List[PathNode]]
+    path: List[PathNodeList]
+
+    def ignore_path(self, resource_system_id: str, resource_type_id: str, selections: List[InstanceSelection]):
+        """
+        检查实例视图
+        """
+        for i in range(len(self.path)):
+            node_list = self.path[i]
+            for selection in selections:
+                if node_list.match_selection(resource_system_id, resource_type_id, selection):
+                    self.path[i] = node_list.ignore_path(selection)
+                    break
 
 
 class Value(BaseModel):
@@ -88,6 +140,17 @@ class RelatedResource(BaseModel):
     type: str
     condition: List[Condition]
 
+    def ignore_path(self, selections: List[InstanceSelection]):
+        """
+        校验条件中的实例拓扑是否满足实例视图
+        """
+        for c in self.condition:
+            if c.has_no_instances():
+                continue
+
+            for instance in c.instances:
+                instance.ignore_path(self.system_id, self.type, selections)
+
 
 class EnvValue(BaseModel):
     name: str = ""
@@ -120,6 +183,13 @@ class ResourceGroup(BaseModel):
         计算环境属性hash值
         """
         return hash(tuple(sorted([e.trim_for_hash() for e in self.environments], key=lambda e: e[0])))
+
+    def ignore_path(self, action: Action):
+        for rrt in self.related_resource_types:
+            resource_type = action.get_related_resource_type(rrt.system_id, rrt.type)
+            if not resource_type:
+                continue
+            rrt.ignore_path(resource_type.instance_selections)
 
 
 ThinResourceType = namedtuple("ThinResourceType", ["system_id", "type"])
@@ -214,6 +284,13 @@ class Policy(BaseModel):
         获取权限关联的资源类型列表
         """
         return self.resource_groups.get_thin_resource_types()
+
+    def ignore_path(self, action: Action):
+        """
+        检查资源的实例视图是否匹配
+        """
+        for rg in self.resource_groups:
+            rg.ignore_path(action)
 
 
 class BackendThinPolicy(BaseModel):

@@ -794,7 +794,7 @@ class ActionScopeDiffer:
         scope_paths = []
         for i in scope_instances:
             for p in i.path:
-                sp = PathNodeBeanList(p).to_path_string()
+                sp = p.to_path_string()
 
                 # 处理路径中存在*的情况
                 if sp.endswith(",*/"):
@@ -804,7 +804,7 @@ class ActionScopeDiffer:
 
         for i in template_instances:
             for p in i.path:
-                path = PathNodeBeanList(p).to_path_string()
+                path = p.to_path_string()
                 for sp in scope_paths:
                     if path.startswith(sp):
                         break
