@@ -19,7 +19,7 @@ from rest_framework.viewsets import GenericViewSet, mixins
 from backend.account.permissions import RolePermission
 from backend.api.admin.models import AdminAPIAllowListConfig
 from backend.apps.mgmt.audit import AdminApiWhiteListCreateAuditProvider, AdminApiWhiteListDeleteAuditProvider
-from backend.apps.mgmt.constants import API_ENUM
+from backend.apps.mgmt.constants import WHITE_LIST_API_ENUM_MAP
 from backend.apps.mgmt.serializers import AdminApiAddWhiteListSLZ, AdminApiWhiteListSLZ, ApiSLZ, QueryApiSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.common.swagger import ResponseSwaggerAutoSchema
@@ -43,7 +43,7 @@ class ApiViewSet(mixins.ListModelMixin, GenericViewSet):
         slz = QueryApiSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         api_type = slz.validated_data["api_type"]
-        data = API_ENUM[api_type].info()
+        data = WHITE_LIST_API_ENUM_MAP[api_type].info()
         return Response(data)
 
 
@@ -105,7 +105,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         if not conf:
             return Response({})
 
-        copied_conf = deepcopy(conf)
+        copied_conf = deepcopy(conf)  # 生成审计信息来源
         conf.delete()
 
         # 写入审计上下文

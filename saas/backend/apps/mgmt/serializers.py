@@ -26,12 +26,13 @@ class ApiSLZ(serializers.Serializer):
 
 class AdminApiWhiteListSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="白名单记录ID")
-    api_msg = serializers.SerializerMethodField(label="API信息")
+    api_info = serializers.SerializerMethodField(label="API信息")
     app_code = serializers.CharField(label="应用TOKEN")
 
-    def get_api_msg(self, obj):
+    def get_api_info(self, obj):
         api = obj.api
-        return {"api": api, "name": "*" if api == "*" else dict(AdminAPIEnum.get_choices())[obj.api]}
+
+        return {"api": api, "name": AdminAPIEnum.get_choice_label(api)}
 
 
 class AdminApiAddWhiteListSLZ(serializers.Serializer):
