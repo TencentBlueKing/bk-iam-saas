@@ -27,22 +27,19 @@ class ApiSLZ(serializers.Serializer):
 
 class ManagementApiWhiteListSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="白名单记录ID")
-    api_msg = serializers.SerializerMethodField(label="API信息")
-    system = serializers.SerializerMethodField(label="系统信息")
+    api_info = serializers.SerializerMethodField(label="API信息")
+    system_info = serializers.SerializerMethodField(label="系统信息")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._system_list = SystemBiz().new_system_list()
 
-    def get_api_msg(self, obj):
+    def get_api_info(self, obj):
         api = obj.api
 
-        return {
-            "api": api,
-            "name": "*" if api == "*" else dict(ManagementAPIEnum.get_choices())[obj.api]
-        }
+        return {"api": api, "name": ManagementAPIEnum.get_choice_label(api)}
 
-    def get_system(self, obj):
+    def get_system_info(self, obj):
         system_id = obj.system_id
         system = self._system_list.get(system_id)
 
