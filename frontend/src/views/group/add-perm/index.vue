@@ -571,7 +571,6 @@
             async handleSubmit () {
                 // debugger
                 const { flag, templates } = this.$refs.resInstanceTableRef.getData()
-                console.log('flag', flag)
                 if (flag) {
                     this.isShowErrorTips = true
                     return
