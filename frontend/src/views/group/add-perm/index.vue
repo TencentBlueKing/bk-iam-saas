@@ -27,7 +27,6 @@
                     :list="tableList"
                     :authorization="curAuthorizationData"
                     :original-list="tableListBackup"
-                    :is-show-error-tips="isShowErrorTips"
                     @on-select="handleAttrValueSelected"
                     @on-resource-select="handleResSelect" />
             </div>
