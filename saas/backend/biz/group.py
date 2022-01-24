@@ -13,7 +13,6 @@ from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
 from rest_framework import serializers
@@ -401,11 +400,7 @@ class GroupBiz:
         if PermTemplatePreUpdateLock.objects.filter(template_id__in=template_ids).exists():
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板正在更新, 不能授权!"))
         # 判断该用户组在长时任务里是否正在添加涉及到的权限模板和自定义权限
-        if (
-            GroupAuthorizeLock.objects.filter(group_id=group.id)
-            .filter(Q(template_id__in=template_ids) | (Q(template_id=0) & Q(system_id__in=custom_action_system_ids)))
-            .exists()
-        ):
+        if GroupAuthorizeLock.objects.is_authorizing(group.id, template_ids, custom_action_system_ids):
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板或自定义权限已经在授权中, 不能重复授权!"))
 
     def check_before_grant(
