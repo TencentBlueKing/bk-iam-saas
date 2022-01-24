@@ -85,6 +85,7 @@ class TemplateNameDictBean(BaseModel):
 
 class TemplateBiz:
     svc = TemplateService()
+    action_svc = ActionService()
 
     def create(self, role_id: int, info: TemplateCreateBean, creator: str) -> PermTemplate:
         """
@@ -128,7 +129,13 @@ class TemplateBiz:
         """
         权限模板增加成员
         """
-        self.svc.grant_subject(system_id, template_id, subject, parse_obj_as(List[Policy], policies))
+        self.svc.grant_subject(
+            system_id,
+            template_id,
+            subject,
+            parse_obj_as(List[Policy], policies),
+            action_list=self.action_svc.new_action_list(system_id),
+        )
 
     def filter_not_auth_subjects(self, template_id, subjects: List[Subject]) -> List[Subject]:
         """
