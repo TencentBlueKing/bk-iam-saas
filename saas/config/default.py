@@ -220,6 +220,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.long_task.tasks.retry_long_task",
         "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
     },
+    "periodic_delete_unreferenced_expressions": {
+        "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
+        "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
+    },
 }
 
 # celery settings
@@ -361,7 +365,7 @@ IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "tr
 # apigateway 相关配置
 # NOTE: it sdk will read settings.BK_APP_CODE and settings.BK_APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = os.environ.get("BK_APIGATEWAY_URL", "") + "/api/{api_name}/"
+BK_API_URL_TMPL = os.environ.get("BK_API_URL_TMPL", "")
 INSTALLED_APPS += ("apigw_manager.apigw",)
 BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
