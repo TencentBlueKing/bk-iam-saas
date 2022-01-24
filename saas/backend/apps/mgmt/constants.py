@@ -29,7 +29,7 @@ class ApiType(ChoicesEnum, LowerStrEnum):
     )
 
 
-WHITELIST_API_ENUM_MAP = {
+WHITE_LIST_API_ENUM_MAP = {
     ApiType.MANAGEMENT_API.value: ManagementAPIEnum,
     ApiType.ADMIN_API.value: AdminAPIEnum,
     ApiType.AUTHORIZATION_API.value: AuthorizationAPIEnum,

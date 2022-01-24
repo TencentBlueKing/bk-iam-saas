@@ -24,7 +24,6 @@ from backend.service.models import (
     ResourceInstanceInfo,
 )
 from backend.service.resource import ResourceProvider
-from backend.service.resource_type import ResourceTypeService
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +89,6 @@ class ResourceNodeAttributeDictBean(BaseModel):
 
 class ResourceBiz:
     """资源实例各种业务场景的调用"""
-
-    resource_type_svc = ResourceTypeService()
 
     def new_resource_provider(self, system_id: str, resource_type_id: str):
         return ResourceProvider(system_id, resource_type_id)
@@ -220,8 +217,3 @@ class ResourceBiz:
                     )
 
         return attribute_dict_bean
-
-    def list_resource_types_by_system_id(self, system_id: str) -> List[Dict]:
-        system_resource_types = self.resource_type_svc.list_resource_type_by_systems([system_id])
-        data = [resource_type.dict() for resource_type in system_resource_types.get(system_id, [])]
-        return data

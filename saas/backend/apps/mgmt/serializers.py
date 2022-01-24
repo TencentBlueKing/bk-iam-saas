@@ -11,7 +11,9 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.api.authorization.constants import AuthorizationAPIEnum
+from backend.api.constants import ALLOW_ANY
 from backend.biz.system import SystemBiz
+from backend.service.resource_type import ResourceTypeService
 
 from .constants import ApiType
 
@@ -27,20 +29,19 @@ class ApiSLZ(serializers.Serializer):
 
 class AuthorizationApiWhiteListSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="白名单记录ID")
-    api_msg = serializers.SerializerMethodField(label="API信息")
-    system = serializers.SerializerMethodField(label="系统信息")
-    object_id = serializers.CharField(label="资源信息")
+    api_info = serializers.SerializerMethodField(label="API信息")
+    system_info = serializers.SerializerMethodField(label="系统信息")
+    object_info = serializers.SerializerMethodField(label="资源类型信息")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._system_list = SystemBiz().new_system_list()
 
-    def get_api_msg(self, obj):
+    def get_api_info(self, obj):
         api = obj.type
+        return {"api": api, "name": AuthorizationAPIEnum.get_choice_label(api)}
 
-        return {"api": api, "name": "*" if api == "*" else dict(AuthorizationAPIEnum.get_choices())[api]}
-
-    def get_system(self, obj):
+    def get_system_info(self, obj):
         system_id = obj.system_id
         system = self._system_list.get(system_id)
 
@@ -48,6 +49,17 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
             "id": system_id,
             "name": system.name if system else "",
             "name_en": system.name_en if system else "",
+        }
+
+    def get_object_info(self, obj):
+        object_id = obj.object_id
+        resource_type_info = ResourceTypeService().get_resource_type_dict(system_ids=[obj.system_id])
+
+        return {
+            "object_id": object_id,
+            "object_name": ALLOW_ANY
+            if object_id == ALLOW_ANY
+            else resource_type_info.get_name(obj.system_id, object_id)[0],
         }
 
 
