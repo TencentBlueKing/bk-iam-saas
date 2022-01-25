@@ -26,7 +26,7 @@ class ManagementAPIAllowListConfig(BaseModel):
         verbose_name = "管理类API允许系统白名单"
         verbose_name_plural = "管理类API允许系统白名单"
         ordering = ["-id"]
-        index_together = ["system_id", "api"]
+        unique_together = [["system_id", "api"]]
 
     @classmethod
     def is_allowed(cls, system_id: str, api: str):
