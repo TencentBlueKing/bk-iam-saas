@@ -85,7 +85,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         api = data["api"]
 
         conf = AdminAPIAllowListConfig.objects.update_or_create(
-            defaults={"updater": username}, creator=username, app_code=app_code, api=api
+            defaults={"updater": username}, app_code=app_code, api=api
         )
 
         # 写入审计上下文
@@ -105,7 +105,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         if not conf:
             return Response({})
 
-        copied_conf = deepcopy(conf)  # 生成审计信息来源
+        copied_conf = deepcopy(conf)  # delete操作会删除数据库记录(白名单信息)，使用deepcopy实现对欲删除记录的信息存储，以便审计记录
         conf.delete()
 
         # 写入审计上下文
