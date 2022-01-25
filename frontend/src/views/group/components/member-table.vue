@@ -328,6 +328,7 @@
                     await this.$store.dispatch('userGroup/deleteUserGroupMember', params)
                     this.messageSuccess(this.$t(`m.info['移除成功']`), 2000)
                     this.currentSelectList = []
+                    this.pagination.current = 1
                     this.fetchMemberList()
                 } catch (e) {
                     console.error(e)
