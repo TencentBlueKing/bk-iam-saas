@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Dict
+from typing import List
 
 from backend.service.resource_type import ResourceTypeService
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class ResourceTypeBiz:
     resource_type_svc = ResourceTypeService()
 
-    @classmethod
-    def list_resource_types_by_system_id(cls, system_id: str) -> Dict:
-        system_resource_types = cls.resource_type_svc.list_resource_type_by_systems([system_id])
-        return system_resource_types
+    def list_resource_types_by_system_id(self, system_id: str) -> List:
+        system_resource_types = self.resource_type_svc.list_resource_type_by_systems([system_id]).get(system_id, [])
+        data = [resource_type.dict() for resource_type in system_resource_types]
+        return data

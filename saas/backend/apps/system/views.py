@@ -40,6 +40,8 @@ class ResourceTypeViewSet(GenericViewSet):
 
     paginator = None  # 去掉swagger中的limit offset参数
 
+    biz = ResourceTypeBiz()
+
     @swagger_auto_schema(
         operation_description="资源类别列表",
         query_serializer=serializers.QueryResourceTypeSLZ(label="系统ID"),
@@ -49,7 +51,5 @@ class ResourceTypeViewSet(GenericViewSet):
     )
     def list_resource_types(self, request, *args, **kwargs):
         system_id = request.query_params["system_id"]
-        system_resource_types = ResourceTypeBiz.list_resource_types_by_system_id(system_id=system_id)
-        data = [resource_type.dict() for resource_type in system_resource_types.get(system_id, [])]
-
+        data = self.biz.list_resource_types_by_system_id(system_id=system_id)
         return Response(data)

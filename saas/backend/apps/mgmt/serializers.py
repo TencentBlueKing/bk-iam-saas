@@ -11,9 +11,7 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.api.authorization.constants import AuthorizationAPIEnum
-from backend.api.constants import ALLOW_ANY
 from backend.biz.system import SystemBiz
-from backend.service.resource_type import ResourceTypeService
 
 from .constants import ApiType
 
@@ -31,7 +29,7 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="白名单记录ID")
     api_info = serializers.SerializerMethodField(label="API信息")
     system_info = serializers.SerializerMethodField(label="系统信息")
-    object_info = serializers.SerializerMethodField(label="资源类型信息")
+    object_id = serializers.CharField(label="资源类型ID")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,17 +47,6 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
             "id": system_id,
             "name": system.name if system else "",
             "name_en": system.name_en if system else "",
-        }
-
-    def get_object_info(self, obj):
-        object_id = obj.object_id
-        resource_type_info = ResourceTypeService().get_resource_type_dict(system_ids=[obj.system_id])
-
-        return {
-            "object_id": object_id,
-            "object_name": ALLOW_ANY
-            if object_id == ALLOW_ANY
-            else resource_type_info.get_name(obj.system_id, object_id)[0],
         }
 
 
