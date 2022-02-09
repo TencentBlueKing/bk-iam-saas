@@ -68,6 +68,13 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
         }
 
 
+class AuthorizationApiWhiteListSchemaSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="白名单记录ID")
+    api_info = serializers.DictField(label="API信息")
+    system_info = serializers.DictField(label="系统信息")
+    object_id = serializers.CharField(label="资源类型ID")
+
+
 class AuthorizationApiAddWhiteListSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     api = serializers.ChoiceField(label="授权类API", choices=AuthorizationAPIEnum.get_choices())
@@ -97,6 +104,12 @@ class ManagementApiWhiteListSLZ(serializers.Serializer):
             "name": system.name if system else "",
             "name_en": system.name_en if system else "",
         }
+
+
+class ManagementApiWhiteListSchemaSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="白名单记录ID")
+    api_info = serializers.DictField(label="API信息")
+    system_info = serializers.DictField(label="系统信息")
 
 
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):
