@@ -17,11 +17,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import RolePermission
-
 from backend.api.admin.models import AdminAPIAllowListConfig
 from backend.api.authorization.models import AuthAPIAllowListConfig
 from backend.api.management.models import ManagementAPIAllowListConfig
-
 from backend.apps.mgmt.audit import (
     AdminApiWhiteListCreateAuditProvider,
     AdminApiWhiteListDeleteAuditProvider,
@@ -36,12 +34,13 @@ from backend.apps.mgmt.serializers import (
     AdminApiWhiteListSLZ,
     ApiSLZ,
     AuthorizationApiAddWhiteListSLZ,
+    AuthorizationApiWhiteListSchemaSLZ,
     AuthorizationApiWhiteListSLZ,
     ManagementApiAddWhiteListSLZ,
+    ManagementApiWhiteListSchemaSLZ,
     ManagementApiWhiteListSLZ,
-    QueryApiSLZ
+    QueryApiSLZ,
 )
-
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum
@@ -148,7 +147,7 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="授权类API白名单列表",
         auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: AuthorizationApiWhiteListSLZ(label="授权类API白名单", many=True)},
+        responses={status.HTTP_200_OK: AuthorizationApiWhiteListSchemaSLZ(label="授权类API白名单", many=True)},
         tags=["mgmt.white_list"],
     )
     def list(self, request, *args, **kwargs):
@@ -217,7 +216,7 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="管理类API白名单列表",
         auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: ManagementApiWhiteListSLZ(label="管理类API白名单", many=True)},
+        responses={status.HTTP_200_OK: ManagementApiWhiteListSchemaSLZ(label="管理类API白名单", many=True)},
         tags=["mgmt.white_list"],
     )
     def list(self, request, *args, **kwargs):

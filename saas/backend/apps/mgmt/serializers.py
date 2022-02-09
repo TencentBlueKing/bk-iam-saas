@@ -68,6 +68,11 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
         }
 
 
+class AuthorizationApiWhiteListSchemaSLZ(AuthorizationApiWhiteListSLZ):
+    def __init__(self, *args, **kwargs):
+        serializers.ModelSerializer.__init__(self, *args, **kwargs)
+
+
 class AuthorizationApiAddWhiteListSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     api = serializers.ChoiceField(label="授权类API", choices=AuthorizationAPIEnum.get_choices())
@@ -97,6 +102,11 @@ class ManagementApiWhiteListSLZ(serializers.Serializer):
             "name": system.name if system else "",
             "name_en": system.name_en if system else "",
         }
+
+
+class ManagementApiWhiteListSchemaSLZ(ManagementApiWhiteListSLZ):
+    def __init__(self, *args, **kwargs):
+        serializers.ModelSerializer.__init__(self, *args, **kwargs)
 
 
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):
