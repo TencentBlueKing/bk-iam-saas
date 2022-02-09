@@ -68,11 +68,9 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
         }
 
 
-class AuthorizationApiWhiteListSchemaSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="白名单记录ID")
-    api_info = serializers.DictField(label="API信息")
-    system_info = serializers.DictField(label="系统信息")
-    object_id = serializers.CharField(label="资源类型ID")
+class AuthorizationApiWhiteListSchemaSLZ(AuthorizationApiWhiteListSLZ):
+    def __init__(self, *args, **kwargs):
+        serializers.ModelSerializer.__init__(self, *args, **kwargs)
 
 
 class AuthorizationApiAddWhiteListSLZ(serializers.Serializer):
@@ -106,10 +104,9 @@ class ManagementApiWhiteListSLZ(serializers.Serializer):
         }
 
 
-class ManagementApiWhiteListSchemaSLZ(serializers.Serializer):
-    id = serializers.IntegerField(label="白名单记录ID")
-    api_info = serializers.DictField(label="API信息")
-    system_info = serializers.DictField(label="系统信息")
+class ManagementApiWhiteListSchemaSLZ(ManagementApiWhiteListSLZ):
+    def __init__(self, *args, **kwargs):
+        serializers.ModelSerializer.__init__(self, *args, **kwargs)
 
 
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):
