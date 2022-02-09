@@ -8,11 +8,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import List
 
-from backend.apps.mgmt.views.white_list import AdminApiWhiteListViewSet, ApiViewSet, ManagementApiWhiteListViewSet
+from django.db import models
+from django.db.models import Q
 
-__all__ = [
-    "ApiViewSet",
-    "AdminApiWhiteListViewSet",
-    "ManagementApiWhiteListViewSet",
-]
+
+class GroupAuthorizeLockManager(models.Manager):
+    def is_authorizing(self, group_id: int, template_ids: List[int], custom_action_system_ids: List[str]) -> bool:
+        """
+        用户组是否正在授权
+
+        group_id: 用户组ID
+        template_ids: 被授权的模板ID集
+        custom_action_system_ids: 被授权的自定义权限系统ID集
+        """
+        return (
+            self.filter(group_id=group_id)
+            .filter(Q(template_id__in=template_ids) | (Q(template_id=0) & Q(system_id__in=custom_action_system_ids)))
+            .exists()
+        )

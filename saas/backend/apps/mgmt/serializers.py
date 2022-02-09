@@ -11,6 +11,8 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.api.admin.constants import AdminAPIEnum
+from backend.api.management.constants import ManagementAPIEnum
+from backend.biz.system import SystemBiz
 
 from .constants import ApiType
 
@@ -38,3 +40,33 @@ class AdminApiWhiteListSLZ(serializers.Serializer):
 class AdminApiAddWhiteListSLZ(serializers.Serializer):
     app_code = serializers.CharField(label="应用TOKEN")
     api = serializers.ChoiceField(label="超级管理类API", choices=AdminAPIEnum.get_choices())
+
+
+class ManagementApiWhiteListSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="白名单记录ID")
+    api_info = serializers.SerializerMethodField(label="API信息")
+    system_info = serializers.SerializerMethodField(label="系统信息")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._system_list = SystemBiz().new_system_list()
+
+    def get_api_info(self, obj):
+        api = obj.api
+
+        return {"api": api, "name": ManagementAPIEnum.get_choice_label(api)}
+
+    def get_system_info(self, obj):
+        system_id = obj.system_id
+        system = self._system_list.get(system_id)
+
+        return {
+            "id": system_id,
+            "name": system.name if system else "",
+            "name_en": system.name_en if system else "",
+        }
+
+
+class ManagementApiAddWhiteListSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+    api = serializers.ChoiceField(label="管理类API", choices=ManagementAPIEnum.get_choices())

@@ -64,6 +64,7 @@ INSTALLED_APPS += (
     "backend.audit",
     "backend.debug",
     "backend.apps.handover",
+    "backend.apps.mgmt",
 )
 
 # 这里是默认的中间件，大部分情况下，不需要改动
@@ -218,6 +219,10 @@ CELERYBEAT_SCHEDULE = {
     "periodic_retry_long_task": {
         "task": "backend.long_task.tasks.retry_long_task",
         "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
+    },
+    "periodic_delete_unreferenced_expressions": {
+        "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
+        "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
     },
 }
 
