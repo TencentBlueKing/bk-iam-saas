@@ -58,7 +58,7 @@ urlpatterns = [
                 url(r"^audits/", include("backend.audit.urls")),
                 url(r"^debug/", include("backend.debug.urls")),
                 url(r"^handover/", include("backend.apps.handover.urls")),
-                url(r"mgmt/", include("backend.apps.mgmt.urls")),
+                url(r"^mgmt/", include("backend.apps.mgmt.urls")),
             ]
         ),
     ),
