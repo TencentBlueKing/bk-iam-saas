@@ -54,7 +54,7 @@ from backend.util.uuid import gen_uuid
 
 from .resource import ResourceBiz, ResourceNodeBean
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 
 
 class PolicyEmptyException(Exception):
@@ -1230,8 +1230,8 @@ class PolicyBeanList:
         try:
             # 获取策略里被重命名的资源实例
             renamed_resources = self.get_renamed_resources()
-        except Exception as error:
-            logger.exception(f"auto_update: get_renamed_resources error={error}")
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("biz policy auto_update_resource_name: get_renamed_resources fail")
             return []
 
         # 没有任何被重命名的资源实例，则无需更新策略

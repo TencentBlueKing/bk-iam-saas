@@ -61,7 +61,7 @@ from .role import RoleBiz, RoleInfo, RoleInfoBean
 from .subject import SubjectInfoList
 from .template import TemplateBiz
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 
 
 class BaseApplicationDataBean(BaseModel):
@@ -171,7 +171,10 @@ class ApprovedPassApplicationBiz:
                 self.group_biz.add_members(group["id"], [subject], expired_at)
             except Group.DoesNotExist:
                 # 若审批通过时，用户组已经被删除，则直接忽略
-                logger.info(f"group({group['id']}) has been deleted before the application is approved")
+                logger.error(
+                    f"subject {subject} join group({group['id']}) fail! "
+                    "the group has been deleted before the application is approved"
+                )
 
     def _renew_group(self, subject: Subject, data: Dict):
         """用户组续期"""
