@@ -355,7 +355,7 @@ PUB_SUB_REDIS_DB = os.environ.get("BKAPP_PUB_SUB_REDIS_DB", 0)
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.environ.get("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "true").lower()
+    "enable_permission_handover": os.environ.get("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "True").lower()
     == "true",
 }
 
