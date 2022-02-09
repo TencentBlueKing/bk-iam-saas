@@ -23,6 +23,16 @@ urlpatterns = [
                     name="mgmt.api",
                 ),
                 path(
+                    "admin_apis/",
+                    views.AdminApiWhiteListViewSet.as_view({"get": "list", "post": "create"}),
+                    name="mgmt.admin_api.white_list",
+                ),
+                path(
+                    "admin_apis/<int:id>/",
+                    views.AdminApiWhiteListViewSet.as_view({"delete": "destroy"}),
+                    name="mgmt.admin_api.delete_white_list",
+                ),
+                path(
                     "management_apis/",
                     views.ManagementApiWhiteListViewSet.as_view({"get": "list", "post": "create"}),
                     name="mgmt.management_api.white_list",

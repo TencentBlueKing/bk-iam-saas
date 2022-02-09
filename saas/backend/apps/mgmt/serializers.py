@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.api.admin.constants import AdminAPIEnum
 from backend.api.management.constants import ManagementAPIEnum
 from backend.biz.system import SystemBiz
 
@@ -23,6 +24,22 @@ class QueryApiSLZ(serializers.Serializer):
 class ApiSLZ(serializers.Serializer):
     api = serializers.CharField(label="API")
     name = serializers.CharField(label="API名称")
+
+
+class AdminApiWhiteListSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="白名单记录ID")
+    api_info = serializers.SerializerMethodField(label="API信息")
+    app_code = serializers.CharField(label="应用TOKEN")
+
+    def get_api_info(self, obj):
+        api = obj.api
+
+        return {"api": api, "name": AdminAPIEnum.get_choice_label(api)}
+
+
+class AdminApiAddWhiteListSLZ(serializers.Serializer):
+    app_code = serializers.CharField(label="应用TOKEN")
+    api = serializers.ChoiceField(label="超级管理类API", choices=AdminAPIEnum.get_choices())
 
 
 class ManagementApiWhiteListSLZ(serializers.Serializer):
