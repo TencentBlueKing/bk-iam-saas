@@ -52,8 +52,7 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
 
     # process result
     if not ok:
-        message = "iam api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
-        logger.error(message)
+        logger.error("iam api failed, method: %s, info: %s", http_func.__name__, kwargs)
         raise error_codes.REMOTE_REQUEST_ERROR.format(f'request iam api error: {data["error"]}')
 
     code = data["code"]
