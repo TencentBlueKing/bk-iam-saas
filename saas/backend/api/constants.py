@@ -26,7 +26,6 @@ class BKNonEntityUser(ChoicesEnum, LowerStrEnum):
     # 双下划线是为了避免与实体用户名冲突
     BK__UNVERIFIED_USER = auto()
     BK__ANONYMOUS_USER = auto()
-
     _choices_labels = skip(
         (
             # 主要用于API调用时，ESB/APIGW传递过来的Jwt.user.verified为False时，Jwt.user.username是不可信的，有可能是很随意的字符串

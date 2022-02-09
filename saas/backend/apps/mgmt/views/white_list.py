@@ -19,11 +19,14 @@ from rest_framework.viewsets import GenericViewSet, mixins
 from backend.account.permissions import RolePermission
 
 from backend.api.admin.models import AdminAPIAllowListConfig
+from backend.api.authorization.models import AuthAPIAllowListConfig
 from backend.api.management.models import ManagementAPIAllowListConfig
 
 from backend.apps.mgmt.audit import (
     AdminApiWhiteListCreateAuditProvider,
     AdminApiWhiteListDeleteAuditProvider,
+    AuthorizationApiWhiteListCreateAuditProvider,
+    AuthorizationApiWhiteListDeleteAuditProvider,
     ManagementApiWhiteListCreateAuditProvider,
     ManagementApiWhiteListDeleteAuditProvider,
 )
@@ -32,6 +35,8 @@ from backend.apps.mgmt.serializers import (
     AdminApiAddWhiteListSLZ,
     AdminApiWhiteListSLZ,
     ApiSLZ,
+    AuthorizationApiAddWhiteListSLZ,
+    AuthorizationApiWhiteListSLZ,
     ManagementApiAddWhiteListSLZ,
     ManagementApiWhiteListSLZ,
     QueryApiSLZ
@@ -75,7 +80,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = AdminApiWhiteListSLZ
 
     @swagger_auto_schema(
-        operation_description="管理类API白名单列表",
+        operation_description="超级管理类API白名单列表",
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AdminApiWhiteListSLZ(label="超级管理类API白名单", many=True)},
         tags=["mgmt.white_list"],
@@ -85,7 +90,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="新增-超级管理类API白名单",
-        request_body=AdminApiAddWhiteListSLZ(label="管理类API白名单信息"),
+        request_body=AdminApiAddWhiteListSLZ(label="超级管理类API白名单信息"),
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: yasg_response({})},
         tags=["mgmt.white_list"],
@@ -120,12 +125,81 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         conf = AdminAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).first()
         if not conf:
             return Response({})
-
-        copied_conf = deepcopy(conf)  # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        copied_conf = deepcopy(conf)
         conf.delete()
 
         # 写入审计上下文
         audit_context_setter(white_list=copied_conf)
+        return Response({})
+
+
+class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
+    permission_classes = [RolePermission]
+    action_permission = {
+        "list": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
+        "create": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
+        "destroy": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value,
+    }
+
+    queryset = AuthAPIAllowListConfig.objects.all()
+    serializer_class = AuthorizationApiWhiteListSLZ
+
+    @swagger_auto_schema(
+        operation_description="授权类API白名单列表",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: AuthorizationApiWhiteListSLZ(label="授权类API白名单", many=True)},
+        tags=["mgmt.white_list"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(self, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="新增-授权类API白名单",
+        request_body=AuthorizationApiAddWhiteListSLZ(label="授权类API白名单信息"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: yasg_response({})},
+        tags=["mgmt.white_list"],
+    )
+    @view_audit_decorator(AuthorizationApiWhiteListCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = AuthorizationApiAddWhiteListSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        username = request.user.username
+        system_id = data["system_id"]
+        object_id = data["object_id"]
+        api = data["api"]
+
+        conf = AuthAPIAllowListConfig.objects.update_or_create(
+            defaults={"updater": username}, system_id=system_id, object_id=object_id, type=api
+        )
+
+        # 写入审计上下文
+        audit_context_setter(white_list=conf[0])
+
+        return Response({}, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        operation_description="删除-授权类API白名单",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: yasg_response({})},
+        tags=["mgmt.white_list"],
+    )
+    @view_audit_decorator(AuthorizationApiWhiteListDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        conf = AuthAPIAllowListConfig.objects.filter(id=self.kwargs.get("id")).first()
+        if not conf:
+            return Response({})
+
+        # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        copied_conf = deepcopy(conf)
+        conf.delete()
+
+        # 写入审计上下文
+        audit_context_setter(white_list=copied_conf)
+
         return Response({})
 
 
@@ -187,7 +261,8 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
         if not conf:
             return Response({})
 
-        copied_conf = deepcopy(conf)  # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        # delete操作会导致conf.id的值被修改为0，那么记录审计信息时就无法确定被删除的具体对象ID，所以需要提前将conf的内容进行deepcopy
+        copied_conf = deepcopy(conf)
         conf.delete()
 
         # 写入审计上下文

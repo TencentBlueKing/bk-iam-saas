@@ -50,6 +50,38 @@ class AdminApiWhiteListDeleteAuditProvider(BaseMgmtWhiteListProvider):
         return {"app_code": self.white_list.app_code}
 
 
+class AuthorizationApiWhiteListCreateAuditProvider(BaseMgmtWhiteListProvider):
+    type = AuditType.AUTHORIZATION_API_ALLOW_LIST_CONFIG_CREATE.value
+
+    @property
+    def object_name(self):
+        return self.white_list.type
+
+    @property
+    def system_id(self):
+        return self.white_list.system_id
+
+    @property
+    def extra(self):
+        return {"object_id": self.white_list.object_id}
+
+
+class AuthorizationApiWhiteListDeleteAuditProvider(BaseMgmtWhiteListProvider):
+    type = AuditType.AUTHORIZATION_API_ALLOW_LIST_CONFIG_DELETE.value
+
+    @property
+    def object_name(self):
+        return self.white_list.type
+
+    @property
+    def system_id(self):
+        return self.white_list.system_id
+
+    @property
+    def extra(self):
+        return {"object_id": self.white_list.object_id}
+
+
 class ManagementApiWhiteListCreateAuditProvider(BaseMgmtWhiteListProvider):
     type = AuditType.MANAGEMENT_API_ALLOW_LIST_CONFIG_CREATE.value
 

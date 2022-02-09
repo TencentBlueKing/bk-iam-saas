@@ -22,7 +22,6 @@ class AdminAPIEnum(BaseAPIEnum):
     GROUP_MEMBER_LIST = auto()
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
-
     _choices_labels = skip(
         (
             (GROUP_LIST, "获取用户组列表"),

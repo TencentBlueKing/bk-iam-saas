@@ -28,4 +28,4 @@ class AuthAPIAllowListConfig(BaseModel):
         verbose_name = "授权API白名单配置"
         verbose_name_plural = "授权API白名单配置"
         ordering = ["-id"]
-        index_together = ["system_id", "object_id"]
+        unique_together = [["system_id", "object_id"]]
