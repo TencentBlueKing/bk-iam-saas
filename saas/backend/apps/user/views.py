@@ -67,7 +67,13 @@ class UserGroupViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        permission_logger.info("subject group delete by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s group %s deleted by user %s",
+            subject.type,
+            subject.id,
+            data["id"],
+            request.user.username,
+        )
 
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:

@@ -233,7 +233,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
         self.template_check_biz.check_template_update_lock_exists(template.id)
 
-        permission_logger.info("template delete by user: %s", request.user.username)
+        permission_logger.info("template %s deleted by user %s", template.id, request.user.username)
 
         self.template_biz.delete(template.id)
 
@@ -328,7 +328,7 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         members = serializer.validated_data["members"]
 
-        permission_logger.info("template delete member by user: %s", request.user.username)
+        permission_logger.info("template %s delete members %s by user %s", template.id, members, request.user.username)
 
         self.template_biz.revoke_subjects(template.system_id, template.id, parse_obj_as(List[Subject], members))
 

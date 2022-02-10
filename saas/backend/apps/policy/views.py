@@ -106,7 +106,13 @@ class PolicyViewSet(GenericViewSet):
         ids = slz.validated_data["ids"]
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        permission_logger.info("policy delete by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s polices %s deleted by user %s",
+            subject.type,
+            subject.id,
+            ids,
+            request.user.username,
+        )
 
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
@@ -141,7 +147,13 @@ class PolicyViewSet(GenericViewSet):
 
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        permission_logger.info("policy delete partial by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s policy %s deleted partial by user %s",
+            subject.type,
+            subject.id,
+            policy_id,
+            request.user.username,
+        )
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
@@ -179,7 +191,14 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
         resource_group_id = kwargs["resource_group_id"]
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        permission_logger.info("policy delete by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s policy %s delete via resource_group_id, by user %s",
+            subject.type,
+            subject.id,
+            policy_id,
+            resource_group_id,
+            request.user.username,
+        )
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)

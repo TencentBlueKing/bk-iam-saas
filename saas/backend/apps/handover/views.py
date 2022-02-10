@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 from typing import Dict, Type
 
 from django.core.cache import cache
@@ -30,9 +29,6 @@ from .constants import HandoverObjectType
 from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
 from .tasks import execute_handover_task
 from .validation import BaseHandoverDataProcessor, GroupInfoProcessor, GustomPolicyProcessor, RoleInfoProcessor
-
-logger = logging.getLogger("app")
-
 
 HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverDataProcessor]] = {
     HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
