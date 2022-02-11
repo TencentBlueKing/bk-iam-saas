@@ -297,6 +297,7 @@ BK_IAM_HOST_TYPE = os.getenv("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigatew
 
 # profile record
 ENABLE_PYINSTRUMENT = os.getenv("BKAPP_ENABLE_PYINSTRUMENT", "False").lower() == "true"  # 需要开启时则配置环境变量
+PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
 
 # version log
 VERSION_LOG_MD_FILES_DIR = os.path.join(BASE_DIR, "resources/version_log")
@@ -490,9 +491,3 @@ CORS_ORIGIN_WHITELIST = (
 
 # logging
 LOGGING = get_logging_config_dict(dict(LOG_LEVEL=LOG_LEVEL, IS_LOCAL=IS_LOCAL, APP_CODE=APP_CODE, BASE_DIR=BASE_DIR))
-
-
-# profile record
-PYINSTRUMENT_PROFILE_DIR = os.path.join(
-    os.path.dirname(BASE_DIR), "logs", APP_CODE, "profiles"
-)  # 默认在日志目录下  TODO 最上面获取app_code

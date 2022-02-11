@@ -11,7 +11,7 @@ import hashlib
 import os
 from urllib.parse import urlparse
 
-from .default import BASE_DIR, CSRF_COOKIE_NAME, LOG_LEVEL
+from .default import CSRF_COOKIE_NAME, LOG_LEVEL
 from .utils import get_paas_v2_logging_config_dict
 
 # 判断是否为本地开发环境
@@ -127,9 +127,3 @@ CORS_ORIGIN_WHITELIST = (
 
 # logging
 LOGGING = get_paas_v2_logging_config_dict(LOG_LEVEL)
-
-
-# profile record
-PYINSTRUMENT_PROFILE_DIR = os.path.join(
-    os.path.dirname(BASE_DIR), "logs", APP_CODE, "profiles"
-)  # 默认在日志目录下  TODO 最上面获取app_code
