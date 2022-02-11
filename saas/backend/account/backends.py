@@ -15,8 +15,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.db import IntegrityError
 
 from backend.account import get_user_model
-from backend.component.esb import get_user_info
-from backend.component.login import verify_bk_token
+from backend.component.login import get_user_info, verify_bk_token
 
 logger = logging.getLogger("component")
 

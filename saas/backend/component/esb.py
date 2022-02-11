@@ -82,11 +82,3 @@ def send_mail(username, title, content, body_format="Html"):
     url_path = "/api/c/compapi/cmsi/send_mail/"
     data = {"receiver__username": username, "title": title, "content": content, "body_format": body_format}
     return _call_esb_api(http_post, url_path, data=data)
-
-
-def get_user_info(bk_token: str):
-    """
-    获取用户信息
-    """
-    url_path = "/api/c/compapi/v2/bk_login/get_user/"
-    return _call_esb_api(http_get, url_path, data={"bk_token": bk_token})

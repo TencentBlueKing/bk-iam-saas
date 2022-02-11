@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 from django.conf import settings
 
 from backend.common.error_codes import error_codes
+from backend.component.esb import _call_esb_api
 from backend.util.url import url_join
 
 from .http import http_get, logger
@@ -30,7 +31,17 @@ def _call_login_api(http_func, url_path, data, timeout=30):
     return data
 
 
+# TODO cache
 def verify_bk_token(bk_token: str):
     """验证bk_token"""
     url_path = "/login/accounts/is_login/"
     return _call_login_api(http_get, url_path=url_path, data={"bk_token": bk_token})
+
+
+# TODO cache
+def get_user_info(bk_token: str):
+    """
+    获取用户信息
+    """
+    url_path = "/api/c/compapi/v2/bk_login/get_user/"
+    return _call_esb_api(http_get, url_path, data={"bk_token": bk_token})

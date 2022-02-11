@@ -89,17 +89,12 @@ CACHES = {
 }
 
 
-# celery
-BROKER_URL = os.getenv("BK_BROKER_URL")
-
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 # 站点URL
 SITE_URL = os.environ.get("BK_SITE_URL", "/o/%s/" % APP_CODE)
 
-WHITENOISE_STATIC_PREFIX = "/staticfiles/"
 FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"

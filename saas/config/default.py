@@ -149,6 +149,8 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, "resources/locale"),)
 # static
 STATIC_VERSION = "1.0"
 
+WHITENOISE_STATIC_PREFIX = "/staticfiles/"
+
 
 # cookie
 SESSION_COOKIE_NAME = "bkiam_sessionid"
@@ -256,6 +258,8 @@ CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 
 # close celery hijack root logger
 CELERYD_HIJACK_ROOT_LOGGER = False
+
+BROKER_URL = get_broker_url()
 
 djcelery.setup_loader()
 
@@ -448,17 +452,12 @@ CACHES = {
 }
 
 
-# celery
-BROKER_URL = get_broker_url()
-
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 # 站点URL
 SITE_URL = os.getenv("BKPAAS_SUB_PATH", "/")
 
-WHITENOISE_STATIC_PREFIX = "/staticfiles/"
 FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
