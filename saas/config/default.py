@@ -377,7 +377,7 @@ if ENABLE_OTEL_TRACE:
 # 判断是否为本地开发环境
 IS_LOCAL = not os.getenv("BKPAAS_ENVIRONMENT", False)
 
-APP_CODE = APP_ID = os.getenv("BKPAAS_APP_ID", "bk_iam")
+APP_CODE = os.getenv("BKPAAS_APP_CODE", "bk_iam")
 APP_SECRET = os.getenv("BKPAAS_APP_SECRET", "af76be9c-2b24-4006-a68e-e66abcfd67af")
 
 APP_URL = get_app_service_url(APP_CODE)
@@ -395,7 +395,7 @@ LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
 BK_PAAS_HOST = os.getenv("BK_PAAS_HOST")
 
 # 用于 用户认证、用户信息获取 的蓝鲸主机
-BK_PAAS_INNER_HOST = os.getenv("BK_PAAS_INNER_HOST", BK_PAAS_HOST)
+BK_PAAS_INNER_HOST = os.getenv("BK_PAAS2_URL", BK_PAAS_HOST)
 
 
 # Quick-start development settings - unsuitable for production

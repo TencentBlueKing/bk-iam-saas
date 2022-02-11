@@ -61,6 +61,16 @@ CACHES = {
 BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
 
+# cors
+CORS_ORIGIN_WHITELIST = []
+
+
+# logging
+LOG_LEVEL = "DEBUG"
+
+LOGGING = get_logging_config_dict(dict(LOG_LEVEL=LOG_LEVEL, IS_LOCAL=IS_LOCAL, APP_CODE=APP_CODE, BASE_DIR=BASE_DIR))
+
+
 # 开启性能统计
 # ENABLE_PYINSTRUMENT = True
 
