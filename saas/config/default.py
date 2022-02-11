@@ -257,8 +257,6 @@ CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 # close celery hijack root logger
 CELERYD_HIJACK_ROOT_LOGGER = False
 
-BROKER_URL = get_broker_url()
-
 djcelery.setup_loader()
 
 
@@ -294,9 +292,6 @@ BK_IAM_HOST = os.getenv("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:908
 BK_IAM_HOST_TYPE = os.getenv("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
 
 # profile record
-PYINSTRUMENT_PROFILE_DIR = os.path.join(
-    os.path.dirname(BASE_DIR), "logs", APP_CODE, "profiles"
-)  # 默认在日志目录下  TODO 最上面获取app_code
 ENABLE_PYINSTRUMENT = os.getenv("BKAPP_ENABLE_PYINSTRUMENT", "False").lower() == "true"  # 需要开启时则配置环境变量
 
 # version log
@@ -393,7 +388,7 @@ BK_COMPONENT_INNER_API_URL = BK_COMPONENT_API_URL
 
 BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
 
-LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL")
+LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL", "/")
 LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
 
 # 蓝鲸PASS平台URL
@@ -414,24 +409,22 @@ SECRET_KEY = APP_SECRET
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": os.getenv("MYSQL_NAME"),
-            "USER": os.getenv("MYSQL_USER"),
-            "PASSWORD": os.getenv("MYSQL_PASSWORD"),
-            "HOST": os.getenv("MYSQL_HOST"),
-            "PORT": os.getenv("MYSQL_PORT"),
-        },
-        "audit": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": os.getenv("AUDIT_DB_NAME") or os.getenv("MYSQL_NAME"),
-            "USER": os.getenv("AUDIT_DB_USERNAME") or os.getenv("MYSQL_USER"),
-            "PASSWORD": os.getenv("AUDIT_DB_PASSWORD") or os.getenv("MYSQL_PASSWORD"),
-            "HOST": os.getenv("AUDIT_DB_HOST") or os.getenv("MYSQL_HOST"),
-            "PORT": os.getenv("AUDIT_DB_PORT") or os.getenv("MYSQL_PORT"),
-        },
-    }
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("MYSQL_NAME"),
+        "USER": os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("MYSQL_HOST"),
+        "PORT": os.getenv("MYSQL_PORT"),
+    },
+    "audit": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("AUDIT_DB_NAME") or os.getenv("MYSQL_NAME"),
+        "USER": os.getenv("AUDIT_DB_USERNAME") or os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("AUDIT_DB_PASSWORD") or os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("AUDIT_DB_HOST") or os.getenv("MYSQL_HOST"),
+        "PORT": os.getenv("AUDIT_DB_PORT") or os.getenv("MYSQL_PORT"),
+    },
 }
 
 
@@ -453,6 +446,10 @@ CACHES = {
         },
     }
 }
+
+
+# celery
+BROKER_URL = get_broker_url()
 
 
 # Static files (CSS, JavaScript, Images)
@@ -494,3 +491,9 @@ CORS_ORIGIN_WHITELIST = (
 
 # logging
 LOGGING = get_logging_config_dict(dict(LOG_LEVEL=LOG_LEVEL, IS_LOCAL=IS_LOCAL, APP_CODE=APP_CODE, BASE_DIR=BASE_DIR))
+
+
+# profile record
+PYINSTRUMENT_PROFILE_DIR = os.path.join(
+    os.path.dirname(BASE_DIR), "logs", APP_CODE, "profiles"
+)  # 默认在日志目录下  TODO 最上面获取app_code
