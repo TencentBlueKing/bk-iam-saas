@@ -27,12 +27,12 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     }
     # Note: 目前企业版ESB调用的鉴权信息都是与接口的参数一起的，并非在header头里
     common_params = {
-        "bk_app_code": settings.APP_ID,
-        "bk_app_secret": settings.APP_TOKEN,
+        "bk_app_code": settings.APP_CODE,
+        "bk_app_secret": settings.APP_SECRET,
         "bk_username": "admin",  # 存在后台任务，无法使用登录态的方式
         # 兼容TE版
-        "app_code": settings.APP_ID,
-        "app_secret": settings.APP_TOKEN,
+        "app_code": settings.APP_CODE,
+        "app_secret": settings.APP_SECRET,
     }
     data.update(common_params)
 
@@ -82,3 +82,11 @@ def send_mail(username, title, content, body_format="Html"):
     url_path = "/api/c/compapi/cmsi/send_mail/"
     data = {"receiver__username": username, "title": title, "content": content, "body_format": body_format}
     return _call_esb_api(http_post, url_path, data=data)
+
+
+def get_user_info(bk_token: str):
+    """
+    获取用户信息
+    """
+    url_path = "/api/c/compapi/v2/bk_login/get_user/"
+    return _call_esb_api(http_get, url_path, data={"bk_token": bk_token})

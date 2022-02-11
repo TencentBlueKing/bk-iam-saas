@@ -31,11 +31,11 @@ def _call_engine_api(http_func, url_path, data, timeout=30):
 
     if settings.BK_IAM_ENGINE_HOST_TYPE == "apigateway":
         headers["x-bkapi-authorization"] = json_dumps(
-            {"bk_app_code": settings.APP_ID, "bk_app_secret": settings.APP_TOKEN}
+            {"bk_app_code": settings.APP_CODE, "bk_app_secret": settings.APP_SECRET}
         )
 
     if settings.BK_IAM_ENGINE_HOST_TYPE == "direct":
-        headers.update({"X-Bk-App-Code": settings.APP_ID, "X-Bk-App-Secret": settings.APP_TOKEN})
+        headers.update({"X-Bk-App-Code": settings.APP_CODE, "X-Bk-App-Secret": settings.APP_SECRET})
 
     url = url_join(settings.BK_IAM_ENGINE_HOST, f"/api/v1/engine{url_path}")
     if settings.BK_IAM_ENGINE_HOST_TYPE == "direct":
