@@ -134,7 +134,7 @@ def custom_exception_handler(exc, context):
     # 记录debug信息
     log_api_error_trace(request, True)
 
-    logger.exception(message)
+    # logger.exception(message)
 
     # Call REST framework's default exception handler to get the standard error response.
     response = exception_handler(exc, context)

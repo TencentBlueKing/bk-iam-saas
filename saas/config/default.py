@@ -72,7 +72,7 @@ INSTALLED_APPS = [
 ]
 
 
-MIDDLEWARE = [  # TODO 添加sentry中间件
+MIDDLEWARE = [
     "backend.common.middlewares.CustomProfilerMiddleware",
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "backend.common.middlewares.RequestProvider",
@@ -87,8 +87,8 @@ MIDDLEWARE = [  # TODO 添加sentry中间件
     "backend.account.middlewares.LoginMiddleware",
     "backend.account.middlewares.TimezoneMiddleware",
     "backend.account.middlewares.RoleAuthenticationMiddleware",
-    "backend.common.middlewares.AppExceptionMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
+    "backend.common.middlewares.AppExceptionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
 ]
 
@@ -265,6 +265,7 @@ djcelery.setup_loader()
 # sentry support
 if os.getenv("SENTRY_DSN"):
     INSTALLED_APPS += ("raven.contrib.django.raven_compat",)
+    MIDDLEWARE += ("raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware",)
     RAVEN_CONFIG = {
         "dsn": os.getenv("SENTRY_DSN"),
     }

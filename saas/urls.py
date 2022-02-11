@@ -33,7 +33,6 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    url(r"^account/", include("blueapps.account.urls")),  # TODO 迁移blueapps views
     # backend apps url
     url(
         r"^api/v1/",
