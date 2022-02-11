@@ -145,6 +145,8 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, "resources/locale"),)
 # static
 STATIC_VERSION = "1.0"
 
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 WHITENOISE_STATIC_PREFIX = "/staticfiles/"
 
 
