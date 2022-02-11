@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from config.utils import get_broker_url
+
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -10,16 +12,10 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-import hashlib
 import os
-from urllib.parse import urlparse
 
 import djcelery
 from celery.schedules import crontab
-
-from .utils import get_app_service_url, get_broker_url, get_logging_config_dict
-
-### ! 以下配置为框架固定配置, 与环境无关
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -163,13 +159,18 @@ CSRF_COOKIE_NAME = "bkiam_csrftoken"
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 
 
-# 初始化管理员列表，列表中的人员将拥有预发布环境和正式环境的管理员权限
-# 注意：请在首次提测和上线前修改，之后的修改将不会生效
-INIT_SUPERUSER = []
-
-
-# 只对正式环境日志级别进行配置，可以在这里修改
-LOG_LEVEL = "ERROR"
+# restframework
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
+    "PAGE_SIZE": 10,
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_RENDERER_CLASSES": ("backend.common.renderers.BKAPIRenderer",),
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+}
 
 
 # CELERY 开关，使用时请改为 True，否则请保持为False。启动方式为以下两行命令：
@@ -273,34 +274,61 @@ if os.getenv("SENTRY_DSN"):
     }
 
 
-# restframework
-REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
-    "PAGE_SIZE": 10,
-    "TEST_REQUEST_DEFAULT_FORMAT": "json",
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_RENDERER_CLASSES": ("backend.common.renderers.BKAPIRenderer",),
-    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
-    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
-}
+# tracing 相关配置
+# if enable, default false
+ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
+BKAPP_OTEL_INSTRUMENT_DB_API = os.getenv("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
+BKAPP_OTEL_SERVICE_NAME = os.getenv("BKAPP_OTEL_SERVICE_NAME") or "bk-iam"
+BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
+BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
+BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
 
-### ! 以下配置 app 自定义配置
+if ENABLE_OTEL_TRACE:
+    INSTALLED_APPS += ("backend.tracing",)
 
-# 是否是smart部署方式
-IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"
 
-# iam host
-BK_IAM_HOST = os.getenv("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
-BK_IAM_HOST_TYPE = os.getenv("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
+# debug trace的过期时间
+MAX_DEBUG_TRACE_TTL = 7 * 24 * 60 * 60  # 7天
+# debug trace的最大数量
+MAX_DEBUG_TRACE_COUNT = 1000
+
 
 # profile record
 ENABLE_PYINSTRUMENT = os.getenv("BKAPP_ENABLE_PYINSTRUMENT", "False").lower() == "true"  # 需要开启时则配置环境变量
 PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
 
+
+# ---------------
+# app 自定义配置
+# ---------------
+
+
+# 只对正式环境日志级别进行配置，可以在这里修改
+LOG_LEVEL = "ERROR"
+
+
+# 初始化管理员列表，列表中的人员将拥有预发布环境和正式环境的管理员权限
+# 注意：请在首次提测和上线前修改，之后的修改将不会生效
+INIT_SUPERUSER = []
+
+
+# 是否是smart部署方式
+IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"
+
+
 # version log
 VERSION_LOG_MD_FILES_DIR = os.path.join(BASE_DIR, "resources/version_log")
+
+
+# iam host
+BK_IAM_HOST = os.getenv("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
+BK_IAM_HOST_TYPE = os.getenv("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
+
+
+# iam engine host
+BK_IAM_ENGINE_HOST = os.getenv("BKAPP_IAM_ENGINE_HOST")
+BK_IAM_ENGINE_HOST_TYPE = os.getenv("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # direct/apigateway
+
 
 # authorization limit
 # 授权对象授权用户组, 模板的最大限制
@@ -329,20 +357,15 @@ SINGLE_POLICY_MAX_INSTANCES_LIMIT = int(os.getenv("BKAPP_SINGLE_POLICY_MAX_INSTA
 # 一次申请策略中中新增实例数量限制
 APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", 20))
 
-# debug trace的过期时间
-MAX_DEBUG_TRACE_TTL = 7 * 24 * 60 * 60  # 7天
-# debug trace的最大数量
-MAX_DEBUG_TRACE_COUNT = 1000
-
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 
-# Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
-BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
+# 前端页面功能开关
+ENABLE_FRONT_END_FEATURES = {
+    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
+    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower() == "true",
+}
 
-# iam engine host
-BK_IAM_ENGINE_HOST = os.getenv("BKAPP_IAM_ENGINE_HOST")
-BK_IAM_ENGINE_HOST_TYPE = os.getenv("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # direct/apigateway
 
 # 用于发布订阅的Redis
 PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")
@@ -350,11 +373,9 @@ PUB_SUB_REDIS_PORT = os.getenv("BKAPP_PUB_SUB_REDIS_PORT")
 PUB_SUB_REDIS_PASSWORD = os.getenv("BKAPP_PUB_SUB_REDIS_PASSWORD")
 PUB_SUB_REDIS_DB = os.getenv("BKAPP_PUB_SUB_REDIS_DB", 0)
 
-# 前端页面功能开关
-ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower() == "true",
-}
+
+# Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
+BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
 
 # apigateway 相关配置
 # NOTE: it sdk will read settings.APP_CODE and settings.APP_SECRET, so you should set it
@@ -363,131 +384,3 @@ BK_API_URL_TMPL = os.getenv("BK_APIGATEWAY_URL", "") + "/api/{api_name}/"
 BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
-
-# tracing 相关配置
-# if enable, default false
-ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
-BKAPP_OTEL_INSTRUMENT_DB_API = os.getenv("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
-BKAPP_OTEL_SERVICE_NAME = os.getenv("BKAPP_OTEL_SERVICE_NAME") or "bk-iam"
-BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
-BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
-BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
-
-if ENABLE_OTEL_TRACE:
-    INSTALLED_APPS += ("backend.tracing",)
-
-
-### ! 以下配置通过平台环境变量动态生成, 默认为容器化版本配置
-
-# 判断是否为本地开发环境
-IS_LOCAL = not os.getenv("BKPAAS_ENVIRONMENT", False)
-
-APP_CODE = os.getenv("BKPAAS_APP_CODE", "bk_iam")
-APP_SECRET = os.getenv("BKPAAS_APP_SECRET", "af76be9c-2b24-4006-a68e-e66abcfd67af")
-
-APP_URL = get_app_service_url(APP_CODE)
-APP_API_URL = APP_URL  # 前后端分离架构下, APP_URL 与 APP_API_URL 不一样
-
-BK_COMPONENT_API_URL = os.getenv("BK_COMPONENT_API_URL")
-BK_COMPONENT_INNER_API_URL = BK_COMPONENT_API_URL
-
-BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
-
-LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL", "/")
-LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
-
-# 蓝鲸PASS平台URL
-BK_PAAS_HOST = os.getenv("BK_PAAS_HOST")
-
-# 用于 用户认证、用户信息获取 的蓝鲸主机
-BK_PAAS_INNER_HOST = os.getenv("BK_PAAS2_URL", BK_PAAS_HOST)
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = APP_SECRET
-
-
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQL_NAME"),
-        "USER": os.getenv("MYSQL_USER"),
-        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
-        "HOST": os.getenv("MYSQL_HOST"),
-        "PORT": os.getenv("MYSQL_PORT"),
-    },
-    "audit": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("AUDIT_DB_NAME") or os.getenv("MYSQL_NAME"),
-        "USER": os.getenv("AUDIT_DB_USERNAME") or os.getenv("MYSQL_USER"),
-        "PASSWORD": os.getenv("AUDIT_DB_PASSWORD") or os.getenv("MYSQL_PASSWORD"),
-        "HOST": os.getenv("AUDIT_DB_HOST") or os.getenv("MYSQL_HOST"),
-        "PORT": os.getenv("AUDIT_DB_PORT") or os.getenv("MYSQL_PORT"),
-    },
-}
-
-
-# cache
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-REDIS_DB = os.getenv("REDIS_DB", 0)
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",  # 根据redis是单机还是集群模式, 修改Client class
-            "PASSWORD": REDIS_PASSWORD,
-            "SOCKET_CONNECT_TIMEOUT": 5,  # in seconds
-            "SOCKET_TIMEOUT": 5,  # in seconds
-        },
-    }
-}
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
-# 站点URL
-SITE_URL = os.getenv("BKPAAS_SUB_PATH", "/")
-
-FORCE_SCRIPT_NAME = SITE_URL
-STATIC_URL = SITE_URL + "staticfiles/"
-AJAX_URL_PREFIX = SITE_URL + "api/v1"
-
-
-# csrf
-_BK_PAAS_HOST_PARSE_URL = urlparse(APP_URL)
-_BK_PAAS_HOSTNAME = _BK_PAAS_HOST_PARSE_URL.hostname  # 去除端口的域名
-_BK_PAAS_NETLOC = _BK_PAAS_HOST_PARSE_URL.netloc  # 若有端口，则会带上对应端口
-_BK_PAAS_IS_SPECIAL_PORT = _BK_PAAS_HOST_PARSE_URL.port in [None, 80, 443]
-_BK_PAAS_SCHEME = _BK_PAAS_HOST_PARSE_URL.scheme
-
-# 注意：Cookie Domain是不支持端口的
-SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME
-CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-
-_APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
-CSRF_COOKIE_NAME = f"{CSRF_COOKIE_NAME}_{_APP_URL_MD5_16BIT}"
-
-# 对于特殊端口，带端口和不带端口都得添加，其他只需要添加默认原生的即可
-CSRF_TRUSTED_ORIGINS = [_BK_PAAS_HOSTNAME, _BK_PAAS_NETLOC] if _BK_PAAS_IS_SPECIAL_PORT else [_BK_PAAS_NETLOC]
-
-
-CORS_ORIGIN_WHITELIST = (
-    [f"{_BK_PAAS_SCHEME}://{_BK_PAAS_HOSTNAME}", f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"]
-    if _BK_PAAS_IS_SPECIAL_PORT
-    else [f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"]
-)
-
-
-# logging
-LOGGING = get_logging_config_dict(dict(LOG_LEVEL=LOG_LEVEL, IS_LOCAL=IS_LOCAL, APP_CODE=APP_CODE, BASE_DIR=BASE_DIR))

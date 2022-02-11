@@ -9,10 +9,12 @@ specific language governing permissions and limitations under the License.
 """
 import hashlib
 import os
+import random
+import string
 from urllib.parse import urlparse
 
-from .default import CSRF_COOKIE_NAME, LOG_LEVEL
-from .utils import RequestIDFilter
+from .default import BASE_DIR, CSRF_COOKIE_NAME, LOG_LEVEL
+from .utils import RequestIDFilter, get_app_service_url
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -20,28 +22,28 @@ from .utils import RequestIDFilter
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USERNAME"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
+        "NAME": os.getenv("MYSQL_NAME"),
+        "USER": os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("MYSQL_HOST"),
+        "PORT": os.getenv("MYSQL_PORT"),
     },
     "audit": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("AUDIT_DB_NAME") or os.environ.get("DB_NAME"),
-        "USER": os.environ.get("AUDIT_DB_USERNAME") or os.environ.get("DB_USERNAME"),
-        "PASSWORD": os.environ.get("AUDIT_DB_PASSWORD") or os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("AUDIT_DB_HOST") or os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("AUDIT_DB_PORT") or os.environ.get("DB_PORT"),
+        "NAME": os.getenv("AUDIT_DB_NAME") or os.getenv("MYSQL_NAME"),
+        "USER": os.getenv("AUDIT_DB_USERNAME") or os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("AUDIT_DB_PASSWORD") or os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("AUDIT_DB_HOST") or os.getenv("MYSQL_HOST"),
+        "PORT": os.getenv("AUDIT_DB_PORT") or os.getenv("MYSQL_PORT"),
     },
 }
 
 
 # cache
-REDIS_HOST = os.environ.get("BKAPP_REDIS_HOST")
-REDIS_PORT = os.environ.get("BKAPP_REDIS_PORT")
-REDIS_PASSWORD = os.environ.get("BKAPP_REDIS_PASSWORD")
-REDIS_DB = os.environ.get("BKAPP_REDIS_DB", 0)
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = os.getenv("REDIS_PORT")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+REDIS_DB = os.getenv("REDIS_DB", 0)
 
 CACHES = {
     "default": {
@@ -58,20 +60,17 @@ CACHES = {
 
 
 # 判断是否为本地开发环境
-IS_LOCAL = False
+IS_LOCAL = not os.getenv("BKPAAS_ENVIRONMENT", False)
 
-APP_CODE = os.getenv("APP_ID", "bk_iam")
-APP_SECRET = os.getenv("APP_TOKEN", "af76be9c-2b24-4006-a68e-e66abcfd67af")
+APP_CODE = os.getenv("BKPAAS_APP_CODE", "bk_iam")
+APP_SECRET = os.getenv("BKPAAS_APP_SECRET", "af76be9c-2b24-4006-a68e-e66abcfd67af")
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = APP_SECRET
 
 
-# 蓝鲸PASS平台URL
-BK_PAAS_HOST = os.getenv("BK_PAAS_HOST")
-
-APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/" + APP_CODE
+APP_URL = get_app_service_url(APP_CODE)
 
 
 # csrf
@@ -103,21 +102,43 @@ CORS_ORIGIN_WHITELIST = (
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 # 站点URL
-SITE_URL = os.environ.get("BK_SITE_URL", "/o/%s/" % APP_CODE)
+SITE_URL = os.getenv("BKPAAS_SUB_PATH", "/")
 
 FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 
-# 设置日志文件夹路径
-_LOG_DIR = os.path.join(os.path.join(os.getenv("BK_LOG_DIR", "/data/apps/logs/"), APP_CODE))
+# 日志配置, 兼容本地环境与平台环境
+_LOG_CLASS = "logging.handlers.RotatingFileHandler"
 
-# 如果日志文件夹不存在则创建,日志文件存在则延用
+if IS_LOCAL:
+    _LOG_DIR = os.path.join(os.path.dirname(BASE_DIR), "logs", APP_CODE)
+    _LOG_NAME_PREFIX = os.getenv("BKPAAS_LOG_NAME_PREFIX", APP_CODE)
+    _LOGGING_FORMAT = {
+        "format": (
+            "%(levelname)s [%(asctime)s] %(pathname)s "
+            "%(lineno)d %(funcName)s %(process)d %(thread)d "
+            "\n \t %(request_id)s\t%(message)s \n"
+        ),
+        "datefmt": "%Y-%m-%d %H:%M:%S",
+    }
+else:
+    _LOG_DIR = os.getenv("BKPAAS_APP_LOG_PATH", "/")
+    _RAND_STR = "".join(random.sample(string.ascii_letters + string.digits, 4))
+    _LOG_NAME_PREFIX = "%s-%s" % (os.getenv("BKPAAS_PROCESS_TYPE"), _RAND_STR)
+
+    _LOGGING_FORMAT = {
+        "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+        "fmt": (
+            "%(levelname)s %(asctime)s %(pathname)s %(lineno)d "
+            "%(funcName)s %(process)d %(thread)d %(request_id)s %(message)s"
+        ),
+    }
 if not os.path.exists(_LOG_DIR):
     os.makedirs(_LOG_DIR)
 
-# logging
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -127,62 +148,65 @@ LOGGING = {
         }
     },
     "formatters": {
-        "simple": {
-            "format": "%(levelname)s %(message)s \n",
-        },
-        "verbose": {
-            "format": "%(levelname)s [%(asctime)s] %(pathname)s "
-            "%(lineno)d %(funcName)s %(process)d %(thread)d "
-            "\n \t %(request_id)s\t%(message)s \n",
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
+        "verbose": _LOGGING_FORMAT,
+        "simple": {"format": "%(levelname)s %(message)s"},
     },
     "handlers": {
-        "component": {
-            "class": "logging.handlers.RotatingFileHandler",
+        "null": {
+            "level": "DEBUG",
+            "class": "logging.NullHandler",
+        },
+        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "simple"},
+        "root": {
+            "class": _LOG_CLASS,
             "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "component.log"),
+            "filename": os.path.join(_LOG_DIR, "%s-django.log" % _LOG_NAME_PREFIX),
+            "maxBytes": 1024 * 1024 * 10,
+            "backupCount": 5,
+            "filters": ["request_id_filter"],
+        },
+        "component": {
+            "class": _LOG_CLASS,
+            "formatter": "verbose",
+            "filename": os.path.join(_LOG_DIR, "%s-component.log" % _LOG_NAME_PREFIX),
+            "maxBytes": 1024 * 1024 * 10,
+            "backupCount": 5,
+            "filters": ["request_id_filter"],
+        },
+        "mysql": {
+            "class": _LOG_CLASS,
+            "formatter": "verbose",
+            "filename": os.path.join(_LOG_DIR, "%s-mysql.log" % _LOG_NAME_PREFIX),
             "maxBytes": 1024 * 1024 * 10,
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
         "celery": {
-            "class": "logging.handlers.RotatingFileHandler",
+            "class": _LOG_CLASS,
             "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "celery.log"),
+            "filename": os.path.join(_LOG_DIR, "%s-celery.log" % _LOG_NAME_PREFIX),
             "maxBytes": 1024 * 1024 * 10,
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
-        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "simple"},
-        "null": {
-            "level": "DEBUG",
-            "class": "logging.NullHandler",
-        },
-        "root": {
-            "class": "logging.handlers.RotatingFileHandler",
+        "organization": {
+            "class": _LOG_CLASS,
             "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "%s.log" % APP_CODE),
+            "filename": os.path.join(_LOG_DIR, "%s-json.log" % _LOG_NAME_PREFIX),
             "maxBytes": 1024 * 1024 * 10,
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
-        "wb_mysql": {
-            "class": "logging.handlers.RotatingFileHandler",
+        "permission": {
+            "class": _LOG_CLASS,
             "formatter": "verbose",
-            "filename": os.path.join(_LOG_DIR, "wb_mysql.log"),
-            "maxBytes": 1024 * 1024 * 4,
+            "filename": os.path.join(_LOG_DIR, "%s-json.log" % _LOG_NAME_PREFIX),
+            "maxBytes": 1024 * 1024 * 10,
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
     },
     "loggers": {
-        # V2旧版开发框架使用的logger
-        "component": {
-            "handlers": ["component"],
-            "level": "WARNING",
-            "propagate": True,
-        },
         "django": {
             "handlers": ["null"],
             "level": "INFO",
@@ -194,26 +218,33 @@ LOGGING = {
             "propagate": True,
         },
         "django.request": {
-            "handlers": ["console"],
+            "handlers": ["root"],
             "level": "ERROR",
             "propagate": True,
         },
         "django.db.backends": {
-            "handlers": ["wb_mysql"],
+            "handlers": ["mysql"],
             "level": LOG_LEVEL,
             "propagate": True,
         },
+        # the root logger ,用于整个project的logger
         "root": {
             "handlers": ["root"],
             "level": LOG_LEVEL,
             "propagate": True,
         },
-        # V3新版使用的日志
+        # 组件调用日志
+        "component": {
+            "handlers": ["component"],
+            "level": LOG_LEVEL,
+            "propagate": True,
+        },
         "celery": {
             "handlers": ["celery"],
             "level": LOG_LEVEL,
             "propagate": True,
         },
+        # 普通app日志
         "app": {
             "handlers": ["root"],
             "level": LOG_LEVEL,
@@ -221,13 +252,13 @@ LOGGING = {
         },
         # 组织架构同步日志
         "organization": {
-            "handlers": ["root"],
+            "handlers": ["root" if IS_LOCAL else "organization"],
             "level": LOG_LEVEL,
             "propagate": True,
         },
         # 授权相关的日志
         "permission": {
-            "handlers": ["root"],
+            "handlers": ["root" if IS_LOCAL else "permission"],
             "level": LOG_LEVEL,
             "propagate": True,
         },
@@ -235,16 +266,18 @@ LOGGING = {
 }
 
 
-# 用于 用户认证、用户信息获取 的蓝鲸主机
-BK_PAAS_INNER_HOST = os.getenv("BK_PAAS_INNER_HOST", BK_PAAS_HOST)
+APP_API_URL = APP_URL  # 前后端分离架构下, APP_URL 与 APP_API_URL 不一样
 
+BK_COMPONENT_API_URL = os.getenv("BK_COMPONENT_API_URL")
+BK_COMPONENT_INNER_API_URL = BK_COMPONENT_API_URL
 
-APP_API_URL = BK_PAAS_INNER_HOST.rstrip("/") + "/o/" + APP_CODE
+BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
 
-BK_COMPONENT_INNER_API_URL = BK_PAAS_INNER_HOST
-BK_COMPONENT_API_URL = BK_PAAS_HOST
-
-BK_ITSM_APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/bk_itsm"
-
-LOGIN_SERVICE_URL = BK_PAAS_HOST.rstrip("/") + "/login/"
+LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL", "/")
 LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
+
+# 蓝鲸PASS平台URL
+BK_PAAS_HOST = os.getenv("BK_PAAS_HOST")
+
+# 用于 用户认证、用户信息获取 的蓝鲸主机
+BK_PAAS_INNER_HOST = os.getenv("BK_PAAS2_URL", os.getenv("BK_PAAS_INNER_HOST", BK_PAAS_HOST))

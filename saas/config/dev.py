@@ -8,6 +8,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from .default import *  # noqa
+from .v3 import *  # noqa
 
 DEBUG = True
 
@@ -64,15 +65,6 @@ BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 # cors
 CORS_ORIGIN_WHITELIST = []
 
-
-# logging
-LOG_LEVEL = "DEBUG"
-
-LOGGING = get_logging_config_dict(dict(LOG_LEVEL=LOG_LEVEL, IS_LOCAL=IS_LOCAL, APP_CODE=APP_CODE, BASE_DIR=BASE_DIR))
-
-
-# 开启性能统计
-# ENABLE_PYINSTRUMENT = True
 
 # 多人开发时，无法共享的本地配置可以放到新建的 local_settings.py 文件中
 # 并且把 local_settings.py 加入版本管理忽略文件中
