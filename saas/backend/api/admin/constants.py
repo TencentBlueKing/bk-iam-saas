@@ -8,12 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import LowerStrEnum, auto, skip
+from aenum import auto, skip
 
-from backend.util.enum import ChoicesEnum
+from backend.api.constants import BaseAPIEnum
 
 
-class AdminAPIEnum(ChoicesEnum, LowerStrEnum):
+class AdminAPIEnum(BaseAPIEnum):
     """枚举每个Admin API"""
 
     # 用户组
@@ -22,7 +22,6 @@ class AdminAPIEnum(ChoicesEnum, LowerStrEnum):
     GROUP_MEMBER_LIST = auto()
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
-
     _choices_labels = skip(
         (
             (GROUP_LIST, "获取用户组列表"),

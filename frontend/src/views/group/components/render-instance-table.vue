@@ -808,6 +808,7 @@
                 
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        && item.related_resource_types[0]
                         && sub.detail.system.id === item.related_resource_types[0].system_id)
                     if (curIndex > -1) {
                         const old = this.tableList[curIndex]
