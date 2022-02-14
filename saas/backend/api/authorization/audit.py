@@ -11,11 +11,21 @@ specific language governing permissions and limitations under the License.
 from backend.apps.subject.audit import BaseSubjectProvider
 from backend.audit.audit import NoNeedAuditException, audit_context_getter
 from backend.audit.constants import AuditType
+from backend.service.constants import ADMIN_USER, SubjectType
+from backend.service.models import Subject
 
 from .constants import OperateEnum
 
 
 class SubjectPolicyGrantOrRevokeAuditProvider(BaseSubjectProvider):
+    @property
+    def subject(self) -> Subject:
+        subject = audit_context_getter(self.request, "subject")
+        if subject.type == SubjectType.USER.value and subject.id.lower() == ADMIN_USER:
+            raise NoNeedAuditException
+
+        return subject
+
     @property
     def type(self):
         operate = audit_context_getter(self.request, "operate")

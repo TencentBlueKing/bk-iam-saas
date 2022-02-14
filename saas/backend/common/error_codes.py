@@ -50,7 +50,9 @@ class CodeException(Exception):
         return new_obj
 
     def as_json(self):
-        return {"result": False, "code": self.code, "message": self.message, "data": None}
+        # append the code_name
+        message = "%s (%s)" % (self.message, self.code_name)
+        return {"result": False, "code": self.code, "message": message, "data": None}
 
     def __str__(self):
         return "<ErrorCode %s:(%s)>" % (self.code, self.message)
@@ -78,7 +80,7 @@ class RemoteAPIException(CodeException):
 def auto_configure_codenames(cls: Type):
     """Auto replace code_name fields"""
     for key, value in cls.__dict__.items():
-        if isinstance(value, APIException):
+        if isinstance(value, APIException) or isinstance(value, RemoteAPIException):
             # Set code_name attribute
             value.code_name = key
     return cls

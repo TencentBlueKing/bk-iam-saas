@@ -65,11 +65,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
         self._lock_ids = set()
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
             template_ids = [template.id for template in self.instance]
-            self._lock_ids = set(
-                PermTemplatePreUpdateLock.objects.filter(template_id__in=template_ids).values_list(
-                    "template_id", flat=True
-                )
-            )
+            self._lock_ids = set(PermTemplatePreUpdateLock.objects.filter_exists_template_ids(template_ids))
 
     class Meta:
         model = PermTemplate

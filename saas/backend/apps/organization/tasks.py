@@ -12,7 +12,6 @@ import logging
 import traceback
 
 from celery import task
-from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
@@ -25,8 +24,9 @@ from backend.biz.org_sync.iam_user_department import IAMBackendUserDepartmentSyn
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.org_sync.user import DBUserSyncService
 from backend.biz.org_sync.user_leader import DBUserLeaderSyncService
+from backend.common.lock import gen_organization_sync_lock
 
-from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskLockKey, SyncTaskStatus, SyncType
+from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
 logger = logging.getLogger("celery")
 
@@ -35,7 +35,7 @@ logger = logging.getLogger("celery")
 def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     try:
         # 分布式锁，避免同一时间该任务多个worker执行
-        with cache.lock(SyncTaskLockKey.Full.value, timeout=10):  # type: ignore[attr-defined]
+        with gen_organization_sync_lock():  # type: ignore[attr-defined]
             # Note: 虽然拿到锁了，但是还是得确定没有正在运行的任务才可以（因为10秒后锁自动释放了）
             record = SyncRecord.objects.filter(type=SyncType.Full.value, status=SyncTaskStatus.Running.value).first()
             if record is not None:

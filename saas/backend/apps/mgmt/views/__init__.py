@@ -8,16 +8,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
 
-from . import views
+from backend.apps.mgmt.views.white_list import (
+    AdminApiWhiteListViewSet,
+    ApiViewSet,
+    AuthorizationApiWhiteListViewSet,
+    ManagementApiWhiteListViewSet,
+)
 
-urlpatterns = [
-    path("", views.SystemViewSet.as_view({"get": "list"}), name="system.list_system"),
-    # 获取指定系统的资源类别
-    path(
-        "resource_types/",
-        views.ResourceTypeViewSet.as_view({"get": "list_resource_types"}),
-        name="system.list_resource_types",
-    ),
+__all__ = [
+    "ApiViewSet",
+    "AdminApiWhiteListViewSet",
+    "AuthorizationApiWhiteListViewSet",
+    "ManagementApiWhiteListViewSet",
 ]
