@@ -11,8 +11,8 @@ import hashlib
 import os
 from urllib.parse import urlparse
 
+from . import RequestIDFilter
 from .default import CSRF_COOKIE_NAME, LOG_LEVEL
-from .utils import RequestIDFilter
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases

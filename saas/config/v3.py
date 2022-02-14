@@ -7,14 +7,37 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import base64
 import hashlib
+import json
 import os
 import random
 import string
 from urllib.parse import urlparse
 
+from . import RequestIDFilter
 from .default import BASE_DIR, CSRF_COOKIE_NAME, LOG_LEVEL
-from .utils import RequestIDFilter, get_app_service_url
+
+
+def get_app_service_url(app_code: str) -> str:
+    """
+    使用app_code获取服务地址
+
+    兼容环境变量配置与v3 smart的服务发现
+    """
+    if app_code == os.getenv("BKPAAS_APP_ID") and "BK_IAM_APP_URL" in os.environ:
+        return os.environ["BK_IAM_APP_URL"]
+
+    if app_code == "bk_itsm" and "BK_ITSM_APP_URL" in os.environ:
+        return os.environ["BK_ITSM_APP_URL"]
+
+    value = os.getenv("BKPAAS_SERVICE_ADDRESSES_BKSAAS")
+    if not value:
+        return ""
+
+    decoded_value = json.loads(base64.b64decode(value).decode("utf-8"))
+    return {item["key"]["bk_app_code"]: item["value"]["prod"] for item in decoded_value}.get(app_code, "")
+
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases

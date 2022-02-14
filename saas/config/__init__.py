@@ -7,3 +7,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
+
+from backend.common.local import local
+
+
+class RequestIDFilter(logging.Filter):
+    """
+    request id log filter
+    日志记录中增加request id
+    """
+
+    def filter(self, record):
+        record.request_id = local.request_id
+        return True

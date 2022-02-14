@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-from config.utils import get_broker_url
-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -262,7 +260,21 @@ CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 # close celery hijack root logger
 CELERYD_HIJACK_ROOT_LOGGER = False
 
-BROKER_URL = get_broker_url()
+
+# 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
+# V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
+# V2 Smart只有BK_BROKER_URL
+if "RABBITMQ_HOST" in os.environ:
+    BROKER_URL = "amqp://{user}:{password}@{host}:{port}/{vhost}".format(
+        user=os.getenv("RABBITMQ_USER"),
+        password=os.getenv("RABBITMQ_PASSWORD"),
+        host=os.getenv("RABBITMQ_HOST"),
+        port=os.getenv("RABBITMQ_PORT"),
+        vhost=os.getenv("RABBITMQ_VHOST"),
+    )
+else:
+    BROKER_URL = os.getenv("BK_BROKER_URL")
+
 
 djcelery.setup_loader()
 
