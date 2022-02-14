@@ -16,7 +16,7 @@ from rest_framework.serializers import empty
 
 from backend.apps.policy.serializers import AttributeSLZ
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 
 
 class ASInstanceSLZ(serializers.Serializer):
@@ -83,8 +83,8 @@ class AccessSystemApplicationSLZ(serializers.Serializer):
                         for rrt_instance in rrt.get("instances", []):
                             for node in rrt_instance:
                                 self._convert_system(node)
-            except Exception as error:  # pylint: disable=broad-except
-                logger.info(f"when access system application data serialized, convert system data error: {error}")
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(f"convert access system's application serialized data fail! data={data}")
 
         super().__init__(instance, data, **kwargs)
 

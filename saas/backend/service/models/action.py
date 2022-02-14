@@ -104,7 +104,7 @@ def _filter_error_instance_selection(
             or selection.resource_type_chain[-1].system_id != system_id  # noqa
         ) and selection.ignore_iam_path:
             logger.error(
-                "system: %s, related_type: %s, " "instance_selection: %s ignore_iam_path conflict",  # noqa
+                "system: %s, related_type: %s, instance_selection: %s ignore_iam_path conflict",
                 system_id,
                 resource_type_id,
                 selection,
@@ -116,8 +116,8 @@ def _filter_error_instance_selection(
             if node.id in resource_type_system and resource_type_system[node.id] != node.system_id:
                 logger.error(
                     "system: %s related_type: %s "
-                    "instance_selection: %s resource_type: %s, "  # noqa
-                    "resource_type_system_id: %s conflict",  # noqa
+                    "instance_selection: %s resource_type: %s, "
+                    "resource_type_system_id: %s conflict",
                     system_id,
                     resource_type_id,
                     selection,

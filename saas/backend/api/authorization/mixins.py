@@ -141,7 +141,7 @@ class AuthViewMixin:
         try:
             Syncer().sync_single_user(username)
         except Exception:  # pylint: disable=broad-except
-            logger.exception(f"[OpenAPI] authorize user[{username}] check error")
+            logger.exception(f"[OpenAPI] authorize user[{username}] check_or_sync fail")
             raise error_codes.VALIDATE_ERROR.format(f"user[{username}] not exists")
 
     def _check_scope(self, subject: Subject, policy_list: PolicyBeanList):

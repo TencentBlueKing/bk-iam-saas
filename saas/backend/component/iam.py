@@ -52,8 +52,7 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
 
     # process result
     if not ok:
-        message = "iam api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
-        logger.error(message)
+        logger.error("iam api failed, method: %s, info: %s", http_func.__name__, kwargs)
         raise error_codes.REMOTE_REQUEST_ERROR.format(f'request iam api error: {data["error"]}')
 
     code = data["code"]
@@ -205,15 +204,6 @@ def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
     return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
 
 
-def list_subject(_type: str, limit: int = 10, offset: int = 0) -> Dict:
-    """
-    获取subject列表
-    """
-    url_path = "/api/v1/web/subjects"
-    params = {"type": _type, "limit": limit, "offset": offset}
-    return _call_iam_api(http_get, url_path, data=params)
-
-
 def list_all_subject(_type: str) -> List[Dict]:
     """
     获取某个类型的所有Subject
@@ -312,22 +302,6 @@ def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str
     return _call_iam_api(http_delete, url_path, data=params)
 
 
-def delete_subject_members_by_auto_paging(_type: str, id: str, members: List[dict]) -> None:
-    """通过自动分页批量删除subject的成员"""
-
-    def delete_paging_subject_members(paging_data):
-        """[分页]添加subject的成员"""
-        url_path = "/api/v1/web/subject-members"
-        params = {
-            "type": _type,
-            "id": id,
-            "members": paging_data,
-        }
-        _call_iam_api(http_delete, url_path, data=params)
-
-    return execute_all_data_by_paging(delete_paging_subject_members, members, 1000)
-
-
 def add_subject_members(_type: str, id: str, policy_expired_at: int, members: List[dict]) -> Dict[str, int]:
     """
     批量添加subject的成员
@@ -341,23 +315,6 @@ def add_subject_members(_type: str, id: str, policy_expired_at: int, members: Li
     }
     permission_logger.info("iam subject add member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_post, url_path, data=params)
-
-
-def add_subject_members_by_auto_paging(_type: str, id: str, policy_expired_at: int, members: List[dict]) -> None:
-    """通过自动分页批量添加subject的成员"""
-
-    def add_paging_subject_members(paging_data):
-        """[分页]添加subject的成员"""
-        url_path = "/api/v1/web/subject-members"
-        params = {
-            "type": _type,
-            "id": id,
-            "members": paging_data,
-            "policy_expired_at": policy_expired_at,
-        }
-        _call_iam_api(http_post, url_path, data=params)
-
-    return execute_all_data_by_paging(add_paging_subject_members, members, 1000)
 
 
 def list_system_policy(system_id: str, subject_type: str, subject_id: str, template_id: int = 0) -> List[Dict]:

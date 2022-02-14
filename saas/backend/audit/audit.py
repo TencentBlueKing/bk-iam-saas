@@ -84,7 +84,7 @@ def view_audit_decorator(provider_cls: Type[DataProvider]):
             except NoNeedAuditException:
                 pass
             except Exception:  # pylint: disable=broad-except
-                logger.exception("audit error")
+                logger.exception("save audit event fail")
 
             return response
 
@@ -166,4 +166,4 @@ def add_audit(provider_cls: Type[DataProvider], request: Request, **kwargs):
     except NoNeedAuditException:
         pass
     except Exception:  # pylint: disable=broad-except
-        logger.exception("audit error")
+        logger.exception("save audit event fail")

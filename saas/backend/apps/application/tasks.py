@@ -43,8 +43,8 @@ def check_or_update_application_status():
         # 查询ITSM可能出错，若出错，则记录日志，继续执行其他的
         try:
             id_status_dict = biz.query_application_approval_status(applications)
-        except Exception as error:  # pylint: disable=broad-except
-            logger.exception(error)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("check_or_update_application_status: query_application_approval_status fail")
             continue
 
         # 遍历每个申请单，进行审批处理
@@ -55,5 +55,5 @@ def check_or_update_application_status():
                 if status is None:
                     continue
                 biz.handle_application_result(application, status)
-            except Exception as error:  # pylint: disable=broad-except
-                logger.exception(error)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("check_or_update_application_status: handle_application_result fail")
