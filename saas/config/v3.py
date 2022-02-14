@@ -7,37 +7,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import base64
 import hashlib
-import json
 import os
 import random
 import string
 from urllib.parse import urlparse
 
 from . import RequestIDFilter
-from .default import BASE_DIR, CSRF_COOKIE_NAME, LOG_LEVEL
-
-
-def get_app_service_url(app_code: str) -> str:
-    """
-    使用app_code获取服务地址
-
-    兼容环境变量配置与v3 smart的服务发现
-    """
-    if app_code == os.getenv("BKPAAS_APP_ID") and "BK_IAM_APP_URL" in os.environ:
-        return os.environ["BK_IAM_APP_URL"]
-
-    if app_code == "bk_itsm" and "BK_ITSM_APP_URL" in os.environ:
-        return os.environ["BK_ITSM_APP_URL"]
-
-    value = os.getenv("BKPAAS_SERVICE_ADDRESSES_BKSAAS")
-    if not value:
-        return ""
-
-    decoded_value = json.loads(base64.b64decode(value).decode("utf-8"))
-    return {item["key"]["bk_app_code"]: item["value"]["prod"] for item in decoded_value}.get(app_code, "")
-
+from .default import BASE_DIR
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -93,7 +70,7 @@ APP_SECRET = os.getenv("BKPAAS_APP_SECRET", "af76be9c-2b24-4006-a68e-e66abcfd67a
 SECRET_KEY = APP_SECRET
 
 
-APP_URL = get_app_service_url(APP_CODE)
+APP_URL = os.getenv("BK_IAM_APP_URL", "")
 
 
 # csrf
@@ -108,12 +85,13 @@ SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 
 _APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
-CSRF_COOKIE_NAME = f"{CSRF_COOKIE_NAME}_{_APP_URL_MD5_16BIT}"
+CSRF_COOKIE_NAME = f"bkiam_csrftoken_{_APP_URL_MD5_16BIT}"
 
 # 对于特殊端口，带端口和不带端口都得添加，其他只需要添加默认原生的即可
 CSRF_TRUSTED_ORIGINS = [_BK_PAAS_HOSTNAME, _BK_PAAS_NETLOC] if _BK_PAAS_IS_SPECIAL_PORT else [_BK_PAAS_NETLOC]
 
 
+CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 CORS_ORIGIN_WHITELIST = (
     [f"{_BK_PAAS_SCHEME}://{_BK_PAAS_HOSTNAME}", f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"]
     if _BK_PAAS_IS_SPECIAL_PORT
@@ -132,7 +110,9 @@ STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 
-# 日志配置, 兼容本地环境与平台环境
+# 只对正式环境日志级别进行配置，可以在这里修改
+LOG_LEVEL = "ERROR"
+
 _LOG_CLASS = "logging.handlers.RotatingFileHandler"
 
 if IS_LOCAL:
@@ -294,7 +274,7 @@ APP_API_URL = APP_URL  # 前后端分离架构下, APP_URL 与 APP_API_URL 不�
 BK_COMPONENT_API_URL = os.getenv("BK_COMPONENT_API_URL")
 BK_COMPONENT_INNER_API_URL = BK_COMPONENT_API_URL
 
-BK_ITSM_APP_URL = get_app_service_url("bk_itsm")
+BK_ITSM_APP_URL = os.getenv("BK_ITSM_APP_URL")
 
 LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL", "/")
 LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"

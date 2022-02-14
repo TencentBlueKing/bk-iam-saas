@@ -25,6 +25,7 @@ from functools import partial
 from urllib.parse import urlparse
 
 import requests
+from django.conf import settings
 
 from backend.common.debug import http_trace
 from backend.metrics import component_request_duration, get_component_by_url
@@ -40,7 +41,9 @@ def _gen_header():
 
 
 session = requests.Session()
-adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=20)
+adapter = requests.adapters.HTTPAdapter(
+    pool_connections=settings.REQUESTS_POOL_CONNECTIONS, pool_maxsize=settings.REQUESTS_POOL_MAXSIZE
+)
 session.mount("https://", adapter)
 session.mount("http://", adapter)
 
