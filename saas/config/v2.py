@@ -12,7 +12,6 @@ import os
 from urllib.parse import urlparse
 
 from . import RequestIDFilter
-from .default import CSRF_COOKIE_NAME, LOG_LEVEL
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -86,12 +85,12 @@ SESSION_COOKIE_DOMAIN = _BK_PAAS_HOSTNAME
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 
 _APP_URL_MD5_16BIT = hashlib.md5(APP_URL.encode("utf-8")).hexdigest()[8:-8]
-CSRF_COOKIE_NAME = f"{CSRF_COOKIE_NAME}_{_APP_URL_MD5_16BIT}"
+CSRF_COOKIE_NAME = f"bkiam_csrftoken_{_APP_URL_MD5_16BIT}"
 
 # 对于特殊端口，带端口和不带端口都得添加，其他只需要添加默认原生的即可
 CSRF_TRUSTED_ORIGINS = [_BK_PAAS_HOSTNAME, _BK_PAAS_NETLOC] if _BK_PAAS_IS_SPECIAL_PORT else [_BK_PAAS_NETLOC]
 
-
+CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 CORS_ORIGIN_WHITELIST = (
     [f"{_BK_PAAS_SCHEME}://{_BK_PAAS_HOSTNAME}", f"{_BK_PAAS_SCHEME}://{_BK_PAAS_NETLOC}"]
     if _BK_PAAS_IS_SPECIAL_PORT
@@ -110,7 +109,9 @@ STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 
-# 设置日志文件夹路径
+# 只对正式环境日志级别进行配置，可以在这里修改
+LOG_LEVEL = "ERROR"
+
 _LOG_DIR = os.path.join(os.path.join(os.getenv("BK_LOG_DIR", "/data/apps/logs/"), APP_CODE))
 
 # 如果日志文件夹不存在则创建,日志文件存在则延用

@@ -153,9 +153,7 @@ SESSION_COOKIE_NAME = "bkiam_sessionid"
 
 SESSION_COOKIE_AGE = 60 * 60 * 24  # 1天
 
-# csrf cors
-CSRF_COOKIE_NAME = "bkiam_csrftoken"
-
+# cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 
 
@@ -321,10 +319,6 @@ PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
 # ---------------
 
 
-# 只对正式环境日志级别进行配置，可以在这里修改
-LOG_LEVEL = "ERROR"
-
-
 # 初始化管理员列表，列表中的人员将拥有预发布环境和正式环境的管理员权限
 # 注意：请在首次提测和上线前修改，之后的修改将不会生效
 INIT_SUPERUSER = []
@@ -402,3 +396,8 @@ BK_API_URL_TMPL = os.getenv("BK_APIGATEWAY_URL", "") + "/api/{api_name}/"
 BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
+
+
+# Requests pool config
+REQUESTS_POOL_CONNECTIONS = int(os.getenv("REQUESTS_POOL_CONNECTIONS", 20))
+REQUESTS_POOL_MAXSIZE = int(os.getenv("REQUESTS_POOL_MAXSIZE", 20))
