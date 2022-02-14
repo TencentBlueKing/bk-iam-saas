@@ -260,6 +260,8 @@ CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 # close celery hijack root logger
 CELERYD_HIJACK_ROOT_LOGGER = False
 
+CELERY_TASK_SERIALIZER = "json"
+
 
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
