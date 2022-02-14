@@ -10,10 +10,11 @@ specific language governing permissions and limitations under the License.
 """
 from aenum import LowerStrEnum, auto, skip
 
+from backend.api.constants import BaseAPIEnum
 from backend.util.enum import ChoicesEnum
 
 
-class ManagementAPIEnum(ChoicesEnum, LowerStrEnum):
+class ManagementAPIEnum(BaseAPIEnum):
     """这里的枚举的是每个具体管理类API"""
 
     # 分级管理员

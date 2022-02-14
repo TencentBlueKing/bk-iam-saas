@@ -16,13 +16,13 @@ from itertools import chain, groupby
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from django.conf import settings
-from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from pydantic.main import BaseModel
 from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_policy_alert_lock
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
 from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
@@ -1385,10 +1385,9 @@ def policy_change_lock(func):
         # Note: 必须保证被装饰的函数有参数system_id和subject
         system_id = kwargs["system_id"] if "system_id" in kwargs else args[0]
         subject = kwargs["subject"] if "subject" in kwargs else args[1]
-        # TODO: 后面重构cache模块时统一定义前缀
-        lock_key = f"bk_iam:lock:{system_id}:{subject.type}:{subject.id}"
+
         # 加 system + subject 锁
-        with cache.lock(lock_key, timeout=10):
+        with gen_policy_alert_lock(f"{system_id}:{subject.type}:{subject.id}"):
             return func(*args, **kwargs)
 
     return wrapper

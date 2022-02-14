@@ -103,10 +103,7 @@ class TemplateBiz:
         """
         删除模板预更新锁
         """
-        lock = PermTemplatePreUpdateLock.objects.filter(template_id=template_id).first()
-        if lock and lock.status == TemplatePreUpdateStatus.RUNNING.value:
-            raise error_codes.VALIDATE_ERROR.format(_("更新任务正在运行!"))
-
+        lock = PermTemplatePreUpdateLock.objects.get_lock_not_running_or_raise(template_id=template_id)
         if not lock:
             return
 
@@ -176,10 +173,7 @@ class TemplateBiz:
         """
         查询模板预更新中的新增操作
         """
-        lock = PermTemplatePreUpdateLock.objects.filter(template_id=template.id).first()
-        if not lock or lock.status != TemplatePreUpdateStatus.WAITING.value:
-            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在!"))
-
+        lock = PermTemplatePreUpdateLock.objects.get_lock_waiting_or_raise(template_id=template.id)
         return list(set(lock.action_ids) - set(template.action_ids))
 
     def sync_group_template_auth(self, group_id: int, template_id: int):
@@ -187,9 +181,7 @@ class TemplateBiz:
         同步用户组模板授权
         """
         # 查询需要删除的操作
-        lock = PermTemplatePreUpdateLock.objects.filter(template_id=template_id).first()
-        if not lock:
-            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在!"))
+        lock = PermTemplatePreUpdateLock.objects.get_lock_or_raise(template_id=template_id)
         template = PermTemplate.objects.get_or_404(template_id)
         del_action_ids = list(set(template.action_ids) - set(lock.action_ids))
 
@@ -209,9 +201,7 @@ class TemplateBiz:
         """
         结束模板更新同步
         """
-        lock = PermTemplatePreUpdateLock.objects.filter(template_id=template_id).first()
-        if not lock:
-            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在!"))
+        lock = PermTemplatePreUpdateLock.objects.get_lock_or_raise(template_id=template_id)
         template = PermTemplate.objects.get_or_404(template_id)
         template.action_ids = lock.action_ids
         with transaction.atomic():
@@ -230,8 +220,8 @@ class TemplateBiz:
             raise error_codes.VALIDATE_ERROR.format(_("模板操作未变更, 无需更新!"))
 
         template_id = template.id
-        lock = PermTemplatePreUpdateLock.objects.filter(template_id=template_id).first()
-        if lock and (lock.status == TemplatePreUpdateStatus.RUNNING.value or set(lock.action_ids) != set(action_ids)):
+        lock = PermTemplatePreUpdateLock.objects.get_lock_not_running_or_raise(template_id=template_id)
+        if lock and set(lock.action_ids) != set(action_ids):
             raise error_codes.VALIDATE_ERROR.format(_("有其它的模板更新任务存在, 禁止提交新的更新任务!"))
 
         if not lock:
@@ -307,13 +297,6 @@ class TemplateCheckBiz:
                     _("提交操作数据{}与模板预更新的数据{}不一致!").format(action_id_set, add_action_ids)
                 )
 
-    def check_template_update_lock_exists(self, template_id: int):
-        """
-        检查模板更新锁是否存在
-        """
-        if PermTemplatePreUpdateLock.objects.filter(template_id=template_id).first() is not None:
-            raise error_codes.VALIDATE_ERROR.format(_("权限模板正在更新, 不能进行下一步操作!"))
-
     def check_group_pre_commit_complete(self, template_id: int):
         """
         检查用户组的与提交信息是否完整
@@ -333,14 +316,6 @@ class TemplateCheckBiz:
                     set(exists_group_ids) - set(map(str, pre_commit_group_ids))
                 )
             )
-
-    def check_pre_update_lock_not_running(self, lock: PermTemplatePreUpdateLock):
-        if lock and lock.status == TemplatePreUpdateStatus.RUNNING.value:
-            raise error_codes.VALIDATE_ERROR.format(_("更新任务正在运行!"))
-
-    def check_pre_update_lock_is_waiting(self, lock: PermTemplatePreUpdateLock):
-        if not lock or lock.status != TemplatePreUpdateStatus.WAITING.value:
-            raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在, 禁止提交!"))
 
 
 class ActionCloneConfig(BaseModel):

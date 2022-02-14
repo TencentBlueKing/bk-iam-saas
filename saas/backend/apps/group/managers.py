@@ -8,16 +8,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
+from typing import List
 
-from . import views
+from django.db import models
+from django.db.models import Q
 
-urlpatterns = [
-    path("", views.SystemViewSet.as_view({"get": "list"}), name="system.list_system"),
-    # 获取指定系统的资源类别
-    path(
-        "resource_types/",
-        views.ResourceTypeViewSet.as_view({"get": "list_resource_types"}),
-        name="system.list_resource_types",
-    ),
-]
+
+class GroupAuthorizeLockManager(models.Manager):
+    def is_authorizing(self, group_id: int, template_ids: List[int], custom_action_system_ids: List[str]) -> bool:
+        """
+        用户组是否正在授权
+
+        group_id: 用户组ID
+        template_ids: 被授权的模板ID集
+        custom_action_system_ids: 被授权的自定义权限系统ID集
+        """
+        return (
+            self.filter(group_id=group_id)
+            .filter(Q(template_id__in=template_ids) | (Q(template_id=0) & Q(system_id__in=custom_action_system_ids)))
+            .exists()
+        )

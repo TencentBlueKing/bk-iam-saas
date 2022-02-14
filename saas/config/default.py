@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "backend.audit",
     "backend.debug",
     "backend.apps.handover",
+    "backend.apps.mgmt",
 ]
 
 
@@ -247,6 +248,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.long_task.tasks.retry_long_task",
         "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
     },
+    # "periodic_delete_unreferenced_expressions": {
+    #     "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
+    #     "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
+    # },
 }
 
 CELERY_ENABLE_UTC = True
@@ -385,6 +390,12 @@ PUB_SUB_REDIS_PORT = os.getenv("BKAPP_PUB_SUB_REDIS_PORT")
 PUB_SUB_REDIS_PASSWORD = os.getenv("BKAPP_PUB_SUB_REDIS_PASSWORD")
 PUB_SUB_REDIS_DB = os.getenv("BKAPP_PUB_SUB_REDIS_DB", 0)
 
+# 前端页面功能开关
+ENABLE_FRONT_END_FEATURES = {
+    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
+    "enable_permission_handover": os.environ.get("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "True").lower()
+    == "true",
+}
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
 BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
@@ -392,9 +403,10 @@ BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
 # apigateway 相关配置
 # NOTE: it sdk will read settings.APP_CODE and settings.APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = os.getenv("BK_APIGATEWAY_URL", "") + "/api/{api_name}/"
-BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
-BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
+BK_API_URL_TMPL = os.environ.get("BK_API_URL_TMPL", "")
+INSTALLED_APPS += ("apigw_manager.apigw",)
+BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
+BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
 
 

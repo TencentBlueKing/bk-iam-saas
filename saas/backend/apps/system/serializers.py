@@ -26,3 +26,12 @@ class NodeSLZ(serializers.Serializer):
 class TopologySLZ(NodeSLZ):
     related_actions = serializers.ListField(label="关联普通操作", child=NodeSLZ(label="普通操作"))
     sub_actions = serializers.ListField(label="关联子操作", child=NodeSLZ(label="子操作"))
+
+
+class QueryResourceTypeSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+
+
+class ResourceTypeSLZ(serializers.Serializer):
+    id = serializers.CharField(label="资源类别ID")
+    name = serializers.CharField(label="资源类别名称")

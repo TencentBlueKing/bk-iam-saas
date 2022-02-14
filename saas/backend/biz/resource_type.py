@@ -8,16 +8,18 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
+import logging
+from typing import List
 
-from . import views
+from backend.service.resource_type import ResourceTypeService
 
-urlpatterns = [
-    path("", views.SystemViewSet.as_view({"get": "list"}), name="system.list_system"),
-    # 获取指定系统的资源类别
-    path(
-        "resource_types/",
-        views.ResourceTypeViewSet.as_view({"get": "list_resource_types"}),
-        name="system.list_resource_types",
-    ),
-]
+logger = logging.getLogger(__name__)
+
+
+class ResourceTypeBiz:
+    resource_type_svc = ResourceTypeService()
+
+    def list_resource_types_by_system_id(self, system_id: str) -> List:
+        system_resource_types = self.resource_type_svc.list_resource_type_by_systems([system_id]).get(system_id, [])
+        data = [resource_type.dict() for resource_type in system_resource_types]
+        return data
