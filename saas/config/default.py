@@ -260,7 +260,9 @@ CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 # close celery hijack root logger
 CELERYD_HIJACK_ROOT_LOGGER = False
 
+CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
 
 
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
