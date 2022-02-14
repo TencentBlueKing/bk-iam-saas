@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
 import logging
 from urllib.parse import urlencode
 
@@ -123,18 +122,18 @@ def custom_exception_handler(exc, context):
         error = error_codes.METHOD_NOT_ALLOWED.format(message=exc.detail)
         return Response(error.as_json(), status=error.status_code, headers={})
 
-    message = "iam system error"
+    # message = "iam system error"
 
     request = context["request"]
-    if request:
-        message = "iam system error, url: {}, method: {}, data: {}".format(
-            request.path, request.method, json.dumps(getattr(request, request.method, None))
-        )
+    # if request:
+    #     message = "iam system error, url: {}, method: {}, data: {}".format(
+    #         request.path, request.method, json.dumps(getattr(request, request.method, None))
+    #     )
 
     # 记录debug信息
     log_api_error_trace(request, True)
 
-    logger.exception(message)
+    # logger.exception(message)
 
     # Call REST framework's default exception handler to get the standard error response.
     response = exception_handler(exc, context)

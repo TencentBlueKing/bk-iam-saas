@@ -38,10 +38,10 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
     }
     if settings.BK_IAM_HOST_TYPE == "apigateway":
         headers["x-bkapi-authorization"] = json_dumps(
-            {"bk_app_code": settings.APP_ID, "bk_app_secret": settings.APP_TOKEN}
+            {"bk_app_code": settings.APP_CODE, "bk_app_secret": settings.APP_SECRET}
         )
     elif settings.BK_IAM_HOST_TYPE == "direct":
-        headers.update({"X-Bk-App-Code": settings.APP_ID, "X-Bk-App-Secret": settings.APP_TOKEN})
+        headers.update({"X-Bk-App-Code": settings.APP_CODE, "X-Bk-App-Secret": settings.APP_SECRET})
 
     url = url_join(settings.BK_IAM_HOST, url_path)
     kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
