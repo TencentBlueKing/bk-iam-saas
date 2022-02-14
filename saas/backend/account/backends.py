@@ -15,9 +15,9 @@ from django.contrib.auth.backends import ModelBackend
 from django.db import IntegrityError
 
 from backend.account import get_user_model
-from backend.component.login import get_user_info, verify_bk_token
+from backend.component import login
 
-logger = logging.getLogger("component")
+logger = logging.getLogger("app")
 
 ROLE_TYPE_ADMIN = "1"
 
@@ -94,7 +94,7 @@ class TokenBackend(ModelBackend):
         @rtype: bool,dict
         """
         try:
-            data = get_user_info(bk_token)
+            data = login.get_user_info(bk_token)
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("Abnormal error in get_user_info...:%s" % e)
             return False, {}
@@ -122,17 +122,9 @@ class TokenBackend(ModelBackend):
         @rtype: bool,None/str
         """
         try:
-            response = verify_bk_token(bk_token)
+            data = login.verify_bk_token(bk_token)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Abnormal error in verify_bk_token...")
             return False, None
 
-        if response.get("result"):
-            data = response.get("data")
-            username = data.get("username")
-            return True, username
-        else:
-            error_msg = response.get("message", "")
-            error_data = response.get("data", "")
-            logger.error("Fail to verify bk_token, error=%s, ret=%s" % (error_msg, error_data))
-            return False, None
+        return True, data["username"]

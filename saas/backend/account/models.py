@@ -160,12 +160,6 @@ class UserProperty(models.Model):
         unique_together = (("user", "key"),)
 
 
-class VerifyInfo(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=6)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
 class UserProxy(User):
     class Meta:
         proxy = True

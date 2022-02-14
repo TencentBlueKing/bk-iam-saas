@@ -105,7 +105,7 @@ class AppExceptionMiddleware(MiddlewareMixin):
             if check_function():
                 return None
 
-        response = JsonResponse({"result": False, "code": "50000", "message": "系统异常,请联系管理员处理", "data": None})
+        response = JsonResponse({"result": False, "code": "1902500", "message": "系统异常,请联系管理员处理", "data": None})
         response.status_code = 500
 
         # notify sentry

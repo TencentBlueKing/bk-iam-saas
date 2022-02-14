@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 from django.conf import settings
 
 from backend.common.error_codes import error_codes
+from backend.common.local import local
 from backend.component.esb import _call_esb_api
 from backend.util.url import url_join
 
@@ -28,7 +29,24 @@ def _call_login_api(http_func, url_path, data, timeout=30):
         logger.error(message)
         raise error_codes.REMOTE_REQUEST_ERROR.format(f'request login api error: {data["error"]}')
 
-    return data
+    result = data.get("result")
+    if result:
+        return data["data"]
+
+    logger.warning(
+        "login api warning, request_id: %s, method: %s, info: %s, result: %s, message: %s",
+        local.request_id,
+        http_func.__name__,
+        kwargs,
+        result,
+        data.get("message", ""),
+    )
+
+    error_message = (
+        f"Request=[{http_func.__name__} {url_path} request_id={local.request_id}],"
+        f"Response[result={result}, message={message}]"
+    )
+    raise error_codes.ESB_REQUEST_ERROR.format(error_message)
 
 
 # TODO cache
