@@ -20,6 +20,7 @@ urlpatterns = [
         name="organization.department",
     ),
     path("users/query/", views.UserView.as_view(), name="organization.user_query"),
+    path("users/departments/", views.UserDepartmentView.as_view(), name="organization.user_department_query"),
     path("search/", views.OrganizationViewSet.as_view({"get": "list"}), name="organization.search"),
     path("sync_task/", views.OrganizationSyncTaskView.as_view(), name="organization.sync_task"),
     path(
