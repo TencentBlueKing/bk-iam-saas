@@ -10,12 +10,13 @@ specific language governing permissions and limitations under the License.
 """
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from backend.biz.policy import (
     ConditionBean,
     InstanceBean,
     PathNodeBean,
+    PathNodeBeanList,
     PolicyBean,
     PolicyBeanList,
     RelatedResourceBean,
@@ -52,20 +53,19 @@ class PathNodeTagBean(TagNoneMixin, PathNodeBean, AbstractTagBean):
         self.tag = tag
 
 
-class PathNodeTagBeanList(AbstractTagBean):
-    def __init__(self, nodes: List[PathNodeTagBean]) -> None:
-        self.nodes = deepcopy(nodes)
+class PathNodeTagBeanList(PathNodeBeanList):
+    __root__: List[PathNodeTagBean]
 
-    def dict(self) -> List[Dict[str, str]]:
-        return [one.dict() for one in self.nodes]
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        super().__init__(**deepcopy(data))
 
     def set_tag(self, tag: str):
-        for node in self.nodes:
+        for node in self.__root__:
             node.set_tag(tag)
 
 
 class InstanceTagBean(TagNoneMixin, InstanceBean, AbstractTagBean):
-    path: List[List[PathNodeTagBean]]
+    path: List[PathNodeTagBeanList]
     tag: str = ""
 
     def iter_path_node(self):
@@ -79,30 +79,30 @@ class InstanceTagBean(TagNoneMixin, InstanceBean, AbstractTagBean):
             node.set_tag(tag)
 
     def _get_path_set(self):
-        return {translate_path(PathNodeTagBeanList(p).dict()) for p in self.path}
+        return {translate_path(p.dict()) for p in self.path}
 
     def compare_and_tag(self, instance: "InstanceTagBean") -> "InstanceTagBean":
         tag_instance = InstanceTagBean(tag=ConditionTag.UNCHANGED.value, type=self.type, name=self.name, path=[])
 
         # 生成path hash set
         new_path_set = self._get_path_set()
-        old_path_dict = {translate_path(PathNodeTagBeanList(p).dict()): p for p in instance.path}
+        old_path_dict = {translate_path(p.dict()): p for p in instance.path}
 
         for p in self.path:
-            node_list = PathNodeTagBeanList(p)
+            copied_p = p.copy()
             # 标记新增的path
-            if translate_path(node_list.dict()) not in old_path_dict:
-                node_list.set_tag(ConditionTag.ADD.value)
+            if translate_path(copied_p.dict()) not in old_path_dict:
+                copied_p.set_tag(ConditionTag.ADD.value)
             else:
-                node_list.set_tag(ConditionTag.UNCHANGED.value)
-            tag_instance.path.append(node_list.nodes)
+                copied_p.set_tag(ConditionTag.UNCHANGED.value)
+            tag_instance.path.append(copied_p)
 
         # 标记删除的path
         for p in instance.path:
-            node_list = PathNodeTagBeanList(p)
-            if translate_path(node_list.dict()) not in new_path_set:
-                node_list.set_tag(ConditionTag.DELETE.value)
-                tag_instance.path.append(node_list.nodes)
+            copied_p = p.copy()
+            if translate_path(copied_p.dict()) not in new_path_set:
+                copied_p.set_tag(ConditionTag.DELETE.value)
+                tag_instance.path.append(copied_p)
 
         return tag_instance
 
