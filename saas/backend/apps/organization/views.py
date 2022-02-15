@@ -263,7 +263,7 @@ class UserDepartmentView(views.APIView):
     @swagger_auto_schema(
         operation_description="组织架构 - 查询用户的部门信息",
         auto_schema=ResponseSwaggerAutoSchema,
-        request_body=UserDepartmentQuerySLZ(label="查询条件"),
+        query_serializer=UserDepartmentQuerySLZ,
         responses={status.HTTP_200_OK: UserDepartmentInfoSLZ(label="用户部门信息列表", many=True)},
         tags=["organization"],
     )
