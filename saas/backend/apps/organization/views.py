@@ -275,6 +275,5 @@ class UserDepartmentView(views.APIView):
 
         user = get_object_or_404(User, username=username)
 
-        data = [{"id": dept.id, "name": dept.name, "full_name": dept.full_name} for dept in user.departments]
-
-        return Response(data)
+        resp_slz = UserDepartmentInfoSLZ(user.departments, many=True)
+        return Response(resp_slz.data)
