@@ -498,7 +498,7 @@ class TemplatePolicyCloneBiz:
 
             for path_list in rg.related_resource_types[0].iter_path_list():
                 for chain in chain_list.chains:
-                    if not chain.is_match_path(path_list.nodes):
+                    if not chain.is_match_path(list(path_list)):
                         continue
 
                     _hash = path_list.to_path_string()
@@ -506,7 +506,7 @@ class TemplatePolicyCloneBiz:
                         break
 
                     match_path_hash_set.add(_hash)
-                    match_paths.append(path_list.nodes)
+                    match_paths.append(list(path_list))
                     break
 
         if not match_paths:

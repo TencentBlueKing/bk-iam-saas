@@ -190,10 +190,10 @@ class InstanceAproverHandler(PolicyProcessHandler):
         for rg in policy.resource_groups:
             rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
             for path in rrt.iter_path_list(ignore_attribute=True):
-                last_node = path.nodes[-1]
+                last_node = path[-1]
                 if last_node.id == ANY_ID:
-                    if len(path.nodes) < 2:
+                    if len(path) < 2:
                         continue
-                    last_node = path.nodes[-2]
+                    last_node = path[-2]
                 resource_node_set.add(ResourceNodeBean.parse_obj(last_node))
         return list(resource_node_set)

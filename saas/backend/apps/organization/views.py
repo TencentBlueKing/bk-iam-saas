@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, views
@@ -27,6 +28,8 @@ from backend.apps.organization.serializers import (
     OrganizationSyncErrorLogSLZ,
     OrganizationSyncRecordSLZ,
     OrganizationSyncTaskSLZ,
+    UserDepartmentInfoSLZ,
+    UserDepartmentQuerySLZ,
     UserInfoSLZ,
     UserQuerySLZ,
 )
@@ -254,3 +257,23 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
         sync_record = self.get_object()
         response_slz = OrganizationSyncErrorLogSLZ(sync_record.detail)
         return Response(response_slz.data)
+
+
+class UserDepartmentView(views.APIView):
+    @swagger_auto_schema(
+        operation_description="组织架构 - 查询用户的部门信息",
+        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=UserDepartmentQuerySLZ,
+        responses={status.HTTP_200_OK: UserDepartmentInfoSLZ(label="用户部门信息列表", many=True)},
+        tags=["organization"],
+    )
+    def get(self, request, *args, **kwargs):
+        serializer = UserDepartmentQuerySLZ(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data["username"]
+
+        user = get_object_or_404(User, username=username)
+
+        resp_slz = UserDepartmentInfoSLZ(user.departments, many=True)
+        return Response(resp_slz.data)
