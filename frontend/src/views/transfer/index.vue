@@ -1,5 +1,14 @@
 <template>
     <div class="iam-transfer-wrapper" v-bkloading="{ isLoading: submitLoading, opacity: 1 }">
+        <bk-button
+            v-if="enablePermissionHandover.toLowerCase() === 'true'"
+            data-test-id="permTransfer_btn_history"
+            text
+            style="position: relative; top: -13px; width: 100%; text-align: right;"
+            @click="goPermTransferHistory">
+            {{ $t(`m.permTransfer['交接历史']`) }}
+        </bk-button>
+
         <Group @group-selection-change="handleGroupSelection" />
 
         <Custom @custom-selection-change="handleCustomSelection" />
@@ -85,7 +94,8 @@
                 reasonValidateText: '',
                 userApi: window.BK_USER_API,
                 pageContainer: null,
-                submitLoading: false
+                submitLoading: false,
+                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
             };
         },
         created () {
@@ -394,6 +404,13 @@
                 // } finally {
                 //     this.submitLoading = false
                 // }
+            },
+
+            // 权限交接历史
+            goPermTransferHistory () {
+                this.$router.push({
+                    name: 'permTransferHistory'
+                });
             }
         }
     };

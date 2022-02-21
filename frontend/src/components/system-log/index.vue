@@ -31,7 +31,7 @@
 </template>
 <script>
     import { mapGetters } from 'vuex';
-    import marked from 'marked';
+    import { marked } from 'marked';
     import ScrollFaker from '../scroll-faker';
 
     export default {
