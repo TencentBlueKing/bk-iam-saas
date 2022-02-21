@@ -170,16 +170,16 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { mapGetters } from 'vuex'
-    import IamPopoverConfirm from '@/components/iam-popover-confirm'
-    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
-    import RenderResourcePopover from '../components/prem-view-resource-popover'
-    import PermPolicy from '@/model/my-perm-policy'
-    import { leaveConfirm } from '@/common/leave-confirm'
-    import RenderDetail from '../components/render-detail-edit'
-    import EffectConditon from './effect-conditon'
-    import SidesliderEffectConditon from './sideslider-effect-condition'
+    import _ from 'lodash';
+    import { mapGetters } from 'vuex';
+    import IamPopoverConfirm from '@/components/iam-popover-confirm';
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
+    import RenderResourcePopover from '../components/prem-view-resource-popover';
+    import PermPolicy from '@/model/my-perm-policy';
+    import { leaveConfirm } from '@/common/leave-confirm';
+    import RenderDetail from '../components/render-detail-edit';
+    import EffectConditon from './effect-conditon';
+    import SidesliderEffectConditon from './sideslider-effect-condition';
 
     export default {
         name: 'CustomPermTable',
@@ -228,34 +228,34 @@
                 params: '',
                 originalCustomTmplList: []
 
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
             loading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty && payload.policy_id !== ''
-                }
+                    return !payload.isEmpty && payload.policy_id !== '';
+                };
             }
         },
         watch: {
             systemId: {
                 async handler (value) {
                     if (value !== '') {
-                        this.initRequestQueue = ['permTable']
+                        this.initRequestQueue = ['permTable'];
                         const params = {
                             systemId: value
-                        }
-                        this.params = params
-                        await this.fetchActions(value)
-                        this.fetchData(params)
+                        };
+                        this.params = params;
+                        await this.fetchActions(value);
+                        this.fetchData(params);
                     } else {
-                        this.initRequestQueue = []
-                        this.policyList = []
-                        this.policyCountMap = {}
+                        this.initRequestQueue = [];
+                        this.policyList = [];
+                        this.policyCountMap = {};
                     }
                 },
                 immediate: true
@@ -272,60 +272,60 @@
                 const params = {
                     system_id: systemId,
                     user_id: this.user.username
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', params)
-                    this.originalCustomTmplList = _.cloneDeep(res.data)
-                    this.handleActionLinearData()
+                    const res = await this.$store.dispatch('permApply/getActions', params);
+                    this.originalCustomTmplList = _.cloneDeep(res.data);
+                    this.handleActionLinearData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
             handleActionLinearData () {
-                const linearActions = []
+                const linearActions = [];
                 this.originalCustomTmplList.forEach((item, index) => {
                     item.actions.forEach(act => {
-                        linearActions.push(act)
+                        linearActions.push(act);
                     })
                     ;(item.sub_groups || []).forEach(sub => {
                         sub.actions.forEach(act => {
-                            linearActions.push(act)
-                        })
-                    })
-                })
+                            linearActions.push(act);
+                        });
+                    });
+                });
 
-                this.linearActionList = _.cloneDeep(linearActions)
+                this.linearActionList = _.cloneDeep(linearActions);
             },
             /**
              * fetchData
              */
             async fetchData (params) {
                 try {
-                    const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId })
+                    const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
                     this.policyList = res.data.map(item => {
                         // eslint-disable-next-line max-len
-                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments
-                        return new PermPolicy(item)
-                    })
-                    console.log('this.policyList', this.policyList)
+                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
+                        return new PermPolicy(item);
+                    });
+                    console.log('this.policyList', this.policyList);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.initRequestQueue.shift()
+                    this.initRequestQueue.shift();
                 }
             },
 
@@ -334,44 +334,44 @@
              */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1 || columnIndex === 2) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             /**
              * handleRefreshData
              */
             handleRefreshData () {
-                this.initRequestQueue = ['permTable']
+                this.initRequestQueue = ['permTable'];
                 const params = {
                     systemId: this.systemId
-                }
-                this.fetchData(params)
+                };
+                this.fetchData(params);
             },
 
             /**
              * handleBatchDelete
              */
             handleBatchDelete () {
-                window.changeAlert = true
-                this.isBatchDelete = false
+                window.changeAlert = true;
+                this.isBatchDelete = false;
             },
 
             handleTabChange (payload) {
-                const { disabled, canDelete } = payload
-                this.batchDisabled = disabled
-                this.canOperate = canDelete
+                const { disabled, canDelete } = payload;
+                this.batchDisabled = disabled;
+                this.canOperate = canDelete;
             },
 
             handleChange () {
-                const data = this.$refs.detailComRef.handleGetValue()
-                this.disabled = data.ids.length < 1 && data.condition.length < 1
+                const data = this.$refs.detailComRef.handleGetValue();
+                this.disabled = data.ids.length < 1 && data.condition.length < 1;
             },
 
             async handleDeletePerm (payload) {
-                const data = this.$refs.detailComRef.handleGetValue()
-                const { ids, condition, type, resource_group_id } = data
+                const data = this.$refs.detailComRef.handleGetValue();
+                const { ids, condition, type, resource_group_id } = data;
                 const params = {
                     id: this.curPolicyId,
                     data: {
@@ -381,104 +381,104 @@
                         condition,
                         resource_group_id
                     }
-                }
+                };
                 try {
-                    await this.$store.dispatch('permApply/updatePerm', params)
-                    window.changeAlert = false
-                    this.isShowSideslider = false
-                    this.resetDataAfterClose()
-                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                    this.handleRefreshData()
+                    await this.$store.dispatch('permApply/updatePerm', params);
+                    window.changeAlert = false;
+                    this.isShowSideslider = false;
+                    this.resetDataAfterClose();
+                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                    this.handleRefreshData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    payload && payload.hide()
+                    payload && payload.hide();
                 }
             },
 
             handleCancel () {
-                this.isBatchDelete = true
+                this.isBatchDelete = true;
             },
 
             handleResourceCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
-                    cancelHandler = leaveConfirm()
+                    cancelHandler = leaveConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.isShowSideslider = false
-                    this.isShowEnvironmentsSideslider = false
-                    this.resetDataAfterClose()
-                }, _ => _)
+                    this.isShowSideslider = false;
+                    this.isShowEnvironmentsSideslider = false;
+                    this.resetDataAfterClose();
+                }, _ => _);
             },
 
             handleResourceEffectTimeCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
-                    cancelHandler = leaveConfirm()
+                    cancelHandler = leaveConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.isShowResourceInstanceEffectTime = false
-                    this.resetDataAfterClose()
-                }, _ => _)
+                    this.isShowResourceInstanceEffectTime = false;
+                    this.resetDataAfterClose();
+                }, _ => _);
             },
 
             /**
              * handleResourceEffectTimeSumit
              */
             handleResourceEffectTimeSumit () {
-                const environments = this.$refs.sidesliderRef.handleGetValue()
-                console.log(this.curIndex, this.curGroupIndex, environments)
-                window.changeAlert = false
+                const environments = this.$refs.sidesliderRef.handleGetValue();
+                console.log(this.curIndex, this.curGroupIndex, environments);
+                window.changeAlert = false;
             },
 
             /**
              * resetDataAfterClose
              */
             resetDataAfterClose () {
-                this.sidesliderTitle = ''
-                this.previewData = []
-                this.canOperate = true
-                this.batchDisabled = false
-                this.disabled = true
-                this.isBatchDelete = true
-                this.curId = ''
-                this.curPolicyId = ''
+                this.sidesliderTitle = '';
+                this.previewData = [];
+                this.canOperate = true;
+                this.batchDisabled = false;
+                this.disabled = true;
+                this.isBatchDelete = true;
+                this.curId = '';
+                this.curPolicyId = '';
             },
 
             /**
              * handleAfterDeleteLeave
              */
             handleAfterDeleteLeave () {
-                this.deleteDialog.subTitle = ''
-                this.curDeleteIds = []
+                this.deleteDialog.subTitle = '';
+                this.curDeleteIds = [];
             },
 
             /**
              * hideCancelDelete
              */
             hideCancelDelete () {
-                this.deleteDialog.visible = false
+                this.deleteDialog.visible = false;
             },
 
             /**
              * handleViewResource
              */
             handleViewResource (groupItem, payload) {
-                this.curId = payload.id
-                this.curPolicyId = payload.policy_id
-                const params = []
+                this.curId = payload.id;
+                this.curPolicyId = payload.policy_id;
+                const params = [];
 
                 if (groupItem.related_resource_types.length > 0) {
                     groupItem.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
+                        const { name, type, condition } = item;
                         params.push({
                             name: type,
                             label: `${name} ${this.$t(`m.common['实例']`)}`,
@@ -486,100 +486,100 @@
                             data: condition,
                             systemId: item.system_id,
                             resource_group_id: groupItem.id
-                        })
-                    })
+                        });
+                    });
                 }
-                this.previewData = _.cloneDeep(params)
+                this.previewData = _.cloneDeep(params);
 
                 if (this.previewData[0].tabType === 'relate') {
-                    this.canOperate = false
+                    this.canOperate = false;
                 }
                 if (this.previewData[0].tabType === 'resource' && (this.previewData[0].data.length < 1 || this.previewData[0].data.every(item => !item.instance || item.instance.length < 1))) {
-                    this.batchDisabled = true
+                    this.batchDisabled = true;
                 }
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
-                window.changeAlert = 'iamSidesider'
-                this.isShowSideslider = true
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                window.changeAlert = 'iamSidesider';
+                this.isShowSideslider = true;
             },
 
             /**
              * handleEnvironmentsViewResource
              */
             handleEnvironmentsViewResource (payload, data) {
-                this.environmentsSidesliderData = payload.environments
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
-                this.isShowEnvironmentsSideslider = true
-                this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`
+                this.environmentsSidesliderData = payload.environments;
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
+                this.isShowEnvironmentsSideslider = true;
+                this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`;
             },
 
             /**
              * handlerReduceInstance
              */
             handlerReduceInstance (payload, data) {
-                if (data.resource_groups.length < 2) return
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}一组实例权限`
-                this.deleteDialog.visible = true
+                if (data.resource_groups.length < 2) return;
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}一组实例权限`;
+                this.deleteDialog.visible = true;
                 this.resourceGrouParams = {
                     id: data.policy_id,
                     resourceGroupId: payload.id
-                }
+                };
             },
 
             /**
              * handleViewSidesliderCondition
              */
             handleViewSidesliderCondition () {
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
-                this.isShowResourceInstanceEffectTime = true
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
+                this.isShowResourceInstanceEffectTime = true;
             },
 
             /**
              * handleDelete
              */
             handleDelete (payload) {
-                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id])
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】权限`
-                this.deleteDialog.visible = true
+                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】权限`;
+                this.deleteDialog.visible = true;
             },
 
             /**
              * handleSumbitDelete
              */
             async handleSumbitDelete () {
-                this.deleteDialog.loading = true
+                this.deleteDialog.loading = true;
                 try {
                     if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
-                        await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams)
-                        this.fetchData(this.params)
-                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
+                        await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
+                        this.fetchData(this.params);
+                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
                     } else {
                         await this.$store.dispatch('permApply/deletePerm', {
                             policyIds: this.curDeleteIds,
                             systemId: this.systemId
-                        })
-                        const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0])
+                        });
+                        const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0]);
                         if (index > -1) {
-                            this.policyList.splice(index, 1)
+                            this.policyList.splice(index, 1);
                         }
-                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                        this.$emit('after-delete', this.policyList.length)
+                        this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                        this.$emit('after-delete', this.policyList.length);
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.deleteDialog.loading = false
-                    this.deleteDialog.visible = false
+                    this.deleteDialog.loading = false;
+                    this.deleteDialog.visible = false;
                 }
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .my-perm-custom-perm-table {

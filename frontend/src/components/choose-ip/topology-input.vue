@@ -12,7 +12,7 @@
     </div>
 </template>
 <script>
-    import il8n from '@/language'
+    import il8n from '@/language';
     export default {
         name: '',
         props: {
@@ -36,37 +36,37 @@
         data () {
             return {
                 value: ''
-            }
+            };
         },
         computed: {
             isUsedByTree () {
-                return this.scene === 'tree'
+                return this.scene === 'tree';
             }
         },
         watch: {
             value (newVal, oldVal) {
                 if (newVal === '' && oldVal !== '' && this.isFilter) {
-                    this.$emit('on-search', '')
+                    this.$emit('on-search', '');
                 }
             }
         },
         methods: {
             handleKeyEnter () {
-                this.handleSearch()
+                this.handleSearch();
             },
 
             handleSearch () {
                 if (this.value === '') {
-                    return
+                    return;
                 }
-                this.$emit('on-search', this.value)
+                this.$emit('on-search', this.value);
             },
 
             handleSetFocus () {
-                this.$refs.input.focus()
+                this.$refs.input.focus();
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-topology-input {

@@ -74,7 +74,7 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -91,88 +91,88 @@
                 isSelectAllChecked: false,
                 groupSelectData: [],
                 pageContainer: null
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
         },
         mounted () {
-            this.pageContainer = document.querySelector('.main-scroller')
-            this.fetchData()
+            this.pageContainer = document.querySelector('.main-scroller');
+            this.fetchData();
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups')
-                    const groupList = res.data || []
+                    const res = await this.$store.dispatch('perm/getPersonalGroups');
+                    const groupList = res.data || [];
                     groupList.forEach(item => {
                         if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
-                            this.groupNotTransferCount += 1
-                            item.canNotTransfer = true
+                            this.groupNotTransferCount += 1;
+                            item.canNotTransfer = true;
                         }
-                    })
+                    });
 
-                    this.groupList.splice(0, this.groupList.length, ...groupList)
+                    this.groupList.splice(0, this.groupList.length, ...groupList);
 
-                    this.isEmpty = groupList.length < 1
+                    this.isEmpty = groupList.length < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handleGroupExpanded () {
-                this.groupExpanded = !this.groupExpanded
+                this.groupExpanded = !this.groupExpanded;
             },
 
             handleGroupShowAll () {
-                this.groupShowAll = !this.groupShowAll
+                this.groupShowAll = !this.groupShowAll;
                 if (!this.groupShowAll) {
                     setTimeout(() => {
                         const top = this.$refs.transferGroupContent.getBoundingClientRect().top
-                            + this.pageContainer.scrollTop
+                            + this.pageContainer.scrollTop;
 
                         this.pageContainer.scrollTo({
                             top: top - 61, // 减去顶导的高度 61
                             behavior: 'smooth'
-                        })
+                        });
                         // this.$refs.transferGroupContent.scrollIntoView({
                         //     behavior: 'smooth'
                         // })
-                    }, 10)
+                    }, 10);
                 }
             },
 
             handleSelectAll (selection) {
-                this.isSelectAllChecked = !!selection.length
+                this.isSelectAllChecked = !!selection.length;
                 if (this.isSelectAllChecked) {
-                    const validGroupList = this.groupList.filter(item => !item.canNotTransfer)
+                    const validGroupList = this.groupList.filter(item => !item.canNotTransfer);
                     this.groupSelectData.splice(
                         0,
                         this.groupSelectData.length,
                         ...validGroupList
-                    )
+                    );
                 } else {
-                    this.groupSelectData.splice(0, this.groupSelectData.length, ...[])
+                    this.groupSelectData.splice(0, this.groupSelectData.length, ...[]);
                 }
 
-                this.$emit('group-selection-change', this.groupSelectData)
+                this.$emit('group-selection-change', this.groupSelectData);
             },
 
             handleSelect (selection) {
-                const validGroupList = this.groupList.filter(item => !item.canNotTransfer)
-                this.isSelectAllChecked = selection.length === validGroupList.length
-                this.groupSelectData.splice(0, this.groupSelectData.length, ...selection)
-                this.$emit('group-selection-change', this.groupSelectData)
+                const validGroupList = this.groupList.filter(item => !item.canNotTransfer);
+                this.isSelectAllChecked = selection.length === validGroupList.length;
+                this.groupSelectData.splice(0, this.groupSelectData.length, ...selection);
+                this.$emit('group-selection-change', this.groupSelectData);
             },
 
             /**
@@ -180,12 +180,12 @@
              */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 0) {
-                    return 'checkbox-cell-wrapper'
+                    return 'checkbox-cell-wrapper';
                 }
-                return ''
+                return '';
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './group.css';

@@ -25,8 +25,8 @@
     </bk-dialog>
 </template>
 <script>
-    import _ from 'lodash'
-    import Tree from './attach-action-tree'
+    import _ from 'lodash';
+    import Tree from './attach-action-tree';
     export default {
         name: '',
         components: {
@@ -40,7 +40,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             curId: {
@@ -58,26 +58,26 @@
                 isLoading: false,
                 relateActionData: [],
                 actionTopologiesData: {}
-            }
+            };
         },
         computed: {
             isShow () {
                 return this.relateActionData.length > 0
                     && (!this.relateActionData[0].isRelateActionEmpty
-                        || (this.relateActionData[0].children && this.relateActionData[0].children.some(item => item.tag !== 'unchecked')))
+                        || (this.relateActionData[0].children && this.relateActionData[0].children.some(item => item.tag !== 'unchecked')));
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             },
             params: {
                 handler (value) {
                     if (Object.keys(value).length > 0) {
-                        this.fetchData(value)
+                        this.fetchData(value);
                     }
                 },
                 immediate: true
@@ -85,70 +85,70 @@
         },
         methods: {
             async fetchData (params) {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('permApply/attachActionCompare', params)
-                    this.relateActionData = _.cloneDeep(res.data)
-                    this.handleMatchData(this.relateActionData)
+                    const res = await this.$store.dispatch('permApply/attachActionCompare', params);
+                    this.relateActionData = _.cloneDeep(res.data);
+                    this.handleMatchData(this.relateActionData);
                     if (Object.keys(this.actionTopologiesData).length > 0) {
-                        this.relateActionData = _.cloneDeep([this.actionTopologiesData])
+                        this.relateActionData = _.cloneDeep([this.actionTopologiesData]);
                     }
-                    this.handleInitData(this.relateActionData)
+                    this.handleInitData(this.relateActionData);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handleMatchData (payload) {
                 payload.forEach(item => {
                     if (item.id === this.curId) {
-                        this.actionTopologiesData = _.cloneDeep(item)
-                        return true
+                        this.actionTopologiesData = _.cloneDeep(item);
+                        return true;
                     } else {
                         if (item.sub_actions && item.sub_actions.length > 0) {
-                            this.handleMatchData(item.sub_actions)
+                            this.handleMatchData(item.sub_actions);
                         }
                     }
-                })
-                return false
+                });
+                return false;
             },
 
             handleInitData (payload = []) {
                 payload.forEach(item => {
-                    const subflag = item.sub_actions.length > 0
-                    const relateActionEmpty = item.related_actions.every(relateItem => relateItem.tag === 'unchecked')
+                    const subflag = item.sub_actions.length > 0;
+                    const relateActionEmpty = item.related_actions.every(relateItem => relateItem.tag === 'unchecked');
                     if (item.id !== this.relateActionData[0].id
                         && item.tag === 'unchecked'
                         && item.sub_actions.every(subItem => subItem.tag === 'unchecked')
                         && relateActionEmpty) {
-                        this.$set(item, 'visible', false)
+                        this.$set(item, 'visible', false);
                     }
-                    this.$set(item, 'isRelateActionEmpty', relateActionEmpty || item.related_actions.length < 1)
+                    this.$set(item, 'isRelateActionEmpty', relateActionEmpty || item.related_actions.length < 1);
                     if (subflag) {
-                        this.$set(item, 'expanded', subflag)
-                        this.$set(item, 'children', _.cloneDeep(item.sub_actions))
+                        this.$set(item, 'expanded', subflag);
+                        this.$set(item, 'children', _.cloneDeep(item.sub_actions));
                     }
                     if (item.children && item.children.length > 0) {
-                        this.handleInitData(item.children)
+                        this.handleInitData(item.children);
                     }
-                })
-                return payload
+                });
+                return payload;
             },
 
             handleAfterEditLeave () {
-                this.$emit('on-after-leave')
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-attach-action-preview-dialog {

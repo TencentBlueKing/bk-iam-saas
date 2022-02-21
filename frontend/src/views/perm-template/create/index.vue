@@ -5,7 +5,7 @@
     </component>
 </template>
 <script>
-    import CreateTemplate from '../components/render-content'
+    import CreateTemplate from '../components/render-content';
 
     export default {
         name: '',
@@ -15,12 +15,12 @@
         data () {
             return {
                 componentId: 'CreateTemplate'
-            }
+            };
         },
         methods: {
             async fetchPageData () {
-                await this.$refs.com.fetchPageData()
+                await this.$refs.com.fetchPageData();
             }
         }
-    }
+    };
 </script>

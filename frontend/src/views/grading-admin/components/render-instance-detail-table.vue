@@ -70,10 +70,10 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import RenderDetail from './render-detail'
-    import GradePolicy from '@/model/grade-policy'
+    import _ from 'lodash';
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
+    import RenderDetail from './render-detail';
+    import GradePolicy from '@/model/grade-policy';
     export default {
         name: '',
         components: {
@@ -98,31 +98,31 @@
                 isShowSideslider: false,
                 sidesliderTitle: '',
                 systemFilter: []
-            }
+            };
         },
         computed: {
             loading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty
-                }
+                    return !payload.isEmpty;
+                };
             }
         },
         watch: {
             actions: {
                 handler (value) {
                     if (value.length > 0) {
-                        this.tableList = value.map(item => new GradePolicy(item)) // 继承。此处会新增字段
+                        this.tableList = value.map(item => new GradePolicy(item)); // 继承。此处会新增字段
                         this.tableList.forEach(item => {
                             if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {
                                 this.systemFilter.push({
                                     text: item.system_name,
                                     value: item.system_id
-                                })
+                                });
                             }
-                        })
+                        });
                     }
                 },
                 immediate: true
@@ -130,43 +130,43 @@
         },
         methods: {
             handleAnimationEnd () {
-                this.sidesliderTitle = ''
-                this.previewData = []
-                this.curId = ''
+                this.sidesliderTitle = '';
+                this.previewData = [];
+                this.curId = '';
             },
 
             systemFilterMethod (value, row, column) {
-                const property = column.property
-                return row[property] === value
+                const property = column.property;
+                return row[property] === value;
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 2) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             handleViewResource (groupItem, payload) {
-                this.curId = payload.id
-                const params = []
+                this.curId = payload.id;
+                const params = [];
                 if (groupItem.related_resource_types.length > 0) {
                     groupItem.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
+                        const { name, type, condition } = item;
                         params.push({
                             name: type,
                             label: `${name} ${this.$t(`m.common['实例']`)}`,
                             tabType: 'resource',
                             data: condition
-                        })
-                    })
+                        });
+                    });
                 }
-                this.previewData = _.cloneDeep(params)
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
-                this.isShowSideslider = true
+                this.previewData = _.cloneDeep(params);
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.isShowSideslider = true;
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-perm-aggregate-table {

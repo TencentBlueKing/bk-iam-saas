@@ -49,8 +49,8 @@
     </ul>
 </template>
 <script>
-    import CollapseTransition from '@/common/collapse-transition'
-    import RenderTag from '@/components/render-span/tag'
+    import CollapseTransition from '@/common/collapse-transition';
+    import RenderTag from '@/components/render-span/tag';
     export default {
         name: 'tree',
         components: {
@@ -65,7 +65,7 @@
             parent: {
                 type: Object,
                 default: () => {
-                    return null
+                    return null;
                 }
             },
             nodeKey: {
@@ -88,15 +88,15 @@
         data () {
             return {
                 isBorder: this.hasBorder
-            }
+            };
         },
         computed: {
             hasChild () {
                 return payload => {
                     return payload.related_actions.some(item => item.tag !== 'unchecked')
                         && (payload.children && payload.children.length > 0)
-                        && payload.children.some(item => !item.isRelateActionEmpty || item.tag !== 'unchecked')
-                }
+                        && payload.children.some(item => !item.isRelateActionEmpty || item.tag !== 'unchecked');
+                };
             },
             isBeingView () {
                 return payload => {
@@ -105,33 +105,33 @@
                         && payload.children.length > 0
                         && payload.children.some(
                             child => !child.isRelateActionEmpty || (child.children && child.children.length > 0)
-                        )
-                }
+                        );
+                };
             }
         },
         watch: {
             data () {
-                this.initTreeData()
+                this.initTreeData();
             },
             hasBorder (value) {
-                this.isBorder = !!value
+                this.isBorder = !!value;
             }
         },
         mounted () {
-            this.initTreeData()
+            this.initTreeData();
         },
         methods: {
             initTreeData () {
                 for (const node of this.data) {
-                    this.$set(node, 'parent', this.parent)
+                    this.$set(node, 'parent', this.parent);
                 }
             },
 
             isLeaf (node) {
-                return !(node.children && node.children.length) && node.parent && !node.async
+                return !(node.children && node.children.length) && node.parent && !node.async;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .fade-enter-active, .fade-leave-active {

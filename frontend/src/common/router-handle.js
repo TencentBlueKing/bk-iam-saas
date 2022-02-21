@@ -49,7 +49,7 @@ export const getRouterDiff = (payload) => {
             'permTemplateDiff',
             'addGroupPerm',
             'resourcePermiss'
-        ]
+        ];
     }
     if (payload === 'super_manager') {
         return [
@@ -68,7 +68,7 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete'
-        ]
+        ];
     }
     if (payload === 'system_manager') {
         return [
@@ -93,7 +93,7 @@ export const getRouterDiff = (payload) => {
             'systemAccessOptimize',
             'systemAccessComplete',
             'resourcePermiss'
-        ]
+        ];
     }
     if (payload === 'rating_manager') {
         return [
@@ -120,7 +120,7 @@ export const getRouterDiff = (payload) => {
             'systemAccessOptimize',
             'systemAccessComplete',
             'resourcePermiss'
-        ]
+        ];
     }
     // payload其它取值默认返回全部菜单
     return [
@@ -159,5 +159,5 @@ export const getRouterDiff = (payload) => {
         'permTemplateEdit',
         'permTemplateDiff',
         'addGroupPerm'
-    ]
-}
+    ];
+};

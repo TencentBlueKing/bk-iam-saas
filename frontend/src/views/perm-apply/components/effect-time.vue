@@ -11,7 +11,7 @@
     </div>
 </template>
 <script>
-    import { GLOBAL_TIME_ZONE_ENUM } from '@/common/constants'
+    import { GLOBAL_TIME_ZONE_ENUM } from '@/common/constants';
     export default {
         name: '',
         props: {
@@ -46,7 +46,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -68,77 +68,77 @@
                 effectType: {
                     'period_daily': '时间'
                 }
-            }
+            };
         },
         computed: {
             style () {
                 if (!this.canOperate) {
                     return {
                         width: '100%'
-                    }
+                    };
                 }
                 if (this.isEmpty) {
                     if (this.canPaste) {
                         return {
                             width: 'calc(100% - 30px)'
-                        }
+                        };
                     }
                     return {
                         width: '100%'
-                    }
+                    };
                 }
-                const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length
+                const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length;
                 return {
                     width: `calc(100% - ${statusLen * 30}px)`
-                }
+                };
             }
         },
         watch: {
             value: {
                 handler (val) {
                     if (this.isEmpty) {
-                        this.curValue = '请选择生效条件，默认无限制'
+                        this.curValue = '请选择生效条件，默认无限制';
                     } else {
                         this.curValue = val.reduce((p, v) => {
-                            let curValue = ''
-                            let weekCopy = ''
+                            let curValue = '';
+                            let weekCopy = '';
                             curValue = v.condition.reduce((prev, item) => {
-                                let hms = ''
-                                let tz = ''
-                                let weekday = ''
+                                let hms = '';
+                                let tz = '';
+                                let weekday = '';
                                 if (item.type === 'weekday') {
                                     weekday = item.values.reduce((pre, e) => {
-                                        pre = `${pre} ${this.effectWeekList[e.value]}`
-                                        return pre
-                                    }, '')
-                                    weekCopy = weekday
+                                        pre = `${pre} ${this.effectWeekList[e.value]}`;
+                                        return pre;
+                                    }, '');
+                                    weekCopy = weekday;
                                 }
 
                                 if (item.type === 'hms') {
                                     hms = item.values.reduce((pre, e) => {
                                         if (pre) {
-                                            pre = `${pre} - ${e.value}`
+                                            pre = `${pre} - ${e.value}`;
                                         } else {
-                                            pre = `${pre} ${e.value}`
+                                            pre = `${pre} ${e.value}`;
                                         }
                                         
-                                        return pre
-                                    }, '')
+                                        return pre;
+                                    }, '');
                                 }
 
                                 if (item.type === 'tz') {
                                     tz = item.values.reduce((pre, e) => {
-                                        pre = this.effectWeekTimeZone[e.value]
-                                        return pre
-                                    }, '')
+                                        pre = this.effectWeekTimeZone[e.value];
+                                        return pre;
+                                    }, '');
                                 }
 
-                                prev = `${prev}${hms}${tz}${weekday}`
-                                return prev
-                            }, '')
-                            p = `${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`
-                            return p
-                        }, '在')
+                                prev = `${prev}${hms}${tz}${weekday}`;
+                                return prev;
+                            }, '');
+                            p = `${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`;
+                            return p;
+                        }, '在');
                     }
                 },
                 immediate: true
@@ -147,28 +147,28 @@
         methods: {
 
             handleMouseenter () {
-                this.isActive = true
-                this.$emit('on-mouseover')
+                this.isActive = true;
+                this.$emit('on-mouseover');
             },
 
             handleMouseleave () {
-                this.isActive = false
-                this.immediatelyShow = false
-                this.$emit('on-mouseleave')
+                this.isActive = false;
+                this.immediatelyShow = false;
+                this.$emit('on-mouseleave');
             },
 
             handleRestore () {
-                this.$emit('on-restore')
+                this.$emit('on-restore');
             },
 
             handleClick () {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.$emit('on-click')
+                this.$emit('on-click');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-effect-time {

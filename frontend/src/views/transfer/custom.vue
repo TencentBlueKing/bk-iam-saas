@@ -50,11 +50,11 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex';
 
-    import PermPolicy from '@/model/my-perm-policy'
-    import PermSystem from '@/model/my-perm-system'
-    import CustomPermTable from './custom-perm-table.vue'
+    import PermPolicy from '@/model/my-perm-policy';
+    import PermSystem from '@/model/my-perm-system';
+    import CustomPermTable from './custom-perm-table.vue';
 
     export default {
         name: 'CustomPerm',
@@ -69,127 +69,127 @@
                 customExpanded: true,
                 customNotTransferCount: 0,
                 customSelectDataMap: {}
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
         },
         mounted () {
-            this.fetchData()
+            this.fetchData();
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('permApply/getHasPermSystem')
-                    const list = res.data || []
+                    const res = await this.$store.dispatch('permApply/getHasPermSystem');
+                    const list = res.data || [];
                     const systemPolicyList = list.map(item => {
-                        const sys = new PermSystem(item)
-                        sys.loading = false
-                        sys.policyList = []
-                        return sys
-                    })
-                    this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList)
-                    this.isEmpty = systemPolicyList.length < 1
+                        const sys = new PermSystem(item);
+                        sys.loading = false;
+                        sys.policyList = [];
+                        return sys;
+                    });
+                    this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
+                    this.isEmpty = systemPolicyList.length < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handleCustomExpanded () {
-                this.customExpanded = !this.customExpanded
+                this.customExpanded = !this.customExpanded;
             },
 
             async handleSystemExpanded (sys) {
-                sys.expanded = !sys.expanded
+                sys.expanded = !sys.expanded;
                 if (sys.expanded) {
                     try {
-                        sys.loading = true
-                        const res = await this.$store.dispatch('permApply/getPolicies', { system_id: sys.id })
-                        const alreadyLoadedList = sys.policyList
+                        sys.loading = true;
+                        const res = await this.$store.dispatch('permApply/getPolicies', { system_id: sys.id });
+                        const alreadyLoadedList = sys.policyList;
                         sys.policyList = res.data.map(item => {
-                            const policy = new PermPolicy(item)
+                            const policy = new PermPolicy(item);
                             if (policy.expired_at < this.user.timestamp) {
-                                this.customNotTransferCount += 1
-                                policy.isExpired = true
+                                this.customNotTransferCount += 1;
+                                policy.isExpired = true;
                             }
                             const foundPolicy = alreadyLoadedList.find(
                                 p => p.id === policy.id && p.policy_id === policy.policy_id
-                            )
-                            policy.transferChecked = foundPolicy ? foundPolicy.transferChecked : false
+                            );
+                            policy.transferChecked = foundPolicy ? foundPolicy.transferChecked : false;
 
                             // test
                             // if (policy.policy_id % 2 === 0) {
                             //     policy.expired_at = 0
                             // }
-                            return policy
-                        })
+                            return policy;
+                        });
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText,
                             ellipsisLine: 2,
                             ellipsisCopy: true
-                        })
+                        });
                     } finally {
-                        sys.loading = false
+                        sys.loading = false;
                     }
                 }
             },
 
             handleCustomSelection (policySelectionList, sys) {
-                const policyList = []
-                policyList.splice(0, 0, ...sys.policyList)
+                const policyList = [];
+                policyList.splice(0, 0, ...sys.policyList);
 
                 if (policySelectionList.length === 0) {
                     policyList.forEach(p => {
-                        p.transferChecked = false
-                    })
+                        p.transferChecked = false;
+                    });
                 } else {
                     policyList.forEach(p => {
-                        p.transferChecked = false
+                        p.transferChecked = false;
                         const foundPolicy = policySelectionList.find(
                             policy => policy.id === p.id && policy.policy_id === p.policy_id
-                        )
+                        );
                         if (foundPolicy) {
-                            p.transferChecked = true
+                            p.transferChecked = true;
                         }
-                    })
+                    });
                 }
-                sys.policyList.splice(0, sys.policyList.length, ...policyList)
+                sys.policyList.splice(0, sys.policyList.length, ...policyList);
 
                 // 组装 customSelectData
-                const customSelectDataMap = Object.assign({}, this.customSelectDataMap)
-                const key = sys.id // + '|||' + sys.name
+                const customSelectDataMap = Object.assign({}, this.customSelectDataMap);
+                const key = sys.id; // + '|||' + sys.name
                 if (!customSelectDataMap[key]) {
-                    customSelectDataMap[key] = []
+                    customSelectDataMap[key] = [];
                 }
-                const selectedPolicyList = policyList.filter(p => p.transferChecked)
+                const selectedPolicyList = policyList.filter(p => p.transferChecked);
                 if (selectedPolicyList.length) {
-                    customSelectDataMap[key].splice(0, customSelectDataMap[key].length, ...selectedPolicyList)
+                    customSelectDataMap[key].splice(0, customSelectDataMap[key].length, ...selectedPolicyList);
                 } else {
-                    delete customSelectDataMap[key]
+                    delete customSelectDataMap[key];
                 }
-                this.customSelectDataMap = Object.assign({}, customSelectDataMap)
+                this.customSelectDataMap = Object.assign({}, customSelectDataMap);
                 // const customSelectData = []
                 // Object.values(this.customSelectDataMap).forEach(v => {
                 //     customSelectData.push(...v)
                 // })
-                this.$emit('custom-selection-change', customSelectDataMap)
+                this.$emit('custom-selection-change', customSelectDataMap);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './custom.css';

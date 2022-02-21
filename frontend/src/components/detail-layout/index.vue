@@ -17,40 +17,40 @@
             }
         },
         created () {
-            this.childrenNum = this.$slots.default
+            this.childrenNum = this.$slots.default;
         },
         updated () {
-            const childrenNum = this.$slots.default
+            const childrenNum = this.$slots.default;
             if (this.childrenNum !== childrenNum) {
-                this.init()
-                this.childrenNum = childrenNum
+                this.init();
+                this.childrenNum = childrenNum;
             }
         },
         mounted () {
-            const isShowLayout = this.$refs.detailLayout.getBoundingClientRect().width > 0
+            const isShowLayout = this.$refs.detailLayout.getBoundingClientRect().width > 0;
             if (isShowLayout) {
-                this.init()
+                this.init();
             }
         },
         methods: {
             init () {
                 if (this.layout === 'vertical') {
-                    return
+                    return;
                 }
-                const $layoutEle = this.$refs.detailLayout
-                const $layoutDetailList = $layoutEle.querySelectorAll('.detail-label')
+                const $layoutEle = this.$refs.detailLayout;
+                const $layoutDetailList = $layoutEle.querySelectorAll('.detail-label');
 
-                let max = 0
+                let max = 0;
                 $layoutDetailList.forEach(item => {
-                    const { width } = item.getBoundingClientRect()
-                    max = Math.max(max, width)
-                })
+                    const { width } = item.getBoundingClientRect();
+                    max = Math.max(max, width);
+                });
                 $layoutDetailList.forEach(item => {
                     // item.style.width = `${max}px`
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-detail-layout {

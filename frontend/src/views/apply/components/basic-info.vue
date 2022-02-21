@@ -50,7 +50,7 @@
             data: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             /**
@@ -66,7 +66,7 @@
              * isHasOrg
              */
             isHasOrg () {
-                return this.data.organizations && this.data.organizations.length > 0
+                return this.data.organizations && this.data.organizations.length > 0;
             }
         },
         methods: {
@@ -74,34 +74,34 @@
              * getApplyTypeDisplay
              */
             getApplyTypeDisplay (payload) {
-                let str = ''
+                let str = '';
                 switch (payload) {
                     case 'grant_action':
-                        str = this.$t(`m.myApply['自定义权限申请']`)
-                        break
+                        str = this.$t(`m.myApply['自定义权限申请']`);
+                        break;
                     case 'renew_action':
-                        str = this.$t(`m.myApply['自定义权限申请']`)
-                        break
+                        str = this.$t(`m.myApply['自定义权限申请']`);
+                        break;
                     case 'join_group':
-                        str = this.$t(`m.myApply['加入用户组']`)
-                        break
+                        str = this.$t(`m.myApply['加入用户组']`);
+                        break;
                     case 'renew_group':
-                        str = this.$t(`m.myApply['加入用户组']`)
-                        break
+                        str = this.$t(`m.myApply['加入用户组']`);
+                        break;
                     case 'create_rating_manager':
-                        str = this.$t(`m.myApply['创建分级管理员']`)
-                        break
+                        str = this.$t(`m.myApply['创建分级管理员']`);
+                        break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.myApply['编辑分级管理员']`)
-                        break
+                        str = this.$t(`m.myApply['编辑分级管理员']`);
+                        break;
                     default:
-                        str = ''
+                        str = '';
                 }
 
-                return str
+                return str;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     @import './basic-info.css';

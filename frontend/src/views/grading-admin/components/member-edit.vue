@@ -48,8 +48,8 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import BkUserSelector from '@blueking/user-selector'
+    import _ from 'lodash';
+    import BkUserSelector from '@blueking/user-selector';
     export default {
         name: 'iam-edit-member',
         components: {
@@ -89,30 +89,30 @@
                 showIcon: false,
                 footerPosition: 'center',
                 newPayload: ''
-            }
+            };
         },
         computed: {
             styles () {
                 return {
                     width: this.width
-                }
+                };
             }
         },
         watch: {
             value (newVal) {
-                this.newVal = [...newVal]
+                this.newVal = [...newVal];
             }
         },
         mounted () {
-            document.body.addEventListener('click', this.hideEdit)
+            document.body.addEventListener('click', this.hideEdit);
             this.$once('hook:beforeDestroy', () => {
-                document.body.removeEventListener('click', this.hideEdit)
-            })
+                document.body.removeEventListener('click', this.hideEdit);
+            });
         },
         async created () {
-            await this.fetchUser()
+            await this.fetchUser();
             if (this.userInfo.role.type === 'super_manager') {
-                this.isShowRole = true
+                this.isShowRole = true;
             }
         },
         methods: {
@@ -121,125 +121,125 @@
              */
             async fetchUser () {
                 try {
-                    this.userInfo = await this.$store.dispatch('userInfo')
+                    this.userInfo = await this.$store.dispatch('userInfo');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
             handleEdit () {
-                document.body.click()
-                this.isEditable = true
+                document.body.click();
+                this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.input.focus()
-                })
+                    this.$refs.input.focus();
+                });
             },
             handleBlur () {
-                if (!this.isEditable || this.newVal.length < 1) return
-                this.triggerChange()
+                if (!this.isEditable || this.newVal.length < 1) return;
+                this.triggerChange();
             },
             handleEnter (value, event) {
-                if (!this.isEditable) return
+                if (!this.isEditable) return;
                 if (event.key === 'Enter' && event.keyCode === 13) {
-                    this.triggerChange()
+                    this.triggerChange();
                 }
             },
             dropOut () {
-                this.deleteRole(this.newPayload)
+                this.deleteRole(this.newPayload);
             },
             handleDelete (payload) {
                 // 超级管理员操作
                 if (this.isShowRole) {
                     if (this.newVal.length !== 1) {
-                        this.isShowDialog = true
+                        this.isShowDialog = true;
                     }
-                    this.newPayload = payload
+                    this.newPayload = payload;
                 }
                 if (!this.isShowRole) {
                     if (this.newVal.length !== 1 && this.userInfo.username === this.newVal[payload]) {
-                        this.isShowDialog = true
+                        this.isShowDialog = true;
                     }
-                    this.newPayload = payload
+                    this.newPayload = payload;
                 }
             },
             async deleteRole (newPayload) {
                 // 超级管理员操作
                 if (this.isShowRole) {
                     if (this.newVal.length === 1) {
-                        return
+                        return;
                     }
-                    this.newVal.splice(newPayload, 1)
-                    this.isLoading = true
+                    this.newVal.splice(newPayload, 1);
+                    this.isLoading = true;
                     this.remoteHander({
                         [this.field]: this.newVal
                     }).then(() => {
                         this.$emit('on-change', {
                             [this.field]: this.newVal
-                        })
+                        });
                     }).finally(() => {
-                        this.isLoading = false
-                    })
+                        this.isLoading = false;
+                    });
                 } else {
                     // 普通用户操作
                     if (this.newVal.length === 1 || this.userInfo.username !== this.newVal[newPayload]) {
-                        return
+                        return;
                     }
-                    this.newVal.splice(newPayload, 1)
-                    this.isLoading = true
+                    this.newVal.splice(newPayload, 1);
+                    this.isLoading = true;
                     try {
-                        await this.$store.dispatch('role/deleteRatingManager', { id: this.$route.params.id })
-                        await this.$store.dispatch('roleList')
-                        this.messageSuccess(this.$t(`m.info['退出成功']`), 2000)
+                        await this.$store.dispatch('role/deleteRatingManager', { id: this.$route.params.id });
+                        await this.$store.dispatch('roleList');
+                        this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     } finally {
-                        this.isLoading = false
+                        this.isLoading = false;
                     }
                 }
             },
             hideEdit (event) {
                 if (this.newVal.length < 1) {
-                    return
+                    return;
                 }
                 if (event.path && event.path.length > 0) {
                     for (let i = 0; i < event.path.length; i++) {
-                        const target = event.path[i]
+                        const target = event.path[i];
                         if (target.className === 'iam-edit-member') {
-                            return
+                            return;
                         }
                     }
                 }
-                this.isEditable = false
+                this.isEditable = false;
             },
             triggerChange () {
-                this.isEditable = false
+                this.isEditable = false;
                 if (_.isEqual(this.newVal, this.value)) {
-                    return
+                    return;
                 }
-                this.isLoading = true
+                this.isLoading = true;
                 this.remoteHander({
                     [this.field]: this.newVal
                 }).then(() => {
                     this.$emit('on-change', {
                         [this.field]: this.newVal
-                    })
+                    });
                 }).finally(() => {
-                    this.isLoading = false
-                })
+                    this.isLoading = false;
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @keyframes textarea-edit-loading {

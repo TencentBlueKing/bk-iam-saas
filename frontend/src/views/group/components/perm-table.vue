@@ -52,10 +52,10 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import RenderDetail from '../common/render-detail'
-    import PermPolicy from '@/model/my-perm-policy'
+    import _ from 'lodash';
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
+    import RenderDetail from '../common/render-detail';
+    import PermPolicy from '@/model/my-perm-policy';
     export default {
         name: '',
         components: {
@@ -82,28 +82,28 @@
                 renderDetailCom: 'RenderDetail',
                 isShowSideslider: false,
                 sidesliderTitle: ''
-            }
+            };
         },
         computed: {
             loading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty
-                }
+                    return !payload.isEmpty;
+                };
             }
         },
         watch: {
             systemId: {
                 handler (value) {
                     if (value !== '') {
-                        this.initRequestQueue = ['permTable']
-                        this.fetchData()
+                        this.initRequestQueue = ['permTable'];
+                        this.fetchData();
                     } else {
-                        this.renderDetailCom = 'RenderDetail'
-                        this.initRequestQueue = []
-                        this.tableList = []
+                        this.renderDetailCom = 'RenderDetail';
+                        this.initRequestQueue = [];
+                        this.tableList = [];
                     }
                 },
                 immediate: true
@@ -112,59 +112,59 @@
         methods: {
             async fetchData () {
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id: this.templateId })
-                    this.tableList = res.data.actions.map(item => new PermPolicy(item))
+                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id: this.templateId });
+                    this.tableList = res.data.actions.map(item => new PermPolicy(item));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.initRequestQueue.shift()
+                    this.initRequestQueue.shift();
                 }
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             handleAnimationEnd () {
-                this.sidesliderTitle = ''
-                this.previewData = []
-                this.curId = ''
+                this.sidesliderTitle = '';
+                this.previewData = [];
+                this.curId = '';
             },
 
             handleViewResource (payload) {
-                this.curId = payload.id
-                const params = []
+                this.curId = payload.id;
+                const params = [];
                 if (payload.resource_groups.length > 0) {
                     payload.resource_groups.forEach(groupItem => {
                         if (groupItem.related_resource_types.length > 0) {
                             groupItem.related_resource_types.forEach(item => {
-                                const { name, type, condition } = item
+                                const { name, type, condition } = item;
                                 params.push({
                                     name: type,
                                     label: `${name} ${this.$t(`m.common['实例']`)}`,
                                     tabType: 'resource',
                                     data: condition
-                                })
-                            })
+                                });
+                            });
                         }
-                    })
+                    });
                 }
-                this.previewData = _.cloneDeep(params)
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
-                this.isShowSideslider = true
+                this.previewData = _.cloneDeep(params);
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.isShowSideslider = true;
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-user-group-perm-table {

@@ -10,9 +10,9 @@
 </template>
 
 <script>
-    import Tippy, { getValidTippyProps } from 'bk-magic-vue/lib/utils/tippy'
-    import zIndexManager from 'bk-magic-vue/lib/utils/z-index-manager'
-    import popManager from 'bk-magic-vue/lib/utils/pop-manager'
+    import Tippy, { getValidTippyProps } from 'bk-magic-vue/lib/utils/tippy';
+    import zIndexManager from 'bk-magic-vue/lib/utils/z-index-manager';
+    import popManager from 'bk-magic-vue/lib/utils/pop-manager';
 
     export default {
         name: 'iamCascadePopover',
@@ -104,7 +104,7 @@
             tippyOptions: {
                 type: Object,
                 default () {
-                    return {}
+                    return {};
                 }
             },
             // 外部设置的 class name
@@ -117,59 +117,59 @@
         data () {
             return {
                 instance: null
-            }
+            };
         },
         watch: {
             disabled (disabled) {
                 if (this.instance) {
-                    disabled ? this.instance.disable() : this.instance.enable()
+                    disabled ? this.instance.disable() : this.instance.enable();
                 }
             }
         },
         mounted () {
             const options = getValidTippyProps(
                 Object.assign({}, { appendTo: popManager.container }, this.tippyOptions, this.$props)
-            )
-            const onShow = options.onShow
-            const onHide = options.onHide
+            );
+            const onShow = options.onShow;
+            const onHide = options.onHide;
             options.onShow = tip => {
-                tip.set({ zIndex: zIndexManager.nextTickIndex(2) })
-                onShow && onShow(tip)
-                this.$emit('show')
-            }
+                tip.set({ zIndex: zIndexManager.nextTickIndex(2) });
+                onShow && onShow(tip);
+                this.$emit('show');
+            };
             options.onHide = tip => {
-                onHide && onHide(tip)
-                this.$emit('hide')
-            }
-            options.content = this.$refs.html
+                onHide && onHide(tip);
+                this.$emit('hide');
+            };
+            options.content = this.$refs.html;
             if (this.always) {
-                options.showOnInit = true
-                options.hideOnClick = false
-                options.trigger = 'manual'
+                options.showOnInit = true;
+                options.hideOnClick = false;
+                options.trigger = 'manual';
             }
-            this.instance = Tippy(this.$refs.reference, options)
+            this.instance = Tippy(this.$refs.reference, options);
             if (this.disabled) {
-                this.instance.disable()
+                this.instance.disable();
             }
         },
         updated () {
-            this.instance.setContent(this.$refs.html)
+            this.instance.setContent(this.$refs.html);
             if (this.instance.popperInstance) {
-                this.instance.popperInstance.update()
+                this.instance.popperInstance.update();
             }
         },
         beforeDestroy () {
-            this.instance.destroy()
+            this.instance.destroy();
         },
         methods: {
             showHandler () {
-                this.instance.show()
+                this.instance.show();
             },
             hideHandler () {
-                this.instance.hide()
+                this.instance.hide();
             }
         }
-    }
+    };
 </script>
 
 <style scoped>

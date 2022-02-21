@@ -13,7 +13,7 @@
 </template>
 
 <script>
-    import RenderAction from '../../perm-template/components/render-action'
+    import RenderAction from '../../perm-template/components/render-action';
 
     export default {
         name: '',
@@ -35,13 +35,13 @@
                 isLoading: false,
                 actions: [],
                 defaultCheckedActions: []
-            }
+            };
         },
         watch: {
             isShow: {
                 handler (value) {
                     if (value) {
-                        this.fetchTemplateDetail()
+                        this.fetchTemplateDetail();
                     }
                 },
                 immediate: true
@@ -49,91 +49,91 @@
         },
         methods: {
             handleCancel () {
-                this.$emit('update:isShow', false)
+                this.$emit('update:isShow', false);
             },
 
             async fetchTemplateDetail () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
                     const res = await this.$store.dispatch('permTemplate/getTemplateDetail', {
                         id: this.id,
                         grouping: true
-                    })
-                    this.actions = res.data.actions
-                    this.handleActionData()
+                    });
+                    this.actions = res.data.actions;
+                    this.handleActionData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handleActionData () {
                 this.actions.forEach((item, index) => {
-                    this.$set(item, 'expanded', false)
-                    let count = 0
-                    let allCount = 0
+                    this.$set(item, 'expanded', false);
+                    let count = 0;
+                    let allCount = 0;
                     if (!item.actions) {
-                        this.$set(item, 'actions', [])
+                        this.$set(item, 'actions', []);
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
-                        this.$set(act, 'disabled', act.tag === 'readonly')
+                        this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag));
+                        this.$set(act, 'disabled', act.tag === 'readonly');
                         if (act.checked) {
-                            ++count
-                            this.defaultCheckedActions.push(act.id)
+                            ++count;
+                            this.defaultCheckedActions.push(act.id);
                         }
-                        ++allCount
+                        ++allCount;
                     })
                     ;(item.sub_groups || []).forEach(sub => {
-                        this.$set(sub, 'expanded', false)
-                        this.$set(sub, 'actionsAllChecked', false)
+                        this.$set(sub, 'expanded', false);
+                        this.$set(sub, 'actionsAllChecked', false);
                         if (!sub.actions) {
-                            this.$set(sub, 'actions', [])
+                            this.$set(sub, 'actions', []);
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag))
-                            this.$set(act, 'disabled', act.tag === 'readonly')
+                            this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag));
+                            this.$set(act, 'disabled', act.tag === 'readonly');
                             if (act.checked) {
-                                ++count
-                                this.defaultCheckedActions.push(act.id)
+                                ++count;
+                                this.defaultCheckedActions.push(act.id);
                             }
-                            ++allCount
-                        })
+                            ++allCount;
+                        });
 
-                        const isSubAllChecked = sub.actions.every(v => v.checked)
-                        this.$set(sub, 'allChecked', isSubAllChecked)
-                    })
+                        const isSubAllChecked = sub.actions.every(v => v.checked);
+                        this.$set(sub, 'allChecked', isSubAllChecked);
+                    });
 
-                    this.$set(item, 'count', count)
-                    this.$set(item, 'allCount', allCount)
+                    this.$set(item, 'count', count);
+                    this.$set(item, 'allCount', allCount);
 
-                    const isAllChecked = item.actions.every(v => v.checked)
-                    const isAllDisabled = item.actions.every(v => v.disabled)
-                    this.$set(item, 'allChecked', isAllChecked)
+                    const isAllChecked = item.actions.every(v => v.checked);
+                    const isAllDisabled = item.actions.every(v => v.disabled);
+                    this.$set(item, 'allChecked', isAllChecked);
                     if (item.sub_groups && item.sub_groups.length > 0) {
-                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked))
+                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
                         this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
-                            return v.actions.every(sub => sub.disabled)
-                        }))
+                            return v.actions.every(sub => sub.disabled);
+                        }));
                     } else {
-                        this.$set(item, 'actionsAllChecked', isAllChecked)
-                        this.$set(item, 'actionsAllDisabled', isAllDisabled)
+                        this.$set(item, 'actionsAllChecked', isAllChecked);
+                        this.$set(item, 'actionsAllDisabled', isAllDisabled);
                     }
-                })
+                });
                 if (this.actions.length === 1) {
-                    this.actions[0].expanded = true
+                    this.actions[0].expanded = true;
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-tempate-detail-sideslider {

@@ -41,13 +41,13 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import RenderPerm from '@/components/render-perm'
-    import BasicInfo from './basic-info'
-    import PermTable from './rate-manager-perm-table'
-    import PermPolicy from '@/model/my-perm-policy'
-    import RenderProcess from '../common/render-process'
-    import RenderMemberItem from '../common/render-member-display'
+    import _ from 'lodash';
+    import RenderPerm from '@/components/render-perm';
+    import BasicInfo from './basic-info';
+    import PermTable from './rate-manager-perm-table';
+    import PermPolicy from '@/model/my-perm-policy';
+    import RenderProcess from '../common/render-process';
+    import RenderMemberItem from '../common/render-member-display';
     export default {
         name: '',
         components: {
@@ -61,7 +61,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             loading: {
@@ -80,42 +80,42 @@
                 name: '',
                 users: [],
                 departments: []
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowAction () {
-                return this.status === 'pending'
+                return this.status === 'pending';
             },
             isShowPage () {
-                return !this.isLoading && this.authorizationScopes.length > 0
+                return !this.isLoading && this.authorizationScopes.length > 0;
             },
             isEmpty () {
-                return !this.isLoading && this.authorizationScopes.length < 1
+                return !this.isLoading && this.authorizationScopes.length < 1;
             },
             isHasUser () {
-                return this.users.length > 0
+                return this.users.length > 0;
             },
             isHasDepartment () {
-                return this.departments.length > 0
+                return this.departments.length > 0;
             }
         },
         watch: {
             params: {
                 handler (value) {
                     if (Object.keys(value).length > 0) {
-                        this.initRequestQueue = ['detail']
-                        this.fetchData(value.id)
+                        this.initRequestQueue = ['detail'];
+                        this.fetchData(value.id);
                     } else {
-                        this.initRequestQueue = []
-                        this.status = ''
-                        this.basicInfo = {}
-                        this.authorizationScopes = []
-                        this.name = ''
-                        this.users = []
-                        this.departments = []
+                        this.initRequestQueue = [];
+                        this.status = '';
+                        this.basicInfo = {};
+                        this.authorizationScopes = [];
+                        this.name = '';
+                        this.users = [];
+                        this.departments = [];
                     }
                 },
                 immediate: true
@@ -124,11 +124,11 @@
         methods: {
             async fetchData (id) {
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id })
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url
-                    } = res.data
+                    } = res.data;
                     this.basicInfo = {
                         sn,
                         type,
@@ -137,35 +137,35 @@
                         reason,
                         created_time,
                         ticket_url
-                    }
-                    this.status = status
-                    this.name = data.name
+                    };
+                    this.status = status;
+                    this.name = data.name;
                     data.authorization_scopes.forEach((item, index) => {
-                        item.list = item.actions.map(subItem => new PermPolicy(subItem)) // 添加属性（此处会关联多个js文件，继承很多属性，暂时不清楚目的）
-                        this.$set(item, 'expanded', index === 0) // 默认第一项展开
-                    })
-                    this.authorizationScopes = _.cloneDeep(data.authorization_scopes)
-                    this.users = data.subject_scopes.filter(item => item.type === 'user')
-                    this.departments = data.subject_scopes.filter(item => item.type === 'department')
+                        item.list = item.actions.map(subItem => new PermPolicy(subItem)); // 添加属性（此处会关联多个js文件，继承很多属性，暂时不清楚目的）
+                        this.$set(item, 'expanded', index === 0); // 默认第一项展开
+                    });
+                    this.authorizationScopes = _.cloneDeep(data.authorization_scopes);
+                    this.users = data.subject_scopes.filter(item => item.type === 'user');
+                    this.departments = data.subject_scopes.filter(item => item.type === 'department');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.initRequestQueue.shift()
+                    this.initRequestQueue.shift();
                 }
             },
 
             handleCancel () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-apply-create-rate-manager-detail-wrapper {

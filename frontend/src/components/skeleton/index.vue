@@ -11,10 +11,10 @@
     </transition>
 </template>
 <script>
-    import List from './list'
+    import List from './list';
     const comMap = {
         list: List
-    }
+    };
 
     export default {
         name: '',
@@ -28,32 +28,32 @@
         data () {
             return {
                 width: 0
-            }
+            };
         },
         computed: {
             realCom () {
                 if (!comMap.hasOwnProperty(this.type)) {
-                    return 'div'
+                    return 'div';
                 }
-                return comMap[this.type]
+                return comMap[this.type];
             }
         },
         mounted () {
-            this.init()
-            window.addEventListener('resize', this.init)
+            this.init();
+            window.addEventListener('resize', this.init);
             this.$once('hook:beforeDestroy', () => {
-                window.removeEventListener('resize', this.init)
-            })
+                window.removeEventListener('resize', this.init);
+            });
         },
         methods: {
             init () {
                 if (!this.$refs.wraper) {
-                    return
+                    return;
                 }
-                this.width = this.$refs.wraper.getBoundingClientRect().width
+                this.width = this.$refs.wraper.getBoundingClientRect().width;
             }
         }
-    }
+    };
 </script>
 <style lang='postcss' scoped>
     .iam-view-skeleton {

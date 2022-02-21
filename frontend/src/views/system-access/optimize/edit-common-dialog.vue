@@ -94,7 +94,7 @@
                 actions: [],
                 actionList: [],
                 rules: null
-            }
+            };
         },
         watch: {
             /**
@@ -102,9 +102,9 @@
              */
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                     if (!this.isShowDialog) {
-                        return
+                        return;
                     }
 
                     this.rules = {
@@ -129,16 +129,16 @@
                                 trigger: 'change'
                             }
                         ]
-                    }
+                    };
 
-                    const formData = {}
-                    formData.name = this.curEditCommon.name
-                    formData.name_en = this.curEditCommon.name_en
-                    const selectedActions = JSON.parse(JSON.stringify(this.curEditCommon.actions))
-                    formData.selectedActions = selectedActions.map(sa => sa.id)
-                    this.formData = Object.assign({}, formData)
+                    const formData = {};
+                    formData.name = this.curEditCommon.name;
+                    formData.name_en = this.curEditCommon.name_en;
+                    const selectedActions = JSON.parse(JSON.stringify(this.curEditCommon.actions));
+                    formData.selectedActions = selectedActions.map(sa => sa.id);
+                    this.formData = Object.assign({}, formData);
 
-                    this.actionList.splice(0, this.actionList.length, ...this.allActionList)
+                    this.actionList.splice(0, this.actionList.length, ...this.allActionList);
                 },
                 immediate: true
             }
@@ -148,22 +148,22 @@
              * handleSumbit
              */
             handleSumbit () {
-                const formComp = this.$refs.editGroupForm
+                const formComp = this.$refs.editGroupForm;
                 formComp.validate().then(async validator => {
                     try {
-                        this.submitLoading = true
+                        this.submitLoading = true;
                         const actions = this.formData.selectedActions.map(
                             actionId => this.actionList.find(act => act.id === actionId)
-                        )
+                        );
 
-                        const commonList = []
-                        commonList.splice(0, 0, ...this.commonList)
+                        const commonList = [];
+                        commonList.splice(0, 0, ...this.commonList);
 
                         this.$set(commonList, this.curEditCommonIndex, {
                             name: this.formData.name,
                             name_en: this.formData.name_en,
                             actions: actions
-                        })
+                        });
 
                         await this.$store.dispatch('access/updateModeling', {
                             id: this.modelingId,
@@ -171,47 +171,47 @@
                                 type: 'common_actions',
                                 data: commonList
                             }
-                        })
-                        this.$emit('on-success')
+                        });
+                        this.$emit('on-success');
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     } finally {
-                        this.submitLoading = false
+                        this.submitLoading = false;
                     }
                 }, validator => {
-                    console.warn(validator)
+                    console.warn(validator);
                     // return Promise.reject(validator.content)
-                })
+                });
             },
 
             /**
              * hide
              */
             hide () {
-                this.$emit('on-hide')
+                this.$emit('on-hide');
             },
 
             /**
              * handleAfterLeave
              */
             handleAfterLeave () {
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
-                this.$refs.editGroupForm.clearError()
-                this.submitLoading = false
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
+                this.$refs.editGroupForm.clearError();
+                this.submitLoading = false;
                 this.formData = Object.assign({}, {
                     name: '',
                     name_en: '',
                     selectedActions: []
-                })
-                this.actionList.splice(0, this.actionList.length, ...[])
-                this.actions.splice(0, this.actions.length, ...[])
+                });
+                this.actionList.splice(0, this.actionList.length, ...[]);
+                this.actions.splice(0, this.actions.length, ...[]);
             }
         }
-    }
+    };
 </script>

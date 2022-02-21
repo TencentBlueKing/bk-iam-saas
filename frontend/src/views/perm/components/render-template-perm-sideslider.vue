@@ -52,8 +52,8 @@
     </bk-sideslider>
 </template>
 <script>
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import PermPolicy from '@/model/my-perm-policy'
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
+    import PermPolicy from '@/model/my-perm-policy';
     export default {
         name: '',
         components: {
@@ -89,24 +89,24 @@
                 isShowSideslider: false,
                 requestQueue: ['list'],
                 systemId: ''
-            }
+            };
         },
         computed: {
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty
-                }
+                    return !payload.isEmpty;
+                };
             },
             isLoading () {
-                return this.requestQueue.length > 0
+                return this.requestQueue.length > 0;
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowSideslider = !!value
+                    this.isShowSideslider = !!value;
                     if (this.isShowSideslider) {
-                        this.handleInit()
+                        this.handleInit();
                     }
                 },
                 immediate: true
@@ -114,76 +114,76 @@
         },
         methods: {
             async handleInit () {
-                await this.fetchData()
+                await this.fetchData();
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             async fetchData () {
                 try {
                     const params = {
                         id: this.templateId
-                    }
+                    };
                     if (this.templateVersion !== '') {
-                        params.version = this.templateVersion
+                        params.version = this.templateVersion;
                     }
 
-                    const res = await this.$store.dispatch('perm/getTemplateDetail', params)
-                    const data = res.data || {}
+                    const res = await this.$store.dispatch('perm/getTemplateDetail', params);
+                    const data = res.data || {};
 
-                    this.systemId = data.system.id
-                    this.tableList.splice(0, this.tableList.length, ...data.actions.map(item => new PermPolicy(item)))
+                    this.systemId = data.system.id;
+                    this.tableList.splice(0, this.tableList.length, ...data.actions.map(item => new PermPolicy(item)));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             handleAnimationEnd () {
-                this.tableList = []
-                this.requestQueue = ['list']
-                this.curId = ''
-                this.$emit('animation-end')
+                this.tableList = [];
+                this.requestQueue = ['list'];
+                this.curId = '';
+                this.$emit('animation-end');
             },
 
             handleViewResource (payload) {
-                this.curId = payload.id
-                const params = []
+                this.curId = payload.id;
+                const params = [];
                 if (payload.resource_groups.length > 0) {
                     payload.resource_groups.forEach(groupItem => {
                         if (groupItem.related_resource_types.length > 0) {
                             groupItem.related_resource_types.forEach(item => {
-                                const { name, type, condition } = item
+                                const { name, type, condition } = item;
                                 params.push({
                                     name: type,
                                     label: `${name} ${this.$t(`m.common['实例']`)}`,
                                     tabType: 'resource',
                                     data: condition
-                                })
-                            })
+                                });
+                            });
                         }
-                    })
+                    });
                 }
                 this.$emit('on-view', {
                     name: payload.name,
                     data: params
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-template-perm-sideslider {

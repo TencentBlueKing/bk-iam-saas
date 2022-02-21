@@ -52,10 +52,10 @@
                 default: 'mouseover',
                 validator (value) {
                     if (['click', 'mouseover'].indexOf(value) < 0) {
-                        console.error(`trigger property is not valid: '${value}'`)
-                        return false
+                        console.error(`trigger property is not valid: '${value}'`);
+                        return false;
                     }
-                    return true
+                    return true;
                 }
             },
             disabled: {
@@ -78,67 +78,67 @@
                 isShowCustom: false,
                 customTime: 1,
                 isFocus: false
-            }
+            };
         },
         watch: {
             active (value) {
-                this.currentActive = value
+                this.currentActive = value;
             }
         },
         created () {
-            this.deadlineMap.custom = `${this.customTime} ${this.$t(`m.common['天']`)}`
+            this.deadlineMap.custom = `${this.customTime} ${this.$t(`m.common['天']`)}`;
         },
         methods: {
             handleTrigger () {
-                this.isDropdownShow = !this.isDropdownShow
+                this.isDropdownShow = !this.isDropdownShow;
                 if (!this.isDropdownShow) {
                     if (!this.isShowCustom) {
-                        this.customTime = 1
+                        this.customTime = 1;
                     }
-                    this.isShowCustom = false
+                    this.isShowCustom = false;
                 }
             },
             handleChange (payload) {
-                this.currentActive = payload
-                this.isShowCustom = false
-                this.isFocus = false
-                this.customTime = 1
-                this.deadlineMap.custom = `${this.customTime} ${this.$t(`m.common['天']`)}`
-                this.$emit('on-change', payload, this.deadlineMap[payload])
+                this.currentActive = payload;
+                this.isShowCustom = false;
+                this.isFocus = false;
+                this.customTime = 1;
+                this.deadlineMap.custom = `${this.customTime} ${this.$t(`m.common['天']`)}`;
+                this.$emit('on-change', payload, this.deadlineMap[payload]);
             },
             handleCustomChange () {
-                this.isShowCustom = true
+                this.isShowCustom = true;
             },
             handleFocus () {
-                this.isFocus = true
+                this.isFocus = true;
             },
             handleBlur () {
-                this.isFocus = false
+                this.isFocus = false;
             },
             handleInput (value) {
-                const flag = /[^1-9]/g.test(value)
+                const flag = /[^1-9]/g.test(value);
                 if (flag || value === '') {
                     setTimeout(() => {
-                        this.customTime = 1
-                    }, 100)
+                        this.customTime = 1;
+                    }, 100);
                 }
             },
             handleClickOutside () {
                 if (arguments[0]['target']['className'].indexOf('iam-deadline-btn') !== -1
                     || arguments[0]['target']['className'].indexOf('iam-deadline-display') !== -1
                     || arguments[0]['target']['className'].indexOf('iam-deadline-icon') !== -1) {
-                    return
+                    return;
                 }
-                this.isDropdownShow = false
+                this.isDropdownShow = false;
             },
             handleEnter () {
-                this.currentActive = 'custom'
-                this.deadlineMap.custom = `${this.customTime} ${this.$t(`m.common['天']`)}`
-                this.isDropdownShow = false
-                this.$emit('on-change', 'custom', this.customTime)
+                this.currentActive = 'custom';
+                this.deadlineMap.custom = `${this.customTime} ${this.$t(`m.common['天']`)}`;
+                this.isDropdownShow = false;
+                this.$emit('on-change', 'custom', this.customTime);
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-deadline-wrapper {

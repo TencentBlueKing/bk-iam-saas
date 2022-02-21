@@ -24,40 +24,40 @@
  * IN THE SOFTWARE.
 */
 
-let callbackSeed = 0
-const api = window.BK_USER_API
+let callbackSeed = 0;
+const api = window.BK_USER_API;
 function JSONP (params = {}, options = {}) {
     return new Promise((resolve, reject) => {
-        let timer
-        const callbackName = `USER_LIST_CALLBACK_${callbackSeed++}`
+        let timer;
+        const callbackName = `USER_LIST_CALLBACK_${callbackSeed++}`;
         window[callbackName] = response => {
-            timer && clearTimeout(timer)
-            document.body.removeChild(script)
-            delete window[callbackName]
-            resolve(response)
-        }
-        const script = document.createElement('script')
+            timer && clearTimeout(timer);
+            document.body.removeChild(script);
+            delete window[callbackName];
+            resolve(response);
+        };
+        const script = document.createElement('script');
         script.onerror = event => {
-            document.body.removeChild(script)
-            delete window[callbackName]
+            document.body.removeChild(script);
+            delete window[callbackName];
             // eslint-disable-next-line
             reject('Get user list failed.')
-        }
-        const query = []
+        };
+        const query = [];
         for (const key in params) {
-            query.push(`${key}=${params[key]}`)
+            query.push(`${key}=${params[key]}`);
         }
-        script.src = `${api}?${query.join('&')}&callback=${callbackName}`
+        script.src = `${api}?${query.join('&')}&callback=${callbackName}`;
         if (options.timeout) {
             setTimeout(() => {
-                document.body.removeChild(script)
-                delete window[callbackName]
+                document.body.removeChild(script);
+                delete window[callbackName];
                 // eslint-disable-next-line
                 reject('Get user list timeout.')
-            }, options.timeout)
+            }, options.timeout);
         }
-        document.body.appendChild(script)
-    })
+        document.body.appendChild(script);
+    });
 }
 
 export async function fuzzyRtxSearch (keyword, options) {
@@ -66,23 +66,23 @@ export async function fuzzyRtxSearch (keyword, options) {
         app_code: 'bk-magicbox',
         page_size: 100,
         page: 1
-    }
-    const data = {}
+    };
+    const data = {};
     try {
-        const response = await JSONP(requestParams, options)
+        const response = await JSONP(requestParams, options);
         if (response.code !== 0) {
-            throw new Error(response)
+            throw new Error(response);
         }
-        data.count = response.data.count
-        data.results = response.data.results || []
+        data.count = response.data.count;
+        data.results = response.data.results || [];
         data.results.forEach(item => {
-            item.name = item.display_name ? `${item.username}(${item.display_name})` : item.username
-            item.id = item.username
-        })
+            item.name = item.display_name ? `${item.username}(${item.display_name})` : item.username;
+            item.id = item.username;
+        });
     } catch (error) {
-        console.error(error.message)
-        data.count = 0
-        data.results = []
+        console.error(error.message);
+        data.count = 0;
+        data.results = [];
     }
-    return data
+    return data;
 }

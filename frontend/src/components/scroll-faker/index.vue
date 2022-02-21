@@ -16,7 +16,7 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
+    import _ from 'lodash';
 
     export default {
         name: 'scroll-faker',
@@ -41,68 +41,68 @@
                 contentHeight: 1,
                 contentScrollHeight: 1,
                 contentScrollTop: 0
-            }
+            };
         },
         computed: {
             wraperStyles () {
                 if (this.height < 1) {
-                    return {}
+                    return {};
                 }
                 return {
                     height: `${this.height}px`
-                }
+                };
             },
             scrollContentStyles () {
                 if (this.maxHeight > 0) {
                     return {
                         'max-height': `${this.maxHeight}px`
-                    }
+                    };
                 }
-                return {}
+                return {};
             },
             speed () {
-                return this.contentHeight / this.contentScrollHeight
+                return this.contentHeight / this.contentScrollHeight;
             },
             scrollTrackStyles () {
                 return {
                     height: `${this.contentHeight * this.speed}px`,
                     top: `${this.contentScrollTop * this.speed}px`
-                }
+                };
             },
             showScrollBar () {
-                return this.contentScrollHeight > this.contentHeight
+                return this.contentScrollHeight > this.contentHeight;
             }
         },
         mounted () {
-            const init = _.debounce(() => this.init(), 300)
-            window.addEventListener('resize', init)
+            const init = _.debounce(() => this.init(), 300);
+            window.addEventListener('resize', init);
             const observer = new MutationObserver(() => {
-                init()
-            })
+                init();
+            });
             observer.observe(this.$refs.scrollContent, {
                 subtree: true,
                 childList: true
-            })
+            });
             this.$once('hook:beforeDestroy', () => {
-                observer.takeRecords()
-                observer.disconnect()
-                window.removeEventListener('resize', init)
-            })
-            init()
+                observer.takeRecords();
+                observer.disconnect();
+                window.removeEventListener('resize', init);
+            });
+            init();
         },
         methods: {
             init () {
                 if (!this.$refs.scrollContent) {
-                    return
+                    return;
                 }
-                this.contentHeight = this.$refs.scrollContent.getBoundingClientRect().height
-                this.contentScrollHeight = this.$refs.scrollContent.scrollHeight
+                this.contentHeight = this.$refs.scrollContent.getBoundingClientRect().height;
+                this.contentScrollHeight = this.$refs.scrollContent.scrollHeight;
             },
             handleContentScroll (event) {
-                this.contentScrollTop = event.target.scrollTop
+                this.contentScrollTop = event.target.scrollTop;
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .scroll-faker-warper{

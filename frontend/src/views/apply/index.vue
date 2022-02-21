@@ -21,18 +21,18 @@
     </layout>
 </template>
 <script>
-    import Layout from './common/render-page-layout'
-    import LeftLayout from './components/left'
-    import RenderDetail from './components/apply-detail'
-    import RenderGroupDetail from './components/apply-group-detail'
-    import RenderRatingManager from './components/apply-create-rate-manager-detail'
+    import Layout from './common/render-page-layout';
+    import LeftLayout from './components/left';
+    import RenderDetail from './components/apply-detail';
+    import RenderGroupDetail from './components/apply-group-detail';
+    import RenderRatingManager from './components/apply-create-rate-manager-detail';
 
     const COM_MAP = new Map([
         [['grant_action', 'renew_action'], 'RenderDetail'],
         [['join_group', 'renew_group'], 'RenderGroupDetail'],
         [['create_rating_manager'], 'RenderRatingManager'],
         [['update_rating_manager'], 'RenderRatingManager']
-    ])
+    ]);
     
     export default {
         name: '',
@@ -69,111 +69,111 @@
                 currentApplyData: {},
                 cancelLoading: false,
                 comKey: -1
-            }
+            };
         },
         computed: {
             curCom () {
-                let com = ''
+                let com = '';
                 for (const [key, value] of this.comMap.entries()) {
                     if (key.includes(this.currentApplyData.type)) { // 根据后台返回值渲染动态组件
-                        com = value
-                        break
+                        com = value;
+                        break;
                     }
                 }
-                return com
+                return com;
             },
             canScrollLoad () {
-                return this.pagination.totalPage > this.currentBackup
+                return this.pagination.totalPage > this.currentBackup;
             }
         },
         created () {
-            this.comMap = COM_MAP
+            this.comMap = COM_MAP;
         },
         methods: {
             async fetchPageData () {
-                await this.fetchApplyList()
+                await this.fetchApplyList();
             },
 
             async fetchApplyList (isLoading = false, isScrollLoad = false) {
-                this.isApplyLoading = isLoading
+                this.isApplyLoading = isLoading;
                 const params = {
                     ...this.searchParams,
                     period: this.currentActive,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
+                };
                 if (!isScrollLoad) {
-                    this.applyList.splice(0, this.applyList.length, ...[])
+                    this.applyList.splice(0, this.applyList.length, ...[]);
                 }
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyList', params)
+                    const res = await this.$store.dispatch('myApply/getApplyList', params);
                     if (!isScrollLoad) {
-                        this.applyList = [...res.data.results]
+                        this.applyList = [...res.data.results];
                         if (this.applyList.length < 1) {
-                            this.currentApplyData = {}
+                            this.currentApplyData = {};
                         } else {
-                            this.currentApplyData = this.applyList[0]
+                            this.currentApplyData = this.applyList[0];
                         }
-                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
+                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
                     } else {
-                        this.currentBackup++
+                        this.currentBackup++;
                         (res.data.results || []).forEach(item => {
-                            item.is_read = false
-                        })
-                        this.applyList.push(...res.data.results)
+                            item.is_read = false;
+                        });
+                        this.applyList.push(...res.data.results);
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isApplyLoading = false
+                    this.isApplyLoading = false;
                 }
             },
 
             handleLoadMore () {
-                this.pagination.current++
-                this.fetchApplyList(false, true)
+                this.pagination.current++;
+                this.fetchApplyList(false, true);
             },
 
             handleChange (payload) {
-                this.comKey = +new Date()
-                this.currentApplyData = payload
+                this.comKey = +new Date();
+                this.currentApplyData = payload;
             },
 
             handleFilterChange (payload) {
-                this.currentActive = payload
-                this.pagination.current = 1
-                this.currentBackup = 1
-                this.fetchApplyList(true)
+                this.currentActive = payload;
+                this.pagination.current = 1;
+                this.currentBackup = 1;
+                this.fetchApplyList(true);
             },
 
             async handleCancel () {
-                this.cancelLoading = true
+                this.cancelLoading = true;
                 try {
-                    await this.$store.dispatch('myApply/applyCancel', { id: this.currentApplyData.id })
-                    this.pagination.current = 1
-                    this.currentBackup = 1
-                    this.applyList.splice(0, this.applyList.length, ...[])
-                    await this.fetchApplyList(true)
+                    await this.$store.dispatch('myApply/applyCancel', { id: this.currentApplyData.id });
+                    this.pagination.current = 1;
+                    this.currentBackup = 1;
+                    this.applyList.splice(0, this.applyList.length, ...[]);
+                    await this.fetchApplyList(true);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.cancelLoading = false
+                    this.cancelLoading = false;
                 }
             }
         }
-    }
+    };
 </script>
