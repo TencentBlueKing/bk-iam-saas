@@ -1,2 +1,5 @@
 logs
 .idea
+build.yml
+.codecc/
+.vscode/
