@@ -60,10 +60,10 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import Resource from '@/components/render-resource/detail'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import DetailContent from './detail-content'
+    import _ from 'lodash';
+    import Resource from '@/components/render-resource/detail';
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
+    import DetailContent from './detail-content';
     export default {
         name: '',
         components: {
@@ -85,12 +85,12 @@
                 sidesliderTitle: '',
                 tableList: [],
                 curId: ''
-            }
+            };
         },
         watch: {
             data: {
                 handler (value) {
-                    this.tableList = _.cloneDeep(value)
+                    this.tableList = _.cloneDeep(value);
                 },
                 immediate: true
             }
@@ -98,36 +98,36 @@
         methods: {
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             handleViewResource (groupItem, row) {
-                this.previewData = _.cloneDeep(this.handleDetailData(groupItem))
-                this.renderDetailCom = 'DetailContent'
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${row.name}】${this.$t(`m.common['的资源实例']`)}`
-                this.isShowSideslider = true
+                this.previewData = _.cloneDeep(this.handleDetailData(groupItem));
+                this.renderDetailCom = 'DetailContent';
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${row.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.isShowSideslider = true;
             },
 
             handleDetailData (payload) {
-                this.curId = payload.id
-                const params = []
+                this.curId = payload.id;
+                const params = [];
                 if (payload.related_resource_types.length > 0) {
                     payload.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
+                        const { name, type, condition } = item;
                         params.push({
                             name: type,
                             label: `${name} ${this.$t(`m.common['实例']`)}`,
                             tabType: 'resource',
                             data: condition
-                        })
-                    })
+                        });
+                    });
                 }
-                return params
+                return params;
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-apply-create-rate-manager-content {

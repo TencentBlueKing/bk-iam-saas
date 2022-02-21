@@ -182,15 +182,15 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { mapGetters } from 'vuex'
-    import SyncPolicy from '@/model/template-sync-policy'
-    import Condition from '@/model/condition'
-    import { leaveConfirm } from '@/common/leave-confirm'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import RenderCondition from '../components/render-condition'
-    import RenderDetail from '../components/render-detail'
-    import RenderResource from '../components/render-resource'
+    import _ from 'lodash';
+    import { mapGetters } from 'vuex';
+    import SyncPolicy from '@/model/template-sync-policy';
+    import Condition from '@/model/condition';
+    import { leaveConfirm } from '@/common/leave-confirm';
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
+    import RenderCondition from '../components/render-condition';
+    import RenderDetail from '../components/render-detail';
+    import RenderResource from '../components/render-resource';
     export default {
         name: '',
         components: {
@@ -242,30 +242,30 @@
                 isLastPage: false,
                 prevLoading: false,
                 curCopyParams: {}
-            }
+            };
         },
         computed: {
             ...mapGetters('permTemplate', ['cloneActions']),
             isShowBatchRefer () {
                 return payload => {
-                    return this.cloneActions.some(item => item.action_id === payload.id)
-                }
+                    return this.cloneActions.some(item => item.action_id === payload.id);
+                };
             },
             condition () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
                     || this.curActionIndex === -1
                     || this.curGroupIndex === -1) {
-                    return []
+                    return [];
                 }
                 const curData = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex]
+                    .related_resource_types[this.curResIndex];
 
                 if (!curData) {
-                    return []
+                    return [];
                 }
-                return _.cloneDeep(curData.condition)
+                return _.cloneDeep(curData.condition);
             },
             originalCondition () {
                 if (this.curIndex === -1
@@ -273,108 +273,108 @@
                     || this.curActionIndex === -1
                     || this.curGroupIndex === -1
                     || this.originalList.length < 1) {
-                    return []
+                    return [];
                 }
-                const curId = this.tableList[this.curIndex].add_actions[this.curActionIndex].id
+                const curId = this.tableList[this.curIndex].add_actions[this.curActionIndex].id;
 
                 const curType = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
                     .resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex]
-                    .type
+                    .type;
 
                 if (!this.originalList.some(item => item.add_actions[this.curActionIndex].id === curId)) {
-                    return []
+                    return [];
                 }
-                const curData = this.originalList.find(item => item.add_actions[this.curActionIndex].id === curId)
+                const curData = this.originalList.find(item => item.add_actions[this.curActionIndex].id === curId);
                 if (!curData) {
-                    return []
+                    return [];
                 }
-                const curActionData = curData.add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
+                const curActionData = curData.add_actions[this.curActionIndex].resource_groups[this.curGroupIndex];
                 if (!curActionData.related_resource_types.some(item => item.type === curType)) {
-                    return []
+                    return [];
                 }
-                const curResData = curActionData.related_resource_types.find(item => item.type === curType)
+                const curResData = curActionData.related_resource_types.find(item => item.type === curType);
                 if (!curResData) {
-                    return []
+                    return [];
                 }
-                return _.cloneDeep(curResData.condition)
+                return _.cloneDeep(curResData.condition);
             },
             curDisabled () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
                     || this.curActionIndex === -1
                     || this.curGroupIndex === -1) {
-                    return false
+                    return false;
                 }
                 const curData = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
                     .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex]
+                    .related_resource_types[this.curResIndex];
 
-                return curData.isDefaultLimit
+                return curData.isDefaultLimit;
             },
             curFlag () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
                     || this.curActionIndex === -1
                     || this.curGroupIndex === -1) {
-                    return 'add'
+                    return 'add';
                 }
                 const curData = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
                     .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex]
+                    .related_resource_types[this.curResIndex];
 
-                return curData.flag
+                return curData.flag;
             },
             curSelectionMode () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
                     || this.curActionIndex === -1
                     || this.curGroupIndex === -1) {
-                    return 'all'
+                    return 'all';
                 }
                 const curData = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
                     .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex]
+                    .related_resource_types[this.curResIndex];
 
-                return curData.selectionMode
+                return curData.selectionMode;
             },
             batchReferAction () {
                 return payload => {
-                    const temp = this.cloneActions.find(item => item.action_id === payload.id)
+                    const temp = this.cloneActions.find(item => item.action_id === payload.id);
                     if (temp) {
-                        return temp.copy_from_actions
+                        return temp.copy_from_actions;
                     }
-                    return []
-                }
+                    return [];
+                };
             },
             syncLoading () {
-                return this.requestQueue.length > 0
+                return this.requestQueue.length > 0;
             },
             isAddActionEmpty () {
-                return this.addAction.length < 1
+                return this.addAction.length < 1;
             }
         },
         watch: {
             requestQueue (value) {
                 if (value.length < 1) {
-                    this.$emit('on-ready')
+                    this.$emit('on-ready');
                 }
             },
             addAction: {
                 handler (value) {
-                    console.log('value', value)
+                    console.log('value', value);
                 },
                 immediate: true
             }
         },
         created () {
-            this.curCopyKey = ''
-            this.fetchData()
-            this.fetchAuthorizationScopeActions()
+            this.curCopyKey = '';
+            this.fetchData();
+            this.fetchAuthorizationScopeActions();
         },
         methods: {
             async fetchData () {
@@ -385,41 +385,41 @@
                             limit: this.pagination.limit,
                             offset: this.pagination.limit * (this.pagination.current - 1)
                         }
-                    })
-                    this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
-                    this.tableList = _.cloneDeep(res.data.results)
+                    });
+                    this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+                    this.tableList = _.cloneDeep(res.data.results);
                     this.tableList.forEach((item, index) => {
                         if (this.addAction.length > 0) {
-                            this.$set(item, 'add_actions', _.cloneDeep(this.addAction))
+                            this.$set(item, 'add_actions', _.cloneDeep(this.addAction));
                             item.add_actions = item.add_actions.map(act => {
                                 if (!act.resource_groups || !act.resource_groups.length) {
-                                    act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : []
+                                    act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
                                 }
-                                return new SyncPolicy({ ...act, tag: 'add' }, 'add')
-                            })
+                                return new SyncPolicy({ ...act, tag: 'add' }, 'add');
+                            });
                         }
                         item.delete_actions = item.delete_actions.map(act => {
                             if (!act.resource_groups || !act.resource_groups.length) {
-                                act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : []
+                                act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
                             }
-                            return new SyncPolicy({ ...act, tag: 'add' }, 'add')
-                        })
-                    })
-                    this.setTableProps()
-                    this.originalList = _.cloneDeep(this.tableList)
-                    this.isLastPage = this.pagination.current === this.pagination.totalPage
-                    this.$emit('on-all-submit', this.pagination.current === this.pagination.totalPage)
+                            return new SyncPolicy({ ...act, tag: 'add' }, 'add');
+                        });
+                    });
+                    this.setTableProps();
+                    this.originalList = _.cloneDeep(this.tableList);
+                    this.isLastPage = this.pagination.current === this.pagination.totalPage;
+                    this.$emit('on-all-submit', this.pagination.current === this.pagination.totalPage);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
@@ -427,45 +427,45 @@
                 try {
                     const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', {
                         systemId: this.$route.params.systemId
-                    })
-                    this.authorizationScopeActions = res.data.filter(item => item.id !== '*')
+                    });
+                    this.authorizationScopeActions = res.data.filter(item => item.id !== '*');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex !== 0) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             getBacthCopyParms (payload, content) {
-                const actions = []
+                const actions = [];
                 this.tableList.forEach(item => {
                     item.add_actions.forEach(act => {
                         if (act.id !== payload.id) {
                             actions.push({
                                 system_id: this.$route.params.systemId,
                                 id: act.id
-                            })
+                            });
                         }
-                    })
-                })
+                    });
+                });
                 actions.unshift({
                     system_id: this.$route.params.systemId,
                     id: payload.id
-                })
+                });
                 return {
                     resource_type: {
                         system_id: content.system_id,
@@ -475,61 +475,61 @@
                                 id: item.id,
                                 instances: item.instance || [],
                                 attributes: item.attribute || []
-                            }
+                            };
                         })
                     },
                     actions
-                }
+                };
             },
 
             getData () {
-                let flag = false
-                let isNoAdd = false
-                const groups = []
+                let flag = false;
+                let isNoAdd = false;
+                const groups = [];
                 this.tableList.forEach(groupItem => {
                     const actionList = []
                     ;(groupItem.add_actions || []).forEach(item => {
-                        const { type, id, name, environment, description } = item
-                        const relatedResourceTypes = []
-                        const groupResourceTypes = []
+                        const { type, id, name, environment, description } = item;
+                        const relatedResourceTypes = [];
+                        const groupResourceTypes = [];
                         if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {
-                                            resItem.isError = true
-                                            flag = true
+                                            resItem.isError = true;
+                                            flag = true;
                                         }
                                         const conditionList = (resItem.condition.length > 0 && !resItem.empty)
                                             ? resItem.condition.map(conItem => {
-                                                const { id, instance, attribute } = conItem
+                                                const { id, instance, attribute } = conItem;
                                                 const attributeList = (attribute && attribute.length > 0)
                                                     ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                                                    : []
+                                                    : [];
         
                                                 const instanceList = (instance && instance.length > 0)
                                                     ? instance.map(({ name, type, paths }) => {
-                                                        const tempPath = _.cloneDeep(paths)
+                                                        const tempPath = _.cloneDeep(paths);
                                                         tempPath.forEach(pathItem => {
                                                             pathItem.forEach(pathSubItem => {
-                                                                delete pathSubItem.disabled
-                                                            })
-                                                        })
+                                                                delete pathSubItem.disabled;
+                                                            });
+                                                        });
                                                         return {
                                                             name,
                                                             type,
                                                             path: tempPath
-                                                        }
+                                                        };
                                                     })
-                                                    : []
+                                                    : [];
         
                                                 return {
                                                     id,
                                                     instances: instanceList,
                                                     attributes: attributeList
-                                                }
+                                                };
                                             })
-                                            : []
+                                            : [];
         
                                         relatedResourceTypes.push({
                                             type: resItem.type,
@@ -538,16 +538,16 @@
                                             condition: conditionList.filter(
                                                 item => item.instances.length > 0 || item.attributes.length > 0
                                             )
-                                        })
-                                    })
+                                        });
+                                    });
                                 }
                                 groupResourceTypes.push({
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
-                                })
-                            })
+                                });
+                            });
                             // 强制刷新下
-                            item.resource_groups = _.cloneDeep(item.resource_groups)
+                            item.resource_groups = _.cloneDeep(item.resource_groups);
                         }
                         const params = {
                             type,
@@ -556,75 +556,75 @@
                             description,
                             resource_groups: groupResourceTypes,
                             environment
-                        }
-                        actionList.push(params)
-                    })
+                        };
+                        actionList.push(params);
+                    });
                     groups.push({
                         id: groupItem.id,
                         actions: actionList
-                    })
-                })
-                isNoAdd = groups.every(item => item.actions.length < 1)
+                    });
+                });
+                isNoAdd = groups.every(item => item.actions.length < 1);
                 return {
                     flag,
                     groups,
                     isNoAdd
-                }
+                };
             },
 
             handlePrevPage () {
-                window.changeDialog = true
+                window.changeDialog = true;
                 if (this.pagination.current > 1) {
-                    --this.pagination.current
+                    --this.pagination.current;
                 }
-                this.requestQueue = ['group']
-                this.fetchData()
+                this.requestQueue = ['group'];
+                this.fetchData();
             },
 
             async handleNextPage () {
-                window.changeDialog = true
+                window.changeDialog = true;
                 if (this.isAddActionEmpty) {
                     if (this.pagination.current < this.pagination.totalPage) {
-                        ++this.pagination.current
-                        this.requestQueue = ['group']
-                        this.fetchData()
+                        ++this.pagination.current;
+                        this.requestQueue = ['group'];
+                        this.fetchData();
                     }
-                    return
+                    return;
                 }
-                const { groups, flag } = this.getData()
+                const { groups, flag } = this.getData();
                 if (flag) {
-                    return
+                    return;
                 }
-                this.nextLoading = true
+                this.nextLoading = true;
                 try {
                     await this.$store.dispatch('permTemplate/preGroupSync', {
                         id: this.id,
                         data: {
                             groups
                         }
-                    })
+                    });
                     if (this.pagination.current < this.pagination.totalPage) {
-                        ++this.pagination.current
-                        this.requestQueue = ['group']
-                        this.fetchData()
+                        ++this.pagination.current;
+                        this.requestQueue = ['group'];
+                        this.fetchData();
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.nextLoading = false
+                    this.nextLoading = false;
                 }
             },
 
             async handleReferInstance (resItem, act, row, index, $index) {
-                window.changeDialog = true
-                act.loading = true
+                window.changeDialog = true;
+                act.loading = true;
                 try {
                     const res = await this.$store.dispatch('permTemplate/getCloneAction', {
                         id: this.id,
@@ -633,68 +633,68 @@
                             clone_from_action_id: resItem.id,
                             group_ids: this.tableList.map(item => item.id)
                         }
-                    })
-                    const referList = res.data
+                    });
+                    const referList = res.data;
                     this.tableList.forEach(item => {
-                        const temp = referList.find(sub => sub.group_id === item.id)
-                        console.log('temp', temp)
+                        const temp = referList.find(sub => sub.group_id === item.id);
+                        console.log('temp', temp);
                         if (temp) {
-                            item.add_actions.splice(index, 1, new SyncPolicy({ ...temp.policy, tag: 'add' }, 'detail'))
+                            item.add_actions.splice(index, 1, new SyncPolicy({ ...temp.policy, tag: 'add' }, 'detail'));
                         }
-                    })
-                    console.log('this.tableList', this.tableList)
+                    });
+                    console.log('this.tableList', this.tableList);
                     this.$refs[`popover_${index}_${$index}_ref`][0]
-                        && this.$refs[`popover_${index}_${$index}_ref`][0].hideHandler()
+                        && this.$refs[`popover_${index}_${$index}_ref`][0].hideHandler();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
                     setTimeout(() => {
-                        act.loading = false
-                    }, 500)
+                        act.loading = false;
+                    }, 500);
                 }
             },
 
             handleAnimationEnd () {
-                this.sidesliderTitle = ''
-                this.previewData = []
+                this.sidesliderTitle = '';
+                this.previewData = [];
             },
 
             handleShowPopover (payload) {
-                payload.showAction = true
-                payload.showPopover = true
+                payload.showAction = true;
+                payload.showPopover = true;
             },
 
             handleHidePopover (payload) {
-                payload.showPopover = false
+                payload.showPopover = false;
             },
 
             handleCellMouseEnter (row, column, cell, event) {
                 if (!row.add_actions) {
-                    return
+                    return;
                 }
                 for (let i = 0; i < row.add_actions.length; i++) {
                     if (row.add_actions[i].id === column.property) {
-                        row.add_actions[i].showAction = true
-                        break
+                        row.add_actions[i].showAction = true;
+                        break;
                     }
                 }
             },
 
             handleCellMouseLeave (row, column, cell, event) {
                 if (!row.add_actions) {
-                    return
+                    return;
                 }
                 for (let i = 0; i < row.add_actions.length; i++) {
                     if (row.add_actions[i].id === column.property && !row.add_actions[i].showPopover) {
-                        row.add_actions[i].showAction = false
-                        break
+                        row.add_actions[i].showAction = false;
+                        break;
                     }
                 }
             },
@@ -704,133 +704,133 @@
                     limit: 1,
                     theme: 'success',
                     message: payload
-                })
+                });
             },
 
             handleOnInit (payload) {
-                this.disabled = !payload
+                this.disabled = !payload;
             },
 
             resetDataAfterClose () {
-                this.curIndex = -1
-                this.curResIndex = -1
-                this.curActionIndex = -1
-                this.curGroupIndex = -1
-                this.params = {}
-                this.instanceSidesliderTitle = ''
+                this.curIndex = -1;
+                this.curResIndex = -1;
+                this.curActionIndex = -1;
+                this.curGroupIndex = -1;
+                this.params = {};
+                this.instanceSidesliderTitle = '';
             },
 
             handleResourceCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
-                    cancelHandler = leaveConfirm()
+                    cancelHandler = leaveConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.isShowInstanceSideslider = false
-                    this.resetDataAfterClose()
-                }, _ => _)
+                    this.isShowInstanceSideslider = false;
+                    this.resetDataAfterClose();
+                }, _ => _);
             },
 
             handleResourceSumit () {
-                const conditionData = this.$refs.renderResourceRef.handleGetValue()
-                const { isEmpty, data } = conditionData
+                const conditionData = this.$refs.renderResourceRef.handleGetValue();
+                const { isEmpty, data } = conditionData;
                 if (isEmpty) {
-                    return
+                    return;
                 }
-                window.changeAlert = false
-                this.instanceSidesliderTitle = ''
-                this.isShowInstanceSideslider = false
+                window.changeAlert = false;
+                this.instanceSidesliderTitle = '';
+                this.isShowInstanceSideslider = false;
                 const resItem = this.tableList[this.curIndex]
                     .add_actions[this.curActionIndex]
                     .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex]
+                    .related_resource_types[this.curResIndex];
 
-                const isConditionEmpty = data.length === 1 && data[0] === 'none'
+                const isConditionEmpty = data.length === 1 && data[0] === 'none';
                 if (isConditionEmpty) {
-                    resItem.condition = ['none']
+                    resItem.condition = ['none'];
                 } else {
-                    resItem.condition = data
-                    resItem.isError = false
+                    resItem.condition = data;
+                    resItem.isError = false;
                 }
 
-                this.curIndex = -1
-                this.curResIndex = -1
-                this.curActionIndex = -1
-                this.curGroupIndex = -1
-                window.changeDialog = true
+                this.curIndex = -1;
+                this.curResIndex = -1;
+                this.curActionIndex = -1;
+                this.curGroupIndex = -1;
+                window.changeDialog = true;
             },
 
             handlerConditionMouseover (payload, row) {
                 if (Object.keys(this.curCopyParams).length < 1) {
-                    return
+                    return;
                 }
 
                 if (this.curCopyKey === `${payload.system_id}${payload.type}`) {
-                    payload.canPaste = true
+                    payload.canPaste = true;
                 }
             },
 
             handlerConditionMouseleave (payload) {
-                payload.canPaste = false
+                payload.canPaste = false;
             },
 
             handlerOnCopy (payload, $index, subIndex, index, action) {
-                window.changeDialog = true
-                this.curCopyKey = `${payload.system_id}${payload.type}`
-                this.curCopyParams = this.getBacthCopyParms(action, payload)
-                this.showMessage(this.$t(`m.info['实例复制']`))
+                window.changeDialog = true;
+                this.curCopyKey = `${payload.system_id}${payload.type}`;
+                this.curCopyParams = this.getBacthCopyParms(action, payload);
+                this.showMessage(this.$t(`m.info['实例复制']`));
                 this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0]
-                    && this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0].setImmediatelyShow(true)
+                    && this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0].setImmediatelyShow(true);
             },
 
             handlerOnPaste (payload, content) {
                 if (!payload.flag) {
-                    return
+                    return;
                 }
                 if (payload.data.length === 0) {
-                    content.condition = []
+                    content.condition = [];
                 } else {
-                    content.condition = payload.data.map(conditionItem => new Condition(conditionItem, '', 'add'))
+                    content.condition = payload.data.map(conditionItem => new Condition(conditionItem, '', 'add'));
                 }
-                content.isError = false
-                this.showMessage(this.$t(`m.info['粘贴成功']`))
+                content.isError = false;
+                this.showMessage(this.$t(`m.info['粘贴成功']`));
             },
 
             handlerOnBatchPaste (payload, content, $index, subIndex, index) {
                 if (!payload.flag) {
-                    return
+                    return;
                 }
                 if (payload.data.length === 0) {
                     this.tableList.forEach(item => {
                         item.add_actions.forEach(subItem => {
                             subItem.related_resource_types.forEach(resItem => {
                                 if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
-                                    resItem.condition = []
-                                    resItem.isError = false
+                                    resItem.condition = [];
+                                    resItem.isError = false;
                                 }
-                            })
-                        })
-                    })
+                            });
+                        });
+                    });
                 } else {
                     this.tableList.forEach(item => {
                         item.add_actions.forEach(subItem => {
-                            const curPasteData = payload.data.find(_ => _.id === subItem.id)
+                            const curPasteData = payload.data.find(_ => _.id === subItem.id);
                             if (curPasteData) {
                                 subItem.related_resource_types.forEach(resItem => {
                                     if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
-                                        resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'))
-                                        resItem.isError = false
+                                        resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                                        resItem.isError = false;
                                     }
-                                })
+                                });
                             }
-                        })
-                    })
+                        });
+                    });
                 }
-                this.curCopyParams = {}
-                content.isError = false
+                this.curCopyParams = {};
+                content.isError = false;
                 this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0]
-                    && this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0].setImmediatelyShow(false)
-                this.showMessage(this.$t(`m.info['批量粘贴成功']`))
+                    && this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0].setImmediatelyShow(false);
+                this.showMessage(this.$t(`m.info['批量粘贴成功']`));
             },
 
             showResourceInstance (data, resItem, resIndex, $index, index, groupIndex) {
@@ -839,38 +839,38 @@
                     action_id: data.add_actions[index].id,
                     resource_type_system: resItem.system_id,
                     resource_type_id: resItem.type
-                }
+                };
                 this.curScopeAction = this.authorizationScopeActions.find(
                     item => item.id === data.add_actions[index].id
-                )
+                );
 
-                console.log('this.curScopeAction', this.curScopeAction)
-                this.curIndex = $index
-                this.curActionIndex = index
-                this.curResIndex = resIndex
-                this.curGroupIndex = groupIndex
-                this.instanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.add_actions[index].name}】${this.$t(`m.common['的资源实例']`)}`
-                window.changeAlert = 'iamSidesider'
-                this.isShowInstanceSideslider = true
+                console.log('this.curScopeAction', this.curScopeAction);
+                this.curIndex = $index;
+                this.curActionIndex = index;
+                this.curResIndex = resIndex;
+                this.curGroupIndex = groupIndex;
+                this.instanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.add_actions[index].name}】${this.$t(`m.common['的资源实例']`)}`;
+                window.changeAlert = 'iamSidesider';
+                this.isShowInstanceSideslider = true;
             },
 
             handleViewResource (payload, index, groIndex) {
-                const data = payload.delete_actions[index].resource_groups[groIndex]
-                const params = []
+                const data = payload.delete_actions[index].resource_groups[groIndex];
+                const params = [];
                 if (data.related_resource_types.length > 0) {
                     data.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
+                        const { name, type, condition } = item;
                         params.push({
                             name: type,
                             label: `${name} ${this.$t(`m.common['实例']`)}`,
                             tabType: 'resource',
                             data: condition
-                        })
-                    })
+                        });
+                    });
                 }
-                this.previewData = params
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
-                this.isShowSideslider = true
+                this.previewData = params;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.isShowSideslider = true;
             },
 
             renderDeleteActionHeader (h, { column }) {
@@ -901,7 +901,7 @@
                             }
                         })
                     ]
-                )
+                );
             },
 
             renderAddActionHeader (h, { column }) {
@@ -932,29 +932,29 @@
                             }
                         })
                     ]
-                )
+                );
             },
 
             setTableProps () {
-                this.addProps = []
-                this.deleteProps = []
+                this.addProps = [];
+                this.deleteProps = [];
                 this.addAction.forEach(item => {
                     this.addProps.push({
                         label: item.name,
                         id: item.id
-                    })
-                })
+                    });
+                });
                 if (this.tableList.some(item => item.delete_actions.length > 0)) {
                     this.tableList[0].delete_actions.forEach(item => {
                         this.deleteProps.push({
                             label: item.name,
                             id: item.id
-                        })
-                    })
+                        });
+                    });
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-template-sync-wrapper {

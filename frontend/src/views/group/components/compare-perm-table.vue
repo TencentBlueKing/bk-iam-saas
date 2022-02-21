@@ -57,7 +57,7 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
+    import _ from 'lodash';
 
     export default {
         name: '',
@@ -70,19 +70,19 @@
         data () {
             return {
                 tableList: []
-            }
+            };
         },
         computed: {
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty
-                }
+                    return !payload.isEmpty;
+                };
             }
         },
         watch: {
             data: {
                 handler (value) {
-                    this.tableList = _.cloneDeep(value)
+                    this.tableList = _.cloneDeep(value);
                 },
                 immediate: true
             }
@@ -90,26 +90,26 @@
         methods: {
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             handleViewResource (payload) {
                 if (payload.tag === 'unchanged') {
-                    return
+                    return;
                 }
-                const { id, related_resource_types, name, attach_actions, tag } = payload
+                const { id, related_resource_types, name, attach_actions, tag } = payload;
                 this.$emit('on-compare', {
                     tag,
                     attach_actions,
                     action_id: id,
                     action_name: name,
                     related_resource_types
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-compare-perm-table {

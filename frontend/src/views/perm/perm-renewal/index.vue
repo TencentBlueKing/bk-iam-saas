@@ -47,10 +47,10 @@
     </smart-action>
 </template>
 <script>
-    import { buildURLParams } from '@/common/url'
-    import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants'
-    import IamDeadline from '@/components/iam-deadline/horizontal'
-    import RenderTable from '../components/render-renewal-table'
+    import { buildURLParams } from '@/common/url';
+    import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
+    import IamDeadline from '@/components/iam-deadline/horizontal';
+    import RenderTable from '../components/render-renewal-table';
 
     export default {
         name: '',
@@ -72,16 +72,16 @@
                 isShowErrorTips: false,
                 tabKey: 'tab-key',
                 isEmpty: false
-            }
+            };
         },
         computed: {
             getTableList () {
-                return this.panels.find(item => item.name === this.active).data || []
+                return this.panels.find(item => item.name === this.active).data || [];
             },
             curBadgeTheme () {
                 return payload => {
-                    return payload === this.active ? '#e1ecff' : '#f0f1f5'
-                }
+                    return payload === this.active ? '#e1ecff' : '#f0f1f5';
+                };
             }
         },
         watch: {
@@ -89,15 +89,15 @@
                 handler (value) {
                     if (this.active === 'group') {
                         if (value[0].total > 0) {
-                            this.isEmpty = false
+                            this.isEmpty = false;
                         } else {
-                            this.isEmpty = true
+                            this.isEmpty = true;
                         }
                     } else if (this.active === 'custom') {
                         if (value[1].total > 0) {
-                            this.isEmpty = false
+                            this.isEmpty = false;
                         } else {
-                            this.isEmpty = true
+                            this.isEmpty = true;
                         }
                     }
                 },
@@ -105,24 +105,24 @@
             }
         },
         async created () {
-            this.isEmpty = false
-            this.curSelectedList = []
-            const query = this.$route.query
-            this.active = query.tab || 'group'
-            this.fetchData()
+            this.isEmpty = false;
+            this.curSelectedList = [];
+            const query = this.$route.query;
+            this.active = query.tab || 'group';
+            this.fetchData();
         },
         methods: {
             async fetchData () {
-                this.tableLoading = true
-                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser'), this.$store.dispatch('renewal/getExpireSoonPerm')]
+                this.tableLoading = true;
+                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser'), this.$store.dispatch('renewal/getExpireSoonPerm')];
                 const resultList = await Promise.all(promiseList).finally(() => {
-                    this.tableLoading = false
-                })
-                this.panels[0].total = resultList[0].data.length
-                this.panels[0].data = resultList[0].data
-                this.panels[1].total = resultList[1].data.length
-                this.panels[1].data = resultList[1].data
-                this.tabKey = +new Date()
+                    this.tableLoading = false;
+                });
+                this.panels[0].total = resultList[0].data.length;
+                this.panels[0].data = resultList[0].data;
+                this.panels[1].total = resultList[1].data.length;
+                this.panels[1].data = resultList[1].data;
+                this.tabKey = +new Date();
             },
             // async fetchPageData () {
             //     await this.fetchData()
@@ -150,76 +150,76 @@
                 this.$nextTick(() => {
                     this.$refs.tabRef
                         && this.$refs.tabRef.$refs.tabLabel
-                        && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate())
-                })
-                window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`)
+                        && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+                });
+                window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
             },
 
             handleDeadlineChange (payload) {
-                this.expiredAt = payload || ONE_DAY_TIMESTAMP
+                this.expiredAt = payload || ONE_DAY_TIMESTAMP;
             },
 
             handleSelected (type, value) {
                 if (type === 'group') {
-                    this.panels[0].count = value.length
-                    this.curSelectedList = value
+                    this.panels[0].count = value.length;
+                    this.curSelectedList = value;
                 } else {
-                    this.panels[1].count = value.length
-                    this.curSelectedList = value
+                    this.panels[1].count = value.length;
+                    this.curSelectedList = value;
                 }
-                this.isShowErrorTips = false
+                this.isShowErrorTips = false;
                 this.$nextTick(() => {
                     this.$refs.tabRef
                         && this.$refs.tabRef.$refs.tabLabel
-                        && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate())
-                })
+                        && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+                });
             },
 
             async handleSubmit () {
                 if (this.curSelectedList.length < 1) {
-                    this.isShowErrorTips = true
-                    return
+                    this.isShowErrorTips = true;
+                    return;
                 }
-                this.submitLoading = true
-                const isGroup = this.active === 'group'
+                this.submitLoading = true;
+                const isGroup = this.active === 'group';
                 const params = {
                     reason: '续期'
-                }
+                };
                 if (isGroup) {
                     params.groups = this.curSelectedList.map(
                         ({ id, name, description, expired_at }) => ({ id, name, description, expired_at })
-                    )
+                    );
                 } else {
-                    params.policies = this.curSelectedList.map(({ id, expired_at }) => ({ id, expired_at }))
+                    params.policies = this.curSelectedList.map(({ id, expired_at }) => ({ id, expired_at }));
                 }
-                const dispatchMethod = isGroup ? 'groupPermRenewal' : 'customPermRenewal'
+                const dispatchMethod = isGroup ? 'groupPermRenewal' : 'customPermRenewal';
                 try {
-                    await this.$store.dispatch(`renewal/${dispatchMethod}`, params)
-                    this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 1000)
+                    await this.$store.dispatch(`renewal/${dispatchMethod}`, params);
+                    this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 1000);
                     this.$router.push({
                         name: 'apply'
-                    })
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.submitLoading = false
+                    this.submitLoading = false;
                 }
             },
 
             handleCancel () {
                 this.$router.push({
                     name: 'myPerm'
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-perm-renewal-wrapper {

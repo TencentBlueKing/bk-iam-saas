@@ -46,7 +46,7 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
+    import _ from 'lodash';
     export default {
         name: '',
         props: {
@@ -73,28 +73,28 @@
                 isEdit: false,
                 tagName: '',
                 tagList: []
-            }
+            };
         },
         computed: {
             tips () {
-                return this.isDisabled ? this.$t(`m.permApply['请先勾选一些操作']`) : this.$t(`m.permApply['保存为常用操作提示']`)
+                return this.isDisabled ? this.$t(`m.permApply['请先勾选一些操作']`) : this.$t(`m.permApply['保存为常用操作提示']`);
             },
             isDisabled () {
-                return this.curSelectActions.length < 1
+                return this.curSelectActions.length < 1;
             },
             isEditMode () {
-                return this.mode === 'edit'
+                return this.mode === 'edit';
             }
         },
         watch: {
             systemId () {
-                this.active = []
-                this.isEdit = false
-                this.tagName = ''
+                this.active = [];
+                this.isEdit = false;
+                this.tagName = '';
             },
             data: {
                 handler (value) {
-                    this.tagList = _.cloneDeep(value)
+                    this.tagList = _.cloneDeep(value);
                 },
                 immediate: true
             }
@@ -123,79 +123,79 @@
         },
         methods: {
             handleSelectTag ({ $id }) {
-                let flag = false
+                let flag = false;
                 if (this.active.includes($id)) {
-                    this.active = [...this.active.filter(_ => _ !== $id)]
+                    this.active = [...this.active.filter(_ => _ !== $id)];
                 } else {
-                    this.active.push($id)
-                    flag = true
+                    this.active.push($id);
+                    flag = true;
                 }
-                let curActions = this.tagList.find(_ => _.$id === $id).action_ids
-                const tempActions = []
+                let curActions = this.tagList.find(_ => _.$id === $id).action_ids;
+                const tempActions = [];
                 this.tagList.forEach((item, index) => {
                     if (item.$id !== $id && this.active.includes(item.$id)) {
                         if (!flag) {
-                            const existActionIds = curActions.filter(v => item.action_ids.includes(v))
-                            tempActions.push(...existActionIds)
+                            const existActionIds = curActions.filter(v => item.action_ids.includes(v));
+                            tempActions.push(...existActionIds);
                         } else {
-                            tempActions.push(...item.action_ids)
+                            tempActions.push(...item.action_ids);
                         }
                     }
-                })
+                });
                 curActions = !flag
                     ? [...curActions.filter(item => !tempActions.includes(item))]
-                    : [...new Set(curActions.concat(tempActions))]
-                this.$emit('on-change', flag, curActions)
+                    : [...new Set(curActions.concat(tempActions))];
+                this.$emit('on-change', flag, curActions);
             },
 
             handleAddTag () {
-                this.isEdit = true
+                this.isEdit = true;
                 this.$nextTick(() => {
-                    this.$refs.input.focus()
-                })
+                    this.$refs.input.focus();
+                });
             },
 
             handleBlur () {
                 if (this.tagName === '') {
-                    this.isEdit = false
+                    this.isEdit = false;
                 }
             },
 
             handleReset () {
-                this.isEdit = false
-                this.tagName = ''
+                this.isEdit = false;
+                this.tagName = '';
             },
 
             handleSetSelectData (payload) {
-                this.active = this.active.filter(item => item !== payload)
+                this.active = this.active.filter(item => item !== payload);
             },
 
             handleSetActive (payload) {
-                this.active.splice(0, this.active.length, ...[payload])
+                this.active.splice(0, this.active.length, ...[payload]);
             },
 
             handleEnter () {
-                this.handeSave()
+                this.handeSave();
             },
 
             handleDelete (id, $id, index) {
-                this.$emit('on-delete', id, $id, index)
+                this.$emit('on-delete', id, $id, index);
             },
 
             handeSave () {
                 if (this.tagName === '') {
-                    this.isEdit = false
-                    return
+                    this.isEdit = false;
+                    return;
                 }
-                this.$emit('on-add', { actions: this.curSelectActions, name: this.tagName })
-                this.handleReset()
+                this.$emit('on-add', { actions: this.curSelectActions, name: this.tagName });
+                this.handleReset();
             },
 
             handeCancel () {
-                this.handleReset()
+                this.handleReset();
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-common-used-action-wrapper {

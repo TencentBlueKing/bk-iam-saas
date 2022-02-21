@@ -54,15 +54,15 @@
             return {
                 isExpanded: this.expanded,
                 isEdit: this.edit
-            }
+            };
         },
         watch: {
             /**
              * expanded
              */
             expanded (value) {
-                this.isExpanded = !!value
-                this.isEdit = !!value
+                this.isExpanded = !!value;
+                this.isEdit = !!value;
             }
         },
         methods: {
@@ -70,36 +70,36 @@
              * test
              */
             test (e) {
-                e.stopPropagation()
+                e.stopPropagation();
             },
 
             /**
              * cancelEdit
              */
             cancelEdit () {
-                this.isEdit = false
+                this.isEdit = false;
             },
 
             /**
              * handlePackup
              */
             handlePackup () {
-                this.isEdit = false
-                this.isExpanded = false
-                this.$emit('update:expanded', false)
-                this.$emit('on-expanded', false)
+                this.isEdit = false;
+                this.isExpanded = false;
+                this.$emit('update:expanded', false);
+                this.$emit('on-expanded', false);
             },
 
             /**
              * handleExpanded
              */
             handleExpanded () {
-                this.isExpanded = !this.isExpanded
-                this.$emit('update:expanded', true)
-                this.$emit('on-expanded', this.isExpanded)
+                this.isExpanded = !this.isExpanded;
+                this.$emit('update:expanded', true);
+                this.$emit('on-expanded', this.isExpanded);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .registry-action-item {

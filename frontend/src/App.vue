@@ -30,19 +30,19 @@
     </div>
 </template>
 <script>
-    import theHeader from '@/components/header/index.vue'
-    import theNav from '@/components/nav/index.vue'
-    import IamGuide from '@/components/iam-guide/index.vue'
-    import { bus } from '@/common/bus'
-    import { mapGetters } from 'vuex'
-    import { afterEach } from '@/router'
-    import { kebabCase } from 'lodash'
+    import theHeader from '@/components/header/index.vue';
+    import theNav from '@/components/nav/index.vue';
+    import IamGuide from '@/components/iam-guide/index.vue';
+    import { bus } from '@/common/bus';
+    import { mapGetters } from 'vuex';
+    import { afterEach } from '@/router';
+    import { kebabCase } from 'lodash';
     export default {
         name: 'app',
         provide () {
             return {
                 reload: this.reload
-            }
+            };
         },
         components: {
             IamGuide,
@@ -69,25 +69,25 @@
                 routeName: '',
                 userGroupId: '',
                 isRouterAlive: true
-            }
+            };
         },
         computed: {
             ...mapGetters(['mainContentLoading', 'user'])
         },
         watch: {
             '$route' (to, from) {
-                this.layoutCls = kebabCase(to.name) + '-container'
-                this.routeName = to.name
-                this.userGroupId = to.params.id
-                this.$store.commit('updateRoute', from.name)
+                this.layoutCls = kebabCase(to.name) + '-container';
+                this.routeName = to.name;
+                this.userGroupId = to.params.id;
+                this.$store.commit('updateRoute', from.name);
             },
             user: {
                 handler (value) {
                     if (['rating_manager', 'system_manager'].includes(value.role.type)) {
-                        this.processGuideStyle.top = '220px'
+                        this.processGuideStyle.top = '220px';
                     }
                     if (value.role.type === 'super_manager') {
-                        this.processGuideStyle.top = '342px'
+                        this.processGuideStyle.top = '342px';
                     }
                 },
                 immediate: true,
@@ -95,65 +95,65 @@
             }
         },
         created () {
-            const platform = window.navigator.platform.toLowerCase()
+            const platform = window.navigator.platform.toLowerCase();
             if (platform.indexOf('win') === 0) {
-                this.systemCls = 'win'
+                this.systemCls = 'win';
             }
-            this.fetchVersionLog()
-            this.fetchNoviceGuide()
+            this.fetchVersionLog();
+            this.fetchNoviceGuide();
 
-            const isPoll = window.localStorage.getItem('isPoll')
+            const isPoll = window.localStorage.getItem('isPoll');
             if (isPoll) {
-                this.$store.commit('updateSync', true)
+                this.$store.commit('updateSync', true);
                 this.timer = setInterval(() => {
-                    this.fetchSyncStatus()
-                }, 15000)
+                    this.fetchSyncStatus();
+                }, 15000);
             }
 
             this.$once('hook:beforeDestroy', () => {
-                bus.$off('show-login-modal')
-                bus.$off('close-login-modal')
-                bus.$off('updatePoll')
-                bus.$off('nav-resize')
-                bus.$off('show-guide')
-            })
+                bus.$off('show-login-modal');
+                bus.$off('close-login-modal');
+                bus.$off('updatePoll');
+                bus.$off('nav-resize');
+                bus.$off('show-guide');
+            });
         },
         mounted () {
-            const self = this
+            const self = this;
             bus.$on('show-login-modal', (payload) => {
-                self.$refs.bkAuth.showLoginModal(payload)
-            })
+                self.$refs.bkAuth.showLoginModal(payload);
+            });
             bus.$on('close-login-modal', () => {
-                self.$refs.bkAuth.hideLoginModal()
+                self.$refs.bkAuth.hideLoginModal();
                 setTimeout(() => {
-                    window.location.reload()
-                }, 0)
-            })
+                    window.location.reload();
+                }, 0);
+            });
             bus.$on('updatePoll', () => {
-                clearInterval(this.timer)
+                clearInterval(this.timer);
                 this.timer = setInterval(() => {
-                    this.fetchSyncStatus()
-                }, 15000)
-            })
+                    this.fetchSyncStatus();
+                }, 15000);
+            });
             bus.$on('nav-resize', flag => {
-                this.groupGuideStyle.left = flag ? '270px' : '90px'
-                this.processGuideStyle.left = flag ? '270px' : '90px'
-            })
+                this.groupGuideStyle.left = flag ? '270px' : '90px';
+                this.processGuideStyle.left = flag ? '270px' : '90px';
+            });
             bus.$on('show-guide', payload => {
                 if (payload === 'group') {
-                    this.groupGuideShow = true
+                    this.groupGuideShow = true;
                 }
                 if (payload === 'process') {
-                    this.processGuideShow = true
+                    this.processGuideShow = true;
                 }
-            })
+            });
         },
         methods: {
             reload () {
-                this.isRouterAlive = false
+                this.isRouterAlive = false;
                 this.$nextTick(() => {
-                    this.isRouterAlive = true
-                })
+                    this.isRouterAlive = true;
+                });
             },
 
             /**
@@ -162,17 +162,17 @@
              * @param {Object} route 要刷新的 route
              */
             reloadCurPage (route) {
-                this.routerKey = +new Date()
-                afterEach(route)
+                this.routerKey = +new Date();
+                afterEach(route);
             },
 
             handleRefreshPage (route) {
-                this.isShowPage = false
+                this.isShowPage = false;
                 this.$nextTick(() => {
-                    this.isShowPage = true
-                    this.routerKey = +new Date()
-                    afterEach(route)
-                })
+                    this.isShowPage = true;
+                    this.routerKey = +new Date();
+                    afterEach(route);
+                });
             },
 
             /**
@@ -181,9 +181,9 @@
              */
             async fetchVersionLog () {
                 try {
-                    await this.$store.dispatch('versionLogInfo')
+                    await this.$store.dispatch('versionLogInfo');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             },
 
@@ -193,9 +193,9 @@
              */
             async fetchNoviceGuide () {
                 try {
-                    await this.$store.dispatch('getNoviceGuide')
+                    await this.$store.dispatch('getNoviceGuide');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             },
 
@@ -205,39 +205,39 @@
              */
             async fetchSyncStatus () {
                 try {
-                    const res = await this.$store.dispatch('organization/getOrganizationsSyncTask')
-                    const status = res.data.status
+                    const res = await this.$store.dispatch('organization/getOrganizationsSyncTask');
+                    const status = res.data.status;
                     if (status === 'Succeed' || status === 'Failed') {
                         if (status === 'Succeed') {
-                            bus.$emit('sync-success')
+                            bus.$emit('sync-success');
                         }
-                        window.localStorage.removeItem('isPoll')
-                        this.$store.commit('updateSync', false)
-                        clearInterval(this.timer)
+                        window.localStorage.removeItem('isPoll');
+                        this.$store.commit('updateSync', false);
+                        clearInterval(this.timer);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: status === 'Succeed' ? 'success' : 'error',
                             message: status === 'Succeed'
                                 ? this.$t(`m.permTemplate['同步组织架构成功']`)
                                 : this.$t(`m.permTemplate['同步组织架构失败']`)
-                        })
+                        });
                     }
                 } catch (e) {
-                    console.error(e)
-                    window.localStorage.removeItem('isPoll')
-                    this.$store.commit('updateSync', false)
-                    clearInterval(this.timer)
+                    console.error(e);
+                    window.localStorage.removeItem('isPoll');
+                    this.$store.commit('updateSync', false);
+                    clearInterval(this.timer);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

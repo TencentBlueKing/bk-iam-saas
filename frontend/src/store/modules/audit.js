@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getAuditList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/audits/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/audits/?${json2Query(params)}`, config);
         },
 
         /**
@@ -60,8 +60,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getAuditDetail ({ commit, state, dispatch }, params, config) {
-            const { id, month } = params
-            return http.get(`${AJAX_URL_PREFIX}/audits/${id}/?month=${month}`, config)
+            const { id, month } = params;
+            return http.get(`${AJAX_URL_PREFIX}/audits/${id}/?month=${month}`, config);
         }
     }
-}
+};

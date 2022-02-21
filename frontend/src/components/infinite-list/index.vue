@@ -41,7 +41,7 @@
 
 </template>
 <script>
-    import _ from 'lodash'
+    import _ from 'lodash';
 
     export default {
         name: 'infinite-list',
@@ -61,35 +61,35 @@
             return {
                 startIndex: 0,
                 endIndex: 0
-            }
+            };
         },
         computed: {
             ghostStyle () {
                 return {
                     height: this.allData.length * this.itemHeight + 'px'
-                }
+                };
             },
             // 页面渲染的数据
             renderData () {
                 // 渲染在可视区的数据
-                return this.allData.slice(this.startIndex, this.endIndex)
+                return this.allData.slice(this.startIndex, this.endIndex);
             },
             renderOrganizationList () {
-                return this.renderData.filter(item => item.type === 'department')
+                return this.renderData.filter(item => item.type === 'department');
             },
             renderUserList () {
-                return this.renderData.filter(item => item.type === 'user')
+                return this.renderData.filter(item => item.type === 'user');
             }
         },
         mounted () {
-            this.endIndex = Math.ceil(this.$el.clientHeight / this.itemHeight)
+            this.endIndex = Math.ceil(this.$el.clientHeight / this.itemHeight);
         },
         methods: {
             /**
              * 滚动回调函数
              */
             rootScroll: _.throttle(function () {
-                this.updateRenderData(this.$el.scrollTop)
+                this.updateRenderData(this.$el.scrollTop);
             }, 0),
 
             /**
@@ -99,14 +99,14 @@
              */
             updateRenderData (scrollTop = 0) {
                 // 可视区显示的条数
-                const count = Math.ceil(this.$el.clientHeight / this.itemHeight)
+                const count = Math.ceil(this.$el.clientHeight / this.itemHeight);
                 // 滚动后可视区新的 startIndex
-                const newStartIndex = Math.floor(scrollTop / this.itemHeight)
+                const newStartIndex = Math.floor(scrollTop / this.itemHeight);
                 // 滚动后可视区新的 endIndex
-                const newEndIndex = newStartIndex + count
-                this.startIndex = newStartIndex
-                this.endIndex = newEndIndex
-                this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`
+                const newEndIndex = newStartIndex + count;
+                this.startIndex = newStartIndex;
+                this.endIndex = newEndIndex;
+                this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`;
             },
 
             /**
@@ -115,7 +115,7 @@
              * @param {Object} node 当前节点
              */
             nodeClick (node) {
-                this.$emit('on-click', node)
+                this.$emit('on-click', node);
             },
 
             /**
@@ -127,10 +127,10 @@
              * @param {Object} node 当前节点
              */
             checkboxChange (newVal, oldVal, localVal, node) {
-                this.$emit('on-checked', newVal, oldVal, localVal, node)
+                this.$emit('on-checked', newVal, oldVal, localVal, node);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './index.css';

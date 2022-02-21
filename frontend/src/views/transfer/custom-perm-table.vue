@@ -53,20 +53,20 @@
         data () {
             return {
                 renderPolicyList: []
-            }
+            };
         },
         watch: {
             loading: {
                 handler (v) {
                     if (v) {
-                        return
+                        return;
                     }
-                    this.renderPolicyList.splice(0, this.renderPolicyList.length, ...(this.policyList || []))
+                    this.renderPolicyList.splice(0, this.renderPolicyList.length, ...(this.policyList || []));
                     this.renderPolicyList.forEach(p => {
                         this.$nextTick(() => {
-                            this.$refs.customTable && this.$refs.customTable.toggleRowSelection(p, !!p.transferChecked)
-                        })
-                    })
+                            this.$refs.customTable && this.$refs.customTable.toggleRowSelection(p, !!p.transferChecked);
+                        });
+                    });
                 }
                 // immediate: true
                 // deep: true
@@ -78,7 +78,7 @@
             // },
 
             handleSelect (selection) {
-                this.$emit('custom-selection-change', selection)
+                this.$emit('custom-selection-change', selection);
             },
 
             /**
@@ -86,12 +86,12 @@
              */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 0) {
-                    return 'checkbox-cell-wrapper'
+                    return 'checkbox-cell-wrapper';
                 }
-                return ''
+                return '';
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-transfer-custom-table {

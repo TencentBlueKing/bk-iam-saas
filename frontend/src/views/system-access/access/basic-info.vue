@@ -51,7 +51,7 @@
             infoData: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -68,7 +68,7 @@
                     description_en: ''
                 },
                 isEdit: false
-            }
+            };
         },
         watch: {
             infoData: {
@@ -107,20 +107,20 @@
                             { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
 
                         ]
-                    }
+                    };
                     if (value && Object.keys(value).length) {
-                        this.formData.id = value.id
-                        this.formData.name = value.name
-                        this.formData.name_en = value.name_en
-                        this.formData.host = value.provider_config.host
-                        this.formData.auth = value.provider_config.auth
-                        this.formData.healthz = value.provider_config.healthz
-                        this.formData.description = value.description
-                        this.formData.description_en = value.description_en
-                        this.isEdit = true
+                        this.formData.id = value.id;
+                        this.formData.name = value.name;
+                        this.formData.name_en = value.name_en;
+                        this.formData.host = value.provider_config.host;
+                        this.formData.auth = value.provider_config.auth;
+                        this.formData.healthz = value.provider_config.healthz;
+                        this.formData.description = value.description;
+                        this.formData.description_en = value.description_en;
+                        this.isEdit = true;
                     }
                     if (!this.isEdit) {
-                        this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['系统ID已被占用']`), trigger: 'change' })
+                        this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['系统ID已被占用']`), trigger: 'change' });
                     }
                 },
                 deep: true,
@@ -128,7 +128,7 @@
             },
             formData: {
                 handler (value) {
-                    this.$store.commit('updateHost', value.host)
+                    this.$store.commit('updateHost', value.host);
                 },
                 deep: true,
                 immediate: true
@@ -139,31 +139,31 @@
                 try {
                     const res = await this.$store.dispatch('access/checkModelingId', {
                         id: val.trim()
-                    })
-                    return !res.data.exists
+                    });
+                    return !res.data.exists;
                 } catch (e) {
-                    console.error(e)
-                    return false
+                    console.error(e);
+                    return false;
                 }
             },
 
             handleValidator () {
                 return this.$refs.basicInfoForm.validate().then(validator => {
-                    this.$emit('on-change', this.formData)
+                    this.$emit('on-change', this.formData);
                 }, validator => {
-                    console.warn(validator)
-                    return Promise.reject(validator.content)
-                })
+                    console.warn(validator);
+                    return Promise.reject(validator.content);
+                });
             },
 
             reset () {
                 this.$refs.basicInfoForm.formItems.forEach(item => {
-                    item.validator.content = ''
-                    item.validator.state = ''
-                })
+                    item.validator.content = '';
+                    item.validator.state = '';
+                });
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

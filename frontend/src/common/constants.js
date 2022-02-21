@@ -25,19 +25,19 @@
 */
 
 // 永久时间戳
-export const PERMANENT_TIMESTAMP = 4102444800
+export const PERMANENT_TIMESTAMP = 4102444800;
 
 // 6个月时间戳
-export const SIX_MONTH_TIMESTAMP = 15552000
+export const SIX_MONTH_TIMESTAMP = 15552000;
 
 // 自定义权限的模板id
-export const CUSTOM_PERM_TEMPLATE_ID = 0
+export const CUSTOM_PERM_TEMPLATE_ID = 0;
 
 // 一天时间的时间戳
-export const ONE_DAY_TIMESTAMP = 86400
+export const ONE_DAY_TIMESTAMP = 86400;
 
 // 权限期限时间戳
-export const DURATION_LIST = [2592000, 7776000, 15552000, 31104000, 4102444800]
+export const DURATION_LIST = [2592000, 7776000, 15552000, 31104000, 4102444800];
 
 // 全球各个时区
 export const GLOBAL_TIME_ZONE = [
@@ -67,7 +67,7 @@ export const GLOBAL_TIME_ZONE = [
     { name: '(GMT+11:00) 马加丹', value: 'Asia/Magadan' },
     { name: '(GMT+12:00) 堪察加半岛时间', value: 'Pacific/Fiji' },
     { name: '(GMT+13:00) 努库阿洛法时间', value: 'Pacific/Tongatapu' }
-]
+];
 
 // 全球各个时区
 export const GLOBAL_TIME_ZONE_ENUM = {
@@ -97,4 +97,4 @@ export const GLOBAL_TIME_ZONE_ENUM = {
     'Asia/Magadan': '(GMT+11:00)',
     'Pacific/Fiji': '(GMT+12:00)',
     'Pacific/Tongatapu': '(GMT+13:00)'
-}
+};

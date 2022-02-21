@@ -39,16 +39,16 @@
         },
         computed: {
             icon () {
-                return this.type === 'user' ? 'personal-user' : 'organization-fill'
+                return this.type === 'user' ? 'personal-user' : 'organization-fill';
             },
             title () {
-                return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`)
+                return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
             },
             isDepartment () {
-                return this.type === 'department'
+                return this.type === 'department';
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-member-display-wrapper {

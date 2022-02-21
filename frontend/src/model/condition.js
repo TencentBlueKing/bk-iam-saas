@@ -24,11 +24,11 @@
  * IN THE SOFTWARE.
 */
 
-import { language, il8n } from '@/language'
-import Instance from './instance'
-import Attribute from './attribute'
+import { language, il8n } from '@/language';
+import Instance from './instance';
+import Attribute from './attribute';
 
-const isCn = language === 'zh-cn'
+const isCn = language === 'zh-cn';
 export default class Condition {
     // flag = '' 为默认拉取，flag = 'add' 为新添加的
     // type 为 init 时初始化
@@ -38,86 +38,86 @@ export default class Condition {
     constructor (
         payload, type = '', flag = '', instanceCanDelete = true, attributeCanDelete = true, instanceNotDisabled = false
     ) {
-        this.instanceExpanded = false
-        this.instanceLoading = false
-        this.attributeExpanded = false
-        this.attributeLoading = false
-        this.isHovering = false
-        this.isInstanceEmpty = false
-        this.isAttributeEmpty = false
-        this.id = payload.id || ''
-        this.flag = flag
-        this.selectionMode = payload.selection_mode || 'all'
+        this.instanceExpanded = false;
+        this.instanceLoading = false;
+        this.attributeExpanded = false;
+        this.attributeLoading = false;
+        this.isHovering = false;
+        this.isInstanceEmpty = false;
+        this.isAttributeEmpty = false;
+        this.id = payload.id || '';
+        this.flag = flag;
+        this.selectionMode = payload.selection_mode || 'all';
         if (this.selectionMode === 'all') {
-            this.initIntance(payload, type, this.flag, instanceCanDelete, instanceNotDisabled)
-            this.initAttribute(payload, type, this.flag, attributeCanDelete)
+            this.initIntance(payload, type, this.flag, instanceCanDelete, instanceNotDisabled);
+            this.initAttribute(payload, type, this.flag, attributeCanDelete);
         } else if (this.selectionMode === 'instance') {
-            this.initIntance(payload, type, this.flag, false, instanceNotDisabled)
-            this.instanceCanDelete = flag !== ''
+            this.initIntance(payload, type, this.flag, false, instanceNotDisabled);
+            this.instanceCanDelete = flag !== '';
         } else {
-            this.initAttribute(payload, type, this.flag)
-            this.attributeCanDelete = flag !== ''
+            this.initAttribute(payload, type, this.flag);
+            this.attributeCanDelete = flag !== '';
         }
     }
     initIntance (payload, type, flag, instanceCanDelete, instanceNotDisabled) {
         if (type === 'init') {
-            this.instance = []
-            this.instanceCanDelete = instanceCanDelete
-            return
+            this.instance = [];
+            this.instanceCanDelete = instanceCanDelete;
+            return;
         }
         if (payload.instances && payload.instances.length > 0) {
-            this.instance = payload.instances.map(item => new Instance(item, flag, instanceNotDisabled))
-            this.instanceCanDelete = flag !== ''
+            this.instance = payload.instances.map(item => new Instance(item, flag, instanceNotDisabled));
+            this.instanceCanDelete = flag !== '';
         }
     }
     initAttribute (payload, type, flag, attributeCanDelete) {
         if (type === 'init') {
-            this.attribute = []
-            this.attributeCanDelete = attributeCanDelete
-            return
+            this.attribute = [];
+            this.attributeCanDelete = attributeCanDelete;
+            return;
         }
         if (payload.attributes && payload.attributes.length > 0) {
-            this.attribute = payload.attributes.map(item => new Attribute(item, flag))
-            this.attributeCanDelete = flag !== ''
+            this.attribute = payload.attributes.map(item => new Attribute(item, flag));
+            this.attributeCanDelete = flag !== '';
         }
     }
     get instanceTitle () {
         if (this.isInstanceEmpty) {
-            return `<span style="color: #ff4d4d;">${il8n('verify', '请选择拓扑实例')}</span>`
+            return `<span style="color: #ff4d4d;">${il8n('verify', '请选择拓扑实例')}</span>`;
         }
         if (this.instance && this.instance.length > 0) {
-            const strList = []
+            const strList = [];
             this.instance.forEach(item => {
                 if (item.displayPath.length > 0) {
                     const str = isCn
                         ? ` ${item.displayPath.length} 个${item.name}`
-                        : ` ${item.displayPath.length} ${item.name}(s)`
-                    strList.push(str)
+                        : ` ${item.displayPath.length} ${item.name}(s)`;
+                    strList.push(str);
                 }
-            })
+            });
             if (strList.length > 0) {
-                return `${il8n('common', '已选择')} ${strList.join('、')}`
+                return `${il8n('common', '已选择')} ${strList.join('、')}`;
             }
-            return il8n('resource', '未选择任何拓扑实例')
+            return il8n('resource', '未选择任何拓扑实例');
         }
-        return il8n('resource', '未选择任何拓扑实例')
+        return il8n('resource', '未选择任何拓扑实例');
     }
     get attributeTitle () {
         if (this.isAttributeEmpty) {
-            return `<span style="color: #ff4d4d;">${il8n('verify', '请设置属性条件')}</span>`
+            return `<span style="color: #ff4d4d;">${il8n('verify', '请设置属性条件')}</span>`;
         }
         if (this.attribute && this.attribute.length > 0) {
-            let len = 0
+            let len = 0;
             this.attribute.forEach(item => {
                 if (item.id && item.values.some(val => val.id)) {
-                    ++len
+                    ++len;
                 }
-            })
+            });
             if (len > 0) {
-                return `${il8n('resource', '已设置')} ${len} ${il8n('resource', '个属性条件')}`
+                return `${il8n('resource', '已设置')} ${len} ${il8n('resource', '个属性条件')}`;
             }
-            return il8n('verify', '未设置任何条件')
+            return il8n('verify', '未设置任何条件');
         }
-        return il8n('verify', '未设置任何条件')
+        return il8n('verify', '未设置任何条件');
     }
 }

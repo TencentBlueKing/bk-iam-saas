@@ -46,31 +46,31 @@
         data () {
             return {
                 isShowDialog: false
-            }
+            };
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             }
         },
         methods: {
             handleSumbitDelete () {
-                this.$emit('on-sumbit')
+                this.$emit('on-sumbit');
             },
 
             hideCancelDelete () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             },
 
             handleAfterDeleteLeave () {
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-confirm-dialog {

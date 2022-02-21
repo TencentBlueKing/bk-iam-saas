@@ -24,15 +24,15 @@
  * IN THE SOFTWARE.
 */
 
-import Vue from 'vue'
-import il8n from '@/language'
+import Vue from 'vue';
+import il8n from '@/language';
 
 export const leaveConfirm = () => {
     if (!window.changeAlert || window.changeAlert === 'iamSidesider') {
-        return Promise.resolve()
+        return Promise.resolve();
     }
-    const vm = new Vue()
-    const h = vm.$createElement
+    const vm = new Vue();
+    const h = vm.$createElement;
     return new Promise((resolve, reject) => {
         vm.$bkInfo({
             title: il8n('info', '离开将会导致未保存信息丢失'),
@@ -44,12 +44,12 @@ export const leaveConfirm = () => {
                 }
             }, il8n('info', '确认离开当前页')),
             confirmFn: () => {
-                window.changeAlert = false
-                resolve()
+                window.changeAlert = false;
+                resolve();
             },
             cancelFn: () => {
-                reject(Error('cancel'))
+                reject(Error('cancel'));
             }
-        })
-    })
-}
+        });
+    });
+};

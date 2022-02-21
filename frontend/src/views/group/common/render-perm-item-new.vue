@@ -61,37 +61,37 @@
             return {
                 isExpanded: this.expanded,
                 role: ''
-            }
+            };
         },
         watch: {
             expanded (value) {
-                this.isExpanded = !!value
+                this.isExpanded = !!value;
             }
         },
         created () {
-            this.isShowTable()
+            this.isShowTable();
         },
         methods: {
             isShowTable () {
                 if (this.groupSystemListLength === 1 && this.templateCount >= 1) {
-                    this.handleExpanded()
+                    this.handleExpanded();
                 } else if (this.groupSystemListLength === 1 && this.templateCount === 0 && this.policyCount >= 1) {
-                    this.handleExpanded()
+                    this.handleExpanded();
                 }
             },
             handlePackup () {
-                this.isExpanded = false
-                this.$emit('update:expanded', false)
-                this.$emit('on-expanded', false)
+                this.isExpanded = false;
+                this.$emit('update:expanded', false);
+                this.$emit('on-expanded', false);
             },
 
             handleExpanded () {
-                this.isExpanded = !this.isExpanded
-                this.$emit('update:expanded', true) // 更新expanded
-                this.$emit('on-expanded', this.isExpanded) // 执行on-expanded
+                this.isExpanded = !this.isExpanded;
+                this.$emit('update:expanded', true); // 更新expanded
+                this.$emit('on-expanded', this.isExpanded); // 执行on-expanded
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-perm-item {

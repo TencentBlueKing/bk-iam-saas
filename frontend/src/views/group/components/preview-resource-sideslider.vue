@@ -36,11 +36,11 @@
 </template>
 
 <script>
-    import _ from 'lodash'
-    import CompareCondition from '@/model/compare-condition'
-    import CompareDetail from '@/components/render-resource/compare-detail'
-    import ConditionDetail from '@/components/render-resource/detail'
-    import Tree from '@/components/attach-action-preview/attach-action-tree'
+    import _ from 'lodash';
+    import CompareCondition from '@/model/compare-condition';
+    import CompareDetail from '@/components/render-resource/compare-detail';
+    import ConditionDetail from '@/components/render-resource/detail';
+    import Tree from '@/components/attach-action-preview/attach-action-tree';
     export default {
         name: '',
         components: {
@@ -72,35 +72,35 @@
                     { name: 'host', label: '主机实例', data: [], tag: 'unchanged', tabType: 'resource' }
                 ],
                 active: 'host'
-            }
+            };
         },
         computed: {
         },
         watch: {
             isShow: {
                 handler (value) {
-                    this.isVisible = !!value
+                    this.isVisible = !!value;
                 },
                 immediate: true
             },
             params: {
                 handler (value) {
                     if (value.length > 0) {
-                        const panels = []
+                        const panels = [];
                         value.forEach(item => {
                             if (item.tabType === 'resource') {
                                 if (['update', 'delete', 'add'].includes(item.tag)) {
-                                    const requestParams = Object.assign({}, item)
-                                    delete requestParams.tag
-                                    delete requestParams.tabType
-                                    this.requestFunQueue.push(this.fetchConditionCompare(requestParams))
+                                    const requestParams = Object.assign({}, item);
+                                    delete requestParams.tag;
+                                    delete requestParams.tabType;
+                                    this.requestFunQueue.push(this.fetchConditionCompare(requestParams));
                                     panels.push({
                                         label: `${item.related_resource_type.name} ${this.$t(`m.common['实例']`)}`,
                                         name: item.related_resource_type.type,
                                         data: [],
                                         tag: item.tag,
                                         tabType: item.tabType
-                                    })
+                                    });
                                 } else {
                                     panels.push({
                                         label: `${item.related_resource_type.name} ${this.$t(`m.common['实例']`)}`,
@@ -108,7 +108,7 @@
                                         data: item.related_resource_type.condition,
                                         tag: item.tag,
                                         tabType: item.tabType
-                                    })
+                                    });
                                 }
                             } else {
                                 panels.push({
@@ -116,17 +116,17 @@
                                     name: 'relate',
                                     data: item.data,
                                     tabType: item.tabType
-                                })
+                                });
                             }
-                        })
-                        this.panels = _.cloneDeep(panels)
-                        this.active = this.panels[0].name
+                        });
+                        this.panels = _.cloneDeep(panels);
+                        this.active = this.panels[0].name;
                         if (this.requestFunQueue.length > 0) {
-                            this.fetchData()
+                            this.fetchData();
                         }
                     } else {
-                        this.conditionData = []
-                        this.requestFunQueue = []
+                        this.conditionData = [];
+                        this.requestFunQueue = [];
                     }
                 },
                 immediate: true
@@ -134,41 +134,41 @@
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await Promise.all(this.requestFunQueue)
-                    const panels = []
+                    const res = await Promise.all(this.requestFunQueue);
+                    const panels = [];
                     res.forEach((item, index) => {
-                        const conditionData = item.data.map(subItem => new CompareCondition(subItem))
+                        const conditionData = item.data.map(subItem => new CompareCondition(subItem));
                         panels.push({
                             name: this.params[index].related_resource_type.type,
                             label: `${this.params[index].related_resource_type.name} ${this.$t(`m.common['实例']`)}`,
                             data: conditionData
-                        })
+                        });
                         const curPanel = this.panels.find(
                             panel => panel.name === this.params[index].related_resource_type.type
-                        )
-                        curPanel.data = _.cloneDeep(conditionData)
-                    })
+                        );
+                        curPanel.data = _.cloneDeep(conditionData);
+                    });
                     if (this.panels[0].data.length > 0) {
                         if (this.panels[0].data[0].hasOwnProperty('instance')) {
-                            this.panels[0].data[0].instanceExpanded = true
+                            this.panels[0].data[0].instanceExpanded = true;
                         }
                         if (this.panels[0].data[0].hasOwnProperty('attribute')) {
-                            this.panels[0].data[0].attributeExpanded = true
+                            this.panels[0].data[0].attributeExpanded = true;
                         }
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
@@ -176,15 +176,15 @@
             },
 
             fetchConditionCompare (payload) {
-                return this.$store.dispatch('permTemplate/templateConditionCompare', { ...payload })
+                return this.$store.dispatch('permTemplate/templateConditionCompare', { ...payload });
             },
 
             handleSliderClose () {
-                this.$emit('update:isShow', false)
-                this.$emit('animation-end')
+                this.$emit('update:isShow', false);
+                this.$emit('animation-end');
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

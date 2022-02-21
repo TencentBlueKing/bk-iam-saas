@@ -24,12 +24,12 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
-import cookie from 'cookie'
+import http from '@/api';
+import { json2Query } from '@/common/util';
+import cookie from 'cookie';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
-const CSRF_COOKIE_NAME = window.CSRF_COOKIE_NAME
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
+const CSRF_COOKIE_NAME = window.CSRF_COOKIE_NAME;
 
 export default {
     namespaced: true,
@@ -48,8 +48,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getResourceManager ({ commit, state, dispatch }, params, config) {
-            console.log('params11', json2Query(params))
-            return http.post(`${AJAX_URL_PREFIX}/roles/query_authorized_subjects/`, params, config)
+            console.log('params11', json2Query(params));
+            return http.post(`${AJAX_URL_PREFIX}/roles/query_authorized_subjects/`, params, config);
         },
 
         /**
@@ -64,8 +64,8 @@ export default {
          */
 
         exportResourceManager ({ commit, state, dispatch }, params, config = {}) {
-            const url = `${AJAX_URL_PREFIX}/roles/query_authorized_subjects/export/`
-            const CSRFToken = cookie.parse(document.cookie)[CSRF_COOKIE_NAME]
+            const url = `${AJAX_URL_PREFIX}/roles/query_authorized_subjects/export/`;
+            const CSRFToken = cookie.parse(document.cookie)[CSRF_COOKIE_NAME];
             return fetch(url, {
                 credentials: 'include',
                 method: 'POST',
@@ -74,7 +74,7 @@ export default {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': CSRFToken
                 })
-            })
+            });
         }
     }
-}
+};

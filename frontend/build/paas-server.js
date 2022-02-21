@@ -31,23 +31,23 @@
  * 注入全局变量
  * 添加html模板引擎
  */
-import express from 'express'
-import path from 'path'
-import artTemplate from 'express-art-template'
-import history from 'connect-history-api-fallback'
-import cookieParser from 'cookie-parser'
-import axios from 'axios'
-import ajaxMiddleware from './ajax-middleware'
-import config from './config'
+import express from 'express';
+import path from 'path';
+import artTemplate from 'express-art-template';
+import history from 'connect-history-api-fallback';
+import cookieParser from 'cookie-parser';
+import axios from 'axios';
+import ajaxMiddleware from './ajax-middleware';
+import config from './config';
 
 // eslint-disable-next-line new-cap
-const app = new express()
-const PORT = process.env.PORT || config.build.localDevPort || 5000
+const app = new express();
+const PORT = process.env.PORT || config.build.localDevPort || 5000;
 const http = axios.create({
     withCredentials: true
-})
+});
 
-http.interceptors.response.use(response => response, error => Promise.reject(error))
+http.interceptors.response.use(response => response, error => Promise.reject(error));
 
 // 注入全局变量
 const GLOBAL_VAR = {
@@ -62,7 +62,7 @@ const GLOBAL_VAR = {
     ENABLE_MODEL_BUILD: process.env.ENABLE_MODEL_BUILD || '',
     ENABLE_PERMISSION_HANDOVER: process.env.ENABLE_PERMISSION_HANDOVER || '',
     BK_COMPONENT_API_URL: process.env.BK_COMPONENT_API_URL || ''
-}
+};
 
 // APA 重定向回首页，由首页Route响应处理
 // https://github.com/bripkens/connect-history-api-fallback#index
@@ -87,33 +87,33 @@ app.use(history({
             to: '/login_success/'
         }
     ]
-}))
+}));
 
-app.use(cookieParser())
+app.use(cookieParser());
 
 // 首页
 app.get('/', (req, res) => {
-    const index = path.join(__dirname, '../dist/index.html')
-    res.render(index, GLOBAL_VAR)
-})
+    const index = path.join(__dirname, '../dist/index.html');
+    res.render(index, GLOBAL_VAR);
+});
 app.get('/login_success/', (req, res) => {
-    const loginSuccess = path.join(__dirname, '../dist/login_success.html')
-    res.render(loginSuccess, GLOBAL_VAR)
-})
+    const loginSuccess = path.join(__dirname, '../dist/login_success.html');
+    res.render(loginSuccess, GLOBAL_VAR);
+});
 
-app.use(ajaxMiddleware)
+app.use(ajaxMiddleware);
 // 配置静态资源
-app.use('/static', express.static(path.join(__dirname, '../dist/static')))
+app.use('/static', express.static(path.join(__dirname, '../dist/static')));
 
 // 配置视图
-app.set('views', path.join(__dirname, '../dist'))
+app.set('views', path.join(__dirname, '../dist'));
 
 // 配置模板引擎
 // http://aui.github.io/art-template/zh-cn/docs/
-app.engine('html', artTemplate)
-app.set('view engine', 'html')
+app.engine('html', artTemplate);
+app.set('view engine', 'html');
 
 // 配置端口
 app.listen(PORT, () => {
-    console.log(`App is running in port ${PORT}`)
-})
+    console.log(`App is running in port ${PORT}`);
+});

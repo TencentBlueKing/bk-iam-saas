@@ -18,14 +18,14 @@
                 type: String,
                 default: 'mini',
                 validator: function (value) {
-                    return ['large', 'small', 'mini'].includes(value)
+                    return ['large', 'small', 'mini'].includes(value);
                 }
             },
             theme: {
                 type: String,
                 default: 'primary',
                 validator: function (value) {
-                    return ['primary', 'danger', 'success', 'white', 'warning'].includes(value)
+                    return ['primary', 'danger', 'success', 'white', 'warning'].includes(value);
                 }
             },
             extCls: {
@@ -33,7 +33,7 @@
                 default: ''
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .bk-spin-loading {

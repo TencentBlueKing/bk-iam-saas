@@ -24,33 +24,33 @@
  * IN THE SOFTWARE.
 */
 
-import { join } from 'path'
-import ora from 'ora'
-import chalk from 'chalk'
-import webpack from 'webpack'
-import rm from 'rimraf'
+import { join } from 'path';
+import ora from 'ora';
+import chalk from 'chalk';
+import webpack from 'webpack';
+import rm from 'rimraf';
 
-import config from './config'
-import checkVer from './check-versions'
-import webpackConf from './webpack.prod.conf'
+import config from './config';
+import checkVer from './check-versions';
+import webpackConf from './webpack.prod.conf';
 
-checkVer()
+checkVer();
 
 // 打包的版本
-const VERSION = process.env.VERSION
+const VERSION = process.env.VERSION;
 
 // const spinner = ora('building...')
-const spinner = ora(`building for ${chalk.green(VERSION)}...`)
-spinner.start()
+const spinner = ora(`building for ${chalk.green(VERSION)}...`);
+spinner.start();
 
 rm(join(config.build.assetsRoot, VERSION), e => {
     if (e) {
-        throw e
+        throw e;
     }
     webpack(webpackConf, (err, stats) => {
-        spinner.stop()
+        spinner.stop();
         if (err) {
-            throw err
+            throw err;
         }
         process.stdout.write(stats.toString({
             colors: true,
@@ -58,17 +58,17 @@ rm(join(config.build.assetsRoot, VERSION), e => {
             children: false,
             chunks: false,
             chunkModules: false
-        }) + '\n\n')
+        }) + '\n\n');
 
         if (stats.hasErrors()) {
-            console.log(chalk.red('  Build failed with errors.\n'))
-            process.exit(1)
+            console.log(chalk.red('  Build failed with errors.\n'));
+            process.exit(1);
         }
 
-        console.log(chalk.cyan('  Build complete.\n'))
+        console.log(chalk.cyan('  Build complete.\n'));
         console.log(chalk.yellow(
             '  Tip: built files are meant to be served over an HTTP server.\n'
             + '  Opening index.html over file:// won\'t work.\n'
-        ))
-    })
-})
+        ));
+    });
+});

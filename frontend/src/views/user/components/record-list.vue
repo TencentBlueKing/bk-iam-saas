@@ -87,25 +87,25 @@
     </div>
 </template>
 <script>
-    import { timestampToTime } from '@/common/util'
-    import RenderStatus from './render-status'
-    import moment from 'moment'
+    import { timestampToTime } from '@/common/util';
+    import RenderStatus from './render-status';
+    import moment from 'moment';
 
     export default {
         name: 'system-access-index',
         filters: {
             getDuration (val) {
-                const d = moment.duration(val, 'seconds')
+                const d = moment.duration(val, 'seconds');
                 if (val >= 86400) {
-                    return `${Math.floor(d.asDays())}d${d.hours()}h${d.minutes()}min${d.seconds()}s`
+                    return `${Math.floor(d.asDays())}d${d.hours()}h${d.minutes()}min${d.seconds()}s`;
                 }
                 if (val >= 3600) {
-                    return `${d.hours()}h${d.minutes()}min${d.seconds()}s`
+                    return `${d.hours()}h${d.minutes()}min${d.seconds()}s`;
                 }
                 if (val > 60) {
-                    return `${d.minutes()}min${d.seconds()}s`
+                    return `${d.minutes()}min${d.seconds()}s`;
                 }
-                return `${Math.floor(val)}s`
+                return `${Math.floor(val)}s`;
             }
         },
         components: {
@@ -132,111 +132,111 @@
                     {
                         text: '今天',
                         value () {
-                            const end = new Date()
-                            const start = new Date()
-                            return [start, end]
+                            const end = new Date();
+                            const start = new Date();
+                            return [start, end];
                         }
                     },
                     {
                         text: '最近7天',
                         value () {
-                            const end = new Date()
-                            const start = new Date()
-                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-                            return [start, end]
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                            return [start, end];
                         }
                     },
                     {
                         text: '最近30天',
                         value () {
-                            const end = new Date()
-                            const start = new Date()
-                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
-                            return [start, end]
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                            return [start, end];
                         }
                     }
                 ],
                 dateRange: { startTime: '', endTime: '' }
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         created () {
-            this.fetchPageData()
+            this.fetchPageData();
         },
         methods: {
             async fetchPageData () {
-                await this.fetchModelingList(true)
+                await this.fetchModelingList(true);
             },
 
             async fetchModelingList (isLoading = false) {
-                this.tableLoading = isLoading
+                this.tableLoading = isLoading;
                 const params = {
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1),
                     start_time: this.dateRange.startTime,
                     end_time: this.dateRange.endTime
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('organization/getRecordsList', params)
-                    this.pagination.count = res.data.count
+                    const res = await this.$store.dispatch('organization/getRecordsList', params);
+                    this.pagination.count = res.data.count;
                     res.data.results = res.data.results.length && res.data.results.sort(
-                        (a, b) => new Date(b.updated_time) - new Date(a.updated_time))
+                        (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
                         
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
             handlePageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchModelingList(true)
+                this.pagination.current = page;
+                this.fetchModelingList(true);
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchModelingList(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchModelingList(true);
             },
 
             handleAnimationEnd () {
-                this.isShowLogDetails = false
+                this.isShowLogDetails = false;
             },
 
             async showLogDetails (data) {
-                this.isShowLogDetails = true
-                this.logDetailLoading = true
+                this.isShowLogDetails = true;
+                this.logDetailLoading = true;
                 try {
-                    const res = await this.$store.dispatch('organization/getRecordsLog', data.id)
-                    this.exceptionMsg = res.data.exception_msg.replaceAll('\n', '<br>')
-                    this.tracebackMsg = res.data.traceback_msg.replaceAll('\n', '<br>')
+                    const res = await this.$store.dispatch('organization/getRecordsLog', data.id);
+                    this.exceptionMsg = res.data.exception_msg.replaceAll('\n', '<br>');
+                    this.tracebackMsg = res.data.traceback_msg.replaceAll('\n', '<br>');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.logDetailLoading = false
+                    this.logDetailLoading = false;
                 }
             },
 
@@ -245,20 +245,20 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             handleDateChange (date) {
-                this.resetPagination()
+                this.resetPagination();
                 this.dateRange = {
                     startTime: `${date[0]}` ? `${date[0]} 00:00:00` : '',
                     endTime: `${date[1]}` ? `${date[1]} 23:59:59` : ''
-                }
-                this.fetchModelingList(true)
+                };
+                this.fetchModelingList(true);
             }
             
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-system-access-wrapper {

@@ -131,7 +131,7 @@
     </bk-dialog>
 </template>
 <script>
-    import IamSearchSelect from '@/components/iam-search-select'
+    import IamSearchSelect from '@/components/iam-search-select';
 
     export default {
         name: '',
@@ -185,48 +185,48 @@
                 tableLoading: false,
 
                 isSearch: false
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.requestQueue.length > 0 && this.isShowDialog
+                return this.requestQueue.length > 0 && this.isShowDialog;
             },
             allChekedDisabled () {
-                return this.userGroupList.length < 1 || this.isLoading
+                return this.userGroupList.length < 1 || this.isLoading;
             },
             isEmpty () {
-                return this.userGroupList.length < 1
+                return this.userGroupList.length < 1;
             },
             isNoBottomBorder () {
-                return !this.isLoading && this.isScrollBottom
+                return !this.isLoading && this.isScrollBottom;
             },
             isHasBottomBorder () {
-                return this.userGroupList.length >= this.pagination.limit && !this.isScrollBottom
+                return this.userGroupList.length >= this.pagination.limit && !this.isScrollBottom;
             },
             isShowNoDataText () {
                 return this.pagination.current >= this.pagination.totalPage
                     && !this.isScrollLoading
-                    && this.pagination.totalPage !== 1
+                    && this.pagination.totalPage !== 1;
             },
             isDisabled () {
-                return this.hasChekedList.length < 1
+                return this.hasChekedList.length < 1;
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.hasChekedList.splice(0, this.hasChekedList.length, ...this.value)
-                    this.isShowDialog = !!value
+                    this.hasChekedList.splice(0, this.hasChekedList.length, ...this.value);
+                    this.isShowDialog = !!value;
                     if (this.isShowDialog) {
                         if (this.templateId !== '') {
-                            this.requestQueue = ['groupList', 'templateGroup']
-                            this.fetchTemplateGroup()
+                            this.requestQueue = ['groupList', 'templateGroup'];
+                            this.fetchTemplateGroup();
                         } else {
-                            this.requestQueue = ['groupList']
-                            this.fetchData()
+                            this.requestQueue = ['groupList'];
+                            this.fetchData();
                         }
                     } else {
-                        this.requestQueue = ['groupList']
+                        this.requestQueue = ['groupList'];
                     }
                 },
                 immediate: true
@@ -253,7 +253,7 @@
                     name: this.$t(`m.common['系统包含']`),
                     remoteMethod: this.handleRemoteSystem
                 }
-            ]
+            ];
         },
         methods: {
             async fetchTemplateGroup () {
@@ -262,22 +262,22 @@
                     offset: 0,
                     id: this.templateId,
                     types: 'group'
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateMember', params)
-                    this.defaultGroupIds = res.data.results.map(item => item.id)
-                    this.fetchData()
+                    const res = await this.$store.dispatch('permTemplate/getTemplateMember', params);
+                    this.defaultGroupIds = res.data.results.map(item => item.id);
+                    this.fetchData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
@@ -286,169 +286,169 @@
                     name: this.$t(`m.userGroup['用户组名']`),
                     id: 'name',
                     values: [value]
-                }
+                };
             },
 
             handleAfterEditLeave () {
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
-                this.isScrollBottom = false
-                this.searchValue = []
-                this.defaultGroupIds.splice(0, this.defaultGroupIds.length, ...[])
-                this.systemList.splice(0, this.systemList.length, ...[])
-                this.hasChekedList.splice(0, this.hasChekedList.length, ...[])
-                this.userGroupList.splice(0, this.userGroupList.length, ...[])
-                this.allCheked = false
-                this.indeterminate = false
-                this.pagination.totalPage = 1
-                this.pagination.current = 1
-                this.pagination.limit = 7
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
+                this.isScrollBottom = false;
+                this.searchValue = [];
+                this.defaultGroupIds.splice(0, this.defaultGroupIds.length, ...[]);
+                this.systemList.splice(0, this.systemList.length, ...[]);
+                this.hasChekedList.splice(0, this.hasChekedList.length, ...[]);
+                this.userGroupList.splice(0, this.userGroupList.length, ...[]);
+                this.allCheked = false;
+                this.indeterminate = false;
+                this.pagination.totalPage = 1;
+                this.pagination.current = 1;
+                this.pagination.limit = 7;
             },
 
             handleSearch (payload) {
-                this.isScrollBottom = false
-                this.searchValue = payload
-                this.pagination.limit = 7
-                this.pagination.totalPage = 1
-                this.pagination.current = 1
-                this.isSearch = true
-                this.fetchData(true)
+                this.isScrollBottom = false;
+                this.searchValue = payload;
+                this.pagination.limit = 7;
+                this.pagination.totalPage = 1;
+                this.pagination.current = 1;
+                this.isSearch = true;
+                this.fetchData(true);
             },
 
             handleRemoteSystem (value) {
                 return this.$store.dispatch('system/getSystems')
                     .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1)
-                    })
+                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
+                    });
             },
 
             async fetchData (isTableLoading = false) {
-                this.tableLoading = isTableLoading
+                this.tableLoading = isTableLoading;
                 const params = {
                     ...this.searchValue,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
-                const ids = this.hasChekedList.map(item => item.id)
+                };
+                const ids = this.hasChekedList.map(item => item.id);
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params)
+                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
                     this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
                     ;(res.data.results || []).forEach(item => {
                         if (ids.includes(item.id)) {
-                            this.$set(item, 'checked', true)
+                            this.$set(item, 'checked', true);
                         } else {
-                            this.$set(item, 'checked', false)
+                            this.$set(item, 'checked', false);
                         }
 
-                        this.$set(item, 'disabled', false)
+                        this.$set(item, 'disabled', false);
 
                         if (this.defaultGroupIds.includes(String(item.id)) || this.defaultValue.includes(item.id)) {
-                            this.$set(item, 'checked', true)
-                            this.$set(item, 'disabled', true)
+                            this.$set(item, 'checked', true);
+                            this.$set(item, 'disabled', true);
                         }
-                    })
-                    this.userGroupList.splice(0, this.userGroupList.length, ...(res.data.results || []))
+                    });
+                    this.userGroupList.splice(0, this.userGroupList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
-                    this.tableLoading = false
+                    this.requestQueue.shift();
+                    this.tableLoading = false;
                 }
             },
 
             async handleScroll (event) {
                 if (this.isLoading || this.isScrollLoading) {
-                    return
+                    return;
                 }
                 if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
-                    this.isScrollBottom = true
-                    this.pagination.current = this.pagination.current + 1
+                    this.isScrollBottom = true;
+                    this.pagination.current = this.pagination.current + 1;
                     if (this.pagination.current <= this.pagination.totalPage) {
-                        const searchParams = {}
+                        const searchParams = {};
                         if (this.searchValue.length > 0) {
                             this.searchValue.forEach(item => {
-                                searchParams[item.id] = item.values[0].id
-                            })
+                                searchParams[item.id] = item.values[0].id;
+                            });
                         }
                         const params = {
                             ...searchParams,
                             limit: this.pagination.limit,
                             offset: this.pagination.limit * (this.pagination.current - 1)
-                        }
-                        const ids = this.hasChekedList.map(item => item.id)
-                        this.isScrollLoading = true
+                        };
+                        const ids = this.hasChekedList.map(item => item.id);
+                        this.isScrollLoading = true;
                         try {
-                            const res = await this.$store.dispatch('userGroup/getUserGroupList', params)
-                            const list = res.data.results || []
+                            const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                            const list = res.data.results || [];
                             list.forEach(item => {
                                 if (ids.includes(item.id)) {
-                                    this.$set(item, 'checked', true)
+                                    this.$set(item, 'checked', true);
                                 } else {
-                                    this.$set(item, 'checked', false)
+                                    this.$set(item, 'checked', false);
                                 }
 
-                                this.$set(item, 'disabled', false)
+                                this.$set(item, 'disabled', false);
 
                                 if (this.defaultGroupIds.includes(String(item.id))
                                     || this.defaultValue.includes(item.id)
                                 ) {
-                                    this.$set(item, 'checked', true)
-                                    this.$set(item, 'disabled', true)
+                                    this.$set(item, 'checked', true);
+                                    this.$set(item, 'disabled', true);
                                 }
-                            })
-                            this.userGroupList.push(...list)
+                            });
+                            this.userGroupList.push(...list);
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             this.bkMessageInstance = this.$bkMessage({
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
+                            });
                         } finally {
-                            this.isScrollLoading = false
-                            const curScrollDom = this.$refs.permTemplateRef
+                            this.isScrollLoading = false;
+                            const curScrollDom = this.$refs.permTemplateRef;
                             // 加载完往回滚动的距离，防止无线滚动加载
-                            const scrollHeight = 2
-                            curScrollDom.scrollTo(0, curScrollDom.scrollTop - scrollHeight)
+                            const scrollHeight = 2;
+                            curScrollDom.scrollTo(0, curScrollDom.scrollTop - scrollHeight);
                         }
                     }
                 } else {
-                    this.isScrollBottom = false
+                    this.isScrollBottom = false;
                 }
             },
 
             handleChecked (item) {
                 if (item.disabled) {
-                    return
+                    return;
                 }
-                item.checked = !item.checked
+                item.checked = !item.checked;
                 if (item.checked) {
-                    this.hasChekedList.push(item)
+                    this.hasChekedList.push(item);
                 } else {
                     for (let i = 0; i < this.hasChekedList.length; i++) {
                         if (this.hasChekedList[i].id === item.id) {
-                            this.hasChekedList.splice(i, 1)
-                            break
+                            this.hasChekedList.splice(i, 1);
+                            break;
                         }
                     }
                 }
                 this.indeterminate = this.hasChekedList.length
-                    && this.hasChekedList.length !== this.userGroupList.length
-                this.allCheked = this.hasChekedList.length === this.userGroupList.length
+                    && this.hasChekedList.length !== this.userGroupList.length;
+                this.allCheked = this.hasChekedList.length === this.userGroupList.length;
             },
 
             handleAllChecked (checked) {
-                this.allCheked = checked
+                this.allCheked = checked;
                 if (checked) {
-                    this.indeterminate = false
+                    this.indeterminate = false;
                 }
                 for (let i = 0; i < this.userGroupList.length; i++) {
-                    this.userGroupList[i]['checked'] = checked
+                    this.userGroupList[i]['checked'] = checked;
                 }
-                this.hasChekedList = checked ? [...this.userGroupList] : []
+                this.hasChekedList = checked ? [...this.userGroupList] : [];
             },
 
             handleSumbit () {
@@ -456,15 +456,15 @@
                     return {
                         type: 'group',
                         id: item.id
-                    }
-                }))
+                    };
+                }));
             },
 
             handleCancel () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-select-user-group-dialog {

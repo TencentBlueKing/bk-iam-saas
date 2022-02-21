@@ -17,8 +17,8 @@
     </bk-dialog>
 </template>
 <script>
-    import CompareCondition from '@/model/compare-condition'
-    import CompareDetail from '@/components/render-resource/compare-detail'
+    import CompareCondition from '@/model/compare-condition';
+    import CompareDetail from '@/components/render-resource/compare-detail';
     export default {
         name: '',
         components: {
@@ -32,7 +32,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             title: {
@@ -47,20 +47,20 @@
                 searchParams: {},
                 conditionData: [],
                 total: 0
-            }
+            };
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             },
             params: {
                 handler (value) {
-                    this.searchParams = value
+                    this.searchParams = value;
                     if (this.isShowDialog) {
-                        this.fetchData()
+                        this.fetchData();
                     }
                 },
                 immediate: true,
@@ -70,52 +70,52 @@
         methods: {
             async fetchData () {
                 // debugger
-                this.isLoading = true
-                const isTemplate = this.params.isTemplate
-                const method = isTemplate ? 'groupTemplateCompare' : 'groupPolicyCompare'
+                this.isLoading = true;
+                const isTemplate = this.params.isTemplate;
+                const method = isTemplate ? 'groupTemplateCompare' : 'groupPolicyCompare';
                 const requestParams = {
                     id: this.params.groupId,
                     data: {
                         related_resource_type: this.params.related_resource_type,
                         resource_group_id: this.params.resource_group_id
                     }
-                }
+                };
                 if (!isTemplate) {
-                    requestParams.data.policy_id = this.params.policy_id
+                    requestParams.data.policy_id = this.params.policy_id;
                 } else {
-                    requestParams.templateId = this.params.id
-                    requestParams.data.action_id = this.params.action_id
+                    requestParams.templateId = this.params.id;
+                    requestParams.data.action_id = this.params.action_id;
                 }
                 try {
-                    const res = await this.$store.dispatch(`userGroup/${method}`, requestParams)
-                    this.conditionData = res.data.map(item => new CompareCondition(item))
+                    const res = await this.$store.dispatch(`userGroup/${method}`, requestParams);
+                    this.conditionData = res.data.map(item => new CompareCondition(item));
                     if (this.conditionData.length > 0) {
                         if (this.conditionData[0].hasOwnProperty('instance')) {
-                            this.conditionData[0].instanceExpanded = true
+                            this.conditionData[0].instanceExpanded = true;
                         }
                         if (this.conditionData[0].hasOwnProperty('attribute')) {
-                            this.conditionData[0].attributeExpanded = true
+                            this.conditionData[0].attributeExpanded = true;
                         }
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handleAfterEditLeave () {
-                this.$emit('on-after-leave')
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-resource-preview-dialog {

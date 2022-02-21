@@ -24,150 +24,150 @@
  * IN THE SOFTWARE.
 */
 
-import il8n from '@/language'
+import il8n from '@/language';
 
-const SITE_URL = window.SITE_URL
+const SITE_URL = window.SITE_URL;
 
 // 系统接入
-const SystemAccess = () => import(/* webpackChunkName: 'system-access' */'../views/system-access')
-const SystemAccessAccess = () => import(/* webpackChunkName: 'system' */'../views/system-access/access')
-const SystemAccessRegistry = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/registry')
-const SystemAccessOptimize = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/optimize')
-const SystemAccessComplete = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/complete')
+const SystemAccess = () => import(/* webpackChunkName: 'system-access' */'../views/system-access');
+const SystemAccessAccess = () => import(/* webpackChunkName: 'system' */'../views/system-access/access');
+const SystemAccessRegistry = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/registry');
+const SystemAccessOptimize = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/optimize');
+const SystemAccessComplete = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/complete');
 
 // 申请自定义权限
 const ApplyCustomPerm = () => import(
-    /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-custom-perm')
+    /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-custom-perm');
 
 // 申请加入用户组
 const ApplyJoinUserGroup = () => import(
-    /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-join-user-group')
+    /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-join-user-group');
 
 // 我的申请
 const Apply = () => import(
-    /* webpackChunkName: 'my-apply' */'../views/apply')
+    /* webpackChunkName: 'my-apply' */'../views/apply');
 
 // 我的权限
 const MyPerm = () => import(
-    /* webpackChunkName: 'my-perm' */'../views/perm')
+    /* webpackChunkName: 'my-perm' */'../views/perm');
 
 // 用户组
 const UserGroup = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group')
+    /* webpackChunkName: 'user-group' */'../views/group');
 
 // 用户组新建
 const CreateUserGroup = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/create')
+    /* webpackChunkName: 'user-group' */'../views/group/create');
 
 // 用户组详情
 const UserGroupDetail = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/detail')
+    /* webpackChunkName: 'user-group' */'../views/group/detail');
 
 // 用户组组权限详情
 const UserGroupPermDetail = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/detail/group-perm-detail')
+    /* webpackChunkName: 'user-group' */'../views/group/detail/group-perm-detail');
 
 // 用户组添加权限
 const AddGroupPerm = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/add-perm')
+    /* webpackChunkName: 'user-group' */'../views/group/add-perm');
 
 // 权限模板
 const PermTemplate = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/index')
+    /* webpackChunkName: 'perm-template' */'../views/perm-template/index');
 
 // 权限模板详情
 const PermTemplateDetail = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/detail')
+    /* webpackChunkName: 'perm-template' */'../views/perm-template/detail');
 
 // 权限模板新建
 const PermTemplateCreate = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/create/index')
+    /* webpackChunkName: 'perm-template' */'../views/perm-template/create/index');
 
 // 权限模板编辑
 const PermTemplateEdit = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/edit')
+    /* webpackChunkName: 'perm-template' */'../views/perm-template/edit');
 
 // 权限模板编辑差异
 const PermTemplateDifference = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/edit/difference')
+    /* webpackChunkName: 'perm-template' */'../views/perm-template/edit/difference');
 
 // 用户
 const User = () => import(
-    /* webpackChunkName: 'user' */'../views/user')
+    /* webpackChunkName: 'user' */'../views/user');
 
 // 分级管理员
 const GradingAdmin = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin')
+    /* webpackChunkName: 'grading-admin' */'../views/grading-admin');
 
 // 分级管理员新建
 const GradingAdminCreate = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/create')
+    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/create');
 
 // 分级管理员详情
 const GradingAdminDetail = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/detail')
+    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/detail');
 
 // 分级管理员编辑
 const GradingAdminEdit = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/edit')
+    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/edit');
 
 // 分级管理员更新权限模板
 const GradingAdminUpdateTemplate = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/update-template')
+    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/update-template');
 
 // 资源权限管理
 const ResourcePermiss = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/resource-permiss')
+    /* webpackChunkName: 'grading-admin' */'../views/resource-permiss');
 
 // 设置
 const Setting = () => import(
-    /* webpackChunkName: 'set' */'../views/set')
+    /* webpackChunkName: 'set' */'../views/set');
 
 // 审批流程设置
 const ApprovalProcess = () => import(
-    /* webpackChunkName: 'approvalProcess' */'../views/approval-process')
+    /* webpackChunkName: 'approvalProcess' */'../views/approval-process');
 
 // 权限续期
 const PermRenewal = () => import(
-    /* webpackChunkName: 'PermRenewal' */'../views/perm/perm-renewal')
+    /* webpackChunkName: 'PermRenewal' */'../views/perm/perm-renewal');
 
 // 组织权限续期
 const GroupPermRenewal = () => import(
-    /* webpackChunkName: 'PermRenewal' */'../views/perm/group-perm-renewal')
+    /* webpackChunkName: 'PermRenewal' */'../views/perm/group-perm-renewal');
 
 // 审计
 const Audit = () => import(
-    /* webpackChunkName: 'audit' */'../views/audit')
+    /* webpackChunkName: 'audit' */'../views/audit');
 
 const TemplatePermDetail = () => import(
     /* webpackChunkName: 'my-perm-template-perm' */'../views/perm/template-perm/detail'
-)
+);
 const GroupPermDetail = () => import(
     /* webpackChunkName: 'my-perm-group-perm' */'../views/perm/group-perm/detail'
-)
+);
 const OrgPermDetail = () => import(
     /* webpackChunkName: 'my-perm-org-perm' */'../views/perm/organization-perm/detail'
-)
+);
 
 const PermTransfer = () => import(
     /* webpackChunkName: 'perm-transfer' */'../views/transfer'
-)
+);
 
 const PermTransferHistory = () => import(
     /* webpackChunkName: 'perm-transfer' */'../views/transfer/history'
-)
+);
 
 // no-perm
 const NoPerm = () => import(
-    /* webpackChunkName: 'no-perm' */'../views/no-perm')
+    /* webpackChunkName: 'no-perm' */'../views/no-perm');
 
 // 404
 const NotFound = () => import(
-    /* webpackChunkName: 'none' */'../views/404')
+    /* webpackChunkName: 'none' */'../views/404');
 
 // Main
 const MainEntry = () => import(
-    /* webpackChunkName: 'index' */'../views')
+    /* webpackChunkName: 'index' */'../views');
 
 export const routes = [
     {
@@ -511,4 +511,4 @@ export const routes = [
         name: '404',
         component: NotFound
     }
-]
+];

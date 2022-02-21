@@ -7,8 +7,8 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { GLOBAL_TIME_ZONE_ENUM } from '@/common/constants'
+    import _ from 'lodash';
+    import { GLOBAL_TIME_ZONE_ENUM } from '@/common/constants';
     export default {
         name: '',
         props: {
@@ -43,56 +43,56 @@
                 effectType: {
                     'period_daily': '时间'
                 }
-            }
+            };
         },
         computed: {},
         watch: {
             value: {
                 handler (val) {
                     if (!val || !val.length) {
-                        this.curValue = '无生效条件'
+                        this.curValue = '无生效条件';
                     } else {
                         this.curValue = val.reduce((p, v) => {
-                            let curValue = ''
-                            let weekCopy = ''
+                            let curValue = '';
+                            let weekCopy = '';
                             curValue = v.condition.reduce((prev, item) => {
-                                let hms = ''
-                                let tz = ''
-                                let weekday = ''
+                                let hms = '';
+                                let tz = '';
+                                let weekday = '';
                                 if (item.type === 'weekday') {
                                     weekday = item.values.reduce((pre, e) => {
-                                        pre = `${pre} ${this.effectWeekList[e.value]}`
-                                        return pre
-                                    }, '')
-                                    weekCopy = weekday
+                                        pre = `${pre} ${this.effectWeekList[e.value]}`;
+                                        return pre;
+                                    }, '');
+                                    weekCopy = weekday;
                                 }
 
                                 if (item.type === 'hms') {
                                     hms = item.values.reduce((pre, e) => {
                                         if (pre) {
-                                            pre = `${pre} - ${e.value}`
+                                            pre = `${pre} - ${e.value}`;
                                         } else {
-                                            pre = `${pre} ${e.value}`
+                                            pre = `${pre} ${e.value}`;
                                         }
                                         
-                                        return pre
-                                    }, '')
+                                        return pre;
+                                    }, '');
                                 }
 
                                 if (item.type === 'tz') {
                                     tz = item.values.reduce((pre, e) => {
-                                        pre = this.effectWeekTimeZone[e.value]
-                                        return pre
-                                    }, '')
+                                        pre = this.effectWeekTimeZone[e.value];
+                                        return pre;
+                                    }, '');
                                 }
 
-                                prev = `${prev}${hms}${tz}${weekday}`
-                                return prev
-                            }, '')
-                            p = `${this.effectType[v.type]}: ${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`
-                            return p
-                        }, '在')
-                        this.effectConditionData = _.cloneDeep(val)
+                                prev = `${prev}${hms}${tz}${weekday}`;
+                                return prev;
+                            }, '');
+                            p = `${this.effectType[v.type]}: ${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`;
+                            return p;
+                        }, '在');
+                        this.effectConditionData = _.cloneDeep(val);
                     }
                 },
                 immediate: true
@@ -100,10 +100,10 @@
         },
         methods: {
             handleEdit () {
-                this.$emit('on-view')
+                this.$emit('on-view');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-effect-condition {

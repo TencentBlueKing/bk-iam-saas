@@ -47,7 +47,7 @@
             return {
                 activePanel: [],
                 instanceData: []
-            }
+            };
         },
         computed: {
             buttonStyle () {
@@ -55,41 +55,41 @@
                     return {
                         'min-width': '48px',
                         'line-height': '42px'
-                    }
+                    };
                 }
                 return {
                     'min-width': '70px',
                     'line-height': '42px'
-                }
+                };
             }
         },
         watch: {
             data: {
                 handler (value) {
                     value.forEach(item => {
-                        const isExist = this.instanceData.some(instance => instance.type === item.type)
+                        const isExist = this.instanceData.some(instance => instance.type === item.type);
                         if (!isExist) {
-                            this.activePanel.push(item.name)
+                            this.activePanel.push(item.name);
                         }
-                    })
-                    this.instanceData.splice(0, this.instanceData.length, ...value)
+                    });
+                    this.instanceData.splice(0, this.instanceData.length, ...value);
                 },
                 immediate: true
             }
         },
         methods: {
             handleRemove (child, index, childIndex) {
-                this.$emit('on-delete', child, index, childIndex)
+                this.$emit('on-delete', child, index, childIndex);
             },
 
             handleClearAll (item, index) {
                 if (item.displayPath.every(v => v.disabled)) {
-                    return
+                    return;
                 }
-                this.$emit('on-clear', item, index)
+                this.$emit('on-clear', item, index);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-instance-panel {

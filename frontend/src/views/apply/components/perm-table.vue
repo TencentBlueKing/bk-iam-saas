@@ -102,12 +102,12 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import Resource from '@/components/render-resource/detail'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import DetailContent from './detail-content'
-    import EffectConditon from './effect-conditon'
-    import SidesliderEffectConditon from './sideslider-effect-condition'
+    import _ from 'lodash';
+    import Resource from '@/components/render-resource/detail';
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
+    import DetailContent from './detail-content';
+    import EffectConditon from './effect-conditon';
+    import SidesliderEffectConditon from './sideslider-effect-condition';
     export default {
         name: '',
         components: {
@@ -125,7 +125,7 @@
             system: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             actionTopologies: {
@@ -143,22 +143,22 @@
                 curId: '',
                 environmentsSidesliderData: [],
                 isShowResourceInstanceEffectTime: false
-            }
+            };
         },
         computed: {
             applyTitle () {
-                return `${this.$t(`m.myApply['申请内容']`)}（${this.system.system_name}）`
+                return `${this.$t(`m.myApply['申请内容']`)}（${this.system.system_name}）`;
             },
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty && payload.policy_id !== ''
-                }
+                    return !payload.isEmpty && payload.policy_id !== '';
+                };
             }
         },
         watch: {
             data: {
                 handler (value) {
-                    this.tableList = _.cloneDeep(value)
+                    this.tableList = _.cloneDeep(value);
                 },
                 immediate: true
             }
@@ -166,54 +166,54 @@
         methods: {
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1 || columnIndex === 2) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             handleViewResource (groupItem, row) {
-                this.previewData = _.cloneDeep(this.handleDetailData(groupItem))
-                this.renderDetailCom = 'DetailContent'
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${row.name}】${this.$t(`m.common['的资源实例']`)}`
-                this.isShowSideslider = true
+                this.previewData = _.cloneDeep(this.handleDetailData(groupItem));
+                this.renderDetailCom = 'DetailContent';
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${row.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.isShowSideslider = true;
             },
 
             handleDetailData (payload) {
-                this.curId = payload.id
-                const params = []
+                this.curId = payload.id;
+                const params = [];
                 if (payload.related_resource_types.length > 0) {
                     payload.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
+                        const { name, type, condition } = item;
                         params.push({
                             name: type,
                             label: `${name} ${this.$t(`m.common['实例']`)}`,
                             tabType: 'resource',
                             data: condition
-                        })
-                    })
+                        });
+                    });
                 }
-                return params
+                return params;
             },
 
             /**
              * handleEnvironmentsViewResource
              */
             handleEnvironmentsViewResource (payload, data) {
-                this.environmentsSidesliderData = payload.environments
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
-                this.isShowEnvironmentsSideslider = true
-                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`
+                this.environmentsSidesliderData = payload.environments;
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
+                this.isShowEnvironmentsSideslider = true;
+                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`;
             },
 
             /**
              * handleViewSidesliderCondition
              */
             handleViewSidesliderCondition () {
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData)
-                this.isShowResourceInstanceEffectTime = true
+                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
+                this.isShowResourceInstanceEffectTime = true;
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-apply-content {

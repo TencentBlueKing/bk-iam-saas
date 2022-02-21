@@ -68,11 +68,11 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import RenderDetail from './render-detail'
-    import PermPolicy from '@/model/my-perm-policy'
-    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
+    import _ from 'lodash';
+    import RenderDetail from './render-detail';
+    import PermPolicy from '@/model/my-perm-policy';
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
     export default {
         name: '',
         components: {
@@ -104,29 +104,29 @@
                     loading: false
                 },
                 sidesliderTitle: ''
-            }
+            };
         },
         computed: {
             loading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty && payload.policy_id !== ''
-                }
+                    return !payload.isEmpty && payload.policy_id !== '';
+                };
             }
         },
         watch: {
             systemId: {
                 handler (value) {
                     if (value !== '') {
-                        this.initRequestQueue = ['permTable']
-                        this.fetchData(value)
+                        this.initRequestQueue = ['permTable'];
+                        this.fetchData(value);
                     } else {
-                        this.renderDetailCom = 'RenderDetail'
-                        this.initRequestQueue = []
-                        this.tableList = []
-                        this.policyCountMap = {}
+                        this.renderDetailCom = 'RenderDetail';
+                        this.initRequestQueue = [];
+                        this.tableList = [];
+                        this.policyCountMap = {};
                     }
                 },
                 immediate: true
@@ -135,100 +135,100 @@
         methods: {
             async fetchData (payload) {
                 try {
-                    const res = await this.$store.dispatch('permApply/getPolicies', { system_id: payload })
-                    this.tableList = res.data.map(item => new PermPolicy(item))
+                    const res = await this.$store.dispatch('permApply/getPolicies', { system_id: payload });
+                    this.tableList = res.data.map(item => new PermPolicy(item));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.initRequestQueue.shift()
+                    this.initRequestQueue.shift();
                 }
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             handleAnimationEnd () {
-                this.sidesliderTitle = ''
-                this.previewData = []
-                this.actionTopologyData = []
-                this.curId = ''
+                this.sidesliderTitle = '';
+                this.previewData = [];
+                this.actionTopologyData = [];
+                this.curId = '';
             },
 
             handleAfterDeleteLeave () {
-                this.deleteDialog.subTitle = ''
-                this.curDeleteIds = []
+                this.deleteDialog.subTitle = '';
+                this.curDeleteIds = [];
             },
 
             hideCancelDelete () {
-                this.deleteDialog.visible = false
+                this.deleteDialog.visible = false;
             },
 
             handleViewResource (payload) {
-                this.curId = payload.id
-                const params = []
+                this.curId = payload.id;
+                const params = [];
                 if (payload.resource_groups.length > 0) {
                     payload.resource_groups.forEach(groupItem => {
                         if (groupItem.related_resource_types.length > 0) {
                             groupItem.related_resource_types.forEach(item => {
-                                const { name, type, condition } = item
+                                const { name, type, condition } = item;
                                 params.push({
                                     name: type,
                                     label: `${name} ${this.$t(`m.common['实例']`)}`,
                                     tabType: 'resource',
                                     data: condition
-                                })
-                            })
+                                });
+                            });
                         }
-                    })
+                    });
                 }
-                this.previewData = _.cloneDeep(params)
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
-                this.isShowSideslider = true
+                this.previewData = _.cloneDeep(params);
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.isShowSideslider = true;
             },
 
             handleDelete (payload) {
-                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id])
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】${this.$t(`m.common['权限']`)}`
-                this.deleteDialog.visible = true
+                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】${this.$t(`m.common['权限']`)}`;
+                this.deleteDialog.visible = true;
             },
 
             async handleSumbitDelete () {
-                this.deleteDialog.loading = true
+                this.deleteDialog.loading = true;
                 try {
-                    await this.$store.dispatch('permApply/deletePerm', { policyIds: this.curDeleteIds, systemId: this.systemId })
-                    const index = this.tableList.findIndex(item => item.policy_id === this.curDeleteIds[0])
+                    await this.$store.dispatch('permApply/deletePerm', { policyIds: this.curDeleteIds, systemId: this.systemId });
+                    const index = this.tableList.findIndex(item => item.policy_id === this.curDeleteIds[0]);
                     if (index > -1) {
-                        this.tableList.splice(index, 1)
+                        this.tableList.splice(index, 1);
                     }
-                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                    this.$emit('after-delete', this.tableList.length)
+                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                    this.$emit('after-delete', this.tableList.length);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.deleteDialog.loading = false
-                    this.deleteDialog.visible = false
+                    this.deleteDialog.loading = false;
+                    this.deleteDialog.visible = false;
                 }
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-perm-table {

@@ -168,28 +168,28 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import IamSearchSelect from '@/components/iam-search-select'
-    import { fuzzyRtxSearch } from '@/common/rtx'
-    import { buildURLParams } from '@/common/url'
-    import RenderStatus from './components/render-status-item'
-    import renderDetailTable from './components/render-instance-detail-table'
+    import _ from 'lodash';
+    import IamSearchSelect from '@/components/iam-search-select';
+    import { fuzzyRtxSearch } from '@/common/rtx';
+    import { buildURLParams } from '@/common/url';
+    import RenderStatus from './components/render-status-item';
+    import renderDetailTable from './components/render-instance-detail-table';
 
     const getDate = payload => {
-        return payload.split('-').join('')
-    }
+        return payload.split('-').join('');
+    };
 
     const getFormatDate = payload => {
-        const now = new Date(payload)
-        const year = now.getFullYear()
-        const month = now.getMonth() + 1
-        return `${year}-${month < 10 ? '0' + month.toString() : month}`
-    }
+        const now = new Date(payload);
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        return `${year}-${month < 10 ? '0' + month.toString() : month}`;
+    };
 
     // 只显示角色名称的审计类型
     const ONLY_ROLE_TYPE = [
         'template.create'
-    ]
+    ];
 
     // 没有详情的审计类型
     const NO_DETAIL_TYPE = [
@@ -198,7 +198,7 @@
         // 'template.create',
         'template.update',
         'role.create'
-    ]
+    ];
 
     // 只有描述字段的审计类型
     const ONLY_DESCRIPTION_TYPE = [
@@ -207,7 +207,7 @@
         'role.member.policy.create',
         'role.member.policy.delete',
         'approval.global.update'
-    ]
+    ];
 
     // 只有子对象的审计类型
     const ONLY_SUB_TYPE = [
@@ -224,7 +224,7 @@
         'role.member.update',
         'role.commonaction.create',
         'role.commonaction.delete'
-    ]
+    ];
 
     // 只有附加信息的审计类型
     const ONLY_EXTRA_INFO_TYPE = [
@@ -234,23 +234,23 @@
         'user.policy.create',
         'role.group.renew',
         'template.version.sync'
-    ]
+    ];
 
     // 既有 description 又有 extra_info
-    const DE_TYPR = ['template.update']
+    const DE_TYPR = ['template.update'];
 
     // 既有 sub_objects 又有 extra_info
     const SE_TYPE = [
         'template.member.create',
         'template.member.delete',
         'template.version.update'
-    ]
+    ];
 
     // 既有 description 又有 sub_objects
     const DS_TYPE = [
         'approval.action.update',
         'approval.group.update'
-    ]
+    ];
 
     export default {
         name: '',
@@ -347,15 +347,15 @@
                 seType: SE_TYPE,
                 dsType: DS_TYPE,
                 onlyRoleType: ONLY_ROLE_TYPE
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         created () {
-            this.currentMonth = getDate(getFormatDate(this.initDateTime))
+            this.currentMonth = getDate(getFormatDate(this.initDateTime));
             this.searchData = [
                 {
                     id: 'username',
@@ -414,33 +414,33 @@
                     ],
                     remoteMethod: () => {}
                 }
-            ]
+            ];
             const isObject = payload => {
-                return Object.prototype.toString.call(payload) === '[object Object]'
-            }
-            const currentQueryCache = this.getCurrentQueryCache()
+                return Object.prototype.toString.call(payload) === '[object Object]';
+            };
+            const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
+                    this.pagination.limit = currentQueryCache.limit;
+                    this.pagination.current = currentQueryCache.current;
                 }
                 if (currentQueryCache.month) {
-                    this.currentMonth = currentQueryCache.month
-                    this.initDateTime = new Date(`${currentQueryCache.month.slice(0, 4)}-${currentQueryCache.month.slice(4)}`)
+                    this.currentMonth = currentQueryCache.month;
+                    this.initDateTime = new Date(`${currentQueryCache.month.slice(0, 4)}-${currentQueryCache.month.slice(4)}`);
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current' && key !== 'month') {
-                        const curData = currentQueryCache[key]
-                        const tempData = this.searchData.find(item => item.id === key)
+                        const curData = currentQueryCache[key];
+                        const tempData = this.searchData.find(item => item.id === key);
                         if (isObject(curData)) {
                             if (tempData) {
                                 this.searchValue.push({
                                     id: key,
                                     name: tempData.name,
                                     values: [curData]
-                                })
-                                this.searchList.push(..._.cloneDeep(this.searchValue))
-                                this.searchParams[key] = curData.id
+                                });
+                                this.searchList.push(..._.cloneDeep(this.searchValue));
+                                this.searchParams[key] = curData.id;
                             }
                         } else if (tempData) {
                             this.searchValue.push({
@@ -450,11 +450,11 @@
                                     id: curData,
                                     name: curData
                                 }]
-                            })
-                            this.searchList.push(..._.cloneDeep(this.searchValue))
-                            this.searchParams[key] = curData
+                            });
+                            this.searchList.push(..._.cloneDeep(this.searchValue));
+                            this.searchParams[key] = curData;
                         } else {
-                            this.searchParams[key] = curData
+                            this.searchParams[key] = curData;
                         }
                     }
                 }
@@ -465,28 +465,28 @@
              * 获取页面数据
              */
             async fetchPageData () {
-                await this.fetchAuditList()
+                await this.fetchAuditList();
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination
-                const params = {}
+                const { limit, current } = this.pagination;
+                const params = {};
                 const queryParams = {
                     limit,
                     current,
                     month: this.currentMonth,
                     ...this.searchParams
-                }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
+                };
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
-                    const tempObj = this.searchData.find(item => key === item.id)
+                    const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
-                            const tempData = this.searchList.find(item => item.id === key)
-                            params[key] = tempData.values[0]
+                            const tempData = this.searchList.find(item => item.id === key);
+                            params[key] = tempData.values[0];
                         }
                     } else {
-                        params[key] = this.searchParams[key]
+                        params[key] = this.searchParams[key];
                     }
                 }
                 return {
@@ -494,20 +494,20 @@
                     limit,
                     current,
                     month: this.currentMonth
-                }
+                };
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('auditList', JSON.stringify(payload))
+                window.localStorage.setItem('auditList', JSON.stringify(payload));
             },
 
             getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('auditList'))
+                return JSON.parse(window.localStorage.getItem('auditList'));
             },
 
             async fetchAuditList (isLoading = false) {
-                this.tableLoading = isLoading
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
+                this.tableLoading = isLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1),
@@ -518,35 +518,35 @@
                     object_id: '',
                     status: '',
                     ...this.searchParams
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('audit/getAuditList', params)
+                    const res = await this.$store.dispatch('audit/getAuditList', params);
                     this.pagination.count = res.data.count || 0
                     ;(res.data.results || []).forEach(item => {
-                        item.loading = false
-                        item.expanded = false
-                        item.detail = {}
-                    })
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                        item.loading = false;
+                        item.expanded = false;
+                        item.detail = {};
+                    });
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
             handleRemoteRtx (value) {
                 return fuzzyRtxSearch(value)
                     .then(data => {
-                        return data.results
-                    })
+                        return data.results;
+                    });
             },
 
             handleRemoteObjectType (value) {
@@ -560,11 +560,11 @@
                     { id: 'event', name: this.$t(`m.audit['审计事件']`) },
                     { id: 'commonaction', name: this.$t(`m.audit['常用操作']`) },
                     { id: 'action', name: this.$t(`m.common['操作']`) }
-                ]
+                ];
                 if (value === '') {
-                    return Promise.resolve(list)
+                    return Promise.resolve(list);
                 }
-                return Promise.resolve(list.filter(item => item.name.indexOf(value) > -1))
+                return Promise.resolve(list.filter(item => item.name.indexOf(value) > -1));
             },
 
             handleRemoteType (value) {
@@ -618,11 +618,11 @@
                     { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
                     { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
                     { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) }
-                ]
+                ];
                 if (value === '') {
-                    return Promise.resolve(list)
+                    return Promise.resolve(list);
                 }
-                return Promise.resolve(list.filter(item => item.name.indexOf(value) > -1))
+                return Promise.resolve(list.filter(item => item.name.indexOf(value) > -1));
             },
 
             resetPagination () {
@@ -630,82 +630,82 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             handleDateChange (date, type) {
-                this.resetPagination()
-                this.currentMonth = getDate(getFormatDate(date))
-                this.fetchAuditList(true)
+                this.resetPagination();
+                this.currentMonth = getDate(getFormatDate(date));
+                this.fetchAuditList(true);
             },
 
             handleSearch (payload, result) {
-                this.searchParams = payload
-                this.searchList = result
-                this.resetPagination()
-                this.fetchAuditList(true)
+                this.searchParams = payload;
+                this.searchList = result;
+                this.resetPagination();
+                this.fetchAuditList(true);
             },
 
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchAuditList(true)
+                this.pagination.current = page;
+                this.fetchAuditList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.$refs.tableRef.clearFilter()
-                this.fetchAuditList(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.$refs.tableRef.clearFilter();
+                this.fetchAuditList(true);
             },
 
             async handleExpandChange (row, expandedRows) {
-                row.expanded = !row.expanded
+                row.expanded = !row.expanded;
                 if (this.noDetailType.includes(row.type)) {
-                    return
+                    return;
                 }
                 if (row.expanded && Object.keys(row.detail).length < 1) {
-                    row.loading = true
+                    row.loading = true;
                     try {
                         const res = await this.$store.dispatch('audit/getAuditDetail', {
                             id: row.id,
                             month: this.currentMonth
-                        })
-                        row.detail = _.cloneDeep(res.data)
+                        });
+                        row.detail = _.cloneDeep(res.data);
                         if (this.seType.includes(row.detail.type)) {
                             row.detail.sub_objects.forEach(item => {
-                                this.$set(item, 'version', row.detail.extra_info.version)
-                            })
+                                this.$set(item, 'version', row.detail.extra_info.version);
+                            });
                         }
                         if (this.dsType.includes(row.detail.type)) {
                             row.detail.sub_objects.forEach(item => {
-                                this.$set(item, 'description', row.detail.description)
-                            })
+                                this.$set(item, 'description', row.detail.description);
+                            });
                         }
                         if (this.onlyExtraInfoType.includes(row.detail.type)) {
                             if (row.detail.type !== 'role.group.renew' && row.detail.type !== 'template.version.sync') {
                                 row.detail.extra_info.policies.forEach(item => {
-                                    item.system_id = row.detail.extra_info.system.id
-                                    item.system_name = row.detail.extra_info.system.name
-                                })
+                                    item.system_id = row.detail.extra_info.system.id;
+                                    item.system_name = row.detail.extra_info.system.name;
+                                });
                             }
                         }
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     } finally {
-                        row.loading = false
+                        row.loading = false;
                     }
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-audit-wrapper {

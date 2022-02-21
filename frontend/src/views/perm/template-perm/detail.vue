@@ -11,8 +11,8 @@
     </div>
 </template>
 <script>
-    import DetailTable from './detail-table'
-    import PermPolicy from '@/model/my-perm-policy'
+    import DetailTable from './detail-table';
+    import PermPolicy from '@/model/my-perm-policy';
 
     export default {
         name: '',
@@ -23,34 +23,34 @@
             return {
                 actions: [],
                 systemId: ''
-            }
+            };
         },
         computed: {
             templateId () {
-                return this.$route.params.id
+                return this.$route.params.id;
             },
             templateVersion () {
-                return this.$route.query.version
+                return this.$route.query.version;
             }
         },
         created () {
-            const params = this.$route.params
+            const params = this.$route.params;
             if (!params.id) {
                 this.$router.push({
                     name: 'myPerm',
                     query: this.$route.query,
                     params
-                })
-                return
+                });
+                return;
             }
-            this.$store.commit('setBackRouter', -1)
+            this.$store.commit('setBackRouter', -1);
         },
         methods: {
             /**
              * 获取页面数据
              */
             async fetchPageData () {
-                await this.fetchTemplateDetail()
+                await this.fetchTemplateDetail();
             },
 
             /**
@@ -60,30 +60,30 @@
                 try {
                     const params = {
                         id: this.templateId
-                    }
+                    };
                     if (this.templateVersion !== undefined) {
-                        params.version = this.templateVersion
+                        params.version = this.templateVersion;
                     }
 
-                    const res = await this.$store.dispatch('perm/getTemplateDetail', params)
-                    const data = res.data || {}
+                    const res = await this.$store.dispatch('perm/getTemplateDetail', params);
+                    const data = res.data || {};
 
-                    this.systemId = data.system.id
-                    this.actions.splice(0, this.actions.length, ...data.actions.map(item => new PermPolicy(item)))
-                    this.$store.commit('setHeaderTitle', `${this.$t(`m.myApply['权限模板']`)}：${data.name}(${data.system.name})`)
+                    this.systemId = data.system.id;
+                    this.actions.splice(0, this.actions.length, ...data.actions.map(item => new PermPolicy(item)));
+                    this.$store.commit('setHeaderTitle', `${this.$t(`m.myApply['权限模板']`)}：${data.name}(${data.system.name})`);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-my-perm {

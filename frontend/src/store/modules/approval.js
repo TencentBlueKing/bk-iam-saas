@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getApprovalList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/approvals/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/approvals/?${json2Query(params)}`, config);
         },
 
         /**
@@ -60,7 +60,7 @@ export default {
          * @return {Promise} promise 对象
          */
         approvalAction ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/approvals/approve/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/approvals/approve/`, params, config);
         }
     }
-}
+};

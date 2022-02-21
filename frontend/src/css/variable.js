@@ -40,4 +40,4 @@ module.exports = {
     'borderColor': '#ebf0f5',
     // 相对较深，常用于输入框边框色
     'borderWeightColor': '#dde4eb'
-}
+};

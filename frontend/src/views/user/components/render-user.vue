@@ -24,9 +24,9 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import CustomPerm from './custom-perm'
-    import GroupPerm from './group-perm'
+    import _ from 'lodash';
+    import CustomPerm from './custom-perm';
+    import GroupPerm from './group-perm';
     export default {
         name: '',
         components: {
@@ -37,7 +37,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -51,20 +51,20 @@
                 active: 'groupPerm',
                 componentsKey: -1,
                 curCom: 'GroupPerm'
-            }
+            };
         },
         computed: {
             /**
              * isExistName
              */
             isExistName () {
-                return this.curData.name !== ''
+                return this.curData.name !== '';
             },
             /**
              * isShowPage
              */
             isShowPage () {
-                return Object.keys(this.params).length > 0
+                return Object.keys(this.params).length > 0;
             }
         },
         watch: {
@@ -74,10 +74,10 @@
             params: {
                 handler (value) {
                     if (Object.keys(value).length > 0) {
-                        this.active = 'groupPerm'
-                        this.curCom = 'GroupPerm'
-                        this.componentsKey = +new Date()
-                        this.curData = _.cloneDeep(value)
+                        this.active = 'groupPerm';
+                        this.curCom = 'GroupPerm';
+                        this.componentsKey = +new Date();
+                        this.curData = _.cloneDeep(value);
                     }
                 },
                 immediate: true
@@ -89,13 +89,13 @@
                 const comMap = {
                     'customPerm': 'CustomPerm',
                     'groupPerm': 'GroupPerm'
-                }
-                this.curCom = comMap[value]
-                this.componentsKey = +new Date()
+                };
+                this.curCom = comMap[value];
+                this.componentsKey = +new Date();
             }
         },
         methods: {}
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-personal-user-perm-wrapper {

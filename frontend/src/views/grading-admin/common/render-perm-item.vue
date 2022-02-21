@@ -50,38 +50,38 @@
         data () {
             return {
                 isExpanded: this.expanded
-            }
+            };
         },
         watch: {
             expanded (value) {
-                this.isExpanded = !!value
+                this.isExpanded = !!value;
             }
         },
         methods: {
             handlePackup () {
-                this.isExpanded = false
-                this.$emit('update:expanded', false)
-                this.$emit('on-expanded', false)
+                this.isExpanded = false;
+                this.$emit('update:expanded', false);
+                this.$emit('on-expanded', false);
             },
 
             handleDelete () {
-                this.$emit('on-delete')
+                this.$emit('on-delete');
             },
 
             handleEdit () {
-                this.$emit('on-edit')
+                this.$emit('on-edit');
             },
 
             handleExpanded () {
                 // if (this.isExpanded) {
                 //     return
                 // }
-                this.isExpanded = !this.isExpanded
-                this.$emit('update:expanded', true)
-                this.$emit('on-expanded', true)
+                this.isExpanded = !this.isExpanded;
+                this.$emit('update:expanded', true);
+                this.$emit('on-expanded', true);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-render-perm {

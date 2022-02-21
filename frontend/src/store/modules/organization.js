@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -49,7 +49,7 @@ export default {
          * @param {Boolean} rightLoading rightLoading 值
          */
         updateRightLoading (state, rightLoading) {
-            state.rightLoading = rightLoading
+            state.rightLoading = rightLoading;
         },
         /**
          * 更新 store.toggleTabLoading
@@ -58,7 +58,7 @@ export default {
          * @param {Boolean} toggleTabLoading toggleTabLoading 值
          */
         updateToggleTabLoading (state, toggleTabLoading) {
-            state.toggleTabLoading = toggleTabLoading
+            state.toggleTabLoading = toggleTabLoading;
         }
     },
     actions: {
@@ -74,7 +74,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getCategories ({ commit, state, dispatch }, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/categories/`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/organizations/categories/`, {}, config);
         },
 
         /**
@@ -89,7 +89,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getOrganizations ({ commit, state, dispatch }, { departmentId }, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/departments/${departmentId}/`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/organizations/departments/${departmentId}/`, {}, config);
         },
 
         /**
@@ -104,7 +104,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getSeachOrganizations ({ commit, state, dispatch }, params, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/search/?${json2Query(params)}`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/organizations/search/?${json2Query(params)}`, {}, config);
         },
 
         /**
@@ -117,9 +117,9 @@ export default {
          * @return {Promise} promise 对象
          */
         getSubjectHasPermSystem ({ commit, state, dispatch }, params, config) {
-            const subjectType = params.subjectType
-            const subjectId = params.subjectId
-            return http.get(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/systems/`, config)
+            const subjectType = params.subjectType;
+            const subjectId = params.subjectId;
+            return http.get(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/systems/`, config);
         },
 
         /**
@@ -131,7 +131,7 @@ export default {
          * @return {Promise} promise 对象
          */
         organizationsSyncTask ({ commit, state, dispatch }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config)
+            return http.post(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config);
         },
 
         /**
@@ -143,7 +143,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getOrganizationsSyncTask ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config);
         },
 
         /**
@@ -156,7 +156,7 @@ export default {
          * @return {Promise} promise 对象
          */
         verifyManualUser ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/organizations/users/query/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/organizations/users/query/`, params, config);
         },
 
         /**
@@ -169,7 +169,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRecordsList ({ commit, state, dispatch }, params, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/?${json2Query(params)}`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/?${json2Query(params)}`, {}, config);
         },
         /**
          * 获取日志详情
@@ -181,7 +181,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRecordsLog ({ commit, state, dispatch }, id, config) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/${id}/logs/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/${id}/logs/`, config);
         }
     }
-}
+};

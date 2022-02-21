@@ -55,8 +55,8 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { GLOBAL_TIME_ZONE } from '@/common/constants'
+    import _ from 'lodash';
+    import { GLOBAL_TIME_ZONE } from '@/common/constants';
     export default {
         name: '',
         props: {
@@ -81,42 +81,42 @@
                 date: [],
                 environmentsData: [],
                 timeRangeEmpty: false
-            }
+            };
         },
         watch: {
             data: {
                 handler (val) {
-                    console.log('val1', val)
+                    console.log('val1', val);
                     if (!val.length) {
-                        this.environmentsData = [{ type: 'period_daily', date: ['1', '2', '3', '4', '5', '6', '0'], TimeZone: 'Asia/Shanghai', initTimeRange: ['00:00:00', '23:59:59'] }]
+                        this.environmentsData = [{ type: 'period_daily', date: ['1', '2', '3', '4', '5', '6', '0'], TimeZone: 'Asia/Shanghai', initTimeRange: ['00:00:00', '23:59:59'] }];
                     } else {
                         this.environmentsData = _.cloneDeep(val).map(e => {
                             if (e.condition && e.condition.length) {
-                                e.date = ['1', '2', '3', '4', '5', '6', '0']
+                                e.date = ['1', '2', '3', '4', '5', '6', '0'];
                                 e.condition.forEach(item => {
                                     if (item.type === 'weekday') {
                                         e.date = item.values.reduce((p, v) => {
-                                            p.push(v.value)
-                                            return p
-                                        }, [])
+                                            p.push(v.value);
+                                            return p;
+                                        }, []);
                                     }
                                     if (item.type === 'tz') {
                                         e.TimeZone = item.values.reduce((p, v) => {
-                                            p = v.value
-                                            return p
-                                        }, '')
+                                            p = v.value;
+                                            return p;
+                                        }, '');
                                     }
                                     if (item.type === 'hms') {
                                         e.initTimeRange = item.values.reduce((p, v) => {
-                                            p.push(v.value)
-                                            return p
-                                        }, [])
+                                            p.push(v.value);
+                                            return p;
+                                        }, []);
                                     }
-                                })
-                                delete e.condition
+                                });
+                                delete e.condition;
                             }
-                            return e
-                        })
+                            return e;
+                        });
                     }
                 },
                 immediate: true
@@ -125,34 +125,34 @@
         methods: {
             handleGetValue () {
                 if (this.environmentsData.some(e => !e.initTimeRange[0] || !e.initTimeRange[1])) {
-                    this.timeRangeEmpty = true
-                    return false
+                    this.timeRangeEmpty = true;
+                    return false;
                 }
                 const environments = _.cloneDeep(this.environmentsData).map(item => {
-                    item.condition = []
+                    item.condition = [];
                     if (!!item.date.length && item.date.length !== 7) {
                         item.date = item.date.reduce((prev, dataItem) => {
-                            prev.values.push({ name: '', value: dataItem })
-                            return prev
-                        }, { type: 'weekday', values: [] })
-                        item.condition.push(item.date)
+                            prev.values.push({ name: '', value: dataItem });
+                            return prev;
+                        }, { type: 'weekday', values: [] });
+                        item.condition.push(item.date);
                     }
-                    item.TimeZone = { type: 'tz', values: [{ name: '', value: item.TimeZone }] }
+                    item.TimeZone = { type: 'tz', values: [{ name: '', value: item.TimeZone }] };
                     item.initTimeRange = item.initTimeRange.reduce((p, v) => {
-                        p.values.push({ name: '', value: v })
-                        return p
-                    }, { type: 'hms', values: [] })
-                    item.condition.push(item.initTimeRange, item.TimeZone)
-                    delete item.date
-                    delete item.TimeZone
-                    delete item.initTimeRange
-                    return item
-                })
-                console.log('environments', environments)
-                return environments
+                        p.values.push({ name: '', value: v });
+                        return p;
+                    }, { type: 'hms', values: [] });
+                    item.condition.push(item.initTimeRange, item.TimeZone);
+                    delete item.date;
+                    delete item.TimeZone;
+                    delete item.initTimeRange;
+                    return item;
+                });
+                console.log('environments', environments);
+                return environments;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .effect-wrap{

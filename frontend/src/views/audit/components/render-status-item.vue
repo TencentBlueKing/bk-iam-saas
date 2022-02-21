@@ -19,14 +19,14 @@
                     0: this.$t(`m.audit['成功']`),
                     1: this.$t(`m.audit['失败']`)
                 }
-            }
+            };
         },
         computed: {
             isSuccess () {
-                return this.status === 0
+                return this.status === 0;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-audit-status-item {

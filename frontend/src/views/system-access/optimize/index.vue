@@ -226,14 +226,14 @@
     </div>
 </template>
 <script>
-    import { leavePageConfirm } from '@/common/leave-page-confirm'
-    import AddGroupDialog from './add-group-dialog.vue'
-    import AddSubGroupDialog from './add-sub-group-dialog.vue'
-    import EditGroupDialog from './edit-group-dialog.vue'
-    import EditSubGroupDialog from './edit-sub-group-dialog.vue'
-    import AddCommonDialog from './add-common-dialog.vue'
-    import EditCommonDialog from './edit-common-dialog.vue'
-    import beforeStepChangedMixin from '../common/before-stepchange'
+    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    import AddGroupDialog from './add-group-dialog.vue';
+    import AddSubGroupDialog from './add-sub-group-dialog.vue';
+    import EditGroupDialog from './edit-group-dialog.vue';
+    import EditSubGroupDialog from './edit-sub-group-dialog.vue';
+    import AddCommonDialog from './add-common-dialog.vue';
+    import EditCommonDialog from './edit-common-dialog.vue';
+    import beforeStepChangedMixin from '../common/before-stepchange';
 
     export default {
         name: '',
@@ -300,16 +300,16 @@
                 isShowEditCommonDialog: false,
                 curEditCommon: null,
                 curEditCommonIndex: -1
-            }
+            };
         },
         mounted () {
-            const stepNode = this.$refs.systemAccessStep.$el
+            const stepNode = this.$refs.systemAccessStep.$el;
             if (stepNode) {
-                const children = Array.from(stepNode.querySelectorAll('.bk-step') || [])
+                const children = Array.from(stepNode.querySelectorAll('.bk-step') || []);
                 children.forEach(child => {
-                    child.classList.remove('current')
-                })
-                children[2].classList.add('current')
+                    child.classList.remove('current');
+                });
+                children[2].classList.add('current');
             }
         },
         methods: {
@@ -324,46 +324,46 @@
              * fetchPageData
              */
             async fetchPageData () {
-                const modelingId = this.$route.params.id
+                const modelingId = this.$route.params.id;
                 if (modelingId === null || modelingId === undefined || modelingId === '') {
-                    return
+                    return;
                 }
 
-                this.modelingId = modelingId
+                this.modelingId = modelingId;
 
                 await Promise.all([
                     this.fetchAllActionList(),
                     this.fetchGroupList(),
                     this.fetchCommonList()
-                ])
+                ]);
 
-                this.refreshNoGroupAction()
+                this.refreshNoGroupAction();
             },
 
             /**
              * refreshNoGroupAction
              */
             refreshNoGroupAction () {
-                const groupActionIds = []
+                const groupActionIds = [];
                 this.groupList.forEach(group => {
                     if (group.sub_groups) {
                         group.sub_groups.forEach(subGroup => {
                             subGroup.actions.forEach(subGroupAction => {
-                                subGroupAction.name = this.allActionIdNameMap[subGroupAction.id].name
-                                subGroupAction.name_en = this.allActionIdNameMap[subGroupAction.id].name_en
-                                groupActionIds.push(subGroupAction.id)
-                            })
-                        })
+                                subGroupAction.name = this.allActionIdNameMap[subGroupAction.id].name;
+                                subGroupAction.name_en = this.allActionIdNameMap[subGroupAction.id].name_en;
+                                groupActionIds.push(subGroupAction.id);
+                            });
+                        });
                     }
                     group.actions.forEach(groupAction => {
-                        groupAction.name = this.allActionIdNameMap[groupAction.id].name
-                        groupAction.name_en = this.allActionIdNameMap[groupAction.id].name_en
-                        groupActionIds.push(groupAction.id)
-                    })
-                })
+                        groupAction.name = this.allActionIdNameMap[groupAction.id].name;
+                        groupAction.name_en = this.allActionIdNameMap[groupAction.id].name_en;
+                        groupActionIds.push(groupAction.id);
+                    });
+                });
 
-                const noGroupActionList = this.allActionList.filter(item => groupActionIds.indexOf(item.id) < 0)
-                this.noGroupActionList.splice(0, this.noGroupActionList.length, ...noGroupActionList)
+                const noGroupActionList = this.allActionList.filter(item => groupActionIds.indexOf(item.id) < 0);
+                this.noGroupActionList.splice(0, this.noGroupActionList.length, ...noGroupActionList);
             },
 
             /**
@@ -376,26 +376,26 @@
                         data: {
                             type: 'action'
                         }
-                    })
-                    const allActionList = []
-                    allActionList.splice(0, 0, ...(resModeling.data || []))
+                    });
+                    const allActionList = [];
+                    allActionList.splice(0, 0, ...(resModeling.data || []));
 
-                    const allActionIdNameMap = {}
+                    const allActionIdNameMap = {};
                     allActionList.forEach(item => {
-                        allActionIdNameMap[item.id] = item
-                    })
-                    this.allActionIdNameMap = Object.assign({}, allActionIdNameMap)
+                        allActionIdNameMap[item.id] = item;
+                    });
+                    this.allActionIdNameMap = Object.assign({}, allActionIdNameMap);
 
-                    this.allActionList.splice(0, this.allActionList.length, ...allActionList)
+                    this.allActionList.splice(0, this.allActionList.length, ...allActionList);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -409,23 +409,23 @@
                         data: {
                             type: 'action_groups'
                         }
-                    })
-                    const groupList = []
-                    groupList.splice(0, 0, ...(resModeling.data || []))
+                    });
+                    const groupList = [];
+                    groupList.splice(0, 0, ...(resModeling.data || []));
                     groupList.forEach((item, index) => {
-                        item.expanded = index === 0
-                    })
+                        item.expanded = index === 0;
+                    });
 
-                    this.groupList.splice(0, this.groupList.length, ...groupList)
+                    this.groupList.splice(0, this.groupList.length, ...groupList);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -439,20 +439,20 @@
                         data: {
                             type: 'common_actions'
                         }
-                    })
-                    const commonList = []
-                    commonList.splice(0, 0, ...(resModeling.data || []))
+                    });
+                    const commonList = [];
+                    commonList.splice(0, 0, ...(resModeling.data || []));
 
-                    this.commonList.splice(0, this.commonList.length, ...commonList)
+                    this.commonList.splice(0, this.commonList.length, ...commonList);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -460,30 +460,30 @@
              * handleExpanded
              */
             handleExpanded (item) {
-                item.expanded = !item.expanded
+                item.expanded = !item.expanded;
             },
 
             /**
              * showAddGroupSameLevel
              */
             showAddGroupSameLevel (index) {
-                this.isShowAddGroupDialog = true
-                this.addGroupIndex = index
+                this.isShowAddGroupDialog = true;
+                this.addGroupIndex = index;
             },
 
             /**
              * addGroupAfterLeave
              */
             addGroupAfterLeave () {
-                this.addGroupIndex = -1
+                this.addGroupIndex = -1;
             },
 
             /**
              * addGroupSuccess
              */
             async addGroupSuccess () {
-                this.isShowAddGroupDialog = false
-                this.groupActionLoading = true
+                this.isShowAddGroupDialog = false;
+                this.groupActionLoading = true;
                 try {
                     const r = await Promise.all([
                         this.fetchAllActionList(),
@@ -493,26 +493,26 @@
                                 type: 'action_groups'
                             }
                         })
-                    ])
+                    ]);
 
-                    const groupList = []
-                    groupList.splice(0, 0, ...this.groupList)
+                    const groupList = [];
+                    groupList.splice(0, 0, ...this.groupList);
 
-                    const res = r[1] || {}
-                    const newGroupList = res.data || []
+                    const res = r[1] || {};
+                    const newGroupList = res.data || [];
                     newGroupList.forEach((group, index) => {
                         if (!groupList.filter(g => g.name === group.name).length) {
-                            group.expanded = false
-                            groupList.splice(index, 0, group)
+                            group.expanded = false;
+                            groupList.splice(index, 0, group);
                         }
-                    })
-                    this.groupList.splice(0, this.groupList.length, ...groupList)
+                    });
+                    this.groupList.splice(0, this.groupList.length, ...groupList);
 
-                    this.refreshNoGroupAction()
+                    this.refreshNoGroupAction();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.groupActionLoading = false
+                    this.groupActionLoading = false;
                 }
             },
 
@@ -520,24 +520,24 @@
              * addGroupHide
              */
             addGroupHide () {
-                this.isShowAddGroupDialog = false
+                this.isShowAddGroupDialog = false;
             },
 
             /**
              * showAddGroupSubLevel
              */
             showAddGroupSubLevel (item, index) {
-                this.isShowAddSubGroupDialog = true
-                this.prepareAddGroupParentIndex = index
-                this.prepareAddGroupParent = Object.assign({}, item)
+                this.isShowAddSubGroupDialog = true;
+                this.prepareAddGroupParentIndex = index;
+                this.prepareAddGroupParent = Object.assign({}, item);
             },
 
             /**
              * addSubGroupAfterLeave
              */
             addSubGroupAfterLeave () {
-                this.prepareAddGroupParentIndex = -1
-                this.prepareAddGroupParent = null
+                this.prepareAddGroupParentIndex = -1;
+                this.prepareAddGroupParent = null;
             },
 
             /**
@@ -546,8 +546,8 @@
              * @param {number} prepareAddGroupParentIndex 将要添加的子分组的父级分组的索引
              */
             async addSubGroupSuccess (prepareAddGroupParentIndex) {
-                this.isShowAddSubGroupDialog = false
-                this.groupActionLoading = true
+                this.isShowAddSubGroupDialog = false;
+                this.groupActionLoading = true;
                 try {
                     const r = await Promise.all([
                         this.fetchAllActionList(),
@@ -557,26 +557,26 @@
                                 type: 'action_groups'
                             }
                         })
-                    ])
+                    ]);
 
-                    const groupList = []
-                    groupList.splice(0, 0, ...this.groupList)
+                    const groupList = [];
+                    groupList.splice(0, 0, ...this.groupList);
 
-                    const res = r[1] || {}
-                    const newGroupList = res.data || []
+                    const res = r[1] || {};
+                    const newGroupList = res.data || [];
                     newGroupList.forEach((group, index) => {
                         if (index === prepareAddGroupParentIndex) {
-                            group.expanded = groupList[index].expanded
-                            this.$set(groupList, index, group)
+                            group.expanded = groupList[index].expanded;
+                            this.$set(groupList, index, group);
                         }
-                    })
-                    this.groupList.splice(0, this.groupList.length, ...groupList)
+                    });
+                    this.groupList.splice(0, this.groupList.length, ...groupList);
 
-                    this.refreshNoGroupAction()
+                    this.refreshNoGroupAction();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.groupActionLoading = false
+                    this.groupActionLoading = false;
                 }
             },
 
@@ -584,24 +584,24 @@
              * addSubGroupHide
              */
             addSubGroupHide () {
-                this.isShowAddSubGroupDialog = false
+                this.isShowAddSubGroupDialog = false;
             },
 
             /**
              * showEditGroup
              */
             showEditGroup (item, index) {
-                this.isShowEditGroupDialog = true
-                this.curEditGroup = item
-                this.curEditGroupIndex = index
+                this.isShowEditGroupDialog = true;
+                this.curEditGroup = item;
+                this.curEditGroupIndex = index;
             },
 
             /**
              * editGroupAfterLeave
              */
             editGroupAfterLeave () {
-                this.curEditGroup = null
-                this.curEditGroupIndex = -1
+                this.curEditGroup = null;
+                this.curEditGroupIndex = -1;
             },
 
             /**
@@ -610,8 +610,8 @@
              * @param {number} curEditGroupIndex 编辑的组的索引
              */
             async editGroupSuccess (curEditGroupIndex) {
-                this.isShowEditGroupDialog = false
-                this.groupActionLoading = true
+                this.isShowEditGroupDialog = false;
+                this.groupActionLoading = true;
                 try {
                     const r = await Promise.all([
                         this.fetchAllActionList(),
@@ -621,27 +621,27 @@
                                 type: 'action_groups'
                             }
                         })
-                    ])
+                    ]);
 
-                    const groupList = []
-                    groupList.splice(0, 0, ...this.groupList)
+                    const groupList = [];
+                    groupList.splice(0, 0, ...this.groupList);
 
-                    const res = r[1] || {}
-                    const newGroupList = res.data || []
+                    const res = r[1] || {};
+                    const newGroupList = res.data || [];
                     newGroupList.forEach((group, index) => {
                         if (index === curEditGroupIndex) {
-                            group.expanded = groupList[index].expanded
-                            this.$set(groupList, index, group)
+                            group.expanded = groupList[index].expanded;
+                            this.$set(groupList, index, group);
                         }
-                    })
+                    });
 
-                    this.groupList.splice(0, this.groupList.length, ...groupList)
+                    this.groupList.splice(0, this.groupList.length, ...groupList);
 
-                    this.refreshNoGroupAction()
+                    this.refreshNoGroupAction();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.groupActionLoading = false
+                    this.groupActionLoading = false;
                 }
             },
 
@@ -649,28 +649,28 @@
              * editGroupHide
              */
             editGroupHide () {
-                this.isShowEditGroupDialog = false
+                this.isShowEditGroupDialog = false;
             },
 
             /**
              * showEditSubGroup
              */
             showEditSubGroup (group, index, subGroup, subGroupIndex) {
-                this.isShowEditSubGroupDialog = true
-                this.curEditParentGroup = group
-                this.curEditParentGroupIndex = index
-                this.curEditSubGroup = subGroup
-                this.curEditSubGroupIndex = subGroupIndex
+                this.isShowEditSubGroupDialog = true;
+                this.curEditParentGroup = group;
+                this.curEditParentGroupIndex = index;
+                this.curEditSubGroup = subGroup;
+                this.curEditSubGroupIndex = subGroupIndex;
             },
 
             /**
              * editSubGroupAfterLeave
              */
             editSubGroupAfterLeave () {
-                this.curEditParentGroup = null
-                this.curEditParentGroupIndex = -1
-                this.curEditSubGroup = null
-                this.curEditSubGroupIndex = -1
+                this.curEditParentGroup = null;
+                this.curEditParentGroupIndex = -1;
+                this.curEditSubGroup = null;
+                this.curEditSubGroupIndex = -1;
             },
 
             /**
@@ -679,8 +679,8 @@
              * @param {number} curEditParentGroupIndex 将要添加的子分组的父级分组的索引
              */
             async editSubGroupSuccess (curEditParentGroupIndex) {
-                this.isShowEditSubGroupDialog = false
-                this.groupActionLoading = true
+                this.isShowEditSubGroupDialog = false;
+                this.groupActionLoading = true;
                 try {
                     const r = await Promise.all([
                         this.fetchAllActionList(),
@@ -690,26 +690,26 @@
                                 type: 'action_groups'
                             }
                         })
-                    ])
+                    ]);
 
-                    const groupList = []
-                    groupList.splice(0, 0, ...this.groupList)
+                    const groupList = [];
+                    groupList.splice(0, 0, ...this.groupList);
 
-                    const res = r[1] || {}
-                    const newGroupList = res.data || []
+                    const res = r[1] || {};
+                    const newGroupList = res.data || [];
                     newGroupList.forEach((group, index) => {
                         if (index === curEditParentGroupIndex) {
-                            group.expanded = groupList[index].expanded
-                            this.$set(groupList, index, group)
+                            group.expanded = groupList[index].expanded;
+                            this.$set(groupList, index, group);
                         }
-                    })
-                    this.groupList.splice(0, this.groupList.length, ...groupList)
+                    });
+                    this.groupList.splice(0, this.groupList.length, ...groupList);
 
-                    this.refreshNoGroupAction()
+                    this.refreshNoGroupAction();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.groupActionLoading = false
+                    this.groupActionLoading = false;
                 }
             },
 
@@ -717,7 +717,7 @@
              * editSubGroupHide
              */
             editSubGroupHide () {
-                this.isShowEditSubGroupDialog = false
+                this.isShowEditSubGroupDialog = false;
             },
 
             /**
@@ -728,8 +728,8 @@
                     name: 'bkTooltips',
                     content: item.name,
                     placement: 'right'
-                }
-                const me = this
+                };
+                const me = this;
                 me.$bkInfo({
                     title: this.$t(`m.access['确认删除操作分组？']`),
                     confirmLoading: true,
@@ -742,11 +742,11 @@
                     ),
                     confirmFn: async () => {
                         try {
-                            const groupList = []
-                            groupList.splice(0, 0, ...this.groupList)
-                            groupList.splice(index, 1)
+                            const groupList = [];
+                            groupList.splice(0, 0, ...this.groupList);
+                            groupList.splice(index, 1);
 
-                            this.groupActionLoading = true
+                            this.groupActionLoading = true;
 
                             await this.$store.dispatch('access/updateModeling', {
                                 id: this.modelingId,
@@ -754,30 +754,30 @@
                                     type: 'action_groups',
                                     data: groupList
                                 }
-                            })
+                            });
 
-                            this.groupList.splice(0, this.groupList.length, ...groupList)
+                            this.groupList.splice(0, this.groupList.length, ...groupList);
 
                             await Promise.all([
                                 this.fetchAllActionList(),
                                 this.fetchGroupList()
-                            ])
-                            this.refreshNoGroupAction()
-                            this.groupActionLoading = false
+                            ]);
+                            this.refreshNoGroupAction();
+                            this.groupActionLoading = false;
 
-                            me.messageSuccess(me.$t(`m.access['删除操作分组成功']`), 1000)
-                            return true
+                            me.messageSuccess(me.$t(`m.access['删除操作分组成功']`), 1000);
+                            return true;
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             me.bkMessageInstance = me.$bkMessage({
                                 limit: 1,
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
-                            return false
+                            });
+                            return false;
                         }
                     }
-                })
+                });
             },
 
             /**
@@ -788,8 +788,8 @@
                     name: 'bkTooltips',
                     content: subGroup.name,
                     placement: 'right'
-                }
-                const me = this
+                };
+                const me = this;
                 me.$bkInfo({
                     title: this.$t(`m.access['确认删除子分组？']`),
                     confirmLoading: true,
@@ -802,18 +802,18 @@
                     ),
                     confirmFn: async () => {
                         try {
-                            const groupList = []
-                            groupList.splice(0, 0, ...this.groupList)
+                            const groupList = [];
+                            groupList.splice(0, 0, ...this.groupList);
 
-                            const subGroups = []
-                            subGroups.splice(0, 0, ...(group.sub_groups || []))
-                            subGroups.splice(subGroupIndex, 1)
+                            const subGroups = [];
+                            subGroups.splice(0, 0, ...(group.sub_groups || []));
+                            subGroups.splice(subGroupIndex, 1);
 
-                            group.sub_groups.splice(0, group.sub_groups.length, ...subGroups)
+                            group.sub_groups.splice(0, group.sub_groups.length, ...subGroups);
 
-                            this.$set(groupList, index, group)
+                            this.$set(groupList, index, group);
 
-                            this.groupActionLoading = true
+                            this.groupActionLoading = true;
 
                             await this.$store.dispatch('access/updateModeling', {
                                 id: this.modelingId,
@@ -821,54 +821,54 @@
                                     type: 'action_groups',
                                     data: groupList
                                 }
-                            })
+                            });
 
-                            this.groupList.splice(0, this.groupList.length, ...groupList)
+                            this.groupList.splice(0, this.groupList.length, ...groupList);
 
                             await Promise.all([
                                 this.fetchAllActionList(),
                                 this.fetchGroupList()
-                            ])
-                            this.refreshNoGroupAction()
-                            this.groupActionLoading = false
+                            ]);
+                            this.refreshNoGroupAction();
+                            this.groupActionLoading = false;
 
-                            me.messageSuccess(me.$t(`m.access['删除操作子分组成功']`), 1000)
-                            return true
+                            me.messageSuccess(me.$t(`m.access['删除操作子分组成功']`), 1000);
+                            return true;
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             me.bkMessageInstance = me.$bkMessage({
                                 limit: 1,
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
-                            return false
+                            });
+                            return false;
                         }
                     }
-                })
+                });
             },
 
             /**
              * showAddCommon
              */
             showAddCommon () {
-                this.isShowAddCommonDialog = true
+                this.isShowAddCommonDialog = true;
             },
 
             /**
              * addCommonSuccess
              */
             async addCommonSuccess () {
-                this.isShowAddCommonDialog = false
-                this.commonActionLoading = true
+                this.isShowAddCommonDialog = false;
+                this.commonActionLoading = true;
                 try {
                     await Promise.all([
                         this.fetchAllActionList(),
                         this.fetchCommonList()
-                    ])
+                    ]);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.commonActionLoading = false
+                    this.commonActionLoading = false;
                 }
             },
 
@@ -876,41 +876,41 @@
              * addCommonHide
              */
             addCommonHide () {
-                this.isShowAddCommonDialog = false
+                this.isShowAddCommonDialog = false;
             },
 
             /**
              * showEditCommon
              */
             showEditCommon (item, index) {
-                this.isShowEditCommonDialog = true
-                this.curEditCommon = item
-                this.curEditCommonIndex = index
+                this.isShowEditCommonDialog = true;
+                this.curEditCommon = item;
+                this.curEditCommonIndex = index;
             },
 
             /**
              * editCommonAfterLeave
              */
             editCommonAfterLeave () {
-                this.curEditCommon = null
-                this.curEditCommonIndex = -1
+                this.curEditCommon = null;
+                this.curEditCommonIndex = -1;
             },
 
             /**
              * editCommonSuccess
              */
             async editCommonSuccess () {
-                this.isShowEditCommonDialog = false
-                this.commonActionLoading = true
+                this.isShowEditCommonDialog = false;
+                this.commonActionLoading = true;
                 try {
                     await Promise.all([
                         this.fetchAllActionList(),
                         this.fetchCommonList()
-                    ])
+                    ]);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.commonActionLoading = false
+                    this.commonActionLoading = false;
                 }
             },
 
@@ -918,7 +918,7 @@
              * editCommonHide
              */
             editCommonHide () {
-                this.isShowEditCommonDialog = false
+                this.isShowEditCommonDialog = false;
             },
 
             /**
@@ -929,8 +929,8 @@
                     name: 'bkTooltips',
                     content: item.name,
                     placement: 'right'
-                }
-                const me = this
+                };
+                const me = this;
                 me.$bkInfo({
                     title: this.$t(`m.access['确认删除常用操作？']`),
                     confirmLoading: true,
@@ -943,11 +943,11 @@
                     ),
                     confirmFn: async () => {
                         try {
-                            const commonList = []
-                            commonList.splice(0, 0, ...this.commonList)
-                            commonList.splice(index, 1)
+                            const commonList = [];
+                            commonList.splice(0, 0, ...this.commonList);
+                            commonList.splice(index, 1);
 
-                            this.commonActionLoading = true
+                            this.commonActionLoading = true;
 
                             await this.$store.dispatch('access/updateModeling', {
                                 id: this.modelingId,
@@ -955,28 +955,28 @@
                                     type: 'common_actions',
                                     data: commonList
                                 }
-                            })
+                            });
 
                             await Promise.all([
                                 this.fetchAllActionList(),
                                 this.fetchCommonList()
-                            ])
-                            this.refreshNoGroupAction()
-                            this.commonActionLoading = false
+                            ]);
+                            this.refreshNoGroupAction();
+                            this.commonActionLoading = false;
 
-                            me.messageSuccess(me.$t(`m.access['删除常用操作成功']`), 1000)
-                            return true
+                            me.messageSuccess(me.$t(`m.access['删除常用操作成功']`), 1000);
+                            return true;
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             me.bkMessageInstance = me.$bkMessage({
                                 limit: 1,
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
-                            return false
+                            });
+                            return false;
                         }
                     }
-                })
+                });
             },
             // stepChanged (index) {
             //     alert(`当前步骤index：${index}`)
@@ -1001,26 +1001,26 @@
                     params: {
                         id: this.modelingId
                     }
-                })
+                });
             },
 
             /**
              * handlePrev
              */
             handlePrev () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm()
+                    cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
                     this.$router.push({
                         name: 'systemAccessRegistry',
                         params: this.$route.params
-                    })
-                }, _ => _)
+                    });
+                }, _ => _);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     @import './index.css';

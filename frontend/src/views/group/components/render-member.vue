@@ -16,8 +16,8 @@
     </render-horizontal-block>
 </template>
 <script>
-    import IamDeadline from '@/components/iam-deadline/horizontal'
-    import RenderMemberItem from '../common/render-member-display'
+    import IamDeadline from '@/components/iam-deadline/horizontal';
+    import RenderMemberItem from '../common/render-member-display';
     export default {
         name: '',
         components: {
@@ -41,38 +41,38 @@
         data () {
             return {
                 expiredAt: 15552000
-            }
+            };
         },
         computed: {
             isHasUser () {
-                return this.users.length > 0
+                return this.users.length > 0;
             },
             isHasDepartment () {
-                return this.departments.length > 0
+                return this.departments.length > 0;
             }
         },
         created () {
-            this.$emit('on-change', 15552000)
+            this.$emit('on-change', 15552000);
         },
         methods: {
             handleAddMember () {
-                this.$emit('on-add')
+                this.$emit('on-add');
             },
 
             handleDeadlineChange (payload) {
-                this.expiredAt = payload
-                this.$emit('on-change', payload)
+                this.expiredAt = payload;
+                this.$emit('on-change', payload);
             },
 
             handleDeleteUser (payload) {
-                this.$emit('on-delete', 'user', payload)
+                this.$emit('on-delete', 'user', payload);
             },
 
             handleDeleteDepartment (payload) {
-                this.$emit('on-delete', 'department', payload)
+                this.$emit('on-delete', 'department', payload);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-user-group-member-wrapper {

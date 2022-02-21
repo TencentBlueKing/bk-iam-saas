@@ -43,16 +43,16 @@
                         tips: [this.$t(`m.applyEntrance['申请自定义权限场景1']`), this.$t(`m.applyEntrance['申请自定义权限场景2']`)]
                     }
                 ]
-            }
+            };
         },
         methods: {
             handleToApply (payload) {
                 this.$router.push({
                     name: payload
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-perm-apply-entrance-wrapper {

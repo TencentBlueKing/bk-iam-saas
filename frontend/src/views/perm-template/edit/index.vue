@@ -6,8 +6,8 @@
         :id="$route.params.id" />
 </template>
 <script>
-    import store from '@/store'
-    import EditTemplate from '../components/render-content'
+    import store from '@/store';
+    import EditTemplate from '../components/render-content';
 
     export default {
         name: '',
@@ -17,16 +17,16 @@
         data () {
             return {
                 componentId: 'EditTemplate'
-            }
+            };
         },
         beforeRouteEnter (to, from, next) {
-            store.commit('setHeaderTitle', '')
-            next()
+            store.commit('setHeaderTitle', '');
+            next();
         },
         methods: {
             async fetchPageData () {
-                await this.$refs.com.fetchPageData()
+                await this.$refs.com.fetchPageData();
             }
         }
-    }
+    };
 </script>

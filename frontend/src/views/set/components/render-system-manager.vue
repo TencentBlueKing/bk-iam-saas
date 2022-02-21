@@ -52,9 +52,9 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import BkUserSelector from '@blueking/user-selector'
-    import RenderItem from '../common/render-item'
+    import _ from 'lodash';
+    import BkUserSelector from '@blueking/user-selector';
+    import RenderItem from '../common/render-item';
     export default {
         name: '',
         components: {
@@ -64,9 +64,9 @@
         filters: {
             memberFilter (value) {
                 if (value.length > 0) {
-                    return value.join('；')
+                    return value.join('；');
                 }
-                return '--'
+                return '--';
             }
         },
         data () {
@@ -74,103 +74,103 @@
                 subTitle: this.$t(`m.set['系统管理员提示']`),
                 systemUserList: [],
                 userApi: window.BK_USER_API
-            }
+            };
         },
         created () {
-            this.fetchSystemManager()
+            this.fetchSystemManager();
         },
         methods: {
             async fetchSystemManager () {
-                this.$emit('data-ready', false)
+                this.$emit('data-ready', false);
                 try {
-                    const res = await this.$store.dispatch('role/getSystemManager')
-                    const tempArr = []
+                    const res = await this.$store.dispatch('role/getSystemManager');
+                    const tempArr = [];
                     res.data.forEach(item => {
                         tempArr.push({
                             ...item,
                             memberBackup: _.cloneDeep(item.members),
                             isEdit: false,
                             isError: false
-                        })
-                    })
-                    this.systemUserList.splice(0, this.systemUserList.length, ...tempArr)
+                        });
+                    });
+                    this.systemUserList.splice(0, this.systemUserList.length, ...tempArr);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.$emit('data-ready', true)
+                    this.$emit('data-ready', true);
                 }
             },
 
             handleSystemRtxChange (payload, row) {
-                row.isError = false
-                row.members = [...payload]
+                row.isError = false;
+                row.members = [...payload];
             },
 
             handleSystemRtxEnter (event, payload) {
                 if (event.keyCode === 13) {
-                    event.stopPropagation()
-                    this.handleSystemRtxBlur(payload)
+                    event.stopPropagation();
+                    this.handleSystemRtxBlur(payload);
                 }
             },
 
             handleSysRowMouseEnter (index) {
-                this.$set(this.systemUserList[index], 'canEdit', true)
+                this.$set(this.systemUserList[index], 'canEdit', true);
             },
 
             handleSysRowMouseLeave (index) {
-                this.$delete(this.systemUserList[index], 'canEdit')
+                this.$delete(this.systemUserList[index], 'canEdit');
             },
 
             handleOpenSysEdit (payload, index) {
                 if (!payload.canEdit) {
-                    return
+                    return;
                 }
-                payload.isEdit = true
+                payload.isEdit = true;
                 this.$nextTick(() => {
-                    this.$refs[`sysRef${index}`].focus()
-                })
+                    this.$refs[`sysRef${index}`].focus();
+                });
             },
 
             async handleSystemRtxBlur (payload) {
-                const ms = JSON.parse(JSON.stringify(payload.members))
-                const mbs = JSON.parse(JSON.stringify(payload.memberBackup))
+                const ms = JSON.parse(JSON.stringify(payload.members));
+                const mbs = JSON.parse(JSON.stringify(payload.memberBackup));
                 if (_.isEqual(ms.sort(), mbs.sort())) {
                     setTimeout(() => {
-                        payload.isEdit = false
-                    }, 10)
-                    return
+                        payload.isEdit = false;
+                    }, 10);
+                    return;
                 }
                 if (payload.members.length < 1) {
-                    payload.isError = true
-                    return
+                    payload.isError = true;
+                    return;
                 }
-                const { id, members } = payload
+                const { id, members } = payload;
                 try {
                     this.$store.dispatch('role/editSystemManagerMember', {
                         id,
                         members
-                    })
+                    });
                     setTimeout(() => {
-                        payload.isEdit = false
-                        payload.memberBackup = _.cloneDeep(members)
-                        this.messageSuccess(this.$t(`m.common['操作成功']`))
-                    }, 10)
+                        payload.isEdit = false;
+                        payload.memberBackup = _.cloneDeep(members);
+                        this.messageSuccess(this.$t(`m.common['操作成功']`));
+                    }, 10);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -179,23 +179,23 @@
                     await this.$store.dispatch('role/editSystemManagerPerm', {
                         id: payload.id,
                         system_permission_global_enabled: newVal
-                    })
-                    payload.system_permission_global_enabled = newVal
-                    const message = newVal ? this.$t(`m.set['设置成功']`) : this.$t(`m.set['取消设置成功']`)
-                    this.messageSuccess(message)
+                    });
+                    payload.system_permission_global_enabled = newVal;
+                    const message = newVal ? this.$t(`m.set['设置成功']`) : this.$t(`m.set['取消设置成功']`);
+                    this.messageSuccess(message);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-set-system-manager-wrapper {
