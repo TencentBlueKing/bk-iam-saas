@@ -1,0 +1,1 @@
+{"preCI.localCodeCheck.filter.whitePath":"","preCI.localCodeCheck.filter.skipPath":"","preCI.localCodeCheck.checkerSet.C#":["standard_csharp"],"preCI.localCodeCheck.checkerSet.Python":["standard_python"],"preCI.localCodeCheck.checkerSet.C/C++":["standard_cpp"],"preCI.localCodeCheck.checkerSet.JS":["standard_js"]}
