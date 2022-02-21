@@ -248,10 +248,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.long_task.tasks.retry_long_task",
         "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
     },
-    # "periodic_delete_unreferenced_expressions": {
-    #     "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
-    #     "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
-    # },
+    "periodic_delete_unreferenced_expressions": {
+        "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
+        "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
+    },
 }
 
 CELERY_ENABLE_UTC = True
@@ -404,7 +404,6 @@ BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
 # NOTE: it sdk will read settings.APP_CODE and settings.APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
 BK_API_URL_TMPL = os.environ.get("BK_API_URL_TMPL", "")
-INSTALLED_APPS += ("apigw_manager.apigw",)
 BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")

@@ -32,6 +32,6 @@ class QueryResourceTypeSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
 
 
-class ResourceTypeSLZ(serializers.Serializer):
+class SystemResourceTypeSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源类别ID")
     name = serializers.CharField(label="资源类别名称")

@@ -204,7 +204,7 @@ class ResourceProviderClient:
             # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
             return resp["data"]
 
-        logger.error(f"Return Code Not Zero! response_content: {resp.text}. {base_log_msg}")
+        logger.error(f"Return Code Not Zero! response_content: {resp}. {base_log_msg}")
 
         # code不同值代表不同意思，401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
         if code not in ResponseCodeToErrorDict:
