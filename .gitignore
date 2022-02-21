@@ -3,3 +3,4 @@ logs
 .envrc
 build.yml
 .codecc/
+.vscode/
