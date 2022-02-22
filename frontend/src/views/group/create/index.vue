@@ -12,6 +12,7 @@
             :title="$t(`m.userGroup['添加组权限']`)"
             ext-cls="add-perm-action"
             v-if="!isHasPermTemplate"
+            data-test-id="group_btn_showAddGroupPerm"
             @on-click="handleAddPerm">
             <iam-guide
                 type="add_group_perm_template"
@@ -59,6 +60,7 @@
             :title="$t(`m.userGroup['添加组成员']`)"
             v-if="isShowMemberAdd"
             style="margin-bottom: 16px;"
+            data-test-id="group_btn_showAddGroupMember"
             @on-click="handleAddMember">
             <iam-guide
                 type="add_group_member"
@@ -76,7 +78,9 @@
                 @on-delete="handleMemberDelete" />
         </section>
         <div slot="action">
-            <bk-button theme="primary" type="button" :loading="submitLoading" @click="handleSubmit">
+            <bk-button theme="primary" type="button" :loading="submitLoading"
+                data-test-id="group_btn_createSubmit"
+                @click="handleSubmit">
                 {{ $t(`m.common['提交']`) }}
             </bk-button>
             <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>

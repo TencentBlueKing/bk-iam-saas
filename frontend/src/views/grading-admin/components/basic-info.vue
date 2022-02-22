@@ -11,6 +11,7 @@
                     clearable
                     :placeholder="$t(`m.verify['请输入']`)"
                     :ext-cls="isShowNameError ? 'group-name-error' : ''"
+                    data-test-id="grading_input_name"
                     @input="handleNameInput"
                     @blur="handleNameBlur"
                     @change="handleNameChange" />
@@ -23,6 +24,7 @@
                     :placeholder="$t(`m.verify['请输入']`)"
                     style="width: 100%;"
                     :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                    data-test-id="grading_userSelector_member"
                     @focus="handleRtxFocus"
                     @blur="handleRtxBlur"
                     @change="handleRtxChange">
@@ -30,7 +32,10 @@
                 <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
             </iam-form-item>
             <iam-form-item :label="$t(`m.common['描述']`)">
-                <bk-input :value="formData.description" type="textarea" maxlength="255" @change="handleDescChange" />
+                <bk-input :value="formData.description"
+                    type="textarea" maxlength="255"
+                    data-test-id="grading_input_desc"
+                    @change="handleDescChange" />
             </iam-form-item>
         </bk-form>
     </div>
