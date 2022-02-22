@@ -33,7 +33,7 @@
     </div>
 </template>
 <script>
-    import il8n from '@/language'
+    import il8n from '@/language';
 
     export default {
         name: 'iam-popover-confirm',
@@ -78,30 +78,30 @@
             return {
                 instance: null,
                 pending: false
-            }
+            };
         },
         computed: {
             parsedWidth () {
-                const width = parseInt(this.contentWidth)
-                return isNaN(width) ? 'auto' : (width + 'px')
+                const width = parseInt(this.contentWidth);
+                return isNaN(width) ? 'auto' : (width + 'px');
             },
             parsedMinWidth () {
-                const minWidth = parseInt(this.contentMinWidth)
-                return isNaN(minWidth) ? 'auto' : (minWidth + 'px')
+                const minWidth = parseInt(this.contentMinWidth);
+                return isNaN(minWidth) ? 'auto' : (minWidth + 'px');
             }
         },
         watch: {
             disabled (disabled) {
                 if (this.instance) {
-                    disabled ? this.instance.disable() : this.instance.enable()
+                    disabled ? this.instance.disable() : this.instance.enable();
                 }
             }
         },
         mounted () {
-            this.init()
+            this.init();
         },
         beforeDestroy () {
-            this.instance = null
+            this.instance = null;
         },
         methods: {
             init () {
@@ -113,37 +113,37 @@
                     trigger: 'click',
                     arrow: true,
                     onShow: () => {
-                        this.$emit('show')
+                        this.$emit('show');
                     },
                     onHidden: () => {
-                        this.$emit('cancel', this)
+                        this.$emit('cancel', this);
                     }
-                })
-                this.disabled && this.instance.disable()
+                });
+                this.disabled && this.instance.disable();
             },
             async handleConfirm () {
                 if (typeof this.confirmHandler === 'function') {
                     try {
-                        this.pending = true
-                        await this.confirmHandler(this.instance)
+                        this.pending = true;
+                        await this.confirmHandler(this.instance);
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                     } finally {
-                        this.pending = false
+                        this.pending = false;
                     }
                 }
-                this.instance && this.hide()
-                this.$emit('confirm', this)
+                this.instance && this.hide();
+                this.$emit('confirm', this);
             },
             hide () {
-                this.instance && this.instance.hide()
+                this.instance && this.instance.hide();
             },
             handleCancel () {
-                this.hide()
-                this.$emit('cancel', this)
+                this.hide();
+                this.$emit('cancel', this);
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

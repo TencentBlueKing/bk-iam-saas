@@ -12,6 +12,7 @@ import time
 
 from rest_framework import serializers
 
+from backend.api.constants import BKNonEntityUser
 from backend.apps.role.models import Role
 from backend.audit.detail import EventDetailExtra
 from backend.audit.models import EventForMeta
@@ -38,6 +39,12 @@ class EventListSchemaSLZ(serializers.ModelSerializer):
 
     def get_system(self, obj):
         pass
+
+    def get_username(self, obj):
+        if obj.username == BKNonEntityUser.BK__UNVERIFIED_USER.value:
+            return "UnverifiedUser"
+        elif obj.username == BKNonEntityUser.BK__ANONYMOUS_USER.value:
+            return "AnonymousUser"
 
 
 class EventListSLZ(EventListSchemaSLZ):
@@ -101,6 +108,12 @@ class EventDetailSchemaSLZ(serializers.ModelSerializer):
             return ""
         role = Role.objects.filter(id=obj.role_id).only("name").first()
         return role.name if role else ""
+
+    def get_username(self, obj):
+        if obj.username == BKNonEntityUser.BK__UNVERIFIED_USER.value:
+            return "UnverifiedUser"
+        elif obj.username == BKNonEntityUser.BK__ANONYMOUS_USER.value:
+            return "AnonymousUser"
 
 
 class EventDetailSLZ(EventDetailSchemaSLZ):

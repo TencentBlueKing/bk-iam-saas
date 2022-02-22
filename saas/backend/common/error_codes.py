@@ -139,9 +139,12 @@ class ErrorCodes:
     # [用户管理请求或同步等错误 19023xx]
     # USERMGR_REQUEST_ERROR = RemoteAPIException(1902301, _("用户管理请求返回码非0"))
 
-    # [ITSM请求或处理等错误 19025xx]
+    # 通用系统错误
+    SYSTEM_ERROR = APIException(1902500, _("系统错误"))
+
+    # [ITSM请求或处理等错误 19026xx]
     # ITSM_REQUEST_ERROR = RemoteAPIException(1902501, _("ITSM请求返回码非0"))
-    ITSM_PROCESSOR_NOT_SUPPORT = RemoteAPIException(1902502, _("ITSM流程里存在IAM不支持的流程处理者"))
+    ITSM_PROCESSOR_NOT_SUPPORT = RemoteAPIException(1902602, _("ITSM流程里存在IAM不支持的流程处理者"))
 
 
 error_codes = ErrorCodes()

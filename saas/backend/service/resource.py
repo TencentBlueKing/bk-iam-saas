@@ -32,7 +32,7 @@ from .models import (
 # 只暴露ResourceProvider，其他只是辅助ResourceProvider的
 __all__ = ["ResourceProvider"]
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 
 
 class SystemProviderConfigService:
@@ -110,8 +110,8 @@ class ResourceIDNameCache:
                     if isinstance(name, str):
                         pipe.set(self._generate_id_cache_key(_id), name, ex=5 * 60)  # 缓存5分钟
                 pipe.execute()
-        except RedisError as error:
-            logger.exception(f"set resource id name cache error: {error}")
+        except RedisError:
+            logger.exception("set resource id:name cache fail")
 
     def get(self, ids: List[str]) -> Dict[str, Optional[str]]:
         """
@@ -126,8 +126,8 @@ class ResourceIDNameCache:
                 # 有序的列表
                 result = pipe.execute()
 
-        except RedisError as error:
-            logger.exception(f"get resource id name cache error: {error}")
+        except RedisError:
+            logger.exception("get resource id:name cache fail")
             result = [None] * len(ids)
 
         return {_id: name for _id, name in zip(ids, result)}

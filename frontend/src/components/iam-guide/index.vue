@@ -14,7 +14,7 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -26,7 +26,7 @@
             style: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             type: {
@@ -37,7 +37,7 @@
                 type: String,
                 default: 'top',
                 validator: (value) => {
-                    return ['top', 'right', 'bottom', 'left'].includes(value)
+                    return ['top', 'right', 'bottom', 'left'].includes(value);
                 }
             },
             loading: {
@@ -52,7 +52,7 @@
         data () {
             return {
                 hasAnimation: true
-            }
+            };
         },
         computed: {
             ...mapGetters(['noviceGuide', 'user']),
@@ -61,33 +61,33 @@
                     'rating_manager_subject_scope',
                     'rating_manager_merge_action',
                     'rating_manager_authorization_scope'
-                ]
+                ];
                 if (types.includes(this.type)) {
-                    return ['super_manager', 'staff'].includes(this.user.role.type)
+                    return ['super_manager', 'staff'].includes(this.user.role.type);
                 }
-                return true
+                return true;
             }
         },
         created () {
             // 动画显示5秒后关闭
             this.timer = setTimeout(() => {
-                this.hasAnimation = false
-                clearTimeout(this.timer)
-            }, 5000)
+                this.hasAnimation = false;
+                clearTimeout(this.timer);
+            }, 5000);
         },
         methods: {
             async handleKnowed () {
-                this.$store.commit('updateNoviceGuide', this.type)
+                this.$store.commit('updateNoviceGuide', this.type);
                 try {
                     await this.$store.dispatch('editNoviceGuide', {
                         scene: this.type
-                    })
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);

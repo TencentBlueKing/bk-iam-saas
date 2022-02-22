@@ -13,8 +13,8 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { bus } from '@/common/bus'
+    import _ from 'lodash';
+    import { bus } from '@/common/bus';
 
     export default {
         props: {
@@ -31,92 +31,92 @@
                 isHide: false,
                 paddingLeft: 0,
                 offsetLeft: 0
-            }
+            };
         },
         computed: {
             classes () {
                 if (this.isHide) {
-                    return 'fixed'
+                    return 'fixed';
                 }
-                return ''
+                return '';
             },
             positionStyles () {
                 if (this.isHide) {
                     return {
                         height: '50px'
-                    }
+                    };
                 }
-                return {}
+                return {};
             },
             styles () {
                 const styles = {
                     'padding-left': `${this.offsetLeft + this.fill}px`
-                }
-                return styles
+                };
+                return styles;
             },
             dymaicStyle () {
                 if (this.isHide) {
                     return {
                         'padding-left': `${this.paddingLeft}px`
-                    }
+                    };
                 }
-                return {}
+                return {};
             }
         },
         mounted () {
-            window.addEventListener('resize', this.smartPosition)
+            window.addEventListener('resize', this.smartPosition);
             const observer = new MutationObserver((payload) => {
-                this.initPosition()
-                this.smartPosition()
-            })
+                this.initPosition();
+                this.smartPosition();
+            });
             observer.observe(document.querySelector('#app'), {
                 subtree: true,
                 childList: true,
                 attributeName: true,
                 characterData: true
-            })
+            });
             this.$once('hook:beforeDestroy', () => {
-                observer.takeRecords()
-                observer.disconnect()
-                window.removeEventListener('resize', this.smartPosition)
-                bus.$off('nav-resize')
-            })
+                observer.takeRecords();
+                observer.disconnect();
+                window.removeEventListener('resize', this.smartPosition);
+                bus.$off('nav-resize');
+            });
             bus.$on('nav-resize', () => {
-                this.resetPosition()
-            })
-            this.initPosition()
+                this.resetPosition();
+            });
+            this.initPosition();
         },
         methods: {
             initPosition () {
                 if (!this.offsetTarget) {
-                    return
+                    return;
                 }
-                const $target = document.querySelector(`.${this.offsetTarget}`)
+                const $target = document.querySelector(`.${this.offsetTarget}`);
                 if (!$target) {
-                    return
+                    return;
                 }
-                const actionPositionLeft = this.$refs.actionPosition.getBoundingClientRect().left
-                const offsetTargetLeft = $target.getBoundingClientRect().left
-                this.offsetLeft = offsetTargetLeft - actionPositionLeft
+                const actionPositionLeft = this.$refs.actionPosition.getBoundingClientRect().left;
+                const offsetTargetLeft = $target.getBoundingClientRect().left;
+                this.offsetLeft = offsetTargetLeft - actionPositionLeft;
             },
             resetPosition: _.debounce(function () {
                 if (!this.$refs.actionPosition) {
-                    return
+                    return;
                 }
-                const { left } = this.$refs.actionPosition.getBoundingClientRect()
-                this.paddingLeft = left
+                const { left } = this.$refs.actionPosition.getBoundingClientRect();
+                this.paddingLeft = left;
             }, 300),
             smartPosition: _.debounce(function () {
                 if (!this.$refs.actionPosition) {
-                    return
+                    return;
                 }
-                const windowHeight = window.innerHeight
-                const { height, top, left } = this.$refs.actionPosition.getBoundingClientRect()
-                this.isHide = height + top + 20 > windowHeight
-                this.paddingLeft = left
+                const windowHeight = window.innerHeight;
+                const { height, top, left } = this.$refs.actionPosition.getBoundingClientRect();
+                this.isHide = height + top + 20 > windowHeight;
+                this.paddingLeft = left;
             }, 300)
         }
-    }
+    };
 </script>
 <style lang='postcss' scoped>
     .smart-action-wraper {

@@ -74,12 +74,12 @@
     </bk-dialog>
 </template>
 <script>
-    import _ from 'lodash'
+    import _ from 'lodash';
 
     const LOADING_ITEM = {
         id: '',
         name: ''
-    }
+    };
 
     export default {
         name: '',
@@ -108,19 +108,19 @@
                 isShowWarnMessage: false,
                 warnMessage: '',
                 loading: false
-            }
+            };
         },
         computed: {
             disbaled () {
-                return this.curGradeManager === ''
+                return this.curGradeManager === '';
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                     if (this.isShowDialog) {
-                        this.fetchData(true)
+                        this.fetchData(true);
                     }
                 },
                 immediate: true
@@ -128,71 +128,71 @@
         },
         methods: {
             async fetchData (isLoading = false, isScrollRemote = false) {
-                this.selectLoading = isLoading
+                this.selectLoading = isLoading;
                 const params = {
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1),
                     name: this.searchValue
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', params)
+                    const res = await this.$store.dispatch('role/getRatingManagerList', params);
                     if (isScrollRemote) {
-                        const len = this.gradeManagerList.length
-                        this.gradeManagerList.splice(len - 1, 0, ...res.data.results)
+                        const len = this.gradeManagerList.length;
+                        this.gradeManagerList.splice(len - 1, 0, ...res.data.results);
                     } else {
-                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
+                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
                         if (this.pagination.totalPage > 1) {
-                            res.data.results.push(LOADING_ITEM)
+                            res.data.results.push(LOADING_ITEM);
                         }
-                        this.gradeManagerList.splice(0, this.gradeManagerList.length, ...(res.data.results || []))
+                        this.gradeManagerList.splice(0, this.gradeManagerList.length, ...(res.data.results || []));
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText
-                    })
+                    });
                 } finally {
-                    this.selectLoading = false
+                    this.selectLoading = false;
                 }
             },
 
             handleToggle (val, index, payload) {
-                const curOptionDom = this.$refs.gradeManagerSelectRef.$refs.optionList
-                curOptionDom.addEventListener('scroll', this.handleScroll)
+                const curOptionDom = this.$refs.gradeManagerSelectRef.$refs.optionList;
+                curOptionDom.addEventListener('scroll', this.handleScroll);
                 if (!val) {
-                    curOptionDom.removeEventListener('scroll', this.handleScroll)
-                    this.searchValue = ''
+                    curOptionDom.removeEventListener('scroll', this.handleScroll);
+                    this.searchValue = '';
                 }
             },
 
             async handleScroll (event) {
                 if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
-                    ++this.pagination.current
+                    ++this.pagination.current;
                     if (this.pagination.current > this.pagination.totalPage) {
-                        this.pagination.current = this.pagination.totalPage
-                        const loadItemIndex = this.gradeManagerList.findIndex(item => item.id === '' && item.name === '')
+                        this.pagination.current = this.pagination.totalPage;
+                        const loadItemIndex = this.gradeManagerList.findIndex(item => item.id === '' && item.name === '');
                         // 删除loading项
                         if (loadItemIndex !== -1) {
-                            this.gradeManagerList = _.cloneDeep(this.gradeManagerList.slice(0, loadItemIndex))
+                            this.gradeManagerList = _.cloneDeep(this.gradeManagerList.slice(0, loadItemIndex));
                         }
-                        return
+                        return;
                     }
-                    await this.fetchData(false, true)
-                    event.target.scrollTo(0, event.target.scrollTop - 10)
+                    await this.fetchData(false, true);
+                    event.target.scrollTo(0, event.target.scrollTop - 10);
                 }
             },
 
             async handleRemoteValue (val) {
-                this.searchValue = val
-                this.pagination.current = 1
-                this.pagination.totalPage = 0
-                const loadItemIndex = this.gradeManagerList.findIndex(item => item.id === '' && item.name === '')
+                this.searchValue = val;
+                this.pagination.current = 1;
+                this.pagination.totalPage = 0;
+                const loadItemIndex = this.gradeManagerList.findIndex(item => item.id === '' && item.name === '');
                 // 删除loading项
                 if (loadItemIndex !== -1) {
-                    this.gradeManagerList = _.cloneDeep(this.gradeManagerList.slice(0, loadItemIndex))
+                    this.gradeManagerList = _.cloneDeep(this.gradeManagerList.slice(0, loadItemIndex));
                 }
-                await this.fetchData()
+                await this.fetchData();
             },
 
             resetData () {
@@ -200,55 +200,55 @@
                     totalPage: 1,
                     limit: 10,
                     current: 1
-                })
-                this.curGradeManager = ''
-                this.isShowWarnMessage = false
-                this.warnMessage = ''
+                });
+                this.curGradeManager = '';
+                this.isShowWarnMessage = false;
+                this.warnMessage = '';
             },
 
             getMembersDisplay (payload) {
-                return `${this.$t(`m.common['管理员']`)}: ${payload.members.join(',')}`
+                return `${this.$t(`m.common['管理员']`)}: ${payload.members.join(',')}`;
             },
 
             async handleSubmit () {
-                this.$emit('on-sumbit', this.curGradeManager)
-                this.loading = true
+                this.$emit('on-sumbit', this.curGradeManager);
+                this.loading = true;
                 try {
                     await this.$store.dispatch('userGroup/userGroupTransfer', {
                         group_ids: this.groupIds,
                         role_id: this.curGradeManager
-                    })
-                    this.messageSuccess(this.$t(`m.info['转出成功']`), 1000)
-                    this.$emit('on-success')
+                    });
+                    this.messageSuccess(this.$t(`m.info['转出成功']`), 1000);
+                    this.$emit('on-success');
                 } catch (e) {
-                    console.error(e)
-                    const message = e.message || e.data.msg || e.statusText
+                    console.error(e);
+                    const message = e.message || e.data.msg || e.statusText;
                     if (e.code === 1902418) {
-                        this.isShowWarnMessage = true
-                        this.warnMessage = message
+                        this.isShowWarnMessage = true;
+                        this.warnMessage = message;
                     } else {
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message
-                        })
+                        });
                     }
                 } finally {
-                    this.loading = false
+                    this.loading = false;
                 }
             },
 
             handleCancel () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             },
             
             handleAfterLeave () {
-                this.resetData()
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
+                this.resetData();
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-group-transfer-dialog {

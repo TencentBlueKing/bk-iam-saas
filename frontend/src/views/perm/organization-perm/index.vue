@@ -25,8 +25,8 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import RenderPermSideslider from '../components/render-depart-perm-sideslider'
+    import { mapGetters } from 'vuex';
+    import RenderPermSideslider from '../components/render-depart-perm-sideslider';
 
     export default {
         name: '',
@@ -47,7 +47,7 @@
                 isShowPermSidesilder: false,
                 curDepartId: '',
                 permSidesilderTitle: ''
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
@@ -55,9 +55,9 @@
         async created () {
             // 动态组件暂时不能使用 fetchPageData。这里 fetchPermOrgs 请求需要用到 user.username
             if (!this.user || !Object.keys(this.user).length) {
-                await this.fetchUser()
+                await this.fetchUser();
             }
-            await this.fetchPermOrgs()
+            await this.fetchPermOrgs();
         },
         methods: {
             /**
@@ -65,24 +65,24 @@
              */
             async fetchUser () {
                 try {
-                    await this.$store.dispatch('userInfo')
+                    await this.$store.dispatch('userInfo');
                 } catch (e) {
-                    this.$emit('toggle-loading', false)
-                    console.error(e)
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             handleAnimationEnd () {
-                this.permSidesilderTitle = ''
-                this.curDepartId = ''
-                this.isShowPermSidesilder = false
+                this.permSidesilderTitle = '';
+                this.curDepartId = '';
+                this.isShowPermSidesilder = false;
             },
 
             /**
@@ -93,22 +93,22 @@
                     const res = await this.$store.dispatch('perm/getPermOrgs', {
                         subjectType: 'user',
                         subjectId: this.user.username
-                    })
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []))
-                    this.initPageConf()
-                    this.curPageData = this.getDataByPage(this.pageConf.current)
+                    });
+                    this.dataList.splice(0, this.dataList.length, ...(res.data || []));
+                    this.initPageConf();
+                    this.curPageData = this.getDataByPage(this.pageConf.current);
                 } catch (e) {
-                    this.$emit('toggle-loading', false)
-                    console.error(e)
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.$emit('toggle-loading', false)
+                    this.$emit('toggle-loading', false);
                 }
             },
 
@@ -116,9 +116,9 @@
              * 初始化弹层翻页条
              */
             initPageConf () {
-                this.pageConf.current = 1
-                const total = this.dataList.length
-                this.pageConf.count = total
+                this.pageConf.current = 1;
+                const total = this.dataList.length;
+                this.pageConf.count = total;
             },
 
             /**
@@ -127,9 +127,9 @@
              * @param {number} page 当前页
              */
             handlePageChange (page = 1) {
-                this.pageConf.current = page
-                const data = this.getDataByPage(page)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
+                this.pageConf.current = page;
+                const data = this.getDataByPage(page);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             },
 
             /**
@@ -141,17 +141,17 @@
              */
             getDataByPage (page) {
                 if (!page) {
-                    this.pageConf.current = page = 1
+                    this.pageConf.current = page = 1;
                 }
-                let startIndex = (page - 1) * this.pageConf.limit
-                let endIndex = page * this.pageConf.limit
+                let startIndex = (page - 1) * this.pageConf.limit;
+                let endIndex = page * this.pageConf.limit;
                 if (startIndex < 0) {
-                    startIndex = 0
+                    startIndex = 0;
                 }
                 if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length
+                    endIndex = this.dataList.length;
                 }
-                return this.dataList.slice(startIndex, endIndex)
+                return this.dataList.slice(startIndex, endIndex);
             },
 
             /**
@@ -161,9 +161,9 @@
              * @param {number} prevLimit 变化前每页多少条的数量
              */
             handlePageLimitChange (currentLimit, prevLimit) {
-                this.pageConf.limit = currentLimit
-                this.pageConf.current = 1
-                this.handlePageChange(this.pageConf.current)
+                this.pageConf.limit = currentLimit;
+                this.pageConf.current = 1;
+                this.handlePageChange(this.pageConf.current);
             },
 
             /**
@@ -172,12 +172,12 @@
              * @param {Object} row 当前行对象
              */
             goDetail (row) {
-                this.curDepartId = row.id
-                this.permSidesilderTitle = `${this.$t(`m.common['组织']`)}【${row.full_name}】${this.$t(`m.common['的权限']`)}`
-                this.isShowPermSidesilder = true
+                this.curDepartId = row.id;
+                this.permSidesilderTitle = `${this.$t(`m.common['组织']`)}【${row.full_name}】${this.$t(`m.common['的权限']`)}`;
+                this.isShowPermSidesilder = true;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './index.css';

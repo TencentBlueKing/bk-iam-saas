@@ -31,16 +31,18 @@
             <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)">
                 <template slot-scope="{ row }">
                     <template v-if="!row.isEmpty">
-                        <p class="related-resource-item"
-                            v-for="item in row.related_resource_types"
-                            :key="item.type">
-                            <render-resource-popover
-                                :key="item.type"
-                                :data="item.condition"
-                                :value="`${item.name}：${item.value}`"
-                                :max-width="380"
-                                @on-view="handleViewResource(row)" />
-                        </p>
+                        <div v-for="_ in row.resource_groups" :key="_.id">
+                            <p class="related-resource-item"
+                                v-for="item in _.related_resource_types"
+                                :key="item.type">
+                                <render-resource-popover
+                                    :key="item.type"
+                                    :data="item.condition"
+                                    :value="`${item.name}：${item.value}`"
+                                    :max-width="380"
+                                    @on-view="handleViewResource(row)" />
+                            </p>
+                        </div>
                     </template>
                     <template v-else>
                         {{ $t(`m.common['无需关联实例']`) }}
@@ -68,10 +70,10 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import RenderResourcePopover from '@/components/iam-view-resource-popover'
-    import RenderDetail from './render-detail'
-    import GradePolicy from '@/model/grade-policy'
+    import _ from 'lodash';
+    import RenderResourcePopover from '@/components/iam-view-resource-popover';
+    import RenderDetail from './render-detail';
+    import GradePolicy from '@/model/grade-policy';
     export default {
         name: '',
         components: {
@@ -96,31 +98,31 @@
                 isShowSideslider: false,
                 sidesliderTitle: '',
                 systemFilter: []
-            }
+            };
         },
         computed: {
             loading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowPreview () {
                 return (payload) => {
-                    return !payload.isEmpty
-                }
+                    return !payload.isEmpty;
+                };
             }
         },
         watch: {
             actions: {
                 handler (value) {
                     if (value.length > 0) {
-                        this.tableList = value.map(item => new GradePolicy(item))
+                        this.tableList = value.map(item => new GradePolicy(item));
                         this.tableList.forEach(item => {
                             if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {
                                 this.systemFilter.push({
                                     text: item.system_name,
                                     value: item.system_id
-                                })
+                                });
                             }
-                        })
+                        });
                     }
                 },
                 immediate: true
@@ -128,43 +130,47 @@
         },
         methods: {
             handleAnimationEnd () {
-                this.sidesliderTitle = ''
-                this.previewData = []
-                this.curId = ''
+                this.sidesliderTitle = '';
+                this.previewData = [];
+                this.curId = '';
             },
 
             systemFilterMethod (value, row, column) {
-                const property = column.property
-                return row[property] === value
+                const property = column.property;
+                return row[property] === value;
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 2) {
-                    return 'iam-perm-table-cell-cls'
+                    return 'iam-perm-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             handleViewResource (payload) {
-                this.curId = payload.id
-                const params = []
-                if (payload.related_resource_types.length > 0) {
-                    payload.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item
-                        params.push({
-                            name: type,
-                            label: `${name} ${this.$t(`m.common['实例']`)}`,
-                            tabType: 'resource',
-                            data: condition
-                        })
-                    })
+                this.curId = payload.id;
+                const params = [];
+                if (payload.resource_groups.length > 0) {
+                    payload.resource_groups.forEach(groupItem => {
+                        if (groupItem.related_resource_types.length > 0) {
+                            groupItem.related_resource_types.forEach(item => {
+                                const { name, type, condition } = item;
+                                params.push({
+                                    name: type,
+                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
+                                    tabType: 'resource',
+                                    data: condition
+                                });
+                            });
+                        }
+                    });
                 }
-                this.previewData = _.cloneDeep(params)
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`
-                this.isShowSideslider = true
+                this.previewData = _.cloneDeep(params);
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.isShowSideslider = true;
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-perm-audit-policy-table {

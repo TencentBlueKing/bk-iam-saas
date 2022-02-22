@@ -21,7 +21,7 @@
                 default: '' // horizontal, vertical
             }
         }
-    }
+    };
 </script>
 <style lang='postcss' scoped>
     .detail-item {

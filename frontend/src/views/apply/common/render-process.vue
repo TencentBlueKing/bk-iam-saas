@@ -15,14 +15,14 @@
             }
         },
         data () {
-            return {}
+            return {};
         },
         methods: {
             handleOpenProcessLink () {
-                window.open(this.link)
+                window.open(this.link);
             }
         }
-    }
+    };
 </script>
 <style lang='postcss' scoped>
     .iam-approval-process-wrapper {

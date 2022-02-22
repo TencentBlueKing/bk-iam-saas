@@ -34,20 +34,20 @@
         data () {
             return {
 
-            }
+            };
         },
         computed: {
             isSingle () {
                 // 如果大于1 则为下拉框
-                return this.list.length === 1
+                return this.list.length === 1;
             }
         },
         methods: {
             handleSelected (value, option) {
-                this.$emit('on-select', value)
+                this.$emit('on-select', value);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .single-resource-name {

@@ -71,3 +71,13 @@ class OrganizationSyncRecordSLZ(serializers.Serializer):
 class OrganizationSyncErrorLogSLZ(serializers.Serializer):
     exception_msg = serializers.CharField(label="异常信息", default="")
     traceback_msg = serializers.CharField(label="日志详情", default="")
+
+
+class UserDepartmentQuerySLZ(serializers.Serializer):
+    username = serializers.CharField(label="用户名")
+
+
+class UserDepartmentInfoSLZ(serializers.Serializer):
+    id = serializers.CharField(label="ID")
+    name = serializers.CharField(label="名称")
+    full_name = serializers.CharField(label="全名")

@@ -50,7 +50,7 @@
             infoData: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -78,14 +78,14 @@
                     { id: 'use', name: '使用' }
                 ],
                 rules: null
-            }
+            };
         },
         computed: {
             /**
              * modelingId
              */
             modelingId () {
-                return this.$route.params.id
+                return this.$route.params.id;
             }
         },
         watch: {
@@ -122,19 +122,19 @@
                             { regex: /^[a-zA-Z0-9,.!?\s_]*$/, message: this.$t(`m.verify['只允许输入英文']`), trigger: 'blur' }
 
                         ]
-                    }
+                    };
                     if (value && Object.keys(value).length) {
-                        this.formData.id = value.id
-                        this.formData.type = value.type
-                        this.formData.name = value.name
-                        this.formData.name_en = value.name_en
-                        this.formData.description = value.description
-                        this.formData.description_en = value.description_en
-                        this.formData.isNewAdd = value.isNewAdd
-                        this.formData.isEdit = value.isEdit
+                        this.formData.id = value.id;
+                        this.formData.type = value.type;
+                        this.formData.name = value.name;
+                        this.formData.name_en = value.name_en;
+                        this.formData.description = value.description;
+                        this.formData.description_en = value.description_en;
+                        this.formData.isNewAdd = value.isNewAdd;
+                        this.formData.isEdit = value.isEdit;
                     }
                     if (this.formData.isNewAdd) {
-                        this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['操作ID已被占用']`), trigger: 'change' })
+                        this.rules.id.push({ validator: this.checkName, message: this.$t(`m.verify['操作ID已被占用']`), trigger: 'change' });
                     }
                 },
                 deep: true,
@@ -168,11 +168,11 @@
                             type: 'action',
                             id: val.trim()
                         }
-                    })
-                    return !res.data.exists
+                    });
+                    return !res.data.exists;
                 } catch (e) {
-                    console.error(e)
-                    return false
+                    console.error(e);
+                    return false;
                 }
             },
 
@@ -181,29 +181,29 @@
              */
             handleValidator () {
                 return this.$refs.basicInfoForm.validate().then(validator => {
-                    this.$emit('on-change', this.formData)
+                    this.$emit('on-change', this.formData);
                 }, validator => {
-                    console.warn('validator', validator)
-                    return Promise.reject(validator.content)
-                })
+                    console.warn('validator', validator);
+                    return Promise.reject(validator.content);
+                });
             },
 
             /**
              * handleChange
              */
             handleChange (idx, value) {
-                this.formData[idx] = value
-                this.$emit('on-change', this.formData)
+                this.formData[idx] = value;
+                this.$emit('on-change', this.formData);
             },
 
             /**
              * resetError
              */
             resetError () {
-                this.$refs.basicInfoForm.clearError()
+                this.$refs.basicInfoForm.clearError();
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

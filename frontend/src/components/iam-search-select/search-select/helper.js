@@ -37,18 +37,18 @@ export const popperConfig = {
     boundary: 'window',
     distance: 15,
     zIndex: window.__bk_zIndex_manager.nextZIndex()
-}
+};
 
 export const generatorMenu = () => ({
     id: null,
     checked: [],
     condition: {}
-})
+});
 
 export const encodeRegexp = param => {
-    const regexpKeyword = ['\\', '.', '*', '-', '{', '}', '[', ']', '^', '(', ')', '$', '+', '?', '|']
+    const regexpKeyword = ['\\', '.', '*', '-', '{', '}', '[', ']', '^', '(', ')', '$', '+', '?', '|'];
     const res = regexpKeyword.reduce((result, charItem) => {
-        return result.replace(new RegExp(`\\${charItem}`, 'g'), `\\${charItem}`)
-    }, param)
-    return res
-}
+        return result.replace(new RegExp(`\\${charItem}`, 'g'), `\\${charItem}`);
+    }, param);
+    return res;
+};

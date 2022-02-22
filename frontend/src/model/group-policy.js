@@ -24,33 +24,33 @@
  * IN THE SOFTWARE.
 */
 
-import Policy from './policy'
-import { il8n } from '@/language'
+import Policy from './policy';
+import { il8n } from '@/language';
 
 export default class GroupPolicy extends Policy {
     // mode: template(模板)， custom(自定义)
     // instanceNotDisabled: instance 不允许 disabled
     constructor (payload, flag = 'detail', mode = 'template', data = {}, instanceNotDisabled = false) {
-        super(payload, flag, instanceNotDisabled)
-        this.detail = data
-        this.mode = mode
+        super(payload, flag, instanceNotDisabled);
+        this.detail = data;
+        this.mode = mode;
         // 聚合id，相同aggregationId的数据聚合时会被聚合在一起
-        this.aggregationId = ''
-        this.aggregateResourceType = {}
+        this.aggregationId = '';
+        this.aggregateResourceType = {};
     }
 
     get isTemplate () {
-        return this.mode === 'template'
+        return this.mode === 'template';
     }
 
     get displayName () {
         if (this.isTemplate) {
-            return this.detail.name || ''
+            return this.detail.name || '';
         }
-        return il8n('perm', '自定义权限')
+        return il8n('perm', '自定义权限');
     }
 
     get judgeId () {
-        return `${this.detail.id}&${this.detail.system.id}`
+        return `${this.detail.id}&${this.detail.system.id}`;
     }
 }

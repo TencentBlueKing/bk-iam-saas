@@ -33,7 +33,7 @@ export default {
                 3: 'systemAccessOptimize',
                 4: 'systemAccessComplete'
             }
-        }
+        };
     },
     methods: {
         /**
@@ -42,7 +42,7 @@ export default {
          * @param {Number} index 当前 step 索引
          */
         async beforeStepChanged (index) {
-            const modelingId = this.$route.params.id
+            const modelingId = this.$route.params.id;
             if (modelingId) {
                 if (this.controllableSteps.curStep === 4) {
                     this.$nextTick(() => {
@@ -51,12 +51,12 @@ export default {
                             params: {
                                 id: modelingId
                             }
-                        })
-                    })
+                        });
+                    });
                 } else {
-                    this.handleSubmit(this.routerName[index])
+                    this.handleSubmit(this.routerName[index]);
                 }
             }
         }
     }
-}
+};

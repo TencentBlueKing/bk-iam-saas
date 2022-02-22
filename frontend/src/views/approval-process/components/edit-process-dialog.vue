@@ -37,7 +37,7 @@
     </lower-component>
 </template>
 <script>
-    import lowerComponent from 'lower-component'
+    import lowerComponent from 'lower-component';
     export default {
         name: '',
         components: {
@@ -69,41 +69,41 @@
             return {
                 isShowDialog: false,
                 curProcessValue: ''
-            }
+            };
         },
         computed: {
             disbaled () {
-                return this.curProcessValue === ''
+                return this.curProcessValue === '';
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             },
             procssValue: {
                 handler (value) {
-                    this.curProcessValue = value
+                    this.curProcessValue = value;
                 },
                 immediate: true
             }
         },
         methods: {
             handleSumbit () {
-                this.$emit('on-submit', this.curProcessValue)
+                this.$emit('on-submit', this.curProcessValue);
             },
 
             handleCancel () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             },
             
             handleAfterLeave () {
-                this.curProcessValue = ''
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
+                this.curProcessValue = '';
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>

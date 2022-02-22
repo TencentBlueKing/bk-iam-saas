@@ -192,6 +192,7 @@ class ConditionView(views.APIView):
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
             Subject(type=SubjectType.USER.value, id=request.user.username),
             data["policy_id"],
+            data["resource_group_id"],
             related_resource_type["system_id"],
             related_resource_type["type"],
         )

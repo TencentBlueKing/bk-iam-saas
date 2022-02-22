@@ -24,44 +24,44 @@
  * IN THE SOFTWARE.
 */
 
-import _ from 'lodash'
-import il8n from '@/language'
+import _ from 'lodash';
+import il8n from '@/language';
 export default class GradeAggregationPolicy {
     constructor (payload) {
-        this.isError = false
-        this.actions = payload.actions || []
-        this.aggregateResourceType = payload.aggregate_resource_type || {}
-        this.instances = payload.instances || []
-        this.instancesBackup = _.cloneDeep(this.instances)
-        this.isAggregate = true
-        this.system_id = payload.actions[0].system_id
-        this.system_name = payload.aggregate_resource_type.system_name
-        this.$id = payload.$id || ''
-        this.canPaste = false
+        this.isError = false;
+        this.actions = payload.actions || [];
+        this.aggregateResourceType = payload.aggregate_resource_type || {};
+        this.instances = payload.instances || [];
+        this.instancesBackup = _.cloneDeep(this.instances);
+        this.isAggregate = true;
+        this.system_id = payload.actions[0].system_id;
+        this.system_name = payload.aggregate_resource_type.system_name;
+        this.$id = payload.$id || '';
+        this.canPaste = false;
     }
 
     get empty () {
-        return this.instances.length < 1
+        return this.instances.length < 1;
     }
 
     get value () {
         if (this.empty) {
-            return il8n('verify', '请选择')
+            return il8n('verify', '请选择');
         }
-        return this.instances.map(item => item.name).join('；')
+        return this.instances.map(item => item.name).join('；');
     }
 
     get name () {
         if (this.actions.length < 1) {
-            return ''
+            return '';
         }
-        return this.actions.map(item => item.name).join('，')
+        return this.actions.map(item => item.name).join('，');
     }
 
     get key () {
         if (this.actions.length < 1) {
-            return ''
+            return '';
         }
-        return this.actions.map(item => item.id).join('')
+        return this.actions.map(item => item.id).join('');
     }
 }

@@ -25,7 +25,7 @@ from backend.apps.group.models import Group
 from backend.apps.template import tasks  # noqa
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionBiz, ActionCheckBiz, ActionForCheck
+from backend.biz.action import ActionBiz, ActionCheckBiz, ActionResourceGroupForCheck
 from backend.biz.action_group import ActionGroupBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
 from backend.biz.subject import SubjectInfoList
@@ -232,7 +232,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         template = self.get_object()
         PermTemplatePreUpdateLock.objects.raise_if_exists(template.id)
 
-        permission_logger.info("template delete by user: %s", request.user.username)
+        permission_logger.info("template %s deleted by user %s", template.id, request.user.username)
 
         self.template_biz.delete(template.id)
 
@@ -326,7 +326,7 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         members = serializer.validated_data["members"]
 
-        permission_logger.info("template delete member by user: %s", request.user.username)
+        permission_logger.info("template %s delete members %s by user %s", template.id, members, request.user.username)
 
         self.template_biz.revoke_subjects(template.system_id, template.id, parse_obj_as(List[Subject], members))
 
@@ -436,7 +436,9 @@ class TemplatePreGroupSyncViewSet(TemplatePermissionMixin, GenericViewSet):
         data = slz.validated_data
 
         for group in data["groups"]:
-            self.action_check_biz.check(template.system_id, parse_obj_as(List[ActionForCheck], group["actions"]))
+            self.action_check_biz.check_action_resource_group(
+                template.system_id, parse_obj_as(List[ActionResourceGroupForCheck], group["actions"])
+            )
 
         # 检查数据
         pre_commits = parse_obj_as(List[TemplateGroupPreCommitBean], data["groups"])

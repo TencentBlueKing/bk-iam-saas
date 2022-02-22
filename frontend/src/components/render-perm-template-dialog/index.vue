@@ -172,9 +172,9 @@
     </bk-dialog>
 </template>
 <script>
-    import IamDeadline from '@/components/iam-deadline/horizontal'
-    import IamSearchSelect from '@/components/iam-search-select'
-    import { fuzzyRtxSearch } from '@/common/rtx'
+    import IamDeadline from '@/components/iam-deadline/horizontal';
+    import IamSearchSelect from '@/components/iam-search-select';
+    import { fuzzyRtxSearch } from '@/common/rtx';
 
     export default {
         name: '',
@@ -235,66 +235,66 @@
                 isPrev: true,
                 expiredAt: 15552000,
                 isSearch: false
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.requestQueue.length > 0 && this.isShowDialog
+                return this.requestQueue.length > 0 && this.isShowDialog;
             },
             disabled () {
-                return this.expiredAt === 0
+                return this.expiredAt === 0;
             },
             allChekedDisabled () {
-                return this.permTemplateList.length < 1 || this.isLoading
+                return this.permTemplateList.length < 1 || this.isLoading;
             },
             isEmpty () {
-                return this.permTemplateList.length < 1
+                return this.permTemplateList.length < 1;
             },
             isNoBottomBorder () {
-                return !this.isLoading && this.isScrollBottom
+                return !this.isLoading && this.isScrollBottom;
             },
             isHasBottomBorder () {
-                return this.permTemplateList.length >= this.pagination.limit && !this.isScrollBottom
+                return this.permTemplateList.length >= this.pagination.limit && !this.isScrollBottom;
             },
             isShowNoDataText () {
                 return this.pagination.current >= this.pagination.totalPage
                     && !this.isScrollLoading
-                    && this.pagination.totalPage !== 1
+                    && this.pagination.totalPage !== 1;
             },
             isDisabled () {
-                return this.hasChekedList.length < 1
+                return this.hasChekedList.length < 1;
             },
             style () {
                 if (this.showExpiredAt) {
                     if (this.isPrev) {
                         return {
                             height: '360px'
-                        }
+                        };
                     }
                     return {
                         height: '35px'
-                    }
+                    };
                 }
                 return {
                     height: '360px'
-                }
+                };
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.hasChekedList.splice(0, this.hasChekedList.length, ...this.value)
-                    this.isShowDialog = !!value
+                    this.hasChekedList.splice(0, this.hasChekedList.length, ...this.value);
+                    this.isShowDialog = !!value;
                     if (this.isShowDialog) {
                         if (this.groupId !== '') {
-                            this.requestQueue = ['templateList', 'groupTemplate']
-                            this.fetchPermTemplate()
+                            this.requestQueue = ['templateList', 'groupTemplate'];
+                            this.fetchPermTemplate();
                         } else {
-                            this.requestQueue = ['templateList']
-                            this.fetchData()
+                            this.requestQueue = ['templateList'];
+                            this.fetchData();
                         }
                     } else {
-                        this.requestQueue = ['templateList']
+                        this.requestQueue = ['templateList'];
                     }
                 },
                 immediate: true
@@ -322,60 +322,60 @@
                     name: this.$t(`m.common['描述']`),
                     disabled: true
                 }
-            ]
+            ];
         },
         methods: {
             async fetchPermTemplate () {
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', { id: this.groupId })
-                    this.defaultTemplateIds = res.data.map(item => item.id)
-                    this.fetchData()
+                    const res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', { id: this.groupId });
+                    this.defaultTemplateIds = res.data.map(item => item.id);
+                    this.fetchData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             handleRefresh () {
-                this.resetData()
-                this.hasChekedList.splice(0, this.hasChekedList.length, ...this.value)
+                this.resetData();
+                this.hasChekedList.splice(0, this.hasChekedList.length, ...this.value);
                 if (this.groupId !== '') {
-                    this.requestQueue = ['templateList', 'groupTemplate']
-                    this.fetchPermTemplate()
+                    this.requestQueue = ['templateList', 'groupTemplate'];
+                    this.fetchPermTemplate();
                 } else {
-                    this.requestQueue = ['templateList']
-                    this.fetchData()
+                    this.requestQueue = ['templateList'];
+                    this.fetchData();
                 }
             },
 
             resetData () {
-                this.isScrollBottom = false
-                this.expiredAt = 15552000
-                this.defaultTemplateIds.splice(0, this.defaultTemplateIds.length, ...[])
-                this.systemList.splice(0, this.systemList.length, ...[])
-                this.hasChekedList.splice(0, this.hasChekedList.length, ...[])
-                this.permTemplateList.splice(0, this.permTemplateList.length, ...[])
-                this.allCheked = false
-                this.indeterminate = false
-                this.isPrev = true
-                this.pagination.totalPage = 1
-                this.pagination.current = 1
-                this.pagination.limit = 7
+                this.isScrollBottom = false;
+                this.expiredAt = 15552000;
+                this.defaultTemplateIds.splice(0, this.defaultTemplateIds.length, ...[]);
+                this.systemList.splice(0, this.systemList.length, ...[]);
+                this.hasChekedList.splice(0, this.hasChekedList.length, ...[]);
+                this.permTemplateList.splice(0, this.permTemplateList.length, ...[]);
+                this.allCheked = false;
+                this.indeterminate = false;
+                this.isPrev = true;
+                this.pagination.totalPage = 1;
+                this.pagination.current = 1;
+                this.pagination.limit = 7;
             },
 
             handleToCreate () {
                 const url = this.$router.resolve({
                     name: `permTemplateCreate`
-                })
-                window.open(url.href, '_blank')
+                });
+                window.open(url.href, '_blank');
             },
 
             quickSearchMethod (value) {
@@ -383,78 +383,78 @@
                     name: this.$t(`m.common['关键字']`),
                     id: 'keyword',
                     values: [value]
-                }
+                };
             },
 
             handleAfterEditLeave () {
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
-                this.resetData()
-                this.searchValue = []
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
+                this.resetData();
+                this.searchValue = [];
             },
 
             handleNextStep () {
-                this.isPrev = false
+                this.isPrev = false;
             },
 
             handlePrevStep () {
-                this.expiredAt = 15552000
-                this.isPrev = true
+                this.expiredAt = 15552000;
+                this.isPrev = true;
             },
 
             handleDeadlineChange (payload) {
-                this.expiredAt = payload
+                this.expiredAt = payload;
             },
 
             handleSearch (payload) {
-                this.isScrollBottom = false
-                this.pagination.limit = 7
-                this.pagination.totalPage = 1
-                this.pagination.current = 1
-                this.searchValue = payload
-                this.isSearch = true
-                this.fetchData(true)
+                this.isScrollBottom = false;
+                this.pagination.limit = 7;
+                this.pagination.totalPage = 1;
+                this.pagination.current = 1;
+                this.searchValue = payload;
+                this.isSearch = true;
+                this.fetchData(true);
             },
 
             handleRemoteRtx (value) {
                 return fuzzyRtxSearch(value)
                     .then(data => {
-                        return data.results
-                    })
+                        return data.results;
+                    });
             },
 
             handleRemoteSystem (value) {
                 return this.$store.dispatch('system/getSystems')
                     .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1)
-                    })
+                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
+                    });
             },
 
             async fetchData (isTableLoading = false) {
-                this.tableLoading = isTableLoading
+                this.tableLoading = isTableLoading;
                 const params = {
                     ...this.searchValue,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
-                const ids = this.hasChekedList.map(item => item.id)
+                };
+                const ids = this.hasChekedList.map(item => item.id);
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params)
+                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
                     this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
                     ;(res.data.results || []).forEach(item => {
                         if (ids.includes(item.id)) {
-                            this.$set(item, 'checked', true)
+                            this.$set(item, 'checked', true);
                         } else {
-                            this.$set(item, 'checked', false)
+                            this.$set(item, 'checked', false);
                         }
 
-                        this.$set(item, 'disabled', false)
+                        this.$set(item, 'disabled', false);
 
                         if (this.defaultTemplateIds.includes(item.id) || this.defaultValue.includes(item.id)) {
-                            this.$set(item, 'checked', true)
-                            this.$set(item, 'disabled', true)
+                            this.$set(item, 'checked', true);
+                            this.$set(item, 'disabled', true);
                         }
-                    })
+                    });
                     // if (this.hasChekedList.length) {
                     //     if (this.hasChekedList.length === res.data.count) {
                     //         this.allCheked = true
@@ -467,43 +467,43 @@
                     //     this.allCheked = false
                     //     this.indeterminate = false
                     // }
-                    this.permTemplateList.splice(0, this.permTemplateList.length, ...(res.data.results || []))
+                    this.permTemplateList.splice(0, this.permTemplateList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
-                    this.tableLoading = false
+                    this.requestQueue.shift();
+                    this.tableLoading = false;
                 }
             },
 
             async handleScroll (event) {
                 if (this.isLoading || this.isScrollLoading) {
-                    return
+                    return;
                 }
                 if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
-                    this.isScrollBottom = true
-                    this.pagination.current = this.pagination.current + 1
+                    this.isScrollBottom = true;
+                    this.pagination.current = this.pagination.current + 1;
                     if (this.pagination.current <= this.pagination.totalPage) {
-                        const searchParams = {}
+                        const searchParams = {};
                         if (this.searchValue.length > 0) {
                             this.searchValue.forEach(item => {
-                                searchParams[item.id] = item.values[0].id
-                            })
+                                searchParams[item.id] = item.values[0].id;
+                            });
                         }
                         const params = {
                             ...searchParams,
                             limit: this.pagination.limit,
                             offset: this.pagination.limit * (this.pagination.current - 1)
-                        }
-                        const ids = this.hasChekedList.map(item => item.id)
-                        this.isScrollLoading = true
+                        };
+                        const ids = this.hasChekedList.map(item => item.id);
+                        this.isScrollLoading = true;
                         try {
-                            const res = await this.$store.dispatch('permTemplate/getTemplateList', params)
-                            const list = res.data.results || []
+                            const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                            const list = res.data.results || [];
                             // if (this.hasChekedList.length) {
                             //     if (this.hasChekedList.length === res.data.count) {
                             //         this.allCheked = true
@@ -518,67 +518,67 @@
                             // }
                             list.forEach(item => {
                                 if (ids.includes(item.id)) {
-                                    this.$set(item, 'checked', true)
+                                    this.$set(item, 'checked', true);
                                 } else {
-                                    this.$set(item, 'checked', false)
+                                    this.$set(item, 'checked', false);
                                 }
 
-                                this.$set(item, 'disabled', false)
+                                this.$set(item, 'disabled', false);
 
                                 if (this.defaultTemplateIds.includes(item.id) || this.defaultValue.includes(item.id)) {
-                                    this.$set(item, 'checked', true)
-                                    this.$set(item, 'disabled', true)
+                                    this.$set(item, 'checked', true);
+                                    this.$set(item, 'disabled', true);
                                 }
-                            })
-                            this.permTemplateList.push(...list)
+                            });
+                            this.permTemplateList.push(...list);
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             this.bkMessageInstance = this.$bkMessage({
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
+                            });
                         } finally {
-                            this.isScrollLoading = false
-                            const curScrollDom = this.$refs.permTemplateRef
+                            this.isScrollLoading = false;
+                            const curScrollDom = this.$refs.permTemplateRef;
                             // 加载完往回滚动的距离，防止无线滚动加载
-                            const scrollHeight = 2
-                            curScrollDom.scrollTo(0, curScrollDom.scrollTop - scrollHeight)
+                            const scrollHeight = 2;
+                            curScrollDom.scrollTo(0, curScrollDom.scrollTop - scrollHeight);
                         }
                     }
                 } else {
-                    this.isScrollBottom = false
+                    this.isScrollBottom = false;
                 }
             },
 
             handleChecked (item) {
                 if (item.disabled) {
-                    return
+                    return;
                 }
-                item.checked = !item.checked
+                item.checked = !item.checked;
                 if (item.checked) {
-                    this.hasChekedList.push(item)
+                    this.hasChekedList.push(item);
                 } else {
                     for (let i = 0; i < this.hasChekedList.length; i++) {
                         if (this.hasChekedList[i].id === item.id) {
-                            this.hasChekedList.splice(i, 1)
-                            break
+                            this.hasChekedList.splice(i, 1);
+                            break;
                         }
                     }
                 }
                 this.indeterminate = this.hasChekedList.length
-                    && this.hasChekedList.length !== this.permTemplateList.length
-                this.allCheked = this.hasChekedList.length === this.permTemplateList.length
+                    && this.hasChekedList.length !== this.permTemplateList.length;
+                this.allCheked = this.hasChekedList.length === this.permTemplateList.length;
             },
 
             handleAllChecked (checked) {
-                this.allCheked = checked
+                this.allCheked = checked;
                 if (checked) {
-                    this.indeterminate = false
+                    this.indeterminate = false;
                 }
                 for (let i = 0; i < this.permTemplateList.length; i++) {
-                    this.permTemplateList[i]['checked'] = checked
+                    this.permTemplateList[i]['checked'] = checked;
                 }
-                this.hasChekedList = checked ? [...this.permTemplateList] : []
+                this.hasChekedList = checked ? [...this.permTemplateList] : [];
             },
 
             handleSumbit () {
@@ -586,17 +586,17 @@
                     this.$emit('on-sumbit', {
                         data: this.hasChekedList.map(({ id, name, system }) => ({ id, name, system })),
                         expired_at: this.expiredAt
-                    })
-                    return
+                    });
+                    return;
                 }
-                this.$emit('on-sumbit', this.hasChekedList.map(({ id, name, system }) => ({ id, name, system })))
+                this.$emit('on-sumbit', this.hasChekedList.map(({ id, name, system }) => ({ id, name, system })));
             },
 
             handleCancel () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-select-perm-template-dialog {

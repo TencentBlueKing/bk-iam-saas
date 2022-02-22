@@ -19,7 +19,7 @@ from backend.component import usermgr
 from .base import BaseSyncDBService
 from .util import convert_list_for_mptt
 
-organization_logger = logging.getLogger("organization")
+logger = logging.getLogger("organization")
 
 
 class DBDepartmentSyncService(BaseSyncDBService):
@@ -63,7 +63,7 @@ class DBDepartmentSyncService(BaseSyncDBService):
                     parent_department = Department.objects.get(id=dept.parent_id)
                 except Exception:  # pylint: disable=broad-except
                     # 记录错误信息，然后将异常往上抛，因为Django QuerySet get异常并不会输出具体ID是什么，不利于问题排查
-                    organization_logger.error(f"parent department(id:{dept.parent_id}) not found")
+                    logger.exception(f"parent department(id:{dept.parent_id}) not found")
                     raise
             # 对于mptt，必须是parent实例对象，无法使用parent_id代替
             dept.parent = parent_department

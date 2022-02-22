@@ -94,13 +94,13 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { mapGetters } from 'vuex'
-    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
-    import CheckUpdateSideslider from '../../perm-template/components/check-update-sideslider'
-    import PreviewResourceSideslider from '../../perm-template/components/preview-resource-sideslider'
-    import RenderPermSideslider from '../components/render-template-perm-sideslider'
-    import RenderDetail from '../components/render-detail'
+    import _ from 'lodash';
+    import { mapGetters } from 'vuex';
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
+    import CheckUpdateSideslider from '../../perm-template/components/check-update-sideslider';
+    import PreviewResourceSideslider from '../../perm-template/components/preview-resource-sideslider';
+    import RenderPermSideslider from '../components/render-template-perm-sideslider';
+    import RenderDetail from '../components/render-detail';
 
     export default {
         name: '',
@@ -144,7 +144,7 @@
                 sidesliderTitle: '',
                 isShowSideslider: false,
                 renderDetailCom: 'RenderDetail'
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
@@ -152,9 +152,9 @@
         async created () {
             // 动态组件暂时不能使用 fetchPageData。这里 fetchPermTemplates 请求需要用到 user.username
             if (!this.user || !Object.keys(this.user).length) {
-                await this.fetchUser()
+                await this.fetchUser();
             }
-            await this.fetchPermTemplates()
+            await this.fetchPermTemplates();
         },
         methods: {
             /**
@@ -162,17 +162,17 @@
              */
             async fetchUser () {
                 try {
-                    await this.$store.dispatch('userInfo')
+                    await this.$store.dispatch('userInfo');
                 } catch (e) {
-                    this.$emit('toggle-loading', false)
-                    console.error(e)
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -184,22 +184,22 @@
                     const res = await this.$store.dispatch('perm/getPermTemplates', {
                         subjectType: 'user',
                         subjectId: this.user.username
-                    })
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []))
-                    this.initPageConf()
-                    this.curPageData = this.getDataByPage(this.pageConf.current)
+                    });
+                    this.dataList.splice(0, this.dataList.length, ...(res.data || []));
+                    this.initPageConf();
+                    this.curPageData = this.getDataByPage(this.pageConf.current);
                 } catch (e) {
-                    this.$emit('toggle-loading', false)
-                    console.error(e)
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.$emit('toggle-loading', false)
+                    this.$emit('toggle-loading', false);
                 }
             },
 
@@ -207,9 +207,9 @@
              * 初始化弹层翻页条
              */
             initPageConf () {
-                this.pageConf.current = 1
-                const total = this.dataList.length
-                this.pageConf.count = total
+                this.pageConf.current = 1;
+                const total = this.dataList.length;
+                this.pageConf.count = total;
             },
 
             handleCheckUpdate (payload) {
@@ -219,9 +219,9 @@
                     templateId: payload.id,
                     type: 'user',
                     id: this.user.username
-                })
-                this.checkUpdateSildesliderTitle = `${this.$t(`m.permTemplate['同步权限']`)}-${payload.name}`
-                this.isShowCheckUpdateSildeslider = true
+                });
+                this.checkUpdateSildesliderTitle = `${this.$t(`m.permTemplate['同步权限']`)}-${payload.name}`;
+                this.isShowCheckUpdateSildeslider = true;
             },
 
             /**
@@ -230,9 +230,9 @@
              * @param {number} page 当前页
              */
             handlePageChange (page = 1) {
-                this.pageConf.current = page
-                const data = this.getDataByPage(page)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
+                this.pageConf.current = page;
+                const data = this.getDataByPage(page);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             },
 
             /**
@@ -244,17 +244,17 @@
              */
             getDataByPage (page) {
                 if (!page) {
-                    this.pageConf.current = page = 1
+                    this.pageConf.current = page = 1;
                 }
-                let startIndex = (page - 1) * this.pageConf.limit
-                let endIndex = page * this.pageConf.limit
+                let startIndex = (page - 1) * this.pageConf.limit;
+                let endIndex = page * this.pageConf.limit;
                 if (startIndex < 0) {
-                    startIndex = 0
+                    startIndex = 0;
                 }
                 if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length
+                    endIndex = this.dataList.length;
                 }
-                return this.dataList.slice(startIndex, endIndex)
+                return this.dataList.slice(startIndex, endIndex);
             },
 
             /**
@@ -264,9 +264,9 @@
              * @param {number} prevLimit 变化前每页多少条的数量
              */
             handlePageLimitChange (currentLimit, prevLimit) {
-                this.pageConf.limit = currentLimit
-                this.pageConf.current = 1
-                this.handlePageChange(this.pageConf.current)
+                this.pageConf.limit = currentLimit;
+                this.pageConf.current = 1;
+                this.handlePageChange(this.pageConf.current);
             },
 
             /**
@@ -275,10 +275,10 @@
              * @param {Object} row 当前行对象
              */
             goDetail (row) {
-                this.curTemplateId = row.id
-                this.curTemplateVersion = row.version
-                this.permSidesilderTitle = `${row.name}(${row.system.name})`
-                this.isShowPermSidesilder = true
+                this.curTemplateId = row.id;
+                this.curTemplateVersion = row.version;
+                this.permSidesilderTitle = `${row.name}(${row.system.name})`;
+                this.isShowPermSidesilder = true;
                 // this.$router.push({
                 //     name: 'templatePermDetail',
                 //     params: Object.assign({}, { id: row.id }, this.$route.params),
@@ -287,23 +287,23 @@
             },
 
             handleOnView (payload) {
-                const { name, data } = payload
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${name}】${this.$t(`m.common['的资源实例']`)}`
-                this.previewData = _.cloneDeep(data)
-                this.isShowSideslider = true
+                const { name, data } = payload;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.previewData = _.cloneDeep(data);
+                this.isShowSideslider = true;
             },
 
             handleAnimationEnd () {
-                this.permSidesilderTitle = ''
-                this.curTemplateVersion = ''
-                this.curTemplateId = ''
-                this.isShowPermSidesilder = false
+                this.permSidesilderTitle = '';
+                this.curTemplateVersion = '';
+                this.curTemplateId = '';
+                this.isShowPermSidesilder = false;
             },
 
             handleViewResourceAnimationEnd () {
-                this.previewData = []
-                this.sidesliderTitle = ''
-                this.isShowSideslider = false
+                this.previewData = [];
+                this.sidesliderTitle = '';
+                this.isShowSideslider = false;
             },
 
             /**
@@ -312,36 +312,36 @@
              * @param {Object} row 当前行对象
              */
             showQuitTemplates (row) {
-                this.deleteDialogConf.visiable = true
-                this.deleteDialogConf.row = Object.assign({}, row)
-                this.deleteDialogConf.msg = `${this.$t(`m.info['解除与权限模板']`)}【${row.name}】${this.$t(`m.common['的关联']`)}，${this.$t(`m.info['当前用户将不再继承该模板权限']`)}。`
+                this.deleteDialogConf.visiable = true;
+                this.deleteDialogConf.row = Object.assign({}, row);
+                this.deleteDialogConf.msg = `${this.$t(`m.info['解除与权限模板']`)}【${row.name}】${this.$t(`m.common['的关联']`)}，${this.$t(`m.info['当前用户将不再继承该模板权限']`)}。`;
             },
 
             /**
              * 脱离模板确认函数
              */
             async confirmDelete () {
-                this.deleteDialogConf.loading = true
+                this.deleteDialogConf.loading = true;
                 try {
                     await this.$store.dispatch('perm/quitPermTemplates', {
                         subjectType: 'user',
                         subjectId: this.user.username,
                         id: this.deleteDialogConf.row.id
-                    })
-                    this.cancelDelete()
-                    this.messageSuccess(this.$t(`m.info['解除成功']`), 2000)
-                    this.$emit('toggle-loading', true)
-                    await this.fetchPermTemplates()
+                    });
+                    this.cancelDelete();
+                    this.messageSuccess(this.$t(`m.info['解除成功']`), 2000);
+                    this.$emit('toggle-loading', true);
+                    await this.fetchPermTemplates();
                 } catch (e) {
-                    this.deleteDialogConf.loading = false
-                    console.error(e)
+                    this.deleteDialogConf.loading = false;
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -349,41 +349,41 @@
              * 脱离模板取消函数
              */
             cancelDelete () {
-                this.deleteDialogConf.visiable = false
+                this.deleteDialogConf.visiable = false;
             },
 
             /**
              * 脱离模板 afterLeave 函数
              */
             afterLeaveDelete () {
-                this.deleteDialogConf.row = Object.assign({}, {})
-                this.deleteDialogConf.msg = ''
-                this.deleteDialogConf.loading = false
+                this.deleteDialogConf.row = Object.assign({}, {});
+                this.deleteDialogConf.msg = '';
+                this.deleteDialogConf.loading = false;
             },
 
             handleViewResource (payload) {
-                this.previewResourceParams = _.cloneDeep(payload.params)
-                this.previewResourceSildesliderTitle = `${this.$t(`m.permTemplate['变更对比']`)}-${payload.action_name}`
-                this.isShowPreviewResourceSildeslider = true
+                this.previewResourceParams = _.cloneDeep(payload.params);
+                this.previewResourceSildesliderTitle = `${this.$t(`m.permTemplate['变更对比']`)}-${payload.action_name}`;
+                this.isShowPreviewResourceSildeslider = true;
             },
 
             handleSyncAfter () {
-                this.fetchPermTemplates()
+                this.fetchPermTemplates();
             },
 
             handleUpdateSildesliderClose () {
-                this.checkUpdateParams = {}
-                this.checkUpdateSildesliderTitle = ''
-                this.isShowCheckUpdateSildeslider = false
+                this.checkUpdateParams = {};
+                this.checkUpdateSildesliderTitle = '';
+                this.isShowCheckUpdateSildeslider = false;
             },
 
             handlePreviewSildesliderClose () {
-                this.previewResourceParams = []
-                this.previewResourceSildesliderTitle = ''
-                this.isShowPreviewResourceSildeslider = false
+                this.previewResourceParams = [];
+                this.previewResourceSildesliderTitle = '';
+                this.isShowPreviewResourceSildeslider = false;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './index.css';

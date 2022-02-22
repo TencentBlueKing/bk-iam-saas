@@ -24,8 +24,8 @@
  * IN THE SOFTWARE.
 */
 
-import _ from 'lodash'
-import store from '@/store'
+import _ from 'lodash';
+import store from '@/store';
 
 const ANONYMOUS_USER = {
     id: null,
@@ -35,14 +35,14 @@ const ANONYMOUS_USER = {
     chineseName: 'anonymous',
     phone: null,
     email: null
-}
+};
 
 let currentUser = {
     avatar_url: '',
     bkpaas_user_id: '',
     chinese_name: '',
     username: ''
-}
+};
 
 /**
  * 转换 user 对象，注意 camelCase
@@ -52,14 +52,14 @@ let currentUser = {
  * @return {Object} 结果
  */
 const transformUserData = data => {
-    const user = {}
+    const user = {};
     Object.keys(data).forEach((key, index) => {
-        const value = data[key]
-        key = _.camelCase(key)
-        user[key] = value
-    })
-    return user
-}
+        const value = data[key];
+        key = _.camelCase(key);
+        user[key] = value;
+    });
+    return user;
+};
 
 export default {
     /**
@@ -73,15 +73,15 @@ export default {
      * @return {Object} 当前用户信息
      */
     getCurrentUser () {
-        return currentUser
+        return currentUser;
     },
 
     /**
      * 跳转到登录页
      */
     redirectToLogin () {
-        const LOGIN_SERVICE_URL = window.LOGIN_SERVICE_URL
-        window.location.href = LOGIN_SERVICE_URL + '/?c_url=' + encodeURIComponent(window.location.href)
+        const LOGIN_SERVICE_URL = window.LOGIN_SERVICE_URL;
+        window.location.href = LOGIN_SERVICE_URL + '/?c_url=' + encodeURIComponent(window.location.href);
     },
 
     /**
@@ -90,43 +90,43 @@ export default {
      * @return {Promise} promise 对象
      */
     requestCurrentUser () {
-        let promise = null
+        let promise = null;
         if (currentUser.bkpaas_user_id) {
             promise = new Promise((resolve, reject) => {
-                const user = transformUserData(currentUser)
+                const user = transformUserData(currentUser);
                 if (user.code && user.code === 'Unauthorized') {
-                    user.isAuthenticated = false
+                    user.isAuthenticated = false;
                 } else {
-                    user.isAuthenticated = true
+                    user.isAuthenticated = true;
                 }
-                resolve(user)
-            })
+                resolve(user);
+            });
         } else {
             if (!store.getters.user || !Object.keys(store.getters.user).length) {
-                const req = store.dispatch('userInfo', { cancelWhenRouteChange: false })
+                const req = store.dispatch('userInfo', { cancelWhenRouteChange: false });
                 promise = new Promise((resolve, reject) => {
                     req.then(resp => {
-                        const user = transformUserData(resp)
+                        const user = transformUserData(resp);
                         if (user.code && user.code === 'Unauthorized') {
-                            user.isAuthenticated = false
+                            user.isAuthenticated = false;
                         } else {
-                            user.isAuthenticated = true
+                            user.isAuthenticated = true;
                         }
 
                         // 存储当前用户信息(全局)
-                        currentUser = store.getters.user
-                        resolve(user)
+                        currentUser = store.getters.user;
+                        resolve(user);
                     }, err => {
                         if (err.response.status === this.HTTP_STATUS_UNAUTHORIZED || err.crossDomain) {
-                            resolve({ ...ANONYMOUS_USER })
+                            resolve({ ...ANONYMOUS_USER });
                         } else {
-                            reject(err)
+                            reject(err);
                         }
-                    })
-                })
+                    });
+                });
             }
         }
 
-        return promise
+        return promise;
     }
-}
+};

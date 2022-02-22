@@ -24,7 +24,7 @@ from .constants import (
 )
 from .models import GroupAttributes
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 
 
 class GroupAttributeService:
@@ -40,11 +40,10 @@ class GroupAttributeService:
         if data_type == GroupAttributeValueTypeEnum.Integer.value:
             # 如果转换错误则直接异常
             try:
-                #
                 value = int(value_str, base=10)
                 return value
-            except Exception as error:  # pylint: disable=broad-except
-                logger.error(f"{error_message}, error: {error}")
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(f"{error_message}")
                 raise error_codes.VALUE_ERROR.format(error_message, replace=True)
         # 布尔
         if data_type == GroupAttributeValueTypeEnum.Boolean.value:

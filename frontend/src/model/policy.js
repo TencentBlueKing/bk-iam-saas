@@ -24,112 +24,144 @@
  * IN THE SOFTWARE.
 */
 
-import il8n from '@/language'
-import { DURATION_LIST } from '@/common/constants'
-import RelateResourceTypes from './related-resource-types'
+import il8n from '@/language';
+import { DURATION_LIST } from '@/common/constants';
+import RelateResourceTypes from './related-resource-types';
 export default class Policy {
     // flag = '' 为默认拉取，flag = 'add' 为新添加的，flag = 'detail' 为权限模板详情, flag = 'custom' 为自定义申请权限
     // tag: add updata unchanged create
     // instanceNotDisabled: instance 不允许 disabled
     constructor (payload, flag = '', instanceNotDisabled = false) {
-        this.type = payload.type
-        this.id = payload.id
-        this.policy_id = payload.policy_id || ''
-        this.name = payload.name
-        this.description = payload.description
-        this.count = payload.count || 0
-        this.tag = payload.tag || ''
-        this.isShowCustom = false
-        this.customValue = ''
-        this.environment = payload.environment || {}
-        this.isNeedAttachAction = false
-        this.isError = false
+        this.type = payload.type;
+        this.id = payload.id;
+        this.policy_id = payload.policy_id || '';
+        this.name = payload.name;
+        this.description = payload.description;
+        this.count = payload.count || 0;
+        this.tag = payload.tag || '';
+        this.isShowCustom = false;
+        this.customValue = '';
+        this.environment = payload.environment || {};
+        this.isNeedAttachAction = false;
+        this.isError = false;
         // 实例是否超出限制
-        this.isLimitExceeded = false
+        this.isLimitExceeded = false;
         // 已有权限是否需要动画提示
-        this.isExistPermAnimation = false
-        this.tid = payload.tid || ''
+        this.isExistPermAnimation = false;
+        this.tid = payload.tid || '';
         // 依赖操作
-        this.related_actions = payload.related_actions || []
-        this.isShowRelatedText = payload.isShowRelatedText || false
-        this.inOriginalList = payload.inOriginalList || false
-        this.initExpired(payload)
-        this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled)
-        this.initAttachActions(payload)
+        this.related_actions = payload.related_actions || [];
+        this.isShowRelatedText = payload.isShowRelatedText || false;
+        this.inOriginalList = payload.inOriginalList || false;
+        this.related_environments = payload.related_environments || [];
+        this.initExpired(payload);
+        this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled);
+        this.initAttachActions(payload);
     }
 
     initExpired (payload) {
-        this.expired_display = payload.expired_display
+        this.expired_display = payload.expired_display;
         // 默认显示永久
         if (payload.expired_at === null) {
-            this.expired_at = 15552000
-            return
+            this.expired_at = 15552000;
+            return;
         }
         if (DURATION_LIST.includes(payload.expired_at) && this.policy_id !== '') {
-            this.expired_at = payload.expired_at
-            return
+            this.expired_at = payload.expired_at;
+            return;
         }
-        this.expired_at = payload.expired_at
+        this.expired_at = payload.expired_at;
     }
 
     initRelatedResourceTypes (payload, action, flag, instanceNotDisabled) {
-        if (!payload.related_resource_types) {
-            this.related_resource_types = []
-            return
+        // console.log('payload', payload)
+        // if (!payload.related_resource_types) {
+        //     this.related_resource_types = []
+        //     return
+        // }
+        // this.related_resource_types = payload.related_resource_types.map(
+        //     item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+        // )
+
+        if (!payload.resource_groups) {
+            this.resource_groups = [];
+            return;
         }
-        this.related_resource_types = payload.related_resource_types.map(
-            item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
-        )
+
+        this.resource_groups = payload.resource_groups.reduce((prev, item) => {
+            const relatedRsourceTypes = item.related_resource_types.map(
+                item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+            );
+            
+            if ((this.related_environments && !!this.related_environments.length)) {
+                const environments = item.environments && !!item.environments.length ? item.environments : [];
+                prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments });
+            } else {
+                if (item.environments && !!item.environments.length) {
+                    // eslint-disable-next-line max-len
+                    prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: item.environments });
+                } else {
+                    prev.push({ id: item.id, related_resource_types: relatedRsourceTypes });
+                }
+            }
+            return prev;
+        }, []);
     }
 
     initAttachActions (payload) {
         if (!payload.attach_actions) {
-            this.attach_actions = []
-            return
+            this.attach_actions = [];
+            return;
         }
-        this.attach_actions = payload.attach_actions || []
+        this.attach_actions = payload.attach_actions || [];
     }
 
     get isCustomExpiredAt () {
         if (DURATION_LIST.includes(this.expired_at)) {
-            return false
+            return false;
         }
-        return true
+        return true;
     }
 
     get expiredAtPlaceholder () {
         if (DURATION_LIST.includes(this.expired_at)) {
-            return il8n('verify', '请选择')
+            return il8n('verify', '请选择');
         }
-        return this.expired_display
+        return this.expired_display;
     }
 
     get isExpiredAtDisabled () {
-        return this.tag === 'unchanged'
+        return this.tag === 'unchanged';
     }
 
     get isNew () {
-        return this.tag === 'add'
+        return this.tag === 'add';
     }
 
     get isChanged () {
-        return this.tag === 'update'
+        return this.tag === 'update';
     }
 
     get isEmpty () {
-        return this.related_resource_types.length < 1
+        return this.resource_groups.length < 1;
+        // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
+    }
+
+    get isEffectEmpty () {
+        return this.resource_groups.length < 1;
+        // return this.related_resource_types.length < 1 // || this.resource_groups.length < 1
     }
 
     get isCreate () {
-        return this.type === 'create'
+        return this.type === 'create';
     }
 
     get canView () {
-        return this.policy_id !== ''
+        return this.policy_id !== '';
     }
 
     // 是否主操作
     get isMainAction () {
-        return this.related_actions.length > 0
+        return this.related_actions.length > 0;
     }
 }

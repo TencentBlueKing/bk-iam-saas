@@ -110,12 +110,12 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import UserGroupDialog from '@/components/render-user-group-dialog'
-    import IamSearchSelect from '@/components/iam-search-select'
-    import IamGuide from '@/components/iam-guide/index.vue'
-    import { fuzzyRtxSearch } from '@/common/rtx'
-    import { buildURLParams } from '@/common/url'
+    import _ from 'lodash';
+    import UserGroupDialog from '@/components/render-user-group-dialog';
+    import IamSearchSelect from '@/components/iam-search-select';
+    import IamGuide from '@/components/iam-guide/index.vue';
+    import { fuzzyRtxSearch } from '@/common/rtx';
+    import { buildURLParams } from '@/common/url';
     export default {
         name: '',
         components: {
@@ -144,16 +144,16 @@
                 curTemplateName: '',
                 curTempalteId: '',
                 addGroupLoading: false
-            }
+            };
         },
         computed: {
             isCanBatchDelete () {
-                return this.currentSelectList.length > 0
+                return this.currentSelectList.length > 0;
             }
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         created () {
@@ -178,29 +178,29 @@
                     name: this.$t(`m.common['描述']`),
                     disabled: true
                 }
-            ]
+            ];
             const isObject = payload => {
-                return Object.prototype.toString.call(payload) === '[object Object]'
-            }
-            const currentQueryCache = this.getCurrentQueryCache()
+                return Object.prototype.toString.call(payload) === '[object Object]';
+            };
+            const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
+                    this.pagination.limit = currentQueryCache.limit;
+                    this.pagination.current = currentQueryCache.current;
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
-                        const curData = currentQueryCache[key]
-                        const tempData = this.searchData.find(item => item.id === key)
+                        const curData = currentQueryCache[key];
+                        const tempData = this.searchData.find(item => item.id === key);
                         if (isObject(curData)) {
                             if (tempData) {
                                 this.searchValue.push({
                                     id: key,
                                     name: tempData.name,
                                     values: [curData]
-                                })
-                                this.searchList.push(..._.cloneDeep(this.searchValue))
-                                this.searchParams[key] = curData.id
+                                });
+                                this.searchList.push(..._.cloneDeep(this.searchValue));
+                                this.searchParams[key] = curData.id;
                             }
                         } else if (tempData) {
                             this.searchValue.push({
@@ -210,11 +210,11 @@
                                     id: curData,
                                     name: curData
                                 }]
-                            })
-                            this.searchList.push(..._.cloneDeep(this.searchValue))
-                            this.searchParams[key] = curData
+                            });
+                            this.searchList.push(..._.cloneDeep(this.searchValue));
+                            this.searchParams[key] = curData;
                         } else {
-                            this.searchParams[key] = curData
+                            this.searchParams[key] = curData;
                         }
                     }
                 }
@@ -222,42 +222,42 @@
         },
         methods: {
             async fetchPageData () {
-                await this.fetchTemplateList()
+                await this.fetchTemplateList();
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination
-                const params = {}
+                const { limit, current } = this.pagination;
+                const params = {};
                 const queryParams = {
                     limit,
                     current,
                     ...this.searchParams
-                }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
+                };
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
-                    const tempObj = this.searchData.find(item => key === item.id)
+                    const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
-                            const tempData = this.searchList.find(item => item.id === key)
-                            params[key] = tempData.values[0]
+                            const tempData = this.searchList.find(item => item.id === key);
+                            params[key] = tempData.values[0];
                         }
                     } else {
-                        params[key] = this.searchParams[key]
+                        params[key] = this.searchParams[key];
                     }
                 }
                 return {
                     ...params,
                     limit,
                     current
-                }
+                };
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('templateList', JSON.stringify(payload))
+                window.localStorage.setItem('templateList', JSON.stringify(payload));
             },
 
             getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('templateList'))
+                return JSON.parse(window.localStorage.getItem('templateList'));
             },
 
             quickSearchMethod (value) {
@@ -265,7 +265,7 @@
                     name: this.$t(`m.common['关键字']`),
                     id: 'keyword',
                     values: [value]
-                }
+                };
             },
 
             resetPagination () {
@@ -273,7 +273,7 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             handleTemplateDelete ({ id }) {
@@ -282,51 +282,51 @@
                     confirmLoading: true,
                     confirmFn: async () => {
                         try {
-                            await this.$store.dispatch('permTemplate/deleteTemplate', { id })
-                            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                            this.resetPagination()
-                            this.fetchTemplateList(true)
-                            return true
+                            await this.$store.dispatch('permTemplate/deleteTemplate', { id });
+                            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                            this.resetPagination();
+                            this.fetchTemplateList(true);
+                            return true;
                         } catch (e) {
-                            console.warn(e)
-                            return false
+                            console.warn(e);
+                            return false;
                         }
                     }
-                })
+                });
             },
 
             async fetchTemplateList (isLoading = false) {
-                this.tableLoading = isLoading
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
+                this.tableLoading = isLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
                     ...this.searchParams,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params)
-                    this.pagination.count = res.data.count
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
-                    this.$store.commit('setGuideShowByField', { field: 'template', flag: !this.tableList.length > 0 })
-                    this.$store.commit('setGuideShowByField', { field: 'group', flag: this.tableList.length > 0 })
+                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.count = res.data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.$store.commit('setGuideShowByField', { field: 'template', flag: !this.tableList.length > 0 });
+                    this.$store.commit('setGuideShowByField', { field: 'group', flag: this.tableList.length > 0 });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
             handleCreate () {
                 this.$router.push({
                     name: 'permTemplateCreate'
-                })
+                });
             },
 
             async handleSumbitSelectUserGroup (payload) {
@@ -334,106 +334,106 @@
                     expired_at: 0,
                     members: payload,
                     id: this.curTempalteId
-                }
-                this.addGroupLoading = true
+                };
+                this.addGroupLoading = true;
                 try {
-                    await this.$store.dispatch('permTemplate/addTemplateMember', params)
-                    this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 2000)
-                    this.handleCancelSelect()
-                    this.fetchTemplateList(true)
+                    await this.$store.dispatch('permTemplate/addTemplateMember', params);
+                    this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 2000);
+                    this.handleCancelSelect();
+                    this.fetchTemplateList(true);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.addGroupLoading = false
+                    this.addGroupLoading = false;
                 }
             },
 
             handleCancelSelect () {
-                this.curTempalteId = ''
-                this.curTemplateName = ''
-                this.isShowUserGroupDialog = false
+                this.curTempalteId = '';
+                this.curTemplateName = '';
+                this.isShowUserGroupDialog = false;
             },
 
             handleBatchDelete () {
-                const hasSelectedLen = this.currentSelectList.length
-                let deleteTitle = ''
+                const hasSelectedLen = this.currentSelectList.length;
+                let deleteTitle = '';
                 if (hasSelectedLen === 1) {
-                    deleteTitle = `确认删除？`
+                    deleteTitle = `确认删除？`;
                 } else {
-                    deleteTitle = `确认删除${hasSelectedLen}个模板？`
+                    deleteTitle = `确认删除${hasSelectedLen}个模板？`;
                 }
                 this.$bkInfo({
                     title: deleteTitle,
                     subTitle: '删除权限模版不会影响已授权用户，可以放心删除。',
                     maskClose: true,
                     confirmFn: async () => {
-                        console.warn('')
+                        console.warn('');
                     }
-                })
+                });
             },
 
             handleRemoteRtx (value) {
                 return fuzzyRtxSearch(value)
                     .then(data => {
-                        return data.results
-                    })
+                        return data.results;
+                    });
             },
 
             handleRemoteSystem (value) {
                 return this.$store.dispatch('system/getSystems')
                     .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1)
-                    })
+                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
+                    });
             },
 
             handleSearch (payload, result) {
-                this.searchParams = payload
-                this.searchList = result
-                this.resetPagination()
-                this.fetchTemplateList(true)
+                this.searchParams = payload;
+                this.searchList = result;
+                this.resetPagination();
+                this.fetchTemplateList(true);
             },
 
             handleRelateGroup (payload) {
-                this.curTempalteId = payload.id
-                this.curTemplateName = payload.name
-                this.isShowUserGroupDialog = true
+                this.curTempalteId = payload.id;
+                this.curTemplateName = payload.name;
+                this.isShowUserGroupDialog = true;
             },
 
             handlePageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchTemplateList(true)
+                this.pagination.current = page;
+                this.fetchTemplateList(true);
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchTemplateList(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchTemplateList(true);
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handleView (payload, tab) {
-                this.$store.commit('permTemplate/updateCloneActions', [])
-                this.$store.commit('permTemplate/updateAction', [])
-                this.$store.commit('permTemplate/updatePreActionIds', [])
-                window.localStorage.setItem('iam-header-title-cache', payload.name)
-                window.localStorage.setItem('iam-header-name-cache', payload.name)
+                this.$store.commit('permTemplate/updateCloneActions', []);
+                this.$store.commit('permTemplate/updateAction', []);
+                this.$store.commit('permTemplate/updatePreActionIds', []);
+                window.localStorage.setItem('iam-header-title-cache', payload.name);
+                window.localStorage.setItem('iam-header-name-cache', payload.name);
                 this.$router.push({
                     name: 'permTemplateDetail',
                     params: {
@@ -443,10 +443,10 @@
                     query: {
                         tab
                     }
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-perm-template-wrapper {

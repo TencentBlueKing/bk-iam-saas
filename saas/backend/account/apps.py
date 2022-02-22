@@ -13,7 +13,6 @@ from django.apps import AppConfig
 
 class AccountConfig(AppConfig):
     name = "backend.account"
-    label = "backend.account"
 
     def ready(self):
         from . import signal_receivers  # noqa

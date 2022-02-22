@@ -60,9 +60,9 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider'
-    import RenderDetail from '../../perm/components/render-detail'
+    import _ from 'lodash';
+    import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider';
+    import RenderDetail from '../../perm/components/render-detail';
 
     export default {
         name: '',
@@ -105,21 +105,21 @@
                 sidesliderTitle: '',
                 isShowSideslider: false,
                 renderDetailCom: 'RenderDetail'
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             data: {
                 handler (value) {
-                    this.tableList = [...value]
+                    this.tableList = [...value];
                 },
                 immediate: true
             },
             count: {
                 handler (value) {
-                    this.pagination.count = value
+                    this.pagination.count = value;
                 },
                 immediate: true
             }
@@ -136,31 +136,31 @@
                     name: this.$t(`m.common['系统']`),
                     remoteMethod: this.handleRemoteSystem
                 }
-            ]
+            ];
         },
         methods: {
             async fetchPermTemplateList () {
-                this.tableLoading = true
+                this.tableLoading = true;
                 const params = {
                     ...this.searchValue,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params)
-                    this.pagination.count = res.data.count || 0
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.count = res.data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
@@ -169,7 +169,7 @@
                     name: this.$t(`m.common['关键字']`),
                     id: 'keyword',
                     values: [value]
-                }
+                };
             },
 
             handleResetPagination () {
@@ -177,14 +177,14 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             handleRemoteSystem () {
                 return this.$store.dispatch('system/getSystems')
                     .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name }))
-                    })
+                        return data.map(({ id, name }) => ({ id, name }));
+                    });
             },
 
             handleCellAttributes ({ rowIndex, cellIndex, row, column }) {
@@ -192,73 +192,73 @@
                     if (this.permTemplate.map(item => item.id).includes(row.id)) {
                         return {
                             title: this.$t(`m.info['你已被授予该模板权限']`)
-                        }
+                        };
                     }
-                    return {}
+                    return {};
                 }
-                return {}
+                return {};
             },
 
             handleDefaultSelect (payload) {
-                return !this.permTemplate.map(item => item.id).includes(payload.id)
+                return !this.permTemplate.map(item => item.id).includes(payload.id);
             },
 
             handleSearch (payload) {
-                this.searchValue = payload
-                this.handleResetPagination()
-                this.fetchPermTemplateList(true)
+                this.searchValue = payload;
+                this.handleResetPagination();
+                this.fetchPermTemplateList(true);
             },
 
             handleView (payload) {
-                this.curTemplateId = payload.id
-                this.curTemplateVersion = payload.version
-                this.permSidesilderTitle = `${payload.name}(${payload.system.name})`
-                this.isShowPermSidesilder = true
+                this.curTemplateId = payload.id;
+                this.curTemplateVersion = payload.version;
+                this.permSidesilderTitle = `${payload.name}(${payload.system.name})`;
+                this.isShowPermSidesilder = true;
             },
 
             handleOnView (payload) {
-                const { name, data } = payload
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${name}】${this.$t(`m.common['的资源实例']`)}`
-                this.previewData = _.cloneDeep(data)
-                this.isShowSideslider = true
+                const { name, data } = payload;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.previewData = _.cloneDeep(data);
+                this.isShowSideslider = true;
             },
 
             handleAnimationEnd () {
-                this.permSidesilderTitle = ''
-                this.curTemplateVersion = ''
-                this.curTemplateId = ''
-                this.isShowPermSidesilder = false
+                this.permSidesilderTitle = '';
+                this.curTemplateVersion = '';
+                this.curTemplateId = '';
+                this.isShowPermSidesilder = false;
             },
 
             handleViewResourceAnimationEnd () {
-                this.previewData = []
-                this.sidesliderTitle = ''
-                this.isShowSideslider = false
+                this.previewData = [];
+                this.sidesliderTitle = '';
+                this.isShowSideslider = false;
             },
 
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchPermTemplateList(true)
+                this.pagination.current = page;
+                this.fetchPermTemplateList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchPermTemplateList(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchPermTemplateList(true);
             },
 
             handlerAllChange (selection) {
-                this.$emit('on-select', selection)
+                this.$emit('on-select', selection);
             },
 
             handlerChange (selection, row) {
-                this.$emit('on-select', selection)
+                this.$emit('on-select', selection);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-apply-perm-template-table-wrapper {

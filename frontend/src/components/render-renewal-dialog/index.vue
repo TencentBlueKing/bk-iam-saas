@@ -34,10 +34,10 @@
     </bk-dialog>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import IamDeadline from '@/components/iam-deadline/horizontal'
-    import { PERMANENT_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants'
-    import renderExpireDisplay from './display'
+    import { mapGetters } from 'vuex';
+    import IamDeadline from '@/components/iam-deadline/horizontal';
+    import { PERMANENT_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
+    import renderExpireDisplay from './display';
 
     export default {
         name: '',
@@ -57,7 +57,7 @@
             data: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             type: {
@@ -70,30 +70,30 @@
                 visible: false,
                 // 默认6个月
                 expiredAt: 15552000
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
             curTime () {
                 if (this.data.expired_at) {
-                    return this.data.expired_at
+                    return this.data.expired_at;
                 }
-                return 0
+                return 0;
             },
             curLabel () {
                 if (this.type === 'department') {
-                    return this.$t(`m.perm['组织名']`)
+                    return this.$t(`m.perm['组织名']`);
                 }
                 if (this.type === 'group') {
-                    return this.$t(`m.userGroup['用户组名']`)
+                    return this.$t(`m.userGroup['用户组名']`);
                 }
-                return this.$t(`m.common['成员']`)
+                return this.$t(`m.common['成员']`);
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.visible = !!value
+                    this.visible = !!value;
                 },
                 immediate: true
             }
@@ -102,31 +102,31 @@
             handleSubmit () {
                 const getTimestamp = payload => {
                     if (this.expiredAt === PERMANENT_TIMESTAMP) {
-                        return PERMANENT_TIMESTAMP
+                        return PERMANENT_TIMESTAMP;
                     }
                     if (payload < this.user.timestamp) {
-                        return this.user.timestamp + this.expiredAt
+                        return this.user.timestamp + this.expiredAt;
                     }
-                    return payload + this.expiredAt
-                }
-                const timestamp = getTimestamp(this.curTime)
-                this.$emit('on-submit', timestamp)
+                    return payload + this.expiredAt;
+                };
+                const timestamp = getTimestamp(this.curTime);
+                this.$emit('on-submit', timestamp);
             },
 
             handleCancel () {
-                this.$emit('update:show', false)
+                this.$emit('update:show', false);
             },
 
             handleDeadlineChange (payload) {
-                this.expiredAt = payload || ONE_DAY_TIMESTAMP
+                this.expiredAt = payload || ONE_DAY_TIMESTAMP;
             },
 
             handleAfterLeave () {
-                this.expiredAt = 15552000
-                this.$emit('update:show', false)
+                this.expiredAt = 15552000;
+                this.$emit('update:show', false);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-group-perm-renewal-dialog {

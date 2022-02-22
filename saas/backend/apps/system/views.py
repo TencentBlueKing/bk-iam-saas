@@ -46,7 +46,7 @@ class ResourceTypeViewSet(GenericViewSet):
         operation_description="资源类别列表",
         query_serializer=serializers.QueryResourceTypeSLZ(label="系统ID"),
         auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: serializers.ResourceTypeSLZ(label="资源类别", many=True)},
+        responses={status.HTTP_200_OK: serializers.SystemResourceTypeSLZ(label="资源类别", many=True)},
         tags=["system"],
     )
     def list_resource_types(self, request, *args, **kwargs):
