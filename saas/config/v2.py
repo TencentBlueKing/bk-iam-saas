@@ -19,28 +19,28 @@ from . import RequestIDFilter
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USERNAME"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USERNAME"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
     },
     "audit": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("AUDIT_DB_NAME") or os.environ.get("DB_NAME"),
-        "USER": os.environ.get("AUDIT_DB_USERNAME") or os.environ.get("DB_USERNAME"),
-        "PASSWORD": os.environ.get("AUDIT_DB_PASSWORD") or os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("AUDIT_DB_HOST") or os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("AUDIT_DB_PORT") or os.environ.get("DB_PORT"),
+        "NAME": os.getenv("AUDIT_DB_NAME") or os.getenv("DB_NAME"),
+        "USER": os.getenv("AUDIT_DB_USERNAME") or os.getenv("DB_USERNAME"),
+        "PASSWORD": os.getenv("AUDIT_DB_PASSWORD") or os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("AUDIT_DB_HOST") or os.getenv("DB_HOST"),
+        "PORT": os.getenv("AUDIT_DB_PORT") or os.getenv("DB_PORT"),
     },
 }
 
 
 # cache
-REDIS_HOST = os.environ.get("BKAPP_REDIS_HOST")
-REDIS_PORT = os.environ.get("BKAPP_REDIS_PORT")
-REDIS_PASSWORD = os.environ.get("BKAPP_REDIS_PASSWORD")
-REDIS_DB = os.environ.get("BKAPP_REDIS_DB", 0)
+REDIS_HOST = os.getenv("BKAPP_REDIS_HOST")
+REDIS_PORT = os.getenv("BKAPP_REDIS_PORT")
+REDIS_PASSWORD = os.getenv("BKAPP_REDIS_PASSWORD")
+REDIS_DB = os.getenv("BKAPP_REDIS_DB", 0)
 
 CACHES = {
     "default": {
@@ -102,7 +102,7 @@ CORS_ORIGIN_WHITELIST = (
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 # 站点URL
-SITE_URL = os.environ.get("BK_SITE_URL", "/o/%s/" % APP_CODE)
+SITE_URL = os.getenv("BK_SITE_URL", "/o/%s/" % APP_CODE)
 
 FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = SITE_URL + "staticfiles/"
