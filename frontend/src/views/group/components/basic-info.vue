@@ -11,6 +11,7 @@
                     clearable
                     :placeholder="$t(`m.verify['用户组名输入提示']`)"
                     :ext-cls="isShowNameError ? 'group-name-error' : ''"
+                    data-test-id="group_input_groupName"
                     @input="handleNameInput"
                     @blur="handleNameBlur"
                     @change="handleNameChange" />
@@ -37,6 +38,7 @@
                     :placeholder="$t(`m.verify['用户组描述提示']`)"
                     maxlength="255"
                     :ext-cls="isShowDescError ? 'group-desc-error' : ''"
+                    data-test-id="group_input_groupDesc"
                     @input="handleDescInput"
                     @blur="handleDescBlur"
                     @change="handleDescChange" />

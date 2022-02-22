@@ -32,6 +32,7 @@
                         v-model="act.checked"
                         :disabled="act.disabled || isDisabled"
                         ext-cls="iam-action-cls"
+                        data-test-id="permTemplate_checkbox_action"
                         @change="handleActionChecked(...arguments, act, item)">
                         <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                             <template v-if="act.disabled">
@@ -60,7 +61,6 @@
                             </template>
                             <div slot="content" class="iam-perm-apply-action-popover-content">
                                 <div>
-
                                     由于分级管理员的授权范围没有包含此操作，<br>
                                     如需使用该模板进行新的授权必须先删除该操作。
                                 </div>
@@ -99,6 +99,7 @@
                                     v-model="act.checked"
                                     :disabled="act.disabled || isDisabled"
                                     ext-cls="iam-action-cls"
+                                    data-test-id="permTemplate_checkbox_action"
                                     @change="handleSubActionChecked(...arguments, act, subAct, item)">
                                     <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                         <template v-if="act.disabled">
@@ -280,14 +281,14 @@
                         sub.allChecked = isSubAllChecked
                         sub.allCheckedData = isSubAllCheckedData
                     })
-                    
+
                     const isAllChecked = item.actions.every(v => v.checked)
                     const actions = item.actions.filter(e => !e.disabled)
                     let isAllCheckedData = true
                     if (actions.length) {
                         isAllCheckedData = actions.every(v => v.checked)
                     }
-                        
+
                     console.log('isAllChecked', isAllChecked)
                     item.allChecked = isAllChecked
                     item.allCheckedData = isAllCheckedData

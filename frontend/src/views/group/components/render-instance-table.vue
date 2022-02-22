@@ -92,6 +92,7 @@
                                     </div>
                                     <div class="content">
                                         <render-condition
+                                            data-test-id="group_input_resourceInstanceCondition"
                                             :ref="`condition_${$index}_${contentIndex}_ref`"
                                             :value="content.value"
                                             :is-empty="content.empty"
@@ -145,7 +146,10 @@
                     @on-init="handleOnInit" />
             </div>
             <div slot="footer" style="margin-left: 25px;">
-                <bk-button theme="primary" :disabled="disabled" :loading="sliderLoading" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+                <bk-button theme="primary" :disabled="disabled" :loading="sliderLoading" @click="handleResourceSumit"
+                    data-test-id="group_btn_resourceInstanceSubmit">
+                    {{ $t(`m.common['保存']`) }}
+                </bk-button>
                 <bk-button style="margin-left: 10px;" :disabled="disabled" v-if="isShowPreview" @click="handleResourcePreview">{{ $t(`m.common['预览']`) }}</bk-button>
                 <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
@@ -805,7 +809,7 @@
                 if (payload.length < 1) {
                     return
                 }
-                
+
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
                         && item.related_resource_types[0]
