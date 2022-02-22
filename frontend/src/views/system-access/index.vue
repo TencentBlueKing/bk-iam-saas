@@ -90,11 +90,10 @@
             ext-cls="showHelp">
             <div class="help-main">
                 <div class="help-info">
-                    <img src="../../images/boot-page/one2x2.jpg" alt="" style="width:384px;height:216px">
                     <div class="info-right ml20">
                         <p class="info-title">{{$t(`m.nav['系统接入']`)}}</p>
-                        <p class="info">蓝鲸各平台或 SaaS 已经内置到权限中心，企业开箱即用，针对企业第三方系统或者在蓝鲸开发的 SaaS 同样可以快速对接到蓝鲸权限中心。</p>
-                        <bk-button theme="primary">快速接入</bk-button>
+                        <p class="info">蓝鲸权限中心提供了体验DEMO、接入文档、多语言SDK、接入视频，帮助开发者更快地实现权限接入。</p>
+                        <bk-button theme="primary">{{$t(`m.access['去接入']`)}}</bk-button>
                     </div>
                 </div>
                 <div class="help-list">
@@ -132,13 +131,13 @@
                         name: '接入前准备',
                         urlInfo: [
                             {
-                                'text': '工作原理', url: 'http://www.qq.com'
+                                'text': '什么是蓝鲸权限中心', url: 'https://bk.tencent.com/docs/document/6.0/131/7337'
                             },
                             {
-                                'text': '什么是蓝鲸权限中心', url: 'http://www.qq.com'
+                                'text': '工作原理', url: 'https://bk.tencent.com/docs/document/6.0/131/8381'
                             },
                             {
-                                'text': '了解概念', url: 'http://www.qq.com'
+                                'text': '了解概念', url: 'https://bk.tencent.com/docs/document/6.0/131/7343'
                             }
                         ]
                     },
@@ -146,7 +145,10 @@
                         name: '接入教程',
                         urlInfo: [
                             {
-                                'text': '接入开发文档', url: 'http://www.qq.com'
+                                'text': '开发接入文档', url: 'https://bk.tencent.com/docs/document/6.0/160/8391'
+                            },
+                            {
+                                'text': '开发接入实战视频', url: 'https://bkvideos-1252002024.cos.ap-guangzhou.myqcloud.com/bkiam/quanxianzhognxinkaifajierushizhan.MP4'
                             }
                         ]
                     },
@@ -157,7 +159,24 @@
                                 'text': '立即体验', url: 'http://www.qq.com'
                             },
                             {
-                                'text': '前往下载', url: 'http://www.qq.com'
+                                'text': '源码下载', url: 'http://www.qq.com'
+                            }
+                        ]
+                    },
+                    {
+                        name: '鉴权SDK',
+                        urlInfo: [
+                            {
+                                'text': 'Python', url: 'https://github.com/TencentBlueKing/iam-python-sdk'
+                            },
+                            {
+                                'text': 'Go', url: 'https://github.com/TencentBlueKing/iam-go-sdk'
+                            },
+                            {
+                                'text': 'PHP', url: 'https://github.com/TencentBlueKing/iam-php-sdk'
+                            },
+                            {
+                                'text': '更多', url: 'https://bk.tencent.com/docs/document/6.0/160/8470'
                             }
                         ]
                     }

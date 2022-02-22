@@ -27,6 +27,7 @@
 /**
  * 英文语言包
  */
+/* eslint-disable */
 export const m = {
     common: {
         '全选': 'ALL',
@@ -736,6 +737,7 @@ export const m = {
         '接入系统': 'Access System',
         '1分钟了解蓝鲸权限中心': 'Learn about BKIAM',
         '更新时间': 'Update time',
+        '去接入': 'to access',
         '查看': 'View',
         '访问': 'Visit',
         '创建者': 'Creator',
