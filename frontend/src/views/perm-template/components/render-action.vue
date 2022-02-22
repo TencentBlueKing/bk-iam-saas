@@ -221,7 +221,6 @@
                         })
                     }
                 })
-
                 return allActionIds
             }
         },
@@ -243,7 +242,6 @@
                     window.changeDialog = true
                 }
             },
-
             handleRelatedActions (payload, flag) {
                 this.originalCustomTmplList.forEach((item, index) => {
                     item.actions.forEach(act => {
@@ -277,18 +275,15 @@
                         if (subActions.length) {
                             isSubAllCheckedData = subActions.every(v => v.checked)
                         }
-
                         sub.allChecked = isSubAllChecked
                         sub.allCheckedData = isSubAllCheckedData
                     })
-
                     const isAllChecked = item.actions.every(v => v.checked)
                     const actions = item.actions.filter(e => !e.disabled)
                     let isAllCheckedData = true
                     if (actions.length) {
                         isAllCheckedData = actions.every(v => v.checked)
                     }
-
                     console.log('isAllChecked', isAllChecked)
                     item.allChecked = isAllChecked
                     item.allCheckedData = isAllCheckedData
@@ -306,7 +301,6 @@
                     console.log('this.originalCustomTmplList', this.originalCustomTmplList)
                 })
             },
-
             handleExpanded (payload) {
                 if (this.originalCustomTmplList.length < 2) {
                     return
@@ -314,12 +308,10 @@
                 this.setWindowChangeDialog()
                 payload.expanded = !payload.expanded
             },
-
             getRelatedActionTips (payload) {
                 const relatedActions = this.linearAction.filter(item => payload.includes(item.id))
                 return `${this.$t(`m.common['依赖操作']`)}: ${relatedActions.map(item => item.name).join('，')}`
             },
-
             handleSubActionChecked (newVal, oldVal, val, actData, payload, item) {
                 this.setWindowChangeDialog()
                 const hasFlag = actData.hasOwnProperty('flag')
@@ -345,16 +337,12 @@
                     this.$set(actData, 'flag', 'added')
                 }
                 payload.allChecked = payload.actions.every(item => item.checked)
-
                 item.actionsAllChecked = item.actions.every(act => act.checked) && item.sub_groups.every(v => {
                     return v.actions.every(act => act.checked)
                 })
-
                 item.count++
-
                 this.handleRelatedActions(actData, true)
             },
-
             handleCheckAll (payload) {
                 if (payload.actionsAllDisabled) {
                     return
@@ -372,7 +360,6 @@
                         item.checked = payload.actionsAllChecked
                         tempActionIds.push(item.id)
                         tempActions.push(item)
-
                         const hasFlag = item.hasOwnProperty('flag')
                         if (!item.checked) {
                             if (hasFlag) {
@@ -402,7 +389,6 @@
                             act.checked = payload.actionsAllChecked
                             tempActionIds.push(act.id)
                             tempActions.push(act)
-
                             const hasFlag = act.hasOwnProperty('flag')
                             if (!act.checked) {
                                 if (hasFlag) {
@@ -425,13 +411,11 @@
                         allActionIds.push(act.id)
                     })
                 })
-
                 tempActions.forEach(item => {
                     this.handleRelatedActions(item, payload.actionsAllChecked)
                 })
                 payload.count = payload.actionsAllChecked ? payload.allCount : 0
             },
-
             handleActionChecked (newVal, oldVal, val, actData, payload) {
                 this.setWindowChangeDialog()
                 const hasFlag = actData.hasOwnProperty('flag')
@@ -464,16 +448,12 @@
                 } else {
                     payload.actionsAllChecked = payload.allChecked
                 }
-
                 payload.count++
-
                 this.handleRelatedActions(actData, true)
             },
-
             getComputedClass (payload) {
                 return payload.checked ? payload.disabled ? 'has-obtained' : 'has-selected' : 'no-obtained'
             },
-
             handleSubAllChange (newVal, oldVal, val, payload, item) {
                 this.setWindowChangeDialog()
                 const tempActionIds = []
@@ -486,7 +466,6 @@
                         item.checked = newVal
                         tempActionIds.push(item.id)
                         this.handleRelatedActions(item, newVal)
-
                         const hasFlag = item.hasOwnProperty('flag')
                         if (!item.checked) {
                             if (hasFlag) {
@@ -507,20 +486,16 @@
                         }
                     }
                 })
-
                 if (!newVal) {
                     item.actionsAllChecked = false
                     item.count = item.count - payload.actions.length
                     return
                 }
-
                 item.actionsAllChecked = item.actions.every(act => act.checked) && item.sub_groups.every(v => {
                     return v.actions.every(act => act.checked)
                 })
-
                 item.count = item.count + count
             },
-
             handleAllChange (newVal, oldVal, val, payload) {
                 this.setWindowChangeDialog()
                 const tempActionIds = []
@@ -533,7 +508,6 @@
                         item.checked = newVal
                         tempActionIds.push(item.id)
                         this.handleRelatedActions(item, newVal)
-
                         const hasFlag = item.hasOwnProperty('flag')
                         if (!item.checked) {
                             if (hasFlag) {
@@ -554,14 +528,11 @@
                         }
                     }
                 })
-
                 if (!newVal) {
                     payload.actionsAllChecked = false
-
                     payload.count = payload.count - payload.actions.length
                     return
                 }
-
                 if (payload.sub_groups && payload.sub_groups.length > 0) {
                     payload.actionsAllChecked = payload.sub_groups.every(v => {
                         return v.actions.every(item => item.checked)
@@ -569,7 +540,6 @@
                 } else {
                     payload.actionsAllChecked = true
                 }
-
                 payload.count = payload.count + count
             }
         }

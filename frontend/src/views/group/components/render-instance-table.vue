@@ -480,7 +480,6 @@
             handleDelete () {
                 this.$emit('on-delete', this.newRow)
             },
-
             handleViewResource (payload) {
                 this.curId = payload.id
                 const params = []
@@ -518,11 +517,9 @@
             getScopeActionResource (payload, id, systemId) {
                 const scopeAction = this.authorization[systemId]
                 const actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))
-
                 const conditions = actions.map(
                     item => item.related_resource_types[0].condition
                 ).filter(_ => _.length > 0)
-
                 if (conditions.length < 1) {
                     return []
                 }
@@ -601,7 +598,6 @@
                 payload.instances = _.cloneDeep(tempInstances)
                 payload.isError = false
                 this.showMessage(this.$t(`m.info['粘贴成功']`))
-
                 this.$emit('on-select', payload)
             },
 
@@ -671,7 +667,6 @@
                         if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
                             item.instances = _.cloneDeep(tempArrgegateData)
                             item.isError = false
-
                             this.$emit('on-select', item)
                         }
                     }
@@ -730,7 +725,6 @@
             handleOnInit (payload) {
                 this.disabled = !payload
             },
-
             showResourceInstance (data, index, resItem, resIndex) {
                 window.changeDialog = true
                 this.params = {
@@ -746,7 +740,6 @@
                 this.curScopeAction = _.cloneDeep(scopeAction.find(item => item.id === data.id))
                 this.curIndex = index
                 this.curResIndex = resIndex
-
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
                 window.changeAlert = 'iamSidesider'
                 this.isShowResourceInstanceSideslider = true
@@ -809,7 +802,6 @@
                 if (payload.length < 1) {
                     return
                 }
-
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
                         && item.related_resource_types[0]
@@ -866,11 +858,9 @@
                 window.changeAlert = false
                 this.resourceInstanceSidesliderTitle = ''
                 this.isShowResourceInstanceSideslider = false
-
                 this.$emit('on-resource-select', this.curIndex, this.curResIndex, resItem.condition)
                 this.curIndex = -1
                 this.curResIndex = -1
-
                 // 这里触发 create/index.vue 里 handleAggregateAction 事件会导致 tableList 变化，导致 list 属性变化
                 // list 属性变化之后，isShowRelatedText 属性以及其他属性均会重置
                 // if (!this.isAllExpanded) {
@@ -885,7 +875,6 @@
                 const { system_id, type, name } = this.tableList[this.curIndex].related_resource_types[this.curResIndex]
                 const condition = []
                 const conditionData = this.$refs.renderResourceRef.handleGetPreviewValue()
-
                 conditionData.forEach(item => {
                     const { id, attribute, instance } = item
                     condition.push({
@@ -928,7 +917,6 @@
             handlerConditionMouseleave (payload) {
                 payload.canPaste = false
             },
-
             handlerOnView (payload, item, itemIndex) {
                 const { system_id, type, name } = item
                 const condition = []
@@ -999,7 +987,6 @@
                     actions
                 }
             },
-
             handlerOnPaste (payload, content, $index, contentIndex) {
                 // debugger
                 let tempCurData = ['none']
@@ -1050,7 +1037,6 @@
                     }
                     content.condition = _.cloneDeep(tempCurData)
                 }
-
                 content.isError = false
                 this.showMessage(this.$t(`m.info['粘贴成功']`))
                 this.$emit('on-resource-select', $index, contentIndex, content.condition)
@@ -1251,7 +1237,6 @@
                                         const attributeList = (attribute && attribute.length > 0)
                                             ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                                             : []
-
                                         const instanceList = (instance && instance.length > 0)
                                             ? instance.map(({ name, type, paths }) => {
                                                 const tempPath = _.cloneDeep(paths)
@@ -1347,7 +1332,6 @@
                     templates
                 }
             },
-
             getDataByNormal () {
                 if (this.isCreateMode) {
                     this.getData()
@@ -1380,7 +1364,6 @@
                                         const attributeList = (attribute && attribute.length > 0)
                                             ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                                             : []
-
                                         const instanceList = (instance && instance.length > 0)
                                             ? instance.map(({ name, type, paths }) => {
                                                 const tempPath = _.cloneDeep(paths)
@@ -1559,7 +1542,6 @@
                 }
             }
         }
-
     }
     .relate-instance-sideslider {
         .sideslider-content {
