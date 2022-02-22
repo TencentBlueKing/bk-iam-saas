@@ -51,12 +51,12 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column label="对象实例">
+                                <bk-table-column label="类型">
                                     <template slot-scope="props">
                                         <span>{{ objectMap[props.row.type] || props.row.type }}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column :label="$t(`m.audit['操作对象']`)">
+                                <bk-table-column :label="$t(`m.audit['实例']`)">
                                     <template slot-scope="props">
                                         <span>{{ props.row.name }}</span>
                                     </template>
@@ -102,12 +102,12 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column prop="name" label="对象实例">
+                                <bk-table-column prop="name" label="类型">
                                     <template slot-scope="props">
                                         <span>{{ objectMap[props.row.type] || props.row.type }}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column :label="$t(`m.audit['操作对象']`)">
+                                <bk-table-column :label="$t(`m.audit['实例']`)">
                                     <template slot-scope="props">
                                         <span>{{ props.row.name }}</span>
                                     </template>
@@ -139,19 +139,19 @@
                     <span :title="row.time">{{ row.time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['操作者']`)">
+            <bk-table-column :label="$t(`m.audit['操作类型']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ row.username }}</span>
+                    <span>{{ typeMap[row.type] || row.type }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['操作对象']`)">
+            <bk-table-column :label="$t(`m.audit['对象及类型']`)">
                 <template slot-scope="{ row }">
                     <span>{{ objectMap[row.object_type] || row.object_type }}：{{ row.object_name }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['操作类型']`)">
+            <bk-table-column :label="$t(`m.audit['操作者']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ typeMap[row.type] || row.type }}</span>
+                    <span>{{ row.username }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作来源']`)">
@@ -159,7 +159,7 @@
                     <span>{{ sourceMap[row.source_type] || row.source_type }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['状态']`)" width="100">
+            <bk-table-column :label="$t(`m.audit['操作状态']`)" width="100">
                 <template slot-scope="{ row }">
                     <render-status :status="row.status" />
                 </template>
@@ -230,8 +230,10 @@
     const ONLY_EXTRA_INFO_TYPE = [
         'group.policy.create',
         'group.policy.delete',
+        'group.policy.update',
         'user.policy.delete',
         'user.policy.create',
+        'user.policy.update',
         'role.group.renew',
         'template.version.sync'
     ];
@@ -369,7 +371,7 @@
                 },
                 {
                     id: 'object_type',
-                    name: this.$t(`m.audit['操作对象']`),
+                    name: this.$t(`m.audit['对象及类型']`),
                     remoteMethod: this.handleRemoteObjectType
                 },
                 {
@@ -393,7 +395,7 @@
                 },
                 {
                     id: 'status',
-                    name: this.$t(`m.audit['状态']`),
+                    name: this.$t(`m.audit['操作状态']`),
                     children: [
                         {
                             name: this.$t(`m.audit['成功']`),

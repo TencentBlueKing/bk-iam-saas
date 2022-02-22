@@ -114,6 +114,11 @@
             actions: {
                 handler (value) {
                     if (value.length > 0) {
+                        value.forEach(e => {
+                            if (!e.name) {
+                                e.name = e.action ? e.action.name : '--';
+                            }
+                        });
                         this.tableList = value.map(item => new GradePolicy(item));
                         this.tableList.forEach(item => {
                             if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {
