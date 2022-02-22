@@ -36,6 +36,7 @@
                                 v-for="(item, index) in panels"
                                 :key="item.name"
                                 :class="['tab-item', { 'has-margin-left': index !== 0 }]"
+                                data-test-id="group_addGroupMemberDialog_tab_switch"
                                 @click.stop="handleTabChange(item)">
                                 {{ item.label }}
                                 <span class="active-line" v-if="tabActive === item.name"></span>
@@ -82,6 +83,7 @@
                                 <div class="tree">
                                     <infinite-tree
                                         ref="memberTreeRef"
+                                        data-test-id="group_addGroupMemberDialog_tree_member"
                                         :all-data="treeList"
                                         style="height: 309px;"
                                         :is-rating-manager="curIsRatingManager"
@@ -98,6 +100,7 @@
                                     <template v-if="isHasSeachResult">
                                         <dialog-infinite-list
                                             ref="searchedResultsRef"
+                                            data-test-id="group_addGroupMemberDialog_list_searchResult"
                                             :all-data="searchedResult"
                                             :focus-index.sync="focusItemIndex"
                                             :is-disabled="isAll"
@@ -123,6 +126,7 @@
                         <div class="manual-wrapper" v-if="!isOrganization">
                             <bk-input
                                 :placeholder="$t(`m.common['手动输入提示']`)"
+                                data-test-id="group_addGroupMemberDialog_input_manualUser"
                                 type="textarea"
                                 :rows="14"
                                 v-model="manualValue"
@@ -136,6 +140,7 @@
                                 style="width: 100%; margin-top: 35px;"
                                 :loading="manualAddLoading"
                                 :disabled="isManualDisabled || isAll"
+                                data-test-id="group_addGroupMemberDialog_btn_addManualUser"
                                 @click="handleAddManualUser">
                                 {{ $t(`m.common['添加到已选列表']`) }}
                             </bk-button>
@@ -211,11 +216,11 @@
                 </template>
                 <template v-else>
                     <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
-                    <bk-button style="margin-left: 10px;" theme="primary" :disabled="isNextSureDisabled" :loading="loading" @click="handleSave">{{ $t(`m.common['确定']`) }}</bk-button>
+                    <bk-button style="margin-left: 10px;" theme="primary" :disabled="isNextSureDisabled" :loading="loading" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
                 </template>
             </template>
             <template v-else>
-                <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave">{{ $t(`m.common['确定']`) }}</bk-button>
+                <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
             </template>
             <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>

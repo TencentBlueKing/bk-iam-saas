@@ -56,7 +56,7 @@
             handleDataReady (payload) {
                 this.isLoading = !payload
             },
-            
+
             handlePanels (payload) {
                 if (payload === 'system_manager') {
                     this.panels = this.panels.filter(item => item.name === 'SystemManager')
