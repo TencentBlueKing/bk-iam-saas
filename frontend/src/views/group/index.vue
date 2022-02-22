@@ -1,11 +1,14 @@
 <template>
     <div class="iam-user-group-wrapper">
         <render-search>
-            <bk-button theme="primary" @click="handleCreate">{{ $t(`m.common['新建']`) }}</bk-button>
+            <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
+                {{ $t(`m.common['新建']`) }}
+            </bk-button>
             <bk-button
                 v-if="isSuperManager"
                 :disabled="currentSelectList.length < 1"
                 style="margin-left: 6px;"
+                data-test-id="group_btn_transferOut"
                 @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
             <!-- 先屏蔽 -->
             <div slot="right">

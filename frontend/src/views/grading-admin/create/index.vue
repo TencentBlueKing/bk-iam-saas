@@ -22,7 +22,8 @@
             v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
-                    <section class="action-wrapper" @click.stop="handleAddAction">
+                    <section class="action-wrapper" @click.stop="handleAddAction"
+                        data-test-id="grading_btn_showAddAction">
                         <Icon bk type="plus-circle-shape" />
                         <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
                     </section>
@@ -96,7 +97,9 @@
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
         <div slot="action">
-            <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
+            <bk-button theme="primary" type="button" @click="handleSubmit"
+                data-test-id="grading_btn_createSubmit"
+                :loading="submitLoading">
                 {{ $t(`m.common['提交']`) }}
             </bk-button>
             <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>

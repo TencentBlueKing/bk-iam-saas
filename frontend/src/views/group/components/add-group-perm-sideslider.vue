@@ -48,6 +48,7 @@
                         :outer-border="false"
                         :header-border="false"
                         :pagination="pagination"
+                        data-test-id="group_table_selectPermTemplate"
                         @page-change="handlePageChange"
                         @page-limit-change="handleLimitChange"
                         @select="handlerChange"
@@ -95,14 +96,14 @@
                             {{ actionCount }}
                             {{ $t(`m.common['个']`) }}
                             {{ $t(`m.common['操作']`) }}
-                            <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleEditCustomPerm">
+                            <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleEditCustomPerm" data-test-id="group_btn_editCustomPerm">
                                 {{ $t(`m.common['编辑']`) }}
                             </bk-button>
                         </p>
                     </template>
                     <template v-else>
                         {{ $t(`m.info['没有在模板中找到']`) }}，{{ $t(`m.common['也可']`) }}
-                        <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleAddCustomPerm">
+                        <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleAddCustomPerm" data-test-id="group_btn_addCustomPerm">
                             {{ $t(`m.info['添加自定义权限']`) }}
                         </bk-button>
                     </template>
@@ -110,7 +111,7 @@
             </section>
         </div>
         <div slot="footer" style="padding-left: 22px;">
-            <bk-button theme="primary" :disabled="isDisabled" @click="handleSubmit">{{ $t(`m.common['确定']`) }}</bk-button>
+            <bk-button theme="primary" :disabled="isDisabled" @click="handleSubmit" data-test-id="group_btn_addGroupConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
             <bk-button @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
     </bk-sideslider>
