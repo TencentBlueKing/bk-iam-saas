@@ -27,7 +27,7 @@
                     <div class="item" @click="handleOpenQuestion">{{ $t(`m.common['问题反馈']`) }}</div>
                 </div>
             </div>
-            <p class="user-name" @click.stop="handleSwitchIdentity">
+            <p class="user-name" @click.stop="handleSwitchIdentity" data-test-id="header_btn_triggerSwitchRole">
                 {{ curIdentity !== 'STAFF' ? curIdentity : user.username }}
                 <Icon type="down-angle" :class="['user-name-angle', { dropped: isShowUserDropdown }]" />
             </p>
@@ -62,6 +62,7 @@
                         </template>
                         <template v-else>
                             <li class="grading-item"
+                                data-test-id="header_btn_switchRole"
                                 v-for="item in curRoleList"
                                 :key="item.id"
                                 :title="item.name"

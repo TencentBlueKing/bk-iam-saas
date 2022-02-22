@@ -12,7 +12,8 @@
         <div class="confirm-content-wrapper">
             <div style="text-align: center;">{{ subTitle }}</div>
             <div class="operate-buttons">
-                <bk-button theme="primary" :loading="loading" @click="handleSumbitDelete">
+                <bk-button theme="primary" :loading="loading" @click="handleSumbitDelete"
+                    data-test-id="group_btn_deleteSubmit">
                     {{ $t(`m.common['确定']`) }}
                 </bk-button>
                 <bk-button theme="default" style="margin-left: 10px;" @click="hideCancelDelete">

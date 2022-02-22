@@ -27,7 +27,7 @@
                                 v-show="!routerDiff.includes(child.rkey)"
                                 :key="child.id"
                                 :class="['iam-menu-item', { active: openedItem === child.id }, { 'has-darkly-theme': isDarklyTheme }]"
-                                @click.stop="handleSwitchNav(child.id, child)">
+                                @click.stop="handleSwitchNav(child.id, child)" :data-test-id="`nav_menu_switchNav_${child.id}`">
                                 <Icon :type="child.icon" class="iam-menu-icon" />
                                 <span class="iam-menu-text">{{ child.name }}</span>
                             </div>
@@ -37,7 +37,7 @@
                         <div
                             v-show="!routerDiff.includes(item.rkey)"
                             :class="['iam-menu-item', { active: openedItem === item.id }, { 'has-darkly-theme': isDarklyTheme }]"
-                            @click.stop="handleSwitchNav(item.id, item)">
+                            @click.stop="handleSwitchNav(item.id, item)" :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
                             <span class="iam-menu-text" v-if="item.name === '分级管理员' && curRole === 'staff'">我的{{ item.name }}</span>
                             <span class="iam-menu-text" v-else>{{ item.name }}</span>

@@ -11,6 +11,7 @@
                         <bk-input
                             v-model="tempName"
                             style="width: 450px;"
+                            data-test-id="permTemplate_input_templateName"
                             clearable
                             :placeholder="$t(`m.common['模板名称可随时修改']`)"
                             :ext-cls="isShowNameError ? 'tempalte-name-error' : ''"
@@ -28,6 +29,7 @@
                         <bk-select
                             v-if="!isEdit"
                             v-model="systemValue"
+                            data-test-id="permTemplate_select_system"
                             style="width: 450px;"
                             :popover-min-width="450"
                             :placeholder="$t(`m.verify['请选择']`)"
@@ -37,7 +39,8 @@
                             <bk-option v-for="option in systemList"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.displayName">
+                                :name="option.displayName"
+                                :data-test-id="`permTemplate_selectOption_system_${option.id}`">
                                 <span>{{ option.name }}</span>
                                 <span style="color: #c4c6cc;">({{ option.id }})</span>
                             </bk-option>
@@ -113,6 +116,7 @@
                 <bk-button
                     theme="primary"
                     :loading="saveLoading"
+                    data-test-id="permTemplate_btn_createSubmit"
                     @click="handleCreateSubmit">
                     {{ $t(`m.common['提交']`) }}
                 </bk-button>

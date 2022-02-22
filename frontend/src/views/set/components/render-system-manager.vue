@@ -22,6 +22,7 @@
                                 :class="row.isError ? 'is-member-empty-cls' : ''"
                                 :placeholder="$t(`m.verify['请输入']`)"
                                 style="width: 100%;"
+                                data-test-id="set_userSelector_editSystemManager"
                                 @blur="handleSystemRtxBlur(row)"
                                 @change="handleSystemRtxChange(...arguments, row)"
                                 @keydown="handleSystemRtxEnter(...arguments, row)">
