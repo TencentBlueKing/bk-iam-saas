@@ -103,7 +103,7 @@ module.exports = {
 
         // 禁止在语句末尾使用分号
         // https://eslint.org/docs/rules/semi
-        'semi': ['error', 'never'],
+        'semi': ['error', 'always'],
 
         // 禁用不必要的分号
         // https://eslint.org/docs/rules/no-extra-semi
@@ -525,17 +525,13 @@ module.exports = {
         // v-text 指令必须合法
         'vue/valid-v-text': 'error',
 
-        'codecc/comment-ratio': 'off',
-
-        // eslint-disable-next-line no-dupe-keys
-        semi: ['error', 'always']
+        'codecc/comment-ratio': 'off'
     },
     overrides: [
         {
             files: ['*.vue'],
             rules: {
-                indent: 'off',
-                semi: ['error', 'always']
+                indent: 'off'
             }
         }
     ]
