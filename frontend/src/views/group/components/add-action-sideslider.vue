@@ -57,7 +57,7 @@
                         <div class="custom-tmpl-wrapper" v-for="(customTmpl, index) in systemData[curSystem].list" :key="index">
                             <label class="bk-label" style="line-height: 20px;">
                                 <span class="name">{{ customTmpl.name }}</span>
-                                <span :class="['select-all', { 'disabled': customTmpl.allDisabled }]" @click.stop="handleSelectAll(customTmpl, index)">
+                                <span :class="['select-all', { 'disabled': customTmpl.allDisabled }]" data-test-id="group_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
                                     （{{ customTmpl.text }}）
                                 </span>
                             </label>

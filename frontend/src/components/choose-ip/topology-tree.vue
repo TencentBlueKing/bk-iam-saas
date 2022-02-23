@@ -23,6 +23,7 @@
                             v-model="item.checked"
                             ext-cls="iam-topology-title-cls"
                             :title="`ID：${item.id}`"
+                            data-test-id="topology_checkbox_chooseip"
                             @change="handleNodeChange(...arguments, item, index)">
                             {{ item.name }}
                         </bk-checkbox>

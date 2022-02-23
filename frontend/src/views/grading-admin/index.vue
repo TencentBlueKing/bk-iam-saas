@@ -7,7 +7,7 @@
             </div>
         </bk-alert> -->
         <render-search>
-            <bk-button theme="primary" @click="handleCreate">
+            <bk-button theme="primary" @click="handleCreate" data-test-id="grading_btn_create">
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
             <bk-link class="AdminLink" theme="primary" @click="showImgDialog">
