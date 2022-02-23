@@ -24,6 +24,7 @@
  * IN THE SOFTWARE.
 */
 
+/* eslint-disable */
 module.exports = {
     root: true,
     parserOptions: {
@@ -535,4 +536,4 @@ module.exports = {
             }
         }
     ]
-}
+};

@@ -580,7 +580,7 @@ class RoleAuthorizationScopeChecker:
                 scope_str_paths.append(sp)
 
             for path in paths:
-                ps = PathNodeBeanList(path).to_path_string()
+                ps = PathNodeBeanList.parse_obj(path).to_path_string()
                 if ps not in path_string_set and self._is_path_match_scope_paths(path, scope_str_paths):
                     inside_paths.append(path)
                     path_string_set.add(ps)
@@ -590,7 +590,7 @@ class RoleAuthorizationScopeChecker:
         return paths
 
     def _is_path_match_scope_paths(self, path: List[PathNodeBean], scope_str_paths: List[str]):
-        tp = PathNodeBeanList(path).to_path_string()
+        tp = PathNodeBeanList.parse_obj(path).to_path_string()
         for sp in scope_str_paths:
             if tp.startswith(sp):
                 return True
