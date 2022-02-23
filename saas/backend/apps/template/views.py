@@ -386,7 +386,7 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
         template = self.get_object()
 
         # 判断模板是否存在已存在的预提交信息
-        lock = PermTemplatePreUpdateLock.objects.get_lock_not_running_or_raise(template_id=template.id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template.id)
         if not lock:
             return Response({})
 
@@ -496,7 +496,7 @@ class TemplateGroupSyncPreviewViewSet(TemplatePermissionMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         template = self.get_object()
-        lock = PermTemplatePreUpdateLock.objects.get_lock_waiting_or_raise(template_id=template.id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_waiting_or_raise(template_id=template.id)
 
         delete_action_set = set(template.action_ids) - set(lock.action_ids)
 
