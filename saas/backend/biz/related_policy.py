@@ -218,7 +218,7 @@ class RelatedPolicyBiz:
             return []
 
         # 重新分组
-        new_instances = group_paths([PathNodeBeanList(__root__=one).dict() for one in checked_path])
+        new_instances = group_paths([PathNodeBeanList.parse_obj(one).dict() for one in checked_path])
         return [ConditionBean(**{"id": gen_uuid(), "instances": new_instances, "attributes": []})]
 
     @staticmethod
