@@ -523,7 +523,7 @@ class TemplatePolicyCloneBiz:
         """
         生成新的Policy
         """
-        instances = group_paths([PathNodeBeanList(one).dict() for one in paths])
+        instances = group_paths([PathNodeBeanList.parse_obj(one).dict() for one in paths])
         condition = ConditionBean(instances=instances, attributes=[])
         related_resource_types = [
             RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
