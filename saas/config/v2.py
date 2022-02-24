@@ -59,8 +59,8 @@ CACHES = {
 # 判断是否为本地开发环境
 IS_LOCAL = False
 
-APP_CODE = os.getenv("APP_ID", "bk_iam")
-APP_SECRET = os.getenv("APP_TOKEN", "af76be9c-2b24-4006-a68e-e66abcfd67af")
+APP_CODE = BK_APP_CODE = os.getenv("APP_ID", "bk_iam")
+APP_SECRET = BK_APP_SECRET = os.getenv("APP_TOKEN", "af76be9c-2b24-4006-a68e-e66abcfd67af")
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
