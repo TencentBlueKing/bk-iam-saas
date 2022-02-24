@@ -280,7 +280,7 @@ LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL", "/")
 LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
 
 # 蓝鲸PASS平台URL
-BK_PAAS_HOST = os.getenv("BK_PAAS_HOST")
+BK_PAAS_HOST = os.getenv("BK_PAAS_HOST", os.getenv("BKPAAS_URL"))
 
 # 用于 用户认证、用户信息获取 的蓝鲸主机
 BK_PAAS_INNER_HOST = os.getenv("BK_PAAS2_URL", os.getenv("BK_PAAS_INNER_HOST", BK_PAAS_HOST))
