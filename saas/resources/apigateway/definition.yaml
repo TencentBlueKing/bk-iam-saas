@@ -17,7 +17,7 @@ stage:
     upstreams:
       loadbalance: "roundrobin"
       hosts:
-        - host: "{{ settings.BK_IAM_SAAS_SVC }}"
+        - host: "http://{{ settings.BK_IAM_SAAS_SVC }}"
           weight: 100
     transform_headers:
        set:
