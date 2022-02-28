@@ -94,11 +94,16 @@ def do_blueking_http_request(
     code = resp_data.get("code", -1)
     message = resp_data.get("message", "unknown")
 
-    if code == 0:
+    # code may be string or int, and login v1 the code is "00"
+    try:
+        code = int(code)
+    except Exception:  # pylint: disable=broad-except
+        pass
+    if code in ("0", 0, "00"):
         return resp_data["data"]
 
     logger.error(
-        "%s api error! %s %s, data: %s, request_id: %s, code: %d, message: %s",
+        "%s api error! %s %s, data: %s, request_id: %s, code: %s, message: %s",
         component,
         http_func.__name__,
         url,

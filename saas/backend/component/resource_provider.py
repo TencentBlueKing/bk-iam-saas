@@ -199,6 +199,11 @@ class ResourceProviderClient:
                 f"{self.system_id}'s API error: {error}! " f"{request_detail_info}"
             )
 
+        if "code" not in resp:
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(
+                f"{self.system_id}'s API response body.code missing! response_content: {resp}. {request_detail_info}"
+            )
+
         code = resp["code"]
         if code == 0:
             # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
