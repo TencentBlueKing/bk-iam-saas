@@ -8,7 +8,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Callable, Dict, List, Tuple
+import copy
+import logging
+from typing import Any, Callable, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
+
+from backend.common.error_codes import error_codes
+from backend.common.local import local
+
+logger = logging.getLogger("component")
 
 
 # TODO: 后续抽象成通用的公共函数，比如paging_func支持可变参数等，同时改成一个通用装饰器
@@ -43,3 +51,65 @@ def execute_all_data_by_paging(
     """通过分页数据的方式循环执行调用"""
     for i in range(0, len(data), page_size):
         paging_func(data[i : i + page_size])
+
+
+def _remove_sensitive_info(info: Optional[Dict]) -> str:
+    """
+    去除敏感信息
+    """
+    if info is None:
+        return ""
+
+    data = copy.copy(info)
+    sensitive_info_keys = ["bk_token", "bk_app_secret", "app_secret"]
+
+    for key in sensitive_info_keys:
+        if key in data:
+            data[key] = data[key][:6] + "******"
+    return str(data)
+
+
+def do_blueking_http_request(
+    component: str, http_func, url: str, data: Dict = None, headers: Dict = None, timeout: int = None
+):
+    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
+
+    ok, resp_data = http_func(**kwargs)
+    if not ok:
+        logger.error(
+            "%s api failed! %s %s, data: %s, request_id: %s, error: %s",
+            component,
+            http_func.__name__,
+            url,
+            _remove_sensitive_info(data),
+            local.request_id,
+            resp_data["error"],
+        )
+        raise error_codes.REMOTE_REQUEST_ERROR.format(
+            f"request {component} fail! "
+            f"Request=[{http_func.__name__} {urlparse(url).path} request_id={local.request_id}]"
+            f"error={resp_data['error']}"
+        )
+
+    code = resp_data.get("code", -1)
+    message = resp_data.get("message", "unknown")
+
+    if code == 0:
+        return resp_data["data"]
+
+    logger.error(
+        "%s api error! %s %s, data: %s, request_id: %s, code: %d, message: %s",
+        component,
+        http_func.__name__,
+        url,
+        _remove_sensitive_info(data),
+        local.request_id,
+        code,
+        message,
+    )
+
+    raise error_codes.REMOTE_REQUEST_ERROR.format(
+        f"request {component} error! "
+        f"Request=[{http_func.__name__} {urlparse(url).path} request_id={local.request_id}] "
+        f"Response[code={code}, message={message}]"
+    )

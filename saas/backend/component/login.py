@@ -9,44 +9,16 @@ specific language governing permissions and limitations under the License.
 """
 from django.conf import settings
 
-from backend.common.error_codes import error_codes
-from backend.common.local import local
 from backend.component.esb import _call_esb_api
 from backend.util.url import url_join
 
-from .http import http_get, logger
+from .http import http_get
+from .util import do_blueking_http_request
 
 
 def _call_login_api(http_func, url_path, data, timeout=30):
     url = url_join(settings.BK_PAAS_INNER_HOST, url_path)
-    kwargs = {"url": url, "data": data, "timeout": timeout}
-
-    ok, data = http_func(**kwargs)
-
-    # process result
-    if not ok:
-        message = "login api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
-        logger.error(message)
-        raise error_codes.REMOTE_REQUEST_ERROR.format(f'request login api error: {data["error"]}')
-
-    result = data.get("result")
-    if result:
-        return data["data"]
-
-    logger.error(
-        "login api error, request_id: %s, method: %s, info: %s, result: %s, message: %s",
-        local.request_id,
-        http_func.__name__,
-        kwargs,
-        result,
-        data.get("message", ""),
-    )
-
-    error_message = (
-        f"Request=[{http_func.__name__} {url_path} request_id={local.request_id}],"
-        f"Response[result={result}, message={message}]"
-    )
-    raise error_codes.ESB_REQUEST_ERROR.format(error_message)
+    return do_blueking_http_request("login", http_func, url, data, None, timeout)
 
 
 # TODO cache

@@ -117,10 +117,10 @@ class ErrorCodes:
     TASK_EXIST = APIException(1902420, _("存在重复任务"))
     # [ESB错误/component的公共错误(网络错误等等): 19020xx]
     REMOTE_REQUEST_ERROR = RemoteAPIException(1902000, _("请求第三方API错误"))
-    ESB_REQUEST_ERROR = RemoteAPIException(1902001, _("ESB请求返回码非0"))
+    # ESB_REQUEST_ERROR = RemoteAPIException(1902001, _("请求ESB后台错误"))
 
     # [IAM后台错误: 19021xx]
-    IAM_REQUEST_ERROR = RemoteAPIException(1902101, _("IAM后台请求返回码非0"))
+    # IAM_REQUEST_ERROR = RemoteAPIException(1902101, _("请求IAM后台错误"))
     ENGINE_REQUEST_ERROR = APIException(1902102, _("请求ENGINE错误"))
 
     # [第三方接入系统: 19022xx]

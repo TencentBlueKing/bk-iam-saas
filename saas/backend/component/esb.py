@@ -12,11 +12,11 @@ from typing import Dict
 
 from django.conf import settings
 
-from backend.common.error_codes import error_codes
 from backend.common.local import local
 from backend.util.url import url_join
 
-from .http import http_get, http_post, logger
+from .http import http_get, http_post
+from .util import do_blueking_http_request
 
 
 def _call_esb_api(http_func, url_path, data, timeout=30):
@@ -25,6 +25,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
         "Content-Type": "application/json",
         "X-Request-Id": local.request_id,
     }
+
     # Note: 目前企业版ESB调用的鉴权信息都是与接口的参数一起的，并非在header头里
     common_params = {
         "bk_app_code": settings.APP_CODE,
@@ -37,37 +38,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     data.update(common_params)
 
     url = url_join(settings.BK_COMPONENT_INNER_API_URL, url_path)
-    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
-
-    ok, data = http_func(**kwargs)
-    # remove sensitive info
-    kwargs["headers"] = {}
-
-    # process result
-    if not ok:
-        logger.error("esb api failed, method: %s, info: %s", http_func.__name__, kwargs)
-        raise error_codes.REMOTE_REQUEST_ERROR.format(f'request esb api error: {data["error"]}')
-
-    code = data["code"]
-    message = data["message"]
-
-    if code == 0:
-        return data["data"]
-
-    logger.error(
-        "esb api error, request_id: %s, method: %s, info: %s, code: %d, message: %s",
-        local.request_id,
-        http_func.__name__,
-        kwargs,
-        code,
-        message,
-    )
-
-    error_message = (
-        f"Request=[{http_func.__name__} {url_path} request_id={local.request_id}],"
-        f"Response[code={code}, message={message}]"
-    )
-    raise error_codes.ESB_REQUEST_ERROR.format(error_message)
+    return do_blueking_http_request("esb", http_func, url, data, headers, timeout)
 
 
 def get_api_public_key() -> Dict:

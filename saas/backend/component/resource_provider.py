@@ -147,7 +147,7 @@ class ResourceProviderClient:
             f"you should check: "
             f"1.the network is ok 2.{self.system_id} is available 3.get details from {self.system_id}'s log. "
             f"[POST {urlparse(self.url).path} body.data.method={data['method']}]"
-            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id})"
+            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id}) request_id={self.request_id}"
         )
 
         try:
