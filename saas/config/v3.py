@@ -116,6 +116,7 @@ LOG_LEVEL = "ERROR"
 _LOG_CLASS = "logging.handlers.RotatingFileHandler"
 
 if IS_LOCAL:
+    LOG_LEVEL = "DEBUG"
     _LOG_DIR = os.path.join(os.path.dirname(BASE_DIR), "logs", APP_CODE)
     _LOG_NAME_PREFIX = os.getenv("BKPAAS_LOG_NAME_PREFIX", APP_CODE)
     _LOGGING_FORMAT = {
