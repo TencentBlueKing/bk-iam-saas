@@ -33,8 +33,8 @@ def _call_login_api(http_func, url_path, data, timeout=30):
     if result:
         return data["data"]
 
-    logger.warning(
-        "login api warning, request_id: %s, method: %s, info: %s, result: %s, message: %s",
+    logger.error(
+        "login api error, request_id: %s, method: %s, info: %s, result: %s, message: %s",
         local.request_id,
         http_func.__name__,
         kwargs,

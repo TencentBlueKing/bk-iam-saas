@@ -156,8 +156,8 @@ class ResourceProviderClient:
             # 接入系统可返回request_id便于排查，避免接入系统未使用权限中心请求头里的request_id而自行生成，所以需要再获取赋值
             self.request_id = resp.headers.get("X-Request-Id") or self.request_id
             latency = int((time.time() - st) * 1000)
-            # 打印INFO日志，用于调试时使用
-            logger.info(
+            # 打印DEBUG日志，用于调试时使用
+            logger.debug(
                 f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
                 f"{base_log_msg}"
             )

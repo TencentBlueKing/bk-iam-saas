@@ -57,8 +57,8 @@ def _call_engine_api(http_func, url_path, data, timeout=30):
     if code == 0:
         return data["data"]
 
-    logger.warning(
-        "engine api warning, request_id: %s, method: %s, info: %s, code: %d message: %s",
+    logger.error(
+        "engine api error, request_id: %s, method: %s, info: %s, code: %d message: %s",
         local.request_id,
         http_func.__name__,
         kwargs,
