@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import re
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
@@ -501,6 +502,16 @@ class GroupBiz:
         return GroupRoleDict(
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
+
+    def search_member_by_keyword(self, group_members, keyword):
+        search_members = []
+        pattern = ".*".join(keyword)
+        keyword_regex = re.compile(pattern)
+        for member in group_members:
+            if keyword_regex.search(member.dict()["id"]) or keyword_regex.search(member.dict()["name"]):
+                search_members.append(member)
+
+        return search_members
 
 
 class GroupCheckBiz:
