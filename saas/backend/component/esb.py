@@ -15,6 +15,7 @@ from django.conf import settings
 from backend.common.local import local
 from backend.util.url import url_join
 
+from .constants import ComponentEnum
 from .http import http_get, http_post
 from .util import do_blueking_http_request
 
@@ -38,7 +39,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     data.update(common_params)
 
     url = url_join(settings.BK_COMPONENT_INNER_API_URL, url_path)
-    return do_blueking_http_request("esb", http_func, url, data, headers, timeout)
+    return do_blueking_http_request(ComponentEnum.ESB.value, http_func, url, data, headers, timeout)
 
 
 def get_api_public_key() -> Dict:

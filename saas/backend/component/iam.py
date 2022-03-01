@@ -19,6 +19,7 @@ from backend.util.cache import region
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
+from .constants import ComponentEnum
 from .http import http_delete, http_get, http_post, http_put
 from .util import do_blueking_http_request, execute_all_data_by_paging, list_all_data_by_paging
 
@@ -44,7 +45,7 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
 
     url = url_join(settings.BK_IAM_HOST, url_path)
 
-    return do_blueking_http_request("iam", http_func, url, data, headers, timeout)
+    return do_blueking_http_request(ComponentEnum.IAM.value, http_func, url, data, headers, timeout)
 
 
 def list_system(fields: str = DEFAULT_SYSTEM_FIELDS) -> List[Dict]:

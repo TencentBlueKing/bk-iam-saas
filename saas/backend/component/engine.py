@@ -17,6 +17,7 @@ from backend.common.local import local
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
+from .constants import ComponentEnum
 from .http import http_post
 from .util import do_blueking_http_request
 
@@ -42,7 +43,7 @@ def _call_engine_api(http_func, url_path, data, timeout=30):
     if settings.BK_IAM_ENGINE_HOST_TYPE == "direct":
         url = url_join(settings.BK_IAM_ENGINE_HOST, f"/api/v1{url_path}")
 
-    return do_blueking_http_request("engine", http_func, url, data, headers, timeout)
+    return do_blueking_http_request(ComponentEnum.ENGINE.value, http_func, url, data, headers, timeout)
 
 
 def batch_query_subjects(data: List[Dict[str, Any]]):

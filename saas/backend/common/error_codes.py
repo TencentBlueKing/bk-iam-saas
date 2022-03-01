@@ -117,10 +117,8 @@ class ErrorCodes:
     TASK_EXIST = APIException(1902420, _("存在重复任务"))
     # [ESB错误/component的公共错误(网络错误等等): 19020xx]
     REMOTE_REQUEST_ERROR = RemoteAPIException(1902000, _("请求第三方API错误"))
-    # ESB_REQUEST_ERROR = RemoteAPIException(1902001, _("请求ESB后台错误"))
 
     # [IAM后台错误: 19021xx]
-    # IAM_REQUEST_ERROR = RemoteAPIException(1902101, _("请求IAM后台错误"))
     ENGINE_REQUEST_ERROR = APIException(1902102, _("请求ENGINE错误"))
 
     # [第三方接入系统: 19022xx]
@@ -135,9 +133,6 @@ class ErrorCodes:
     RESOURCE_PROVIDER_INTERNAL_SERVER_ERROR = APIException(1902250, _("接入系统自身接口异常"))
     RESOURCE_PROVIDER_JSON_LOAD_ERROR = APIException(1902250, _("接入系统自身接口返回数据进行JSON解析出错"))
     RESOURCE_PROVIDER_DATA_INVALID = APIException(1902250, _("接入系统自身接口返回数据不符合要求"))
-
-    # [用户管理请求或同步等错误 19023xx]
-    # USERMGR_REQUEST_ERROR = RemoteAPIException(1902301, _("用户管理请求返回码非0"))
 
     # 通用系统错误
     SYSTEM_ERROR = APIException(1902500, _("系统错误"))

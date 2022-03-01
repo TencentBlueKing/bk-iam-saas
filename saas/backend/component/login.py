@@ -12,13 +12,14 @@ from django.conf import settings
 from backend.component.esb import _call_esb_api
 from backend.util.url import url_join
 
+from .constants import ComponentEnum
 from .http import http_get
 from .util import do_blueking_http_request
 
 
 def _call_login_api(http_func, url_path, data, timeout=30):
     url = url_join(settings.BK_PAAS_INNER_HOST, url_path)
-    return do_blueking_http_request("login", http_func, url, data, None, timeout)
+    return do_blueking_http_request(ComponentEnum.LOGIN.value, http_func, url, data, None, timeout)
 
 
 # TODO cache
