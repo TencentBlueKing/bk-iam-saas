@@ -807,7 +807,7 @@
                 }
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
-                        && item.resource_groups
+                        && item.resource_groups[this.curGroupIndex]
                         && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
                             .related_resource_types[0].system_id);
                     if (curIndex > -1) {
