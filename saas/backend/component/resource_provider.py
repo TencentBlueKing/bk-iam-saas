@@ -271,7 +271,11 @@ class ResourceProviderClient:
     def list_attr(self) -> List[Dict[str, str]]:
         """查询某个资源类型可用于配置权限的属性列表"""
         data = {"type": self.resource_type_id, "method": ResourceAPIEnum.LIST_ATTR.value}
-        return self._handle_empty_data(self._call_api(data), default=[])
+        resp_data = self._handle_empty_data(self._call_api(data), default=[])
+
+        # {"id": "id", "display_name":""} should not be displayed in frontend for making policy
+        removed_attr_id_data = [d for d in resp_data if d.get("id") != "id"]
+        return removed_attr_id_data
 
     def list_attr_value(
         self, attr: str, filter_condition: Dict, page: Dict[str, int]
