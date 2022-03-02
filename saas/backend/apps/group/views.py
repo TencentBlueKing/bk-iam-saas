@@ -264,8 +264,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
             slz.is_valid(raise_exception=True)
             keyword = slz.validated_data["keyword"]
 
-            _, group_members = self.biz.list_paging_group_member(group.id, 1000, 0)
-            group_members = self.biz.search_member_by_keyword(group_members, keyword)
+            group_members = self.biz.search_member_by_keyword(group.id, keyword)
 
             return Response({"results": [one.dict() for one in group_members]})
 
