@@ -35,16 +35,18 @@
                 <template slot-scope="{ row, $index }">
                     <template v-if="!isEdit">
                         <template v-if="!row.isEmpty">
-                            <p class="related-resource-item"
-                                v-for="item in row.related_resource_types"
-                                :key="item.type">
-                                <render-resource-popover
-                                    :key="item.type"
-                                    :data="item.condition"
-                                    :value="`${item.name}：${item.value}`"
-                                    :max-width="380"
-                                    @on-view="handleViewResource(row)" />
-                            </p>
+                            <div v-for="_ in row.resource_groups" :key="_.id">
+                                <p class="related-resource-item"
+                                    v-for="item in _.related_resource_types"
+                                    :key="item.type">
+                                    <render-resource-popover
+                                        :key="item.type"
+                                        :data="item.condition"
+                                        :value="`${item.name}：${item.value}`"
+                                        :max-width="380"
+                                        @on-view="handleViewResource(row)" />
+                                </p>
+                            </div>
                         </template>
                         <template v-else>
                             {{ $t(`m.common['无需关联实例']`) }}
@@ -79,36 +81,38 @@
                         </div>
                         <div class="relation-content-wrapper" v-else>
                             <template v-if="!row.isEmpty">
-                                <div class="relation-content-item"
-                                    v-for="(content, contentIndex) in row.related_resource_types"
-                                    :key="contentIndex">
-                                    <div class="content-name">
-                                        {{ content.name }}
-                                        <template v-if="row.isShowRelatedText">
-                                            <div style="display: inline-block; color: #979ba5;">
-                                                ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <div class="content">
-                                        <render-condition
-                                            data-test-id="group_input_resourceInstanceCondition"
-                                            :ref="`condition_${$index}_${contentIndex}_ref`"
-                                            :value="content.value"
-                                            :is-empty="content.empty"
-                                            :can-view="row.canView"
-                                            :params="curCopyParams"
-                                            :can-paste="content.canPaste"
-                                            :is-error="content.isError"
-                                            @on-mouseover="handlerConditionMouseover(content)"
-                                            @on-mouseleave="handlerConditionMouseleave(content)"
-                                            @on-view="handlerOnView(row, content, contentIndex)"
-                                            @on-restore="handlerOnRestore(content)"
-                                            @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
-                                            @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
-                                            @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
-                                            @on-click="showResourceInstance(row, $index, content, contentIndex)" />
-                                        <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
+                                    <div class="relation-content-item"
+                                        v-for="(content, contentIndex) in _.related_resource_types"
+                                        :key="contentIndex">
+                                        <div class="content-name">
+                                            {{ content.name }}
+                                            <template v-if="row.isShowRelatedText && _.id">
+                                                <div style="display: inline-block; color: #979ba5;">
+                                                    ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="content">
+                                            <render-condition
+                                                data-test-id="group_input_resourceInstanceCondition"
+                                                :ref="`condition_${$index}_${contentIndex}_ref`"
+                                                :value="content.value"
+                                                :is-empty="content.empty"
+                                                :can-view="row.canView"
+                                                :params="curCopyParams"
+                                                :can-paste="content.canPaste"
+                                                :is-error="content.isError"
+                                                @on-mouseover="handlerConditionMouseover(content)"
+                                                @on-mouseleave="handlerConditionMouseleave(content)"
+                                                @on-view="handlerOnView(row, content, contentIndex, groIndex)"
+                                                @on-restore="handlerOnRestore(content)"
+                                                @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
+                                                @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
+                                                @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
+                                                @on-click="showResourceInstance(row, $index, content, contentIndex, groIndex)" />
+                                            <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -281,6 +285,7 @@
                 disabled: false,
                 curIndex: -1,
                 curResIndex: -1,
+                curGroupIndex: -1,
                 isShowPreviewDialog: false,
                 previewDialogTitle: '',
                 previewResourceParams: {},
@@ -315,10 +320,11 @@
                 return this.mode === 'detail' ? 890 : 725;
             },
             condition () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return [];
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex];
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
                 if (!curData) {
                     return [];
                 }
@@ -327,43 +333,50 @@
             originalCondition () {
                 if (this.curIndex === -1
                     || this.curResIndex === -1
+                    || this.curGroupIndex === -1
                     || this.originalList.length < 1) {
                     return [];
                 }
                 const curId = this.tableList[this.curIndex].id;
-                const curType = this.tableList[this.curIndex].related_resource_types[this.curResIndex].type;
+                const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex].type;
                 if (!this.originalList.some(item => item.id === curId)) {
                     return [];
                 }
                 const curResTypeData = this.originalList.find(item => item.id === curId);
-                if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
+                if (!curResTypeData.resource_groups[this.curGroupIndex]
+                    .related_resource_types.some(item => item.type === curType)) {
                     return [];
                 }
-                const curData = (curResTypeData.related_resource_types || []).find(item => item.type === curType);
+                const curData = (curResTypeData.resource_groups[this.curGroupIndex]
+                    .related_resource_types || []).find(item => item.type === curType);
                 if (!curData) {
                     return [];
                 }
                 return _.cloneDeep(curData.condition);
             },
             curDisabled () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return false;
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex];
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
                 return curData.isDefaultLimit;
             },
             curFlag () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return 'add';
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex];
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
                 return curData.flag;
             },
             curSelectionMode () {
-                if (this.curIndex === -1 || this.curResIndex === -1) {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
                     return 'all';
                 }
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex];
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
                 return curData.selectionMode;
             },
             isShowPreview () {
@@ -398,6 +411,7 @@
                         this.curCopyData = ['none'];
                         this.curIndex = -1;
                         this.curResIndex = -1;
+                        this.curGroupIndex = -1;
                         this.aggregateResourceParams = {};
                         this.aggregateIndex = -1;
                         this.aggregateValue = [];
@@ -475,15 +489,19 @@
             handleViewResource (payload) {
                 this.curId = payload.id;
                 const params = [];
-                if (payload.related_resource_types.length > 0) {
-                    payload.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item;
-                        params.push({
-                            name: type,
-                            label: `${name} ${this.$t(`m.common['实例']`)}`,
-                            tabType: 'resource',
-                            data: condition
-                        });
+                if (payload.resource_groups.length > 0) {
+                    payload.resource_groups.forEach(groupItem => {
+                        if (groupItem.related_resource_types.length > 0) {
+                            groupItem.related_resource_types.forEach(item => {
+                                const { name, type, condition } = item;
+                                params.push({
+                                    name: type,
+                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
+                                    tabType: 'resource',
+                                    data: condition
+                                });
+                            });
+                        }
                     });
                 }
                 this.previewData = _.cloneDeep(params);
@@ -699,13 +717,14 @@
             },
             handleLimitChange () {
                 window.changeDialog = true;
-                const curData = this.tableList[this.curIndex].related_resource_types[this.curResIndex];
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
                 curData.isChange = true;
             },
             handleOnInit (payload) {
                 this.disabled = !payload;
             },
-            showResourceInstance (data, index, resItem, resIndex) {
+            showResourceInstance (data, index, resItem, resIndex, groupIndex) {
                 window.changeDialog = true;
                 this.params = {
                     system_id: this.systemId,
@@ -720,6 +739,7 @@
                 this.curScopeAction = _.cloneDeep(scopeAction.find(item => item.id === data.id));
                 this.curIndex = index;
                 this.curResIndex = resIndex;
+                this.curGroupIndex = groupIndex;
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideslider = true;
@@ -736,18 +756,21 @@
                     delete item.attribute;
                 });
                 const curData = _.cloneDeep(this.tableList[this.curIndex]);
-                curData.related_resource_types = [curData.related_resource_types[this.curResIndex]];
-                curData.related_resource_types[0].condition = curPayload;
+                // eslint-disable-next-line max-len
+                curData.resource_groups[this.curGroupIndex].related_resource_types = [curData.resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex]];
+                curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload;
                 const relatedList = _.cloneDeep(this.tableList.filter(item => {
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
                         && curData.detail.system.id === item.detail.system.id
-                        && !item.related_resource_types.every(sub => sub.empty);
+                        && item.resource_groups
+                        && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
                 }));
                 if (relatedList.length > 0) {
                     relatedList.forEach(item => {
                         delete item.policy_id;
-                        item.related_resource_types.forEach(resItem => {
+                        item.resource_groups[this.curGroupIndex].related_resource_types.forEach(resItem => {
                             resItem.condition.forEach(conditionItem => {
                                 conditionItem.instances = conditionItem.instance || [];
                                 conditionItem.attributes = conditionItem.attribute || [];
@@ -784,8 +807,9 @@
                 }
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
-                        && item.related_resource_types[0]
-                        && sub.detail.system.id === item.related_resource_types[0].system_id);
+                        && item.resource_groups
+                        && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
+                            .related_resource_types[0].system_id);
                     if (curIndex > -1) {
                         const old = this.tableList[curIndex];
                         this.tableList.splice(curIndex, 1, new GroupPolicy(
@@ -813,16 +837,17 @@
             },
             // 保存
             async handleResourceSumit () {
-                // debugger
                 window.changeDialog = true;
                 const conditionData = this.$refs.renderResourceRef.handleGetValue();
                 const { isEmpty, data } = conditionData;
                 if (isEmpty) {
                     this.curIndex = -1;
                     this.curResIndex = -1;
+                    this.curGroupIndex = -1;
                     return;
                 }
-                const resItem = this.tableList[this.curIndex].related_resource_types[this.curResIndex];
+                const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
                 const isConditionEmpty = data.length === 1 && data[0] === 'none';
                 if (isConditionEmpty) {
                     resItem.condition = ['none'];
@@ -838,9 +863,10 @@
                 window.changeAlert = false;
                 this.resourceInstanceSidesliderTitle = '';
                 this.isShowResourceInstanceSideslider = false;
-                this.$emit('on-resource-select', this.curIndex, this.curResIndex, resItem.condition);
+                this.$emit('on-resource-select', this.curIndex, this.curResIndex, resItem.condition, this.curGroupIndex);
                 this.curIndex = -1;
                 this.curResIndex = -1;
+                this.curGroupIndex = -1;
                 // 这里触发 create/index.vue 里 handleAggregateAction 事件会导致 tableList 变化，导致 list 属性变化
                 // list 属性变化之后，isShowRelatedText 属性以及其他属性均会重置
                 // if (!this.isAllExpanded) {
@@ -852,7 +878,7 @@
                 // debugger
                 window.changeDialog = true;
                 // eslint-disable-next-line max-len
-                const { system_id, type, name } = this.tableList[this.curIndex].related_resource_types[this.curResIndex];
+                const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex].related_resource_types[this.curResIndex];
                 const condition = [];
                 const conditionData = this.$refs.renderResourceRef.handleGetPreviewValue();
                 conditionData.forEach(item => {
@@ -1162,6 +1188,7 @@
             resetDataAfterClose () {
                 this.curIndex = -1;
                 this.curResIndex = -1;
+                this.curGroupIndex = -1;
                 this.previewResourceParams = {};
                 this.params = {};
                 this.resourceInstanceSidesliderTitle = '';
@@ -1193,63 +1220,72 @@
                     let aggregationParam = {};
                     let systemId = '';
                     if (!item.isAggregate) {
+                        const groupResourceTypes = [];
                         const { type, id, name, environment, description } = item;
                         systemId = item.detail.system.id;
-                        const relatedResourceTypes = [];
-                        if (item.related_resource_types.length > 0) {
-                            item.related_resource_types.forEach(resItem => {
-                                if (resItem.empty) {
-                                    resItem.isError = true;
-                                    flag = true;
-                                }
-                                const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-                                    ? resItem.condition.map(conItem => {
-                                        const { id, instance, attribute } = conItem;
-                                        const attributeList = (attribute && attribute.length > 0)
-                                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                                            : [];
-                                        const instanceList = (instance && instance.length > 0)
-                                            ? instance.map(({ name, type, paths }) => {
-                                                const tempPath = _.cloneDeep(paths);
-                                                tempPath.forEach(pathItem => {
-                                                    pathItem.forEach(pathSubItem => {
-                                                        delete pathSubItem.disabled;
-                                                    });
-                                                });
+                        if (item.resource_groups.length > 0) {
+                            item.resource_groups.forEach(groupItem => {
+                                const relatedResourceTypes = [];
+                                if (groupItem.related_resource_types.length > 0) {
+                                    groupItem.related_resource_types.forEach(resItem => {
+                                        if (resItem.empty) {
+                                            resItem.isError = true;
+                                            flag = true;
+                                        }
+                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                            ? resItem.condition.map(conItem => {
+                                                const { id, instance, attribute } = conItem;
+                                                const attributeList = (attribute && attribute.length > 0)
+                                                    ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                                                    : [];
+                                                const instanceList = (instance && instance.length > 0)
+                                                    ? instance.map(({ name, type, paths }) => {
+                                                        const tempPath = _.cloneDeep(paths);
+                                                        tempPath.forEach(pathItem => {
+                                                            pathItem.forEach(pathSubItem => {
+                                                                delete pathSubItem.disabled;
+                                                            });
+                                                        });
+                                                        return {
+                                                            name,
+                                                            type,
+                                                            path: tempPath
+                                                        };
+                                                    })
+                                                    : [];
                                                 return {
-                                                    name,
-                                                    type,
-                                                    path: tempPath
+                                                    id,
+                                                    instances: instanceList,
+                                                    attributes: attributeList
                                                 };
                                             })
                                             : [];
-                                        return {
-                                            id,
-                                            instances: instanceList,
-                                            attributes: attributeList
-                                        };
-                                    })
-                                    : [];
-                                relatedResourceTypes.push({
-                                    type: resItem.type,
-                                    system_id: resItem.system_id,
-                                    name: resItem.name,
-                                    condition: conditionList.filter(
-                                        item => item.instances.length > 0 || item.attributes.length > 0
-                                    )
+                                        relatedResourceTypes.push({
+                                            type: resItem.type,
+                                            system_id: resItem.system_id,
+                                            name: resItem.name,
+                                            condition: conditionList.filter(
+                                                item => item.instances.length > 0 || item.attributes.length > 0
+                                            )
+                                        });
+                                    });
+                                }
+                                groupResourceTypes.push({
+                                    id: groupItem.id,
+                                    related_resource_types: relatedResourceTypes
                                 });
+                                actionParam = {
+                                    type,
+                                    name,
+                                    id,
+                                    description,
+                                    resource_groups: groupResourceTypes,
+                                    environment
+                                };
                             });
                             // 强制刷新下
-                            item.related_resource_types = _.cloneDeep(item.related_resource_types);
+                            item.resource_groups = _.cloneDeep(item.resource_groups);
                         }
-                        actionParam = {
-                            type,
-                            name,
-                            id,
-                            description,
-                            related_resource_types: relatedResourceTypes,
-                            environment
-                        };
                     } else {
                         systemId = item.system_id;
                         const { actions, aggregateResourceType, instances } = item;
