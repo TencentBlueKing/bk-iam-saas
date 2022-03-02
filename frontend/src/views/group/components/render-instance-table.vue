@@ -764,7 +764,7 @@
                     return !item.isAggregate
                         && relatedActions.includes(item.id)
                         && curData.detail.system.id === item.detail.system.id
-                        && item.resource_groups
+                        && item.resource_groups[this.curGroupIndex]
                         && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
                 }));
                 if (relatedList.length > 0) {
@@ -1088,11 +1088,13 @@
                     if (payload.data.length === 0) {
                         this.tableList.forEach(item => {
                             if (!item.isAggregate) {
-                                item.related_resource_types.forEach(resItem => {
-                                    if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
-                                        resItem.condition = [];
-                                        resItem.isError = false;
-                                    }
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types.forEach(resItem => {
+                                        if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
+                                            resItem.condition = [];
+                                            resItem.isError = false;
+                                        }
+                                    });
                                 });
                             } else {
                                 if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
@@ -1107,11 +1109,13 @@
                             if (!item.isAggregate) {
                                 const curPasteData = (payload.data || []).find(_ => _.id === item.id);
                                 if (curPasteData) {
-                                    item.related_resource_types.forEach(resItem => {
-                                        if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
-                                            resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
-                                            resItem.isError = false;
-                                        }
+                                    item.resource_groups.forEach(groupItem => {
+                                        groupItem.related_resource_types.forEach(resItem => {
+                                            if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                                resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                                                resItem.isError = false;
+                                            }
+                                        });
                                     });
                                 }
                             } else {
@@ -1159,12 +1163,14 @@
                     }
                     this.tableList.forEach(item => {
                         if (!item.isAggregate) {
-                            item.related_resource_types.forEach((subItem, subItemIndex) => {
-                                if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                                    subItem.condition = _.cloneDeep(tempCurData);
-                                    subItem.isError = false;
-                                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
-                                }
+                            item.resource_groups.forEach(groupItem => {
+                                groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
+                                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                                        subItem.condition = _.cloneDeep(tempCurData);
+                                        subItem.isError = false;
+                                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
+                                    }
+                                });
                             });
                         } else {
                             if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
