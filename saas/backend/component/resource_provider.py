@@ -147,7 +147,7 @@ class ResourceProviderClient:
             f"you should check: "
             f"1.the network is ok 2.{self.system_id} is available 3.get details from {self.system_id}'s log. "
             f"[POST {urlparse(self.url).path} body.data.method={data['method']}]"
-            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id})"
+            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id}) request_id={self.request_id}"
         )
 
         try:
@@ -156,8 +156,8 @@ class ResourceProviderClient:
             # 接入系统可返回request_id便于排查，避免接入系统未使用权限中心请求头里的request_id而自行生成，所以需要再获取赋值
             self.request_id = resp.headers.get("X-Request-Id") or self.request_id
             latency = int((time.time() - st) * 1000)
-            # 打印INFO日志，用于调试时使用
-            logger.info(
+            # 打印DEBUG日志，用于调试时使用
+            logger.debug(
                 f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
                 f"{base_log_msg}"
             )
@@ -197,6 +197,11 @@ class ResourceProviderClient:
             # 数据异常，JSON解析出错
             raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(
                 f"{self.system_id}'s API error: {error}! " f"{request_detail_info}"
+            )
+
+        if "code" not in resp:
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(
+                f"{self.system_id}'s API response body.code missing! response_content: {resp}. {request_detail_info}"
             )
 
         code = resp["code"]

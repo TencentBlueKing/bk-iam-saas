@@ -51,6 +51,7 @@ session.mount("http://", adapter)
 def _http_request(method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None):
     trace_func = partial(http_trace, method=method, url=url, data=data)
 
+    request_id = headers.get("X-Request-Id", "-") if headers else "-"
     st = time.time()
     try:
         if method == "GET":
@@ -78,7 +79,7 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
         else:
             return False, {"error": "method not supported"}
     except requests.exceptions.RequestException as e:
-        logger.exception("http request error! method: %s, url: %s, data: %s", method, url, data)
+        logger.exception("http request error! %s %s, data: %s, request_id: %s", method, url, data, request_id)
         trace_func(exc=traceback.format_exc())
         return False, {"error": str(e)}
     else:
@@ -96,14 +97,20 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
             logger.warning("http slow request! method: %s, url: %s, latency: %dms", method, url, latency)
 
         if resp.status_code != 200:
-            content = resp.content[:100] if resp.content else ""
+            content = resp.content[:256] if resp.content else ""
             error_msg = (
-                "http request fail! method: %s, url: %s, data: %s, " "response_status_code: %s, response_content: %s"
+                "http request fail! %s %s, data: %s, request_id: %s, response.status_code: %s, response.body: %s"
             )
-            logger.error(error_msg, method, url, str(data), resp.status_code, content)
+            logger.error(error_msg, method, url, str(data), request_id, resp.status_code, content)
 
             trace_func(status_code=resp.status_code, content=content)
-            return False, {"error": f"status_code is {resp.status_code}, not 200"}
+
+            return False, {
+                "error": (
+                    f"status_code is {resp.status_code}, not 200! "
+                    f"{method} {urlparse(url).path}, request_id={request_id}, resp.body={content}"
+                )
+            }
 
         return True, resp.json()
 
