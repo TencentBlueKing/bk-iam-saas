@@ -10,13 +10,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterIndexTogether(
-            name='authapiallowlistconfig',
-            index_together=set(),
-        ),
-        migrations.AlterUniqueTogether(
-            name='authapiallowlistconfig',
-            unique_together={('system_id', 'object_id')},
-        ),
-
     ]
