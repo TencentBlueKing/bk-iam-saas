@@ -349,6 +349,7 @@ export const m = {
         '收起导航': 'Collapse The Navigation',
         '固定导航': 'Fixed The Navigation',
         '权限申请': 'Apply',
+        '临时权限申请': 'provisional provisional Apply',
         '我的申请': 'My Application',
         '我的审批': 'My Approval',
         '我的权限': 'My Permissions',
