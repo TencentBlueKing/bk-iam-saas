@@ -726,13 +726,13 @@
                     }
                     this.submitLoading = true;
                     window.changeDialog = false;
-                    // debugger
                     const params = {
                         ...this.formData,
                         members: this.members,
                         expired_at: this.expired_at,
                         templates
                     };
+                    // debugger;
                     try {
                         await this.$store.dispatch('userGroup/addUserGroup', params);
                         this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);

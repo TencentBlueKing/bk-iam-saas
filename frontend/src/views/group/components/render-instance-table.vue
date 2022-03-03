@@ -1280,18 +1280,18 @@
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
                                 });
-                                actionParam = {
-                                    type,
-                                    name,
-                                    id,
-                                    description,
-                                    resource_groups: groupResourceTypes,
-                                    environment
-                                };
                             });
                             // 强制刷新下
                             item.resource_groups = _.cloneDeep(item.resource_groups);
                         }
+                        actionParam = {
+                            type,
+                            name,
+                            id,
+                            description,
+                            resource_groups: groupResourceTypes,
+                            environment
+                        };
                     } else {
                         systemId = item.system_id;
                         const { actions, aggregateResourceType, instances } = item;
