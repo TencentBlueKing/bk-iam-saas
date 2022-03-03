@@ -525,15 +525,15 @@
                 const scopeAction = this.authorization[systemId];
                 const actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id));
                 const conditions = actions.map(
-                    item => item.related_resource_types[0].condition
+                    item => item.resource_groups[0].related_resource_types[0].condition
                 ).filter(_ => _.length > 0);
                 if (conditions.length < 1) {
                     return [];
                 }
                 const instances = actions.map(item =>
                     (
-                        item.related_resource_types[0].condition[0]
-                        && item.related_resource_types[0].condition[0].instances
+                        item.resource_groups[0].related_resource_types[0].condition[0]
+                        && item.resource_groups[0].related_resource_types[0].condition[0].instances
                     ) || []
                 );
                 const tempData = [];
