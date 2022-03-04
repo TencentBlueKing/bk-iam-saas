@@ -23,7 +23,7 @@
                                     icon="plus"
                                     theme="primary"
                                     @click="handleGoToAdd">
-                                    {{ $t(`m.common['新增']`) }}
+                                    {{ $t(`m.common['新增模板']`) }}
                                 </bk-button>
                             </div>
                             <iam-search-select
@@ -306,7 +306,7 @@
             },
 
             getIsSelect (row, index) {
-                return row.tag === 'unchecked' && !row.need_to_update;
+                return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled;
             },
 
             handleRefresh () {
