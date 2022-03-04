@@ -100,15 +100,16 @@ class DBDepartmentSyncService(BaseSyncDBService):
             if dept.id not in new_department_id_set:
                 continue
             if dept.parent_id != new_department_parent_dict[dept.id]:
-                dept.parent_id = new_department_parent_dict[dept.id]
-                updated_parent_departments.append(dept)
+                updated_parent_departments.append({"id": dept.id, "parent_id": new_department_parent_dict[dept.id]})
 
         if not updated_parent_departments:
             return
 
         # SaaS使用mptt进行更新parent
-        for dept in updated_parent_departments:
-            dept.parent = Department.objects.get(id=dept.parent_id) if dept.parent_id else None
+        for d in updated_parent_departments:
+            # Note: 这里必须重新获取部门对象，否则会是旧的数据，这样会导致更新时lft\rght\level错误
+            dept = Department.objects.get(id=d["id"])
+            dept.parent = Department.objects.get(id=d["parent_id"]) if d["parent_id"] else None
             dept.save()
 
     def updated_handler(self):
