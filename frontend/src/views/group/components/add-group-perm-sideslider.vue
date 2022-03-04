@@ -182,7 +182,8 @@
                 authorizationScope: {},
                 requestQueueBySys: [],
                 requestQueueByTemplate: [],
-                selectLength: ''
+                selectLength: '',
+                selection: []
             };
         },
         computed: {
@@ -228,6 +229,7 @@
                         this.fetchData(false, true);
                     } else {
                         window.changeAlert = this.pageChangeAlertMemo;
+                        this.selection = [];
                     }
                 },
                 immediate: true
@@ -321,6 +323,7 @@
                 this.currentSelectList = [];
                 this.requestQueueBySys = [];
                 this.requestQueueByTemplate = [];
+                this.selection = [];
                 this.fetchData(true);
             },
 
@@ -405,9 +408,19 @@
                 this.fetchData(true);
             },
 
-            handlerChange (selection, row) {
+            async handlerChange (selection, row) {
                 window.changeAlert = true;
-                const checked = selection.length >= this.currentSelectList.length;
+                if (!this.curSelectedTemplate.includes(row.id)) {
+                    const obj = {};
+                    this.selection = [...this.selection, ...selection].reduce((pre, item) => {
+                        // eslint-disable-next-line no-unused-expressions
+                        obj[item.id] ? '' : obj[item.id] = true && pre.push(item);
+                        return pre;
+                    }, []);
+                } else {
+                    this.selection = this.selection.filter(item => item.id !== row.id);
+                }
+                const checked = this.selection.length >= this.currentSelectList.length;
                 this.currentSelectList = [...selection.map(item => item.id)];
                 if (checked) {
                     if (!this.curSelectedSystem.includes(row.system.id)) {
@@ -460,6 +473,7 @@
                 try {
                     const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: false });
                     this.tempalteDetailList.push(res.data);
+                    console.log('this.tempalteDetailList1', this.tempalteDetailList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
