@@ -294,6 +294,7 @@
 
             async handleEnabledChange (newVal, oldVal, val, payload) {
                 if (!payload.userBackup || payload.userBackup.length < 1) {
+                    payload.system_permission_enabled = newVal;
                     return;
                 }
                 try {
