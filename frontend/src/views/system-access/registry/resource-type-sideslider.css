@@ -1,9 +1,15 @@
+.icon-info-instance{
+    position: fixed;
+    right: 550px;
+    top: 20px;
+    z-index: 9999;
+}
 .resource-type-sideslider {
     z-index: 2503;
     .content-wrapper {
         position: relative;
         padding: 12px 30px 12px 12px;
-        min-height: calc(100vh - 114px)
+        min-height: calc(100vh - 114px);
     }
     .add-resource-type-form-wrapper {
         margin-bottom: 20px;

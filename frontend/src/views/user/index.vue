@@ -5,11 +5,15 @@
             <div class="header-wrapper">
                 <span class="text">{{ $t(`m.common['组织架构']`) }}</span>
                 <div class="icon-content">
-                    <div :class="['action-wrapper', { 'is-disabled': isSync }]"
-                        :title="isSync ? $t(`m.user['正在同步中']`) : $t(`m.user['同步组织']`)"
-                        @click.stop="handleSyncDepartment">
-                        <Icon type="refresh" />
-                    </div>
+                    <iam-popover-confirm
+                        :title="$t(`m.common['确定同步']`)"
+                        :confirm-handler="() => handleSyncDepartment(row, $index)">
+                        <div :class="['action-wrapper', { 'is-disabled': isSync }]"
+                            :title="isSync ? $t(`m.user['正在同步中']`) : $t(`m.user['同步组织']`)"
+                        >
+                            <Icon type="refresh" />
+                        </div>
+                    </iam-popover-confirm>
                     <div class="action-wrapper"
                         @click.stop="handleSyncRecordList">
                         <Icon type="time-circle-fill" />
@@ -156,7 +160,8 @@
             <template v-else-if="isRecord">
                 <record-list
                     :params="curSelectedData"
-                    @on-init="handleInitRecordContent" />
+                    @on-init="handleInitRecordContent"
+                    @handleBack="handleBack" />
             </template>
             <template v-else>
                 <render-user
@@ -176,6 +181,7 @@
     import RenderDepart from './components/render-depart';
     import RenderUser from './components/render-user';
     import RecordList from './components/record-list';
+    import IamPopoverConfirm from '@/components/iam-popover-confirm';
     export default {
         name: '',
         components: {
@@ -183,7 +189,8 @@
             dialogInfiniteList,
             RenderDepart,
             RenderUser,
-            RecordList
+            RecordList,
+            IamPopoverConfirm
         },
         data () {
             return {
@@ -776,6 +783,11 @@
 
             handleInitRecordContent (payload) {
                 this.rightLoading = !payload;
+            },
+
+            // 子组件emit方法
+            handleBack () {
+                this.curSelectedData.type = 'depart';
             }
 
         }

@@ -1,10 +1,12 @@
 <template>
     <bk-form class="action-base-info" :model="formData" :rules="rules" form-type="vertical" ref="basicInfoForm">
-        <iam-form-item :label="$t(`m.access['操作ID']`)" :property="'id'" required>
+        <iam-form-item :label="$t(`m.access['操作ID']`)" :property="'id'" required
+            :desc="$t(`m.access['操作的唯一标识']`)">
             <bk-input class="input" :disabled="!formData.isNewAdd" v-model="formData.id"
                 @change="handleChange('id', ...arguments)" :placeholder="$t(`m.access['请输入操作ID']`)" />
         </iam-form-item>
-        <iam-form-item :label="$t(`m.access['操作类型']`)" :property="'type'" required>
+        <iam-form-item :label="$t(`m.access['操作类型']`)" :property="'type'" required
+            :desc="$t(`m.access['仅使用建筑材料操作分类使用']`)">
             <bk-select v-model="formData.type" class="input" :disabled="!formData.isEdit"
                 @change="handleChange('type', ...arguments)" searchable :placeholder="$t(`m.access['请选择操作类型']`)">
                 <bk-option v-for="option in typeList"
@@ -14,15 +16,18 @@
                 </bk-option>
             </bk-select>
         </iam-form-item>
-        <iam-form-item :label="$t(`m.access['操作中文名']`)" :property="'name'" required>
+        <iam-form-item :label="$t(`m.access['操作中文名']`)" :property="'name'" required
+            :desc="$t(`m.access['即操作展示名称，中文名称：名词+动词，如：服务器重启，脚本操作']`)">
             <bk-input class="input" :disabled="!formData.isEdit" v-model="formData.name"
                 @change="handleChange('name', ...arguments)" :placeholder="$t(`m.access['请输入操作中文名']`)" />
         </iam-form-item>
-        <iam-form-item :label="$t(`m.access['操作英文名']`)" :property="'name_en'" required>
+        <iam-form-item :label="$t(`m.access['操作英文名']`)" :property="'name_en'" required
+            :desc="$t(`m.access['国际化版本会展示该字段']`)">
             <bk-input class="input" :disabled="!formData.isEdit" v-model="formData.name_en"
                 @change="handleChange('name_en', ...arguments)" :placeholder="$t(`m.access['请输入操作英文名']`)" />
         </iam-form-item>
-        <iam-form-item :label="$t(`m.access['操作中文描述']`)" :property="'description'" required>
+        <iam-form-item :label="$t(`m.access['操作中文描述']`)" :property="'description'" required
+            :desc="$t(`m.access['简要描述清楚操作的功能作用']`)">
             <bk-input
                 type="textarea"
                 v-model="formData.description"
@@ -31,7 +36,8 @@
                 :placeholder="$t(`m.access['请输入操作中文描述']`)">
             </bk-input>
         </iam-form-item>
-        <iam-form-item :label="$t(`m.access['操作英文描述']`)" :property="'description_en'" required>
+        <iam-form-item :label="$t(`m.access['操作英文描述']`)" :property="'description_en'" required
+            :desc="$t(`m.access['国际化版本会展示该字段']`)">
             <!-- eslint-disable vue/camelcase -->
             <bk-input
                 type="textarea"

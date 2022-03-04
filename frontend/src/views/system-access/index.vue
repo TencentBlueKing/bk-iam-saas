@@ -2,9 +2,12 @@
     <div class="iam-system-access-wrapper">
         <render-search>
             <bk-button theme="primary" @click="goCreate">{{ $t(`m.common['新增']`) }}</bk-button>
-            <!-- <div slot="right" class="right">
-                <bk-link theme="primary" :href="'http://www.qq.com'" target="_blank">{{ $t(`m.access['1分钟了解蓝鲸权限中心']`) }}</bk-link>
-            </div> -->
+            <div slot="right" class="right">
+                <bk-button theme="primary" class="right" text @click="showHelpDialog">
+                    <!-- {{ $t(`m.common['编辑']`) }} -->
+                    接入帮助
+                </bk-button>
+            </div>
         </render-search>
         <bk-table
             :data="tableList"
@@ -78,6 +81,31 @@
                 </template>
             </bk-table-column>
         </bk-table>
+        <bk-dialog
+            v-model="helpDialog"
+            :show-footer="noFooter"
+            title="接入帮助"
+            width="1000"
+            header-position="left"
+            ext-cls="showHelp">
+            <div class="help-main">
+                <div class="help-info">
+                    <div class="info-right ml20">
+                        <p class="info-title">{{$t(`m.nav['系统接入']`)}}</p>
+                        <p class="info">蓝鲸权限中心提供了体验DEMO、接入文档、多语言SDK、接入视频，帮助开发者更快地实现权限接入。</p>
+                        <bk-button theme="primary">{{$t(`m.access['去接入']`)}}</bk-button>
+                    </div>
+                </div>
+                <div class="help-list">
+                    <div v-for="item in helpList" :key="item.name">
+                        <div>{{item.name}}</div>
+                        <p class="pt10" v-for="e in item.urlInfo" :key="e.text">
+                            <bk-link theme="primary" :href="e.url" target="_blank">{{e.text}}</bk-link>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 <script>
@@ -95,7 +123,64 @@
                     limit: 10
                 },
                 currentBackup: 1,
-                currentSelectList: []
+                currentSelectList: [],
+                helpDialog: false,
+                noFooter: false,
+                helpList: [
+                    {
+                        name: '接入前准备',
+                        urlInfo: [
+                            {
+                                'text': '什么是蓝鲸权限中心', url: 'https://bk.tencent.com/docs/document/6.0/131/7337'
+                            },
+                            {
+                                'text': '工作原理', url: 'https://bk.tencent.com/docs/document/6.0/131/8381'
+                            },
+                            {
+                                'text': '了解概念', url: 'https://bk.tencent.com/docs/document/6.0/131/7343'
+                            }
+                        ]
+                    },
+                    {
+                        name: '接入教程',
+                        urlInfo: [
+                            {
+                                'text': '开发接入文档', url: 'https://bk.tencent.com/docs/document/6.0/160/8391'
+                            },
+                            {
+                                'text': '开发接入实战视频', url: 'https://bkvideos-1252002024.cos.ap-guangzhou.myqcloud.com/bkiam/quanxianzhognxinkaifajierushizhan.MP4'
+                            }
+                        ]
+                    },
+                    {
+                        name: 'DEMO',
+                        urlInfo: [
+                            {
+                                'text': '立即体验', url: 'http://www.qq.com'
+                            },
+                            {
+                                'text': '源码下载', url: 'http://www.qq.com'
+                            }
+                        ]
+                    },
+                    {
+                        name: '鉴权SDK',
+                        urlInfo: [
+                            {
+                                'text': 'Python', url: 'https://github.com/TencentBlueKing/iam-python-sdk'
+                            },
+                            {
+                                'text': 'Go', url: 'https://github.com/TencentBlueKing/iam-go-sdk'
+                            },
+                            {
+                                'text': 'PHP', url: 'https://github.com/TencentBlueKing/iam-php-sdk'
+                            },
+                            {
+                                'text': '更多', url: 'https://bk.tencent.com/docs/document/6.0/160/8470'
+                            }
+                        ]
+                    }
+                ]
             };
         },
         watch: {
@@ -207,6 +292,10 @@
 
             handlerChange (selection, row) {
                 this.currentSelectList = [...selection];
+            },
+
+            showHelpDialog () {
+                this.helpDialog = true;
             }
         }
     };
@@ -243,6 +332,30 @@
             .lock-status {
                 font-size: 12px;
                 color: #fe9c00;
+            }
+        }
+    }
+    .showHelp {
+        .help-main{
+            .help-info{
+                display: flex;
+                justify-content: space-between;
+                padding-bottom: 28px;
+                border-bottom: 1px solid #DCDEE5;
+                .info-title{
+                    color: #313238;
+                    font-size: 18px;
+                    font-weight: 700;
+                }
+                .info{
+                    padding: 17px 0 40px 0;
+                }
+            }
+            .help-list{
+                padding-top: 28px;
+                display: flex;
+                justify-content: space-between;
+                width: 70%;
             }
         }
     }
