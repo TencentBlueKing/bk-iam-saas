@@ -31,7 +31,7 @@ export default class Policy {
     // flag = '' 为默认拉取，flag = 'add' 为新添加的，flag = 'detail' 为权限模板详情, flag = 'custom' 为自定义申请权限
     // tag: add updata unchanged create
     // instanceNotDisabled: instance 不允许 disabled
-    constructor (payload, flag = '', instanceNotDisabled = false) {
+    constructor (payload, flag = '', instanceNotDisabled = false, isProv = false) {
         this.type = payload.type;
         this.id = payload.id;
         this.policy_id = payload.policy_id || '';
@@ -54,16 +54,19 @@ export default class Policy {
         this.isShowRelatedText = payload.isShowRelatedText || false;
         this.inOriginalList = payload.inOriginalList || false;
         this.related_environments = payload.related_environments || [];
-        this.initExpired(payload);
+        this.initExpired(payload, isProv);
         this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag, instanceNotDisabled);
         this.initAttachActions(payload);
     }
 
-    initExpired (payload) {
+    initExpired (payload, isProv) {
         this.expired_display = payload.expired_display;
         // 默认显示永久
         if (payload.expired_at === null) {
             this.expired_at = 15552000;
+            if (isProv) {
+                this.expired_at = 3600;
+            }
             return;
         }
         if (DURATION_LIST.includes(payload.expired_at) && this.policy_id !== '') {

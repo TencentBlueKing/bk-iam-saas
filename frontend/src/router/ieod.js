@@ -41,7 +41,7 @@ const ApplyCustomPerm = () => import(
 
 // 申请临时权限
 const applyProvisionPerm = () => import(
-    /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-custom-perm');
+    /* webpackChunkName: 'perm-apply' */'../views/tempora-perm-apply/apply-custom-perm');
 
 // 申请加入用户组
 const ApplyJoinUserGroup = () => import(
