@@ -266,7 +266,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
             group_members = self.biz.search_member_by_keyword(group.id, keyword)
 
-            return Response({"results": [one for one in group_members]})
+            return Response({"results": group_members})
 
         pagination = LimitOffsetPagination()
         limit = pagination.get_limit(request)
