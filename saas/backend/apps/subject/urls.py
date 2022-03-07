@@ -45,6 +45,11 @@ urlpatterns = [
                     views.SubjectTemporaryPolicyViewSet.as_view({"get": "list", "delete": "destroy"}),
                     name="subject.temporary_policies",
                 ),
+                path(
+                    "temporary_policy_systems/",
+                    views.SubjectTemporaryPolicySystemViewSet.as_view({"get": "list"}),
+                    name="subject.temporary_policy_systems",
+                ),
             ]
         ),
     )

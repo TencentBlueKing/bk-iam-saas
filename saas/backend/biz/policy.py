@@ -1343,8 +1343,11 @@ class PolicyQueryBiz:
         """
         查询subject有权限的系统-policy数量信息
         """
-        system_list = self.system_svc.new_system_list()
         system_counts = self.svc.list_system_counter_by_subject(subject)
+        return self._system_counter_to_system_counter_bean(system_counts)
+
+    def _system_counter_to_system_counter_bean(self, system_counts: List[SystemCounter]) -> List[SystemCounterBean]:
+        system_list = self.system_svc.new_system_list()
         system_count_beans = parse_obj_as(List[SystemCounterBean], system_counts)
 
         for scb in system_count_beans:
@@ -1354,6 +1357,13 @@ class PolicyQueryBiz:
             scb.fill_empty_fields(system)
 
         return system_count_beans
+
+    def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
+        """
+        查询subject有权限的系统-临时policy数量信息
+        """
+        system_counts = self.svc.list_temporary_system_counter_by_subject(subject)
+        return self._system_counter_to_system_counter_bean(system_counts)
 
     def get_policy_resource_type_conditions(
         self, subject: Subject, policy_id: int, resource_group_id: str, resource_system: str, resource_type: str

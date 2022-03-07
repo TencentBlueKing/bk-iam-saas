@@ -313,3 +313,26 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
         audit_context_setter(subject=subject, system_id=system_id, policies=policies)
 
         return Response()
+
+
+class SubjectTemporaryPolicySystemViewSet(GenericViewSet):
+
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
+
+    paginator = None  # 去掉swagger中的limit offset参数
+
+    biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject有临时权限的所有系统列表",
+        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=None,
+        responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
+        tags=["subject"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
+        data = self.biz.list_temporary_system_counter_by_subject(subject)
+
+        return Response([one.dict() for one in data])

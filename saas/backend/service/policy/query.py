@@ -141,6 +141,18 @@ class PolicyQueryService:
 
         return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
 
+    def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
+        """
+        查询subject有权限的系统-临时policy数量信息
+        """
+        qs = (
+            TemporaryPolicy.objects.filter(subject_type=subject.type, subject_id=subject.id)
+            .values("system_id")
+            .annotate(count=Count("system_id"))
+        )
+
+        return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
+
     def get_system_policy(self, policy_id: int, subject: Subject) -> Tuple[str, Policy]:
         """
         获取指定的Policy
