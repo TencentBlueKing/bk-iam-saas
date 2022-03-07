@@ -49,3 +49,39 @@ class Policy(BaseModel):
     @resources.setter
     def resources(self, resources):
         self._resources = json_dumps(resources)
+
+
+class TemporaryPolicy(BaseModel):
+    """
+    临时权限
+    """
+
+    # subject
+    subject_type = models.CharField(max_length=32)
+    subject_id = models.CharField(max_length=64)
+
+    # system
+    system_id = models.CharField(max_length=32)
+
+    # action
+    action_type = models.CharField("操作类型", max_length=32, default="")
+    action_id = models.CharField("操作ID", max_length=64)
+
+    # policy
+    _resources = models.TextField("资源策略", db_column="resources")  # json
+    expired_at = models.IntegerField("过期时间")
+    policy_id = models.BigIntegerField("后端policy_id", default=0)
+
+    class Meta:
+        verbose_name = "临时权限策略"
+        verbose_name_plural = "临时权限策略"
+
+        index_together = ["subject_id", "subject_type", "system_id"]
+
+    @property
+    def resources(self):
+        return json.loads(self._resources)
+
+    @resources.setter
+    def resources(self, resources):
+        self._resources = json_dumps(resources)

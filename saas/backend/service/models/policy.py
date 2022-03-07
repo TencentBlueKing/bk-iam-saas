@@ -9,11 +9,12 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import namedtuple
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
+from backend.apps.policy.models import TemporaryPolicy
 from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
@@ -244,7 +245,7 @@ class Policy(BaseModel):
         return False
 
     @classmethod
-    def from_db_model(cls, policy: PolicyModel, expired_at: int) -> "Policy":
+    def from_db_model(cls, policy: Union[PolicyModel, TemporaryPolicy], expired_at: int) -> "Policy":
         # 兼容新老结构
         resource_groups = policy.resources
         if cls._is_old_structure(policy.resources):
@@ -265,6 +266,18 @@ class Policy(BaseModel):
             system_id=system_id,
             action_type="",
             action_id=self.action_id,
+        )
+        p.resources = self.resource_groups.dict()
+        return p
+
+    def to_temporary_model(self, system_id: str, subject: Subject) -> TemporaryPolicy:
+        p = TemporaryPolicy(
+            subject_type=subject.type,
+            subject_id=subject.id,
+            system_id=system_id,
+            action_type="",
+            action_id=self.action_id,
+            expired_at=self.expired_at,
         )
         p.resources = self.resource_groups.dict()
         return p

@@ -40,6 +40,11 @@ urlpatterns = [
                     views.SubjectPolicyResourceGroupDeleteViewSet.as_view({"delete": "destroy"}),
                     name="subject.resource_group_delete",
                 ),
+                path(
+                    "temporary_policies/",
+                    views.SubjectTemporaryPolicyViewSet.as_view({"get": "list", "delete": "destroy"}),
+                    name="subject.temporary_policies",
+                ),
             ]
         ),
     )

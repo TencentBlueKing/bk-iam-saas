@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from functools import wraps
-from typing import List
+from typing import Any, Dict, List
 
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
@@ -188,7 +188,7 @@ class ConditionView(views.APIView):
         data = serializer.validated_data
 
         # 1. 查询用户已有的policy的condition
-        related_resource_type = data["related_resource_type"]
+        related_resource_type: Dict[str, Any] = data["related_resource_type"]
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
             Subject(type=SubjectType.USER.value, id=request.user.username),
             data["policy_id"],
@@ -386,5 +386,36 @@ class ApplicationByRenewPolicyView(views.APIView):
         self.biz.create_for_renew_policy(
             parse_obj_as(List[ApplicationRenewPolicyInfoBean], data["policies"]), request.user.username, data["reason"]
         )
+
+        return Response({}, status=status.HTTP_201_CREATED)
+
+
+class ApplicationByTemporaryPolicyView(views.APIView):
+    """
+    申请临时权限
+    """
+
+    trans = ApplicationDataTrans()
+    biz = ApplicationBiz()
+
+    @swagger_auto_schema(
+        operation_description="提交临时权限申请",
+        request_body=ApplicationSLZ(label="申请"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_201_CREATED: {}},
+        tags=["application"],
+    )
+    @admin_not_need_apply_check
+    def create(self, request, *args, **kwargs):
+        serializer = ApplicationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        user_id = request.user.username
+
+        # 将Dict数据转换为创建单据所需的数据结构
+        application_data = self.trans.from_grant_temporary_policy_application(user_id, data)
+        # 创建单据
+        self.biz.create_for_policy(ApplicationTypeEnum.GRANT_TEMPORARY_ACTION.value, application_data)
 
         return Response({}, status=status.HTTP_201_CREATED)

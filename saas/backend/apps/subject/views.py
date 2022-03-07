@@ -247,3 +247,65 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
         audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
 
         return Response()
+
+
+class SubjectTemporaryPolicyViewSet(GenericViewSet):
+
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
+
+    paginator = None  # 去掉swagger中的limit offset参数
+
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户的所有临时权限列表",
+        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=SystemQuerySLZ,
+        responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
+        tags=["policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = SystemQuerySLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+
+        system_id = slz.validated_data["system_id"]
+
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        policies = self.policy_query_biz.list_temporary_by_subject(system_id, subject)
+
+        return Response([p.dict() for p in policies])
+
+    @swagger_auto_schema(
+        operation_description="删除权限",
+        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=PolicyDeleteSLZ,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["policy"],
+    )
+    @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        slz = PolicyDeleteSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+
+        system_id = slz.validated_data["system_id"]
+        ids = slz.validated_data["ids"]
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
+        permission_logger.info(
+            "subject type=%s, id=%s temporary polices %s deleted by user %s",
+            subject.type,
+            subject.id,
+            ids,
+            request.user.username,
+        )
+
+        policies = self.policy_query_biz.list_temporary_by_policy_ids(system_id, subject, ids)
+
+        # 删除权限
+        self.policy_operation_biz.delete_temporary_policies_by_ids(system_id, subject, ids)
+
+        # 写入审计上下文
+        audit_context_setter(subject=subject, system_id=system_id, policies=policies)
+
+        return Response()

@@ -205,6 +205,15 @@ class ApprovedPassApplicationBiz:
         info = self._gen_role_info_bean(data)
         self.role_biz.update(role, info, subject.id)
 
+    def _grant_temporary_action(self, subject: Subject, data: Dict):
+        """临时权限授权"""
+        system_id = data["system"]["id"]
+        actions = data["actions"]
+
+        self.policy_operation_biz.create_temporary_policies(
+            system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
+        )
+
     def handle(self, application: Application):
         """审批通过处理"""
         func_name = f"_{application.type}"
