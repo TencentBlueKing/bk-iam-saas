@@ -506,8 +506,10 @@ class GroupBiz:
         search_members = []
         _, group_members = self.list_paging_group_member(group_id, 1000, 0)
 
-        for member in group_members:
-            if keyword in member.dict()["id"] or keyword in member.dict()["name"]:
+        for m in group_members:
+            member = m.dict()
+
+            if keyword in member["id"] or keyword in member["name"]:
                 search_members.append(member)
 
         return search_members
