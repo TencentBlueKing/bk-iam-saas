@@ -328,6 +328,7 @@ class EventDetailExtra:
         AuditType.USER_POLICY_UPDATE.value: SubjectPoliciesProvider,
         AuditType.USER_POLICY_CREATE.value: SubjectPoliciesProvider,
         AuditType.USER_ROLE_DELETE.value: UserRoleDeleteProvider,
+        AuditType.USER_TEMPORARY_POLICY_DELETE.value: SubjectPoliciesProvider,
         # template
         AuditType.TEMPLATE_CREATE.value: BaseProvider,
         AuditType.TEMPLATE_DELETE.value: BaseProvider,

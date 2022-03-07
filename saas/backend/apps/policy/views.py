@@ -19,7 +19,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.apps.subject.audit import SubjectPolicyDeleteAuditProvider
+from backend.apps.subject.audit import SubjectPolicyDeleteAuditProvider, SubjectTemporaryPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.constants import PolicyTag
 from backend.biz.open import ApplicationPolicyListCache
@@ -398,7 +398,7 @@ class TemporaryPolicyViewSet(GenericViewSet):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["policy"],
     )
-    @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
+    @view_audit_decorator(SubjectTemporaryPolicyDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         slz = PolicyDeleteSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)

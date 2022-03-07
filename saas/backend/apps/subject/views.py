@@ -26,7 +26,11 @@ from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum, SubjectRelationType
 from backend.service.models import Subject
 
-from .audit import SubjectGroupDeleteAuditProvider, SubjectPolicyDeleteAuditProvider
+from .audit import (
+    SubjectGroupDeleteAuditProvider,
+    SubjectPolicyDeleteAuditProvider,
+    SubjectTemporaryPolicyDeleteAuditProvider,
+)
 from .serializers import SubjectGroupSLZ, UserRelationSLZ
 
 permission_logger = logging.getLogger("permission")
@@ -283,7 +287,7 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["policy"],
     )
-    @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
+    @view_audit_decorator(SubjectTemporaryPolicyDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         slz = PolicyDeleteSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)

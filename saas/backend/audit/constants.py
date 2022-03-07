@@ -61,6 +61,7 @@ class AuditType(ChoicesEnum, StrEnum):
     USER_POLICY_DELETE = auto()
     USER_GROUP_DELETE = auto()
     USER_ROLE_DELETE = auto()
+    USER_TEMPORARY_POLICY_DELETE = auto()
     DEPARTMENT_GROUP_DELETE = auto()
     DEPARTMENT_UPDATE = auto()
 
