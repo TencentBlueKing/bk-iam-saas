@@ -18,12 +18,6 @@ from django.utils.deprecation import MiddlewareMixin
 from pyinstrument.middleware import ProfilerMiddleware
 from sentry_sdk import capture_exception
 
-try:
-    from raven.contrib.django.raven_compat.models import sentry_exception_handler
-# 兼容未有安装sentry的情况
-except ImportError:
-    sentry_exception_handler = None
-
 from backend.common.local import local
 
 logger = logging.getLogger("app")
@@ -99,7 +93,6 @@ class AppExceptionMiddleware(MiddlewareMixin):
                 json.dumps(getattr(request, request.method, None)),
             )
         )
-        capture_exception(exception)
 
         # 对于check开头函数进行遍历调用，如有满足条件的函数，则不屏蔽异常
         check_funtions = self.get_check_functions()
@@ -111,8 +104,7 @@ class AppExceptionMiddleware(MiddlewareMixin):
         response.status_code = 500
 
         # notify sentry
-        if sentry_exception_handler is not None:
-            sentry_exception_handler(request=request)
+        capture_exception(exception)
 
         return response
 
