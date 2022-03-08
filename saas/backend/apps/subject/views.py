@@ -267,7 +267,7 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
         auto_schema=ResponseSwaggerAutoSchema,
         query_serializer=SystemQuerySLZ,
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
-        tags=["policy"],
+        tags=["subject"],
     )
     def list(self, request, *args, **kwargs):
         slz = SystemQuerySLZ(data=request.query_params)
@@ -285,7 +285,7 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
         auto_schema=ResponseSwaggerAutoSchema,
         query_serializer=PolicyDeleteSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
-        tags=["policy"],
+        tags=["subject"],
     )
     @view_audit_decorator(SubjectTemporaryPolicyDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):

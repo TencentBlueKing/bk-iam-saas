@@ -406,7 +406,7 @@ class ApplicationByTemporaryPolicyView(views.APIView):
         tags=["application"],
     )
     @admin_not_need_apply_check
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = ApplicationSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
