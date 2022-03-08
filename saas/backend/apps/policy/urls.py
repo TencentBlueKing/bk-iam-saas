@@ -34,14 +34,4 @@ urlpatterns = [
         views.BatchPolicyResourceCopyViewSet.as_view({"post": "create"}),
         name="policy.resource_copy",
     ),
-    path(
-        "temporary_policies/",
-        views.TemporaryPolicyViewSet.as_view({"get": "list", "delete": "destroy"}),
-        name="policy.temporary_policies",
-    ),
-    path(
-        "temporary_policy_systems/",
-        views.PolicySystemViewSet.as_view({"get": "list"}),
-        name="policy.temporary_policy_systems",
-    ),
 ]

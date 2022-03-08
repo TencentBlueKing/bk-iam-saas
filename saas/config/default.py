@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "backend.debug",
     "backend.apps.handover",
     "backend.apps.mgmt",
+    "backend.apps.temporary_policy",
 ]
 
 
@@ -197,6 +198,7 @@ CELERY_IMPORTS = (
     "backend.audit.tasks",
     "backend.publisher.tasks",
     "backend.long_task.tasks",
+    "backend.apps.temporary_policy.tasks",
 )
 
 CELERYBEAT_SCHEDULE = {
@@ -253,7 +255,7 @@ CELERYBEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
     },
     "periodic_clean_expired_temporary_policies": {
-        "task": "backend.apps.policy.tasks.clean_expired_temporary_policies",
+        "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
 }

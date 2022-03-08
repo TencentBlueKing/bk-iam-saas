@@ -9,12 +9,12 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import namedtuple
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Type, Union
 
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
-from backend.apps.policy.models import TemporaryPolicy
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
@@ -259,8 +259,10 @@ class Policy(BaseModel):
             resource_groups=ResourceGroupList.parse_obj(resource_groups),
         )
 
-    def to_db_model(self, system_id: str, subject: Subject) -> PolicyModel:
-        p = PolicyModel(
+    def to_db_model(
+        self, system_id: str, subject: Subject, model: Union[Type[PolicyModel], Type[TemporaryPolicy]] = PolicyModel
+    ) -> Union[PolicyModel, TemporaryPolicy]:
+        p = model(
             subject_type=subject.type,
             subject_id=subject.id,
             system_id=system_id,
@@ -268,18 +270,10 @@ class Policy(BaseModel):
             action_id=self.action_id,
         )
         p.resources = self.resource_groups.dict()
-        return p
 
-    def to_temporary_model(self, system_id: str, subject: Subject) -> TemporaryPolicy:
-        p = TemporaryPolicy(
-            subject_type=subject.type,
-            subject_id=subject.id,
-            system_id=system_id,
-            action_type="",
-            action_id=self.action_id,
-            expired_at=self.expired_at,
-        )
-        p.resources = self.resource_groups.dict()
+        if isinstance(p, TemporaryPolicy):
+            p.expired_at = self.expired_at
+
         return p
 
     def to_backend_dict(self, system_id: str):

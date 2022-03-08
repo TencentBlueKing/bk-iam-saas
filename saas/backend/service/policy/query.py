@@ -14,7 +14,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
 from backend.apps.policy.models import Policy as PolicyModel
-from backend.apps.policy.models import TemporaryPolicy
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.error_codes import error_codes
 from backend.component import iam
 

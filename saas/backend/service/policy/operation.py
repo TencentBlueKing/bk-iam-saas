@@ -14,7 +14,7 @@ from typing import List, Optional
 from django.db import transaction
 
 from backend.apps.policy.models import Policy as PolicyModel
-from backend.apps.policy.models import TemporaryPolicy
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.component import iam
 from backend.service.action import ActionList
 from backend.util.json import json_dumps
@@ -163,7 +163,7 @@ class PolicyOperationService:
         创建临时权限
         """
         # 创建 db model
-        db_policies = [p.to_temporary_model(system_id, subject) for p in policies]
+        db_policies = [p.to_db_model(system_id, subject, model=TemporaryPolicy) for p in policies]
 
         # 处理忽略路径
         if action_list is not None:

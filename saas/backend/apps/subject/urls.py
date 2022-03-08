@@ -46,9 +46,9 @@ urlpatterns = [
                     name="subject.temporary_policies",
                 ),
                 path(
-                    "temporary_policy_systems/",
+                    "temporary_policies/systems/",
                     views.SubjectTemporaryPolicySystemViewSet.as_view({"get": "list"}),
-                    name="subject.temporary_policy_systems",
+                    name="subject.temporary_policies_systems",
                 ),
             ]
         ),

@@ -16,9 +16,9 @@ from backend.common.models import BaseModel
 from backend.util.json import json_dumps
 
 
-class Policy(BaseModel):
+class TemporaryPolicy(BaseModel):
     """
-    subject-系统-操作-策略
+    临时权限
     """
 
     # subject
@@ -34,11 +34,12 @@ class Policy(BaseModel):
 
     # policy
     _resources = models.TextField("资源策略", db_column="resources")  # json
+    expired_at = models.IntegerField("过期时间")
     policy_id = models.BigIntegerField("后端policy_id", default=0)
 
     class Meta:
-        verbose_name = "权限策略"
-        verbose_name_plural = "权限策略"
+        verbose_name = "临时权限策略"
+        verbose_name_plural = "临时权限策略"
 
         index_together = ["subject_id", "subject_type", "system_id"]
 

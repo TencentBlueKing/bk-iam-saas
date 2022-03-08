@@ -13,16 +13,13 @@ import logging
 
 from aenum import LowerStrEnum, auto
 from celery import task
-from django.conf import settings
-from django.db import transaction
 
 from backend.api.authorization.constants import AuthorizationAPIEnum
 from backend.api.authorization.models import AuthAPIAllowListConfig
 from backend.apps.approval.models import ActionProcessRelation
-from backend.apps.policy.models import Policy, TemporaryPolicy
+from backend.apps.policy.models import Policy
 from backend.apps.role.models import RoleScope
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
-from backend.common.time import db_time
 from backend.component import iam
 from backend.service.constants import RoleScopeType
 from backend.util.enum import ChoicesEnum
@@ -185,12 +182,3 @@ def _delete_action_from_role_scope(system_id: str, action_id: str):
 def delete_unreferenced_expressions():
     """删除未被引用的expression"""
     iam.delete_unreferenced_expressions()
-
-
-@task(ignore_result=True)
-def clean_expired_temporary_policies():
-    """清理过期3天以上的临时权限"""
-    expired_at = int(db_time()) - settings.MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME
-    with transaction.atomic():
-        TemporaryPolicy.objects.filter(expired_at__lt=expired_at).delete()
-        iam.delete_temporary_policies_before_expired_at(expired_at)
