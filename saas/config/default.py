@@ -404,7 +404,7 @@ BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
 BK_APIGW_NAME = "bk-iam"
 BK_API_URL_TMPL = os.getenv("BK_API_URL_TMPL", "")
 BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
-BK_IAM_SAAS_API_SVC = os.getenv("BK_IAM_SAAS_API_SVC", "bkiam-saas-web")
+BK_IAM_SAAS_API_SVC = os.getenv("BK_IAM_SAAS_API_SVC", "bkiam-saas-api")
 BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
 
