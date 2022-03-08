@@ -956,6 +956,35 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+  /api/v1/open/departments/{department_id}/groups:
+    get:
+      operationId: open_departments_groups
+      description: 查询部门加入的组列表(注意部门-组关系存在有限期, 只会返回未过期的组列表)
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/departments/{department_id}/groups
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
   /api/v1/open/management/grade_managers/:
     post:
       operationId: management_grade_managers
@@ -1325,6 +1354,122 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+  /api/v1/open/systems/{system_id}/policies:
+    get:
+      operationId: open_system_policies
+      description: 拉取系统下某个操作的策略列表
+      tags:
+      - system
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/systems/{system_id}/policies
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/systems/{system_id}/policies/-/subjects:
+    get:
+      operationId: open_system_policies_subjects
+      description: 根据策略 ID 拉群策略对应的用户信息
+      tags:
+      - system
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/systems/{system_id}/policies/-/subjects
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/systems/{system_id}/policies/{policy_id}:
+    get:
+      operationId: open_system_get_policy
+      description: 获取某条策略详情
+      tags:
+      - system
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/systems/{system_id}/policies/{policy_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+  /api/v1/open/users/{user_id}/groups:
+    get:
+      operationId: open_user_groups
+      description: 查询用户加入的组列表(注意用户-组关系存在有限期, 只会返回未过期的组列表)
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/users/{user_id}/groups
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
   /api/v1/policy/auth:
     post:
       operationId: policy_auth
@@ -1502,15 +1647,15 @@ paths:
   /api/v1/systems/{system_id}/policies:
     get:
       operationId: system_policies
-      description: 拉取系统下某个操作的策略列表
+      description: 拉取系统下某个操作的策略列表(废弃, 请使用open_system_policies)
       tags:
       - system
       responses:
         default:
           description: ''
       x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
+        isPublic: false
+        allowApplyPermission: false
         matchSubpath: false
         backend:
           type: HTTP
@@ -1531,15 +1676,15 @@ paths:
   /api/v1/systems/{system_id}/policies/-/subjects:
     get:
       operationId: system_policies_subjects
-      description: 根据策略 ID 拉群策略对应的用户信息
+      description: 根据策略 ID 拉群策略对应的用户信息(废弃, 请使用open_system_policies_subjects)
       tags:
       - system
       responses:
         default:
           description: ''
       x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
+        isPublic: false
+        allowApplyPermission: false
         matchSubpath: false
         backend:
           type: HTTP
@@ -1557,23 +1702,23 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
-  /api/v1/systems/{system}/policies/{policy_id}:
+  /api/v1/systems/{system_id}/policies/{policy_id}:
     get:
       operationId: system_get_policy
-      description: 获取某条策略详情
+      description: 获取某条策略详情(废弃, 请使用open_system_get_policy)
       tags:
       - system
       responses:
         default:
           description: ''
       x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
+        isPublic: false
+        allowApplyPermission: false
         matchSubpath: false
         backend:
           type: HTTP
           method: get
-          path: /api/v1/systems/{system}/policies/{policy_id}
+          path: /api/v1/systems/{system_id}/policies/{policy_id}
           matchSubpath: false
           timeout: 0
           upstreams:
