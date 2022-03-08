@@ -1,3 +1,11 @@
+# V1.7.6
+
+### 功能优化
+* apigw 新增user-groups/department-groups两个开放 API
+* 变更原policy查询三个api的路径, 增加 /open/(但是保持向前兼容: 老的public=false, 新增三个新的)
+* apigw-manage 升级到 1.0.2
+* apigw配置后端由SaaS Web调整为SaaS API
+
 # V1.7.5
 
 ### 功能优化
