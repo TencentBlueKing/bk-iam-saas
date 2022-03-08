@@ -35,11 +35,11 @@ python-versions = "*"
 
 [[package]]
 name = "apigw-manager"
-version = "1.0.0"
+version = "1.0.2"
 description = ""
 category = "main"
 optional = false
-python-versions = "==3.*,>=3.6.1"
+python-versions = ">=3.6.1,<4.0.0"
 
 [package.dependencies]
 bkapi-bk-apigateway = ">=1.0.3,<2.0.0"
@@ -1534,7 +1534,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "3.6.6"
-content-hash = "e9a16a73d234acca307a626058f9e6938fe40336876de7fc9bda0a47ca92d5ff"
+content-hash = "819f8fe00a3e058bd7ae67629b7db5b146fcc5f9a1b6917523604f8ae546ed72"
 
 [metadata.files]
 aenum = [
@@ -1554,7 +1554,7 @@ anyjson = [
     {file = "anyjson-0.3.3.tar.gz", hash = "sha256:37812d863c9ad3e35c0734c42e0bf0320ce8c3bed82cd20ad54cb34d158157ba"},
 ]
 apigw-manager = [
-    {file = "apigw-manager-1.0.0.tar.gz", hash = "sha256:96032b786aa6ec578001de26035faec4b17a3f304a3af37484d9f7297a15739a"},
+    {file = "apigw_manager-1.0.2-py3-none-any.whl", hash = "sha256:96e232038e94807640698400fe40b0be6f7de51a53645d83772b90f772359ad1"},
 ]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},

@@ -2,7 +2,7 @@ aenum==2.2.6
 aiocontextvars==0.2.2; python_version < "3.7" and python_version >= "3.6"
 amqp==1.4.9
 anyjson==0.3.3
-apigw-manager==1.0.0; python_full_version >= "3.6.1" and python_full_version < "4.0.0"
+apigw-manager==1.0.2; python_full_version >= "3.6.1" and python_full_version < "4.0.0"
 backoff==1.10.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6"
 billiard==3.3.0.23
 bkapi-bk-apigateway==1.0.3; python_full_version >= "3.6.1" and python_version < "4.0" and python_full_version < "4.0.0"
