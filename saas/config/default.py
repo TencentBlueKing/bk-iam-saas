@@ -252,6 +252,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
         "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
     },
+    "periodic_clean_expired_temporary_policies": {
+        "task": "backend.apps.policy.tasks.clean_expired_temporary_policies",
+        "schedule": crontab(minute=0, hour="*"),  # 每小时执行
+    },
 }
 
 CELERY_ENABLE_UTC = True
@@ -379,6 +383,9 @@ TEMPORARY_POLICY_LIMIT = int(os.getenv("BKAPP_TEMPORARY_POLICY_LIMIT", 10))
 
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
+
+# 最长已过期临时权限期限
+MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
