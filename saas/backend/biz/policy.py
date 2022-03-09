@@ -973,7 +973,7 @@ class PolicyBean(Policy):
         return is_changed
 
 
-class PolicyBeanListHelper:
+class PolicyBeanListMixin:
     action_svc = ActionService()
     resource_type_svc = ResourceTypeService()
     resource_biz = ResourceBiz()
@@ -1123,7 +1123,7 @@ class PolicyBeanListHelper:
         return changed_policies
 
 
-class PolicyBeanList(PolicyBeanListHelper):
+class PolicyBeanList(PolicyBeanListMixin):
     def __init__(
         self,
         system_id: str,
@@ -1259,6 +1259,20 @@ class PolicyBeanList(PolicyBeanListHelper):
         return parse_obj_as(List[Policy], self.policies)
 
 
+class TemporaryPolicyBeanList(PolicyBeanListMixin):
+    def __init__(
+        self,
+        system_id: str,
+        policies: List[PolicyBean],
+        need_fill_empty_fields: bool = False,
+    ) -> None:
+        self.system_id = system_id
+        self.policies = policies
+
+        if need_fill_empty_fields:
+            self.fill_empty_fields()
+
+
 class SystemCounterBean(SystemCounter):
     name: str = ""
     name_en: str = ""
@@ -1307,9 +1321,8 @@ class PolicyQueryBiz:
     def list_temporary_by_subject(self, system_id: str, subject: Subject) -> List[PolicyBean]:
         """查询subject指定系统的临时权限策略"""
         policies = self.svc.list_temporary_by_subject(system_id, subject)
-        helper = PolicyBeanListHelper(system_id, parse_obj_as(List[PolicyBean], policies))
-        helper.fill_empty_fields()
-        return helper.policies
+        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return pl.policies
 
     def new_policy_list(
         self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
@@ -1335,9 +1348,8 @@ class PolicyQueryBiz:
         通过policy_ids查询临时权限
         """
         policies = self.svc.list_temporary_by_policy_ids(system_id, subject, policy_ids)
-        helper = PolicyBeanListHelper(system_id, parse_obj_as(List[PolicyBean], policies))
-        helper.fill_empty_fields()
-        return helper.policies
+        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return pl.policies
 
     def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
         """
