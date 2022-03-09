@@ -262,7 +262,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         if request.query_params.get("keyword"):
             slz = SearchMemberSLZ(data=request.query_params)
             slz.is_valid(raise_exception=True)
-            keyword = slz.validated_data["keyword"]
+            keyword = slz.validated_data["keyword"].lower()
 
             group_members = self.biz.search_member_by_keyword(group.id, keyword)
 

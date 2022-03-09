@@ -504,14 +504,9 @@ class GroupBiz:
 
     def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
         """根据关键词 获取指定用户组成员列表"""
-        hit_members = []
         maximum_number_of_member = 1000
-        keyword_match_func = lambda keyword, text: keyword.lower() in text.lower()
-
         _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
-        for m in group_members:
-            if keyword_match_func(keyword, m.id) or keyword_match_func(keyword, m.name):
-                hit_members.append(m)
+        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
 
         return hit_members
 
