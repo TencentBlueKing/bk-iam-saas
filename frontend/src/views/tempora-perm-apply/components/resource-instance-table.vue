@@ -142,12 +142,12 @@
                         </template>
                         <template v-else>
                             <!-- 44 -->
-                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId">
-                                <!-- 55 -->
+                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId && !row.isNew">
+                                <!-- 55{{!cacheId}} -->
                                 <div class="mock-disabled-select">{{row.expired_display}}</div>
                             </template>
                             <template v-else>
-                                <!-- 66{{row.expiredAtPlaceholder}}--{{user.timestamp}} -->
+                                <!-- 66{{!cacheId}} -->
                                 <bk-select
                                     v-model="row.expired_at"
                                     :clearable="false"
@@ -1310,7 +1310,7 @@
                 this.tableList.forEach(item => {
                     let tempExpiredAt = '';
                     if (item.expired_at === '' && item.expired_display) {
-                        tempExpiredAt = parseInt(item.expired_display, 10) * 24 * 3600;
+                        tempExpiredAt = parseInt(item.expired_display, 10);
                     }
 
                     if (!item.isAggregate) {

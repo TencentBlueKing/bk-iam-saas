@@ -76,6 +76,9 @@ import access from './modules/access';
 // 资源权限模块
 import resourcePermiss from './modules/resource-permiss';
 
+// 临时权限模块
+import applyProvisionPerm from './modules/apply-provision-perm';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -226,7 +229,8 @@ const store = new Vuex.Store({
         renewal,
         audit,
         access,
-        resourcePermiss
+        resourcePermiss,
+        applyProvisionPerm
     },
     state: {
         mainContentLoading: false,

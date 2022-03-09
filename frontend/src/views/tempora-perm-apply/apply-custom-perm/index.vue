@@ -519,7 +519,7 @@
                 routerQuery: {},
                 linearActionList: [],
 
-                requestQueue: ['action', 'policy', 'aggregate', 'commonAction'],
+                requestQueue: ['action', 'aggregate', 'commonAction'],
                 isAllExpanded: false,
                 aggregationMap: [],
                 aggregations: [],
@@ -790,7 +790,7 @@
              */
             async fetchPageData () {
                 await this.fetchSystems();
-                await this.fetchPolicies(this.systemValue);
+                // await this.fetchPolicies(this.systemValue);
                 await this.fetchAggregationAction(this.systemValue);
                 await this.fetchCommonActions(this.systemValue);
                 if (this.sysAndtid) {
@@ -1736,8 +1736,9 @@
                         this.$set(item, 'actions', []);
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
-                        this.$set(act, 'disabled', act.tag === 'readonly');
+                        // this.$set(act, 'checked', ['checked'].includes(act.tag) || hasCheckedList.includes(act.id));
+                        // this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
+                        // this.$set(act, 'disabled', act.tag === 'readonly');
                         linearActions.push(act);
                         if (act.checked) {
                             ++count;
@@ -1751,8 +1752,9 @@
                             this.$set(sub, 'actions', []);
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
-                            this.$set(act, 'disabled', act.tag === 'readonly');
+                            // this.$set(act, 'checked', ['checked'].includes(act.tag) || hasCheckedList.includes(act.id));
+                            // this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
+                            // this.$set(act, 'disabled', act.tag === 'readonly');
                             linearActions.push(act);
                             if (act.checked) {
                                 ++count;
@@ -1984,9 +1986,9 @@
                 this.aggregationsBackup = [];
                 this.aggregationsTableData = [];
                 this.actionSearchValue = '';
-                this.requestQueue = ['action', 'policy', 'aggregate', 'commonAction'];
+                this.requestQueue = ['action', 'aggregate', 'commonAction'];
                 await this.fetchActions(value);
-                await this.fetchPolicies(value);
+                // await this.fetchPolicies(value);
                 await this.fetchAggregationAction(value);
                 await this.fetchCommonActions(value);
             },
@@ -2023,8 +2025,10 @@
                     reason: this.reason
                 };
                 this.buttonLoading = true;
+                console.log('params', params);
+                debugger;
                 try {
-                    await this.$store.dispatch('permApply/permApply', params);
+                    await this.$store.dispatch('applyProvisionPerm/permTemporaryApply', params);
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
                     this.$router.push({
                         name: 'apply'
