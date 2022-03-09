@@ -141,7 +141,7 @@ class ApplicationListSLZ(serializers.ModelSerializer):
         if obj.type in [
             ApplicationTypeEnum.GRANT_ACTION.value,
             ApplicationTypeEnum.RENEW_ACTION.value,
-            ApplicationTypeEnum.GRANT_TEMPORARY_ACTION,
+            ApplicationTypeEnum.GRANT_TEMPORARY_ACTION.value,
         ]:
             system = obj.data["system"]
             extra_info["system_name"] = system.get("name")
