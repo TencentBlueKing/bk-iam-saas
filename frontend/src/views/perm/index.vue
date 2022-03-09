@@ -45,7 +45,7 @@
                 :key="index">
                 <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
                     <component
-                        v-if="!componentLoading"
+                        v-if="!componentLoading && active === panel.name"
                         :is="active"
                         :personal-group-list="personalGroupList"
                         :system-list="systemList"
@@ -59,12 +59,14 @@
 <script>
     import { buildURLParams } from '@/common/url';
     import CustomPerm from './custom-perm/index.vue';
+    import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
     import GroupPerm from './group-perm/index.vue';
 
     export default {
         name: 'MyPerm',
         components: {
             CustomPerm,
+            TeporaryCustomPerm,
             GroupPerm
         },
         data () {
@@ -76,6 +78,9 @@
                     },
                     {
                         name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
+                    },
+                    {
+                        name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
                     }
                 ],
                 active: 'GroupPerm',
