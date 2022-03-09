@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import re
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
@@ -502,13 +503,16 @@ class GroupBiz:
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
 
-    def search_member_by_keyword(self, group_id, keyword):
+    def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
+        """根据关键词 获取指定用户组成员列表"""
         hit_members = []
-        _, group_members = self.list_paging_group_member(group_id, 1000, 0)
+        maximum_number_of_member = 1000
+        keyword_match_func = lambda keyword, origin_str: keyword.lower() in origin_str.lower()
+
+        _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
         for m in group_members:
-            member = m.dict()
-            if keyword in member["id"] or keyword in member["name"]:
-                hit_members.append(member)
+            if keyword_match_func(keyword, m.id) or keyword_match_func(keyword, m.name):
+                hit_members.append(m)
 
         return hit_members
 
