@@ -503,16 +503,14 @@ class GroupBiz:
         )
 
     def search_member_by_keyword(self, group_id, keyword):
-        search_members = []
+        hit_members = []
         _, group_members = self.list_paging_group_member(group_id, 1000, 0)
-
         for m in group_members:
             member = m.dict()
-
             if keyword in member["id"] or keyword in member["name"]:
-                search_members.append(member)
+                hit_members.append(member)
 
-        return search_members
+        return hit_members
 
 
 class GroupCheckBiz:
