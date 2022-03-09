@@ -267,11 +267,11 @@ class GroupBiz:
         转换类型
         """
         groups = Group.objects.filter(id__in=[int(one.id) for one in relations if one.type == SubjectType.GROUP.value])
-        relation_dict = {one.id: one for one in relations}
+        group_dict = {g.id: g for g in groups}
         relation_beans: List[SubjectGroupBean] = []
-        for group in groups:
-            relation = relation_dict.get(str(group.id))
-            if not relation:
+        for relation in relations:
+            group = group_dict.get(int(relation.id))
+            if not group:
                 continue
             relation_beans.append(
                 SubjectGroupBean(
@@ -285,6 +285,7 @@ class GroupBiz:
                     department_name=relation.department_name,
                 )
             )
+
         return relation_beans
 
     def list_subject_group(self, subject: Subject, is_recursive: bool = False) -> List[SubjectGroupBean]:
