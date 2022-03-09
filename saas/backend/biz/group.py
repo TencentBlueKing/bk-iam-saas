@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import re
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
@@ -507,7 +506,7 @@ class GroupBiz:
         """根据关键词 获取指定用户组成员列表"""
         hit_members = []
         maximum_number_of_member = 1000
-        keyword_match_func = lambda keyword, origin_str: keyword.lower() in origin_str.lower()
+        keyword_match_func = lambda keyword, text: keyword.lower() in text.lower()
 
         _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
         for m in group_members:
