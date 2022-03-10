@@ -17,6 +17,8 @@ class AuditSourceType(ChoicesEnum, LowerStrEnum):
     WEB = auto()
     OPENAPI = auto()
     TASK = auto()
+    APPROVAL = auto()
+    HANDOVER = auto()
 
 
 class AuditObjectType(ChoicesEnum, LowerStrEnum):
@@ -61,6 +63,7 @@ class AuditType(ChoicesEnum, StrEnum):
     USER_POLICY_DELETE = auto()
     USER_GROUP_DELETE = auto()
     USER_ROLE_DELETE = auto()
+    USER_TEMPORARY_POLICY_CREATE = auto()
     USER_TEMPORARY_POLICY_DELETE = auto()
     DEPARTMENT_GROUP_DELETE = auto()
     DEPARTMENT_UPDATE = auto()

@@ -8,17 +8,22 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import Dict, Type
+from typing import Any, Dict, List, Optional, Type
 
 from rest_framework.request import Request
 
+from backend.apps.group.models import Group
+from backend.apps.organization.models import User
+from backend.apps.role.models import Role
 from backend.audit.models import get_event_model
 from backend.common.local import local
+from backend.service.models import Subject
 
-from .constants import AuditSourceType
+from .constants import AuditObjectType, AuditSourceType
 
 logger = logging.getLogger("app")
 
@@ -167,3 +172,70 @@ def add_audit(provider_cls: Type[DataProvider], request: Request, **kwargs):
         pass
     except Exception:  # pylint: disable=broad-except
         logger.exception("save audit event fail")
+
+
+def log_approval_user_event(_type: str, subject: Subject, system_id: str, policies: List[Any]):
+    """
+    记录用户相关的审批事件
+    """
+    user = User.objects.filter(username=subject.id).only("display_name").first()
+
+    Event = get_event_model()
+
+    event = Event(
+        type=_type,
+        username=subject.id,
+        system_id=system_id,
+        object_type=AuditObjectType.USER.value,
+        object_id=subject.id,
+        object_name=user.display_name if user else "",
+    )
+
+    event.extra = {"system_id": system_id, "policies": policies}
+
+    event.source_type = AuditSourceType.APPROVAL.value
+
+    event.save(force_insert=True)
+
+
+def log_approval_group_event(_type: str, subject: Subject, group_ids: List[int]):
+    """
+    记录用户组相关的审批事件
+    """
+    groups = Group.objects.filter(id__in=group_ids)
+
+    Event = get_event_model()
+
+    events = []
+    for group in groups:
+        event = Event(
+            type=_type,
+            username=subject.id,
+            object_type=AuditObjectType.GROUP.value,
+            object_id=group.id,
+            object_name=group.name,
+            source_type=AuditSourceType.APPROVAL.value,
+        )
+        event.extra = {"members": [subject.dict()]}
+
+        events.append(event)
+
+    Event.objects.bulk_create(events)
+
+
+def log_approval_role_event(_type: str, subject: Subject, role: Role, extra: Optional[Dict[str, Any]] = None):
+    """
+    记录角色相关的审批事件
+    """
+    Event = get_event_model()
+    event = Event(
+        type=_type,
+        username=subject.id,
+        object_type=AuditObjectType.ROLE.value,
+        object_id=role.id,
+        object_name=role.name,
+        source_type=AuditSourceType.APPROVAL.value,
+    )
+    event.extra = extra if extra else {}
+
+    event.save(force_insert=True)
