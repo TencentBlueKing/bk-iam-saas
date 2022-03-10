@@ -49,6 +49,7 @@
                         :is="active"
                         :personal-group-list="personalGroupList"
                         :system-list="systemList"
+                        :tep-system-list="teporarySystemList"
                         @refresh="fetchData"
                     ></component>
                 </div>
@@ -90,6 +91,7 @@
                 soonPermLength: 0,
                 personalGroupList: [],
                 systemList: [],
+                teporarySystemList: [],
                 enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
             };
         },
@@ -113,11 +115,12 @@
             async fetchData () {
                 this.componentLoading = true;
                 try {
-                    const [res1, res2, res3, res4] = await Promise.all([
+                    const [res1, res2, res3, res4, res5] = await Promise.all([
                         this.$store.dispatch('perm/getPersonalGroups'),
                         this.$store.dispatch('permApply/getHasPermSystem'),
                         this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
-                        this.$store.dispatch('renewal/getExpireSoonPerm')
+                        this.$store.dispatch('renewal/getExpireSoonPerm'),
+                        this.$store.dispatch('permApply/getTeporHasPermSystem')
                         // this.fetchPermGroups(),
                         // this.fetchSystems(),
                         // this.fetchSoonGroupWithUser(),
@@ -132,6 +135,9 @@
                     this.isEmpty = personalGroupList.length < 1 && systemList.length < 1;
                     this.soonGroupLength = res3.data.length;
                     this.soonPermLength = res4.data.length;
+                    const teporarySystemList = res5.data || [];
+                    this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
+                    console.log('this.teporarySystemList', this.teporarySystemList);
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
                     console.error(e);

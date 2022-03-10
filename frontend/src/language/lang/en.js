@@ -438,6 +438,7 @@ export const m = {
         '自定义权限申请': 'Custom Permission Application',
         '自定义临时权限申请': 'Temporary Custom Permission Application',
         '临时权限': 'Temporary Permission',
+        '再次申请': 'Apply Again',
         '加入用户组': 'Join The Group',
         '申请的权限模板': 'Permission template applied',
         '申请加入': 'Apply to join',

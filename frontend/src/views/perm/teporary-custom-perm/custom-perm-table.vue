@@ -67,9 +67,12 @@
                 </template>
             </bk-table-column>
             <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="140">
                 <template slot-scope="{ row }">
                     <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
+                    <bk-button v-if="row.expired_dis === '已过期'" text @click="handleToTemporaryCustomApply(row)">
+                        {{ $t(`m.nav['再次申请']`) }}
+                    </bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -308,7 +311,7 @@
              */
             async fetchData (params) {
                 try {
-                    const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
+                    const res = await this.$store.dispatch('permApply/getProvisionPolicies', { system_id: params.systemId });
                     this.policyList = res.data.map(item => {
                         // eslint-disable-next-line max-len
                         item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
@@ -548,12 +551,14 @@
             async handleSumbitDelete () {
                 this.deleteDialog.loading = true;
                 try {
+                    console.log(11111, this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId);
+                    debugger;
                     if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
                         await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
                         this.fetchData(this.params);
                         this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
                     } else {
-                        await this.$store.dispatch('permApply/deletePerm', {
+                        await this.$store.dispatch('permApply/deleteTemporaryPerm', {
                             policyIds: this.curDeleteIds,
                             systemId: this.systemId
                         });
@@ -577,6 +582,13 @@
                     this.deleteDialog.loading = false;
                     this.deleteDialog.visible = false;
                 }
+            },
+
+            // 跳转到临时权限
+            handleToTemporaryCustomApply () {
+                this.$router.push({
+                    name: 'applyProvisionPerm'
+                });
             }
         }
     };

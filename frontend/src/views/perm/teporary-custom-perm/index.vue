@@ -37,7 +37,7 @@
             CustomPermTable
         },
         props: {
-            systemList: {
+            tepSystemList: {
                 type: Array,
                 default: () => []
             }
@@ -54,7 +54,7 @@
             }
         },
         watch: {
-            systemList: {
+            tepSystemList: {
                 handler (v) {
                     const systemPolicyList = v.map(item => new PermSystem(item));
                     this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
