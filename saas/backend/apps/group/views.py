@@ -86,7 +86,7 @@ def check_readonly_group(operation):
         @wraps(func)
         def wrapper(view, request, *args, **kwargs):
             group = view.get_object()
-            readonly = group = Group.objects.filter(id=group.id).first()
+            readonly = Group.objects.filter(id=group.id).first().readonly
 
             if readonly:
                 raise error_codes.FORBIDDEN.format(
@@ -243,7 +243,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         tags=["group"],
     )
     @view_audit_decorator(GroupDeleteAuditProvider)
-    @check_readonly_group(operation=OperateEnum.GROUP_DESTROY.label)
+    @check_readonly_group(operation=OperateEnum.GROUP_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()
 
@@ -334,7 +334,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberDeleteAuditProvider)
-    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_DESTROY.label)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         serializer = GroupDeleteMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -370,7 +370,7 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberRenewAuditProvider)
-    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_UPDATE_EXPIRED_AT.label)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_RENEW.label)
     def create(self, request, *args, **kwargs):
         serializer = GroupMemberUpdateExpiredAtSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -512,7 +512,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupPolicyDeleteAuditProvider)
-    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_DESTROY.label)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         slz = PolicyDeleteSLZ(data=request.data)
         slz.is_valid(raise_exception=True)

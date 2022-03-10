@@ -15,23 +15,23 @@ from backend.util.enum import ChoicesEnum
 
 class OperateEnum(ChoicesEnum, LowerStrEnum):
     GROUP_UPDATE = auto()
-    GROUP_DESTROY = auto()
+    GROUP_DELETE = auto()
     GROUP_MEMBER_CREATE = auto()
-    GROUP_MEMBER_DESTROY = auto()
+    GROUP_MEMBER_DELETE = auto()
     GROUP_POLICY_CREATE = auto()
-    GROUP_POLICY_DESTROY = auto()
+    GROUP_POLICY_DELETE = auto()
     GROUP_POLICY_UPDATE = auto()
-    GROUP_MEMBER_UPDATE_EXPIRED_AT = auto()
+    GROUP_MEMBER_RENEW = auto()
 
     _choices_labels = skip(
         (
             (GROUP_UPDATE, "修改用户组"),
-            (GROUP_DESTROY, "删除用户组"),
+            (GROUP_DELETE, "删除用户组"),
             (GROUP_MEMBER_CREATE, "添加用户组成员"),
-            (GROUP_MEMBER_DESTROY, "删除用户组成员"),
+            (GROUP_MEMBER_DELETE, "删除用户组成员"),
             (GROUP_POLICY_CREATE, "用户组添加权限"),
-            (GROUP_POLICY_DESTROY, "用户组删除权限"),
+            (GROUP_POLICY_DELETE, "用户组删除权限"),
             (GROUP_POLICY_UPDATE, "用户组更新权限"),
-            (GROUP_MEMBER_UPDATE_EXPIRED_AT, "用户组成员续期"),
+            (GROUP_MEMBER_RENEW, "用户组成员续期"),
         )
     )
