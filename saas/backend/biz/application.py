@@ -25,7 +25,7 @@ from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
 from backend.apps.template.models import PermTemplatePolicyAuthorized
-from backend.audit.audit import log_approval_group_event, log_approval_role_event, log_approval_user_event
+from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditType
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
@@ -157,7 +157,7 @@ class ApprovedPassApplicationBiz:
             system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
         )
 
-        log_approval_user_event(audit_type, subject, system_id, actions)
+        log_user_event(audit_type, subject, system_id, actions)
 
     def _renew_action(self, subject: Subject, data: Dict):
         """用户自定义权限续期"""
@@ -180,7 +180,7 @@ class ApprovedPassApplicationBiz:
                     "the group has been deleted before the application is approved"
                 )
 
-        log_approval_group_event(AuditType.GROUP_MEMBER_CREATE.value, subject, [one["id"] for one in data["groups"]])
+        log_group_event(AuditType.GROUP_MEMBER_CREATE.value, subject, [one["id"] for one in data["groups"]])
 
     def _renew_group(self, subject: Subject, data: Dict):
         """用户组续期"""
@@ -190,7 +190,7 @@ class ApprovedPassApplicationBiz:
                 [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, policy_expired_at=group["expired_at"])],
             )
 
-        log_approval_group_event(AuditType.GROUP_MEMBER_RENEW.value, subject, [one["id"] for one in data["groups"]])
+        log_group_event(AuditType.GROUP_MEMBER_RENEW.value, subject, [one["id"] for one in data["groups"]])
 
     def _gen_role_info_bean(self, data: Dict) -> RoleInfoBean:
         """处理分级管理员数据"""
@@ -207,7 +207,7 @@ class ApprovedPassApplicationBiz:
         info = self._gen_role_info_bean(data)
         role = self.role_biz.create(info, subject.id)
 
-        log_approval_role_event(AuditType.ROLE_CREATE.value, subject, role)
+        log_role_event(AuditType.ROLE_CREATE.value, subject, role)
 
     def _update_rating_manager(self, subject: Subject, data: Dict):
         """更新分级管理员"""
@@ -215,7 +215,7 @@ class ApprovedPassApplicationBiz:
         info = self._gen_role_info_bean(data)
         self.role_biz.update(role, info, subject.id)
 
-        log_approval_role_event(
+        log_role_event(
             AuditType.ROLE_UPDATE.value, subject, role, extra={"name": info.name, "description": info.description}
         )
 
@@ -228,7 +228,7 @@ class ApprovedPassApplicationBiz:
             system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
         )
 
-        log_approval_user_event(AuditType.USER_TEMPORARY_POLICY_CREATE.value, subject, system_id, actions)
+        log_user_event(AuditType.USER_TEMPORARY_POLICY_CREATE.value, subject, system_id, actions)
 
     def handle(self, application: Application):
         """审批通过处理"""
