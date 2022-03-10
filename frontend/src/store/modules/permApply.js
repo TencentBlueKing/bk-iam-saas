@@ -244,6 +244,26 @@ export default {
         },
 
         /**
+         * 组织架构删除临时权限
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { policyIds, systemId } policyIds 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        deleteTemporarySubjectPerm ({ commit, state, dispatch },
+            { policyIds, systemId, subjectId, subjectType }, config) {
+            return http.delete(
+                `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/temporary_policies/?`
+                    + `ids=${policyIds.join(',')}&system_id=${systemId}`,
+                config
+            );
+        },
+
+        /**
          * 获取用户的关联权限列表
          *
          * @param {Function} commit store commit mutation handler
