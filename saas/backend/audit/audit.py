@@ -181,6 +181,7 @@ def log_user_event(
     policies: List[Any],
     username: Optional[str] = None,
     source_type: str = AuditSourceType.APPROVAL.value,
+    sn: Optional[str] = None,
 ):
     """
     记录用户相关的审批事件
@@ -200,7 +201,10 @@ def log_user_event(
         source_type=source_type,
     )
 
-    event.extra = {"system_id": system_id, "policies": policies}
+    extra = {"system_id": system_id, "policies": policies}
+    if sn:
+        extra["sn"] = sn
+    event.extra = extra
     event.save(force_insert=True)
 
 
@@ -210,6 +214,7 @@ def log_group_event(
     group_ids: List[int],
     username: Optional[str] = None,
     source_type: str = AuditSourceType.APPROVAL.value,
+    sn: Optional[str] = None,
 ):
     """
     记录用户组相关的审批事件
@@ -229,7 +234,10 @@ def log_group_event(
             object_name=group.name,
             source_type=source_type,
         )
-        event.extra = {"members": [subject.dict()]}
+        extra: Dict[str, Any] = {"members": [subject.dict()]}
+        if sn:
+            extra["sn"] = sn
+        event.extra = extra
 
         events.append(event)
 
@@ -242,6 +250,7 @@ def log_role_event(
     role: Role,
     extra: Optional[Dict[str, Any]] = None,
     source_type: str = AuditSourceType.APPROVAL.value,
+    sn: Optional[str] = None,
 ):
     """
     记录角色相关的审批事件
@@ -255,6 +264,9 @@ def log_role_event(
         object_name=role.name,
         source_type=source_type,
     )
-    event.extra = extra if extra else {}
+    extra = extra if extra else {}
+    if sn:
+        extra["sn"] = sn
+    event.extra = extra
 
     event.save(force_insert=True)

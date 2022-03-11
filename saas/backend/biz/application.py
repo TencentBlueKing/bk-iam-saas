@@ -148,27 +148,29 @@ class ApprovedPassApplicationBiz:
     group_biz = GroupBiz()
     role_biz = RoleBiz()
 
-    def _grant_action(self, subject: Subject, data: Dict, audit_type: str = AuditType.USER_POLICY_CREATE.value):
+    def _grant_action(
+        self, subject: Subject, application: Application, audit_type: str = AuditType.USER_POLICY_CREATE.value
+    ):
         """用户自定义权限授权"""
-        system_id = data["system"]["id"]
-        actions = data["actions"]
+        system_id = application.data["system"]["id"]
+        actions = application.data["actions"]
 
         self.policy_operation_biz.alter(
             system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
         )
 
-        log_user_event(audit_type, subject, system_id, actions)
+        log_user_event(audit_type, subject, system_id, actions, sn=application.sn)
 
-    def _renew_action(self, subject: Subject, data: Dict):
+    def _renew_action(self, subject: Subject, application: Application):
         """用户自定义权限续期"""
-        self._grant_action(subject, data, audit_type=AuditType.USER_POLICY_UPDATE.value)
+        self._grant_action(subject, application, audit_type=AuditType.USER_POLICY_UPDATE.value)
 
-    def _join_group(self, subject: Subject, data: Dict):
+    def _join_group(self, subject: Subject, application: Application):
         """加入用户组"""
         # 兼容，新老数据在data都存在expired_at
-        default_expired_at = data["expired_at"]
+        default_expired_at = application.data["expired_at"]
         # 加入用户组
-        for group in data["groups"]:
+        for group in application.data["groups"]:
             # 新数据才有，老数据则使用data外层的expired_at
             expired_at = group.get("expired_at", default_expired_at)
             try:
@@ -180,55 +182,69 @@ class ApprovedPassApplicationBiz:
                     "the group has been deleted before the application is approved"
                 )
 
-        log_group_event(AuditType.GROUP_MEMBER_CREATE.value, subject, [one["id"] for one in data["groups"]])
+        log_group_event(
+            AuditType.GROUP_MEMBER_CREATE.value,
+            subject,
+            [one["id"] for one in application.data["groups"]],
+            sn=application.sn,
+        )
 
-    def _renew_group(self, subject: Subject, data: Dict):
+    def _renew_group(self, subject: Subject, application: Application):
         """用户组续期"""
-        for group in data["groups"]:
+        for group in application.data["groups"]:
             self.group_biz.update_members_expired_at(
                 group["id"],
                 [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, policy_expired_at=group["expired_at"])],
             )
 
-        log_group_event(AuditType.GROUP_MEMBER_RENEW.value, subject, [one["id"] for one in data["groups"]])
+        log_group_event(
+            AuditType.GROUP_MEMBER_RENEW.value,
+            subject,
+            [one["id"] for one in application.data["groups"]],
+            sn=application.sn,
+        )
 
-    def _gen_role_info_bean(self, data: Dict) -> RoleInfoBean:
+    def _gen_role_info_bean(self, application: Application) -> RoleInfoBean:
         """处理分级管理员数据"""
         # 兼容新老数据
-        auth_scopes = data["authorization_scopes"]
+        auth_scopes = application.data["authorization_scopes"]
         for scope in auth_scopes:
             # 新数据是system，没有system_id
             if "system_id" not in scope:
                 scope["system_id"] = scope["system"]["id"]
-        return RoleInfoBean(**data)
+        return RoleInfoBean(**application.data)
 
-    def _create_rating_manager(self, subject: Subject, data: Dict):
+    def _create_rating_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
-        info = self._gen_role_info_bean(data)
+        info = self._gen_role_info_bean(application.data)
         role = self.role_biz.create(info, subject.id)
 
-        log_role_event(AuditType.ROLE_CREATE.value, subject, role)
+        log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
 
-    def _update_rating_manager(self, subject: Subject, data: Dict):
+    def _update_rating_manager(self, subject: Subject, application: Application):
         """更新分级管理员"""
-        role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=data["id"])
-        info = self._gen_role_info_bean(data)
+        role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=application.data["id"])
+        info = self._gen_role_info_bean(application.data)
         self.role_biz.update(role, info, subject.id)
 
         log_role_event(
-            AuditType.ROLE_UPDATE.value, subject, role, extra={"name": info.name, "description": info.description}
+            AuditType.ROLE_UPDATE.value,
+            subject,
+            role,
+            extra={"name": info.name, "description": info.description},
+            sn=application.sn,
         )
 
-    def _grant_temporary_action(self, subject: Subject, data: Dict):
+    def _grant_temporary_action(self, subject: Subject, application: Application):
         """临时权限授权"""
-        system_id = data["system"]["id"]
-        actions = data["actions"]
+        system_id = application.data["system"]["id"]
+        actions = application.data["actions"]
 
         self.policy_operation_biz.create_temporary_policies(
             system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
         )
 
-        log_user_event(AuditType.USER_TEMPORARY_POLICY_CREATE.value, subject, system_id, actions)
+        log_user_event(AuditType.USER_TEMPORARY_POLICY_CREATE.value, subject, system_id, actions, sn=application.sn)
 
     def handle(self, application: Application):
         """审批通过处理"""
