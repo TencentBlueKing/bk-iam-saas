@@ -1997,6 +1997,7 @@
              * 提交权限申请
              */
             async handleApplySubmit () {
+                await this.$store.dispatch('userInfo');
                 const tableData = this.$refs.resInstanceTableRef.handleGetValue();
                 const { actions, flag, aggregations } = tableData;
                 if (flag || this.reason === '') {
