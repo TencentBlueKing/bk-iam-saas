@@ -164,7 +164,7 @@
                 batchDisabled: false,
                 deleteLoading: false,
                 disabled: true,
-                canOperate: true
+                canOperate: false
             };
         },
         computed: {
@@ -322,7 +322,7 @@
                 this.previewData = [];
                 this.curId = '';
 
-                this.canOperate = true;
+                this.canOperate = false;
                 this.batchDisabled = false;
                 this.disabled = true;
                 this.isBatchDelete = true;

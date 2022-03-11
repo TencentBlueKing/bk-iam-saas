@@ -39,6 +39,10 @@ const SystemAccessComplete = () => import(/* webpackChunkName: 'system-access' *
 const ApplyCustomPerm = () => import(
     /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-custom-perm');
 
+// 申请临时权限
+const applyProvisionPerm = () => import(
+    /* webpackChunkName: 'perm-apply' */'../views/tempora-perm-apply/apply-custom-perm');
+
 // 申请加入用户组
 const ApplyJoinUserGroup = () => import(
     /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-join-user-group');
@@ -386,6 +390,15 @@ export const routes = [
                     backRouter: -1
                 },
                 component: ApplyCustomPerm
+            },
+            {
+                path: 'apply-provision-perm',
+                name: 'applyProvisionPerm',
+                meta: {
+                    headerTitle: il8n('applyEntrance', '申请临时权限'),
+                    backRouter: -1
+                },
+                component: applyProvisionPerm
             },
             {
                 path: 'apply-join-user-group',
