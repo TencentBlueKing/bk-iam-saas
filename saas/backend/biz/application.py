@@ -252,7 +252,7 @@ class ApprovedPassApplicationBiz:
         handle_func = getattr(self, func_name)
 
         subject = Subject(type=SubjectType.USER.value, id=application.applicant)
-        handle_func(subject, application.data)
+        handle_func(subject, application)
 
 
 class ApplicationBiz:
