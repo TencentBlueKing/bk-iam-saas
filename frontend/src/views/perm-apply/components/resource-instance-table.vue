@@ -302,6 +302,10 @@
             cacheId: {
                 type: String,
                 default: ''
+            },
+            buttonLoading: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -684,6 +688,7 @@
             },
 
             showResourceInstance (data, resItem, resIndex, groupIndex) {
+                if (this.buttonLoading) return;
                 this.params = {
                     system_id: this.systemId,
                     action_id: data.id,
@@ -1468,6 +1473,7 @@
 
             // 生效条件侧边栏
             showTimeSlider (data, index, groupIndex) {
+                if (this.buttonLoading) return;
                 this.curIndex = index;
                 this.curGroupIndex = groupIndex;
                 this.isShowResourceInstanceEffectTime = true;
