@@ -113,16 +113,16 @@
 <script>
     /* eslint-disable max-len */
 
-    import _ from 'lodash'
-    import renderResourceInstance from '@/components/render-resource'
-    import renderOrderNumber from '@/components/render-resource/order-number'
-    import OrStatusBar from '@/components/render-status/bar'
-    import ChooseIp from '@/components/choose-ip/grade/index'
-    import InstanceView from '@/components/choose-ip/view'
-    import Attribute from './attribute'
-    import Instance from '@/model/instance'
-    import Condition from '@/model/condition'
-    import RelateResourceTypes from '@/model/related-resource-types'
+    import _ from 'lodash';
+    import renderResourceInstance from '@/components/render-resource';
+    import renderOrderNumber from '@/components/render-resource/order-number';
+    import OrStatusBar from '@/components/render-status/bar';
+    import ChooseIp from '@/components/choose-ip/grade/index';
+    import InstanceView from '@/components/choose-ip/view';
+    import Attribute from './attribute';
+    import Instance from '@/model/instance';
+    import Condition from '@/model/condition';
+    import RelateResourceTypes from '@/model/related-resource-types';
 
     const ATTRIBUTE_ITEM = {
         id: '',
@@ -133,7 +133,7 @@
                 name: ''
             }
         ]
-    }
+    };
 
     export default {
         name: '',
@@ -158,7 +158,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             flag: {
@@ -180,7 +180,7 @@
             curScopeAction: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -202,21 +202,21 @@
                 selectListMap: {},
                 selectValueMap: {},
                 selectionModeMap: {}
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.requestQueue.length > 0
+                return this.requestQueue.length > 0;
             },
             attributeParams () {
                 if (Object.keys(this.params).length > 0) {
-                    const { resource_type_system, resource_type_id } = this.params
+                    const { resource_type_system, resource_type_id } = this.params;
                     return {
                         system_id: resource_type_system,
                         type: resource_type_id
-                    }
+                    };
                 }
-                return {}
+                return {};
             },
             // attributeMode () {
             //     return payload => {
@@ -230,67 +230,67 @@
             dragStyle () {
                 return {
                     'left': `${this.dragWidth}px`
-                }
+                };
             },
             dottedLineStyle () {
                 return {
                     'left': `${this.dragRealityWidth}px`
-                }
+                };
             },
             leftLayoutStyle () {
                 if (this.dragWidth >= 220) {
                     return {
                         'min-width': `${this.dragWidth}px`
-                    }
+                    };
                 }
-                return {}
+                return {};
             },
             curSelectList () {
                 return payload => {
                     if (this.selectListMap[payload] && this.selectListMap[payload].length > 0) {
-                        return this.selectListMap[payload]
+                        return this.selectListMap[payload];
                     }
-                    return this.selectList
-                }
+                    return this.selectList;
+                };
             },
             curSelectValue () {
                 return payload => {
                     if (this.selectValueMap[payload]) {
-                        return this.selectValueMap[payload]
+                        return this.selectValueMap[payload];
                     }
-                    return this.selectValue
-                }
+                    return this.selectValue;
+                };
             },
             curSelectionMode () {
                 return payload => {
                     if (this.selectionModeMap[payload]) {
-                        return this.selectionModeMap[payload]
+                        return this.selectionModeMap[payload];
                     }
-                    return this.selectionMode
-                }
+                    return this.selectionMode;
+                };
             },
             limitDisabled () {
-                return this.disabled || this.conditionLimitData.length > 0
+                return this.disabled || this.conditionLimitData.length > 0;
             }
         },
         watch: {
             params: {
                 handler (value) {
                     if (Object.keys(value).length > 0) {
-                        this.$emit('on-init', false)
+                        this.$emit('on-init', false);
                         if (this.selectionMode === 'all') {
                             // this.requestQueue = ['instanceSelection', 'resourceAttr']
-                            this.requestQueue.push(...['instanceSelection', 'resourceAttr'])
-                            this.fetchInstanceSelection(value)
-                            this.fetchResourceAttrs()
+                            this.requestQueue.push(...['instanceSelection', 'resourceAttr']);
+                            this.fetchInstanceSelection(value);
+                            this.fetchResourceAttrs();
                         } else if (this.selectionMode === 'instance') {
                             // this.requestQueue = ['instanceSelection']
-                            this.requestQueue.push('instanceSelection')
-                            this.fetchInstanceSelection(value)
+                            this.requestQueue.push('instanceSelection');
+                            this.fetchInstanceSelection(value);
                         } else {
-                            this.requestQueue.push('resourceAttr')
+                            this.requestQueue.push('resourceAttr');
                             // this.requestQueue = ['resourceAttr']
-                            this.fetchResourceAttrs()
+                            this.fetchResourceAttrs();
                         }
                     }
                 },
@@ -298,43 +298,43 @@
             },
             requestQueue (value) {
                 if (value.length < 1) {
-                    this.$emit('on-init', true)
+                    this.$emit('on-init', true);
                 }
             },
             data: {
                 handler (val) {
-                    const len = val.length
+                    const len = val.length;
                     // 此时是无权限状态
                     if (len === 1 && val[0] === 'none') {
-                        this.conditionData = [new Condition({ selection_mode: this.selectionMode }, 'init', 'add')]
-                        this.conditionData[0].instanceExpanded = true
-                        const selectionMode = this.conditionData[0].selectionMode
+                        this.conditionData = [new Condition({ selection_mode: this.selectionMode }, 'init', 'add')];
+                        this.conditionData[0].instanceExpanded = true;
+                        const selectionMode = this.conditionData[0].selectionMode;
                         if (selectionMode !== 'all') {
-                            this.conditionData[0].instanceCanDelete = false
+                            this.conditionData[0].instanceCanDelete = false;
                         }
-                        return
+                        return;
                     }
                     if (len > 0) {
-                        this.conditionData = val
-                        const firstConditionData = this.conditionData[0]
+                        this.conditionData = val;
+                        const firstConditionData = this.conditionData[0];
                         if (firstConditionData.instance && firstConditionData.instance.length > 0) {
-                            firstConditionData.instanceExpanded = true
+                            firstConditionData.instanceExpanded = true;
                         }
                         if (firstConditionData.attribute && firstConditionData.attribute.length > 0) {
-                            firstConditionData.attributeExpanded = true
+                            firstConditionData.attributeExpanded = true;
                         }
                         if (len === 1) {
-                            const selectionMode = this.conditionData[0].selectionMode
+                            const selectionMode = this.conditionData[0].selectionMode;
                             if (selectionMode !== 'all') {
-                                this.conditionData[0].instanceCanDelete = false
+                                this.conditionData[0].instanceCanDelete = false;
                             }
                         }
-                        this.notLimitValue = false
-                        this.isHide = false
+                        this.notLimitValue = false;
+                        this.isHide = false;
                     } else {
-                        this.notLimitValue = true
-                        this.isHide = true
-                        this.conditionData = []
+                        this.notLimitValue = true;
+                        this.isHide = true;
+                        this.conditionData = [];
                     }
                 },
                 deep: true,
@@ -343,84 +343,84 @@
             notLimitValue (value) {
                 if (value) {
                     this.conditionData.forEach(item => {
-                        item.isInstanceEmpty = false
-                        item.isAttributeEmpty = false
-                    })
+                        item.isInstanceEmpty = false;
+                        item.isAttributeEmpty = false;
+                    });
                 }
             }
         },
         created () {
             this.isArrayInclude = (target, origin) => {
-                const itemAry = []
+                const itemAry = [];
                 target.forEach(function (p1) {
                     if (origin.indexOf(p1) !== -1) {
-                        itemAry.push(p1)
+                        itemAry.push(p1);
                     }
-                })
+                });
                 if (itemAry.length === target.length) {
-                    return true
+                    return true;
                 }
-                return false
-            }
+                return false;
+            };
         },
         methods: {
             getLimitInstance (payload) {
                 if (payload && payload.instance) {
-                    return payload.instance
+                    return payload.instance;
                 }
-                return []
+                return [];
             },
             getLimitAttribute (payload) {
                 if (payload && payload.attribute) {
-                    return payload.attribute
+                    return payload.attribute;
                 }
-                return []
+                return [];
             },
 
             getAuthorizationScopeAction () {
                 if (Object.keys(this.curScopeAction).length > 0) {
-                    const curData = new RelateResourceTypes(this.curScopeAction.related_resource_types[this.resIndex], { name: this.curScopeAction.name, type: this.curScopeAction.type }, 'detail')
-                    console.log(curData)
-                    const len = curData.condition.length
+                    const curData = new RelateResourceTypes(this.curScopeAction.resource_groups[0].related_resource_types[this.resIndex], { name: this.curScopeAction.name, type: this.curScopeAction.type }, 'detail');
+                    console.log(curData);
+                    const len = curData.condition.length;
                     if (len > 0) {
-                        this.conditionLimitData = curData.condition
+                        this.conditionLimitData = curData.condition;
                         if (this.conditionData.length < len) {
-                            const differenceLen = len - this.conditionData.length
+                            const differenceLen = len - this.conditionData.length;
                             for (let i = 0; i < differenceLen; i++) {
-                                this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'))
+                                this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
                             }
                         }
                         this.conditionLimitData.forEach((item, index) => {
                             const tempList = this.selectList.filter(subItem => {
-                                const chainLen = subItem.resource_type_chain.length
-                                const curChainId = subItem.resource_type_chain.map(item => item.id)
-                                const lastChainId = subItem.resource_type_chain[chainLen - 1].id
-                                const curTypes = item.instance.map(v => v.path.map(vItem => vItem.map(_ => _.type)))
+                                const chainLen = subItem.resource_type_chain.length;
+                                const curChainId = subItem.resource_type_chain.map(item => item.id);
+                                const lastChainId = subItem.resource_type_chain[chainLen - 1].id;
+                                const curTypes = item.instance.map(v => v.path.map(vItem => vItem.map(_ => _.type)));
                                 return curTypes.filter(typeItem => {
                                     if (subItem.ignore_iam_path && typeItem.length === 1) {
-                                        return typeItem[0] === lastChainId
+                                        return typeItem[0] === lastChainId;
                                     }
-                                    return this.isArrayInclude(curChainId, typeItem)
-                                })
-                            })
+                                    return this.isArrayInclude(curChainId, typeItem);
+                                });
+                            });
                             if (tempList.length > 0) {
-                                this.$set(this.selectListMap, index, tempList)
-                                this.$set(this.selectValueMap, index, tempList[0].id)
+                                this.$set(this.selectListMap, index, tempList);
+                                this.$set(this.selectValueMap, index, tempList[0].id);
                             }
-                            const isHasInstance = item.instance && item.instance.length > 0
-                            const isHasAttribute = item.attribute && item.attribute.length > 0
-                            let curSelectMode = ''
+                            const isHasInstance = item.instance && item.instance.length > 0;
+                            const isHasAttribute = item.attribute && item.attribute.length > 0;
+                            let curSelectMode = '';
                             if (!isHasInstance && isHasAttribute) {
-                                curSelectMode = 'attribute'
-                                this.$delete(this.conditionData[index], 'instance')
+                                curSelectMode = 'attribute';
+                                this.$delete(this.conditionData[index], 'instance');
                             } else if (isHasInstance && !isHasAttribute) {
-                                curSelectMode = 'instance'
-                                this.$delete(this.conditionData[index], 'attribute')
+                                curSelectMode = 'instance';
+                                this.$delete(this.conditionData[index], 'attribute');
                             } else {
-                                curSelectMode = 'all'
+                                curSelectMode = 'all';
                             }
-                            this.$set(this.selectionModeMap, index, curSelectMode)
-                        })
+                            this.$set(this.selectionModeMap, index, curSelectMode);
+                        });
                     }
                 }
                 // try {
@@ -473,95 +473,95 @@
 
             handleDragMouseenter (e) {
                 if (this.isDrag) {
-                    return
+                    return;
                 }
-                this.isDrag = true
-                document.addEventListener('mousemove', this.handleDragMousemove)
-                document.addEventListener('mouseup', this.handleDragMouseup)
+                this.isDrag = true;
+                document.addEventListener('mousemove', this.handleDragMousemove);
+                document.addEventListener('mouseup', this.handleDragMouseup);
             },
 
             handleDragMouseup (e) {
                 // this.dragWidth = this.dragRealityWidth
-                this.isDrag = false
-                document.removeEventListener('mousemove', this.handleDragMousemove)
-                document.removeEventListener('mouseup', this.handleDragMouseup)
+                this.isDrag = false;
+                document.removeEventListener('mousemove', this.handleDragMousemove);
+                document.removeEventListener('mouseup', this.handleDragMouseup);
             },
 
             handleDragMousemove (e) {
                 if (!this.isDrag) {
-                    return
+                    return;
                 }
                 // 可拖拽范围
-                const MIN_OFFSET_WIDTH = 220
-                const minWidth = MIN_OFFSET_WIDTH
-                const maxWidth = MIN_OFFSET_WIDTH + 120
-                const offsetX = e.clientX - (document.body.clientWidth - 720)
+                const MIN_OFFSET_WIDTH = 220;
+                const minWidth = MIN_OFFSET_WIDTH;
+                const maxWidth = MIN_OFFSET_WIDTH + 120;
+                const offsetX = e.clientX - (document.body.clientWidth - 720);
                 if (offsetX < minWidth || offsetX >= maxWidth) {
-                    return
+                    return;
                 }
-                this.dragRealityWidth = offsetX
-                this.dragWidth = offsetX
+                this.dragRealityWidth = offsetX;
+                this.dragWidth = offsetX;
             },
 
             async fetchInstanceSelection (params = {}) {
                 try {
-                    const res = await this.$store.dispatch('permApply/getInstanceSelection', params)
-                    this.selectList = [...res.data]
+                    const res = await this.$store.dispatch('permApply/getInstanceSelection', params);
+                    this.selectList = [...res.data];
                     if (this.selectList.length > 0) {
-                        this.selectValue = res.data[0].id
+                        this.selectValue = res.data[0].id;
                     }
-                    this.getAuthorizationScopeAction()
+                    this.getAuthorizationScopeAction();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             async fetchResourceAttrs () {
                 try {
-                    const res = await this.$store.dispatch('permApply/getResourceAttrs', this.attributeParams)
-                    this.attributes = [...res.data.results]
+                    const res = await this.$store.dispatch('permApply/getResourceAttrs', this.attributeParams);
+                    this.attributes = [...res.data.results];
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             handleLimitChange (newVal, oldVal) {
-                window.changeAlert = true
+                window.changeAlert = true;
                 if (!newVal) {
-                    this.isHide = false
-                    const isInitializeData = this.originalData.length === 1 && this.originalData[0] === 'none'
+                    this.isHide = false;
+                    const isInitializeData = this.originalData.length === 1 && this.originalData[0] === 'none';
                     if (!isInitializeData && this.originalData.length > 0) {
-                        this.conditionData = _.cloneDeep(this.originalData)
-                        const firstConditionData = this.conditionData[0]
+                        this.conditionData = _.cloneDeep(this.originalData);
+                        const firstConditionData = this.conditionData[0];
                         if (firstConditionData.instance && firstConditionData.instance.length > 0) {
-                            firstConditionData.instanceExpanded = true
+                            firstConditionData.instanceExpanded = true;
                         }
                         if (firstConditionData.attribute && firstConditionData.attribute.length > 0) {
-                            firstConditionData.attributeExpanded = true
+                            firstConditionData.attributeExpanded = true;
                         }
-                        return
+                        return;
                     }
                     if (this.conditionData.length < 1) {
-                        this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'))
-                        this.conditionData[0].instanceExpanded = true
+                        this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
+                        this.conditionData[0].instanceExpanded = true;
                     }
                 }
                 // else {
@@ -569,100 +569,100 @@
                 // }
 
                 if (this.flag === '') {
-                    this.$emit('on-limit-change')
+                    this.$emit('on-limit-change');
                 }
             },
 
             handleExpanded (payload, item) {
-                window.changeAlert = true
-                item.isHovering = !payload
+                window.changeAlert = true;
+                item.isHovering = !payload;
             },
 
             handleDelete (payload, index, key) {
-                window.changeAlert = true
-                const currentData = _.cloneDeep(payload)
+                window.changeAlert = true;
+                const currentData = _.cloneDeep(payload);
                 if (key === 'instance') {
-                    delete currentData.instance
+                    delete currentData.instance;
                 } else {
-                    delete currentData.attribute
+                    delete currentData.attribute;
                 }
                 if (!currentData.instance && !currentData.attribute) {
-                    this.conditionData.splice(index, 1)
-                    this.conditionLimitData.splice(index, 1)
+                    this.conditionData.splice(index, 1);
+                    this.conditionLimitData.splice(index, 1);
                 } else {
-                    this.conditionData.splice(index, 1, currentData)
+                    this.conditionData.splice(index, 1, currentData);
                 }
             },
 
             handleAdd (condition, index, type) {
-                window.changeAlert = true
-                const currentData = _.cloneDeep(condition)
+                window.changeAlert = true;
+                const currentData = _.cloneDeep(condition);
                 if (type === 'instance') {
-                    currentData.isAttributeEmpty = false
-                    currentData.attribute = _.cloneDeep([ATTRIBUTE_ITEM])
+                    currentData.isAttributeEmpty = false;
+                    currentData.attribute = _.cloneDeep([ATTRIBUTE_ITEM]);
                 } else {
-                    currentData.isInstanceEmpty = false
-                    currentData.instance = []
+                    currentData.isInstanceEmpty = false;
+                    currentData.instance = [];
                 }
-                this.conditionData.splice(index, 1, currentData)
+                this.conditionData.splice(index, 1, currentData);
             },
 
             handleMouseenter (payload) {
                 if (!payload.instanceExpanded) {
-                    payload.isHovering = true
+                    payload.isHovering = true;
                 }
             },
 
             handleMouseleave (payload) {
-                payload.isHovering = false
+                payload.isHovering = false;
             },
 
             handleAddInstance () {
                 // this.isEmptyResource = false
-                window.changeAlert = true
-                this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'))
+                window.changeAlert = true;
+                this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
                 // this.conditionLimitData.push(this.conditionLimitData[this.conditionLimitData.length - 1])
-                const lastConditionData = this.conditionData[this.conditionData.length - 1]
+                const lastConditionData = this.conditionData[this.conditionData.length - 1];
                 if (lastConditionData.instance) {
-                    lastConditionData.instanceExpanded = true
+                    lastConditionData.instanceExpanded = true;
                 } else {
-                    lastConditionData.attributeExpanded = true
+                    lastConditionData.attributeExpanded = true;
                 }
             },
 
             handleComputedIsGroup (payload) {
                 if (payload.hasOwnProperty('instance') && payload.hasOwnProperty('attribute')) {
-                    return true
+                    return true;
                 }
-                return false
+                return false;
             },
 
             handleAttrValueChange (payload, condition) {
-                window.changeAlert = true
-                condition.isAttributeEmpty = false
-                condition.attribute = payload
+                window.changeAlert = true;
+                condition.isAttributeEmpty = false;
+                condition.attribute = payload;
             },
 
             handleGetPreviewValue () {
                 if (this.notLimitValue) {
-                    return []
+                    return [];
                 }
-                const tempConditionData = _.cloneDeep(this.conditionData)
+                const tempConditionData = _.cloneDeep(this.conditionData);
                 tempConditionData.forEach(item => {
                     if (!item.instance) {
-                        item.instance = []
+                        item.instance = [];
                     }
                     if (!item.attribute) {
-                        item.attribute = []
+                        item.attribute = [];
                     }
                     if (item.instance.length > 0) {
-                        item.instance = item.instance.filter(ins => ins.path.length > 0)
+                        item.instance = item.instance.filter(ins => ins.path.length > 0);
                     }
                     if (item.attribute.length > 0) {
-                        item.attribute = item.attribute.filter(attr => attr.values.length > 0)
+                        item.attribute = item.attribute.filter(attr => attr.values.length > 0);
                     }
-                })
-                return tempConditionData.map(({ id, instance, attribute }) => ({ id, instance, attribute }))
+                });
+                return tempConditionData.map(({ id, instance, attribute }) => ({ id, instance, attribute }));
             },
 
             handleGetValue () {
@@ -670,68 +670,68 @@
                     return {
                         isEmpty: false,
                         data: []
-                    }
+                    };
                 }
                 if (this.conditionData.length < 1) {
                     return {
                         isEmpty: false,
                         data: ['none']
-                    }
+                    };
                 }
-                const tempConditionData = _.cloneDeep(this.conditionData)
+                const tempConditionData = _.cloneDeep(this.conditionData);
                 if (!tempConditionData.some(item => {
                     return (item.instance && (item.instance.length > 0 && item.instance.some(instanceItem => instanceItem.path.length > 0)))
-                        || (item.attribute && (item.attribute.length > 0 && item.attribute.some(attr => attr.values.some(val => val.id !== ''))))
+                        || (item.attribute && (item.attribute.length > 0 && item.attribute.some(attr => attr.values.some(val => val.id !== ''))));
                 })) {
                     return {
                         isEmpty: false,
                         data: ['none']
-                    }
+                    };
                 }
                 tempConditionData.forEach(item => {
                     if (item.instance && item.instance.length > 0) {
-                        item.instance = item.instance.filter(ins => ins.path.length > 0)
+                        item.instance = item.instance.filter(ins => ins.path.length > 0);
                     }
                     if (item.attribute && item.attribute.length > 0) {
-                        item.attribute = item.attribute.filter(attr => attr.values.length > 0)
+                        item.attribute = item.attribute.filter(attr => attr.values.length > 0);
                     }
-                })
+                });
                 return {
                     isEmpty: false,
                     data: tempConditionData
-                }
+                };
             },
 
             handleInstanceClearAll (payload, payloadIndex, index) {
-                window.changeAlert = true
-                const { displayPath } = payload
+                window.changeAlert = true;
+                const { displayPath } = payload;
                 displayPath.forEach((item, itemIndex) => {
-                    const curIds = item.parentChain.map(v => `${v.id}&${v.type}`)
-                    const curInstance = this.conditionData[index].instance
-                    let id = item.id
-                    let type = item.type
+                    const curIds = item.parentChain.map(v => `${v.id}&${v.type}`);
+                    const curInstance = this.conditionData[index].instance;
+                    let id = item.id;
+                    let type = item.type;
                     if (item.id === '*') {
-                        const data = curInstance[payloadIndex].path[itemIndex]
-                        const idIndex = data.findIndex(item => item.id === '*')
-                        id = data[idIndex - 1].id
-                        type = data[idIndex - 1].type
+                        const data = curInstance[payloadIndex].path[itemIndex];
+                        const idIndex = data.findIndex(item => item.id === '*');
+                        id = data[idIndex - 1].id;
+                        type = data[idIndex - 1].type;
                     }
-                    curIds.push(`${id}&${type}`)
-                    this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'))
-                })
+                    curIds.push(`${id}&${type}`);
+                    this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'));
+                });
 
-                const curInstanceItem = this.conditionData[index].instance[payloadIndex]
-                const indexs = []
+                const curInstanceItem = this.conditionData[index].instance[payloadIndex];
+                const indexs = [];
                 curInstanceItem.path.forEach((v, index) => {
                     if (v.some(_ => _.disabled)) {
-                        indexs.push(index)
+                        indexs.push(index);
                     }
-                })
-                curInstanceItem.paths = curInstanceItem.paths.filter((v, index) => indexs.includes(index))
-                curInstanceItem.path = curInstanceItem.path.filter(v => v.some(_ => _.disabled))
+                });
+                curInstanceItem.paths = curInstanceItem.paths.filter((v, index) => indexs.includes(index));
+                curInstanceItem.path = curInstanceItem.path.filter(v => v.some(_ => _.disabled));
 
                 if (curInstanceItem.path.length < 1) {
-                    this.conditionData[index].instance.splice(payloadIndex, 1)
+                    this.conditionData[index].instance.splice(payloadIndex, 1);
                 }
             },
 
@@ -756,149 +756,149 @@
 
                 // curIds.push(`${id}&${type}`)
                 // this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'))
-                window.changeAlert = true
-                const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`)
-                const isCarryNextNoLimit = payload.id === '*'
+                window.changeAlert = true;
+                const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`);
+                const isCarryNextNoLimit = payload.id === '*';
 
-                const curInstance = this.conditionData[index].instance
-                const curPath = curInstance[payloadIndex].path
-                const curPaths = curInstance[payloadIndex].paths
-                let id = payload.id
-                let type = payload.type
+                const curInstance = this.conditionData[index].instance;
+                const curPath = curInstance[payloadIndex].path;
+                const curPaths = curInstance[payloadIndex].paths;
+                let id = payload.id;
+                let type = payload.type;
                 if (isCarryNextNoLimit) {
-                    const data = curPath[childIndex]
-                    const idIndex = data.findIndex(item => item.id === '*')
-                    id = data[idIndex - 1].id
-                    type = data[idIndex - 1].type
+                    const data = curPath[childIndex];
+                    const idIndex = data.findIndex(item => item.id === '*');
+                    id = data[idIndex - 1].id;
+                    type = data[idIndex - 1].type;
                 }
-                curPath.splice(childIndex, 1)
-                curPaths.splice(childIndex, 1)
+                curPath.splice(childIndex, 1);
+                curPaths.splice(childIndex, 1);
                 if (curInstance.every(item => item.path.length < 1)) {
-                    const len = curInstance.length
-                    curInstance.splice(0, len, ...[])
+                    const len = curInstance.length;
+                    curInstance.splice(0, len, ...[]);
                 }
 
-                curIds.push(`${id}&${type}`)
+                curIds.push(`${id}&${type}`);
 
                 if (isCarryNextNoLimit) {
                     const existedNoCarryNoLimitData = curPath.find(item => {
-                        return curIds.join('#') === item.map(v => `${v.id}&${v.type}`).join('#')
-                    })
+                        return curIds.join('#') === item.map(v => `${v.id}&${v.type}`).join('#');
+                    });
                     if (existedNoCarryNoLimitData) {
-                        const isDisabled = existedNoCarryNoLimitData.some(v => v.disabled)
+                        const isDisabled = existedNoCarryNoLimitData.some(v => v.disabled);
                         if (isDisabled) {
-                            this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeSetChecked(curIds.join('#'))
+                            this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeSetChecked(curIds.join('#'));
                         }
                     } else {
-                        this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'))
+                        this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'));
                     }
                 } else {
                     const existedNoLimitData = curPath.find(item => {
-                        const tempArr = item.filter(_ => _.id !== '*')
-                        return curIds.join('#') === tempArr.map(v => `${v.id}&${v.type}`).join('#') && item[item.length - 1].id === '*'
-                    })
+                        const tempArr = item.filter(_ => _.id !== '*');
+                        return curIds.join('#') === tempArr.map(v => `${v.id}&${v.type}`).join('#') && item[item.length - 1].id === '*';
+                    });
                     if (existedNoLimitData) {
-                        const isDisabled = existedNoLimitData.some(v => v.disabled)
+                        const isDisabled = existedNoLimitData.some(v => v.disabled);
                         if (isDisabled) {
-                            this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeSetChecked(curIds.join('#'))
+                            this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeSetChecked(curIds.join('#'));
                         }
                     } else {
-                        this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'))
+                        this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'));
                     }
                 }
             },
 
             handleChain (payload, currentInstance, index, curAsync) {
-                const typeChain = _.cloneDeep(payload).filter(item => item.id !== '*')
+                const typeChain = _.cloneDeep(payload).filter(item => item.id !== '*');
                 // const curInstance = _.cloneDeep(currentInstance)
                 // console.warn('typeChain: ')
                 // console.warn(typeChain)
                 // 当前类型链路：
-                const curChain = typeChain.map(item => item.type)
+                const curChain = typeChain.map(item => item.type);
                 // console.warn('当前类型链路curChain: ')
                 // console.warn(curChain)
                 // 当前父级id链路
-                const curIdChain = typeChain.map(item => item.id)
+                const curIdChain = typeChain.map(item => item.id);
                 // console.warn('当前父级id链路curIdChain: ')
                 // console.warn(curIdChain)
                 // 匹配的所有包含父级id的链路
-                const allChain = []
+                const allChain = [];
                 // console.warn(currentInstance)
                 currentInstance.forEach((item, itemIndex) => {
-                    const obj = {}
-                    obj.instanceIndex = itemIndex
+                    const obj = {};
+                    obj.instanceIndex = itemIndex;
                     item.path.forEach((pathItem, pathIndex) => {
-                        const isExistAny = pathItem.some(v => v.id === '*')
+                        const isExistAny = pathItem.some(v => v.id === '*');
                         if (!isExistAny) {
                             if (pathItem.length === 1 && curAsync) {
                                 // const tempPathItem = _.cloneDeep(pathItem)
                                 // tempPathItem.unshift(...typeChain)
-                                const tempPathItem = _.cloneDeep(item.paths[pathIndex])
+                                const tempPathItem = _.cloneDeep(item.paths[pathIndex]);
                                 if (tempPathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
-                                    obj.childChain = tempPathItem.map(chain => chain.type)
-                                    obj.childChainId = tempPathItem.map(chain => chain.id)
-                                    obj.id = tempPathItem[tempPathItem.length - 1].id
-                                    obj.pathIndex = pathIndex
-                                    allChain.push(_.cloneDeep(obj))
+                                    obj.childChain = tempPathItem.map(chain => chain.type);
+                                    obj.childChainId = tempPathItem.map(chain => chain.id);
+                                    obj.id = tempPathItem[tempPathItem.length - 1].id;
+                                    obj.pathIndex = pathIndex;
+                                    allChain.push(_.cloneDeep(obj));
                                 }
                             }
                             if (pathItem.length > 1) {
                                 if (pathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
-                                    obj.childChain = pathItem.map(chain => chain.type)
-                                    obj.childChainId = pathItem.map(chain => chain.id)
-                                    obj.id = pathItem[pathItem.length - 1].id
-                                    obj.pathIndex = pathIndex
-                                    allChain.push(_.cloneDeep(obj))
+                                    obj.childChain = pathItem.map(chain => chain.type);
+                                    obj.childChainId = pathItem.map(chain => chain.id);
+                                    obj.id = pathItem[pathItem.length - 1].id;
+                                    obj.pathIndex = pathIndex;
+                                    allChain.push(_.cloneDeep(obj));
                                 }
                             }
                         } else {
-                            const templatePathItem = pathItem.filter(v => v.id !== '*')
+                            const templatePathItem = pathItem.filter(v => v.id !== '*');
                             if (templatePathItem.length > 1) {
                                 if (templatePathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
-                                    obj.childChain = templatePathItem.map(chain => chain.type)
-                                    obj.childChainId = templatePathItem.map(chain => chain.id)
-                                    obj.id = templatePathItem[templatePathItem.length - 1].id
-                                    obj.pathIndex = pathIndex
-                                    allChain.push(_.cloneDeep(obj))
+                                    obj.childChain = templatePathItem.map(chain => chain.type);
+                                    obj.childChainId = templatePathItem.map(chain => chain.id);
+                                    obj.id = templatePathItem[templatePathItem.length - 1].id;
+                                    obj.pathIndex = pathIndex;
+                                    allChain.push(_.cloneDeep(obj));
                                 }
                             }
                         }
-                    })
-                })
+                    });
+                });
 
                 // 匹配的所有子级链路：
-                const tempChain = allChain.filter(item => item.childChain.length > curChain.length)
+                const tempChain = allChain.filter(item => item.childChain.length > curChain.length);
                 // console.warn('匹配的所有子级链路tempChain: ')
                 // console.warn(tempChain)
                 if (tempChain.length < 1) {
-                    return
+                    return;
                 }
                 tempChain.forEach(item => {
                     if (item.childChainId.join('').includes(curIdChain.join(''))) {
-                        const curPath = currentInstance[item.instanceIndex].path
+                        const curPath = currentInstance[item.instanceIndex].path;
                         // console.warn('curPath：')
                         // console.warn(curPath)
                         // const curPathIndex = curPath.findIndex(sub => item.id === sub[sub.length - 1].id)
                         const curPathIndex = curPath.findIndex(sub => {
                             if (sub.some(v => v.id === '*')) {
-                                return item.id === sub[sub.length - 2].id
+                                return item.id === sub[sub.length - 2].id;
                             }
-                            return item.id === sub[sub.length - 1].id
-                        })
+                            return item.id === sub[sub.length - 1].id;
+                        });
                         const getFlag = () => {
                             if (curIdChain.length === 1) {
-                                const arr = item.childChainId.slice(item.childChainId.length - 1)
+                                const arr = item.childChainId.slice(item.childChainId.length - 1);
                                 if (arr[0] === curIdChain[0]) {
-                                    return true
+                                    return true;
                                 }
-                                return false
+                                return false;
                             }
-                            return false
-                        }
+                            return false;
+                        };
                         // 禁用的不做移除
                         if (curPathIndex > -1) {
                             if (!curPath[curPathIndex].every(v => v.disabled) && !getFlag()) {
-                                curPath.splice(curPathIndex, 1)
+                                curPath.splice(curPathIndex, 1);
                             }
                         }
                     }
@@ -907,102 +907,102 @@
                     //     const curPathIndex = curPath.findIndex(sub => item.id === sub[sub.length - 1].id)
                     //     curPath.splice(curPathIndex, 1)
                     // }
-                })
+                });
             },
 
             handlePathSelect (value, node, payload, index) {
-                window.changeAlert = true
-                const { type, path, paths } = payload[0]
-                const tempPath = path[0]
-                const curInstance = this.conditionData[index].instance
-                this.conditionData[index].isInstanceEmpty = false
+                window.changeAlert = true;
+                const { type, path, paths } = payload[0];
+                const tempPath = path[0];
+                const curInstance = this.conditionData[index].instance;
+                this.conditionData[index].isInstanceEmpty = false;
                 if (value) {
                     // console.warn('curInstance: ')
                     // console.warn(curInstance)
                     if (curInstance.length < 1) {
-                        curInstance.push(new Instance(payload[0]))
+                        curInstance.push(new Instance(payload[0]));
                     } else {
-                        const selectInstanceItemIndex = curInstance.findIndex(item => item.type === type)
+                        const selectInstanceItemIndex = curInstance.findIndex(item => item.type === type);
                         // console.warn('selectInstanceItem: ')
                         // console.warn(selectInstanceItem)
                         // console.warn('path: ')
                         // console.warn(path)
                         if (selectInstanceItemIndex > -1) {
-                            const selectInstanceItem = _.cloneDeep(curInstance[selectInstanceItemIndex])
-                            selectInstanceItem.path.push(...path)
-                            selectInstanceItem.paths.push(...paths)
-                            curInstance.splice(selectInstanceItemIndex, 1, selectInstanceItem)
+                            const selectInstanceItem = _.cloneDeep(curInstance[selectInstanceItemIndex]);
+                            selectInstanceItem.path.push(...path);
+                            selectInstanceItem.paths.push(...paths);
+                            curInstance.splice(selectInstanceItemIndex, 1, selectInstanceItem);
                         } else {
-                            curInstance.push(new Instance(payload[0]))
+                            curInstance.push(new Instance(payload[0]));
                         }
-                        this.handleChain(tempPath, curInstance, index, node.async)
+                        this.handleChain(tempPath, curInstance, index, node.async);
                     }
                 } else {
                     // const noCarryNoLimitPath = payload[1]
-                    const deleteInstanceItem = curInstance.find(item => item.type === type)
+                    const deleteInstanceItem = curInstance.find(item => item.type === type);
 
                     // const arr = path[0]
                     // const tempPath = arr.filter(item => item.id !== '*')
 
                     // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
-                    const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''))
+                    const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
 
                     // const curChildreIds = node.children.map(item => item.id)
-                    const curChildreIds = node.children.map(item => `${item.id}&${item.type}`)
+                    const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
 
                     // deleteInstanceItem.path.splice(deleteIndex, 1)
-                    let isDisabled = false
+                    let isDisabled = false;
                     if (deleteIndex > -1) {
-                        isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled)
+                        isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
                         if (!isDisabled) {
-                            deleteInstanceItem.path.splice(deleteIndex, 1)
+                            deleteInstanceItem.path.splice(deleteIndex, 1);
                         }
                     }
 
                     if (payload[1]) {
-                        const noCarryNoLimitPath = payload[1].path[0]
+                        const noCarryNoLimitPath = payload[1].path[0];
                         const deleteIndexTemp = deleteInstanceItem.path.findIndex(item => {
-                            return item.map(v => `${v.id}&${v.type}`).join('') === noCarryNoLimitPath.map(v => `${v.id}&${v.type}`).join('')
-                        })
+                            return item.map(v => `${v.id}&${v.type}`).join('') === noCarryNoLimitPath.map(v => `${v.id}&${v.type}`).join('');
+                        });
                         if (deleteIndexTemp > -1 && !deleteInstanceItem.path[deleteIndexTemp].some(_ => _.disabled)) {
-                            deleteInstanceItem.path.splice(deleteIndexTemp, 1)
+                            deleteInstanceItem.path.splice(deleteIndexTemp, 1);
                             if (isDisabled) {
-                                const curIds = deleteInstanceItem.path[deleteIndex].filter(v => v.id !== '*').map(_ => `${_.id}&${_.type}`)
+                                const curIds = deleteInstanceItem.path[deleteIndex].filter(v => v.id !== '*').map(_ => `${_.id}&${_.type}`);
                                 this.$nextTick(() => {
-                                    this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeSetChecked(curIds.join('#'))
-                                })
+                                    this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeSetChecked(curIds.join('#'));
+                                });
                             }
                         }
 
-                        const otherTempPaths = payload[1].paths[0]
-                        const otherDeleteIndexTemp = deleteInstanceItem.paths.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === otherTempPaths.map(v => `${v.id}&${v.type}`).join(''))
-                        deleteInstanceItem.paths.splice(otherDeleteIndexTemp, 1)
+                        const otherTempPaths = payload[1].paths[0];
+                        const otherDeleteIndexTemp = deleteInstanceItem.paths.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === otherTempPaths.map(v => `${v.id}&${v.type}`).join(''));
+                        deleteInstanceItem.paths.splice(otherDeleteIndexTemp, 1);
                     }
 
                     for (let i = 0; i < curInstance.length; i++) {
-                        const instanceItem = curInstance[i]
+                        const instanceItem = curInstance[i];
                         if (instanceItem.path.length === 1 && instanceItem.path[0].length === 1) {
                             // if (curChildreIds.includes(instanceItem.path[0][0].id)) {
                             //     curInstance.splice(i, 1)
                             // }
                             if (curChildreIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
-                                curInstance.splice(i, 1)
-                                break
+                                curInstance.splice(i, 1);
+                                break;
                             }
                         }
                         if (instanceItem.path < 1) {
-                            curInstance.splice(i, 1)
-                            break
+                            curInstance.splice(i, 1);
+                            break;
                         }
                     }
 
-                    const tempPaths = paths[0]
-                    const deleteIndexTemp = deleteInstanceItem.paths.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPaths.map(v => `${v.id}&${v.type}`).join(''))
-                    deleteInstanceItem.paths.splice(deleteIndexTemp, 1)
+                    const tempPaths = paths[0];
+                    const deleteIndexTemp = deleteInstanceItem.paths.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPaths.map(v => `${v.id}&${v.type}`).join(''));
+                    deleteInstanceItem.paths.splice(deleteIndexTemp, 1);
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-slider-resource-wrapper {

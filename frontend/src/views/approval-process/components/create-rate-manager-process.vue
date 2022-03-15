@@ -27,13 +27,13 @@
         data () {
             return {
                 value: '0'
-            }
+            };
         },
         methods: {
             handleProcessSelect (value, option) {
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-create-rate-manager-process-wrapper {

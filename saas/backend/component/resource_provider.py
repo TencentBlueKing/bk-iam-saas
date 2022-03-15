@@ -147,7 +147,7 @@ class ResourceProviderClient:
             f"you should check: "
             f"1.the network is ok 2.{self.system_id} is available 3.get details from {self.system_id}'s log. "
             f"[POST {urlparse(self.url).path} body.data.method={data['method']}]"
-            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id})"
+            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id}) request_id={self.request_id}"
         )
 
         try:
@@ -156,8 +156,8 @@ class ResourceProviderClient:
             # 接入系统可返回request_id便于排查，避免接入系统未使用权限中心请求头里的request_id而自行生成，所以需要再获取赋值
             self.request_id = resp.headers.get("X-Request-Id") or self.request_id
             latency = int((time.time() - st) * 1000)
-            # 打印INFO日志，用于调试时使用
-            logger.info(
+            # 打印DEBUG日志，用于调试时使用
+            logger.debug(
                 f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
                 f"{base_log_msg}"
             )
@@ -171,7 +171,7 @@ class ResourceProviderClient:
                 status=resp.status_code,
             ).observe(latency)
         except requests.exceptions.RequestException as e:
-            logger.exception(f"RequestException! {base_log_msg} ")
+            logger.exception(f"RequestException! {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 接口不可达
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
@@ -192,11 +192,16 @@ class ResourceProviderClient:
                 f"{request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
-            logger.error(f"RespDataException response_content: {resp.text}， error: {error}. {base_log_msg}")
+            logger.exception(f"ResponseDataException! response_content: {resp.text}， error: {error}. {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 数据异常，JSON解析出错
             raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(
                 f"{self.system_id}'s API error: {error}! " f"{request_detail_info}"
+            )
+
+        if "code" not in resp:
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(
+                f"{self.system_id}'s API response body.code missing! response_content: {resp}. {request_detail_info}"
             )
 
         code = resp["code"]
@@ -204,7 +209,7 @@ class ResourceProviderClient:
             # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
             return resp["data"]
 
-        logger.error(f"Return Code Not Zero, resp: %s. {base_log_msg} ", resp)
+        logger.error(f"Return Code Not Zero! response_content: {resp}. {base_log_msg}")
 
         # code不同值代表不同意思，401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
         if code not in ResponseCodeToErrorDict:
@@ -266,7 +271,11 @@ class ResourceProviderClient:
     def list_attr(self) -> List[Dict[str, str]]:
         """查询某个资源类型可用于配置权限的属性列表"""
         data = {"type": self.resource_type_id, "method": ResourceAPIEnum.LIST_ATTR.value}
-        return self._handle_empty_data(self._call_api(data), default=[])
+        resp_data = self._handle_empty_data(self._call_api(data), default=[])
+
+        # {"id": "id", "display_name":""} should not be displayed in frontend for making policy
+        removed_attr_id_data = [d for d in resp_data if d.get("id") != "id"]
+        return removed_attr_id_data
 
     def list_attr_value(
         self, attr: str, filter_condition: Dict, page: Dict[str, int]

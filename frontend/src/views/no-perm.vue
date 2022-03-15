@@ -17,7 +17,7 @@
      *  @param text {String} - 显示的文案，默认：有：404（页面找不到了！）、403（Sorry，您的权限不足）、500（）、building(功能正在建设中···)
      *  @example1 <app-exception type="404"></app-exception>
      */
-    import { mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex';
     export default {
         name: 'no-perm',
         props: {
@@ -37,7 +37,7 @@
         data () {
             return {
                 curRole: 'staff'
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
@@ -45,34 +45,34 @@
         watch: {
             user: {
                 handler (value) {
-                    this.curRole = value.role.type || 'staff'
+                    this.curRole = value.role.type || 'staff';
                 },
                 immediate: true
             }
         },
         beforeRouteEnter (to, from, next) {
-            window.localStorage.removeItem('iam-header-title-cache')
-            window.localStorage.removeItem('iam-header-name-cache')
-            next()
+            window.localStorage.removeItem('iam-header-title-cache');
+            window.localStorage.removeItem('iam-header-name-cache');
+            next();
         },
         created () {
             setTimeout(() => {
-                this.show = true
-            }, this.delay)
+                this.show = true;
+            }, this.delay);
         },
         methods: {
             handleRefreshPage () {
-                this.curRole = this.user.role.type || 'staff'
+                this.curRole = this.user.role.type || 'staff';
                 if (this.curRole === 'staff' || this.curRole === '') {
                     this.$router.push({
                         name: 'myPerm'
-                    })
+                    });
                 } else {
                     this.$router.push({
                         name: 'permTemplate'
-                    })
+                    });
                 }
             }
         }
-    }
+    };
 </script>

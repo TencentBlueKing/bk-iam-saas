@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
-
 from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -22,8 +20,6 @@ from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum
 from backend.util.time import format_localtime
-
-logger = logging.getLogger("app")
 
 
 class QueryAuthorizedSubjectsViewSet(GenericViewSet):

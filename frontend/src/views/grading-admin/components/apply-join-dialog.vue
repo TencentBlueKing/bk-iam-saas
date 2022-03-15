@@ -54,47 +54,47 @@
                 isShowDialog: false,
                 reason: '',
                 isShowReasonError: false
-            }
+            };
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             }
         },
         methods: {
             handleReasonInput (payload) {
-                this.isShowReasonError = false
+                this.isShowReasonError = false;
             },
 
             handleReasonBlur (payload) {
                 if (payload === '') {
-                    this.isShowReasonError = true
+                    this.isShowReasonError = true;
                 }
             },
 
             handleSumbitDelete () {
                 if (this.reason === '') {
-                    this.isShowReasonError = true
-                    return
+                    this.isShowReasonError = true;
+                    return;
                 }
-                this.$emit('on-sumbit', this.reason)
+                this.$emit('on-sumbit', this.reason);
             },
 
             hideCancelDelete () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             },
             
             handleAfterDeleteLeave () {
-                this.reason = ''
-                this.isShowReasonError = false
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
+                this.reason = '';
+                this.isShowReasonError = false;
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-apply-join-dialog {

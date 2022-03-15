@@ -24,12 +24,12 @@
  * IN THE SOFTWARE.
 */
 
-import en from './lang/en'
-import cn from './lang/zh'
+import en from './lang/en';
+import cn from './lang/zh';
 
-const language = window.CUR_LANGUAGE || 'zh-cn'
+const language = window.CUR_LANGUAGE || 'zh-cn';
 
-const local = language === 'zh-cn' ? cn.language : en.language
+const local = language === 'zh-cn' ? cn.language : en.language;
 
 // 检测漏掉的翻译
 // const cnLan = cn.language
@@ -59,14 +59,14 @@ const local = language === 'zh-cn' ? cn.language : en.language
 
 const il8n = (key, subKey) => {
     if (!local[key] || !local[key][subKey]) {
-        return subKey
+        return subKey;
     }
-    return local[key][subKey]
-}
+    return local[key][subKey];
+};
 
-export default il8n
+export default il8n;
 
 export {
     il8n,
     language
-}
+};

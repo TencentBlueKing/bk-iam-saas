@@ -86,14 +86,14 @@
                 actions: [],
                 actionList: [],
                 rules: null
-            }
+            };
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                     if (!this.isShowDialog) {
-                        return
+                        return;
                     }
 
                     this.rules = {
@@ -128,115 +128,115 @@
                                 trigger: 'change'
                             }
                         ]
-                    }
+                    };
 
-                    const actionList = []
+                    const actionList = [];
                     this.noGroupActionList.forEach(item => {
-                        actionList.push(item)
-                    })
-                    this.actionList.splice(0, this.actionList.length, ...actionList)
+                        actionList.push(item);
+                    });
+                    this.actionList.splice(0, this.actionList.length, ...actionList);
                 },
                 immediate: true
             }
         },
         methods: {
             checkName (v) {
-                const val = v.trim()
-                const isExist = !!this.groupList.filter(item => item.name.trim() === val).length
+                const val = v.trim();
+                const isExist = !!this.groupList.filter(item => item.name.trim() === val).length;
                 if (isExist) {
-                    return false
+                    return false;
                 }
 
                 const isExistInSub = !!this.groupList.filter(item => {
                     if (item.sub_groups && item.sub_groups.length) {
-                        return item.sub_groups.filter(subGroup => subGroup.name.trim() === val).length
+                        return item.sub_groups.filter(subGroup => subGroup.name.trim() === val).length;
                     }
-                }).length
+                }).length;
 
                 if (isExistInSub) {
-                    return false
+                    return false;
                 }
 
-                return true
+                return true;
             },
             checkNameEn (v) {
-                const val = v.trim()
-                const isExist = !!this.groupList.filter(item => item.name_en.trim() === val).length
+                const val = v.trim();
+                const isExist = !!this.groupList.filter(item => item.name_en.trim() === val).length;
                 if (isExist) {
-                    return false
+                    return false;
                 }
 
                 const isExistInSub = !!this.groupList.filter(item => {
                     if (item.sub_groups && item.sub_groups.length) {
-                        return item.sub_groups.filter(subGroup => subGroup.name_en.trim() === val).length
+                        return item.sub_groups.filter(subGroup => subGroup.name_en.trim() === val).length;
                     }
-                }).length
+                }).length;
 
                 if (isExistInSub) {
-                    return false
+                    return false;
                 }
 
-                return true
+                return true;
             },
 
             handleSumbit () {
-                const formComp = this.$refs.addGroupForm
+                const formComp = this.$refs.addGroupForm;
                 formComp.validate().then(async validator => {
                     try {
-                        this.submitLoading = true
-                        const groupList = []
-                        groupList.splice(0, 0, ...this.groupList)
+                        this.submitLoading = true;
+                        const groupList = [];
+                        groupList.splice(0, 0, ...this.groupList);
 
                         const actions = this.formData.selectedActions.map(
                             actionId => this.actionList.find(act => act.id === actionId)
-                        )
+                        );
                         // 添加同级分组
                         groupList.splice(this.addGroupIndex + 1, 0, {
                             name: this.formData.name,
                             name_en: this.formData.name_en,
                             actions: actions
-                        })
+                        });
                         await this.$store.dispatch('access/updateModeling', {
                             id: this.modelingId,
                             data: {
                                 type: 'action_groups',
                                 data: groupList
                             }
-                        })
-                        this.$emit('on-success')
+                        });
+                        this.$emit('on-success');
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     } finally {
-                        this.submitLoading = false
+                        this.submitLoading = false;
                     }
                 }, validator => {
-                    console.warn(validator)
+                    console.warn(validator);
                     // return Promise.reject(validator.content)
-                })
+                });
             },
 
             hide () {
-                this.$emit('on-hide')
+                this.$emit('on-hide');
             },
 
             handleAfterLeave () {
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
-                this.$refs.addGroupForm.clearError()
-                this.submitLoading = false
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
+                this.$refs.addGroupForm.clearError();
+                this.submitLoading = false;
                 this.formData = Object.assign({}, {
                     name: '',
                     name_en: '',
                     selectedActions: []
-                })
-                this.actionList.splice(0, this.actionList.length, ...[])
-                this.actions.splice(0, this.actions.length, ...[])
+                });
+                this.actionList.splice(0, this.actionList.length, ...[]);
+                this.actions.splice(0, this.actions.length, ...[]);
             }
         }
-    }
+    };
 </script>

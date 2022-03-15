@@ -16,13 +16,13 @@
     </div>
 </template>
 <script>
-    import CodeMirror from 'codemirror'
-    import 'codemirror/lib/codemirror.css'
-    import 'codemirror/mode/javascript/javascript'
-    import 'codemirror/addon/edit/matchbrackets.js'
-    import 'codemirror/addon/comment/continuecomment.js'
-    import 'codemirror/addon/comment/comment.js'
-    import 'codemirror/theme/icecoder.css'
+    import CodeMirror from 'codemirror';
+    import 'codemirror/lib/codemirror.css';
+    import 'codemirror/mode/javascript/javascript';
+    import 'codemirror/addon/edit/matchbrackets.js';
+    import 'codemirror/addon/comment/continuecomment.js';
+    import 'codemirror/addon/comment/comment.js';
+    import 'codemirror/theme/icecoder.css';
     export default {
         name: 'LogDetails',
         props: {
@@ -44,19 +44,19 @@
             return {
                 // value: '',
                 editor: null
-            }
+            };
         },
         computed: {
             newVal () {
                 if (this.editor) {
-                    return this.editor.getValue()
+                    return this.editor.getValue();
                 }
-                return ''
+                return '';
             }
         },
         watch: {
             newVal () {
-                this.$emit('input', this.editor.getValue())
+                this.$emit('input', this.editor.getValue());
             }
         },
         mounted () {
@@ -68,15 +68,15 @@
                     theme: 'icecoder',
                     lineWrapping: true,
                     readOnly: true
-                })
+                });
                 setTimeout(() => {
-                    console.log(this.value)
-                    this.editor.setValue(this.value)
-                }, 300)
-                this.editor.setSize(this.width, this.height)
-            })
+                    console.log(this.value);
+                    this.editor.setValue(this.value);
+                }, 300);
+                this.editor.setSize(this.width, this.height);
+            });
         }
-    }
+    };
 </script>
 <style scoped>
     .link-btn{

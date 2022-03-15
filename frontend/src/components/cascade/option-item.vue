@@ -59,8 +59,8 @@
         },
         methods: {
             handleCheckItem () {
-                this.$emit('handleCheckItem', this.item)
+                this.$emit('handleCheckItem', this.item);
             }
         }
-    }
+    };
 </script>

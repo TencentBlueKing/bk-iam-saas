@@ -24,9 +24,9 @@
  * IN THE SOFTWARE.
 */
 
-import path from 'path'
-import prodEnv from './prod.env'
-import devEnv from './dev.env'
+import path from 'path';
+import prodEnv from './prod.env';
+import devEnv from './dev.env';
 
 export default {
     build: {
@@ -53,4 +53,4 @@ export default {
         cssSourceMap: false,
         autoOpenBrowser: false
     }
-}
+};

@@ -33,7 +33,10 @@ class ActionList:
 class ActionService:
     """Action相关查询与操作"""
 
-    full_fields = "id,name,name_en,related_resource_types,version,type,description,description_en,related_actions"
+    full_fields = (
+        "id,name,name_en,related_resource_types,version,type,description,description_en,"
+        "related_actions,related_environments"
+    )
 
     @region.cache_on_arguments(expiration_time=60)
     def list(self, system_id: str) -> List[Action]:

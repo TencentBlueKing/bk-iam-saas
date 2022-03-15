@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -50,7 +50,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getModelingList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/modeling/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/modeling/?${json2Query(params)}`, config);
         },
 
         /**
@@ -65,8 +65,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getModeling ({ commit, state, dispatch }, params, config) {
-            const { id, data = {} } = params
-            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/?${json2Query(data)}`, config)
+            const { id, data = {} } = params;
+            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/?${json2Query(data)}`, config);
         },
 
         /**
@@ -81,7 +81,7 @@ export default {
          * @return {Promise} promise 对象
          */
         checkModelingId ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/modeling/is_id_exists/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/modeling/is_id_exists/?${json2Query(params)}`, config);
         },
 
         /**
@@ -96,8 +96,8 @@ export default {
          * @return {Promise} promise 对象
          */
         checkResourceId ({ commit, state, dispatch }, params, config) {
-            const { id, data = {} } = params
-            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/is_id_exists/?${json2Query(data)}`, config)
+            const { id, data = {} } = params;
+            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/is_id_exists/?${json2Query(data)}`, config);
         },
 
         /**
@@ -112,7 +112,7 @@ export default {
          * @return {Promise} promise 对象
          */
         createModeling ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/modeling/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/modeling/`, params, config);
         },
 
         /**
@@ -127,8 +127,8 @@ export default {
          * @return {Promise} promise 对象
          */
         updateModeling ({ commit, state, dispatch }, params, config) {
-            const { id, data } = params
-            return http.put(`${AJAX_URL_PREFIX}/modeling/${id}/`, data, config)
+            const { id, data } = params;
+            return http.put(`${AJAX_URL_PREFIX}/modeling/${id}/`, data, config);
         },
 
         /**
@@ -143,8 +143,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getResourceTypeListBySystem ({ commit, state, dispatch }, params, config) {
-            const { id, data = {} } = params
-            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/resource_types/?${json2Query(data)}`, config)
+            const { id, data = {} } = params;
+            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/resource_types/?${json2Query(data)}`, config);
         },
 
         /**
@@ -159,8 +159,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getInstanceSelectionsListBySystem ({ commit, state, dispatch }, params, config) {
-            const { id, data = {} } = params
-            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/instance_selections/?${json2Query(data)}`, config)
+            const { id, data = {} } = params;
+            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/instance_selections/?${json2Query(data)}`, config);
         },
 
         /**
@@ -175,8 +175,8 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteModeling ({ commit, state, dispatch }, params, config) {
-            const { id, data = {} } = params
-            return http.delete(`${AJAX_URL_PREFIX}/modeling/${id}/`, { data: data }, config)
+            const { id, data = {} } = params;
+            return http.delete(`${AJAX_URL_PREFIX}/modeling/${id}/`, { data: data }, config);
         },
 
         /**
@@ -191,8 +191,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getSystemList ({ commit, state, dispatch }, params, config) {
-            const { id } = params
-            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/systems/`, config)
+            const { id } = params;
+            return http.get(`${AJAX_URL_PREFIX}/modeling/${id}/systems/`, config);
         },
 
         /**
@@ -207,8 +207,8 @@ export default {
          * @return {Promise} promise 对象
          */
         downloadJSON ({ commit, state, dispatch }, params, config) {
-            const { id, data } = params
-            return http.post(`${AJAX_URL_PREFIX}/modeling/${id}/json/`, data, config)
+            const { id, data } = params;
+            return http.post(`${AJAX_URL_PREFIX}/modeling/${id}/json/`, data, config);
         }
 
         // /**
@@ -526,4 +526,4 @@ export default {
         //     return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_group_sync/`, data, config)
         // }
     }
-}
+};

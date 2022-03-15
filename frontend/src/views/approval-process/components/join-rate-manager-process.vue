@@ -74,7 +74,7 @@
     </div>
 </template>
 <script>
-    import editProcessDialog from './edit-process-dialog'
+    import editProcessDialog from './edit-process-dialog';
     export default {
         name: '',
         components: {
@@ -82,9 +82,9 @@
         },
         filters: {
             proceeNameFilter (value, list) {
-                const data = list.find(item => item.id === value)
-                if (data) return data.name
-                return ''
+                const data = list.find(item => item.id === value);
+                if (data) return data.name;
+                return '';
             }
         },
         props: {
@@ -113,41 +113,41 @@
                 searchValue: '',
                 tableLoading: false,
                 isProcessDialogShow: false
-            }
+            };
         },
         computed: {
             isCanBatchDelete () {
-                return this.currentSelectList.length > 0 && this.tableList.length > 0
+                return this.currentSelectList.length > 0 && this.tableList.length > 0;
             }
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         methods: {
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
+                this.pagination.current = page;
                 // this.fetchMemberList()
             },
 
             handleSearch () {},
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
                 // this.fetchMemberList()
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handleProcessSelect (value, option, item) {
@@ -156,40 +156,40 @@
 
             handleSelectToggle (payload, row) {
                 if (payload) {
-                    this.$set(row, 'isToggle', true)
+                    this.$set(row, 'isToggle', true);
                 } else {
-                    this.$delete(row, 'isToggle')
+                    this.$delete(row, 'isToggle');
                 }
             },
 
             handleRowMouseEnter (index) {
-                this.$set(this.tableList[index], 'canEdit', true)
+                this.$set(this.tableList[index], 'canEdit', true);
             },
 
             handleRowMouseLeave (index) {
-                this.$delete(this.tableList[index], 'canEdit')
+                this.$delete(this.tableList[index], 'canEdit');
             },
 
             getSelectable (row, index) {
                 if (this.tableList.length < 1) {
-                    return false
+                    return false;
                 }
-                return true
+                return true;
             },
 
             handleBatchDelete () {
-                this.isProcessDialogShow = true
+                this.isProcessDialogShow = true;
             },
 
             handleEditProcess (payload) {
-                this.isProcessDialogShow = false
+                this.isProcessDialogShow = false;
             },
 
             handleViewDetail (payload) {
 
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-join-rate-manager-process-wrapper {

@@ -71,7 +71,7 @@ def user_group_policy_expire_remind():
             try:
                 esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)
             except Exception:  # pylint: disable=broad-except
-                logger.exception("send email error")
+                logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
 
 
 @task(ignore_result=True)

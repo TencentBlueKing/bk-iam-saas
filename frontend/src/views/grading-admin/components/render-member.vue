@@ -24,7 +24,7 @@
     </render-horizontal-block>
 </template>
 <script>
-    import RenderMemberItem from '../../group/common/render-member-display'
+    import RenderMemberItem from '../../group/common/render-member-display';
     export default {
         name: '',
         components: {
@@ -47,34 +47,34 @@
         data () {
             return {
                 tips: this.$t(`m.grading['添加成员提示']`)
-            }
+            };
         },
         computed: {
             isHasUser () {
-                return this.users.length > 0
+                return this.users.length > 0;
             },
             isHasDepartment () {
-                return this.departments.length > 0
+                return this.departments.length > 0;
             }
         },
         methods: {
             handleAddMember () {
-                this.$emit('on-add')
+                this.$emit('on-add');
             },
 
             handleDeleteUser (payload) {
-                this.$emit('on-delete', 'user', payload)
+                this.$emit('on-delete', 'user', payload);
             },
 
             handleDeleteDepartment (payload) {
-                this.$emit('on-delete', 'department', payload)
+                this.$emit('on-delete', 'department', payload);
             },
 
             handleDelete () {
-                this.$emit('on-delete-all')
+                this.$emit('on-delete-all');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .action-wrapper {

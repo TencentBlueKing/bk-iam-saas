@@ -17,6 +17,7 @@ from backend.biz.policy import (
     PathNodeBeanList,
     PolicyBean,
     RelatedResourceBean,
+    ResourceGroupBean,
     group_paths,
 )
 from backend.service.action import ActionService
@@ -81,38 +82,57 @@ class RelatedPolicyBiz:
             return PolicyBean(action_id=action.id, related_resource_types=[], expired_at=policy.expired_at)
 
         # 申请的操作不关联资源类型, 依赖操作关联了资源类型, 不产生依赖操作权限
-        if len(policy.related_resource_types) == 0:
+        if len(policy.resource_groups) == 0:
             return None
 
         # 申请操作关联的资源类型与依赖操作关联的资源类型相同
         action_rrt = action.related_resource_types[0]
-        for rrt in policy.related_resource_types:
-            if rrt.type == action_rrt.id and rrt.system_id == action_rrt.system_id:
-                # 如果申请操作时任意, 创建任意的依赖操作
-                if len(rrt.condition) == 0:
-                    return PolicyBean(
-                        action_id=action.id,
-                        related_resource_types=[deepcopy(rrt)],
-                        expired_at=policy.expired_at,
-                    )
 
-                # 遍历申请的操作的实例拓扑, 匹配依赖操作的实例视图
-                new_rrt = self._filter_condition_of_same_type(rrt, action_rrt)
+        new_rrt_list = []  # 遍历所有的resource_group后生成的用于创建关联操作policy的
+
+        for rg in policy.resource_groups:
+            # NOTE 有环境属性的资源组不能生成依赖操作
+            if len(rg.environments) != 0:
+                continue
+
+            if self._has_same_type(policy, action_rrt):
+                # 如果有相同的资源类型
+                for rrt in rg.related_resource_types:
+                    if rrt.type != action_rrt.id or rrt.system_id != action_rrt.system_id:
+                        continue
+
+                    # 如果申请操作时任意, 创建任意的依赖操作
+                    if len(rrt.condition) == 0:
+                        new_rrt_list.append(deepcopy(rrt))
+                        continue
+
+                    new_rrt = self._filter_condition_of_same_type(rrt, action_rrt)
+                    if new_rrt:
+                        new_rrt_list.append(new_rrt)
+            else:
+                new_rrt = self._filter_condition_of_different_type(rg.related_resource_types, action_rrt)
                 if new_rrt:
-                    return PolicyBean(
-                        action_id=action.id,
-                        related_resource_types=[new_rrt],
-                        expired_at=policy.expired_at,
-                    )
+                    new_rrt_list.append(new_rrt)
 
-                return None
+        if not new_rrt_list:
+            return None
 
-        # 申请操作关联的资源类型与依赖操作关联的资源类型不同
-        new_rrt = self._filter_condition_of_different_type(policy.related_resource_types, action_rrt)
-        if new_rrt:
-            return PolicyBean(action_id=action.id, related_resource_types=[new_rrt], expired_at=policy.expired_at)
+        rg = ResourceGroupBean(id=gen_uuid(), related_resource_types=[new_rrt_list[0]])
+        for new_rrt in new_rrt_list[1:]:
+            rg.add_related_resource_types([new_rrt])
 
-        return None
+        return PolicyBean(
+            action_id=action.id,
+            resource_groups=[rg],
+            expired_at=policy.expired_at,
+        )
+
+    def _has_same_type(self, policy: PolicyBean, action_rrt: RelatedResourceType) -> bool:
+        for rt in policy.list_thin_resource_type():
+            if rt.system_id == action_rrt.system_id and rt.type == action_rrt.id:
+                return True
+
+        return False
 
     def _filter_condition_of_different_type(
         self, policy_rrts: List[RelatedResourceBean], action_rrt: RelatedResourceType
@@ -198,7 +218,7 @@ class RelatedPolicyBiz:
             return []
 
         # 重新分组
-        new_instances = group_paths([PathNodeBeanList(one).dict() for one in checked_path])
+        new_instances = group_paths([PathNodeBeanList.parse_obj(one).dict() for one in checked_path])
         return [ConditionBean(**{"id": gen_uuid(), "instances": new_instances, "attributes": []})]
 
     @staticmethod
@@ -287,13 +307,14 @@ class RelatedPolicyBiz:
 
     # 特殊的截断逻辑, 不能复用PathNodeList的方法
     def _check_path_by_instance_selection(
-        self, path: List[PathNodeBean], instance_selections: List[InstanceSelection]
+        self, path: PathNodeBeanList, instance_selections: List[InstanceSelection]
     ) -> Optional[List[PathNodeBean]]:
         """
         校验拓扑链路是否满足实例视图
 
         不同类型的实例视图匹配使用前缀匹配
         """
+        path = list(path.copy())
         for selection in instance_selections:
             # 资源类型不同时, 截取视图长度的拓扑
             if len(path) > len(selection.resource_type_chain):

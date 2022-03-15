@@ -17,8 +17,8 @@
     </div>
 </template>
 <script>
-    import Tree from '@/components/attach-action-preview/attach-action-tree'
-    import ConditionDetail from '@/components/render-resource/detail'
+    import Tree from '@/components/attach-action-preview/attach-action-tree';
+    import ConditionDetail from '@/components/render-resource/detail';
     export default {
         name: '',
         components: {
@@ -42,7 +42,7 @@
                 ],
                 // active
                 active: 'relate'
-            }
+            };
         },
         watch: {
             /**
@@ -51,14 +51,14 @@
             data: {
                 handler (value) {
                     if (value.length > 0) {
-                        this.panels = value
-                        this.active = this.panels[0].name
+                        this.panels = value;
+                        this.active = this.panels[0].name;
                     }
                 },
                 immediate: true
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-my-perm-related-content {

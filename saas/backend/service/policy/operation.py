@@ -8,12 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import itertools
 from typing import List, Optional
 
 from django.db import transaction
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.component import iam
+from backend.service.action import ActionList
 from backend.util.json import json_dumps
 
 from ..models import Policy, PolicyIDExpiredAt, Subject
@@ -36,6 +38,7 @@ class PolicyOperationService:
         create_policies: Optional[List[Policy]] = None,
         update_policies: Optional[List[Policy]] = None,
         delete_policy_ids: Optional[List[int]] = None,
+        action_list: Optional[ActionList] = None,
     ):
         """
         变更subject的Policies
@@ -55,7 +58,9 @@ class PolicyOperationService:
                 self._delete_db_policies(system_id, subject, delete_policy_ids)
 
             if create_policies or update_policies or delete_policy_ids:
-                self._alter_backend_policies(system_id, subject, create_policies, update_policies, delete_policy_ids)
+                self._alter_backend_policies(
+                    system_id, subject, create_policies, update_policies, delete_policy_ids, action_list
+                )
 
         if create_policies:
             self._sync_db_policy_id(system_id, subject)
@@ -67,13 +72,22 @@ class PolicyOperationService:
         create_policies: List[Policy],
         update_policies: List[Policy],
         delete_policy_ids: List[int],
+        action_list: Optional[ActionList] = None,
     ):
         """
         执行对policies的创建, 更新, 删除操作, 调用后端批量操作接口
         """
+        # 处理忽略路径
+        if action_list is not None:
+            for p in itertools.chain(create_policies, update_policies):
+                action = action_list.get(p.action_id)
+                if not action:
+                    continue
+                p.ignore_path(action)
+
         # 组装backend变更策略的数据
-        backend_create_policies = [p.to_backend_dict() for p in create_policies]
-        backend_update_policies = [p.to_backend_dict() for p in update_policies]
+        backend_create_policies = [p.to_backend_dict(system_id) for p in create_policies]
+        backend_update_policies = [p.to_backend_dict(system_id) for p in update_policies]
 
         return iam.alter_policies(
             system_id, subject.type, subject.id, backend_create_policies, backend_update_policies, delete_policy_ids
@@ -101,9 +115,7 @@ class PolicyOperationService:
             update_policy = policy_list.get(p.action_id)
             if not update_policy:
                 continue
-            PolicyModel.objects.filter(id=p.id).update(
-                _resources=json_dumps([rt.dict() for rt in update_policy.related_resource_types])
-            )
+            PolicyModel.objects.filter(id=p.id).update(_resources=json_dumps(update_policy.resource_groups.dict()))
 
     def _delete_db_policies(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """

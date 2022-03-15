@@ -34,12 +34,12 @@
 // 如果这里定义的是 VART: JSON.stringify('abcde') 那么这段代码会替换为 if (a === 'abcde')
 // 如果这里定义的是 VART: 'abcde' 那么这段代码会替换为 if (a === abcde) 会报错
 
-import merge from 'webpack-merge'
-import prodEnv from './prod.env'
+import merge from 'webpack-merge';
+import prodEnv from './prod.env';
 
-const NODE_ENV = JSON.stringify('development')
+const NODE_ENV = JSON.stringify('development');
 
-const VERSION = process.env.VERSION
+const VERSION = process.env.VERSION;
 
 export default merge(prodEnv, {
     staticUrl: '/static',
@@ -49,4 +49,4 @@ export default merge(prodEnv, {
     AJAX_MOCK_PARAM: JSON.stringify('mock-file'),
     USER_INFO_URL: JSON.stringify('user'),
     VERSION: JSON.stringify(`${VERSION}`)
-})
+});

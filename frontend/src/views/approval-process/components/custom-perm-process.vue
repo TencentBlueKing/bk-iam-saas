@@ -95,9 +95,9 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import editProcessDialog from './edit-process-dialog'
-    import { buildURLParams } from '@/common/url'
+    import _ from 'lodash';
+    import editProcessDialog from './edit-process-dialog';
+    import { buildURLParams } from '@/common/url';
     export default {
         name: '',
         components: {
@@ -105,9 +105,9 @@
         },
         filters: {
             proceeNameFilter (value, list) {
-                const data = list.find(item => item.id === value)
-                if (data) return data.name
-                return ''
+                const data = list.find(item => item.id === value);
+                if (data) return data.name;
+                return '';
             }
         },
         props: {
@@ -134,100 +134,100 @@
                 searchValue: [],
                 procssValue: '',
                 tips: this.$t(`m.common['暂未开放']`)
-            }
+            };
         },
         computed: {
             isCanBatchDelete () {
-                return this.currentSelectList.length > 0 && this.tableList.length > 0
+                return this.currentSelectList.length > 0 && this.tableList.length > 0;
             },
             tableLoading () {
-                return this.requestQueue.length > 0
+                return this.requestQueue.length > 0;
             },
             curSelectName () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return this.list.find(item => item.id === payload.process_id).name
+                        return this.list.find(item => item.id === payload.process_id).name;
                     }
-                    return ''
-                }
+                    return '';
+                };
             },
             curTitle () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`
+                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
                     }
-                    return ''
-                }
+                    return '';
+                };
             }
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             searchKeyword (newVal, oldVal) {
                 if (newVal === '' && oldVal !== '' && this.isFilter) {
-                    this.isFilter = false
+                    this.isFilter = false;
                     this.pagination = Object.assign({}, {
                         current: 1,
                         count: 1,
                         limit: 10
-                    })
-                    this.fetchActionProcessesList()
+                    });
+                    this.fetchActionProcessesList();
                 }
             }
         },
         created () {
-            this.isFilter = false
-            this.cacheSystemId = ''
-            const currentQueryCache = this.getCurrentQueryCache()
+            this.isFilter = false;
+            this.cacheSystemId = '';
+            const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
+                    this.pagination.limit = currentQueryCache.limit;
+                    this.pagination.current = currentQueryCache.current;
                 }
                 if (currentQueryCache.keyword) {
-                    this.searchKeyword = currentQueryCache.keyword
+                    this.searchKeyword = currentQueryCache.keyword;
                 }
-                this.cacheSystemId = currentQueryCache.system_id
+                this.cacheSystemId = currentQueryCache.system_id;
                 if (this.searchKeyword !== '') {
-                    this.isFilter = true
+                    this.isFilter = true;
                 }
             }
-            this.fetchSystemList()
+            this.fetchSystemList();
         },
         methods: {
             async fetchSystemList () {
                 try {
-                    const res = await this.$store.dispatch('system/getSystems')
-                    this.systemList = res.data
+                    const res = await this.$store.dispatch('system/getSystems');
+                    this.systemList = res.data;
                     setTimeout(() => {
                         if (this.cacheSystemId) {
-                            this.searchValue = [this.cacheSystemId]
+                            this.searchValue = [this.cacheSystemId];
                         } else {
-                            this.searchValue = [this.systemList[0].id]
+                            this.searchValue = [this.systemList[0].id];
                         }
-                        this.fetchActionProcessesList()
-                    })
+                        this.fetchActionProcessesList();
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             async fetchActionProcessesList () {
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
-                const systemId = this.searchValue[0]
-                let actionGroupId = ''
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
+                const systemId = this.searchValue[0];
+                let actionGroupId = '';
                 if (this.searchValue.length > 1) {
-                    actionGroupId = this.searchValue[this.searchValue.length - 1]
+                    actionGroupId = this.searchValue[this.searchValue.length - 1];
                 }
                 const params = {
                     limit: this.pagination.limit,
@@ -235,45 +235,45 @@
                     keyword: this.searchKeyword,
                     system_id: systemId,
                     action_group_id: actionGroupId
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getActionProcessesList', params)
-                    this.tableList = res.data.results
-                    this.pagination.count = res.data.count
+                    const res = await this.$store.dispatch('approvalProcess/getActionProcessesList', params);
+                    this.tableList = res.data.results;
+                    this.pagination.count = res.data.count;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination
+                const { limit, current } = this.pagination;
                 const queryParams = {
                     limit,
                     current,
                     system_id: this.searchValue[0]
-                }
+                };
                 if (this.searchKeyword !== '') {
-                    queryParams.keyword = this.searchKeyword
+                    queryParams.keyword = this.searchKeyword;
                 }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
-                return queryParams
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                return queryParams;
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('customPermProcessList', JSON.stringify(payload))
+                window.localStorage.setItem('customPermProcessList', JSON.stringify(payload));
             },
 
             getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('customPermProcessList'))
+                return JSON.parse(window.localStorage.getItem('customPermProcessList'));
             },
 
             handleOpenCreateLink () {
@@ -282,102 +282,102 @@
             },
 
             handleCascadeChange (payload) {
-                this.requestQueue = ['list']
+                this.requestQueue = ['list'];
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 1,
                     limit: 10
-                })
-                this.fetchActionProcessesList()
+                });
+                this.fetchActionProcessesList();
             },
 
             setCellStyle ({ row, column, rowIndex, columnIndex }) {
                 if (rowIndex === 0 && columnIndex === 2) {
                     return {
                         paddingLeft: '10px'
-                    }
+                    };
                 }
-                return {}
+                return {};
             },
 
             async remoteMethod (item, resolve) {
-                const flag = this.systemList.some(v => v.id === item.id)
+                const flag = this.systemList.some(v => v.id === item.id);
                 if (item.isLoading === false || !flag) {
                     if (!flag && item.sub_groups && item.sub_groups.length > 0) {
-                        item.children = _.cloneDeep(item.sub_groups)
-                        resolve(item)
+                        item.children = _.cloneDeep(item.sub_groups);
+                        resolve(item);
                     } else {
-                        resolve(item)
+                        resolve(item);
                     }
                 } else {
-                    this.$set(item, 'isLoading', true)
+                    this.$set(item, 'isLoading', true);
                     try {
-                        const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: item.id })
-                        item.children = res.data || []
-                        resolve(item)
+                        const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: item.id });
+                        item.children = res.data || [];
+                        resolve(item);
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     }
                 }
             },
 
             async updateActionProcesses (params = {}) {
                 try {
-                    await this.$store.dispatch('approvalProcess/updateActionProcesses', params)
-                    this.messageSuccess(this.$t(`m.common['操作成功']`))
+                    await this.$store.dispatch('approvalProcess/updateActionProcesses', params);
+                    this.messageSuccess(this.$t(`m.common['操作成功']`));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.requestQueue = ['list']
-                this.pagination.current = page
-                this.fetchActionProcessesList()
+                this.requestQueue = ['list'];
+                this.pagination.current = page;
+                this.fetchActionProcessesList();
             },
 
             handleSearch () {
                 if (this.searchKeyword === '') {
-                    return
+                    return;
                 }
-                this.isFilter = true
-                this.requestQueue = ['list']
+                this.isFilter = true;
+                this.requestQueue = ['list'];
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 1,
                     limit: 10
-                })
-                this.fetchActionProcessesList()
+                });
+                this.fetchActionProcessesList();
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.requestQueue = ['list']
-                this.fetchActionProcessesList()
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.requestQueue = ['list'];
+                this.fetchActionProcessesList();
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handleProcessSelect (value, option, item) {
@@ -387,75 +387,75 @@
                         system_id: item.system_id
                     }],
                     process_id: value
-                }
-                item.process_id = value
-                this.updateActionProcesses(params)
+                };
+                item.process_id = value;
+                this.updateActionProcesses(params);
             },
 
             handleSelectToggle (payload, row) {
                 if (payload) {
-                    this.$set(row, 'isToggle', true)
+                    this.$set(row, 'isToggle', true);
                 } else {
-                    this.$delete(row, 'isToggle')
+                    this.$delete(row, 'isToggle');
                 }
             },
 
             handleRowMouseEnter (index) {
-                this.$set(this.tableList[index], 'canEdit', true)
+                this.$set(this.tableList[index], 'canEdit', true);
             },
 
             handleRowMouseLeave (index) {
-                this.$delete(this.tableList[index], 'canEdit')
+                this.$delete(this.tableList[index], 'canEdit');
             },
 
             getSelectable (row, index) {
                 if (this.tableList.length < 1) {
-                    return false
+                    return false;
                 }
-                return true
+                return true;
             },
 
             handleBatchDelete () {
-                this.isProcessDialogShow = true
-                const list = [...new Set(this.currentSelectList.map(item => item.process_id))]
+                this.isProcessDialogShow = true;
+                const list = [...new Set(this.currentSelectList.map(item => item.process_id))];
                 if (list.length === 1) {
-                    this.procssValue = list[0]
+                    this.procssValue = list[0];
                 }
             },
 
             handleAfterLeave () {
-                this.procssValue = ''
+                this.procssValue = '';
             },
 
             async handleEditProcess (payload) {
                 if (payload === this.procssValue) {
-                    this.isProcessDialogShow = false
-                    return
+                    this.isProcessDialogShow = false;
+                    return;
                 }
-                this.batchEditLoading = true
+                this.batchEditLoading = true;
                 try {
                     const params = {
                         actions: this.currentSelectList.map(item => {
                             return {
                                 id: item.action_id,
                                 system_id: item.system_id
-                            }
+                            };
                         }),
                         process_id: payload
-                    }
-                    await this.updateActionProcesses(params)
-                    this.isProcessDialogShow = false
-                    this.currentSelectList = []
-                    this.requestQueue = ['list']
-                    this.fetchActionProcessesList()
+                    };
+                    await this.updateActionProcesses(params);
+                    this.isProcessDialogShow = false;
+                    this.currentSelectList = [];
+                    this.requestQueue = ['list'];
+                    this.fetchActionProcessesList();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.batchEditLoading = false
+                    this.batchEditLoading = false;
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-custom-perm-process-wrapper {
