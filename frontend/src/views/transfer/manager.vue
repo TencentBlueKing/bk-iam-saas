@@ -79,77 +79,77 @@
                 isSelectAllChecked: false,
                 managerSelectData: [],
                 pageContainer: null
-            }
+            };
         },
         mounted () {
-            this.pageContainer = document.querySelector('.main-scroller')
-            this.fetchData()
+            this.pageContainer = document.querySelector('.main-scroller');
+            this.fetchData();
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('roleList')
-                    const managerList = res || []
-                    this.managerList.splice(0, this.managerList.length, ...managerList)
+                    const res = await this.$store.dispatch('roleList');
+                    const managerList = res || [];
+                    this.managerList.splice(0, this.managerList.length, ...managerList);
 
-                    this.isEmpty = managerList.length < 1
+                    this.isEmpty = managerList.length < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handleRateExpanded () {
-                this.rateExpanded = !this.rateExpanded
+                this.rateExpanded = !this.rateExpanded;
             },
 
             handleManagerShowAll () {
-                this.managerShowAll = !this.managerShowAll
+                this.managerShowAll = !this.managerShowAll;
                 if (!this.managerShowAll) {
                     setTimeout(() => {
                         const top = this.$refs.transferManagerContent.getBoundingClientRect().top
-                            + this.pageContainer.scrollTop
+                            + this.pageContainer.scrollTop;
 
                         this.pageContainer.scrollTo({
                             top: top - 61, // 减去顶导的高度 61
                             behavior: 'smooth'
-                        })
+                        });
                         // this.$refs.transferManagerContent.scrollIntoView({
                         //     behavior: 'smooth'
                         // })
-                    }, 10)
+                    }, 10);
                 }
             },
 
             handleSelectAll (selection) {
-                this.isSelectAllChecked = !!selection.length
+                this.isSelectAllChecked = !!selection.length;
                 if (this.isSelectAllChecked) {
                     this.managerSelectData.splice(
                         0,
                         this.managerSelectData.length,
                         ...this.managerList
-                    )
+                    );
                 } else {
-                    this.managerSelectData.splice(0, this.managerSelectData.length, ...[])
+                    this.managerSelectData.splice(0, this.managerSelectData.length, ...[]);
                 }
 
-                this.$emit('manager-selection-change', this.managerSelectData)
+                this.$emit('manager-selection-change', this.managerSelectData);
             },
 
             handleSelect (selection) {
-                this.isSelectAllChecked = selection.length === this.managerList.length
-                this.managerSelectData.splice(0, this.managerSelectData.length, ...selection)
+                this.isSelectAllChecked = selection.length === this.managerList.length;
+                this.managerSelectData.splice(0, this.managerSelectData.length, ...selection);
 
-                this.$emit('manager-selection-change', this.managerSelectData)
+                this.$emit('manager-selection-change', this.managerSelectData);
             },
 
             /**
@@ -157,12 +157,12 @@
              */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 0) {
-                    return 'checkbox-cell-wrapper'
+                    return 'checkbox-cell-wrapper';
                 }
-                return ''
+                return '';
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './manager.css';

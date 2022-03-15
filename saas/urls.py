@@ -33,7 +33,6 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    url(r"^account/", include("blueapps.account.urls")),
     # backend apps url
     url(
         r"^api/v1/",
@@ -58,6 +57,7 @@ urlpatterns = [
                 url(r"^audits/", include("backend.audit.urls")),
                 url(r"^debug/", include("backend.debug.urls")),
                 url(r"^handover/", include("backend.apps.handover.urls")),
+                url(r"^mgmt/", include("backend.apps.mgmt.urls")),
             ]
         ),
     ),
@@ -68,7 +68,7 @@ urlpatterns = [
 ]
 
 # add swagger api document
-if settings.RUN_MODE == "DEVELOP":
+if settings.IS_LOCAL:
     urlpatterns += [
         url(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     ]

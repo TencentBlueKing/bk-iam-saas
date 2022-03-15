@@ -63,7 +63,7 @@
 
 </template>
 <script>
-    import _ from 'lodash'
+    import _ from 'lodash';
 
     export default {
         name: 'dialog-infinite-list',
@@ -99,49 +99,49 @@
                 organizationIndex: -1,
 
                 userIndex: -1
-            }
+            };
         },
         computed: {
             ghostStyle () {
                 return {
                     height: this.allData.length * this.itemHeight + 'px'
-                }
+                };
             },
             // 页面渲染的数据
             renderData () {
                 // 渲染在可视区的数据
-                return this.allData.slice(this.startIndex, this.endIndex)
+                return this.allData.slice(this.startIndex, this.endIndex);
             },
             renderOrganizationList () {
-                return this.renderData.filter(item => item.type === 'depart')
+                return this.renderData.filter(item => item.type === 'depart');
             },
             renderUserList () {
-                return this.renderData.filter(item => item.type === 'user')
+                return this.renderData.filter(item => item.type === 'user');
             }
         },
         watch: {
             focusIndex (value) {
-                this.currentFocusIndex = value
+                this.currentFocusIndex = value;
                 if (value === -1) {
-                    this.organizationIndex = -1
-                    this.userIndex = -1
+                    this.organizationIndex = -1;
+                    this.userIndex = -1;
                 } else {
-                    this.computedIndex()
+                    this.computedIndex();
                 }
             }
         },
         mounted () {
-            this.endIndex = Math.ceil(this.$el.clientHeight / this.itemHeight)
+            this.endIndex = Math.ceil(this.$el.clientHeight / this.itemHeight);
         },
         methods: {
             /**
              * 滚动回调函数
              */
             rootScroll: _.throttle(function () {
-                this.organizationIndex = -1
-                this.userIndex = -1
-                this.$emit('update:focusIndex', -1)
-                this.updateRenderData(this.$el.scrollTop)
+                this.organizationIndex = -1;
+                this.userIndex = -1;
+                this.$emit('update:focusIndex', -1);
+                this.updateRenderData(this.$el.scrollTop);
             }, 0),
 
             /**
@@ -151,14 +151,14 @@
              */
             updateRenderData (scrollTop = 0) {
                 // 可视区显示的条数
-                const count = Math.ceil(this.$el.clientHeight / this.itemHeight)
+                const count = Math.ceil(this.$el.clientHeight / this.itemHeight);
                 // 滚动后可视区新的 startIndex
-                const newStartIndex = Math.floor(scrollTop / this.itemHeight)
+                const newStartIndex = Math.floor(scrollTop / this.itemHeight);
                 // 滚动后可视区新的 endIndex
-                const newEndIndex = newStartIndex + count
-                this.startIndex = newStartIndex
-                this.endIndex = newEndIndex
-                this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`
+                const newEndIndex = newStartIndex + count;
+                this.startIndex = newStartIndex;
+                this.endIndex = newEndIndex;
+                this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`;
             },
 
             /**
@@ -167,19 +167,19 @@
             computedIndex () {
                 if (this.renderOrganizationList.length && this.renderUserList.length) {
                     if (this.currentFocusIndex < this.renderOrganizationList.length) {
-                        this.organizationIndex = this.currentFocusIndex
-                        this.userIndex = -1
+                        this.organizationIndex = this.currentFocusIndex;
+                        this.userIndex = -1;
                     } else {
-                        this.userIndex = this.currentFocusIndex - this.renderOrganizationList.length
-                        this.organizationIndex = -1
+                        this.userIndex = this.currentFocusIndex - this.renderOrganizationList.length;
+                        this.organizationIndex = -1;
                     }
                 } else if (this.renderOrganizationList.length && !this.renderUserList.length) {
-                    this.organizationIndex = this.currentFocusIndex
+                    this.organizationIndex = this.currentFocusIndex;
                 } else if (!this.renderOrganizationList.length && this.renderUserList.length) {
-                    this.userIndex = this.currentFocusIndex
+                    this.userIndex = this.currentFocusIndex;
                 } else {
-                    this.organizationIndex = -1
-                    this.userIndex = -1
+                    this.organizationIndex = -1;
+                    this.userIndex = -1;
                 }
 
                 // console.warn('organizationIndex: ' + this.organizationIndex)
@@ -190,18 +190,18 @@
                 if (this.organizationIndex !== -1) {
                     const currentOrganizationItem = this.renderOrganizationList.find(
                         (item, index) => index === this.organizationIndex
-                    )
+                    );
                     if (!currentOrganizationItem.disabled) {
-                        currentOrganizationItem.is_selected = !currentOrganizationItem.is_selected
-                        this.$emit('on-checked', currentOrganizationItem.is_selected, !currentOrganizationItem.is_selected, currentOrganizationItem.is_selected, currentOrganizationItem)
+                        currentOrganizationItem.is_selected = !currentOrganizationItem.is_selected;
+                        this.$emit('on-checked', currentOrganizationItem.is_selected, !currentOrganizationItem.is_selected, currentOrganizationItem.is_selected, currentOrganizationItem);
                     }
                 }
 
                 if (this.userIndex !== -1) {
-                    const currentUserItem = this.renderUserList.find((item, index) => index === this.userIndex)
+                    const currentUserItem = this.renderUserList.find((item, index) => index === this.userIndex);
                     if (!currentUserItem.disabled) {
-                        currentUserItem.is_selected = !currentUserItem.is_selected
-                        this.$emit('on-checked', currentUserItem.is_selected, !currentUserItem.is_selected, currentUserItem.is_selected, currentUserItem)
+                        currentUserItem.is_selected = !currentUserItem.is_selected;
+                        this.$emit('on-checked', currentUserItem.is_selected, !currentUserItem.is_selected, currentUserItem.is_selected, currentUserItem);
                     }
                 }
             },
@@ -213,24 +213,24 @@
              */
             nodeClick (node) {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.$emit('on-click', node)
+                this.$emit('on-click', node);
                 if (!node.disabled) {
-                    node.is_selected = !node.is_selected
-                    this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node)
+                    node.is_selected = !node.is_selected;
+                    this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
                 }
             },
 
             handleNodeClick (node) {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                node.is_selected = !node.is_selected
-                this.$emit('on-checked', node.is_selected, !node.is_selected, true, node)
+                node.is_selected = !node.is_selected;
+                this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .dialog-infinite-list {

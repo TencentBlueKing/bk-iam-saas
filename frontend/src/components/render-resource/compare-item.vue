@@ -9,7 +9,7 @@
     </div>
 </template>
 <script>
-    import RenderSpan from '../render-span'
+    import RenderSpan from '../render-span';
     export default {
         name: '',
         components: {
@@ -29,7 +29,7 @@
                 default: () => []
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-instance-content {

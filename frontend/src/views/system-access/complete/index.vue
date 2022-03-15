@@ -60,8 +60,8 @@
     </div>
 </template>
 <script>
-    import { saveAs } from '@/common/file-saver'
-    import beforeStepChangedMixin from '../common/before-stepchange'
+    import { saveAs } from '@/common/file-saver';
+    import beforeStepChangedMixin from '../common/before-stepchange';
 
     export default {
         mixins: [beforeStepChangedMixin],
@@ -80,34 +80,34 @@
                     ],
                     curStep: 4
                 }
-            }
+            };
         },
         mounted () {
-            const stepNode = this.$refs.systemAccessStep.$el
+            const stepNode = this.$refs.systemAccessStep.$el;
             if (stepNode) {
-                const children = Array.from(stepNode.querySelectorAll('.bk-step') || [])
+                const children = Array.from(stepNode.querySelectorAll('.bk-step') || []);
                 children.forEach(child => {
-                    child.classList.remove('current')
-                })
-                children[3].classList.add('current')
+                    child.classList.remove('current');
+                });
+                children[3].classList.add('current');
             }
         },
         methods: {
             stepChanged (index) {
             },
             async fetchPageData () {
-                const modelingId = this.$route.params.id
+                const modelingId = this.$route.params.id;
                 if (modelingId === null || modelingId === undefined || modelingId === '') {
-                    return
+                    return;
                 }
 
-                this.modelingId = modelingId
+                this.modelingId = modelingId;
             },
 
             goList () {
                 this.$router.push({
                     name: 'systemAccess'
-                })
+                });
             },
 
             async handleDownload () {
@@ -117,30 +117,30 @@
                         data: {
                             type: 'migrate'
                         }
-                    })
+                    });
                     if (res.code) {
-                        this.messageError(this.$t(`m.access['下载权限模型配置失败']`), 1000)
-                        return
+                        this.messageError(this.$t(`m.access['下载权限模型配置失败']`), 1000);
+                        return;
                     }
-                    const content = JSON.stringify(res.data, null, 2)
-                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-                    saveAs(blob, 'config.json')
-                    this.messageSuccess(this.$t(`m.access['下载权限模型配置成功']`), 1000)
+                    const content = JSON.stringify(res.data, null, 2);
+                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                    saveAs(blob, 'config.json');
+                    this.messageSuccess(this.$t(`m.access['下载权限模型配置成功']`), 1000);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.downloadLoading = false
+                    this.downloadLoading = false;
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     @import './index.css';

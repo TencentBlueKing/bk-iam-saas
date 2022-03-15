@@ -24,12 +24,12 @@
  * IN THE SOFTWARE.
 */
 
-import Policy from './policy'
+import Policy from './policy';
 
 export default class GradePolicy extends Policy {
     constructor (payload, flag = 'detail') {
-        super(payload, flag)
-        this.system_id = payload.system_id
-        this.system_name = payload.system_name
+        super(payload, flag);
+        this.system_id = payload.system_id;
+        this.system_name = payload.system_name;
     }
 }

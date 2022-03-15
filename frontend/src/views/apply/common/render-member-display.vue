@@ -50,27 +50,27 @@
              * icon
              */
             icon () {
-                return this.type === 'user' ? 'personal-user' : 'organization-fill'
+                return this.type === 'user' ? 'personal-user' : 'organization-fill';
             },
             /**
              * title
              */
             title () {
-                return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`)
+                return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
             },
 
             /**
              * isDepartment
              */
             isDepartment () {
-                return this.type === 'department'
+                return this.type === 'department';
             },
 
             /**
              * isEdit
              */
             isEdit () {
-                return this.mode === 'edit'
+                return this.mode === 'edit';
             }
         },
         methods: {
@@ -79,19 +79,19 @@
              */
             getTitle (payload) {
                 if (this.isDepartment) {
-                    return payload.full_name !== '' ? payload.full_name : payload.name
+                    return payload.full_name !== '' ? payload.full_name : payload.name;
                 }
-                return payload.name !== '' ? `${payload.id}(${payload.name})` : payload.id
+                return payload.name !== '' ? `${payload.id}(${payload.name})` : payload.id;
             },
 
             /**
              * handleDelete
              */
             handleDelete (payload) {
-                this.$emit('on-delete', payload)
+                this.$emit('on-delete', payload);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-member-display-wrapper {

@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getApprovalList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/approvals/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/approvals/?${json2Query(params)}`, config);
         },
 
         /**
@@ -60,7 +60,7 @@ export default {
          * @return {Promise} promise 对象
          */
         approvalAction ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/approvals/approve/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/approvals/approve/`, params, config);
         },
 
         /**
@@ -74,7 +74,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getProcessesList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/?${json2Query(params)}`, config);
         },
 
         /**
@@ -88,7 +88,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getActionProcessesList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/actions/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/actions/?${json2Query(params)}`, config);
         },
 
         /**
@@ -102,7 +102,7 @@ export default {
          * @return {Promise} promise 对象
          */
         updateActionProcesses ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/approvals/processes/actions/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/approvals/processes/actions/`, params, config);
         },
 
         /**
@@ -116,7 +116,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getGroupProcessesList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/groups/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/groups/?${json2Query(params)}`, config);
         },
 
         /**
@@ -130,7 +130,7 @@ export default {
          * @return {Promise} promise 对象
          */
         updateGroupProcesses ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/approvals/processes/groups/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/approvals/processes/groups/`, params, config);
         },
 
         /**
@@ -144,7 +144,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getActionGroups ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/actions/action_groups/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/actions/action_groups/?${json2Query(params)}`, config);
         },
 
         /**
@@ -157,7 +157,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getDefaultProcesses ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/global_config/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/approvals/processes/global_config/`, config);
         },
 
         /**
@@ -171,7 +171,7 @@ export default {
          * @return {Promise} promise 对象
          */
         updateDefaultProcesses ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/approvals/processes/global_config/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/approvals/processes/global_config/`, params, config);
         }
     }
-}
+};

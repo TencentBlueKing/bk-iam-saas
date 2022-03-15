@@ -59,8 +59,8 @@
 </template>
 
 <script>
-    import _ from 'lodash'
-    import Tree from '@/components/tree'
+    import _ from 'lodash';
+    import Tree from '@/components/tree';
     export default {
         name: '',
         components: {
@@ -98,49 +98,49 @@
                 curSelectedNodes: [],
                 curRemoteValue: [],
                 bigData: []
-            }
+            };
         },
         computed: {
             relateActionList () {
                 if (this.curSelectId === '' || !this.relateActionMap[this.curSelectId]) {
-                    return []
+                    return [];
                 }
-                return this.relateActionMap[this.curSelectId]
+                return this.relateActionMap[this.curSelectId];
             },
             values () {
-                const relateActions = []
+                const relateActions = [];
                 for (const key in this.relateActionMap) {
                     const hasSelecteds = this.relateActionMap[key]
                         .filter(item => item.checked)
-                        .map(({ id, name }) => ({ id, name }))
-                    relateActions.push(...hasSelecteds)
+                        .map(({ id, name }) => ({ id, name }));
+                    relateActions.push(...hasSelecteds);
                 }
-                return this.curSelectedNodes.concat(relateActions)
+                return this.curSelectedNodes.concat(relateActions);
             }
         },
         watch: {
             isShow: {
                 handler (value) {
-                    this.isVisible = !!value
+                    this.isVisible = !!value;
                 },
                 immediate: true
             },
             data: {
                 handler (value) {
-                    this.relateActionMap = {}
-                    this.curSelectedNodes = []
-                    this.curSelectId = ''
+                    this.relateActionMap = {};
+                    this.curSelectedNodes = [];
+                    this.curSelectId = '';
                     if (value.length > 0) {
-                        this.relateActionData = _.cloneDeep(value)
+                        this.relateActionData = _.cloneDeep(value);
                     } else {
-                        this.relateActionData = []
+                        this.relateActionData = [];
                     }
                 },
                 immediate: true
             },
             value: {
                 handler (val) {
-                    this.handleInitData(this.relateActionData, true, val)
+                    this.handleInitData(this.relateActionData, true, val);
                 },
                 immediate: true
             }
@@ -148,110 +148,110 @@
         methods: {
             handleInitData (payload = [], isDisabled = true, selectedValues = []) {
                 payload.forEach(item => {
-                    const subflag = item.sub_actions.length > 0
-                    const relateFlag = item.related_actions.length > 0
-                    this.$set(item, 'display_name', item.name)
+                    const subflag = item.sub_actions.length > 0;
+                    const relateFlag = item.related_actions.length > 0;
+                    this.$set(item, 'display_name', item.name);
                     if (subflag) {
-                        this.$set(item, 'expanded', subflag)
-                        this.$set(item, 'children', _.cloneDeep(item.sub_actions))
+                        this.$set(item, 'expanded', subflag);
+                        this.$set(item, 'children', _.cloneDeep(item.sub_actions));
                     }
-                    this.$set(item, 'count', item.related_actions.length)
-                    this.$set(item, 'hasSelectCount', 0)
-                    item.name = `${item.display_name}(${item.hasSelectCount}/${item.count})`
+                    this.$set(item, 'count', item.related_actions.length);
+                    this.$set(item, 'hasSelectCount', 0);
+                    item.name = `${item.display_name}(${item.hasSelectCount}/${item.count})`;
                     if (selectedValues.includes(item.id)) {
                         this.curSelectedNodes.push({
                             id: item.id,
                             name: item.display_name
-                        })
+                        });
                     }
-                    this.$set(item, 'checked', selectedValues.includes(item.id) || isDisabled)
-                    this.$set(item, 'disabled', isDisabled)
+                    this.$set(item, 'checked', selectedValues.includes(item.id) || isDisabled);
+                    this.$set(item, 'disabled', isDisabled);
                     if (relateFlag) {
                         const tempRelatedActions = item.related_actions.map(subItem => {
-                            subItem.checked = selectedValues.includes(subItem.id)
+                            subItem.checked = selectedValues.includes(subItem.id);
                             if (subItem.checked) {
-                                ++item.hasSelectCount
-                                item.name = `${item.display_name}(${item.hasSelectCount}/${item.count})`
+                                ++item.hasSelectCount;
+                                item.name = `${item.display_name}(${item.hasSelectCount}/${item.count})`;
                             }
-                            subItem.parentId = item.id
-                            return subItem
-                        })
-                        this.$set(this.relateActionMap, item.id, _.cloneDeep(tempRelatedActions))
+                            subItem.parentId = item.id;
+                            return subItem;
+                        });
+                        this.$set(this.relateActionMap, item.id, _.cloneDeep(tempRelatedActions));
                         if (this.curSelectId === '') {
-                            this.curSelectId = item.id
+                            this.curSelectId = item.id;
                         }
                     }
                     if (item.children && item.children.length > 0) {
-                        this.handleInitData(item.children, false, selectedValues)
+                        this.handleInitData(item.children, false, selectedValues);
                     }
-                })
-                return payload
+                });
+                return payload;
             },
 
             handlePreview () {
-                this.$emit('on-preview', this.values)
+                this.$emit('on-preview', this.values);
             },
 
             handleSliderClose () {
-                this.$emit('update:isShow', false)
-                this.$emit('animation-end')
+                this.$emit('update:isShow', false);
+                this.$emit('animation-end');
             },
 
             handleCancel () {
-                this.$emit('update:isShow', false)
-                this.$emit('on-cancel', false)
+                this.$emit('update:isShow', false);
+                this.$emit('on-cancel', false);
             },
 
             handleSumbit () {
-                this.$emit('on-sumbit', this.values)
+                this.$emit('on-sumbit', this.values);
             },
 
             handleRelateChange (newVal, oldVal, val, payload) {
-                this.handleSetNodeNameDisplay(this.relateActionData, payload.parentId, newVal)
+                this.handleSetNodeNameDisplay(this.relateActionData, payload.parentId, newVal);
             },
 
             handleSetNodeNameDisplay (payload, id, checked) {
                 for (let i = 0; i < payload.length; i++) {
-                    const node = payload[i]
+                    const node = payload[i];
                     if (node.id === id) {
                         if (checked) {
                             if (node.hasSelectCount < node.count) {
-                                ++node.hasSelectCount
+                                ++node.hasSelectCount;
                             }
                         } else {
                             if (node.hasSelectCount > 0) {
-                                --node.hasSelectCount
+                                --node.hasSelectCount;
                             }
                         }
-                        node.name = `${node.display_name}(${node.hasSelectCount}/${node.count})`
-                        break
+                        node.name = `${node.display_name}(${node.hasSelectCount}/${node.count})`;
+                        break;
                     } else {
                         if (node.children && node.children.length > 0) {
-                            this.handleSetNodeNameDisplay(node.children, id, checked)
+                            this.handleSetNodeNameDisplay(node.children, id, checked);
                         }
                     }
                 }
-                return false
+                return false;
             },
 
             handleTreeClick (payload) {
-                this.curSelectId = payload.id
+                this.curSelectId = payload.id;
             },
 
             handleTreeChecked (node, checked) {
                 if (checked) {
-                    this.curSelectId = node.id
+                    this.curSelectId = node.id;
                     this.curSelectedNodes.push({
                         id: node.id,
                         name: node.display_name
-                    })
+                    });
                 } else {
-                    const index = this.curSelectedNodes.findIndex(item => item.id === node.id)
-                    this.curSelectedNodes.splice(index, 1)
+                    const index = this.curSelectedNodes.findIndex(item => item.id === node.id);
+                    this.curSelectedNodes.splice(index, 1);
                 }
             }
         }
-    }
+    };
 </script>
 
 <style>

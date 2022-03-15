@@ -36,12 +36,12 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { guid } from '@/common/util'
-    import il8n from '@/language'
-    import ResourceSelect from './resource-select'
-    import TopologyInput from './topology-input'
-    import TopologyTree from './topology-tree'
+    import _ from 'lodash';
+    import { guid } from '@/common/util';
+    import il8n from '@/language';
+    import ResourceSelect from './resource-select';
+    import TopologyInput from './topology-input';
+    import TopologyTree from './topology-tree';
 
     const LOAD_ITEM = {
         nodeId: guid(),
@@ -49,75 +49,75 @@
         visiable: true,
         loading: false,
         display_name: il8n('common', '查看更多')
-    }
+    };
 
     const SEARCH_ITEM = {
         nodeId: guid(),
         id: -2,
         visiable: true
-    }
+    };
 
     const SEARCH_EMPTY_ITEM = {
         nodeId: guid(),
         id: -3,
         visiable: true
-    }
+    };
 
     const SEARCH_LOAD_ITEM = {
         nodeId: guid(),
         id: -4,
         visiable: true
-    }
+    };
 
     const ASYNC_ITEM = {
         nodeId: guid(),
         id: -4,
         visiable: true
-    }
+    };
 
     const RESULT_TIP = {
         '0': il8n('common', '搜索无结果'),
         '1902204': il8n('common', '暂不支持搜索'),
         '1902229': il8n('info', '搜索过于频繁'),
         '1902222': il8n('info', '搜索结果太多')
-    }
+    };
 
-    const ERROR_CODE_LIST = [1902204, 1902229, 1902222, 1902206]
+    const ERROR_CODE_LIST = [1902204, 1902229, 1902222, 1902206];
 
     class Node {
         constructor (payload, level = 0, isAsync = true, type = 'node') {
-            this.disabled = payload.disabled || false
-            this.checked = payload.checked || false
-            this.expanded = false
-            this.loading = false
-            this.loadingMore = false
-            this.current = payload.current || 0
-            this.totalPage = payload.totalPage || 0
-            this.id = payload.id
-            this.name = payload.display_name || ''
-            this.parentId = level > 0 ? payload.parentId : ''
-            this.parentSyncId = level > 0 ? payload.parentSyncId : ''
-            this.level = level
-            this.nodeId = guid()
-            this.async = isAsync
-            this.children = []
-            this.parentChain = payload.parentChain || []
-            this.type = type
-            this.childType = payload.child_type || ''
-            this.isRemote = payload.isRemote || false
-            this.isFilter = payload.isFilter || false
-            this.placeholder = payload.placeholder || ''
+            this.disabled = payload.disabled || false;
+            this.checked = payload.checked || false;
+            this.expanded = false;
+            this.loading = false;
+            this.loadingMore = false;
+            this.current = payload.current || 0;
+            this.totalPage = payload.totalPage || 0;
+            this.id = payload.id;
+            this.name = payload.display_name || '';
+            this.parentId = level > 0 ? payload.parentId : '';
+            this.parentSyncId = level > 0 ? payload.parentSyncId : '';
+            this.level = level;
+            this.nodeId = guid();
+            this.async = isAsync;
+            this.children = [];
+            this.parentChain = payload.parentChain || [];
+            this.type = type;
+            this.childType = payload.child_type || '';
+            this.isRemote = payload.isRemote || false;
+            this.isFilter = payload.isFilter || false;
+            this.placeholder = payload.placeholder || '';
             // 是否存在未带下一级的无限制数据
-            this.isExistNoCarryLimit = payload.isExistNoCarryLimit || false
-            this.initVisiable(payload)
+            this.isExistNoCarryLimit = payload.isExistNoCarryLimit || false;
+            this.initVisiable(payload);
         }
 
         initVisiable (payload) {
             if (payload.hasOwnProperty('visiable')) {
-                this.visiable = payload.visiable
-                return
+                this.visiable = payload.visiable;
+                return;
             }
-            this.visiable = true
+            this.visiable = true;
         }
     }
 
@@ -162,25 +162,25 @@
                 curSearchObj: {},
                 curPlaceholder: '',
                 searchDisplayText: ''
-            }
+            };
         },
         watch: {
             treeValue: {
                 handler (value) {
                     if (value.length) {
-                        const hasSelecteds = []
+                        const hasSelecteds = [];
                         value.forEach(item => {
                             item.path.forEach(pathItem => {
                                 hasSelecteds.push({
                                     ids: pathItem.map(v => `${v.id}&${v.type}`),
                                     idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
                                     disabled: pathItem.some(subItem => subItem.disabled)
-                                })
-                            })
-                        })
-                        this.hasSelectedValues = _.cloneDeep(hasSelecteds)
+                                });
+                            });
+                        });
+                        this.hasSelectedValues = _.cloneDeep(hasSelecteds);
                     } else {
-                        this.hasSelectedValues = []
+                        this.hasSelectedValues = [];
                     }
                 },
                 deep: true,
@@ -189,11 +189,11 @@
             selectValue: {
                 handler (value) {
                     if (value) {
-                        this.curChain = _.cloneDeep(this.selectList[0].resource_type_chain)
-                        this.ignorePathFlag = this.selectList[0].ignore_iam_path
-                        this.isExistIgnore = this.selectList.some(item => item.ignore_iam_path)
-                        this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`
-                        this.firstFetchResources()
+                        this.curChain = _.cloneDeep(this.selectList[0].resource_type_chain);
+                        this.ignorePathFlag = this.selectList[0].ignore_iam_path;
+                        this.isExistIgnore = this.selectList.some(item => item.ignore_iam_path);
+                        this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
+                        this.firstFetchResources();
                     }
                 },
                 immediate: true
@@ -201,38 +201,38 @@
         },
         methods: {
             handleSearch (payload) {
-                this.curKeyword = payload
+                this.curKeyword = payload;
                 if (this.isFilter && payload === '') {
-                    this.isFilter = false
+                    this.isFilter = false;
                 } else {
-                    this.isFilter = true
+                    this.isFilter = true;
                 }
-                this.firstFetchResources()
+                this.firstFetchResources();
             },
 
             handleOnExpanded (index, expanded) {
-                window.changeAlert = true
+                window.changeAlert = true;
                 if (!expanded && this.treeData[index + 2].type === 'search-empty') {
-                    this.treeData.splice(index + 2, 1)
+                    this.treeData.splice(index + 2, 1);
                 }
             },
 
             async handleTreeSearch (payload) {
-                window.changeAlert = true
-                const { index, node, value } = payload
+                window.changeAlert = true;
+                const { index, node, value } = payload;
 
                 this.curSearchObj = Object.assign({}, {
                     value,
                     parentId: node.parentId
-                })
+                });
 
                 if (node.isFilter && value === '') {
-                    node.isFilter = false
+                    node.isFilter = false;
                 } else {
-                    node.isFilter = true
+                    node.isFilter = true;
                 }
 
-                this.treeData = this.treeData.filter(item => item.type !== 'search-empty')
+                this.treeData = this.treeData.filter(item => item.type !== 'search-empty');
 
                 const searchLoadingItem = {
                     ...SEARCH_LOAD_ITEM,
@@ -240,40 +240,40 @@
                     parentSyncId: node.id,
                     parentChain: _.cloneDeep(node.parentChain),
                     level: node.level
-                }
-                const searchLoadingData = new Node(searchLoadingItem, node.level, false, 'search-loading')
-                this.treeData.splice((index + 1), 0, searchLoadingData)
+                };
+                const searchLoadingData = new Node(searchLoadingItem, node.level, false, 'search-loading');
+                this.treeData.splice((index + 1), 0, searchLoadingData);
 
-                const chainLen = this.curChain.length
+                const chainLen = this.curChain.length;
                 const params = {
                     limit: this.limit,
                     offset: 0,
                     parent_id: node.level > 0 ? node.parentSyncId : '',
                     keyword: value
-                }
+                };
 
                 if (node.level > chainLen - 1) {
-                    params.system_id = this.curChain[chainLen - 1].system_id
-                    params.type = this.curChain[chainLen - 1].id
-                    params.parent_type = this.curChain[chainLen - 1].id || ''
+                    params.system_id = this.curChain[chainLen - 1].system_id;
+                    params.type = this.curChain[chainLen - 1].id;
+                    params.parent_type = this.curChain[chainLen - 1].id || '';
                 } else {
-                    params.system_id = this.curChain[node.level].system_id
-                    params.type = this.curChain[node.level].id
-                    params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : ''
+                    params.system_id = this.curChain[node.level].system_id;
+                    params.type = this.curChain[node.level].id;
+                    params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : '';
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params)
+                    const res = await this.$store.dispatch('permApply/getResources', params);
 
-                    const parentNode = this.treeData.find(item => item.nodeId === node.parentId)
+                    const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
 
                     if (parentNode || !parentNode.children) {
-                        parentNode.children = []
+                        parentNode.children = [];
                     }
 
                     this.treeData = this.treeData.filter(item => {
-                        const flag = item.type === 'search' && item.parentId === node.parentId
-                        return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId)
-                    })
+                        const flag = item.type === 'search' && item.parentId === node.parentId;
+                        return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId);
+                    });
 
                     if (res.data.results.length < 1) {
                         const searchEmptyItem = {
@@ -283,70 +283,70 @@
                             parentChain: _.cloneDeep(node.parentChain),
                             level: node.level,
                             display_name: RESULT_TIP[res.code]
-                        }
-                        const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty')
-                        this.treeData.splice((index + 1), 0, searchEmptyData)
-                        return
+                        };
+                        const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
+                        this.treeData.splice((index + 1), 0, searchEmptyData);
+                        return;
                     }
 
-                    const totalPage = Math.ceil(res.data.count / this.limit)
+                    const totalPage = Math.ceil(res.data.count / this.limit);
 
-                    let isAsync = this.curChain.length > (node.level + 1)
+                    let isAsync = this.curChain.length > (node.level + 1);
                     const loadNodes = res.data.results.map(item => {
-                        let tempItem = _.cloneDeep(item)
+                        let tempItem = _.cloneDeep(item);
 
-                        let checked = false
-                        let disabled = false
-                        let isRemote = false
-                        let isExistNoCarryLimit = false
+                        let checked = false;
+                        let disabled = false;
+                        let isRemote = false;
+                        let isExistNoCarryLimit = false;
                         if (!isAsync && item.child_type !== '') {
-                            isAsync = true
+                            isAsync = true;
                         }
                         if (this.hasSelectedValues.length > 0) {
                             // 父级链路id + 当前id = 整条链路id
-                            const curIds = node.parentChain.map(v => `${v.id}&${v.type}`)
+                            const curIds = node.parentChain.map(v => `${v.id}&${v.type}`);
                             // 取当前的请求的type
-                            curIds.push(`${item.id}&${params.type}`)
+                            curIds.push(`${item.id}&${params.type}`);
 
-                            const tempData = [...curIds]
+                            const tempData = [...curIds];
 
                             if (isAsync) {
                                 const nextLevelId = (() => {
-                                    const nextLevelData = this.curChain[node.level + 1]
+                                    const nextLevelData = this.curChain[node.level + 1];
                                     if (nextLevelData) {
-                                        return nextLevelData.id
+                                        return nextLevelData.id;
                                     }
-                                    return this.curChain[chainLen - 1].id
-                                })()
-                                curIds.push(`*&${nextLevelId}`)
+                                    return this.curChain[chainLen - 1].id;
+                                })();
+                                curIds.push(`*&${nextLevelId}`);
                             }
 
-                            let noCarryLimitData = {}
-                            let normalSelectedData = {}
+                            let noCarryLimitData = {};
+                            let normalSelectedData = {};
                             this.hasSelectedValues.forEach(val => {
                                 if (isAsync && val.idChain === tempData.join('#')) {
-                                    noCarryLimitData = val
+                                    noCarryLimitData = val;
                                 } else {
                                     if (!isAsync && val.ids.length === 1 && this.ignorePathFlag && val.ids[0] === `${item.id}&${params.type}`) {
-                                        normalSelectedData = val
+                                        normalSelectedData = val;
                                     } else {
                                         if (val.idChain === curIds.join('#')) {
-                                            normalSelectedData = val
+                                            normalSelectedData = val;
                                         }
                                     }
                                 }
-                            })
+                            });
 
-                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0
+                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
                             if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
-                                checked = true
-                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled
-                                isRemote = disabled
+                                checked = true;
+                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                                isRemote = disabled;
                             } else {
                                 if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
-                                    checked = true
-                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled
-                                    isRemote = disabled
+                                    checked = true;
+                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                                    isRemote = disabled;
                                 }
                             }
                         }
@@ -361,20 +361,20 @@
                                 parentChain: _.cloneDeep(node.parentChain),
                                 isRemote,
                                 isExistNoCarryLimit
-                            }
+                            };
                         } else {
-                            tempItem.checked = checked
-                            tempItem.disabled = disabled
-                            tempItem.isExistNoCarryLimit = isExistNoCarryLimit
+                            tempItem.checked = checked;
+                            tempItem.disabled = disabled;
+                            tempItem.isExistNoCarryLimit = isExistNoCarryLimit;
                         }
 
-                        const isAsyncFlag = isAsync || item.child_type !== ''
-                        return new Node(tempItem, node.level, isAsyncFlag)
-                    })
-                    this.treeData.splice((index + 1), 0, ...loadNodes)
+                        const isAsyncFlag = isAsync || item.child_type !== '';
+                        return new Node(tempItem, node.level, isAsyncFlag);
+                    });
+                    this.treeData.splice((index + 1), 0, ...loadNodes);
 
                     // 将新加载的节点push到父级点的children中
-                    parentNode.children.splice(0, parentNode.children.length, ...loadNodes)
+                    parentNode.children.splice(0, parentNode.children.length, ...loadNodes);
 
                     if (totalPage > 1) {
                         const loadItem = {
@@ -384,21 +384,21 @@
                             parentSyncId: node.id,
                             parentId: node.parentId,
                             parentChain: _.cloneDeep(node.parentChain)
-                        }
-                        const loadData = new Node(loadItem, node.level, isAsync, 'load')
-                        this.treeData.splice((index + loadNodes.length + 1), 0, loadData)
-                        parentNode.children.push(loadData)
+                        };
+                        const loadData = new Node(loadItem, node.level, isAsync, 'load');
+                        this.treeData.splice((index + loadNodes.length + 1), 0, loadData);
+                        parentNode.children.push(loadData);
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     if (!ERROR_CODE_LIST.includes(e.code)) {
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     }
-                    const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message
+                    const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message;
                     const searchEmptyItem = {
                         ...SEARCH_EMPTY_ITEM,
                         parentId: node.parentId,
@@ -406,124 +406,124 @@
                         parentChain: _.cloneDeep(node.parentChain),
                         level: node.level,
                         display_name: message
-                    }
-                    const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty')
-                    this.treeData.splice((index + 1), 0, searchEmptyData)
+                    };
+                    const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
+                    this.treeData.splice((index + 1), 0, searchEmptyData);
                 } finally {
                     this.$nextTick(() => {
-                        this.$refs.topologyRef && this.$refs.topologyRef.handleSetFocus(index)
-                    })
-                    this.treeData = this.treeData.filter(item => item.type !== 'search-loading')
+                        this.$refs.topologyRef && this.$refs.topologyRef.handleSetFocus(index);
+                    });
+                    this.treeData = this.treeData.filter(item => item.type !== 'search-loading');
                 }
             },
 
             setNodeNoChecked (value, node) {
                 if (node.children && node.children.length > 0) {
-                    const children = this.treeData.filter(item => item.parentId === node.nodeId)
+                    const children = this.treeData.filter(item => item.parentId === node.nodeId);
                     children.forEach(item => {
                         // isRemote 已有默认权限标识
                         if (item.checked !== value && !item.isRemote) {
-                            item.checked = value
+                            item.checked = value;
                         }
                         if (item.disabled !== value && !item.isRemote) {
-                            item.disabled = value
+                            item.disabled = value;
                         }
                         if (item.children && item.children.length > 0) {
-                            this.setNodeNoChecked(value, item)
+                            this.setNodeNoChecked(value, item);
                         }
-                    })
+                    });
                 }
             },
 
             setNodeChecked (value, node) {
                 if (node.children && node.children.length > 0) {
-                    const children = this.treeData.filter(item => item.parentId === node.nodeId)
+                    const children = this.treeData.filter(item => item.parentId === node.nodeId);
                     children.forEach(item => {
-                        item.checked = value
-                        item.disabled = true
+                        item.checked = value;
+                        item.disabled = true;
                         if (item.children && item.children.length > 0) {
-                            this.setNodeChecked(value, item)
+                            this.setNodeChecked(value, item);
                         }
-                    })
+                    });
                 }
             },
 
             handeCancelChecked (payload) {
                 const curNode = this.treeData.find(item => {
-                    const { parentChain, id, async, childType } = item
+                    const { parentChain, id, async, childType } = item;
                     // const curIds = parentChain.map(v => v.id)
-                    const curIds = parentChain.map(v => `${v.id}&${v.type}`)
-                    let type = ''
+                    const curIds = parentChain.map(v => `${v.id}&${v.type}`);
+                    let type = '';
                     // curIds.push(id)
                     if (childType !== '') {
-                        type = childType
-                        curIds.push(`${id}&${type}`)
+                        type = childType;
+                        curIds.push(`${id}&${type}`);
                     } else {
-                        type = this.curChain[item.level].id
-                        curIds.push(`${id}&${type}`)
+                        type = this.curChain[item.level].id;
+                        curIds.push(`${id}&${type}`);
                     }
 
                     // curIds.push(`${id}&${type}`)
 
                     // const chainCheckedFlag = curIds.join('&') === payload
-                    const chainCheckedFlag = curIds.join('#') === payload
+                    const chainCheckedFlag = curIds.join('#') === payload;
 
                     // (parentChain.length > 0 && !async)
                     if (!this.isExistIgnore) {
-                        return chainCheckedFlag
+                        return chainCheckedFlag;
                     }
                     // 优先判断整个链路是否相等
                     if (chainCheckedFlag) {
-                        return chainCheckedFlag
+                        return chainCheckedFlag;
                     }
                     if (this.ignorePathFlag || (parentChain.length < 1 && !async)) {
                         // return item.id === payload
-                        return `${id}&${type}` === payload
+                        return `${id}&${type}` === payload;
                     }
-                    return false
-                })
+                    return false;
+                });
                 if (curNode && !curNode.disabled) {
-                    curNode.checked = false
-                    this.setNodeNoChecked(false, curNode)
+                    curNode.checked = false;
+                    this.setNodeNoChecked(false, curNode);
                 }
             },
 
             handeSetChecked (payload) {
                 const curNode = this.treeData.find(item => {
-                    const { parentChain, id, async, childType } = item
-                    const curIds = parentChain.map(v => `${v.id}&${v.type}`)
-                    let type = ''
+                    const { parentChain, id, async, childType } = item;
+                    const curIds = parentChain.map(v => `${v.id}&${v.type}`);
+                    let type = '';
                     if (childType !== '') {
-                        type = childType
-                        curIds.push(`${id}&${type}`)
+                        type = childType;
+                        curIds.push(`${id}&${type}`);
                     } else {
-                        type = this.curChain[item.level].id
-                        curIds.push(`${id}&${type}`)
+                        type = this.curChain[item.level].id;
+                        curIds.push(`${id}&${type}`);
                     }
-                    const chainCheckedFlag = curIds.join('#') === payload
+                    const chainCheckedFlag = curIds.join('#') === payload;
 
                     if (!this.isExistIgnore) {
-                        return chainCheckedFlag
+                        return chainCheckedFlag;
                     }
                     // 优先判断整个链路是否相等
                     if (chainCheckedFlag) {
-                        return chainCheckedFlag
+                        return chainCheckedFlag;
                     }
                     if (this.ignorePathFlag || (parentChain.length < 1 && !async)) {
-                        return `${id}&${type}` === payload
+                        return `${id}&${type}` === payload;
                     }
-                    return false
-                })
+                    return false;
+                });
                 if (curNode && !curNode.disabled) {
-                    curNode.checked = true
-                    curNode.disabled = true
-                    this.setNodeChecked(true, curNode)
+                    curNode.checked = true;
+                    curNode.disabled = true;
+                    this.setNodeChecked(true, curNode);
                 }
             },
 
             async firstFetchResources () {
-                this.isLoading = true
-                this.treeData = []
+                this.isLoading = true;
+                this.treeData = [];
                 const params = {
                     limit: this.limit,
                     offset: 0,
@@ -532,90 +532,90 @@
                     parent_type: '',
                     parent_id: '',
                     keyword: this.curKeyword
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params)
+                    const res = await this.$store.dispatch('permApply/getResources', params);
                     if (res.data.results.length < 1) {
-                        this.searchDisplayText = RESULT_TIP[res.code]
-                        return
+                        this.searchDisplayText = RESULT_TIP[res.code];
+                        return;
                     }
-                    const totalPage = Math.ceil(res.data.count / this.limit)
-                    const isAsync = this.curChain.length > 1
+                    const totalPage = Math.ceil(res.data.count / this.limit);
+                    const isAsync = this.curChain.length > 1;
                     this.treeData = res.data.results.map(item => {
-                        let checked = false
-                        let disabled = false
-                        let isRemote = false
-                        let isExistNoCarryLimit = false
+                        let checked = false;
+                        let disabled = false;
+                        let isRemote = false;
+                        let isExistNoCarryLimit = false;
                         if (this.hasSelectedValues.length > 0) {
-                            let noCarryLimitData = {}
-                            let normalSelectedData = {}
+                            let noCarryLimitData = {};
+                            let normalSelectedData = {};
                             this.hasSelectedValues.forEach(val => {
-                                const curKey = `${item.id}&${params.type}`
+                                const curKey = `${item.id}&${params.type}`;
                                 if (isAsync) {
-                                    const curIdChain = `${curKey}#*&${this.curChain[1].id}`
+                                    const curIdChain = `${curKey}#*&${this.curChain[1].id}`;
                                     if (val.idChain === curIdChain) {
-                                        normalSelectedData = val
+                                        normalSelectedData = val;
                                     }
                                     if (val.idChain === curKey) {
-                                        noCarryLimitData = val
+                                        noCarryLimitData = val;
                                     }
                                 } else {
                                     if (val.idChain === curKey) {
-                                        normalSelectedData = val
+                                        normalSelectedData = val;
                                     }
                                 }
-                            })
+                            });
 
-                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0
+                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
                             if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
-                                checked = true
-                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled
-                                isRemote = disabled
+                                checked = true;
+                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                                isRemote = disabled;
                             } else {
                                 if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
-                                    checked = true
-                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled
-                                    isRemote = disabled
+                                    checked = true;
+                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                                    isRemote = disabled;
                                 }
                             }
                         }
-                        const isAsyncFlag = isAsync || item.child_type !== ''
-                        return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag)
-                    })
+                        const isAsyncFlag = isAsync || item.child_type !== '';
+                        return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
+                    });
                     if (totalPage > 1 && res.data.results.length > 0) {
                         const loadItem = {
                             ...LOAD_ITEM,
                             totalPage: totalPage,
                             current: 1
-                        }
-                        this.treeData.push(new Node(loadItem, 0, isAsync, 'load'))
+                        };
+                        this.treeData.push(new Node(loadItem, 0, isAsync, 'load'));
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     if (!ERROR_CODE_LIST.includes(e.code)) {
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     }
-                    const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message
-                    this.searchDisplayText = message
+                    const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message;
+                    this.searchDisplayText = message;
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             async handleResourceSelect (value) {
-                const curSelected = this.selectList.find(item => item.id === value)
-                this.curChain = _.cloneDeep(curSelected.resource_type_chain)
-                this.ignorePathFlag = curSelected.ignore_iam_path
-                this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`
-                await this.firstFetchResources()
+                const curSelected = this.selectList.find(item => item.id === value);
+                this.curChain = _.cloneDeep(curSelected.resource_type_chain);
+                this.ignorePathFlag = curSelected.ignore_iam_path;
+                this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
+                await this.firstFetchResources();
             },
 
             handleTreeSelect (value, node) {
-                const parentChain = _.cloneDeep(node.parentChain)
+                const parentChain = _.cloneDeep(node.parentChain);
                 // const isNeedAny = node.async
                 // const anyData = (() => {
                 //     const data = this.curChain[node.level + 1]
@@ -625,31 +625,31 @@
                 //     return this.curChain[this.curChain.length - 1]
                 // })()
 
-                const curChainData = this.curChain[node.level]
-                const chainLen = this.curChain.length
-                let id = ''
-                let name = ''
-                let systemId = ''
+                const curChainData = this.curChain[node.level];
+                const chainLen = this.curChain.length;
+                let id = '';
+                let name = '';
+                let systemId = '';
                 if (!curChainData) {
-                    id = this.curChain[chainLen - 1].id
-                    name = this.curChain[chainLen - 1].name
-                    systemId = this.curChain[chainLen - 1].system_id
+                    id = this.curChain[chainLen - 1].id;
+                    name = this.curChain[chainLen - 1].name;
+                    systemId = this.curChain[chainLen - 1].system_id;
                 } else {
-                    id = curChainData.id
-                    name = curChainData.name
-                    systemId = curChainData.system_id
+                    id = curChainData.id;
+                    name = curChainData.name;
+                    systemId = curChainData.system_id;
                 }
 
                 parentChain.forEach((item, index) => {
-                    let id = ''
+                    let id = '';
                     if (this.curChain[index]) {
-                        id = this.curChain[index].id
+                        id = this.curChain[index].id;
                     } else {
-                        id = this.curChain[this.curChain.length - 1].id
+                        id = this.curChain[this.curChain.length - 1].id;
                     }
-                    item.type = id
-                    item.type_name = id
-                })
+                    item.type = id;
+                    item.type_name = id;
+                });
                 parentChain.push({
                     type: id,
                     type_name: name,
@@ -657,7 +657,7 @@
                     name: node.name,
                     system_id: systemId,
                     child_type: node.childType || ''
-                })
+                });
                 // if (isNeedAny) {
                 //     parentChain.push({
                 //         type: anyData.id,
@@ -678,99 +678,99 @@
                     // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
                     path: [parentChain],
                     paths: [parentChain]
-                }]
+                }];
 
                 if (node.isExistNoCarryLimit) {
-                    const p = [parentChain.slice(0, parentChain.length - 1)]
+                    const p = [parentChain.slice(0, parentChain.length - 1)];
                     params.push({
                         type: id,
                         name,
                         path: p,
                         paths: p
-                    })
+                    });
                 }
 
-                this.$emit('on-tree-select', value, node, params)
+                this.$emit('on-tree-select', value, node, params);
             },
 
             async handleAsyncNodes (node, index, flag) {
-                window.changeAlert = true
+                window.changeAlert = true;
                 const asyncItem = {
                     ...ASYNC_ITEM,
                     parentId: node.nodeId,
                     parentSyncId: node.id
-                }
+                };
 
-                const asyncData = new Node(asyncItem, node.level + 1, false, 'async')
-                this.treeData.splice((index + 1), 0, asyncData)
+                const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
+                this.treeData.splice((index + 1), 0, asyncData);
 
-                const chainLen = this.curChain.length
+                const chainLen = this.curChain.length;
                 const params = {
                     limit: this.limit,
                     offset: 0,
                     parent_id: node.id,
                     keyword: ''
-                }
+                };
 
                 if (Object.keys(this.curSearchObj).length) {
                     if (node.nodeId === this.curSearchObj.parentId) {
-                        this.curSearchObj = {}
+                        this.curSearchObj = {};
                     }
                 }
 
-                let placeholder = ''
+                let placeholder = '';
 
                 if (node.childType !== '') {
-                    params.system_id = this.curChain[chainLen - 1].system_id
-                    params.type = node.childType
-                    params.parent_type = this.curChain[chainLen - 1].id
-                    placeholder = this.curChain[chainLen - 1].name
+                    params.system_id = this.curChain[chainLen - 1].system_id;
+                    params.type = node.childType;
+                    params.parent_type = this.curChain[chainLen - 1].id;
+                    placeholder = this.curChain[chainLen - 1].name;
                 } else {
-                    const isExistNextChain = !!this.curChain[node.level + 1]
+                    const isExistNextChain = !!this.curChain[node.level + 1];
                     params.system_id = isExistNextChain
                         ? this.curChain[node.level + 1].system_id
-                        : this.curChain[chainLen - 1].system_id
-                    params.type = isExistNextChain ? this.curChain[node.level + 1].id : this.curChain[chainLen - 1].id
-                    params.parent_type = this.curChain[node.level].id
+                        : this.curChain[chainLen - 1].system_id;
+                    params.type = isExistNextChain ? this.curChain[node.level + 1].id : this.curChain[chainLen - 1].id;
+                    params.parent_type = this.curChain[node.level].id;
                     placeholder = isExistNextChain
                         ? this.curChain[node.level + 1].name
-                        : this.curChain[chainLen - 1].name
+                        : this.curChain[chainLen - 1].name;
                 }
 
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params)
+                    const res = await this.$store.dispatch('permApply/getResources', params);
                     if (res.data.results.length < 1) {
-                        this.removeAsyncNode()
-                        node.expanded = false
-                        node.async = false
-                        return
+                        this.removeAsyncNode();
+                        node.expanded = false;
+                        node.async = false;
+                        return;
                     }
-                    const curLevel = node.level + 1
-                    const totalPage = Math.ceil(res.data.count / this.limit)
-                    let isAsync = this.curChain.length > (curLevel + 1)
-                    const parentChain = _.cloneDeep(node.parentChain)
+                    const curLevel = node.level + 1;
+                    const totalPage = Math.ceil(res.data.count / this.limit);
+                    let isAsync = this.curChain.length > (curLevel + 1);
+                    const parentChain = _.cloneDeep(node.parentChain);
                     parentChain.push({
                         name: node.name,
                         id: node.id,
                         type: params.parent_type,
                         system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level].system_id,
                         child_type: node.childType || ''
-                    })
+                    });
                     const childNodes = res.data.results.map(item => {
-                        let checked = false
-                        let disabled = false
-                        let isRemote = false
-                        let isExistNoCarryLimit = false
+                        let checked = false;
+                        let disabled = false;
+                        let isRemote = false;
+                        let isExistNoCarryLimit = false;
                         if (!isAsync && item.child_type !== '') {
-                            isAsync = true
+                            isAsync = true;
                         }
                         if (this.hasSelectedValues.length > 0) {
                             // 父级链路id + 当前id = 整条链路id
-                            const curIds = parentChain.map(v => `${v.id}&${v.type}`)
+                            const curIds = parentChain.map(v => `${v.id}&${v.type}`);
                             // 取当前的请求的type
-                            curIds.push(`${item.id}&${params.type}`)
+                            curIds.push(`${item.id}&${params.type}`);
 
-                            const tempData = [...curIds]
+                            const tempData = [...curIds];
 
                             // if (isAsync) {
                             //     const nextLevelId = (() => {
@@ -783,32 +783,32 @@
                             //     curIds.push(`*&${nextLevelId}`)
                             // }
 
-                            let noCarryLimitData = {}
-                            let normalSelectedData = {}
+                            let noCarryLimitData = {};
+                            let normalSelectedData = {};
                             this.hasSelectedValues.forEach(val => {
                                 if (isAsync && val.idChain === tempData.join('#')) {
-                                    noCarryLimitData = val
+                                    noCarryLimitData = val;
                                 } else {
                                     if (!isAsync && val.ids.length === 1 && this.ignorePathFlag && val.ids[0] === `${item.id}&${params.type}`) {
-                                        normalSelectedData = val
+                                        normalSelectedData = val;
                                     } else {
                                         if (val.idChain === curIds.join('#')) {
-                                            normalSelectedData = val
+                                            normalSelectedData = val;
                                         }
                                     }
                                 }
-                            })
+                            });
 
-                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0
+                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
                             if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
-                                checked = true
-                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled
-                                isRemote = disabled
+                                checked = true;
+                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                                isRemote = disabled;
                             } else {
                                 if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
-                                    checked = true
-                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled
-                                    isRemote = disabled
+                                    checked = true;
+                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                                    isRemote = disabled;
                                 }
                             }
                         }
@@ -822,13 +822,13 @@
                             parentChain,
                             isRemote,
                             isExistNoCarryLimit
-                        }
+                        };
 
-                        const isAsyncFlag = isAsync || item.child_type !== ''
-                        return new Node(childItem, curLevel, isAsyncFlag)
-                    })
-                    this.treeData.splice((index + 1), 0, ...childNodes)
-                    node.children = [...res.data.results.map(item => new Node(item, curLevel, false))]
+                        const isAsyncFlag = isAsync || item.child_type !== '';
+                        return new Node(childItem, curLevel, isAsyncFlag);
+                    });
+                    this.treeData.splice((index + 1), 0, ...childNodes);
+                    node.children = [...res.data.results.map(item => new Node(item, curLevel, false))];
                     if (totalPage > 1) {
                         const loadItem = {
                             ...LOAD_ITEM,
@@ -837,10 +837,10 @@
                             parentSyncId: node.id,
                             parentId: node.nodeId,
                             parentChain
-                        }
-                        const loadData = new Node(loadItem, curLevel, isAsync, 'load')
-                        this.treeData.splice((index + childNodes.length + 1), 0, loadData)
-                        node.children.push(new Node(loadItem, curLevel, false, 'load'))
+                        };
+                        const loadData = new Node(loadItem, curLevel, isAsync, 'load');
+                        this.treeData.splice((index + childNodes.length + 1), 0, loadData);
+                        node.children.push(new Node(loadItem, curLevel, false, 'load'));
                     }
 
                     const searchItem = {
@@ -851,44 +851,44 @@
                         parentChain,
                         visiable: flag,
                         placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
-                    }
+                    };
 
-                    const searchData = new Node(searchItem, curLevel, false, 'search')
-                    this.treeData.splice((index + 1), 0, searchData)
+                    const searchData = new Node(searchItem, curLevel, false, 'search');
+                    this.treeData.splice((index + 1), 0, searchData);
                     if (flag) {
                         this.$nextTick(() => {
-                            this.$refs.topologyRef.handleSetFocus(index + 1)
-                        })
+                            this.$refs.topologyRef.handleSetFocus(index + 1);
+                        });
                     }
-                    this.removeAsyncNode()
+                    this.removeAsyncNode();
                 } catch (e) {
-                    this.removeAsyncNode()
-                    console.error(e)
+                    this.removeAsyncNode();
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             removeAsyncNode () {
-                const index = this.treeData.findIndex(item => item.type === 'async')
-                if (index > -1) this.treeData.splice(index, 1)
+                const index = this.treeData.findIndex(item => item.type === 'async');
+                if (index > -1) this.treeData.splice(index, 1);
             },
 
             async handleLoadMore (node, index) {
-                window.changeAlert = true
-                node.current = node.current + 1
-                node.loadingMore = true
+                window.changeAlert = true;
+                node.current = node.current + 1;
+                node.loadingMore = true;
 
-                const chainLen = this.curChain.length
-                let keyword = ''
+                const chainLen = this.curChain.length;
+                let keyword = '';
                 if (Object.keys(this.curSearchObj).length) {
                     if (node.parentId === this.curSearchObj.parentId) {
-                        keyword = this.curSearchObj.value
+                        keyword = this.curSearchObj.value;
                     }
                 }
                 const params = {
@@ -896,37 +896,37 @@
                     offset: this.limit * (node.current - 1),
                     parent_id: node.level > 0 ? node.parentSyncId : '',
                     keyword
-                }
+                };
 
                 if (node.level > chainLen - 1) {
-                    params.system_id = this.curChain[chainLen - 1].system_id
-                    params.type = this.curChain[chainLen - 1].id
-                    params.parent_type = this.curChain[chainLen - 1].id || ''
+                    params.system_id = this.curChain[chainLen - 1].system_id;
+                    params.type = this.curChain[chainLen - 1].id;
+                    params.parent_type = this.curChain[chainLen - 1].id || '';
                 } else {
-                    params.system_id = this.curChain[node.level].system_id
-                    params.type = this.curChain[node.level].id
-                    params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : ''
+                    params.system_id = this.curChain[node.level].system_id;
+                    params.type = this.curChain[node.level].id;
+                    params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : '';
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params)
-                    let isAsync = this.curChain.length > (node.level + 1)
+                    const res = await this.$store.dispatch('permApply/getResources', params);
+                    let isAsync = this.curChain.length > (node.level + 1);
                     const loadNodes = res.data.results.map(item => {
-                        let tempItem = _.cloneDeep(item)
+                        let tempItem = _.cloneDeep(item);
 
-                        let checked = false
-                        let disabled = false
-                        let isRemote = false
-                        let isExistNoCarryLimit = false
+                        let checked = false;
+                        let disabled = false;
+                        let isRemote = false;
+                        let isExistNoCarryLimit = false;
                         if (!isAsync && tempItem.child_type !== '') {
-                            isAsync = true
+                            isAsync = true;
                         }
                         if (this.hasSelectedValues.length > 0) {
                             // 父级链路id + 当前id = 整条链路id
-                            const curIds = node.parentChain.map(v => `${v.id}&${v.type}`)
+                            const curIds = node.parentChain.map(v => `${v.id}&${v.type}`);
                             // 取当前的请求的type
-                            curIds.push(`${item.id}&${params.type}`)
+                            curIds.push(`${item.id}&${params.type}`);
 
-                            const tempData = [...curIds]
+                            const tempData = [...curIds];
 
                             // if (isAsync) {
                             //     const nextLevelId = (() => {
@@ -939,38 +939,38 @@
                             //     curIds.push(`*&${nextLevelId}`)
                             // }
 
-                            let noCarryLimitData = {}
-                            let normalSelectedData = {}
+                            let noCarryLimitData = {};
+                            let normalSelectedData = {};
                             this.hasSelectedValues.forEach(val => {
                                 if (isAsync && val.idChain === tempData.join('#')) {
-                                    noCarryLimitData = val
+                                    noCarryLimitData = val;
                                 } else {
                                     if (!isAsync && val.ids.length === 1 && this.ignorePathFlag && val.ids[0] === `${item.id}&${params.type}`) {
-                                        normalSelectedData = val
+                                        normalSelectedData = val;
                                     } else {
                                         if (val.idChain === curIds.join('#')) {
-                                            normalSelectedData = val
+                                            normalSelectedData = val;
                                         }
                                     }
                                 }
-                            })
+                            });
 
-                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0
+                            isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
                             if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
-                                checked = true
-                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled
-                                isRemote = disabled
+                                checked = true;
+                                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                                isRemote = disabled;
                             } else {
                                 if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
-                                    checked = true
-                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled
-                                    isRemote = disabled
+                                    checked = true;
+                                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                                    isRemote = disabled;
                                 }
                             }
                         }
 
                         if (node.level > 0) {
-                            const parentData = this.treeData.find(sub => sub.nodeId === node.parentId)
+                            const parentData = this.treeData.find(sub => sub.nodeId === node.parentId);
                             tempItem = {
                                 ...item,
                                 parentId: node.parentId,
@@ -980,44 +980,44 @@
                                 parentChain: _.cloneDeep(node.parentChain),
                                 isRemote,
                                 isExistNoCarryLimit
-                            }
+                            };
                         } else {
-                            tempItem.checked = checked
+                            tempItem.checked = checked;
 
-                            tempItem.disabled = disabled
-                            tempItem.isExistNoCarryLimit = isExistNoCarryLimit
+                            tempItem.disabled = disabled;
+                            tempItem.isExistNoCarryLimit = isExistNoCarryLimit;
                         }
 
-                        const isAsyncFlag = isAsync || item.child_type !== ''
-                        return new Node(tempItem, node.level, isAsyncFlag)
-                    })
+                        const isAsyncFlag = isAsync || item.child_type !== '';
+                        return new Node(tempItem, node.level, isAsyncFlag);
+                    });
                     if (node.current >= node.totalPage) {
-                        this.treeData.splice(index, 1, ...loadNodes)
+                        this.treeData.splice(index, 1, ...loadNodes);
                     } else {
-                        this.treeData.splice(index, 0, ...loadNodes)
+                        this.treeData.splice(index, 0, ...loadNodes);
                     }
                     // 将新加载的节点push到父级点的children中
                     if (node.level > 0) {
-                        const parentNode = this.treeData.find(item => item.nodeId === node.parentId)
+                        const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
                         if (parentNode.children.length > 0) {
-                            parentNode.children.push(...loadNodes)
+                            parentNode.children.push(...loadNodes);
                         }
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    node.loadingMore = false
+                    node.loadingMore = false;
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-choose-ip {

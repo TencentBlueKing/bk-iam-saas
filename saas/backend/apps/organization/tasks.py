@@ -12,7 +12,6 @@ import logging
 import traceback
 
 from celery import task
-from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
@@ -25,8 +24,9 @@ from backend.biz.org_sync.iam_user_department import IAMBackendUserDepartmentSyn
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.org_sync.user import DBUserSyncService
 from backend.biz.org_sync.user_leader import DBUserLeaderSyncService
+from backend.common.lock import gen_organization_sync_lock
 
-from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskLockKey, SyncTaskStatus, SyncType
+from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
 logger = logging.getLogger("celery")
 
@@ -35,7 +35,7 @@ logger = logging.getLogger("celery")
 def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     try:
         # 分布式锁，避免同一时间该任务多个worker执行
-        with cache.lock(SyncTaskLockKey.Full.value, timeout=10):  # type: ignore[attr-defined]
+        with gen_organization_sync_lock():  # type: ignore[attr-defined]
             # Note: 虽然拿到锁了，但是还是得确定没有正在运行的任务才可以（因为10秒后锁自动释放了）
             record = SyncRecord.objects.filter(type=SyncType.Full.value, status=SyncTaskStatus.Running.value).first()
             if record is not None:
@@ -55,6 +55,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
         )
         SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
         return record.id
+
     try:
         # 1. SaaS 从用户管理同步组织架构
         # 用户
@@ -98,8 +99,8 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     except Exception:  # pylint: disable=broad-except
         sync_status = SyncTaskStatus.Failed.value
         exception_msg = "sync_organization error"
-        traceback_msg = traceback.format_exc()
         logger.exception(exception_msg)
+        traceback_msg = traceback.format_exc()
 
     SyncRecord.objects.filter(id=record.id).update(status=sync_status, updated_time=timezone.now())
     if sync_status == SyncTaskStatus.Failed.value:

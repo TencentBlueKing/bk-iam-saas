@@ -32,8 +32,8 @@ class ModelIdSLZ(serializers.Serializer):
 
 
 class ModelUpdateSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="类型(type)", choices=ModelSectionEnum.get_choices(), required=True)
-    data = serializers.JSONField(label="数据(data)", required=True)
+    type = serializers.ChoiceField(label="类型(type)", choices=ModelSectionEnum.get_choices())
+    data = serializers.JSONField(label="数据(data)")
 
 
 class RetrievePartSLZ(serializers.Serializer):
@@ -41,7 +41,7 @@ class RetrievePartSLZ(serializers.Serializer):
 
 
 class DeletePartSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="类型(type)", choices=ModelSectionEnum.get_choices(), required=True)
+    type = serializers.ChoiceField(label="类型(type)", choices=ModelSectionEnum.get_choices())
     id = serializers.CharField(label="ID(id)", required=False)
 
     def validate(self, data):
@@ -54,24 +54,24 @@ class DeletePartSLZ(serializers.Serializer):
 
 
 class ResourceTypeListSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID(system_id)", required=True, max_length=128, allow_blank=False)
+    system_id = serializers.CharField(label="系统ID(system_id)", max_length=128, allow_blank=False)
 
 
 class InstanceSelectionListSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID(system_id)", required=True, max_length=128, allow_blank=False)
+    system_id = serializers.CharField(label="系统ID(system_id)", max_length=128, allow_blank=False)
 
 
 class GenerateJsonSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="类型(type)", choices=GenerateJsonTypeEnum.get_choices(), required=True)
+    type = serializers.ChoiceField(label="类型(type)", choices=GenerateJsonTypeEnum.get_choices())
 
 
 class ModelSystemIDExistsSLZ(serializers.Serializer):
-    id = serializers.CharField(label="系统ID(id)", required=True, max_length=128)
+    id = serializers.CharField(label="系统ID(id)", max_length=128)
 
 
 class ModelDataIDExistsSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="类型(type)", choices=ModelSectionEnum.get_choices(), required=True)
-    id = serializers.CharField(label="ID(id)", required=True, max_length=128)
+    type = serializers.ChoiceField(label="类型(type)", choices=ModelSectionEnum.get_choices())
+    id = serializers.CharField(label="ID(id)", max_length=128)
 
 
 class ModelIDExistsResponseSLZ(serializers.Serializer):
@@ -80,17 +80,17 @@ class ModelIDExistsResponseSLZ(serializers.Serializer):
 
 # ========= 系统 system
 class SystemProviderConfigSLZ(serializers.Serializer):
-    host = serializers.URLField(label="回调HOST(host)", required=True)
+    host = serializers.URLField(label="回调HOST(host)")
     auth = serializers.ChoiceField(label="鉴权方式(auth)", choices=SystemProviderAuthEnum.get_choices())
 
     healthz = serializers.CharField(label="健康检查地址(healthz)", required=False, default="/healthz")
 
 
 class ModelSystemSLZ(serializers.Serializer):
-    id = serializers.CharField(label="ID(id)", required=True, max_length=32)
+    id = serializers.CharField(label="ID(id)", max_length=32)
 
-    name = serializers.CharField(label="名称(name)", required=True, allow_blank=False)
-    name_en = serializers.CharField(label="英文名称(name_en)", required=True, allow_blank=False)
+    name = serializers.CharField(label="名称(name)", allow_blank=False)
+    name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
 
     description = serializers.CharField(label="描述(description)", required=False)
     description_en = serializers.CharField(label="英文描述(description_en)", required=False)
@@ -98,18 +98,18 @@ class ModelSystemSLZ(serializers.Serializer):
     # required=False, 什么都不配置, 注册时会将发起注册的app_code加入
     clients = serializers.CharField(label="合法CLIENTS(clients)", required=False, default="")
 
-    provider_config = SystemProviderConfigSLZ(label="回调配置(provider_config)", required=True)
+    provider_config = SystemProviderConfigSLZ(label="回调配置(provider_config)")
 
 
 # ========= 资源类型  resource type
 class ResourceTypeProviderConfigSLZ(serializers.Serializer):
-    path = serializers.CharField(label="PATH(path)", required=True)
+    path = serializers.CharField(label="PATH(path)")
 
 
 class ResourceTypeSLZ(serializers.Serializer):
-    id = serializers.CharField(label="ID(id)", required=True, max_length=32)
-    name = serializers.CharField(label="名称(name)", required=True, allow_blank=False)
-    name_en = serializers.CharField(label="英文名称(name_en)", required=True, allow_blank=False)
+    id = serializers.CharField(label="ID(id)", max_length=32)
+    name = serializers.CharField(label="名称(name)", allow_blank=False)
+    name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
 
     description = serializers.CharField(label="描述(description)", required=False)
     description_en = serializers.CharField(label="英文描述(description_en)", required=False)
@@ -122,14 +122,14 @@ class ResourceTypeSLZ(serializers.Serializer):
 
 # ========= 实例视图 instance selection
 class ReferenceResourceTypeSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID(system_id)", required=True, max_length=32)
-    id = serializers.CharField(label="ID(id)", required=True, max_length=32)
+    system_id = serializers.CharField(label="系统ID(system_id)", max_length=32)
+    id = serializers.CharField(label="ID(id)", max_length=32)
 
 
 class InstanceSelectionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="ID(id)", required=True, max_length=32)
-    name = serializers.CharField(label="名称(name)", required=True, allow_blank=False)
-    name_en = serializers.CharField(label="英文名称(name_en)", required=True, allow_blank=False)
+    id = serializers.CharField(label="ID(id)", max_length=32)
+    name = serializers.CharField(label="名称(name)", allow_blank=False)
+    name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
     is_dynamic = serializers.BooleanField(label="是否动态(is_dynamic)", default=False)
     resource_type_chain = serializers.ListField(
         label="资源类型链路(resource_type_chain)",
@@ -141,14 +141,14 @@ class InstanceSelectionSLZ(serializers.Serializer):
 
 # ========= 操作 action
 class ReferenceInstanceSelectionSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID(system_id)", required=True, max_length=32)
-    id = serializers.CharField(label="ID(id)", required=True, max_length=32)
+    system_id = serializers.CharField(label="系统ID(system_id)", max_length=32)
+    id = serializers.CharField(label="ID(id)", max_length=32)
     ignore_iam_path = serializers.BooleanField(label="忽略路径(ignore_iam_path)", required=False, default=False)
 
 
 class RelatedResourceTypeSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID(system_id)", required=True, max_length=32)
-    id = serializers.CharField(label="ID(id)", required=True, max_length=32)
+    system_id = serializers.CharField(label="系统ID(system_id)", max_length=32)
+    id = serializers.CharField(label="ID(id)", max_length=32)
 
     name_alias = serializers.CharField(label="别名(name_alias)", required=False, allow_blank=True)
     name_alias_en = serializers.CharField(label="英文别名(name_alias_en)", required=False, allow_blank=True)
@@ -169,14 +169,14 @@ class RelatedResourceTypeSLZ(serializers.Serializer):
 
 
 class ActionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="ID(id)", required=True, max_length=32)
-    name = serializers.CharField(label="名称(name)", required=True, allow_blank=False)
-    name_en = serializers.CharField(label="英文名称(name_en)", required=True, allow_blank=False)
+    id = serializers.CharField(label="ID(id)", max_length=32)
+    name = serializers.CharField(label="名称(name)", allow_blank=False)
+    name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
 
     description = serializers.CharField(label="描述(description)", required=False)
     description_en = serializers.CharField(label="英文描述(description_en)", required=False)
 
-    type = serializers.ChoiceField(label="类型(type)", choices=ActionTypeEnum.get_choices(), required=True)
+    type = serializers.ChoiceField(label="类型(type)", choices=ActionTypeEnum.get_choices())
 
     related_resource_types = serializers.ListField(
         label="操作对象(related_resource_types)",
@@ -195,21 +195,19 @@ class ActionSLZ(serializers.Serializer):
 
 
 class ActionIDSLZ(serializers.Serializer):
-    id = serializers.CharField(label="操作ID(id)", required=True)
+    id = serializers.CharField(label="操作ID(id)")
 
 
 # ========= 操作分组 action groups
 class ActionSubGroupSLZ(serializers.Serializer):
-    name = serializers.CharField(label="名称(name)", required=True, allow_blank=False)
-    name_en = serializers.CharField(label="英文名称(name_en)", required=True, allow_blank=False)
-    actions = serializers.ListField(
-        label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), required=True, allow_empty=False
-    )
+    name = serializers.CharField(label="名称(name)", allow_blank=False)
+    name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
+    actions = serializers.ListField(label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), allow_empty=False)
 
 
 class ActionGroupSLZ(serializers.Serializer):
-    name = serializers.CharField(label="名称(name)", required=True, allow_blank=False)
-    name_en = serializers.CharField(label="英文名称(name_en)", required=True, allow_blank=False)
+    name = serializers.CharField(label="名称(name)", allow_blank=False)
+    name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
     actions = serializers.ListField(
         label="操作列表(actions)", child=ActionIDSLZ(label="操作()"), required=False, allow_empty=True
     )
@@ -220,11 +218,9 @@ class ActionGroupSLZ(serializers.Serializer):
 
 # ========= 常用操作 common actions
 class CommonActionSLZ(serializers.Serializer):
-    name = serializers.CharField(label="名称(name)", required=True, allow_blank=False)
-    name_en = serializers.CharField(label="英文名称(name_en)", required=True, allow_blank=False)
-    actions = serializers.ListField(
-        label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), required=True, allow_empty=False
-    )
+    name = serializers.CharField(label="名称(name)", allow_blank=False)
+    name_en = serializers.CharField(label="英文名称(name_en)", allow_blank=False)
+    actions = serializers.ListField(label="操作列表(actions)", child=ActionIDSLZ(label="操作(action)"), allow_empty=False)
 
     def validate_actions(self, value):
         # id uniq in one common_action

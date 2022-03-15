@@ -10,9 +10,9 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Optional
 
+from backend.account import get_user_model
 from backend.apps.role.models import AnonymousRole, Role
 from backend.service.constants import RoleType
-from blueapps.account import get_user_model
 from tests.test_util.helpers import generate_random_string
 
 

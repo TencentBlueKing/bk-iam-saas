@@ -22,7 +22,7 @@ class BasicAppCodeAuthentication(BasicAuthentication):
     """
 
     def authenticate_credentials(self, userid, password, request=None):
-        if userid != settings.APP_ID or password != settings.APP_TOKEN:
+        if userid != settings.APP_CODE or password != settings.APP_SECRET:
             return None
         user_model = get_user_model()
         user, _ = user_model.objects.get_or_create(

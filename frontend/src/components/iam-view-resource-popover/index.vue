@@ -33,7 +33,7 @@
     </bk-popconfirm>
 </template>
 <script>
-    import Instance from '@/model/instance'
+    import Instance from '@/model/instance';
     export default {
         name: '',
         props: {
@@ -54,28 +54,28 @@
             return {
                 displayList: [],
                 originList: []
-            }
+            };
         },
         computed: {
             isShowAction () {
-                return this.originList.length > 10
+                return this.originList.length > 10;
             },
             isEmpty () {
-                return this.displayList.length < 1
+                return this.displayList.length < 1;
             }
         },
         watch: {
             data: {
                 handler (value) {
-                    const arr = []
+                    const arr = [];
                     if (value.length > 0) {
                         value.forEach(item => {
                             (item.instance || []).forEach(subItem => {
-                                arr.push(...new Instance(subItem).displayPath)
-                            })
-                        })
-                        this.originList.splice(0, this.originList.length, ...arr)
-                        this.displayList = this.originList.slice(0, 10)
+                                arr.push(...new Instance(subItem).displayPath);
+                            });
+                        });
+                        this.originList.splice(0, this.originList.length, ...arr);
+                        this.displayList = this.originList.slice(0, 10);
                     }
                 },
                 immediate: true
@@ -83,10 +83,10 @@
         },
         methods: {
             handleConfirm () {
-                this.$emit('on-view')
+                this.$emit('on-view');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-view-resource-tooltips-cls {

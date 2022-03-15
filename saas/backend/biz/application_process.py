@@ -17,8 +17,17 @@ from pydantic import BaseModel
 from backend.biz.resource import ResourceBiz, ResourceNodeAttributeDictBean, ResourceNodeBean
 from backend.service.constants import ANY_ID
 from backend.service.models.approval import ApprovalProcessWithNodeProcessor
+from backend.util.uuid import gen_uuid
 
-from .policy import ConditionBean, InstanceBean, PolicyBean, PolicyEmptyException, RelatedResourceBean
+from .policy import (
+    ConditionBean,
+    InstanceBean,
+    PolicyBean,
+    PolicyEmptyException,
+    RelatedResourceBean,
+    ResourceGroupBean,
+    ResourceGroupBeanList,
+)
 
 
 class PolicyProcess(BaseModel):
@@ -92,40 +101,41 @@ class InstanceAproverHandler(PolicyProcessHandler):
         """
         通过实例审批人信息, 分离policy_process为独立的实例policy
         """
-        if len(policy_process.policy.related_resource_types) != 1:
+        if len(policy_process.policy.list_thin_resource_type()) != 1:
             return [policy_process]
 
         policy = policy_process.policy
         process = policy_process.process
-        rrt = policy.related_resource_types[0]
 
         policy_process_list: List[PolicyProcess] = []
-        for condition in rrt.condition:
-            # 忽略有属性的condition
-            if not condition.has_no_attributes():
-                continue
+        for rg in policy.resource_groups:
+            rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
+            for condition in rrt.condition:
+                # 忽略有属性的condition
+                if not condition.has_no_attributes():
+                    continue
 
-            # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
-            for instance in condition.instances:
-                for path in instance.path:
-                    last_node = path[-1]
-                    if last_node.id == ANY_ID:
-                        if len(path) < 2:
+                # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
+                for instance in condition.instances:
+                    for path in instance.path:
+                        last_node = path[-1]
+                        if last_node.id == ANY_ID:
+                            if len(path) < 2:
+                                continue
+                            last_node = path[-2]
+
+                        resource_node = ResourceNodeBean.parse_obj(last_node)
+                        if not resource_approver_dict.get_attribute(resource_node):
                             continue
-                        last_node = path[-2]
 
-                    resource_node = ResourceNodeBean.parse_obj(last_node)
-                    if not resource_approver_dict.get_attribute(resource_node):
-                        continue
+                        # 复制出单实例的policy
+                        copied_policy = self._copy_policy_by_instance_path(policy, rg, rrt, instance, path)
 
-                    # 复制出单实例的policy
-                    copied_policy = self._copy_policy_by_instance_path(policy, rrt, instance, path)
+                        # 复制出新的审批流程, 并填充实例审批人
+                        copied_process = deepcopy(process)
+                        copied_process.set_instance_approver(resource_approver_dict.get_attribute(resource_node))
 
-                    # 复制出新的审批流程, 并填充实例审批人
-                    copied_process = deepcopy(process)
-                    copied_process.set_instance_approver(resource_approver_dict.get_attribute(resource_node))
-
-                    policy_process_list.append(PolicyProcess(policy=copied_policy, process=copied_process))
+                        policy_process_list.append(PolicyProcess(policy=copied_policy, process=copied_process))
 
         # 如果没有拆分处理部分实例, 直接返回原始的policy_process
         if not policy_process_list:
@@ -134,7 +144,7 @@ class InstanceAproverHandler(PolicyProcessHandler):
         # 把原始的策略剔除拆分的部分
         for part_policy_process in policy_process_list:
             try:
-                policy_process.policy.remove_related_resource_types(part_policy_process.policy.related_resource_types)
+                policy_process.policy.remove_resource_group_list(part_policy_process.policy.resource_groups)
             except PolicyEmptyException:
                 # 如果原始的策略全部删完了, 直接返回拆分的部分
                 return policy_process_list
@@ -143,21 +153,29 @@ class InstanceAproverHandler(PolicyProcessHandler):
         policy_process_list.append(policy_process)
         return policy_process_list
 
-    def _copy_policy_by_instance_path(self, policy, rrt, instance, path):
+    def _copy_policy_by_instance_path(self, policy, resource_group, rrt, instance, path):
         # 复制出单实例的policy
         copied_policy = PolicyBean(
-            related_resource_types=[
-                RelatedResourceBean(
-                    condition=[
-                        ConditionBean(
-                            attributes=[],
-                            instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
-                        )
-                    ],
-                    **rrt.dict(exclude={"condition"}),
-                )
-            ],
-            **policy.dict(exclude={"related_resource_types"}),
+            resource_groups=ResourceGroupBeanList.parse_obj(
+                [
+                    ResourceGroupBean(
+                        id=gen_uuid(),
+                        related_resource_types=[
+                            RelatedResourceBean(
+                                condition=[
+                                    ConditionBean(
+                                        attributes=[],
+                                        instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
+                                    )
+                                ],
+                                **rrt.dict(exclude={"condition"}),
+                            )
+                        ],
+                        environments=resource_group.environments,
+                    )
+                ]
+            ),
+            **policy.dict(exclude={"resource_groups"}),
         )
         return copied_policy
 
@@ -166,15 +184,16 @@ class InstanceAproverHandler(PolicyProcessHandler):
         # 需要查询资源实例审批人的节点集合
         resource_node_set = set()
         # 只支持关联1个资源类型的操作查询资源审批人
-        if len(policy.related_resource_types) != 1:
+        if len(policy.list_thin_resource_type()) != 1:
             return []
 
-        rrt = policy.related_resource_types[0]
-        for path in rrt.iter_path_list(ignore_attribute=True):
-            last_node = path.nodes[-1]
-            if last_node.id == ANY_ID:
-                if len(path.nodes) < 2:
-                    continue
-                last_node = path.nodes[-2]
-            resource_node_set.add(ResourceNodeBean.parse_obj(last_node))
+        for rg in policy.resource_groups:
+            rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
+            for path in rrt.iter_path_list(ignore_attribute=True):
+                last_node = path[-1]
+                if last_node.id == ANY_ID:
+                    if len(path) < 2:
+                        continue
+                    last_node = path[-2]
+                resource_node_set.add(ResourceNodeBean.parse_obj(last_node))
         return list(resource_node_set)

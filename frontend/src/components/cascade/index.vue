@@ -120,9 +120,9 @@
 </template>
 
 <script>
-    import iamCascadePopover from './popover'
-    import iamCascadeCaspanel from './caspanel.vue'
-    import cascadeInfo from './cascade.js'
+    import iamCascadePopover from './popover';
+    import iamCascadeCaspanel from './caspanel.vue';
+    import cascadeInfo from './cascade.js';
 
     export default {
         name: 'iamCascade',
@@ -182,7 +182,7 @@
             },
             trigger: {
                 validator (value) {
-                    return ['click', 'hover'].includes(value)
+                    return ['click', 'hover'].includes(value);
                 },
                 default: 'click'
             },
@@ -236,114 +236,114 @@
                 filterableStatus: false,
                 filterRestoreStatus: false,
                 remoteSearchLoading: false
-            }
+            };
         },
         computed: {
             selectedName () {
-                let label = []
+                let label = [];
                 if (this.multiple) {
-                    label = this.multipleSelectedList.map(item => item.name)
+                    label = this.multipleSelectedList.map(item => item.name);
                 } else {
                     if (!this.showCompleteName && this.selectedList.length) {
-                        label = [this.selectedList[this.selectedList.length - 1].name]
+                        label = [this.selectedList[this.selectedList.length - 1].name];
                     } else {
-                        label = this.selectedList.map(item => item.name)
+                        label = this.selectedList.map(item => item.name);
                     }
                 }
-                return this.multiple ? label.join(' , ') : label.join(this.separator)
+                return this.multiple ? label.join(' , ') : label.join(this.separator);
             },
             isUnselected () {
-                return this.selectedName === ''
+                return this.selectedName === '';
             },
             placeContent () {
-                return this.placeholder ? this.placeholder : '请选择'
+                return this.placeholder ? this.placeholder : '请选择';
             },
             nodeOptions () {
                 const nodeOptions = {
                     idKey: 'id',
                     nameKey: 'name',
                     childrenKey: 'children'
-                }
-                return Object.assign(nodeOptions, this.options)
+                };
+                return Object.assign(nodeOptions, this.options);
             }
         },
         watch: {
             showCascade (val) {
-                this.$emit('toggle', val)
-                this.filterableStatus = this.searchContent !== ''
+                this.$emit('toggle', val);
+                this.filterableStatus = this.searchContent !== '';
                 if (val) {
-                    this.popoverWidth = 1
+                    this.popoverWidth = 1;
                     if (this.currentList.length) {
-                        this.updateSelected()
+                        this.updateSelected();
                     }
                 } else {
                     if (this.filterable && !this.multiple) {
                         if (this.searchContent !== this.selectedName) {
-                            this.filterRestoreStatus = true
+                            this.filterRestoreStatus = true;
                         }
-                        this.searchContent = this.selectedName
+                        this.searchContent = this.selectedName;
                     }
-                    this.tippyInstance()
+                    this.tippyInstance();
                 }
-                this.filterableStatus = false
+                this.filterableStatus = false;
             },
             searchContent (val) {
                 if (this.filterRestoreStatus) {
-                    this.filterRestoreStatus = false
-                    return
+                    this.filterRestoreStatus = false;
+                    return;
                 }
                 if (val) {
-                    this.filterableStatus = true
-                    this.$refs.cascadeDropdown.$refs.reference._tippy.show()
-                    this.handleDropdownShow()
-                    this.getSearchList()
+                    this.filterableStatus = true;
+                    this.$refs.cascadeDropdown.$refs.reference._tippy.show();
+                    this.handleDropdownShow();
+                    this.getSearchList();
                 } else {
-                    this.filterableStatus = false
+                    this.filterableStatus = false;
                     if (this.multiple) {
                         // 改变选框的选中态
-                        this.recursiveList(this.cascadeList, this.multipleCurrentList, 'search')
+                        this.recursiveList(this.cascadeList, this.multipleCurrentList, 'search');
                     }
                 }
             },
             selectedName () {
                 if (this.filterable && !this.multiple) {
-                    this.searchContent = this.selectedName
+                    this.searchContent = this.selectedName;
                 }
             },
             list: {
                 handler (newValue) {
                     // watch list变化改变cascadeList的值
-                    this.cascadeList = this.recurrenceNodes(JSON.parse(JSON.stringify(newValue)))
+                    this.cascadeList = this.recurrenceNodes(JSON.parse(JSON.stringify(newValue)));
                     // 当list发生变化时，显示的数据也要做相应的改变
                     if (this.multiple) {
-                        this.recursiveList(this.cascadeList, this.multipleCurrentList, 'init')
-                        this.checkListStatus(this.multipleCurrentList)
-                        const newList = this.changeList()
+                        this.recursiveList(this.cascadeList, this.multipleCurrentList, 'init');
+                        this.checkListStatus(this.multipleCurrentList);
+                        const newList = this.changeList();
                         this.multipleSelectedList = newList.filter(item => item.isSelected).map(item => {
                             return {
                                 id: item.id,
                                 name: item.name
-                            }
-                        })
+                            };
+                        });
                     } else {
                         // 通过递归找到对应的项(如果不存在对应的项，则清空当前的数据)
                         if (this.currentList.length) {
-                            let findStatus = false
+                            let findStatus = false;
                             const checkInfo = (arr) => {
                                 arr.forEach(itemArr => {
                                     if (itemArr.id === this.currentList[this.currentList.length - 1]) {
-                                        findStatus = true
+                                        findStatus = true;
                                     }
                                     if (itemArr.children && itemArr.children.length) {
-                                        checkInfo(itemArr.children)
+                                        checkInfo(itemArr.children);
                                     }
-                                })
-                            }
-                            checkInfo(this.cascadeList)
+                                });
+                            };
+                            checkInfo(this.cascadeList);
                             if (!findStatus) {
-                                this.currentList = []
-                                this.selectedList = []
-                                this.tmpSelected = []
+                                this.currentList = [];
+                                this.selectedList = [];
+                                this.tmpSelected = [];
                             }
                         }
                     }
@@ -352,181 +352,181 @@
             },
             value: {
                 handler () {
-                    this.initValue()
+                    this.initValue();
                 },
                 deep: true
             }
         },
         created () {
-            this.cascadeList = this.recurrenceNodes(JSON.parse(JSON.stringify(this.list)))
+            this.cascadeList = this.recurrenceNodes(JSON.parse(JSON.stringify(this.list)));
             // 单选
             this.$on('on-id-change', (params) => {
-                const { isLast, checkAnyLevel, fromInit } = params
+                const { isLast, checkAnyLevel, fromInit } = params;
 
                 if (isLast || checkAnyLevel) {
-                    const oldIdList = JSON.parse(JSON.stringify(this.currentList))
-                    this.selectedList = this.tmpSelected
+                    const oldIdList = JSON.parse(JSON.stringify(this.currentList));
+                    this.selectedList = this.tmpSelected;
 
-                    const newIdList = this.selectedList.map(item => item.id)
+                    const newIdList = this.selectedList.map(item => item.id);
 
                     if (!fromInit) {
-                        this.currentList = newIdList
-                        this.exposedId(this.currentList, oldIdList)
+                        this.currentList = newIdList;
+                        this.exposedId(this.currentList, oldIdList);
                     }
                 }
                 if (isLast && !fromInit) {
-                    this.tippyInstance()
+                    this.tippyInstance();
                 }
-            })
+            });
             // 多选
             this.$on('on-multiple-change', (params) => {
-                const { checkAnyLevel, fromInit } = params
-                this.selectedList = this.tmpSelected
-                const newIdList = this.selectedList.map(item => item.id)
+                const { checkAnyLevel, fromInit } = params;
+                this.selectedList = this.tmpSelected;
+                const newIdList = this.selectedList.map(item => item.id);
                 if (!fromInit) {
-                    this.currentList = newIdList
+                    this.currentList = newIdList;
                 }
                 // 多选触发cascade选中的状态
                 if (!checkAnyLevel) {
                     this.cascadeList.forEach(item => {
                         if (item.children && item.children.length) {
-                            item.isSelected = item.children.every(child => (child.isSelected || child.disabled))
+                            item.isSelected = item.children.every(child => (child.isSelected || child.disabled));
                             item.isIndeterminate = item.children.some(
                                 child => (child.isIndeterminate || child.isSelected)
-                            )
+                            );
                         }
-                    })
+                    });
                 }
-                const oldIdList = JSON.parse(JSON.stringify(this.multipleCurrentList))
-                this.exposeMultiple(oldIdList)
-            })
+                const oldIdList = JSON.parse(JSON.stringify(this.multipleCurrentList));
+                this.exposeMultiple(oldIdList);
+            });
             // cascade的层级（popoverWidth的值控制）
             this.$on('on-popover-width', (params) => {
-                const currentItem = params.item
-                this.popoverWidth = this.tmpSelected.length
+                const currentItem = params.item;
+                this.popoverWidth = this.tmpSelected.length;
                 if (currentItem.children && currentItem.children.length) {
-                    this.popoverWidth += 1
+                    this.popoverWidth += 1;
                 }
-            })
+            });
         },
         mounted () {
-            this.initValue()
+            this.initValue();
             // 暂时将远程加载中的搜索去掉
             if (this.isRemote) {
-                this.filterable = false
+                this.filterable = false;
             }
         },
         methods: {
             recurrenceNodes (list) {
                 if (!Array.isArray(list) || !list.length) {
-                    return []
+                    return [];
                 }
-                const { idKey, nameKey, childrenKey } = this.nodeOptions
+                const { idKey, nameKey, childrenKey } = this.nodeOptions;
                 // 默认赋值
                 list.forEach((item, index) => {
-                    item.id = item[idKey]
-                    item.name = item[nameKey] || ''
-                    const children = item[childrenKey]
+                    item.id = item[idKey];
+                    item.name = item[nameKey] || '';
+                    const children = item[childrenKey];
                     if (Array.isArray(children)) {
-                        item.children = this.recurrenceNodes(children)
+                        item.children = this.recurrenceNodes(children);
                     }
-                })
-                return list
+                });
+                return list;
             },
             initValue () {
                 // 如果是多选内置需要的数据
                 if (this.multiple) {
-                    this.multipleCurrentList = this.value
-                    this.changeValueList()
+                    this.multipleCurrentList = this.value;
+                    this.changeValueList();
                 } else {
-                    this.currentList = this.value
+                    this.currentList = this.value;
                     if (this.value.length) {
-                        this.updateSelected()
+                        this.updateSelected();
                     } else {
-                        this.clearData()
+                        this.clearData();
                     }
                 }
             },
             // 清空数据
             clearData () {
-                if (this.disabled) return
+                if (this.disabled) return;
                 if (this.multiple) {
-                    const oldId = JSON.parse(JSON.stringify(this.multipleCurrentList))
-                    this.multipleCurrentList = []
-                    this.multipleSelectedList = []
-                    this.exposedId(this.multipleCurrentList, oldId)
+                    const oldId = JSON.parse(JSON.stringify(this.multipleCurrentList));
+                    this.multipleCurrentList = [];
+                    this.multipleSelectedList = [];
+                    this.exposedId(this.multipleCurrentList, oldId);
                     // 递归修改选中和半选的状态
                     const changeCheckStatus = (arr) => {
                         arr.forEach(item => {
-                            item.isSelected = false
-                            item.isIndeterminate = false
+                            item.isSelected = false;
+                            item.isIndeterminate = false;
                             if (item.children && item.children.length) {
-                                changeCheckStatus(item.children)
+                                changeCheckStatus(item.children);
                             }
-                        })
-                    }
-                    changeCheckStatus(this.cascadeList)
+                        });
+                    };
+                    changeCheckStatus(this.cascadeList);
                 } else {
-                    const oldId = JSON.parse(JSON.stringify(this.currentList))
-                    this.currentList = []
-                    this.selectedList = []
-                    this.tmpSelected = []
-                    this.exposedId(this.currentList, oldId)
+                    const oldId = JSON.parse(JSON.stringify(this.currentList));
+                    this.currentList = [];
+                    this.selectedList = [];
+                    this.tmpSelected = [];
+                    this.exposedId(this.currentList, oldId);
                 }
-                this.broadcast('iamCascadeCaspanel', 'on-clear')
+                this.broadcast('iamCascadeCaspanel', 'on-clear');
                 // 关闭下拉面板
-                this.tippyInstance()
+                this.tippyInstance();
             },
             // popover面板的展开收起回调
             handleDropdownShow () {
-                this.popoverWidth = 1
-                this.defaultWidth = this.$el.offsetWidth
+                this.popoverWidth = 1;
+                this.defaultWidth = this.$el.offsetWidth;
                 if (this.currentList.length) {
-                    this.updateSelected()
+                    this.updateSelected();
                 }
-                if (this.disabled) return
-                this.showCascade = true
+                if (this.disabled) return;
+                this.showCascade = true;
                 if (!this.currentList.length) {
-                    this.broadcast('iamCascadeCaspanel', 'on-clear')
+                    this.broadcast('iamCascadeCaspanel', 'on-clear');
                 }
             },
             handleDropdownHide () {
-                this.showCascade = false
+                this.showCascade = false;
             },
             tippyInstance () {
                 if (this.$refs.cascadeDropdown) {
-                    this.$refs.cascadeDropdown.$refs.reference._tippy.hide()
+                    this.$refs.cascadeDropdown.$refs.reference._tippy.hide();
                 }
             },
             showTippyInstance () {
                 if (this.$refs.cascadeDropdown) {
-                    this.$refs.cascadeDropdown.$refs.reference._tippy.show()
+                    this.$refs.cascadeDropdown.$refs.reference._tippy.show();
                 }
             },
             // 当数据发生变化是触发change事件
             exposedId (newId, oldId) {
                 if (JSON.stringify(newId) !== JSON.stringify(oldId)) {
-                    const selectedList = this.multiple ? this.multipleSelectedList : this.selectedList
-                    this.$emit('input', newId)
-                    this.$emit('change', newId, oldId, JSON.parse(JSON.stringify(selectedList)))
+                    const selectedList = this.multiple ? this.multipleSelectedList : this.selectedList;
+                    this.$emit('input', newId);
+                    this.$emit('change', newId, oldId, JSON.parse(JSON.stringify(selectedList)));
                 }
             },
             exposeMultiple (oldId) {
-                const newList = this.changeList()
-                this.multipleSelectedList = []
-                this.multipleCurrentList = []
+                const newList = this.changeList();
+                this.multipleSelectedList = [];
+                this.multipleCurrentList = [];
                 // 使用一次循环过滤元素
                 for (let i = 0; i < newList.length; i++) {
                     if (newList[i].isSelected) {
                         this.multipleSelectedList.push({
                             id: newList[i].id,
                             name: newList[i].name
-                        })
+                        });
                     }
                 }
                 for (let i = 0; i < newList.length; i++) {
                     if (newList[i].isSelected) {
-                        this.multipleCurrentList.push(newList[i].id)
+                        this.multipleCurrentList.push(newList[i].id);
                     }
                 }
                 // this.multipleSelectedList = newList.filter(item => item.isSelected).map(item => {
@@ -538,37 +538,37 @@
                 // this.multipleCurrentList = newList.filter(item => item.isSelected).map(item => item.id)
 
                 // 抛出选中事件
-                this.exposedId(this.multipleCurrentList, oldId)
+                this.exposedId(this.multipleCurrentList, oldId);
             },
             // 更新选中的数据
             updateSelectedList (selectedList) {
-                this.tmpSelected = selectedList
+                this.tmpSelected = selectedList;
             },
             // 将数据赋值
             updateSelected () {
                 this.broadcast('iamCascadeCaspanel', 'change-selected', {
                     idList: this.currentList
-                })
+                });
             },
             // 搜索功能
             getSearchList () {
-                const selections = this.changeList()
+                const selections = this.changeList();
                 this.searchList = selections.filter(item => {
-                    return item.name && item.name.indexOf(this.searchContent) > -1
-                })
+                    return item.name && item.name.indexOf(this.searchContent) > -1;
+                });
                 if (!this.multiple) {
                     this.searchList.forEach(item => {
-                        item.isSelected = this.currentList.join(',') === item.id.join(',')
-                    })
+                        item.isSelected = this.currentList.join(',') === item.id.join(',');
+                    });
                 }
             },
             changeList () {
-                const listInfo = JSON.parse(JSON.stringify(this.cascadeList))
-                const selections = []
+                const listInfo = JSON.parse(JSON.stringify(this.cascadeList));
+                const selections = [];
                 const getSelections = (arr, id, name) => {
                     arr.forEach(item => {
-                        item.id = id ? id + this.separator + item.id : item.id
-                        item.name = name ? name + this.separator + item.name : item.name
+                        item.id = id ? id + this.separator + item.id : item.id;
+                        item.name = name ? name + this.separator + item.name : item.name;
 
                         if (this.checkAnyLevel) {
                             selections.push({
@@ -576,162 +576,162 @@
                                 name: item.name,
                                 disabled: !!item.disabled,
                                 isSelected: !!item.isSelected
-                            })
+                            });
                             if (item.children && item.children.length) {
-                                getSelections(item.children, item.id, item.name)
+                                getSelections(item.children, item.id, item.name);
                             }
                         } else {
                             if (item.children && item.children.length) {
-                                getSelections(item.children, item.id, item.name)
-                                delete item.id
-                                delete item.name
+                                getSelections(item.children, item.id, item.name);
+                                delete item.id;
+                                delete item.name;
                             } else {
                                 selections.push({
                                     id: item.id.split(this.separator),
                                     name: item.name,
                                     disabled: !!item.disabled,
                                     isSelected: !!item.isSelected
-                                })
+                                });
                             }
                         }
-                    })
-                }
-                getSelections(listInfo)
-                return selections
+                    });
+                };
+                getSelections(listInfo);
+                return selections;
             },
             changeValueList () {
                 // 赋值操作
-                this.recursiveList(this.cascadeList, this.value, 'init')
-                this.checkListStatus(this.value)
+                this.recursiveList(this.cascadeList, this.value, 'init');
+                this.checkListStatus(this.value);
 
-                const newList = this.changeList()
+                const newList = this.changeList();
                 this.multipleSelectedList = newList.filter(item => item.isSelected).map(item => {
                     return {
                         id: item.id,
                         name: item.name
-                    }
-                })
+                    };
+                });
             },
             recursiveList (arr, valueList, type) {
                 arr.forEach(arrItem => {
                     if (type === 'init') {
-                        this.$set(arrItem, 'isSelected', false)
-                        this.$set(arrItem, 'isIndeterminate', false)
+                        this.$set(arrItem, 'isSelected', false);
+                        this.$set(arrItem, 'isIndeterminate', false);
                     }
 
                     valueList.forEach(item => {
                         if (Array.isArray(item)) {
                             if (item[item.length - 1] === arrItem.id) {
-                                arrItem.isSelected = true
+                                arrItem.isSelected = true;
                             }
                             if (!this.checkAnyLevel) {
                                 item.forEach(child => {
                                     if (child === arrItem.id) {
-                                        arrItem.isIndeterminate = true
+                                        arrItem.isIndeterminate = true;
                                     }
-                                })
+                                });
                             }
                         }
-                    })
+                    });
 
                     if (arrItem.children && arrItem.children.length) {
-                        this.recursiveList(arrItem.children, valueList, type)
+                        this.recursiveList(arrItem.children, valueList, type);
                     }
-                })
+                });
             },
             // 对比数据选中态
             checkListStatus (currentValue) {
                 if (!this.checkAnyLevel) {
-                    const valueList = []
+                    const valueList = [];
                     currentValue.forEach(item => {
-                        valueList.push(item.length)
-                    })
-                    const value = Math.max(...valueList)
+                        valueList.push(item.length);
+                    });
+                    const value = Math.max(...valueList);
                     for (let i = 0; i <= value; i++) {
                         const checkInfo = (arr) => {
                             arr.forEach(arrItem => {
                                 if (arrItem.children && arrItem.children.length) {
                                     arrItem.isSelected = arrItem.children.every(
                                         child => (child.isSelected || child.disabled)
-                                    )
+                                    );
                                     arrItem.isIndeterminate = arrItem.children.some(
                                         child => (child.isIndeterminate || child.isSelected)
-                                    )
-                                    checkInfo(arrItem.children)
+                                    );
+                                    checkInfo(arrItem.children);
                                 }
-                            })
-                        }
-                        checkInfo(this.cascadeList)
+                            });
+                        };
+                        checkInfo(this.cascadeList);
                     }
                 }
             },
             handleSelectItem (item, index) {
                 if (item.disabled) {
-                    return
+                    return;
                 }
                 if (this.multiple) {
-                    const oldId = JSON.parse(JSON.stringify(this.multipleCurrentList))
-                    item.isSelected = !item.isSelected
+                    const oldId = JSON.parse(JSON.stringify(this.multipleCurrentList));
+                    item.isSelected = !item.isSelected;
                     if (item.isSelected) {
-                        this.multipleCurrentList.push(item.id)
+                        this.multipleCurrentList.push(item.id);
                         this.multipleSelectedList.push({
                             id: item.id,
                             name: item.name
-                        })
+                        });
                     } else {
                         this.multipleCurrentList = this.multipleCurrentList.filter(node => {
-                            return node.join('/') !== item.id.join('/')
-                        })
+                            return node.join('/') !== item.id.join('/');
+                        });
                         this.multipleSelectedList = this.multipleSelectedList.filter(node => {
-                            return node.id.join('/') !== item.id.join('/')
-                        })
+                            return node.id.join('/') !== item.id.join('/');
+                        });
                     }
-                    this.recursiveList(this.cascadeList, this.multipleCurrentList, 'search')
+                    this.recursiveList(this.cascadeList, this.multipleCurrentList, 'search');
                     // 同步数据的选中态
                     this.broadcast('iamCascadeCaspanel', 'multiple-selected', {
                         idList: item.id,
                         isSelected: item.isSelected
-                    })
+                    });
                     // 抛出事件
-                    this.exposeMultiple(oldId)
+                    this.exposeMultiple(oldId);
                 } else {
-                    const oldVal = JSON.parse(JSON.stringify(this.currentList))
-                    this.currentList = item.id
-                    this.tmpSelected = []
-                    this.selectedList = []
-                    this.updateSelected()
+                    const oldVal = JSON.parse(JSON.stringify(this.currentList));
+                    this.currentList = item.id;
+                    this.tmpSelected = [];
+                    this.selectedList = [];
+                    this.updateSelected();
                     this.$nextTick(() => {
-                        this.searchContent = this.selectedName
-                        this.exposedId(this.currentList, oldVal)
-                        this.tippyInstance()
-                    })
+                        this.searchContent = this.selectedName;
+                        this.exposedId(this.currentList, oldVal);
+                        this.tippyInstance();
+                    });
                 }
             },
             // 多选删除数据
             removeTag (item, index) {
-                const oldId = JSON.parse(JSON.stringify(this.multipleCurrentList))
-                this.multipleCurrentList = this.multipleCurrentList.filter(itemInfo => itemInfo.join(',') !== item.id.join(','))
-                this.multipleSelectedList = this.multipleSelectedList.filter(itemInfo => itemInfo.id.join(',') !== item.id.join(','))
-                const itemId = item.id[item.id.length - 1]
+                const oldId = JSON.parse(JSON.stringify(this.multipleCurrentList));
+                this.multipleCurrentList = this.multipleCurrentList.filter(itemInfo => itemInfo.join(',') !== item.id.join(','));
+                this.multipleSelectedList = this.multipleSelectedList.filter(itemInfo => itemInfo.id.join(',') !== item.id.join(','));
+                const itemId = item.id[item.id.length - 1];
                 // 同步数据的选中态
                 const changeCheckStatus = (arr) => {
                     arr.forEach(item => {
                         if (itemId === item.id) {
-                            item.isSelected = false
-                            item.isIndeterminate = false
+                            item.isSelected = false;
+                            item.isIndeterminate = false;
                         }
                         if (item.children && item.children.length) {
-                            changeCheckStatus(item.children)
+                            changeCheckStatus(item.children);
                         }
-                    })
-                }
-                changeCheckStatus(this.cascadeList)
-                this.checkListStatus(this.multipleCurrentList)
+                    });
+                };
+                changeCheckStatus(this.cascadeList);
+                this.checkListStatus(this.multipleCurrentList);
                 // 抛出事件
-                this.exposeMultiple(oldId)
+                this.exposeMultiple(oldId);
             }
         }
-    }
+    };
 </script>
 <style scoped>
     @import './cascade.css';

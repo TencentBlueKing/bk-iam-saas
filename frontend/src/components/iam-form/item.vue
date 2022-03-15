@@ -17,12 +17,12 @@
                     state: '',
                     content: ''
                 }
-            }
+            };
         },
         mounted () {
-            this.validator = this.$refs.formItem.validator
+            this.validator = this.$refs.formItem.validator;
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-form-item {

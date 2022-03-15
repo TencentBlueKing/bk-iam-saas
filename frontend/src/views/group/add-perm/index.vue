@@ -4,7 +4,7 @@
             :label="$t(`m.userGroup['组权限']`)">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
-                    <section class="action-wrapper" @click.stop="handleAddPerm">
+                    <section class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
                         <Icon bk type="plus-circle-shape" />
                         <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
                     </section>
@@ -27,7 +27,6 @@
                     :list="tableList"
                     :authorization="curAuthorizationData"
                     :original-list="tableListBackup"
-                    :is-show-error-tips="isShowErrorTips"
                     @on-select="handleAttrValueSelected"
                     @on-resource-select="handleResSelect" />
             </div>
@@ -67,17 +66,17 @@
     </smart-action>
 </template>
 <script>
-    import _ from 'lodash'
-    import { guid } from '@/common/util'
-    import { CUSTOM_PERM_TEMPLATE_ID } from '@/common/constants'
-    import { leavePageConfirm } from '@/common/leave-page-confirm'
-    import AddPermSideslider from '../components/add-group-perm-sideslider'
-    import AddActionSideslider from '../components/add-action-sideslider'
-    import ResourceInstanceTable from '../components/render-instance-table'
-    import RenderTemplateSideslider from '../components/render-template-detail-sideslider'
-    import GroupPolicy from '@/model/group-policy'
-    import GroupAggregationPolicy from '@/model/group-aggregation-policy'
-    import Condition from '@/model/condition'
+    import _ from 'lodash';
+    import { guid } from '@/common/util';
+    import { CUSTOM_PERM_TEMPLATE_ID } from '@/common/constants';
+    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    import AddPermSideslider from '../components/add-group-perm-sideslider';
+    import AddActionSideslider from '../components/add-action-sideslider';
+    import ResourceInstanceTable from '../components/render-instance-table';
+    import RenderTemplateSideslider from '../components/render-template-detail-sideslider';
+    import GroupPolicy from '@/model/group-policy';
+    import GroupAggregationPolicy from '@/model/group-aggregation-policy';
+    import Condition from '@/model/condition';
 
     export default {
         name: '',
@@ -113,163 +112,187 @@
                 },
                 curMap: null,
                 isShowErrorTips: false
-            }
+            };
         },
         computed: {
             isAggregateDisabled () {
                 const aggregationIds = this.tableList.reduce((counter, item) => {
-                    return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter
-                }, [])
-                const temps = []
+                    return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
+                }, []);
+                const temps = [];
                 aggregationIds.forEach(item => {
                     if (!temps.some(sub => sub.includes(item))) {
-                        temps.push([item])
+                        temps.push([item]);
                     } else {
-                        const tempObj = temps.find(sub => sub.includes(item))
-                        tempObj.push(item)
+                        const tempObj = temps.find(sub => sub.includes(item));
+                        tempObj.push(item);
                     }
-                })
-                return !temps.some(item => item.length > 1) && !this.isAllExpanded
+                });
+                return !temps.some(item => item.length > 1) && !this.isAllExpanded;
             },
             expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`)
+                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
             },
             defaultValue () {
                 if (this.originalList.length < 1) {
-                    return []
+                    return [];
                 }
-                const tempList = []
+                const tempList = [];
                 this.originalList.forEach(item => {
                     if (!tempList.some(sys => sys.system_id === item.system_id)) {
                         tempList.push({
                             system_id: item.system_id,
                             system_name: item.system_name,
                             list: [item]
-                        })
+                        });
                     } else {
-                        const curData = tempList.find(sys => sys.system_id === item.system_id)
-                        curData.list.push(item)
+                        const curData = tempList.find(sys => sys.system_id === item.system_id);
+                        curData.list.push(item);
                     }
-                })
+                });
 
-                return tempList
+                return tempList;
             },
             curAuthorizationData () {
-                const data = Object.assign(this.authorizationData, this.authorizationDataByCustom)
-                return data
+                const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
+                return data;
             }
         },
         beforeRouteEnter (to, from, next) {
-            window.FROM_ROUTER_NAME = from.name
-            next()
+            window.FROM_ROUTER_NAME = from.name;
+            next();
         },
         methods: {
             handleAddCancel () {
-                this.isShowAddSideslider = false
+                this.isShowAddSideslider = false;
             },
 
             handleAddCustom () {
-                this.isShowAddActionSideslider = true
+                this.isShowAddActionSideslider = true;
             },
 
             handleViewDetail ({ id }) {
-                this.templateDetailSideslider.id = id
-                this.templateDetailSideslider.isShow = true
+                this.templateDetailSideslider.id = id;
+                this.templateDetailSideslider.isShow = true;
             },
 
             handleSubmitPerm (templates, aggregation, authorization) {
                 // debugger
-                this.isShowErrorTips = false
+                this.isShowErrorTips = false;
 
                 if (this.isAllExpanded) {
-                    this.isAllExpanded = false
-                    this.handleAggregateAction(false)
+                    this.isAllExpanded = false;
+                    this.handleAggregateAction(false);
                 }
 
-                this.aggregationData = aggregation
-                this.authorizationData = authorization
+                this.aggregationData = aggregation;
+                this.authorizationData = authorization;
 
-                let hasDeleteTemplateList = []
-                let hasAddTemplateList = []
+                let hasDeleteTemplateList = [];
+                let hasAddTemplateList = [];
                 if (this.tempalteDetailList.length > 0) {
                     const intersection = templates.filter(
                         item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
-                    )
+                    );
                     hasDeleteTemplateList = this.tempalteDetailList.filter(
                         item => !intersection.map(sub => sub.id).includes(item.id)
-                    )
-                    hasAddTemplateList = templates.filter(item => !intersection.map(sub => sub.id).includes(item.id))
+                    );
+                    hasAddTemplateList = templates.filter(item => !intersection.map(sub => sub.id).includes(item.id));
                 } else {
-                    hasAddTemplateList = templates
+                    hasAddTemplateList = templates;
                 }
-                this.tempalteDetailList = _.cloneDeep(templates)
+                this.tempalteDetailList = _.cloneDeep(templates);
 
                 if (hasDeleteTemplateList.length > 0) {
                     this.tableList = this.tableList.filter(
                         item => !hasDeleteTemplateList.map(sub => sub.id).includes(item.detail.id)
-                    )
+                    );
                 }
 
                 if (this.hasDeleteCustomList.length > 0) {
                     this.tableList = this.tableList.filter(item => {
-                        return item.detail.id === CUSTOM_PERM_TEMPLATE_ID && !this.hasDeleteCustomList.map(sub => sub.$id).includes(`${item.detail.system.id}&${item.id}`)
-                    })
+                        return item.detail.id === CUSTOM_PERM_TEMPLATE_ID && !this.hasDeleteCustomList.map(sub => sub.$id).includes(`${item.detail.system.id}&${item.id}`);
+                    });
                 }
 
-                const tempList = []
+                const tempList = [];
                 hasAddTemplateList.forEach(item => {
-                    const temp = _.cloneDeep(item)
-                    delete temp.actions
-                    item.actions.forEach(sub => {
-                        tempList.push(new GroupPolicy(sub, 'add', 'template', temp))
-                    })
-                })
+                    const temp = _.cloneDeep(item);
+                    delete temp.actions;
 
-                const temps = []
+                    // // mock数据
+                    // item.actions.forEach((element, index) => {
+                    //     element.resource_groups = [{
+                    //         id: index,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
+                    item.actions.forEach(sub => {
+                        if (!sub.resource_groups || !sub.resource_groups.length) {
+                            sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : [];
+                        }
+                        tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
+                    });
+                });
+
+                const temps = [];
                 this.tableList.forEach(item => {
                     if (item.detail.id === CUSTOM_PERM_TEMPLATE_ID) {
                         if (item.isAggregate) {
-                            temps.push(item.actions.map(_ => `${_.detail.system.id}&${_.id}`))
+                            temps.push(item.actions.map(_ => `${_.detail.system.id}&${_.id}`));
                         } else {
-                            temps.push(`${item.detail.system.id}&${item.id}`)
+                            temps.push(`${item.detail.system.id}&${item.id}`);
                         }
                     }
-                })
+                });
 
-                const addCustomList = this.hasAddCustomList.filter(item => !temps.includes(item.$id))
+                console.log('this.hasAddCustomList', this.hasAddCustomList);
+                const addCustomList = this.hasAddCustomList.filter(item => !temps.includes(item.$id));
+                // // mock数据
+                // addCustomList.forEach((element, index) => {
+                //     element.resource_groups = [{
+                //         id: index,
+                //         related_resource_types: element.related_resource_types
+                //     }]
+                // })
                 addCustomList.forEach(item => {
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                    }
                     tempList.push(new GroupPolicy(item, 'add', 'custom', {
                         system: {
                             id: item.system_id,
                             name: item.system_name
                         },
                         id: CUSTOM_PERM_TEMPLATE_ID
-                    }))
-                })
+                    }));
+                });
 
-                this.tableList.push(...tempList)
-                this.tableListBackup = _.cloneDeep(this.tableList)
+                this.tableList.push(...tempList);
+                console.log('this.tableList', this.tableList);
+                this.tableListBackup = _.cloneDeep(this.tableList);
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
-                this.handleAggregateData()
+                this.handleAggregateData();
 
                 this.$nextTick(() => {
                     if (hasDeleteTemplateList.length > 0 || this.hasDeleteCustomList.length > 0) {
-                        this.setCurMapData(hasDeleteTemplateList)
+                        this.setCurMapData(hasDeleteTemplateList);
                     }
-                })
+                });
             },
 
-            handleResSelect (index, resIndex, condition) {
+            handleResSelect (index, resIndex, condition, groupIndex) {
                 if (this.curMap.size > 0) {
-                    const item = this.tableList[index]
-                    const actions = this.curMap.get(item.aggregationId) || []
-                    const len = actions.length
+                    const item = this.tableList[index];
+                    const actions = this.curMap.get(item.aggregationId) || [];
+                    const len = actions.length;
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
                             if (actions[i].id === item.id) {
-                                actions[i].related_resource_types[resIndex].condition = _.cloneDeep(condition)
-                                break
+                                actions[i].resource_groups[groupIndex]
+                                    .related_resource_types[resIndex].condition = _.cloneDeep(condition);
+                                break;
                             }
                         }
                     }
@@ -277,12 +300,12 @@
             },
 
             handleAttrValueSelected (payload) {
-                window.changeDialog = true
+                window.changeDialog = true;
                 const instances = (function () {
-                    const { id, name, system_id } = payload.aggregateResourceType
-                    const arr = []
+                    const { id, name, system_id } = payload.aggregateResourceType;
+                    const arr = [];
                     payload.instances.forEach(v => {
-                        const curItem = arr.find(_ => _.type === id)
+                        const curItem = arr.find(_ => _.type === id);
                         if (curItem) {
                             curItem.path.push([{
                                 id: v.id,
@@ -290,7 +313,7 @@
                                 system_id,
                                 type: id,
                                 type_name: name
-                            }])
+                            }]);
                         } else {
                             arr.push({
                                 name,
@@ -302,277 +325,281 @@
                                     type: id,
                                     type_name: name
                                 }]]
-                            })
+                            });
                         }
-                    })
-                    return arr
-                })()
+                    });
+                    return arr;
+                })();
                 if (instances.length > 0) {
-                    const actions = this.curMap.get(payload.aggregationId)
+                    const actions = this.curMap.get(payload.aggregationId);
                     actions.forEach(item => {
                         item.related_resource_types.forEach(subItem => {
-                            subItem.condition = [new Condition({ instances }, '', 'add')]
-                        })
-                    })
+                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                        });
+                    });
                 }
             },
 
             handleAggregateData () {
-                this.allAggregationData = Object.assign(this.aggregationData, this.aggregationDataByCustom)
-                const keys = Object.keys(this.allAggregationData)
-                const data = {}
+                this.allAggregationData = Object.assign(this.aggregationData, this.aggregationDataByCustom);
+                const keys = Object.keys(this.allAggregationData);
+                const data = {};
                 keys.forEach(item => {
                     if (this.allAggregationData[item] && this.allAggregationData[item].length > 0) {
-                        data[item] = this.allAggregationData[item]
+                        data[item] = this.allAggregationData[item];
                     }
-                })
-                this.allAggregationData = data
+                });
+                this.allAggregationData = data;
                 this.tableList.forEach(item => {
                     if (this.allAggregationData[item.detail.system.id]) {
-                        const aggregationData = this.allAggregationData[item.detail.system.id]
+                        const aggregationData = this.allAggregationData[item.detail.system.id];
                         aggregationData.forEach(aggItem => {
                             if (aggItem.actions.map(act => act.id).includes(item.id)) {
                                 // const existDatas = this.tableList.filter(sub => sub.judgeId === item.judgeId)
                                 const existDatas = this.tableList.filter(
                                     sub => aggItem.actions.find(act => act.id === sub.id)
                                         && sub.judgeId === item.judgeId
-                                )
+                                );
                                 if (existDatas.length > 1) {
-                                    const temp = existDatas.find(sub => sub.aggregationId !== '') || {}
-                                    item.aggregationId = temp.aggregationId || guid()
-                                    item.aggregateResourceType = aggItem.aggregate_resource_type
+                                    const temp = existDatas.find(sub => sub.aggregationId !== '') || {};
+                                    item.aggregationId = temp.aggregationId || guid();
+                                    item.aggregateResourceType = aggItem.aggregate_resource_type;
                                 }
                             }
-                        })
+                        });
                     }
-                })
+                });
                 const aggregationIds = this.tableList.reduce((counter, item) => {
-                    return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter
-                }, [])
-                console.warn('aggregationIds:')
-                console.warn([...new Set(aggregationIds)])
+                    return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
+                }, []);
+                console.warn('aggregationIds:');
+                console.warn([...new Set(aggregationIds)]);
                 if (!this.curMap) {
-                    this.curMap = new Map()
+                    this.curMap = new Map();
                 }
                 this.tableList.forEach(item => {
                     if (item.aggregationId !== '') {
                         if (!this.curMap.has(item.aggregationId)) {
-                            this.curMap.set(item.aggregationId, [item])
+                            this.curMap.set(item.aggregationId, [item]);
                         } else {
-                            const temps = this.curMap.get(item.aggregationId)
+                            const temps = this.curMap.get(item.aggregationId);
                             if (!temps.map(sub => sub.id).includes(item.id)) {
-                                temps.push(item)
+                                temps.push(item);
                             }
                         }
                     }
-                })
+                });
             },
 
             setCurMapData (payload = []) {
-                const flag = String(Number(payload.length > 0)) + String(Number(this.hasDeleteCustomList.length > 0))
-                const hasDeleteIds = payload.map(item => item.id)
-                const hasDeleteIdsTemp = this.hasDeleteCustomList.map(_ => _.$id)
-                const tempData = {}
+                const flag = String(Number(payload.length > 0)) + String(Number(this.hasDeleteCustomList.length > 0));
+                const hasDeleteIds = payload.map(item => item.id);
+                const hasDeleteIdsTemp = this.hasDeleteCustomList.map(_ => _.$id);
+                const tempData = {};
                 for (const [key, value] of this.curMap.entries()) {
-                    tempData[key] = value
+                    tempData[key] = value;
                 }
-                const tempDataBackup = {}
+                const tempDataBackup = {};
                 switch (flag) {
                     case '11':
                         for (const key in tempData) {
-                            const value = tempData[key]
+                            const value = tempData[key];
                             if (value[0].detail.id !== CUSTOM_PERM_TEMPLATE_ID) {
-                                const tempValue = _.cloneDeep(value)
+                                const tempValue = _.cloneDeep(value);
                                 if (!value.every(item => hasDeleteIds.includes(item.detail.id))) {
-                                    tempDataBackup[key] = tempValue
+                                    tempDataBackup[key] = tempValue;
                                 }
                             }
                         }
                         for (const key in tempData) {
-                            const value = tempData[key]
+                            const value = tempData[key];
                             if (value[0].detail.id === CUSTOM_PERM_TEMPLATE_ID) {
-                                let tempValue = _.cloneDeep(value)
-                                tempValue = tempValue.filter(item => !hasDeleteIdsTemp.includes(`${item.detail.system.id}&${item.id}`))
+                                let tempValue = _.cloneDeep(value);
+                                tempValue = tempValue.filter(item => !hasDeleteIdsTemp.includes(`${item.detail.system.id}&${item.id}`));
                                 if (tempValue.length > 0) {
-                                    tempDataBackup[key] = tempValue
+                                    tempDataBackup[key] = tempValue;
                                 }
                             }
                         }
-                        break
+                        break;
                     case '10':
                         for (const key in tempData) {
-                            const value = tempData[key]
+                            const value = tempData[key];
                             if (value[0].detail.id !== CUSTOM_PERM_TEMPLATE_ID) {
                                 if (!value.every(item => hasDeleteIds.includes(item.detail.id))) {
-                                    tempDataBackup[key] = value
+                                    tempDataBackup[key] = value;
                                 }
                             } else {
-                                tempDataBackup[key] = value
+                                tempDataBackup[key] = value;
                             }
                         }
-                        break
+                        break;
                     case '01':
                         for (const key in tempData) {
-                            const value = tempData[key]
+                            const value = tempData[key];
                             if (value[0].detail.id === CUSTOM_PERM_TEMPLATE_ID) {
-                                let tempValue = _.cloneDeep(value)
-                                tempValue = tempValue.filter(item => !hasDeleteIdsTemp.includes(`${item.detail.system.id}&${item.id}`))
+                                let tempValue = _.cloneDeep(value);
+                                tempValue = tempValue.filter(item => !hasDeleteIdsTemp.includes(`${item.detail.system.id}&${item.id}`));
                                 if (tempValue.length > 0) {
-                                    tempDataBackup[key] = tempValue
+                                    tempDataBackup[key] = tempValue;
                                 }
                             } else {
-                                tempDataBackup[key] = value
+                                tempDataBackup[key] = value;
                             }
                         }
-                        break
+                        break;
                 }
-                this.curMap.clear()
+                this.curMap.clear();
                 for (const key in tempDataBackup) {
-                    this.curMap.set(key, _.cloneDeep(tempDataBackup[key]))
+                    this.curMap.set(key, _.cloneDeep(tempDataBackup[key]));
                 }
 
-                console.warn('curMap: ')
-                console.warn(this.curMap)
-                console.warn(this.tableList)
+                console.warn('curMap: ');
+                console.warn(this.curMap);
+                console.warn(this.tableList);
             },
 
             handleAggregateAction (payload) {
-                const tempData = []
-                let templateIds = []
+                const tempData = [];
+                let templateIds = [];
                 if (payload) {
                     this.tableList.forEach(item => {
                         if (!item.aggregationId) {
-                            tempData.push(item)
-                            templateIds.push(item.detail.id)
+                            tempData.push(item);
+                            templateIds.push(item.detail.id);
                         }
-                    })
+                    });
                     for (const [key, value] of this.curMap.entries()) {
                         if (value.length === 1) {
-                            tempData.push(...value)
+                            tempData.push(...value);
                         } else {
-                            let curInstances = []
-                            const conditions = value.map(subItem => subItem.related_resource_types[0].condition)
+                            let curInstances = [];
+                            const conditions = value.map(subItem => subItem.resource_groups[0]
+                                .related_resource_types[0].condition);
                             // 是否都选择了实例
-                            const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0)
+                            const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
                             if (isAllHasInstance) {
-                                const instances = conditions.map(subItem => subItem.map(v => v.instance))
-                                let isAllEqual = true
+                                const instances = conditions.map(subItem => subItem.map(v => v.instance));
+                                let isAllEqual = true;
                                 for (let i = 0; i < instances.length - 1; i++) {
                                     if (!_.isEqual(instances[i], instances[i + 1])) {
-                                        isAllEqual = false
-                                        break
+                                        isAllEqual = false;
+                                        break;
                                     }
                                 }
-                                console.log('instances: ')
-                                console.log(instances)
-                                console.log('isAllEqual: ' + isAllEqual)
+                                console.log('instances: ');
+                                console.log(instances);
+                                console.log('isAllEqual: ' + isAllEqual);
                                 if (isAllEqual) {
-                                    const instanceData = instances[0][0][0]
+                                    const instanceData = instances[0][0][0];
                                     curInstances = instanceData.path.map(pathItem => {
                                         return {
                                             id: pathItem[0].id,
                                             name: pathItem[0].name
-                                        }
-                                    })
+                                        };
+                                    });
                                 } else {
-                                    curInstances = []
+                                    curInstances = [];
                                 }
                             } else {
-                                curInstances = []
+                                curInstances = [];
                             }
                             tempData.push(new GroupAggregationPolicy({
                                 aggregationId: key,
                                 aggregate_resource_type: value[0].aggregateResourceType,
                                 actions: value,
                                 instances: curInstances
-                            }))
+                            }));
                         }
-                        templateIds.push(value[0].detail.id)
+                        templateIds.push(value[0].detail.id);
                     }
                 } else {
                     this.tableList.forEach(item => {
                         if (item.hasOwnProperty('isAggregate') && item.isAggregate) {
-                            const actions = this.curMap.get(item.aggregationId)
-                            tempData.push(...actions)
-                            templateIds.push(actions[0].detail.id)
+                            const actions = this.curMap.get(item.aggregationId);
+                            tempData.push(...actions);
+                            templateIds.push(actions[0].detail.id);
                         } else {
-                            tempData.push(item)
-                            templateIds.push(item.detail.id)
+                            tempData.push(item);
+                            templateIds.push(item.detail.id);
                         }
-                    })
+                    });
                 }
                 // 为了合并单元格的计算，需将再次展开后的数据按照相同模板id重新排序组装一下
-                const tempList = []
-                templateIds = [...new Set(templateIds)]
+                const tempList = [];
+                templateIds = [...new Set(templateIds)];
                 templateIds.forEach(item => {
-                    const list = tempData.filter(subItem => subItem.detail.id === item)
-                    tempList.push(...list)
-                })
-                this.tableList = _.cloneDeep(tempList)
+                    const list = tempData.filter(subItem => subItem.detail.id === item);
+                    tempList.push(...list);
+                });
+                console.log('tempList', tempList);
+                this.tableList = _.cloneDeep(tempList);
             },
 
             handleEditCustom () {
-                this.curActionValue = this.originalList.map(item => item.$id)
-                this.isShowAddActionSideslider = true
+                this.curActionValue = this.originalList.map(item => item.$id);
+                this.isShowAddActionSideslider = true;
             },
 
             // 添加系统和操作 侧边栏确定按钮回调
             handleSelectSubmit (payload, aggregation, authorization) {
                 // debugger
-                this.isShowErrorTips = false
-                const hasAddCustomList = []
-                hasAddCustomList.splice(0, 0, ...this.hasAddCustomList)
+                this.isShowErrorTips = false;
+                const hasAddCustomList = [];
+                hasAddCustomList.splice(0, 0, ...this.hasAddCustomList);
                 if (this.originalList.length > 0) {
                     const intersection = payload.filter(
                         item => this.originalList.map(sub => sub.$id).includes(item.$id)
-                    )
+                    );
                     this.hasDeleteCustomList = this.originalList.filter(
                         item => !intersection.map(sub => sub.$id).includes(item.$id)
-                    )
+                    );
                     hasAddCustomList.push(
                         ...payload.filter(item => !intersection.map(sub => sub.$id).includes(item.$id))
-                    )
+                    );
                 } else {
-                    hasAddCustomList.push(...payload)
+                    hasAddCustomList.push(...payload);
                 }
 
-                this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList)
+                this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
 
-                this.originalList = _.cloneDeep(payload)
-                this.aggregationDataByCustom = _.cloneDeep(aggregation)
-                this.authorizationDataByCustom = _.cloneDeep(authorization)
+                this.originalList = _.cloneDeep(payload);
+                this.aggregationDataByCustom = _.cloneDeep(aggregation);
+                this.authorizationDataByCustom = _.cloneDeep(authorization);
             },
 
             async handleSubmit () {
                 // debugger
-                const { flag, templates } = this.$refs.resInstanceTableRef.getData()
+                const { flag, templates } = this.$refs.resInstanceTableRef.getData();
                 if (flag) {
-                    this.isShowErrorTips = true
-                    return
+                    this.isShowErrorTips = true;
+                    return;
                 }
-                this.submitLoading = true
-                window.changeDialog = false
+                this.submitLoading = true;
+                window.changeDialog = false;
                 const params = {
                     id: this.$route.params.id,
                     data: {
                         templates
                     }
-                }
+                };
+                console.log('params', params);
+                debugger;
                 try {
-                    await this.$store.dispatch('userGroup/addUserGroupPolicy', params)
-                    this.messageSuccess(this.$t(`m.info['用户组添加权限成功']`), 1000)
-                    this.setBackRouter()
+                    await this.$store.dispatch('userGroup/addUserGroupPolicy', params);
+                    this.messageSuccess(this.$t(`m.info['用户组添加权限成功']`), 1000);
+                    this.setBackRouter();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.submitLoading = false
+                    this.submitLoading = false;
                 }
             },
 
@@ -583,30 +610,30 @@
                         params: {
                             id: this.$route.params.id
                         }
-                    })
+                    });
                 } else {
                     this.$router.push({
                         name: 'userGroup'
-                    })
+                    });
                 }
-                delete window.FROM_ROUTER_NAME
+                delete window.FROM_ROUTER_NAME;
             },
 
             handleCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm()
+                    cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.setBackRouter()
-                }, _ => _)
+                    this.setBackRouter();
+                }, _ => _);
             },
 
             handleAddPerm () {
-                this.isShowAddSideslider = true
+                this.isShowAddSideslider = true;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-add-group-perm-wrapper {

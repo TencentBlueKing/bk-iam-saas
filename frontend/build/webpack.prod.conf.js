@@ -24,26 +24,26 @@
  * IN THE SOFTWARE.
 */
 
-import { resolve, join, sep } from 'path'
-import webpack from 'webpack'
-import merge from 'webpack-merge'
-import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import TerserPlugin from 'terser-webpack-plugin'
-import OptimizeCSSPlugin from 'optimize-css-assets-webpack-plugin'
-import HtmlWebpackPlugin from 'html-webpack-plugin'
-import CopyWebpackPlugin from 'copy-webpack-plugin'
-import FilterWarningsPlugin from 'webpack-filter-warnings-plugin'
-import bundleAnalyzer from 'webpack-bundle-analyzer'
+import { resolve, join, sep } from 'path';
+import webpack from 'webpack';
+import merge from 'webpack-merge';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
+import OptimizeCSSPlugin from 'optimize-css-assets-webpack-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import FilterWarningsPlugin from 'webpack-filter-warnings-plugin';
+import bundleAnalyzer from 'webpack-bundle-analyzer';
 
-import config from './config'
-import { assetsPath } from './util'
-import baseConf from './webpack.base.conf'
-import manifest from '../static/lib-manifest.json'
+import config from './config';
+import { assetsPath } from './util';
+import baseConf from './webpack.base.conf';
+import manifest from '../static/lib-manifest.json';
 // import ReplaceJSStaticUrlPlugin from './replace-js-static-url-plugin'
-import ReplaceCSSStaticUrlPlugin from './replace-css-static-url-plugin'
+import ReplaceCSSStaticUrlPlugin from './replace-css-static-url-plugin';
 
 // 打包的版本
-const VERSION = process.env.VERSION
+const VERSION = process.env.VERSION;
 
 const prodConf = merge(baseConf, {
     mode: 'production',
@@ -113,7 +113,7 @@ const prodConf = merge(baseConf, {
                     // 表示是否使用已有的 chunk，如果为 true 则表示如果当前的 chunk 包含的模块已经被提取出去了，那么将不会重新生成新的。
                     reuseExistingChunk: true,
                     test: module => {
-                        return /bk-magic-vue/.test(module.context)
+                        return /bk-magic-vue/.test(module.context);
                     }
                 },
                 // 所有 node_modules 的模块被不同的 chunk 引入超过 1 次的提取为 twice
@@ -215,10 +215,10 @@ const prodConf = merge(baseConf, {
         // new ReplaceJSStaticUrlPlugin({}),
         new ReplaceCSSStaticUrlPlugin({})
     ]
-})
+});
 
 if (config.build.bundleAnalyzerReport) {
-    const BundleAnalyzerPlugin = bundleAnalyzer.BundleAnalyzerPlugin
+    const BundleAnalyzerPlugin = bundleAnalyzer.BundleAnalyzerPlugin;
     prodConf.plugins.push(new BundleAnalyzerPlugin(
         {
             analyzerPort: 7777
@@ -253,7 +253,7 @@ if (config.build.bundleAnalyzerReport) {
         //     statsOptions: null,
         //     logLevel: 'info' //日志级别。可以是'信息'，'警告'，'错误'或'沉默'。
         // }
-    ))
+    ));
 }
 
-export default prodConf
+export default prodConf;

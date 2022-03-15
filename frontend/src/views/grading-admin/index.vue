@@ -7,7 +7,7 @@
             </div>
         </bk-alert> -->
         <render-search>
-            <bk-button theme="primary" @click="handleCreate">
+            <bk-button theme="primary" @click="handleCreate" data-test-id="grading_btn_create">
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
             <bk-link class="AdminLink" theme="primary" @click="showImgDialog">
@@ -108,10 +108,10 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import ConfirmDialog from '@/components/iam-confirm-dialog/index.vue'
-    import { buildURLParams } from '@/common/url'
-    import ApplyDialog from './components/apply-join-dialog'
+    import { mapGetters } from 'vuex';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index.vue';
+    import { buildURLParams } from '@/common/url';
+    import ApplyDialog from './components/apply-join-dialog';
     export default {
         name: '',
         components: {
@@ -142,47 +142,47 @@
                 curName: '',
                 showImageDialog: false,
                 noFooter: false
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
             isStaff () {
-                return this.user.role.type === 'staff'
+                return this.user.role.type === 'staff';
             }
         },
         watch: {
             searchValue (newVal, oldVal) {
                 if (newVal === '' && oldVal !== '' && this.isFilter) {
-                    this.isFilter = false
-                    this.resetPagination()
-                    this.fetchGradingAdmin(true)
+                    this.isFilter = false;
+                    this.resetPagination();
+                    this.fetchGradingAdmin(true);
                 }
             },
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         created () {
-            const currentQueryCache = this.getCurrentQueryCache()
+            const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
+                    this.pagination.limit = currentQueryCache.limit;
+                    this.pagination.current = currentQueryCache.current;
                 }
                 if (currentQueryCache.name) {
-                    this.searchValue = currentQueryCache.name
+                    this.searchValue = currentQueryCache.name;
                 }
                 if (this.searchValue !== '') {
-                    this.isFilter = true
+                    this.isFilter = true;
                 }
             }
         },
         methods: {
             showImgDialog () {
-                this.showImageDialog = true
+                this.showImageDialog = true;
             },
             async fetchPageData () {
-                await this.fetchGradingAdmin()
+                await this.fetchGradingAdmin();
             },
 
             handleCopy (payload) {
@@ -191,59 +191,59 @@
                     params: {
                         id: payload.id
                     }
-                })
+                });
             },
 
             handleOpenMoreLink () {
-                window.open(`${window.PRODUCT_DOC_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`)
+                window.open(`${window.PRODUCT_DOC_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`);
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination
+                const { limit, current } = this.pagination;
                 const queryParams = {
                     limit,
                     current
-                }
+                };
                 if (this.searchValue !== '') {
-                    queryParams.name = this.searchValue
+                    queryParams.name = this.searchValue;
                 }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
-                return queryParams
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                return queryParams;
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('gradeManagerList', JSON.stringify(payload))
+                window.localStorage.setItem('gradeManagerList', JSON.stringify(payload));
             },
 
             getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('gradeManagerList'))
+                return JSON.parse(window.localStorage.getItem('gradeManagerList'));
             },
 
             async fetchGradingAdmin (isTableLoading = false) {
-                this.tableLoading = isTableLoading
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
+                this.tableLoading = isTableLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
                 try {
                     const res = await this.$store.dispatch('role/getRatingManagerList', {
                         limit: this.pagination.limit,
                         offset: (this.pagination.current - 1) * this.pagination.limit,
                         name: this.searchValue
-                    })
-                    this.pagination.count = res.data.count
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    });
+                    this.pagination.count = res.data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                     if (this.isStaff) {
-                        this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 })
+                        this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
@@ -253,7 +253,7 @@
                     params: {
                         id: 0
                     }
-                })
+                });
             },
 
             resetPagination () {
@@ -261,108 +261,108 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                })
+                });
             },
 
             handleSearch () {
                 if (this.searchValue === '') {
-                    return
+                    return;
                 }
-                this.isFilter = true
-                this.resetPagination()
-                this.fetchGradingAdmin(true)
+                this.isFilter = true;
+                this.resetPagination();
+                this.fetchGradingAdmin(true);
             },
 
             handleAfterApplyLeave () {
-                this.curName = ''
+                this.curName = '';
             },
 
             handleApplyCancel () {
-                this.isShowApplyDialog = false
+                this.isShowApplyDialog = false;
             },
 
             handleApplySumbit () {},
 
             handleDropOut (payload) {
-                this.curOperateType = 'drop'
-                this.curId = payload.id
-                this.confirmDialogTitle = this.$t(`m.dialog['确认退出']`)
-                this.confirmDialogSubTitle = `${this.$t(`m.common['退出']`)}【${payload.name}】，${this.$t(`m.grading['退出提示']`)}`
-                this.isShowConfirmDialog = true
+                this.curOperateType = 'drop';
+                this.curId = payload.id;
+                this.confirmDialogTitle = this.$t(`m.dialog['确认退出']`);
+                this.confirmDialogSubTitle = `${this.$t(`m.common['退出']`)}【${payload.name}】，${this.$t(`m.grading['退出提示']`)}`;
+                this.isShowConfirmDialog = true;
             },
 
             handleDelete (payload) {
-                this.curOperateType = 'delete'
-                this.curId = payload.id
-                this.confirmDialogTitle = this.$t(`m.dialog['确认删除']`)
-                this.confirmDialogSubTitle = `${this.$t(`m.common['删除']`)}【${payload.name}】，${this.$t(`m.grading['删除提示']`)}`
-                this.isShowConfirmDialog = true
+                this.curOperateType = 'delete';
+                this.curId = payload.id;
+                this.confirmDialogTitle = this.$t(`m.dialog['确认删除']`);
+                this.confirmDialogSubTitle = `${this.$t(`m.common['删除']`)}【${payload.name}】，${this.$t(`m.grading['删除提示']`)}`;
+                this.isShowConfirmDialog = true;
             },
 
             handleApplyJoin (payload) {
-                this.curName = payload.name
-                this.isShowApplyDialog = true
+                this.curName = payload.name;
+                this.isShowApplyDialog = true;
             },
 
             async handleSumbit () {
-                this.confirmLoading = true
+                this.confirmLoading = true;
                 try {
-                    await this.$store.dispatch('role/deleteRatingManager', { id: this.curId })
-                    await this.$store.dispatch('roleList')
-                    this.messageSuccess(this.$t(`m.info['退出成功']`), 2000)
-                    this.isShowConfirmDialog = false
-                    this.resetPagination()
-                    this.fetchGradingAdmin(true)
+                    await this.$store.dispatch('role/deleteRatingManager', { id: this.curId });
+                    await this.$store.dispatch('roleList');
+                    this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+                    this.isShowConfirmDialog = false;
+                    this.resetPagination();
+                    this.fetchGradingAdmin(true);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.confirmLoading = false
+                    this.confirmLoading = false;
                 }
             },
 
             handleAfterLeave () {
-                this.confirmDialogTitle = ''
-                this.confirmDialogSubTitle = ''
-                this.curOperateType = ''
-                this.curId = -1
+                this.confirmDialogTitle = '';
+                this.confirmDialogSubTitle = '';
+                this.curOperateType = '';
+                this.curId = -1;
             },
 
             handleCancel () {
-                this.isShowConfirmDialog = false
+                this.isShowConfirmDialog = false;
             },
 
             handleView (payload) {
-                window.localStorage.setItem('iam-header-name-cache', payload.name)
+                window.localStorage.setItem('iam-header-name-cache', payload.name);
                 this.$router.push({
                     name: 'gradingAdminDetail',
                     params: {
                         id: payload.id
                     }
-                })
+                });
             },
 
             handlePageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchGradingAdmin(true)
+                this.pagination.current = page;
+                this.fetchGradingAdmin(true);
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchGradingAdmin(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchGradingAdmin(true);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-grading-admin-wrapper {

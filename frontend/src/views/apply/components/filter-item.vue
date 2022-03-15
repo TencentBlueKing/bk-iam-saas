@@ -29,8 +29,8 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import il8n from '@/language'
+    import _ from 'lodash';
+    import il8n from '@/language';
 
     export default {
         name: '',
@@ -45,7 +45,7 @@
                     return {
                         'all': il8n('common', '全部'),
                         'wait': il8n('myApproval', '待审批')
-                    }
+                    };
                 }
             },
             active: {
@@ -58,12 +58,12 @@
                 isDropdownShow: false,
                 currentActive: this.active,
                 dataDisplay: []
-            }
+            };
         },
         watch: {
             data: {
                 handler (value) {
-                    this.dataDisplay = _.cloneDeep(value)
+                    this.dataDisplay = _.cloneDeep(value);
                 },
                 immediate: true
             }
@@ -73,26 +73,26 @@
              * handleDropdownShow
              */
             handleDropdownShow () {
-                this.isDropdownShow = true
+                this.isDropdownShow = true;
             },
 
             /**
              * handleDropdownHide
              */
             handleDropdownHide () {
-                this.isDropdownShow = false
+                this.isDropdownShow = false;
             },
 
             /**
              * handleChange
              */
             handleChange (payload) {
-                this.currentActive = payload
-                this.$refs.dropdown.hide()
-                this.$emit('on-change', payload)
+                this.currentActive = payload;
+                this.$refs.dropdown.hide();
+                this.$emit('on-change', payload);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     @import './filter-item.css';

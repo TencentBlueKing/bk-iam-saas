@@ -26,9 +26,9 @@
 
 export default class PermSystem {
     constructor (payload) {
-        this.id = payload.id
-        this.name = payload.name
-        this.count = payload.count || 0
-        this.expanded = false
+        this.id = payload.id;
+        this.name = payload.name;
+        this.count = payload.count || 0;
+        this.expanded = false;
     }
 }

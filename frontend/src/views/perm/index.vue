@@ -24,14 +24,6 @@
                 @click="handleGoPermTransfer">
                 {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
-            <bk-button
-                v-if="enablePermissionHandover.toLowerCase() === 'true'"
-                data-test-id="myPerm_btn_applyPerm"
-                text
-                style="position: absolute; top: 5px; right: 0;"
-                @click="goPermTransferHistory">
-                {{ $t(`m.permTransfer['交接历史']`) }}
-            </bk-button>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
         <template v-if="isEmpty">
@@ -65,9 +57,9 @@
     </div>
 </template>
 <script>
-    import { buildURLParams } from '@/common/url'
-    import CustomPerm from './custom-perm/index.vue'
-    import GroupPerm from './group-perm/index.vue'
+    import { buildURLParams } from '@/common/url';
+    import CustomPerm from './custom-perm/index.vue';
+    import GroupPerm from './group-perm/index.vue';
 
     export default {
         name: 'MyPerm',
@@ -94,27 +86,27 @@
                 personalGroupList: [],
                 systemList: [],
                 enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
-            }
+            };
         },
         created () {
-            const query = this.$route.query
+            const query = this.$route.query;
             if (query.tab) {
-                this.active = query.tab
+                this.active = query.tab;
             }
         },
         methods: {
             async fetchPageData () {
-                await this.fetchData()
+                await this.fetchData();
             },
 
             async handleTabChange (tabName) {
-                this.active = tabName
-                await this.fetchData()
-                window.history.replaceState({}, '', `?${buildURLParams({ tab: tabName })}`)
+                this.active = tabName;
+                await this.fetchData();
+                window.history.replaceState({}, '', `?${buildURLParams({ tab: tabName })}`);
             },
 
             async fetchData () {
-                this.componentLoading = true
+                this.componentLoading = true;
                 try {
                     const [res1, res2, res3, res4] = await Promise.all([
                         this.$store.dispatch('perm/getPersonalGroups'),
@@ -125,28 +117,28 @@
                         // this.fetchSystems(),
                         // this.fetchSoonGroupWithUser(),
                         // this.fetchSoonPerm()
-                    ])
-                    const personalGroupList = res1.data || []
-                    this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList)
+                    ]);
+                    const personalGroupList = res1.data || [];
+                    this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
 
-                    const systemList = res2.data || []
-                    this.systemList.splice(0, this.systemList.length, ...systemList)
+                    const systemList = res2.data || [];
+                    this.systemList.splice(0, this.systemList.length, ...systemList);
 
-                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
-                    this.soonGroupLength = res3.data.length
-                    this.soonPermLength = res4.data.length
-                    this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1
+                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1;
+                    this.soonGroupLength = res3.data.length;
+                    this.soonPermLength = res4.data.length;
+                    this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.componentLoading = false
+                    this.componentLoading = false;
                 }
             },
             // fetchSoonGroupWithUser () {
@@ -166,7 +158,7 @@
             handleGoApply () {
                 this.$router.push({
                     name: 'applyJoinUserGroup'
-                })
+                });
             },
 
             handleBatchRenewal () {
@@ -176,37 +168,31 @@
                         query: {
                             tab: 'group'
                         }
-                    })
+                    });
                 } else if (this.soonPermLength > 0 && this.soonGroupLength < 1) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
                             tab: 'custom'
                         }
-                    })
+                    });
                 } else if (this.soonPermLength > 0 && this.soonGroupLength > 0) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
                             tab: this.active === 'GroupPerm' ? 'group' : 'custom'
                         }
-                    })
+                    });
                 }
             },
             // 权限交接
             handleGoPermTransfer () {
                 this.$router.push({
                     name: 'permTransfer'
-                })
-            },
-            // 权限交接历史
-            goPermTransferHistory () {
-                this.$router.push({
-                    name: 'permTransferHistory'
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-my-perm-wrapper {

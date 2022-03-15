@@ -49,7 +49,7 @@ class HealthChecker:
         try:
             from django.db import connections
         except ImportError as e:
-            logger.exception(e)
+            logger.exception("mysql connect fail")
             return False, f"mysql connect fail, error: {str(e)}"
 
         try:
@@ -60,7 +60,7 @@ class HealthChecker:
                 if row is None:
                     return False, "mysql `Select 1` Not Return Row"
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
+            logger.exception("mysql query fail")
             return False, f"mysql query fail, error: {str(e)}"
 
         return True, "ok"
@@ -73,13 +73,13 @@ class HealthChecker:
             from django_redis import get_redis_connection
             from redis.exceptions import ConnectionError
         except ImportError as e:
-            logger.exception(e)
+            logger.exception("redis module import fail")
             return False, f"redis module import fail, error: {str(e)}"
 
         try:
             get_redis_connection("default").ping()
         except ConnectionError as e:
-            logger.exception(e)
+            logger.exception("redis ping test fail")
             return False, f"redis ping test fail, error: {str(e)}"
 
         return True, "ok"
@@ -91,7 +91,7 @@ class HealthChecker:
         try:
             from celery import current_app
         except ImportError as e:
-            logger.exception(e)
+            logger.exception("celery import fail")
             return False, f"celery import fail, error: {str(e)}"
 
         try:
@@ -108,8 +108,10 @@ class HealthChecker:
             # Limit=1表示只要有一个worker响应了就进行返回，没必要等待timeout再返回结果，Timeout表示最多等待多少秒返回结果
             new_app.control.inspect(limit=1, timeout=0.05).ping()
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
+            logger.exception("celery ping test fail")
             return False, f"celery ping test fail, error: {str(e)}"
+        finally:
+            new_app.close()
 
         return True, "ok"
 
@@ -120,7 +122,7 @@ class HealthChecker:
             if resp.status_code != requests.codes.ok:
                 return False, f"iam backend response status[{resp.status_code}] not OK"
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
+            logger.exception("iam backend request fail")
             return False, f"iam backend request fail, error: {str(e)}"
 
         return True, "ok"
@@ -151,6 +153,6 @@ class HealthChecker:
             userinfo = usermgr.retrieve_user("admin")
             UserFieldSLZ(data=userinfo).is_valid(raise_exception=True)
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
+            logger.exception("usermgr request fail")
             return False, f"usermgr request fail, error: {str(e)}"
         return True, "ok"

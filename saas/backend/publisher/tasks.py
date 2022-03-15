@@ -73,5 +73,5 @@ def publish_delete_policies(_type: DeletePolicyTypeEnum, data: Dict):
                 "interval_max": 0.2,  # 重试之间最大等待为0.2秒
             },
         )
-    except Exception as error:  # pylint: disable=broad-except
-        logger.exception(f"publish_delete_policies task push celery queue error: {error}")
+    except Exception:  # pylint: disable=broad-except
+        logger.exception(f"publish_delete_policies task push celery queue fail! message={message}")

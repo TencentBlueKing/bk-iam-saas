@@ -27,7 +27,7 @@
                                 v-show="!routerDiff.includes(child.rkey)"
                                 :key="child.id"
                                 :class="['iam-menu-item', { active: openedItem === child.id }, { 'has-darkly-theme': isDarklyTheme }]"
-                                @click.stop="handleSwitchNav(child.id, child)">
+                                @click.stop="handleSwitchNav(child.id, child)" :data-test-id="`nav_menu_switchNav_${child.id}`">
                                 <Icon :type="child.icon" class="iam-menu-icon" />
                                 <span class="iam-menu-text">{{ child.name }}</span>
                             </div>
@@ -37,7 +37,7 @@
                         <div
                             v-show="!routerDiff.includes(item.rkey)"
                             :class="['iam-menu-item', { active: openedItem === item.id }, { 'has-darkly-theme': isDarklyTheme }]"
-                            @click.stop="handleSwitchNav(item.id, item)">
+                            @click.stop="handleSwitchNav(item.id, item)" :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
                             <span class="iam-menu-text" v-if="item.name === '分级管理员' && curRole === 'staff'">我的{{ item.name }}</span>
                             <span class="iam-menu-text" v-else>{{ item.name }}</span>
@@ -56,9 +56,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import { bus } from '@/common/bus'
-    import { getRouterDiff } from '@/common/router-handle'
+    import { mapGetters } from 'vuex';
+    import { bus } from '@/common/bus';
+    import { getRouterDiff } from '@/common/router-handle';
 
     const routerMap = new Map([
         // 权限模板
@@ -108,7 +108,7 @@
         [['user'], 'userNav'],
         // 审计
         [['audit'], 'auditNav']
-    ])
+    ]);
 
     export default {
         inject: ['reload'],
@@ -120,22 +120,22 @@
                 curRole: 'staff',
                 isUnfold: true,
                 routerMap: routerMap
-            }
+            };
         },
         computed: {
             ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff']),
             unfold () {
-                return this.navStick || !this.navFold
+                return this.navStick || !this.navFold;
             },
             isDarklyTheme () {
-                return ['super_manager', 'system_manager', 'rating_manager'].includes(this.curRole)
+                return ['super_manager', 'system_manager', 'rating_manager'].includes(this.curRole);
             },
             isShowRouterGroup () {
                 return payload => {
-                    const allRouter = getRouterDiff('all')
-                    const curRouter = allRouter.filter(item => !this.routerDiff.includes(item))
-                    return curRouter.filter(item => payload.children.map(_ => _.rkey).includes(item)).length > 0
-                }
+                    const allRouter = getRouterDiff('all');
+                    const curRouter = allRouter.filter(item => !this.routerDiff.includes(item));
+                    return curRouter.filter(item => payload.children.map(_ => _.rkey).includes(item)).length > 0;
+                };
             }
         },
         watch: {
@@ -145,25 +145,25 @@
             },
             user: {
                 handler (newValue, oldValue) {
-                    this.curRole = newValue.role.type || 'staff'
+                    this.curRole = newValue.role.type || 'staff';
                     if (newValue.role.id !== oldValue.role.id) {
-                        this.reload()
+                        this.reload();
                     }
                 },
                 deep: true
             }
         },
         created () {
-            this.curRole = this.user.role.type
-            this.isUnfold = this.navStick || !this.navFold
+            this.curRole = this.user.role.type;
+            this.isUnfold = this.navStick || !this.navFold;
             this.$once('hook:beforeDestroy', () => {
-                bus.$off('theme-change')
-            })
+                bus.$off('theme-change');
+            });
         },
         mounted () {
             bus.$on('theme-change', payload => {
-                this.curRole = payload
-            })
+                this.curRole = payload;
+            });
         },
         methods: {
             /**
@@ -174,64 +174,64 @@
              * @param {Object} from from route
              */
             routeChangeHandler (to, from) {
-                const pathName = to.name
+                const pathName = to.name;
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
-                        this.openedItem = value
-                        break
+                        this.openedItem = value;
+                        break;
                     }
                 }
             },
 
             handleMouseEnter () {
                 if (this.timer) {
-                    clearTimeout(this.timer)
+                    clearTimeout(this.timer);
                 }
-                this.$store.commit('setNavStatus', { fold: false })
+                this.$store.commit('setNavStatus', { fold: false });
                 if (!this.navStick) {
-                    this.isUnfold = true
+                    this.isUnfold = true;
                 }
             },
 
             handleMouseLeave () {
                 this.timer = setTimeout(() => {
-                    this.$store.commit('setNavStatus', { fold: true })
-                }, 300)
+                    this.$store.commit('setNavStatus', { fold: true });
+                }, 300);
                 if (!this.navStick) {
-                    this.isUnfold = false
+                    this.isUnfold = false;
                 }
             },
 
             // 切换导航展开固定
             toggleNavStick () {
-                bus.$emit('nav-resize', !this.navStick)
+                bus.$emit('nav-resize', !this.navStick);
                 this.$store.commit('setNavStatus', {
                     fold: !this.navFold,
                     stick: !this.navStick
-                })
-                this.isUnfold = this.navStick
+                });
+                this.isUnfold = this.navStick;
             },
 
             handleSwitchNav (id, item) {
                 this.$nextTick(() => {
                     if (item.rkey === 'approval') {
-                        const url = `${window.BK_ITSM_APP_URL}/#/ticket/my/approval`
-                        window.open(url)
-                        return
+                        const url = `${window.BK_ITSM_APP_URL}/#/ticket/my/approval`;
+                        window.open(url);
+                        return;
                     }
                     if (item.path === this.$route.path) {
-                        bus.$emit('reload-page', item)
-                        this.$emit('reload-page', this.$route)
-                        return
+                        bus.$emit('reload-page', item);
+                        this.$emit('reload-page', this.$route);
+                        return;
                     }
                     if (item.hasOwnProperty('path')) {
-                        this.$router.push(item.path)
+                        this.$router.push(item.path);
                     }
-                    this.openedItem = item.id === this.openedItem ? '' : item.id
-                })
+                    this.openedItem = item.id === this.openedItem ? '' : item.id;
+                });
             }
         }
-    }
+    };
 </script>
 
 <style scoped>

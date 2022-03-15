@@ -60,13 +60,13 @@
     </smart-action>
 </template>
 <script>
-    import _ from 'lodash'
-    import DetailLayout from '@/components/detail-layout'
-    import DetailItem from '@/components/detail-layout/item'
-    import IamEditInput from '@/components/iam-edit/input'
-    import IamEditTextarea from '@/components/iam-edit/textarea'
-    import RenderLayout from '../common/render-layout'
-    import RenderAction from '../components/render-action'
+    import _ from 'lodash';
+    import DetailLayout from '@/components/detail-layout';
+    import DetailItem from '@/components/detail-layout/item';
+    import IamEditInput from '@/components/iam-edit/input';
+    import IamEditTextarea from '@/components/iam-edit/textarea';
+    import RenderLayout from '../common/render-layout';
+    import RenderAction from '../components/render-action';
     export default {
         name: '',
         components: {
@@ -101,20 +101,20 @@
                 requestQueue: ['detail'],
                 defaultCheckedActions: [],
                 editRequestQueue: []
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.requestQueue.length > 0
+                return this.requestQueue.length > 0;
             },
             editLoading () {
-                return this.editRequestQueue.length > 0
+                return this.editRequestQueue.length > 0;
             }
         },
         watch: {
             id: {
                 handler () {
-                    this.fetchTemplateDetail()
+                    this.fetchTemplateDetail();
                 },
                 immediate: true
             }
@@ -128,17 +128,17 @@
                 },
                 {
                     validator: (value) => {
-                        return value.length <= 32
+                        return value.length <= 32;
                     },
                     message: this.$t(`m.verify['模板名称最长不超过32个字符']`),
                     trigger: 'blur'
                 }
-            ]
+            ];
         },
         methods: {
             async fetchTemplateDetail () {
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id: this.id, grouping: true })
+                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id: this.id, grouping: true });
                     this.basicInfo = Object.assign({}, {
                         name: res.data.name,
                         description: res.data.description,
@@ -147,208 +147,208 @@
                         actions: res.data.actions,
                         updatedTime: res.data.updated_time,
                         id: this.id
-                    })
-                    this.basicInfo.actions = res.data.actions
-                    this.handleActionData()
+                    });
+                    this.basicInfo.actions = res.data.actions;
+                    this.handleActionData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             handleActionData () {
                 this.basicInfo.actions.forEach((item, index) => {
-                    this.$set(item, 'expanded', false)
-                    let count = 0
-                    let allCount = 0
-                    let deleteCount = 0
+                    this.$set(item, 'expanded', false);
+                    let count = 0;
+                    let allCount = 0;
+                    let deleteCount = 0;
                     if (!item.actions) {
-                        this.$set(item, 'actions', [])
+                        this.$set(item, 'actions', []);
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
-                        this.$set(act, 'disabled', act.tag === 'readonly')
+                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+                        this.$set(act, 'disabled', act.tag === 'readonly');
                         if (act.checked) {
-                            ++count
-                            this.defaultCheckedActions.push(act.id)
+                            ++count;
+                            this.defaultCheckedActions.push(act.id);
                         }
                         if (act.tag === 'delete') {
-                            ++deleteCount
+                            ++deleteCount;
                         }
-                        ++allCount
+                        ++allCount;
                     })
                     ;(item.sub_groups || []).forEach(sub => {
-                        this.$set(sub, 'expanded', false)
-                        this.$set(sub, 'actionsAllChecked', false)
+                        this.$set(sub, 'expanded', false);
+                        this.$set(sub, 'actionsAllChecked', false);
                         if (!sub.actions) {
-                            this.$set(sub, 'actions', [])
+                            this.$set(sub, 'actions', []);
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
-                            this.$set(act, 'disabled', act.tag === 'readonly')
+                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+                            this.$set(act, 'disabled', act.tag === 'readonly');
                             if (act.checked) {
-                                ++count
-                                this.defaultCheckedActions.push(act.id)
+                                ++count;
+                                this.defaultCheckedActions.push(act.id);
                             }
                             if (act.tag === 'delete') {
-                                ++deleteCount
+                                ++deleteCount;
                             }
-                            ++allCount
-                        })
+                            ++allCount;
+                        });
 
-                        const isSubAllChecked = sub.actions.every(v => v.checked)
-                        this.$set(sub, 'allChecked', isSubAllChecked)
-                    })
+                        const isSubAllChecked = sub.actions.every(v => v.checked);
+                        this.$set(sub, 'allChecked', isSubAllChecked);
+                    });
 
-                    this.$set(item, 'deleteCount', deleteCount)
-                    this.$set(item, 'count', count)
-                    this.$set(item, 'allCount', allCount)
+                    this.$set(item, 'deleteCount', deleteCount);
+                    this.$set(item, 'count', count);
+                    this.$set(item, 'allCount', allCount);
 
-                    const isAllChecked = item.actions.every(v => v.checked)
-                    const isAllDisabled = item.actions.every(v => v.disabled)
-                    this.$set(item, 'allChecked', isAllChecked)
+                    const isAllChecked = item.actions.every(v => v.checked);
+                    const isAllDisabled = item.actions.every(v => v.disabled);
+                    this.$set(item, 'allChecked', isAllChecked);
                     if (item.sub_groups && item.sub_groups.length > 0) {
-                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked))
+                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
                         this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
-                            return v.actions.every(sub => sub.disabled)
-                        }))
+                            return v.actions.every(sub => sub.disabled);
+                        }));
                     } else {
-                        this.$set(item, 'actionsAllChecked', isAllChecked)
-                        this.$set(item, 'actionsAllDisabled', isAllDisabled)
+                        this.$set(item, 'actionsAllChecked', isAllChecked);
+                        this.$set(item, 'actionsAllDisabled', isAllDisabled);
                     }
-                })
+                });
                 if (this.basicInfo.actions.length === 1) {
-                    this.basicInfo.actions[0].expanded = true
+                    this.basicInfo.actions[0].expanded = true;
                 }
             },
 
             getActionsData (payload) {
-                const temps = _.cloneDeep(this.basicInfo.actions)
+                const temps = _.cloneDeep(this.basicInfo.actions);
                 // 交集
-                const intersections = this.defaultCheckedActions.filter(item => payload.includes(item))
+                const intersections = this.defaultCheckedActions.filter(item => payload.includes(item));
                 // 已删除的
-                const hasDeleteActions = this.defaultCheckedActions.filter(item => !intersections.includes(item))
+                const hasDeleteActions = this.defaultCheckedActions.filter(item => !intersections.includes(item));
                 // 新增的
-                const hasAddActions = payload.filter(item => !intersections.includes(item))
+                const hasAddActions = payload.filter(item => !intersections.includes(item));
                 temps.forEach((item, index) => {
-                    this.$set(item, 'expanded', index === 0)
-                    let count = 0
-                    let deleteCount = 0
+                    this.$set(item, 'expanded', index === 0);
+                    let count = 0;
+                    let deleteCount = 0;
                     if (!item.actions) {
-                        this.$set(item, 'actions', [])
+                        this.$set(item, 'actions', []);
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
-                        this.$set(act, 'disabled', act.tag === 'readonly')
+                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+                        this.$set(act, 'disabled', act.tag === 'readonly');
                         if (hasAddActions.includes(act.id)) {
-                            this.$set(act, 'checked', true)
-                            this.$set(act, 'flag', 'added')
+                            this.$set(act, 'checked', true);
+                            this.$set(act, 'flag', 'added');
                         }
                         if (act.checked && hasDeleteActions.includes(act.id)) {
-                            act.checked = false
-                            this.$set(act, 'flag', 'cancel')
+                            act.checked = false;
+                            this.$set(act, 'flag', 'cancel');
                         }
                         if (act.checked) {
-                            ++count
+                            ++count;
                         }
                         if (act.tag === 'delete') {
-                            ++deleteCount
+                            ++deleteCount;
                         }
                     })
                     ;(item.sub_groups || []).forEach(sub => {
-                        this.$set(sub, 'expanded', false)
-                        this.$set(sub, 'actionsAllChecked', false)
+                        this.$set(sub, 'expanded', false);
+                        this.$set(sub, 'actionsAllChecked', false);
                         if (!sub.actions) {
-                            this.$set(sub, 'actions', [])
+                            this.$set(sub, 'actions', []);
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
-                            this.$set(act, 'disabled', act.tag === 'readonly')
+                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+                            this.$set(act, 'disabled', act.tag === 'readonly');
                             if (hasAddActions.includes(act.id)) {
-                                this.$set(act, 'checked', true)
-                                this.$set(act, 'flag', 'added')
+                                this.$set(act, 'checked', true);
+                                this.$set(act, 'flag', 'added');
                             }
                             if (act.checked && hasDeleteActions.includes(act.id)) {
-                                act.checked = false
-                                this.$set(act, 'flag', 'cancel')
+                                act.checked = false;
+                                this.$set(act, 'flag', 'cancel');
                             }
                             if (act.checked) {
-                                ++count
+                                ++count;
                             }
                             if (act.tag === 'delete') {
-                                ++deleteCount
+                                ++deleteCount;
                             }
-                        })
+                        });
 
-                        const isSubAllChecked = sub.actions.every(v => v.checked)
-                        this.$set(sub, 'allChecked', isSubAllChecked)
-                    })
+                        const isSubAllChecked = sub.actions.every(v => v.checked);
+                        this.$set(sub, 'allChecked', isSubAllChecked);
+                    });
 
-                    this.$set(item, 'deleteCount', deleteCount)
-                    this.$set(item, 'count', count)
+                    this.$set(item, 'deleteCount', deleteCount);
+                    this.$set(item, 'count', count);
 
-                    const isAllChecked = item.actions.every(v => v.checked)
-                    const isAllDisabled = item.actions.every(v => v.disabled)
-                    this.$set(item, 'allChecked', isAllChecked)
+                    const isAllChecked = item.actions.every(v => v.checked);
+                    const isAllDisabled = item.actions.every(v => v.disabled);
+                    this.$set(item, 'allChecked', isAllChecked);
                     if (item.sub_groups && item.sub_groups.length > 0) {
-                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked))
+                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
                         this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
-                            return v.actions.every(sub => sub.disabled)
-                        }))
+                            return v.actions.every(sub => sub.disabled);
+                        }));
                     } else {
-                        this.$set(item, 'actionsAllChecked', isAllChecked)
-                        this.$set(item, 'actionsAllDisabled', isAllDisabled)
+                        this.$set(item, 'actionsAllChecked', isAllChecked);
+                        this.$set(item, 'actionsAllDisabled', isAllDisabled);
                     }
-                })
+                });
 
-                return temps
+                return temps;
             },
 
             async handleEdit () {
-                this.editRequestQueue = ['getPre', 'addPre']
-                await this.getPreUpdateInfo()
+                this.editRequestQueue = ['getPre', 'addPre'];
+                await this.getPreUpdateInfo();
             },
 
             async getPreUpdateInfo () {
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id: this.id })
-                    const flag = Object.keys(res.data).length > 0
-                    const nameCache = window.localStorage.getItem('iam-header-name-cache')
-                    window.localStorage.setItem('iam-header-title-cache', `${this.$t(`m.nav['编辑权限模板']`)}(${nameCache})`)
+                    const res = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id: this.id });
+                    const flag = Object.keys(res.data).length > 0;
+                    const nameCache = window.localStorage.getItem('iam-header-name-cache');
+                    window.localStorage.setItem('iam-header-title-cache', `${this.$t(`m.nav['编辑权限模板']`)}(${nameCache})`);
                     if (flag) {
-                        this.$store.commit('permTemplate/updatePreActionIds', res.data.action_ids)
-                        this.$store.commit('permTemplate/updateAction', this.getActionsData(res.data.action_ids))
-                        await this.addPreUpdateInfo(res.data.action_ids)
+                        this.$store.commit('permTemplate/updatePreActionIds', res.data.action_ids);
+                        this.$store.commit('permTemplate/updateAction', this.getActionsData(res.data.action_ids));
+                        await this.addPreUpdateInfo(res.data.action_ids);
                         this.$router.push({
                             name: 'permTemplateDiff',
                             params: this.$route.params
-                        })
+                        });
                     } else {
-                        this.editRequestQueue = ['getPre']
+                        this.editRequestQueue = ['getPre'];
                         this.$router.push({
                             name: 'permTemplateEdit',
                             params: this.$route.params
-                        })
+                        });
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.editRequestQueue.shift()
+                    this.editRequestQueue.shift();
                 }
             },
 
@@ -359,54 +359,54 @@
                         data: {
                             action_ids: payload
                         }
-                    })
-                    this.$store.commit('permTemplate/updateCloneActions', res.data)
+                    });
+                    this.$store.commit('permTemplate/updateCloneActions', res.data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.editRequestQueue.shift()
+                    this.editRequestQueue.shift();
                 }
             },
 
             handleCancel () {
                 this.$router.push({
                     name: 'permTemplate'
-                })
+                });
             },
 
             handleUpdateTemplate (payload) {
-                const { name, description } = this.basicInfo
+                const { name, description } = this.basicInfo;
                 const params = {
                     name: name.trim(),
                     description,
                     id: this.id,
                     ...payload
-                }
+                };
                 return this.$store.dispatch('permTemplate/updateTemplate', params)
                     .then(() => {
-                        this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000)
-                        this.basicInfo.name = params.name
-                        this.basicInfo.description = params.description
-                        window.localStorage.setItem('iam-header-title-cache', this.basicInfo.name)
-                        this.$store.commit('setHeaderTitle', this.basicInfo.name)
+                        this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                        this.basicInfo.name = params.name;
+                        this.basicInfo.description = params.description;
+                        window.localStorage.setItem('iam-header-title-cache', this.basicInfo.name);
+                        this.$store.commit('setHeaderTitle', this.basicInfo.name);
                     }, (e) => {
-                        console.warn('error')
+                        console.warn('error');
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
-                    })
+                        });
+                    });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-template-detail-wrapper {

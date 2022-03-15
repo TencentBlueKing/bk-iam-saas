@@ -25,7 +25,7 @@ from backend.apps.group.models import Group
 from backend.apps.template import tasks  # noqa
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionBiz, ActionCheckBiz, ActionForCheck
+from backend.biz.action import ActionBiz, ActionCheckBiz, ActionResourceGroupForCheck
 from backend.biz.action_group import ActionGroupBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
 from backend.biz.subject import SubjectInfoList
@@ -41,7 +41,7 @@ from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseS
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
-from backend.service.constants import PermissionCodeEnum, SubjectType, TemplatePreUpdateStatus
+from backend.service.constants import PermissionCodeEnum, SubjectType
 from backend.service.models import Subject
 
 from .audit import (
@@ -230,10 +230,9 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
     @view_audit_decorator(TemplateDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         template = self.get_object()
+        PermTemplatePreUpdateLock.objects.raise_if_exists(template.id)
 
-        self.template_check_biz.check_template_update_lock_exists(template.id)
-
-        permission_logger.info("template delete by user: %s", request.user.username)
+        permission_logger.info("template %s deleted by user %s", template.id, request.user.username)
 
         self.template_biz.delete(template.id)
 
@@ -321,14 +320,13 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
     @view_audit_decorator(TemplateMemberDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         template = self.get_object()
-
-        self.template_check_biz.check_template_update_lock_exists(template.id)
+        PermTemplatePreUpdateLock.objects.raise_if_exists(template.id)
 
         serializer = TemplateDeleteMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         members = serializer.validated_data["members"]
 
-        permission_logger.info("template delete member by user: %s", request.user.username)
+        permission_logger.info("template %s delete members %s by user %s", template.id, members, request.user.username)
 
         self.template_biz.revoke_subjects(template.system_id, template.id, parse_obj_as(List[Subject], members))
 
@@ -388,8 +386,7 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
         template = self.get_object()
 
         # 判断模板是否存在已存在的预提交信息
-        lock = PermTemplatePreUpdateLock.objects.filter(template_id=template.id).first()
-        self.template_check_biz.check_pre_update_lock_not_running(lock)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template.id)
         if not lock:
             return Response({})
 
@@ -439,7 +436,9 @@ class TemplatePreGroupSyncViewSet(TemplatePermissionMixin, GenericViewSet):
         data = slz.validated_data
 
         for group in data["groups"]:
-            self.action_check_biz.check(template.system_id, parse_obj_as(List[ActionForCheck], group["actions"]))
+            self.action_check_biz.check_action_resource_group(
+                template.system_id, parse_obj_as(List[ActionResourceGroupForCheck], group["actions"])
+            )
 
         # 检查数据
         pre_commits = parse_obj_as(List[TemplateGroupPreCommitBean], data["groups"])
@@ -497,8 +496,7 @@ class TemplateGroupSyncPreviewViewSet(TemplatePermissionMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         template = self.get_object()
-        lock = PermTemplatePreUpdateLock.objects.filter(template_id=template.id).first()
-        self.template_check_biz.check_pre_update_lock_is_waiting(lock)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_waiting_or_raise(template_id=template.id)
 
         delete_action_set = set(template.action_ids) - set(lock.action_ids)
 
@@ -549,12 +547,8 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
         if add_action_ids:
             self.template_check_biz.check_group_pre_commit_complete(template.id)
 
-        count = PermTemplatePreUpdateLock.objects.filter(
-            template_id=template.id, status=TemplatePreUpdateStatus.WAITING.value
-        ).update(status=TemplatePreUpdateStatus.RUNNING.value)
-
-        # 任务已经开始运行了
-        if count != 1:
+        if not PermTemplatePreUpdateLock.objects.update_waiting_to_running(template.id):
+            # 任务已经开始运行了
             raise error_codes.VALIDATE_ERROR.format(_("预提交的任务不存在, 禁止提交!"))
 
         # 使用长时任务实现用户组授权更新

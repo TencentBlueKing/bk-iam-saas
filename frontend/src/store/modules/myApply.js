@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -47,7 +47,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getApplyList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/applications/?${json2Query(params)}`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/applications/?${json2Query(params)}`, {}, config);
         },
 
         /**
@@ -62,7 +62,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getApplyDetail ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/applications/${id}/`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/applications/${id}/`, {}, config);
         },
 
         /**
@@ -77,7 +77,7 @@ export default {
          * @return {Promise} promise 对象
          */
         applyCancel ({ commit, state, dispatch }, { id }, config) {
-            return http.put(`${AJAX_URL_PREFIX}/applications/${id}/cancel/`, {}, config)
+            return http.put(`${AJAX_URL_PREFIX}/applications/${id}/cancel/`, {}, config);
         }
     }
-}
+};

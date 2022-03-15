@@ -1,5 +1,7 @@
 # 根据策略 ID 拉群策略对应的用户信息
 
+废弃, 请使用 `/api/v1/open/systems/{system_id}/policies/-/subjects`
+
 基于 LBAC 方案, 最终每个资源会打上一批 label, 这批 label 对应一批 Policy IDs
 
 查询这个资源的有某个权限的用户列表时, 可以将这批 Policy IDs 作为这个接口参数, 查询`用户列表`

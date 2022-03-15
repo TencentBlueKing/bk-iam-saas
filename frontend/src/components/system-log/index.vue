@@ -30,9 +30,9 @@
     </bk-dialog>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import marked from 'marked'
-    import ScrollFaker from '../scroll-faker'
+    import { mapGetters } from 'vuex';
+    import { marked } from 'marked';
+    import ScrollFaker from '../scroll-faker';
 
     export default {
         name: 'system-version-log',
@@ -49,30 +49,30 @@
             return {
                 isShow: true,
                 activeIndex: 0
-            }
+            };
         },
         computed: {
             ...mapGetters(['versionLogs']),
             logContent () {
                 if (this.versionLogs.length < 1) {
-                    return ''
+                    return '';
                 }
-                return marked(this.versionLogs[this.activeIndex].content)
+                return marked(this.versionLogs[this.activeIndex].content);
             }
         },
         created () {
         },
         methods: {
             handleTabChange (index) {
-                this.activeIndex = index
+                this.activeIndex = index;
             },
             handleClose () {
-                this.activeIndex = 0
-                this.$emit('input', false)
-                this.$emit('change', false)
+                this.activeIndex = 0;
+                this.$emit('input', false);
+                this.$emit('change', false);
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     @import './index.css';

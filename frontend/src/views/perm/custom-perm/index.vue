@@ -26,9 +26,9 @@
     </div>
 </template>
 <script>
-    import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue'
-    import PermSystem from '@/model/my-perm-system'
-    import CustomPermTable from './custom-perm-table.vue'
+    import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue';
+    import PermSystem from '@/model/my-perm-system';
+    import CustomPermTable from './custom-perm-table.vue';
 
     export default {
         name: 'CustomPerm',
@@ -46,19 +46,19 @@
             return {
                 onePerm: 0,
                 systemPolicyList: []
-            }
+            };
         },
         computed: {
             hasPerm () {
-                return this.systemPolicyList.length > 0
+                return this.systemPolicyList.length > 0;
             }
         },
         watch: {
             systemList: {
                 handler (v) {
-                    const systemPolicyList = v.map(item => new PermSystem(item))
-                    this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList)
-                    this.onePerm = systemPolicyList.length
+                    const systemPolicyList = v.map(item => new PermSystem(item));
+                    this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
+                    this.onePerm = systemPolicyList.length;
                 },
                 immediate: true,
                 deep: true
@@ -76,13 +76,13 @@
             handleExpanded (value, payload) {},
 
             handleAfterDelete (policyListLen, sysIndex) {
-                --this.systemPolicyList[sysIndex].count
+                --this.systemPolicyList[sysIndex].count;
                 if (this.systemPolicyList[sysIndex].count < 1) {
-                    this.systemPolicyList.splice(sysIndex, 1)
+                    this.systemPolicyList.splice(sysIndex, 1);
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './index.css';

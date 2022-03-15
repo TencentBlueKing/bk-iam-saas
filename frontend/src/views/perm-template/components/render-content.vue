@@ -11,6 +11,7 @@
                         <bk-input
                             v-model="tempName"
                             style="width: 450px;"
+                            data-test-id="permTemplate_input_templateName"
                             clearable
                             :placeholder="$t(`m.common['模板名称可随时修改']`)"
                             :ext-cls="isShowNameError ? 'tempalte-name-error' : ''"
@@ -28,6 +29,7 @@
                         <bk-select
                             v-if="!isEdit"
                             v-model="systemValue"
+                            data-test-id="permTemplate_select_system"
                             style="width: 450px;"
                             :popover-min-width="450"
                             :placeholder="$t(`m.verify['请选择']`)"
@@ -37,7 +39,8 @@
                             <bk-option v-for="option in systemList"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.displayName">
+                                :name="option.displayName"
+                                :data-test-id="`permTemplate_selectOption_system_${option.id}`">
                                 <span>{{ option.name }}</span>
                                 <span style="color: #c4c6cc;">({{ option.id }})</span>
                             </bk-option>
@@ -113,6 +116,7 @@
                 <bk-button
                     theme="primary"
                     :loading="saveLoading"
+                    data-test-id="permTemplate_btn_createSubmit"
                     @click="handleCreateSubmit">
                     {{ $t(`m.common['提交']`) }}
                 </bk-button>
@@ -127,13 +131,13 @@
 </template>
 
 <script>
-    import _ from 'lodash'
-    import { mapGetters } from 'vuex'
-    import { guid } from '@/common/util'
-    import { bus } from '@/common/bus'
-    import { leavePageConfirm } from '@/common/leave-page-confirm'
-    import RenderActionTag from '@/components/common-action'
-    import RenderAction from './render-action'
+    import _ from 'lodash';
+    import { mapGetters } from 'vuex';
+    import { guid } from '@/common/util';
+    import { bus } from '@/common/bus';
+    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    import RenderActionTag from '@/components/common-action';
+    import RenderAction from './render-action';
 
     export default {
         name: '',
@@ -177,88 +181,88 @@
                 initialValue: [],
                 initialTempName: '',
                 initialDescription: ''
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
             isShowGroupAction () {
                 return (item) => {
-                    const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0)
-                    return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup
-                }
+                    const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
+                    return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
+                };
             },
             customLoading () {
-                return this.requestQueue.length > 0
+                return this.requestQueue.length > 0;
             },
             isEdit () {
-                return this.mode === 'edit'
+                return this.mode === 'edit';
             },
             nextLoading () {
-                return this.nextRequestQueue.length > 0
+                return this.nextRequestQueue.length > 0;
             }
         },
         watch: {
             mode: {
                 handler (value) {
                     if (value === 'edit') {
-                        this.requestQueue = ['detail', 'commonActions']
+                        this.requestQueue = ['detail', 'commonActions'];
                     } else {
-                        this.requestQueue = ['actions', 'commonActions']
+                        this.requestQueue = ['actions', 'commonActions'];
                     }
                 },
                 immediate: true
             },
             curSelectActions (newValue, value) {
                 if (value.length > 0) {
-                    this.isShowActionError = false
+                    this.isShowActionError = false;
                 }
                 if (value.length !== newValue.length) {
-                    this.isEditTemplate = true
+                    this.isEditTemplate = true;
                 }
                 if (newValue.toString() !== this.initialValue.toString()) {
-                    this.isCurSelectActions = false
+                    this.isCurSelectActions = false;
                 } else {
-                    this.isCurSelectActions = true
+                    this.isCurSelectActions = true;
                 }
             },
             tempName (newValue) {
                 if (newValue.toString() !== this.initialTempName.toString()) {
-                    this.isTempName = false
+                    this.isTempName = false;
                 } else {
-                    this.isTempName = true
+                    this.isTempName = true;
                 }
             },
             description (newValue) {
                 if (newValue.toString() !== this.initialDescription.toString()) {
-                    this.isDescription = false
+                    this.isDescription = false;
                 } else {
-                    this.isDescription = true
+                    this.isDescription = true;
                 }
             }
         },
         created () {
             // 判断数组是否被另外一个数组包含
             this.isArrayInclude = (target, origin) => {
-                const itemAry = []
+                const itemAry = [];
                 target.forEach(function (p1) {
                     if (origin.indexOf(p1) !== -1) {
-                        itemAry.push(p1)
+                        itemAry.push(p1);
                     }
-                })
+                });
                 if (itemAry.length === target.length) {
-                    return true
+                    return true;
                 }
-                return false
-            }
-            this.initialValue = this.curSelectActions
+                return false;
+            };
+            this.initialValue = this.curSelectActions;
         },
         methods: {
             async fetchPageData () {
                 if (this.isEdit) {
-                    await this.fetchDetail()
-                    await this.fetchGroupPreview()
+                    await this.fetchDetail();
+                    await this.fetchGroupPreview();
                 } else {
-                    await this.fetchSystems()
+                    await this.fetchSystems();
                 }
             },
 
@@ -268,129 +272,129 @@
                     types: 'group',
                     limit: 0,
                     offset: 0
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateMember', params)
-                    this.hasGroupPreview = res.data.count > 0
-                    this.$store.commit('permTemplate/updatePreGroupOnePage', Math.ceil(res.data.count / 5) === 1)
+                    const res = await this.$store.dispatch('permTemplate/getTemplateMember', params);
+                    this.hasGroupPreview = res.data.count > 0;
+                    this.$store.commit('permTemplate/updatePreGroupOnePage', Math.ceil(res.data.count / 5) === 1);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             async fetchDetail () {
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id: this.id, grouping: true })
-                    this.tempName = res.data.name
-                    this.systemValue = res.data.system.id
-                    this.description = res.data.description
-                    this.systemName = res.data.system.name
-                    this.originalCustomTmplList = _.cloneDeep(res.data.actions)
-                    await this.handleActionLinearData()
-                    await this.fetchCommonActions(this.systemValue)
-                    this.initialTempName = this.tempName
-                    this.initialDescription = this.description
+                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id: this.id, grouping: true });
+                    this.tempName = res.data.name;
+                    this.systemValue = res.data.system.id;
+                    this.description = res.data.description;
+                    this.systemName = res.data.system.name;
+                    this.originalCustomTmplList = _.cloneDeep(res.data.actions);
+                    await this.handleActionLinearData();
+                    await this.fetchCommonActions(this.systemValue);
+                    this.initialTempName = this.tempName;
+                    this.initialDescription = this.description;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             async handleCommonActionDelete (id, $id, index) {
-                window.changeDialog = true
+                window.changeDialog = true;
                 try {
-                    await this.$store.dispatch('permTemplate/deleteCommonAction', { id })
-                    this.commonActions.splice(index, 1)
-                    this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetSelectData($id)
+                    await this.$store.dispatch('permTemplate/deleteCommonAction', { id });
+                    this.commonActions.splice(index, 1);
+                    this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetSelectData($id);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             async handleCommonActionAdd ({ actions, name }) {
-                window.changeDialog = true
+                window.changeDialog = true;
                 const params = {
                     system_id: this.systemValue,
                     name,
                     action_ids: actions
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/addCommonAction', params)
+                    const res = await this.$store.dispatch('permTemplate/addCommonAction', params);
                     const addData = {
                         ...params,
                         id: res.data.id,
                         $id: guid()
-                    }
-                    this.commonActions.push(addData)
-                    this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetActive(addData.$id)
+                    };
+                    this.commonActions.push(addData);
+                    this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetActive(addData.$id);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             handleActionTagChange (flag, payload) {
-                window.changeDialog = true
+                window.changeDialog = true;
                 if (payload.length < 1) {
-                    return
+                    return;
                 }
-                this.handleActionMatchChecked(flag, payload)
+                this.handleActionMatchChecked(flag, payload);
             },
 
             handleActionMatchChecked (flag, payload) {
                 this.originalCustomTmplList.forEach(item => {
-                    let allCheckedLen = 0
-                    let count = 0
-                    let delCount = 0
-                    let deleteCount = 0
+                    let allCheckedLen = 0;
+                    let count = 0;
+                    let delCount = 0;
+                    let deleteCount = 0;
                     item.actions.forEach(item => {
                         if (!item.disabled) {
                             if (payload.includes(item.id)) {
                                 if (!item.checked && flag) {
-                                    ++count
+                                    ++count;
                                 }
                                 if (item.checked && !flag) {
-                                    ++delCount
+                                    ++delCount;
                                 }
-                                item.checked = flag
-                                this.$refs.actionsRef.handleRelatedActions(item, flag)
+                                item.checked = flag;
+                                this.$refs.actionsRef.handleRelatedActions(item, flag);
                             }
                         }
                         if (item.tag === 'delete') {
-                            ++deleteCount
+                            ++deleteCount;
                         }
                         if (item.disabled || item.checked) {
-                            allCheckedLen++
+                            allCheckedLen++;
                         }
-                    })
+                    });
                     item.allChecked = allCheckedLen === item.actions.length
 
                     ;(item.sub_groups || []).forEach(subItem => {
@@ -399,158 +403,158 @@
                             if (!act.disabled) {
                                 if (payload.includes(act.id)) {
                                     if (!act.checked && flag) {
-                                        ++count
+                                        ++count;
                                     }
                                     if (act.checked && !flag) {
-                                        ++delCount
+                                        ++delCount;
                                     }
-                                    act.checked = flag
-                                    this.$refs.actionsRef.handleRelatedActions(act, flag)
+                                    act.checked = flag;
+                                    this.$refs.actionsRef.handleRelatedActions(act, flag);
                                 }
                             }
 
                             if (item.tag === 'delete') {
-                                ++deleteCount
+                                ++deleteCount;
                             }
                             if (act.disabled || act.checked) {
-                                allSubCheckedLen++
+                                allSubCheckedLen++;
                             }
-                        })
-                        subItem.allChecked = allSubCheckedLen === subItem.actions.length
-                    })
+                        });
+                        subItem.allChecked = allSubCheckedLen === subItem.actions.length;
+                    });
 
                     item.actionsAllChecked = item.actions.every(act => act.checked) && (item.sub_groups || []).every(
                         v => {
-                            return v.actions.every(act => act.checked)
+                            return v.actions.every(act => act.checked);
                         }
-                    )
+                    );
 
                     if (flag) {
-                        item.count = item.count + count
+                        item.count = item.count + count;
                     } else {
-                        item.count = item.count - delCount
+                        item.count = item.count - delCount;
                     }
-                    this.$set(item, 'deleteCount', deleteCount)
-                })
+                    this.$set(item, 'deleteCount', deleteCount);
+                });
             },
 
             async fetchSystems () {
                 try {
                     const res = await this.$store.dispatch('system/getSystems')
                     ;(res.data || []).forEach(item => {
-                        item.displayName = `${item.name}(${item.id})`
-                    })
-                    this.systemList = res.data || []
-                    this.systemValue = res.data[0].id || ''
-                    await this.fetchActions(this.systemValue)
-                    await this.fetchCommonActions(this.systemValue)
+                        item.displayName = `${item.name}(${item.id})`;
+                    });
+                    this.systemList = res.data || [];
+                    this.systemValue = res.data[0].id || '';
+                    await this.fetchActions(this.systemValue);
+                    await this.fetchCommonActions(this.systemValue);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             handleActionLinearData () {
-                const linearActions = []
+                const linearActions = [];
                 this.originalCustomTmplList.forEach((item, index) => {
-                    this.$set(item, 'expanded', index === 0)
-                    let allCount = 0
-                    let count = 0
-                    let deleteCount = 0
-                    this.$set(item, 'count', 0)
+                    this.$set(item, 'expanded', index === 0);
+                    let allCount = 0;
+                    let count = 0;
+                    let deleteCount = 0;
+                    this.$set(item, 'count', 0);
                     if (!item.actions) {
-                        this.$set(item, 'actions', [])
+                        this.$set(item, 'actions', []);
                     }
                     item.actions.forEach(act => {
-                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
-                        this.$set(act, 'disabled', act.tag === 'readonly')
-                        linearActions.push(act)
+                        this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+                        this.$set(act, 'disabled', act.tag === 'readonly');
+                        linearActions.push(act);
                         if (act.checked) {
-                            this.curSelectActions.push(act.id)
-                            this.$set(act, 'flag', 'selected')
-                            ++count
+                            this.curSelectActions.push(act.id);
+                            this.$set(act, 'flag', 'selected');
+                            ++count;
                             if (act.tag === 'delete') {
-                                ++deleteCount
+                                ++deleteCount;
                             }
                         }
-                    })
+                    });
                     allCount = allCount + item.actions.length
                     ;(item.sub_groups || []).forEach(sub => {
-                        this.$set(sub, 'expanded', false)
-                        this.$set(sub, 'actionsAllChecked', false)
+                        this.$set(sub, 'expanded', false);
+                        this.$set(sub, 'actionsAllChecked', false);
                         if (!sub.actions) {
-                            this.$set(sub, 'actions', [])
+                            this.$set(sub, 'actions', []);
                         }
                         sub.actions.forEach(act => {
-                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag))
-                            this.$set(act, 'disabled', act.tag === 'readonly')
-                            linearActions.push(act)
+                            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+                            this.$set(act, 'disabled', act.tag === 'readonly');
+                            linearActions.push(act);
                             if (act.checked) {
-                                this.curSelectActions.push(act.id)
-                                this.$set(act, 'flag', 'selected')
-                                ++count
+                                this.curSelectActions.push(act.id);
+                                this.$set(act, 'flag', 'selected');
+                                ++count;
                                 if (act.tag === 'delete') {
-                                    ++deleteCount
+                                    ++deleteCount;
                                 }
                             }
-                        })
+                        });
 
-                        allCount = allCount + sub.actions.length
+                        allCount = allCount + sub.actions.length;
 
-                        const isSubAllChecked = sub.actions.every(v => v.checked)
-                        this.$set(sub, 'allChecked', isSubAllChecked)
-                    })
+                        const isSubAllChecked = sub.actions.every(v => v.checked);
+                        this.$set(sub, 'allChecked', isSubAllChecked);
+                    });
 
-                    this.$set(item, 'allCount', allCount)
-                    this.$set(item, 'count', count)
-                    this.$set(item, 'deleteCount', deleteCount)
-                    const isAllChecked = item.actions.every(v => v.checked)
-                    const isAllDisabled = item.actions.every(v => v.disabled)
-                    this.$set(item, 'allChecked', isAllChecked)
+                    this.$set(item, 'allCount', allCount);
+                    this.$set(item, 'count', count);
+                    this.$set(item, 'deleteCount', deleteCount);
+                    const isAllChecked = item.actions.every(v => v.checked);
+                    const isAllDisabled = item.actions.every(v => v.disabled);
+                    this.$set(item, 'allChecked', isAllChecked);
                     if (item.sub_groups && item.sub_groups.length > 0) {
-                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked))
+                        this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
                         this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
-                            return v.actions.every(sub => sub.disabled)
-                        }))
+                            return v.actions.every(sub => sub.disabled);
+                        }));
                     } else {
-                        this.$set(item, 'actionsAllChecked', isAllChecked)
-                        this.$set(item, 'actionsAllDisabled', isAllDisabled)
+                        this.$set(item, 'actionsAllChecked', isAllChecked);
+                        this.$set(item, 'actionsAllDisabled', isAllDisabled);
                     }
-                })
-                this.linearAction = _.cloneDeep(linearActions)
+                });
+                this.linearAction = _.cloneDeep(linearActions);
             },
 
             async fetchCommonActions (systemId) {
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getCommonAction', { systemId })
-                    const list = res.data || []
+                    const res = await this.$store.dispatch('permTemplate/getCommonAction', { systemId });
+                    const list = res.data || [];
 
-                    const linearActionIdList = this.linearAction.map(la => la.id)
-                    const commonActions = []
+                    const linearActionIdList = this.linearAction.map(la => la.id);
+                    const commonActions = [];
                     list.forEach(ca => {
-                        ca.$id = guid()
+                        ca.$id = guid();
                         if (ca.action_ids.every(aId => linearActionIdList.indexOf(aId) > -1)) {
-                            commonActions.push(ca)
+                            commonActions.push(ca);
                         }
-                    })
-                    this.commonActions.splice(0, this.commonActions.length, ...commonActions)
+                    });
+                    this.commonActions.splice(0, this.commonActions.length, ...commonActions);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
@@ -558,117 +562,117 @@
                 const params = {
                     system_id: systemId,
                     template_id: this.id
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', params)
-                    this.originalCustomTmplList = _.cloneDeep(res.data)
-                    this.handleActionLinearData()
+                    const res = await this.$store.dispatch('permApply/getActions', params);
+                    this.originalCustomTmplList = _.cloneDeep(res.data);
+                    this.handleActionLinearData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             handleNameInput () {
-                window.changeDialog = true
-                this.isShowNameError = false
-                this.nameValidateText = ''
+                window.changeDialog = true;
+                this.isShowNameError = false;
+                this.nameValidateText = '';
             },
 
             handleDescInput () {
-                window.changeDialog = true
+                window.changeDialog = true;
             },
 
             handleNameBlur (payload) {
-                const maxLength = 32
+                const maxLength = 32;
                 if (payload === '') {
-                    this.nameValidateText = this.$t(`m.verify['模板名称必填']`)
-                    this.isShowNameError = true
+                    this.nameValidateText = this.$t(`m.verify['模板名称必填']`);
+                    this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {
                     if (payload.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['模板名称最长不超过32个字符']`)
-                        this.isShowNameError = true
+                        this.nameValidateText = this.$t(`m.verify['模板名称最长不超过32个字符']`);
+                        this.isShowNameError = true;
                     }
                 }
             },
 
             async handleSysSelected (value, option) {
-                window.changeDialog = true
-                this.commonActions = []
-                this.linearAction = []
-                this.curSelectActions = []
-                this.requestQueue = ['actions', 'commonActions']
-                await this.fetchActions(value)
-                await this.fetchCommonActions(value)
+                window.changeDialog = true;
+                this.commonActions = [];
+                this.linearAction = [];
+                this.curSelectActions = [];
+                this.requestQueue = ['actions', 'commonActions'];
+                await this.fetchActions(value);
+                await this.fetchCommonActions(value);
             },
 
             handleSelect (payload) {
-                this.curSelectActions = [...payload]
+                this.curSelectActions = [...payload];
             },
 
             getActionsData (payload) {
-                const temps = _.cloneDeep(payload)
+                const temps = _.cloneDeep(payload);
                 temps.forEach(item => {
-                    let count = 0
-                    let deleteCount = 0
+                    let count = 0;
+                    let deleteCount = 0;
                     item.actions.forEach(act => {
                         if (act.checked) {
-                            ++count
+                            ++count;
                             if (act.tag === 'delete') {
-                                ++deleteCount
+                                ++deleteCount;
                             }
                         }
                     })
                     ;(item.sub_groups || []).forEach(sub => {
                         sub.actions.forEach(act => {
                             if (act.checked) {
-                                ++count
+                                ++count;
                                 if (act.tag === 'delete') {
-                                    ++deleteCount
+                                    ++deleteCount;
                                 }
                             }
-                        })
-                    })
-                    this.$set(item, 'count', count)
-                    this.$set(item, 'deleteCount', deleteCount)
-                })
+                        });
+                    });
+                    this.$set(item, 'count', count);
+                    this.$set(item, 'deleteCount', deleteCount);
+                });
 
-                return temps
+                return temps;
             },
 
             async handleUpdateCommit () {
                 try {
                     await this.$store.dispatch('permTemplate/updateCommit', {
                         id: this.id
-                    })
+                    });
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'success',
                         message: this.$t(`m.info['提交成功']`)
-                    })
+                    });
                     this.$router.push({
                         name: 'permTemplate'
-                    })
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.nextRequestQueue.shift()
+                    this.nextRequestQueue.shift();
                 }
             },
 
@@ -678,20 +682,20 @@
                         name: this.tempName.trim(),
                         description: this.description,
                         id: this.id
-                    })
-                    window.localStorage.setItem('iam-header-title-cache', this.tempName)
-                    window.localStorage.setItem('iam-header-name-cache', this.tempName)
+                    });
+                    window.localStorage.setItem('iam-header-title-cache', this.tempName);
+                    window.localStorage.setItem('iam-header-name-cache', this.tempName);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.nextRequestQueue.shift()
+                    this.nextRequestQueue.shift();
                 }
             },
 
@@ -703,134 +707,134 @@
                         message: '由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。',
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
-                    return
+                    });
+                    return;
                 }
-                this.handleNameBlur(this.tempName)
-                this.isShowActionError = this.curSelectActions.length < 1
+                this.handleNameBlur(this.tempName);
+                this.isShowActionError = this.curSelectActions.length < 1;
                 if (this.isShowNameError || this.isShowActionError) {
-                    const nameRef = this.$refs.templateNameRef
-                    const actionRef = this.$refs.actionRef
+                    const nameRef = this.$refs.templateNameRef;
+                    const actionRef = this.$refs.actionRef;
                     if (this.isShowNameError) {
-                        this.scrollToLocation(nameRef)
+                        this.scrollToLocation(nameRef);
                     }
                     if (!this.isShowNameError && this.isShowActionError) {
-                        this.scrollToLocation(actionRef)
+                        this.scrollToLocation(actionRef);
                     }
-                    return
+                    return;
                 }
-                this.nextRequestQueue = ['edit', 'addPre']
+                this.nextRequestQueue = ['edit', 'addPre'];
                 // 如果编辑中修改的是模板名称和描述
                 if (!this.isEditTemplate) {
-                    await this.editTemplate()
-                    window.changeDialog = false
+                    await this.editTemplate();
+                    window.changeDialog = false;
                     this.$router.push({
                         name: 'permTemplateDetail',
                         params: this.$route.params
-                    })
+                    });
                 } else {
                     try {
-                        await this.editTemplate()
+                        await this.editTemplate();
                         const res = await this.$store.dispatch('permTemplate/addPreUpdateInfo', {
                             id: this.id,
                             data: {
                                 action_ids: this.curSelectActions
                             }
-                        })
+                        });
                         if (!this.hasGroupPreview) {
-                            this.nextRequestQueue = ['addPre', 'updateCommit']
-                            this.handleUpdateCommit()
-                            return
+                            this.nextRequestQueue = ['addPre', 'updateCommit'];
+                            this.handleUpdateCommit();
+                            return;
                         }
-                        this.$store.commit('permTemplate/updateCloneActions', res.data)
-                        this.$store.commit('permTemplate/updatePreActionIds', this.curSelectActions)
-                        this.$store.commit('permTemplate/updateAction', this.getActionsData(this.originalCustomTmplList))
-                        window.changeDialog = false
+                        this.$store.commit('permTemplate/updateCloneActions', res.data);
+                        this.$store.commit('permTemplate/updatePreActionIds', this.curSelectActions);
+                        this.$store.commit('permTemplate/updateAction', this.getActionsData(this.originalCustomTmplList));
+                        window.changeDialog = false;
                         this.$router.push({
                             name: 'permTemplateDiff',
                             params: this.$route.params
-                        })
+                        });
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     } finally {
-                        this.nextRequestQueue.shift()
+                        this.nextRequestQueue.shift();
                     }
                 }
             },
             async handlePrevStep () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm()
+                    cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(async () => {
                     this.$router.push({
                         name: 'permTemplateDetail',
                         params: this.$route.params
-                    })
-                }, _ => _)
+                    });
+                }, _ => _);
             },
 
             async handleCreateSubmit () {
-                this.handleNameBlur(this.tempName)
-                this.isShowActionError = this.curSelectActions.length < 1
+                this.handleNameBlur(this.tempName);
+                this.isShowActionError = this.curSelectActions.length < 1;
                 if (this.isShowNameError || this.isShowActionError) {
-                    const nameRef = this.$refs.templateNameRef
-                    const actionRef = this.$refs.actionRef
+                    const nameRef = this.$refs.templateNameRef;
+                    const actionRef = this.$refs.actionRef;
                     if (this.isShowNameError) {
-                        this.scrollToLocation(nameRef)
+                        this.scrollToLocation(nameRef);
                     }
                     if (!this.isShowNameError && this.isShowActionError) {
-                        this.scrollToLocation(actionRef)
+                        this.scrollToLocation(actionRef);
                     }
-                    return
+                    return;
                 }
                 const params = {
                     name: this.tempName,
                     system_id: this.systemValue,
                     action_ids: this.curSelectActions,
                     description: this.description
-                }
-                this.saveLoading = true
+                };
+                this.saveLoading = true;
                 try {
-                    await this.$store.dispatch('permTemplate/createTemplate', params)
-                    this.messageSuccess(this.$t(`m.info['新建权限模板成功']`), 1000)
-                    bus.$emit('show-guide', 'group')
-                    window.changeDialog = false
+                    await this.$store.dispatch('permTemplate/createTemplate', params);
+                    this.messageSuccess(this.$t(`m.info['新建权限模板成功']`), 1000);
+                    bus.$emit('show-guide', 'group');
+                    window.changeDialog = false;
                     this.$router.push({
                         name: 'permTemplate'
-                    })
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.saveLoading = false
+                    this.saveLoading = false;
                 }
             },
 
             handleCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm()
+                    cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
                     this.$router.push({
                         name: 'permTemplate'
-                    })
-                }, _ => _)
+                    });
+                }, _ => _);
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss" scoped>

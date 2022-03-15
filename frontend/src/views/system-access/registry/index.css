@@ -42,7 +42,7 @@
             .header {
                 display: flex;
                 justify-content: flex-start;
-                padding: 0 30px;
+                padding: 0 0 0 30px;
                 height: 60px;
                 line-height: 80px;
                 font-size: 14px;
@@ -57,6 +57,10 @@
                 .title {
                     font-weight: 600;
                     cursor: pointer;
+                    overflow: hidden;
+                    text-overflow:ellipsis;
+                    white-space: nowrap;
+                    width: 95px;
                 }
                 .sub-title {
                     position: absolute;
@@ -66,9 +70,14 @@
                     }
                 }
             }
+            .icon-info-regis {
+                position: absolute;
+                left: 90px;
+                top: 32px;
+            }
             .btn-wrapper {
                 position: absolute;
-                left: 125px;
+                left: 133px;
                 bottom: 10px;
                 z-index: 1;
                 .bk-button {
@@ -78,8 +87,8 @@
             .content {
                 position: relative;
                 margin-top: 15px;
-                width: calc(100% - 100px);
-                left: 100px;
+                width: calc(100% - 138px);
+                left: 138px;
                 .expand-action {
                     padding: 20px 0 5px 0;
                     width: 100%;
@@ -93,7 +102,7 @@
                     }
                 }
                 .slot-content {
-                    padding: 0 20px 0 30px;
+                    padding: 0 20px 0 0px;
                 }
             }
         }

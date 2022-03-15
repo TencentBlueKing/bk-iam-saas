@@ -24,7 +24,7 @@
  * IN THE SOFTWARE.
 */
 
-import store from '@/store'
+import store from '@/store';
 
 /**
  * 获取user信息
@@ -36,7 +36,7 @@ function getUser () {
         cancelWhenRouteChange: false
         // fromCache: true
         // cancelPrevious: false
-    })
+    });
 }
 
 /**
@@ -49,7 +49,7 @@ function getRoleList () {
         cancelWhenRouteChange: false
         // fromCache: true
         // cancelPrevious: false
-    })
+    });
 }
 
 /**
@@ -62,7 +62,7 @@ function getNoviceGuide () {
         cancelWhenRouteChange: false
         // fromCache: true
         // cancelPrevious: false
-    })
+    });
 }
 
 export default function () {
@@ -70,5 +70,5 @@ export default function () {
         getUser(),
         getNoviceGuide(),
         getRoleList()
-    ])
+    ]);
 }

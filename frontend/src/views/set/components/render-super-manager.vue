@@ -85,13 +85,13 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { mapGetters } from 'vuex'
-    import { bus } from '@/common/bus'
-    import IamPopoverConfirm from '@/components/iam-popover-confirm'
-    import BkUserSelector from '@blueking/user-selector'
-    import RenderItem from '../common/render-item'
-    import RenderAction from '../common/render-action'
+    import _ from 'lodash';
+    import { mapGetters } from 'vuex';
+    import { bus } from '@/common/bus';
+    import IamPopoverConfirm from '@/components/iam-popover-confirm';
+    import BkUserSelector from '@blueking/user-selector';
+    import RenderItem from '../common/render-item';
+    import RenderAction from '../common/render-action';
     export default {
         name: '',
         components: {
@@ -103,9 +103,9 @@
         filters: {
             memberFilter (value) {
                 if (value.length > 0) {
-                    return value.join('；')
+                    return value.join('；');
                 }
-                return '--'
+                return '--';
             }
         },
         data () {
@@ -113,24 +113,24 @@
                 subTitle: this.$t(`m.set['超级管理员提示']`),
                 superUserList: [],
                 userApi: window.BK_USER_API
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
             isDisabled () {
                 return payload => {
                     if (payload.user.length !== 1) {
-                        return true
+                        return true;
                     }
                     if (this.superUserList.filter(item => item.user[0] === payload.user[0]).length > 1) {
-                        return true
+                        return true;
                     }
-                    return false
-                }
+                    return false;
+                };
             }
         },
         created () {
-            this.fetchSuperManager()
+            this.fetchSuperManager();
         },
         methods: {
             handleAddSuperUser () {
@@ -139,198 +139,199 @@
                     userBackup: [],
                     system_permission_enabled: false,
                     isEdit: true
-                })
-                const index = this.superUserList.length - 1
+                });
+                const index = this.superUserList.length - 1;
                 this.$nextTick(() => {
-                    this.$refs[`superRef${index}`].focus()
-                })
+                    this.$refs[`superRef${index}`].focus();
+                });
             },
 
             async fetchSuperManager () {
-                this.$emit('data-ready', false)
+                this.$emit('data-ready', false);
                 try {
-                    const res = await this.$store.dispatch('role/getSuperManager')
-                    const tempArr = []
+                    const res = await this.$store.dispatch('role/getSuperManager');
+                    const tempArr = [];
                     res.data.forEach(item => {
-                        const { username, system_permission_enabled } = item
+                        const { username, system_permission_enabled } = item;
                         tempArr.push({
                             user: [username],
                             userBackup: [username],
                             system_permission_enabled,
                             isEdit: false,
                             username
-                        })
-                    })
-                    this.superUserList.splice(0, this.superUserList.length, ...tempArr)
+                        });
+                    });
+                    this.superUserList.splice(0, this.superUserList.length, ...tempArr);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.$emit('data-ready', true)
+                    this.$emit('data-ready', true);
                 }
             },
 
             handleSuperRtxChange (payload, row) {
-                row.user = [...payload]
+                row.user = [...payload];
             },
 
             handleSuperRtxEnter (event, payload) {
                 if (!payload.userBackup || payload.userBackup.length < 1) {
-                    return
+                    return;
                 }
                 if (event.keyCode === 13) {
-                    event.stopPropagation()
-                    const flag = _.isEqual(payload.user.sort(), payload.userBackup.sort())
+                    event.stopPropagation();
+                    const flag = _.isEqual(payload.user.sort(), payload.userBackup.sort());
                     if (flag) {
-                        payload.isEdit = false
-                        return
+                        payload.isEdit = false;
+                        return;
                     }
                     if (payload.user.length < 2) {
-                        this.handleSave(payload)
+                        this.handleSave(payload);
                     }
                 }
             },
 
             handleSuperRowMouseEnter (index) {
-                this.$set(this.superUserList[index], 'canEdit', true)
+                this.$set(this.superUserList[index], 'canEdit', true);
             },
 
             handleSuperRowMouseLeave (index) {
-                this.$delete(this.superUserList[index], 'canEdit')
+                this.$delete(this.superUserList[index], 'canEdit');
             },
 
             handleOpenSuperEdit (payload, index) {
                 if (!payload.canEdit || payload.username === 'admin') {
-                    return
+                    return;
                 }
-                payload.isEdit = true
+                payload.isEdit = true;
                 this.$nextTick(() => {
-                    this.$refs[`superRef${index}`].focus()
-                })
+                    this.$refs[`superRef${index}`].focus();
+                });
             },
 
             async handleDelete (payload, index) {
-                const username = payload.user[0]
+                const username = payload.user[0];
                 try {
-                    this.$store.dispatch('role/deleteSuperManager', { username })
-                    this.superUserList.splice(index, 1)
-                    this.messageSuccess(this.$t(`m.common['操作成功']`))
+                    this.$store.dispatch('role/deleteSuperManager', { username });
+                    this.superUserList.splice(index, 1);
+                    this.messageSuccess(this.$t(`m.common['操作成功']`));
                     if (username === this.user.username) {
                         bus.$emit('refresh-role', {
                             id: 0,
                             type: 'staff',
                             name: this.user.role.name
-                        })
+                        });
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             handleCancel (payload, index) {
                 if (payload.userBackup.length < 1) {
-                    this.superUserList.splice(index, 1)
-                    return
+                    this.superUserList.splice(index, 1);
+                    return;
                 }
-                payload.user = [...payload.userBackup]
-                payload.isEdit = false
+                payload.user = [...payload.userBackup];
+                payload.isEdit = false;
             },
 
             async addSuperManager (payload) {
-                const { user, system_permission_enabled } = payload
+                const { user, system_permission_enabled } = payload;
                 try {
                     await this.$store.dispatch('role/addSuperManager', {
                         username: user[0],
                         system_permission_enabled
-                    })
-                    payload.userBackup = [...payload.user]
-                    payload.isEdit = false
+                    });
+                    payload.userBackup = [...payload.user];
+                    payload.isEdit = false;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             async editSuperManager (payload) {
-                const { user, system_permission_enabled } = payload
+                const { user, system_permission_enabled } = payload;
                 try {
                     await this.$store.dispatch('role/editSuperManager', {
                         username: user[0],
                         system_permission_enabled
-                    })
-                    payload.userBackup = [...payload.user]
-                    payload.username = payload.user[0]
-                    payload.isEdit = false
+                    });
+                    payload.userBackup = [...payload.user];
+                    payload.username = payload.user[0];
+                    payload.isEdit = false;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             async handleEnabledChange (newVal, oldVal, val, payload) {
                 if (!payload.userBackup || payload.userBackup.length < 1) {
-                    return
+                    payload.system_permission_enabled = newVal;
+                    return;
                 }
                 try {
                     await this.$store.dispatch('role/editSuperManager', {
                         username: payload.user[0],
                         system_permission_enabled: newVal
-                    })
-                    payload.system_permission_enabled = newVal
-                    payload.isEdit = false
-                    const message = newVal ? this.$t(`m.set['设置成功']`) : this.$t(`m.set['取消设置成功']`)
-                    this.messageSuccess(message)
+                    });
+                    payload.system_permission_enabled = newVal;
+                    payload.isEdit = false;
+                    const message = newVal ? this.$t(`m.set['设置成功']`) : this.$t(`m.set['取消设置成功']`);
+                    this.messageSuccess(message);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             handleSave (payload) {
-                const flag = _.isEqual(payload.user.sort(), payload.userBackup.sort())
+                const flag = _.isEqual(payload.user.sort(), payload.userBackup.sort());
                 if (flag) {
-                    payload.isEdit = false
-                    return
+                    payload.isEdit = false;
+                    return;
                 }
                 if (payload.userBackup.length < 1) {
-                    this.addSuperManager(payload)
-                    return
+                    this.addSuperManager(payload);
+                    return;
                 }
-                this.editSuperManager(payload)
+                this.editSuperManager(payload);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-set-super-manager-wrapper {
