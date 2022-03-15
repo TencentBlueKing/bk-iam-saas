@@ -86,7 +86,7 @@ def check_readonly_group(operation):
         @wraps(func)
         def wrapper(view, request, *args, **kwargs):
             group = view.get_object()
-            readonly = Group.objects.filter(id=group.id).first().readonly
+            readonly = group.readonly
 
             if readonly:
                 raise error_codes.FORBIDDEN.format(
