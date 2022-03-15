@@ -1,7 +1,7 @@
 <script>
-    import _ from 'lodash'
-    import { encodeRegexp } from './helper'
-    import Mixin from './mixin'
+    import _ from 'lodash';
+    import { encodeRegexp } from './helper';
+    import Mixin from './mixin';
 
     export default {
         name: 'BKSearchSuggest',
@@ -10,15 +10,15 @@
             return {
                 activeIndex: -1,
                 list: []
-            }
+            };
         },
         computed: {
             needRender () {
                 // 没有有选中key，且输入框中有输入值
                 if (!this.searchSelect.menu.id && !!this.searchSelect.localValue) {
-                    return true
+                    return true;
                 }
-                return false
+                return false;
             }
         },
         watch: {
@@ -26,27 +26,27 @@
                 const {
                     primaryKey,
                     defaultInputKey
-                } = this.searchSelect
+                } = this.searchSelect;
 
-                this.activeIndex = -1
+                this.activeIndex = -1;
                 if (!defaultInputKey) {
-                    return
+                    return;
                 }
                 for (let i = 0; i < list.length; i++) {
                     if (defaultInputKey[primaryKey] === list[i].keyId) {
-                        this.activeIndex = i
+                        this.activeIndex = i;
                     }
                 }
             }
         },
         created () {
-            this.generatorList = _.debounce(this._generatorList, 100)
+            this.generatorList = _.debounce(this._generatorList, 100);
         },
         mounted () {
-            document.body.addEventListener('keydown', this.handleKeydown)
+            document.body.addEventListener('keydown', this.handleKeydown);
         },
         beforeDestroy () {
-            document.body.removeEventListener('keydown', this.handleKeydown)
+            document.body.removeEventListener('keydown', this.handleKeydown);
         },
         methods: {
             _generatorList () {
@@ -57,34 +57,34 @@
                     displayKey,
                     primaryKey,
                     _remoteKeyImmediateChildrenMap
-                } = this.searchSelect
+                } = this.searchSelect;
 
                 const selectKeyMap = chipList.reduce((result, item) => {
-                    result[item[primaryKey]] = true
-                    return result
-                }, {})
-                const search = localValue
+                    result[item[primaryKey]] = true;
+                    return result;
+                }, {});
+                const search = localValue;
 
-                const stack = []
+                const stack = [];
                 for (let i = 0; i < data.length; i++) {
-                    const current = data[i]
+                    const current = data[i];
                     // 过滤已选key
                     if (selectKeyMap[current[primaryKey]]) {
-                        continue
+                        continue;
                     }
                     if (typeof current.remoteMethod === 'function'
                         && !current.inputInclude
                         && !current.remoteExecuteImmediate) {
-                        continue
+                        continue;
                     }
 
-                    const children = _remoteKeyImmediateChildrenMap[current[primaryKey]] || current.children
+                    const children = _remoteKeyImmediateChildrenMap[current[primaryKey]] || current.children;
                     
                     if (children) {
                         // 搜索本地配置子项
                         for (let j = 0; j < children.length; j++) {
-                            const currentChild = children[j]
-                            const reg = new RegExp(encodeRegexp(search), 'i')
+                            const currentChild = children[j];
+                            const reg = new RegExp(encodeRegexp(search), 'i');
                             if (reg.test(currentChild.name)) {
                                 stack.push({
                                     keyName: current[displayKey],
@@ -92,16 +92,16 @@
                                     valueName: currentChild[displayKey],
                                     valueId: currentChild[primaryKey],
                                     payload: current
-                                })
+                                });
                             }
                         }
-                        continue
+                        continue;
                     }
                     
                     // 匹配验证规则
                     if (typeof current.validate === 'function') {
                         if (current.validate([{ name: search }]) !== true) {
-                            continue
+                            continue;
                         }
                     }
                     
@@ -111,34 +111,34 @@
                         valueName: search,
                         valueId: search,
                         payload: current
-                    })
+                    });
                 }
 
-                this.list = Object.freeze(stack)
+                this.list = Object.freeze(stack);
             },
             
             handleKeydown (event) {
                 if (!this.needRender) {
-                    return
+                    return;
                 }
                 // 取消选中状态
                 if (event.keyCode === 27) {
-                    this.activeIndex = -1
+                    this.activeIndex = -1;
                     // this.$emit('enter-invalid-toggle', false)
-                    return
+                    return;
                 }
                 // enter键直接触发选中
                 if (event.keyCode === 13 && this.activeIndex > -1) {
-                    this.handleClick(this.list[this.activeIndex])
-                    return
+                    this.handleClick(this.list[this.activeIndex]);
+                    return;
                 }
-                this.scrollActiveToView(event)
-                this.$emit('enter-invalid-toggle', true)
+                this.scrollActiveToView(event);
+                this.$emit('enter-invalid-toggle', true);
             },
             
             handleClick (payload) {
-                const displayKey = this.searchSelect.displayKey
-                const primaryKey = this.searchSelect.primaryKey
+                const displayKey = this.searchSelect.displayKey;
+                const primaryKey = this.searchSelect.primaryKey;
 
                 this.$emit('select', {
                     [primaryKey]: payload.keyId,
@@ -147,7 +147,7 @@
                         [primaryKey]: payload.valueId,
                         [displayKey]: payload.valueName
                     }]
-                })
+                });
             },
             
             renderList () {
@@ -155,7 +155,7 @@
                 if (this.list.length < 1) {
                     return (
                         <div class="iam-bk-search-list-loading">{ this.searchSelect.remoteEmptyText }</div>
-                    )
+                    );
                 }
 
                 return (
@@ -188,18 +188,18 @@
                             }
                         </table>
                     </div>
-                )
+                );
             }
         },
         render () {
             if (!this.needRender) {
-                return null
+                return null;
             }
             return (
                 <div class="iam-bk-search-list" role="suggest-menu" tabIndex="-1">
                     {this.renderList()}
                 </div>
-            )
+            );
         }
-    }
+    };
 </script>

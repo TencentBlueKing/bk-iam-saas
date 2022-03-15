@@ -1,3 +1,53 @@
+# V1.7.6
+
+### 功能优化
+* apigw 新增user-groups/department-groups两个开放 API
+* 变更原policy查询三个api的路径, 增加 /open/(但是保持向前兼容: 老的public=false, 新增三个新的)
+* apigw-manage 升级到 1.0.2
+* apigw配置后端由SaaS Web调整为SaaS API
+
+# V1.7.5
+
+### 功能优化
+* 对接APIGateway的SaaS Open API，其后端由bkiam-saas-web调整为 bkiam-saas-api
+
+### 缺陷修复
+* 修复前端用户组配置权限相关问题
+* 组织架构部门同步修复了部门lft/rght/level数据错误问题
+
+# V1.7.4
+
+### 缺陷修复
+* 修复healthz导致redis连接泄露问题
+* 修复前端用户组配置权限没有显示资源类型问题
+
+# V1.7.3
+
+### 缺陷修复
+* 修复自动注册apigateway配置错误
+
+# V1.7.2
+
+### 缺陷修复
+* 修复权限模板变更操作报错
+* 修复自动注册apigateway配置错误
+
+# V1.7.1
+
+### 新增功能
+* 定时清理后台未被引用的expression
+
+### 功能优化
+* 优化操作审计信息
+* 优化日志打印
+* 优化SaaS Django配置, 去除blueapps依赖
+
+# V1.7.0
+
+### 新增功能
+* 关联多个资源类型的操作支持配置多个实例组合
+* 权限策略增加生效条件
+
 # V1.6.5
 
 ### 缺陷修复

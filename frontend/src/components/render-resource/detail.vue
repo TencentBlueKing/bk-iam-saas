@@ -43,11 +43,11 @@
     </div>
 </template>
 <script>
-    import renderResourceInstance from './index.vue'
-    import renderOrderNumber from './order-number.vue'
-    import InstanceItem from './instance-item.vue'
-    import propertyItem from './property-item.vue'
-    import OrStatusBar from '../render-status/bar.vue'
+    import renderResourceInstance from './index.vue';
+    import renderOrderNumber from './order-number.vue';
+    import InstanceItem from './instance-item.vue';
+    import propertyItem from './property-item.vue';
+    import OrStatusBar from '../render-status/bar.vue';
 
     export default {
         name: '',
@@ -67,20 +67,20 @@
         data () {
             return {
                 conditionData: []
-            }
+            };
         },
         watch: {
             data: {
                 handler (value) {
                     if (value.length > 0) {
                         if (value[0] && value[0].hasOwnProperty('instance')) {
-                            value[0].instanceExpanded = true
+                            value[0].instanceExpanded = true;
                         }
                         if (value[0] && value[0].hasOwnProperty('attribute')) {
-                            value[0].attributeExpanded = true
+                            value[0].attributeExpanded = true;
                         }
                     }
-                    this.conditionData = value
+                    this.conditionData = value;
                 },
                 immediate: true
             }
@@ -88,56 +88,56 @@
         methods: {
             computedIsGroup (payload) {
                 if (payload.hasOwnProperty('instance') && payload.hasOwnProperty('attribute')) {
-                    return true
+                    return true;
                 }
-                return false
+                return false;
             },
 
             computedInstanceTitle (payload) {
                 if (payload.instance && payload.instance.length > 0) {
-                    const strList = []
+                    const strList = [];
                     payload.instance.forEach(item => {
                         if (item.displayPath.length > 0) {
-                            const str = ` ${item.displayPath.length} ${this.$t(`m.common['个']`)}${item.name}${this.curLanguageIsCn ? '' : '(s)'}`
-                            strList.push(str)
+                            const str = ` ${item.displayPath.length} ${this.$t(`m.common['个']`)}${item.name}${this.curLanguageIsCn ? '' : '(s)'}`;
+                            strList.push(str);
                         }
-                    })
-                    return this.curLanguageIsCn ? `已选择 ${strList.join('、')}` : `${strList.join('、')} selected`
+                    });
+                    return this.curLanguageIsCn ? `已选择 ${strList.join('、')}` : `${strList.join('、')} selected`;
                 }
-                return this.$t(`m.resource['未选择任何拓扑实例']`)
+                return this.$t(`m.resource['未选择任何拓扑实例']`);
             },
 
             computedAttributeTitle (payload) {
                 if (payload.attribute && payload.attribute.length > 0) {
-                    let len = 0
+                    let len = 0;
                     payload.attribute.forEach(item => {
                         if (item.id && item.values.some(val => val.id)) {
-                            ++len
+                            ++len;
                         }
-                    })
+                    });
                     if (len > 0) {
-                        return this.curLanguageIsCn ? `已设置 ${len} ${this.$t(`m.resource['个属性条件']`)}` : `${len} ${this.$t(`m.resource['个属性条件']`)} has been set`
+                        return this.curLanguageIsCn ? `已设置 ${len} ${this.$t(`m.resource['个属性条件']`)}` : `${len} ${this.$t(`m.resource['个属性条件']`)} has been set`;
                     }
-                    return this.$t(`m.resource['未设置任何属性条件']`)
+                    return this.$t(`m.resource['未设置任何属性条件']`);
                 }
-                return this.$t(`m.resource['未设置任何属性条件']`)
+                return this.$t(`m.resource['未设置任何属性条件']`);
             },
 
             handleExpanded (payload, item) {
-                item.isHovering = !payload
+                item.isHovering = !payload;
             },
 
             handleMouseenter (payload) {
                 if (!payload.instanceExpanded) {
-                    payload.isHovering = true
+                    payload.isHovering = true;
                 }
             },
 
             handleMouseleave (payload) {
-                payload.isHovering = false
+                payload.isHovering = false;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-condition-detail-wrapper {

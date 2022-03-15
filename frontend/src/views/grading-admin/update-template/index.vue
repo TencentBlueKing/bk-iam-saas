@@ -51,9 +51,9 @@
     </smart-action>
 </template>
 <script>
-    import _ from 'lodash'
-    import GradeAggregationPolicy from '@/model/grade-aggregation-policy'
-    import renderResourceInstanceTable from '../components/render-template-resource-instance-table'
+    import _ from 'lodash';
+    import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
+    import renderResourceInstanceTable from '../components/render-template-resource-instance-table';
     export default {
         name: '',
         components: {
@@ -112,32 +112,32 @@
                 rightLoading: false,
                 isFilter: false,
                 policyList: []
-            }
+            };
         },
         computed: {
             isEmpty () {
-                return this.templateList.length < 1
+                return this.templateList.length < 1;
             }
         },
         watch: {
             searchKey (newVal, oldVal) {
                 if (newVal === '' && oldVal !== '' && this.isFilter) {
-                    this.templateList = _.cloneDeep(this.templateListBackup)
-                    this.isFilter = false
+                    this.templateList = _.cloneDeep(this.templateListBackup);
+                    this.isFilter = false;
                 }
             }
         },
         created () {
-            this.templateListBackup = _.cloneDeep(this.templateList)
+            this.templateListBackup = _.cloneDeep(this.templateList);
         },
         methods: {
             async fetchPageData () {
-                const curId = this.templateList.find(item => item.id === this.curTemplateId).gradingId
-                await this.fetchRatingManagerDetail(curId)
+                const curId = this.templateList.find(item => item.id === this.curTemplateId).gradingId;
+                await this.fetchRatingManagerDetail(curId);
             },
 
             handlePrevious () {
-                this.handleCancel()
+                this.handleCancel();
             },
 
             handleSubmit () {},
@@ -146,66 +146,66 @@
                 this.$router.push({
                     name: 'gradingAdminEdit',
                     params: this.$route.params
-                })
+                });
             },
 
             handleSearch () {
                 if (this.searchKey === '') {
-                    return
+                    return;
                 }
-                this.templateList = this.templateListBackup.filter(item => item.name.indexOf(this.searchKey) > -1)
-                this.isFilter = true
-                this.curTemplateId = -1
+                this.templateList = this.templateListBackup.filter(item => item.name.indexOf(this.searchKey) > -1);
+                this.isFilter = true;
+                this.curTemplateId = -1;
                 // this.leftLoading = true
             },
 
             async fetchRatingManagerDetail (payload) {
-                this.rightLoading = true
+                this.rightLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: payload })
-                    this.handleDetailData(res.data)
+                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: payload });
+                    this.handleDetailData(res.data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.rightLoading = false
+                    this.rightLoading = false;
                 }
             },
 
             handleDetailData (payload) {
-                const tempActions = []
+                const tempActions = [];
                 payload.authorization_scopes.forEach(item => {
                     item.actions.forEach(act => {
                         const obj = {
                             ...act,
                             system_id: item.system.id,
                             system_name: item.system.name
-                        }
+                        };
                         tempActions.push(new GradeAggregationPolicy({
                             'instance_selections': [],
                             'actions': [obj]
-                        }, false, ''))
-                    })
-                })
-                this.policyList = _.cloneDeep(tempActions)
+                        }, false, ''));
+                    });
+                });
+                this.policyList = _.cloneDeep(tempActions);
             },
 
             handleSelectTempalte ({ id, gradingId }) {
                 if (this.curTemplateId === id) {
-                    return
+                    return;
                 }
                 // this.rightLoading = true
-                this.curTemplateId = id
-                this.fetchRatingManagerDetail(gradingId)
+                this.curTemplateId = id;
+                this.fetchRatingManagerDetail(gradingId);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-grading-update-template-wrapper {

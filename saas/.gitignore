@@ -133,3 +133,4 @@ dmypy.json
 nohub.out
 .DS_Store
 iam.db
+.codecc

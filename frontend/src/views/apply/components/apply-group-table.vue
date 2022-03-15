@@ -38,8 +38,8 @@
     </div>
 </template>
 <script>
-    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider'
-    import RenderTable from '../common/render-table'
+    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import RenderTable from '../common/render-table';
 
     export default {
         name: '',
@@ -74,22 +74,22 @@
                 isShowPermSidesilder: false,
                 curGroupName: '',
                 curGroupId: ''
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             data: {
                 handler (value) {
-                    this.tableList = [...value]
-                    this.curPageData = this.getDataByPage(this.pagination.current)
+                    this.tableList = [...value];
+                    this.curPageData = this.getDataByPage(this.pagination.current);
                 },
                 immediate: true
             },
             count: {
                 handler (value) {
-                    this.pagination.count = value
+                    this.pagination.count = value;
                 },
                 immediate: true
             }
@@ -100,53 +100,53 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             getDataByPage (page) {
                 if (!page) {
-                    this.pagination.current = page = 1
+                    this.pagination.current = page = 1;
                 }
-                let startIndex = (page - 1) * this.pagination.limit
-                let endIndex = page * this.pagination.limit
+                let startIndex = (page - 1) * this.pagination.limit;
+                let endIndex = page * this.pagination.limit;
                 if (startIndex < 0) {
-                    startIndex = 0
+                    startIndex = 0;
                 }
                 if (endIndex > this.tableList.length) {
-                    endIndex = this.tableList.length
+                    endIndex = this.tableList.length;
                 }
-                return this.tableList.slice(startIndex, endIndex)
+                return this.tableList.slice(startIndex, endIndex);
             },
 
             handleView (payload) {
-                this.curGroupName = payload.name
-                this.curGroupId = payload.id
-                this.isShowPermSidesilder = true
+                this.curGroupName = payload.name;
+                this.curGroupId = payload.id;
+                this.isShowPermSidesilder = true;
             },
 
             handleAnimationEnd () {
-                this.curGroupName = ''
-                this.curGroupId = ''
-                this.isShowPermSidesilder = false
+                this.curGroupName = '';
+                this.curGroupId = '';
+                this.isShowPermSidesilder = false;
             },
 
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                const data = this.getDataByPage(page)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
+                this.pagination.current = page;
+                const data = this.getDataByPage(page);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                const data = this.getDataByPage(this.pagination.current)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                const data = this.getDataByPage(this.pagination.current);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-apply-user-group-table-wrapper {

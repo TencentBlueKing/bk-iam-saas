@@ -74,18 +74,20 @@
                 <bk-form form-type="inline" class="pb10">
                     <iam-form-item class="pb20 form-item-resource" :label="$t(`m.common['资源实例']`)">
                         <div class="resource-container">
-                            <div class="relation-content-item" v-for="(content, contentIndex) in
-                                resourceTypeData.related_resource_types" :key="contentIndex">
-                                <div class="content">
-                                    <render-condition
-                                        :ref="`condition_${$index}_${contentIndex}_ref`"
-                                        :value="content.value"
-                                        :is-empty="content.empty"
-                                        :params="curCopyParams"
-                                        :is-error="content.isLimitExceeded || content.isError"
-                                        @on-click="showResourceInstance(resourceTypeData, content, contentIndex)" />
+                            <div v-for="(_, _index) in resourceTypeData.resource_groups" :key="_.id">
+                                <div class="relation-content-item" v-for="(content, contentIndex) in
+                                    _.related_resource_types" :key="contentIndex">
+                                    <div class="content">
+                                        <render-condition
+                                            :ref="`condition_${$index}_${contentIndex}_ref`"
+                                            :value="content.value"
+                                            :is-empty="content.empty"
+                                            :params="curCopyParams"
+                                            :is-error="content.isLimitExceeded || content.isError"
+                                            @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
+                                    </div>
+                                    <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
                                 </div>
-                                <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
                             </div>
                         </div>
                     </iam-form-item>
@@ -177,12 +179,12 @@
 </template>
 <script>
     // import IamSearchSelect from '@/components/iam-search-select'
-    import Policy from '@/model/policy'
-    import _ from 'lodash'
-    import RenderCondition from './components/render-condition.vue'
-    import RenderResource from './components/render-resource.vue'
-    import { leaveConfirm } from '@/common/leave-confirm'
-    import { fuzzyRtxSearch } from '@/common/rtx'
+    import Policy from '@/model/policy';
+    import _ from 'lodash';
+    import RenderCondition from './components/render-condition.vue';
+    import RenderResource from './components/render-resource.vue';
+    import { leaveConfirm } from '@/common/leave-confirm';
+    import { fuzzyRtxSearch } from '@/common/rtx';
     // import iamCascade from '@/components/cascade'
 
     // 单次申请的最大实例数
@@ -222,6 +224,7 @@
                 resourceTypeData: { isEmpty: true },
                 isShowResourceInstanceSideslider: false,
                 curResIndex: -1,
+                groupIndex: -1,
                 params: {},
                 resourceInstances: [],
                 searchTypeList: [{ name: '实例权限', value: 'resource_instance' }, { name: '操作权限', value: 'operate' }],
@@ -231,43 +234,45 @@
                 actionIdError: false,
                 searchTypeError: false,
                 resourceTypeError: false
-            }
+            };
         },
         computed: {
             condition () {
-                if (this.curResIndex === -1) {
-                    return []
+                if (this.curResIndex === -1 || this.groupIndex === -1) {
+                    return [];
                 }
-                const curData = this.resourceTypeData.related_resource_types[this.curResIndex]
+                const curData = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex];
                 if (!curData) {
-                    return []
+                    return [];
                 }
-                if (curData.condition.length === 0) curData.condition = ['none']
-                return _.cloneDeep(curData.condition)
+                if (curData.condition.length === 0) curData.condition = ['none'];
+                return _.cloneDeep(curData.condition);
             },
             curSelectionMode () {
-                if (this.curResIndex === -1) {
-                    return 'all'
+                if (this.curResIndex === -1 || this.groupIndex === -1) {
+                    return 'all';
                 }
-                console.log('this.curResIndex', this.curResIndex)
-                console.log('this.resourceTypeData.related_resource_types[this.curResIndex]', this.resourceTypeData.related_resource_types[this.curResIndex])
-                const curData = this.resourceTypeData.related_resource_types[this.curResIndex]
-                return curData.selectionMode
+                console.log('this.resourceTypeData.related_resource_types[this.curResIndex]', this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex]);
+                const curData = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex];
+                return curData.selectionMode;
             },
             originalCondition () {
-                return _.cloneDeep(this.condition)
+                return _.cloneDeep(this.condition);
             }
         },
         watch: {
             searchValue (value) {
                 if (!value) {
-                    this.tableList = _.cloneDeep(this.tableListClone)
+                    this.tableList = _.cloneDeep(this.tableListClone);
                 }
             }
         },
         created () {
             // this.handleSearchAndExport(false)
-            this.fetchSystemList()
+            this.fetchSystemList();
             this.searchData = [
                 {
                     id: 'group',
@@ -278,93 +283,94 @@
                     id: 'user',
                     name: this.$t(`m.common['用户']`)
                 }
-            ]
+            ];
         },
         methods: {
             async fetchSystemList () {
                 try {
-                    const res = await this.$store.dispatch('system/getSystems')
-                    this.systemList = res.data
+                    const res = await this.$store.dispatch('system/getSystems');
+                    this.systemList = res.data;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
                     // this.requestQueue.shift()
                 }
             },
 
             async handleCascadeChange () {
-                this.systemIdError = false
-                this.resourceActionData = []
-                this.processesList = []
-                if (!this.systemId) return
-                this.actionId = ''
-                this.resourceTypeData = { isEmpty: true }
-                const systemId = this.systemId
+                this.systemIdError = false;
+                this.resourceActionData = [];
+                this.processesList = [];
+                if (!this.systemId) return;
+                this.actionId = '';
+                this.resourceTypeData = { isEmpty: true };
+                const systemId = this.systemId;
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId })
-                    console.log('res', res)
-                    this.recursionFunc(res.data)
+                    const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId });
+                    console.log('res', res);
+                    this.recursionFunc(res.data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText
-                    })
+                    });
                 }
             },
 
             // 查询类型选择
             handlSearchChange (value) {
-                console.log('this.searchType', this.searchType)
-                this.searchTypeError = false
-                this.resourceTypeData = { isEmpty: true }
-                this.systemId = ''
-                this.actionId = ''
-                this.resourceInstances = []
+                console.log('this.searchType', this.searchType);
+                this.searchTypeError = false;
+                this.resourceTypeData = { isEmpty: true };
+                this.systemId = '';
+                this.actionId = '';
+                this.resourceInstances = [];
                 if (value === 'operate') {
-                    this.permissionType = 'custom'
+                    this.permissionType = 'custom';
                 }
             },
 
             // 操作选择
             handleSelected () {
-                this.actionIdError = false
-                this.resourceTypeError = false
-                this.resourceInstances = []
-                this.resourceTypeData = this.processesList.find(e => e.id === this.actionId)
-                console.log('resourceTypeData', this.resourceTypeData)
+                this.actionIdError = false;
+                this.resourceTypeError = false;
+                this.resourceInstances = [];
+                this.resourceTypeData = this.processesList.find(e => e.id === this.actionId);
+                console.log('resourceTypeData', this.resourceTypeData);
             },
 
             // 查询和导入
             async handleSearchAndExport (isExport = false) {
                 if (!this.searchType) {
-                    this.searchTypeError = true
-                    return
+                    this.searchTypeError = true;
+                    return;
                 }
                 if (!this.systemId) {
-                    this.systemIdError = true
-                    return
+                    this.systemIdError = true;
+                    return;
                 }
                 if (!this.actionId) {
-                    this.actionIdError = true
-                    return
+                    this.actionIdError = true;
+                    return;
                 }
-                console.log('resourceTypeData', this.resourceTypeData)
+                console.log('resourceTypeData', this.resourceTypeData);
                 if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
-                    && this.resourceTypeData.related_resource_types.some(e => e.empty)) {
-                    this.resourceTypeError = true
-                    return
+                    && this.resourceTypeData.resource_groups[this.groupIndex]
+                        .related_resource_types.some(e => e.empty)) {
+                    this.resourceTypeError = true;
+                    return;
                 }
-                this.tableLoading = !isExport
-                let resourceInstances = _.cloneDeep(this.resourceInstances)
+                this.tableLoading = !isExport;
+                let resourceInstances = _.cloneDeep(this.resourceInstances);
                 resourceInstances = resourceInstances.reduce((prev, item) => {
                     prev.push({
                         system_id: item.system_id,
@@ -377,165 +383,167 @@
                                     type: e.type,
                                     id: e.id,
                                     name: e.name
-                                })
-                                return p
+                                });
+                                return p;
                             }, []) : []
-                    })
-                    return prev
-                }, [])
-                console.log('resourceInstances', resourceInstances)
+                    });
+                    return prev;
+                }, []);
+                console.log('resourceInstances', resourceInstances);
                 const params = {
                     system_id: this.systemId || '',
                     action_id: this.actionId,
                     resource_instances: resourceInstances || [],
                     permission_type: this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType,
                     limit: this.limit
-                }
+                };
                 try {
-                    const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager'
-                    const res = await this.$store.dispatch(fetchUrl, params)
+                    const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager';
+                    const res = await this.$store.dispatch(fetchUrl, params);
                     if (isExport) {
                         if (res.ok) {
-                            const blob = await res.blob()
-                            const url = URL.createObjectURL(blob)
-                            const elment = document.createElement('a')
-                            elment.download = '资源权限管理.xlsx'
-                            elment.href = url
-                            elment.click()
-                            URL.revokeObjectURL(blob)
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const elment = document.createElement('a');
+                            elment.download = '资源权限管理.xlsx';
+                            elment.href = url;
+                            elment.click();
+                            URL.revokeObjectURL(blob);
 
                             this.$bkMessage({
                                 theme: 'success',
                                 message: '导出成功！'
-                            })
+                            });
                         }
                     } else {
-                        this.tableList = res.data
-                        this.tableListClone = res.data
+                        this.tableList = res.data;
+                        this.tableListClone = res.data;
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
             // 重置
             handleReset () {
-                this.searchType = ''
-                this.systemId = ''
-                this.actionId = ''
-                this.resourceInstances = []
-                this.permissionType = ''
-                this.limit = 100
+                this.searchType = '';
+                this.systemId = '';
+                this.actionId = '';
+                this.resourceInstances = [];
+                this.permissionType = '';
+                this.limit = 100;
             },
 
             // 求值
             recursionFunc (list) {
-                console.log('list', list)
                 list.forEach(data => {
                     if (data.actions && data.actions.length) {
                         data.actions.forEach(e => {
-                            this.resourceActionData.push(e)
-                        })
+                            this.resourceActionData.push(e);
+                        });
                     }
                     if (data.sub_groups && data.sub_groups.length) {
                         data.sub_groups.forEach(item => {
                             if (item.actions && item.actions.length) {
                                 item.actions.forEach(e => {
-                                    this.resourceActionData.push(e)
-                                })
+                                    this.resourceActionData.push(e);
+                                });
                             }
-                        })
+                        });
                     }
-                })
-                this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index)
+                });
+                this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index);
                 this.resourceActionData.forEach(item => {
-                    this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'))
-                })
-                console.log('this.resourceActionData', this.resourceActionData)
-                console.log('this.processesList', this.processesList)
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                    }
+                    this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'));
+                });
             },
 
             // 显示资源实例
-            showResourceInstance (data, resItem, resIndex) {
+            showResourceInstance (data, resItem, resIndex, groupIndex) {
                 this.params = {
                     system_id: this.systemId,
                     action_id: data.id,
                     resource_type_system: resItem.system_id,
                     resource_type_id: resItem.type
-                }
+                };
 
-                this.curResIndex = resIndex
-                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`
-                window.changeAlert = 'iamSidesider'
-                console.log(this.params)
-                this.isShowResourceInstanceSideslider = true
+                this.curResIndex = resIndex;
+                this.groupIndex = groupIndex;
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
+                window.changeAlert = 'iamSidesider';
+                console.log('1111', this.params);
+                this.isShowResourceInstanceSideslider = true;
             },
 
             handleResourceCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
-                    cancelHandler = leaveConfirm()
+                    cancelHandler = leaveConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.isShowResourceInstanceSideslider = false
-                    this.resetDataAfterClose()
-                }, _ => _)
+                    this.isShowResourceInstanceSideslider = false;
+                    this.resetDataAfterClose();
+                }, _ => _);
             },
 
             resetDataAfterClose () {
-                this.curResIndex = -1
-                this.params = {}
-                this.resourceInstanceSidesliderTitle = ''
+                this.curResIndex = -1;
+                this.groupIndex = -1;
+                this.params = {};
+                this.resourceInstanceSidesliderTitle = '';
             },
 
             async handleResourceSumit () {
-                const conditionData = this.$refs.renderResourceRef.handleGetValue()
-                console.log('conditionData', conditionData)
-                const { isEmpty, data } = conditionData
+                const conditionData = this.$refs.renderResourceRef.handleGetValue();
+                console.log('conditionData', conditionData);
+                const { isEmpty, data } = conditionData;
                 if (isEmpty) {
-                    return
+                    return;
                 }
-                console.log('this.resourceTypeData', this.resourceTypeData)
-                const resItem = this.resourceTypeData.related_resource_types[this.curResIndex]
-                const isConditionEmpty = data.length === 1 && data[0] === 'none'
+                const resItem = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex];
+                const isConditionEmpty = data.length === 1 && data[0] === 'none';
                 if (isConditionEmpty) {
-                    resItem.condition = ['none']
-                    resItem.isLimitExceeded = false
-                    this.resourceInstances = []
+                    resItem.condition = ['none'];
+                    resItem.isLimitExceeded = false;
+                    this.resourceInstances = [];
                 } else {
-                    resItem.condition = data
+                    resItem.condition = data;
                     data.forEach(item => {
                         item.instance.forEach(e => {
-                            resItem.resourceInstancesPath = e.path[0]
-                        })
-                    })
+                            resItem.resourceInstancesPath = e.path[0];
+                        });
+                    });
                     if (this.curResIndex !== -1) {
-                        this.resourceInstances.splice(this.curResIndex, 1, resItem)
+                        this.resourceInstances.splice(this.curResIndex, 1, resItem);
                     }
-                    console.log('this.resourceInstances', this.resourceInstances)
-                    console.log('resItem', resItem)
+                    console.log('this.resourceInstances', this.resourceInstances);
+                    console.log('resItem', resItem);
                 }
-                window.changeAlert = false
-                this.resourceInstanceSidesliderTitle = ''
-                this.isShowResourceInstanceSideslider = false
-                this.curResIndex = -1
-                this.resourceTypeError = false
+                window.changeAlert = false;
+                this.resourceInstanceSidesliderTitle = '';
+                this.isShowResourceInstanceSideslider = false;
+                this.curResIndex = -1;
+                this.resourceTypeError = false;
             },
             
             // 搜索
             handleSearch () {
                 if (this.searchValue) {
                     this.tableList = _.cloneDeep(this.tableListClone).filter(item =>
-                        item.name.indexOf(this.searchValue) !== -1)
+                        item.name.indexOf(this.searchValue) !== -1);
                 }
             },
 
@@ -544,19 +552,19 @@
                     name: this.$t(`m.common['关键字']`),
                     id: 'keyword',
                     values: [value]
-                }
+                };
             },
 
             handleRemoteRtx (value) {
-                console.log('value', value)
+                console.log('value', value);
                 return fuzzyRtxSearch(value)
                     .then(data => {
-                        return data.results
-                    })
+                        return data.results;
+                    });
             }
             
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-system-access-wrapper {

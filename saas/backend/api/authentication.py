@@ -98,7 +98,7 @@ class ESBAuthentication(BaseAuthentication):
 
         # 虽然app_code为空对于后续的鉴权一定是不通过的，但鉴权不通过有很多原因，这里提前log便于问题排查
         if not app_code:
-            logger.warning("could not get app_code from esb payload: %s", jwt_payload)
+            logger.warning("could not get app_code from the payload of jwt(esb or apigateway): %s", jwt_payload)
 
         return app_code
 
@@ -116,14 +116,14 @@ class ESBAuthentication(BaseAuthentication):
         """
         # 如果BK_APIGW_PUBLIC_KEY为空，则直接报错
         if not settings.BK_APIGW_PUBLIC_KEY:
-            logger.exception("BK_APIGW_PUBLIC_KEY can not be empty")
+            logger.error("BK_APIGW_PUBLIC_KEY can not be empty")
             return ""
 
         # base64解码
         try:
             public_key = base64.b64decode(settings.BK_APIGW_PUBLIC_KEY).decode("utf-8")
-        except Exception as error:  # pylint: disable=broad-except
-            logger.exception(f"BK_APIGW_PUBLIC_KEY is not the base64 string, base64.b64decode error: {error}")
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("BK_APIGW_PUBLIC_KEY is not the base64 string, base64.b64decode fail")
             return ""
 
         return public_key

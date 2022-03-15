@@ -24,6 +24,6 @@
  * IN THE SOFTWARE.
 */
 
-import Vue from 'vue'
-import bkMagicVue from 'bk-magic-vue'
-Vue.use(bkMagicVue)
+import Vue from 'vue';
+import bkMagicVue from 'bk-magic-vue';
+Vue.use(bkMagicVue);

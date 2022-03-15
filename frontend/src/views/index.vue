@@ -7,11 +7,11 @@
         components: {},
         data () {
             return {
-            }
+            };
         },
         computed: {},
         watch: {},
         created () {},
         methods: {}
-    }
+    };
 </script>

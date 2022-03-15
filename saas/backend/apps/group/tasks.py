@@ -17,7 +17,7 @@ from pydantic.tools import parse_obj_as
 
 from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.biz.group import GroupBiz
-from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
+from backend.biz.policy import PolicyBean, PolicyOperationBiz
 from backend.biz.template import TemplateBiz
 from backend.common.time import db_time
 from backend.long_task.constants import TaskType
@@ -85,12 +85,11 @@ class GroupAuthorizationTask(StepTask):
         template_id = lock.template_id
         system_id = lock.system_id
         policies = parse_obj_as(List[PolicyBean], lock.data["actions"])
-        policy_list = PolicyBeanList(system_id, policies, need_ignore_path=True)  # 处理忽略路径
         # 授权
         if template_id != 0:
-            self.template_biz.grant_subject(system_id, template_id, self.subject, policy_list.policies)
+            self.template_biz.grant_subject(system_id, template_id, self.subject, policies)
         else:
-            self.policy_biz.alter(system_id, self.subject, policy_list.policies)
+            self.policy_biz.alter(system_id, self.subject, policies)
 
         lock.delete()
 

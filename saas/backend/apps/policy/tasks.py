@@ -58,11 +58,11 @@ def execute_model_change_event():
             ModelChangeEventTypeEnum.ActionPolicyDeleted.value,
             ModelChangeEventTypeEnum.ActionDeleted.value,
         ]:
-            logger.info(f"The model change event of type({event_type}) not supported yet")
+            logger.info(f"model change event type({event_type}) not supported yet")
             continue
 
         # 记录执行过的事件，以防需要排查
-        logger.info(f"execute model change event: f{event}")
+        logger.info(f"execute model change event: {event}")
         try:
             # 删除Action相关的所有策略
             if event_type == ModelChangeEventTypeEnum.ActionPolicyDeleted.value:
@@ -77,8 +77,8 @@ def execute_model_change_event():
                 delete_action(system_id, action_id)
             # 执行完事件后，更新事件状态
             iam.update_model_change_event(event["pk"], ModelChangeEventStatusEnum.Finished.value)
-        except Exception as error:
-            logger.exception(error)
+        except Exception:
+            logger.exception(f"execute model change event fail! event={event}")
             # 记录失败事件
             failed_events.add((event_type, system_id, action_id))
 

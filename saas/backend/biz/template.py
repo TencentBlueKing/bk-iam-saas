@@ -31,6 +31,7 @@ from backend.biz.policy import (
     PolicyBean,
     PolicyBeanList,
     RelatedResourceBean,
+    ResourceGroupBean,
     ThinAction,
     group_paths,
 )
@@ -41,6 +42,7 @@ from backend.service.action import ActionList, ActionService
 from backend.service.constants import RoleRelatedObjectType, SubjectType, TemplatePreUpdateStatus
 from backend.service.models import Action, ChainNode, Policy, Subject
 from backend.service.template import TemplateGroupPreCommit, TemplateService
+from backend.util.uuid import gen_uuid
 
 
 class TemplateCreateBean(BaseModel):
@@ -83,6 +85,7 @@ class TemplateNameDictBean(BaseModel):
 
 class TemplateBiz:
     svc = TemplateService()
+    action_svc = ActionService()
 
     def create(self, role_id: int, info: TemplateCreateBean, creator: str) -> PermTemplate:
         """
@@ -100,7 +103,7 @@ class TemplateBiz:
         """
         删除模板预更新锁
         """
-        lock = PermTemplatePreUpdateLock.objects.get_lock_not_running_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template_id)
         if not lock:
             return
 
@@ -123,7 +126,13 @@ class TemplateBiz:
         """
         权限模板增加成员
         """
-        self.svc.grant_subject(system_id, template_id, subject, parse_obj_as(List[Policy], policies))
+        self.svc.grant_subject(
+            system_id,
+            template_id,
+            subject,
+            parse_obj_as(List[Policy], policies),
+            action_list=self.action_svc.new_action_list(system_id),
+        )
 
     def filter_not_auth_subjects(self, template_id, subjects: List[Subject]) -> List[Subject]:
         """
@@ -164,7 +173,7 @@ class TemplateBiz:
         """
         查询模板预更新中的新增操作
         """
-        lock = PermTemplatePreUpdateLock.objects.get_lock_waiting_or_raise(template_id=template.id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_waiting_or_raise(template_id=template.id)
         return list(set(lock.action_ids) - set(template.action_ids))
 
     def sync_group_template_auth(self, group_id: int, template_id: int):
@@ -172,7 +181,7 @@ class TemplateBiz:
         同步用户组模板授权
         """
         # 查询需要删除的操作
-        lock = PermTemplatePreUpdateLock.objects.get_lock_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_or_raise(template_id=template_id)
         template = PermTemplate.objects.get_or_404(template_id)
         del_action_ids = list(set(template.action_ids) - set(lock.action_ids))
 
@@ -192,7 +201,7 @@ class TemplateBiz:
         """
         结束模板更新同步
         """
-        lock = PermTemplatePreUpdateLock.objects.get_lock_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_or_raise(template_id=template_id)
         template = PermTemplate.objects.get_or_404(template_id)
         template.action_ids = lock.action_ids
         with transaction.atomic():
@@ -211,7 +220,7 @@ class TemplateBiz:
             raise error_codes.VALIDATE_ERROR.format(_("模板操作未变更, 无需更新!"))
 
         template_id = template.id
-        lock = PermTemplatePreUpdateLock.objects.get_lock_not_running_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template_id)
         if lock and set(lock.action_ids) != set(action_ids):
             raise error_codes.VALIDATE_ERROR.format(_("有其它的模板更新任务存在, 禁止提交新的更新任务!"))
 
@@ -476,20 +485,29 @@ class TemplatePolicyCloneBiz:
         """
         生成clone的policy
         """
+        if len(source_policy.list_thin_resource_type()) != 1:
+            return None
+
         match_paths = []  # 能匹配实例视图前缀的资源路径
         match_path_hash_set = set()  # 用于去重
-        for path_list in source_policy.related_resource_types[0].iter_path_list():
-            for chain in chain_list.chains:
-                if not chain.is_match_path(path_list.nodes):
-                    continue
 
-                _hash = path_list.to_path_string()
-                if _hash in match_path_hash_set:
+        for rg in source_policy.resource_groups:
+            # NOTE 有环境属性的资源组不能生成
+            if len(rg.environments) != 0:
+                continue
+
+            for path_list in rg.related_resource_types[0].iter_path_list():
+                for chain in chain_list.chains:
+                    if not chain.is_match_path(list(path_list)):
+                        continue
+
+                    _hash = path_list.to_path_string()
+                    if _hash in match_path_hash_set:
+                        break
+
+                    match_path_hash_set.add(_hash)
+                    match_paths.append(list(path_list))
                     break
-
-                match_path_hash_set.add(_hash)
-                match_paths.append(path_list.nodes)
-                break
 
         if not match_paths:
             return None
@@ -505,13 +523,16 @@ class TemplatePolicyCloneBiz:
         """
         生成新的Policy
         """
-        instances = group_paths([PathNodeBeanList(one).dict() for one in paths])
+        instances = group_paths([PathNodeBeanList.parse_obj(one).dict() for one in paths])
         condition = ConditionBean(instances=instances, attributes=[])
         related_resource_types = [
             RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
             for rrt in action.related_resource_types
         ]
-        return PolicyBean(action_id=action.id, related_resource_types=related_resource_types)
+        return PolicyBean(
+            action_id=action.id,
+            resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=related_resource_types)],
+        )
 
     def gen_system_action_clone_config(
         self, system_id: str, new_action_ids: List[str], old_action_ids: List[str]

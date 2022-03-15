@@ -52,10 +52,10 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import RenderTable from './render-table'
-    import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider'
-    import RenderDetail from '../../perm/components/render-detail'
+    import _ from 'lodash';
+    import RenderTable from './render-table';
+    import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider';
+    import RenderDetail from '../../perm/components/render-detail';
 
     export default {
         name: '',
@@ -95,22 +95,22 @@
                 sidesliderTitle: '',
                 isShowSideslider: false,
                 renderDetailCom: 'RenderDetail'
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             data: {
                 handler (value) {
-                    this.tableList = [...value]
-                    this.curPageData = this.getDataByPage(this.pagination.current)
+                    this.tableList = [...value];
+                    this.curPageData = this.getDataByPage(this.pagination.current);
                 },
                 immediate: true
             },
             count: {
                 handler (value) {
-                    this.pagination.count = value
+                    this.pagination.count = value;
                 },
                 immediate: true
             }
@@ -124,7 +124,7 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             /**
@@ -132,56 +132,56 @@
              */
             getDataByPage (page) {
                 if (!page) {
-                    this.pagination.current = page = 1
+                    this.pagination.current = page = 1;
                 }
-                let startIndex = (page - 1) * this.pagination.limit
-                let endIndex = page * this.pagination.limit
+                let startIndex = (page - 1) * this.pagination.limit;
+                let endIndex = page * this.pagination.limit;
                 if (startIndex < 0) {
-                    startIndex = 0
+                    startIndex = 0;
                 }
                 if (endIndex > this.tableList.length) {
-                    endIndex = this.tableList.length
+                    endIndex = this.tableList.length;
                 }
-                return this.tableList.slice(startIndex, endIndex)
+                return this.tableList.slice(startIndex, endIndex);
             },
 
             /**
              * handleView
              */
             handleView (payload) {
-                this.curTemplateId = payload.id
-                this.curTemplateVersion = payload.version || ''
-                this.permSidesilderTitle = `${payload.name}(${payload.system_name})`
-                this.isShowPermSidesilder = true
+                this.curTemplateId = payload.id;
+                this.curTemplateVersion = payload.version || '';
+                this.permSidesilderTitle = `${payload.name}(${payload.system_name})`;
+                this.isShowPermSidesilder = true;
             },
 
             /**
              * handleOnView
              */
             handleOnView (payload) {
-                const { name, data } = payload
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${name}】${this.$t(`m.common['的资源实例']`)}`
-                this.previewData = _.cloneDeep(data)
-                this.isShowSideslider = true
+                const { name, data } = payload;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.previewData = _.cloneDeep(data);
+                this.isShowSideslider = true;
             },
 
             /**
              * handleAnimationEnd
              */
             handleAnimationEnd () {
-                this.permSidesilderTitle = ''
-                this.curTemplateVersion = ''
-                this.curTemplateId = ''
-                this.isShowPermSidesilder = false
+                this.permSidesilderTitle = '';
+                this.curTemplateVersion = '';
+                this.curTemplateId = '';
+                this.isShowPermSidesilder = false;
             },
 
             /**
              * handleViewResourceAnimationEnd
              */
             handleViewResourceAnimationEnd () {
-                this.previewData = []
-                this.sidesliderTitle = ''
-                this.isShowSideslider = false
+                this.previewData = [];
+                this.sidesliderTitle = '';
+                this.isShowSideslider = false;
             },
 
             /**
@@ -189,24 +189,24 @@
              */
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                const data = this.getDataByPage(page)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
+                this.pagination.current = page;
+                const data = this.getDataByPage(page);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             },
 
             /**
              * limitChange
              */
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                const data = this.getDataByPage(this.pagination.current)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                const data = this.getDataByPage(this.pagination.current);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-join-template-table-wrapper {

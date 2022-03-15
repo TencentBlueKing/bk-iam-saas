@@ -71,11 +71,6 @@ def batch_query_ticket_result(sns: List[str]) -> List[Dict]:
     return _call_esb_api(http_post, url_path, data=data)
 
 
-def get_ticket_result(sn: str) -> Dict:
-    """获取单据结果"""
-    return batch_query_ticket_result([sn])[0]
-
-
 def withdraw_ticket(sn: str, operator: str):
     """撤销单据"""
     url_path = "/api/c/compapi/v2/itsm/operate_ticket/"

@@ -31,7 +31,7 @@
     </div>
 </template>
 <script>
-    import il8n from '@/language'
+    import il8n from '@/language';
     
     export default {
         name: 'iam-edit-input',
@@ -64,7 +64,7 @@
                 type: String,
                 default: 'edit',
                 validator: function (value) {
-                    return ['detail', 'edit'].includes(value)
+                    return ['detail', 'edit'].includes(value);
                 }
             }
         },
@@ -75,109 +75,109 @@
                 isLoading: false,
                 isShowError: false,
                 errorTips: ''
-            }
+            };
         },
         computed: {
             styles () {
                 return {
                     width: this.width
-                }
+                };
             },
             isEditMode () {
-                return this.mode === 'edit'
+                return this.mode === 'edit';
             }
         },
         watch: {
             value (newVal) {
-                this.newVal = newVal
+                this.newVal = newVal;
             }
         },
         mounted () {
-            document.body.addEventListener('click', this.hideEdit)
+            document.body.addEventListener('click', this.hideEdit);
             this.$once('hook:beforeDestroy', () => {
-                document.body.removeEventListener('click', this.hideEdit)
-            })
+                document.body.removeEventListener('click', this.hideEdit);
+            });
         },
         methods: {
             handleValidate () {
-                this.isShowError = false
-                this.errorTips = ''
+                this.isShowError = false;
+                this.errorTips = '';
                 if (this.rules.length > 0) {
                     for (let i = 0; i < this.rules.length; i++) {
-                        const validate = this.rules[i]
+                        const validate = this.rules[i];
                         if (validate.required && this.newVal === '') {
-                            this.isShowError = true
-                            this.errorTips = validate.message
-                            break
+                            this.isShowError = true;
+                            this.errorTips = validate.message;
+                            break;
                         }
                         if (validate.validator && !validate.validator(this.newVal)) {
-                            this.isShowError = true
-                            this.errorTips = validate.message
-                            break
+                            this.isShowError = true;
+                            this.errorTips = validate.message;
+                            break;
                         }
                         if ((validate.required && this.newVal !== '') && (validate.validator && validate.validator(this.newVal))) {
-                            this.isShowError = false
-                            this.errorTips = ''
-                            break
+                            this.isShowError = false;
+                            this.errorTips = '';
+                            break;
                         }
                     }
                 }
             },
             handleEdit () {
-                document.body.click()
-                this.isEditable = true
+                document.body.click();
+                this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.input.focus()
-                })
+                    this.$refs.input.focus();
+                });
             },
             handleInput () {
-                this.isShowError = false
-                this.errorTips = ''
+                this.isShowError = false;
+                this.errorTips = '';
             },
             handleBlur () {
-                if (!this.isEditable) return
-                this.handleValidate()
-                if (this.isShowError) return
-                this.triggerChange()
+                if (!this.isEditable) return;
+                this.handleValidate();
+                if (this.isShowError) return;
+                this.triggerChange();
             },
             handleEnter (value, event) {
-                if (!this.isEditable) return
+                if (!this.isEditable) return;
                 if (event.key === 'Enter' && event.keyCode === 13) {
-                    this.triggerChange()
+                    this.triggerChange();
                 }
             },
             hideEdit (event) {
                 if (event.path && event.path.length > 0) {
                     for (let i = 0; i < event.path.length; i++) {
-                        const target = event.path[i]
+                        const target = event.path[i];
                         if (target.className === 'iam-edit-input') {
-                            return
+                            return;
                         }
                     }
                 }
 
-                this.handleValidate()
-                if (this.isShowError) return
-                this.isEditable = false
+                this.handleValidate();
+                if (this.isShowError) return;
+                this.isEditable = false;
             },
             triggerChange () {
-                this.isEditable = false
+                this.isEditable = false;
                 if (this.newVal === this.value) {
-                    return
+                    return;
                 }
-                this.isLoading = true
+                this.isLoading = true;
                 this.remoteHander({
                     [this.field]: this.newVal
                 }).then(() => {
                     this.$emit('on-change', {
                         [this.field]: this.newVal
-                    })
+                    });
                 }).finally(() => {
-                    this.isLoading = false
-                })
+                    this.isLoading = false;
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @keyframes ani-edit-loading {

@@ -48,9 +48,9 @@
     </div>
 </template>
 <script>
-    import { leavePageConfirm } from '@/common/leave-page-confirm'
-    import BasicInfo from './basic-info'
-    import beforeStepChangedMixin from '../common/before-stepchange'
+    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    import BasicInfo from './basic-info';
+    import beforeStepChangedMixin from '../common/before-stepchange';
 
     export default {
         name: '',
@@ -85,68 +85,68 @@
                     ],
                     curStep: 1
                 }
-            }
+            };
         },
         methods: {
             async fetchPageData () {
-                const modelingId = this.$route.params.id
+                const modelingId = this.$route.params.id;
                 if (modelingId === null || modelingId === undefined || modelingId === '') {
-                    return
+                    return;
                 }
 
-                this.modelingId = modelingId
+                this.modelingId = modelingId;
 
                 // 编辑
-                await this.fetchModeling()
+                await this.fetchModeling();
             },
 
             async fetchModeling () {
                 try {
-                    const res = await this.$store.dispatch('access/getModeling', { id: this.modelingId })
-                    const systemData = (res.data || {}).system
-                    this.modelingSystemData = Object.assign({}, systemData || {})
-                    this.fillFormData()
+                    const res = await this.$store.dispatch('access/getModeling', { id: this.modelingId });
+                    const systemData = (res.data || {}).system;
+                    this.modelingSystemData = Object.assign({}, systemData || {});
+                    this.fillFormData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             fillFormData () {
                 if (Object.keys(this.modelingSystemData).length) {
-                    this.formData.id = this.modelingSystemData.id
-                    this.formData.name = this.modelingSystemData.name
-                    this.formData.name_en = this.modelingSystemData.name_en
-                    this.formData.host = this.modelingSystemData.provider_config.host
-                    this.formData.auth = this.modelingSystemData.provider_config.auth
-                    this.formData.healthz = this.modelingSystemData.provider_config.healthz
-                    this.formData.description = this.modelingSystemData.description
-                    this.formData.description_en = this.modelingSystemData.description_en
+                    this.formData.id = this.modelingSystemData.id;
+                    this.formData.name = this.modelingSystemData.name;
+                    this.formData.name_en = this.modelingSystemData.name_en;
+                    this.formData.host = this.modelingSystemData.provider_config.host;
+                    this.formData.auth = this.modelingSystemData.provider_config.auth;
+                    this.formData.healthz = this.modelingSystemData.provider_config.healthz;
+                    this.formData.description = this.modelingSystemData.description;
+                    this.formData.description_en = this.modelingSystemData.description_en;
                 }
             },
 
             handleBasicInfoChange (value) {
-                window.changeDialog = true
-                this.formData = Object.assign({}, value)
+                window.changeDialog = true;
+                this.formData = Object.assign({}, value);
             },
 
             async handleSubmit (routerName) {
-                const infoFlag = await this.$refs.basicInfoRef.handleValidator()
+                const infoFlag = await this.$refs.basicInfoRef.handleValidator();
                 if (infoFlag) {
-                    this.scrollToLocation(this.$refs.basicInfoContentRef)
-                    return
+                    this.scrollToLocation(this.$refs.basicInfoContentRef);
+                    return;
                 }
 
-                let url = ''
-                let params = {}
+                let url = '';
+                let params = {};
                 if (this.modelingId) {
-                    url = 'access/updateModeling'
+                    url = 'access/updateModeling';
                     params = {
                         id: this.modelingId,
                         data: {
@@ -164,9 +164,9 @@
                                 }
                             }
                         }
-                    }
+                    };
                 } else {
-                    url = 'access/createModeling'
+                    url = 'access/createModeling';
                     params = {
                         id: this.formData.id,
                         name: this.formData.name,
@@ -178,47 +178,47 @@
                             auth: this.formData.auth,
                             healthz: this.formData.healthz
                         }
-                    }
+                    };
                 }
 
-                window.changeDialog = false
-                this.submitLoading = true
+                window.changeDialog = false;
+                this.submitLoading = true;
                 try {
-                    const res = await this.$store.dispatch(url, params)
+                    const res = await this.$store.dispatch(url, params);
                     // this.messageSuccess(this.$t(`m.access['新建系统成功']`), 1000)
                     this.$router.push({
                         name: routerName,
                         params: {
                             id: this.modelingId || res.data.id
                         }
-                    })
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.submitLoading = false
+                    this.submitLoading = false;
                 }
             },
 
             handleCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm()
+                    cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
                     this.$router.push({
                         name: 'systemAccess'
-                    })
-                }, _ => _)
+                    });
+                }, _ => _);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     @import './index.css';

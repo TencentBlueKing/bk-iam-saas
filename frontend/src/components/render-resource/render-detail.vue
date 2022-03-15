@@ -18,8 +18,8 @@
     </div>
 </template>
 <script>
-    import Tree from '../attach-action-preview/attach-action-tree'
-    import ConditionDetail from './detail'
+    import Tree from '../attach-action-preview/attach-action-tree';
+    import ConditionDetail from './detail';
     export default {
         name: '',
         components: {
@@ -38,20 +38,20 @@
                     { name: 'relate', label: this.$t(`m.permApply['关联权限']`), tabType: 'relate' }
                 ],
                 active: 'relate'
-            }
+            };
         },
         watch: {
             data: {
                 handler (value) {
                     if (value.length > 0) {
-                        this.panels = value
-                        this.active = this.panels[0].name
+                        this.panels = value;
+                        this.active = this.panels[0].name;
                     }
                 },
                 immediate: true
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-perm-related-content {

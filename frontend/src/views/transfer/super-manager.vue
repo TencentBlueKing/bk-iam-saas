@@ -31,38 +31,38 @@
                 isLoading: false,
                 superListAll: [], // 超级管理员权限交接
                 superExpanded: true
-            }
+            };
         },
         mounted () {
-            this.fetchData()
+            this.fetchData();
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getSuperManager') // 普通用户没有获取超级管理员接口数据的权限...需要确认
-                    const superListAll = res.data || []
-                    this.superListAll.splice(0, this.superListAll.length, ...superListAll)
-                    this.isEmpty = superListAll.length < 1
+                    const res = await this.$store.dispatch('role/getSuperManager'); // 普通用户没有获取超级管理员接口数据的权限...需要确认
+                    const superListAll = res.data || [];
+                    this.superListAll.splice(0, this.superListAll.length, ...superListAll);
+                    this.isEmpty = superListAll.length < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handlesuperExpanded () {
-                this.superExpanded = !this.superExpanded
+                this.superExpanded = !this.superExpanded;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './group.css';

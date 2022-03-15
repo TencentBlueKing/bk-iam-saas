@@ -30,10 +30,10 @@
         },
         methods: {
             handleClick () {
-                this.$emit('on-click')
+                this.$emit('on-click');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-action-block-wrapper {

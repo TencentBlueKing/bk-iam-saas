@@ -14,7 +14,7 @@
     export default {
         inject: ['collapse'],
         data () {
-            return {}
+            return {};
         },
         mounted () {
             // const unwatch = this.$watch(() => this.$refs.collapseItem.isActive, newValue => {
@@ -26,7 +26,7 @@
             //     unwatch()
             // })
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .bk-collapse {

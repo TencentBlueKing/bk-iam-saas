@@ -32,8 +32,8 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import JoinedUserGroup from './joined-user-group'
+    import _ from 'lodash';
+    import JoinedUserGroup from './joined-user-group';
     export default {
         name: '',
         components: {
@@ -43,7 +43,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -56,26 +56,26 @@
                 active: 'group',
                 componentsKey: -1,
                 curCom: 'JoinedUserGroup'
-            }
+            };
         },
         computed: {
             /**
              * isDepart
              */
             isDepart () {
-                return this.curData.type === 'depart'
+                return this.curData.type === 'depart';
             },
             /**
              * isExistName
              */
             isExistName () {
-                return this.curData.type === 'user' && this.curData.name !== ''
+                return this.curData.type === 'user' && this.curData.name !== '';
             },
             /**
              * isShowPage
              */
             isShowPage () {
-                return Object.keys(this.params).length > 0
+                return Object.keys(this.params).length > 0;
             }
         },
         watch: {
@@ -87,10 +87,10 @@
                     if (Object.keys(value).length > 0) {
                         // this.active = 'perm'
                         // this.curCom = 'DepartPerm'
-                        this.active = 'group'
-                        this.curCom = 'JoinedUserGroup'
-                        this.componentsKey = +new Date()
-                        this.curData = _.cloneDeep(value)
+                        this.active = 'group';
+                        this.curCom = 'JoinedUserGroup';
+                        this.componentsKey = +new Date();
+                        this.curData = _.cloneDeep(value);
                     }
                 },
                 immediate: true
@@ -99,8 +99,8 @@
              * active
              */
             active (value) {
-                this.curCom = value === 'perm' ? 'DepartPerm' : 'JoinedUserGroup'
-                this.componentsKey = +new Date()
+                this.curCom = value === 'perm' ? 'DepartPerm' : 'JoinedUserGroup';
+                this.componentsKey = +new Date();
             }
         },
         methods: {
@@ -108,10 +108,10 @@
              * handleComInit
              */
             handleComInit (payload) {
-                this.$emit('on-init', payload)
+                this.$emit('on-init', payload);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-depart-perm-wrapper {

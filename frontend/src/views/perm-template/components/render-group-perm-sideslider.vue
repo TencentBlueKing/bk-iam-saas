@@ -65,12 +65,12 @@
     </bk-sideslider>
 </template>
 <script>
-    import Policy from '@/model/policy'
-    import RenderPermItem from '@/views/group/common/render-perm-item-new'
-    import RenderTemplateItem from '@/views/group/common/render-template-item'
-    import ResourceInstanceTable from '@/views/group/components/render-instance-table'
+    import Policy from '@/model/policy';
+    import RenderPermItem from '@/views/group/common/render-perm-item-new';
+    import RenderTemplateItem from '@/views/group/common/render-template-item';
+    import ResourceInstanceTable from '@/views/group/components/render-instance-table';
 
-    const CUSTOM_CUSTOM_TEMPLATE_ID = 0
+    const CUSTOM_CUSTOM_TEMPLATE_ID = 0;
     export default {
         name: '',
         components: {
@@ -94,19 +94,19 @@
                 isLoading: false,
                 groupSystemList: [],
                 groupSystemListLength: ''
-            }
+            };
         },
         computed: {
             isEmpty () {
-                return this.groupSystemList.length < 1
+                return this.groupSystemList.length < 1;
             }
         },
         watch: {
             isShow: {
                 handler (value) {
-                    this.visible = !!value
+                    this.visible = !!value;
                     if (this.visible) {
-                        this.handleInit()
+                        this.handleInit();
                     }
                 },
                 immediate: true
@@ -114,48 +114,48 @@
         },
         methods: {
             handleClose () {
-                this.$emit('update:isShow', false)
+                this.$emit('update:isShow', false);
             },
 
             async handleInit () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
                     const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId })
                     ;(res.data || []).forEach(item => {
-                        item.expanded = false
-                        item.loading = false
-                        item.templates = []
-                    })
-                    this.groupSystemList = res.data
-                    this.groupSystemListLength = res.data.length
+                        item.expanded = false;
+                        item.loading = false;
+                        item.templates = [];
+                    });
+                    this.groupSystemList = res.data;
+                    this.groupSystemListLength = res.data.length;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             async getGroupTemplateList (payload) {
-                payload.loading = true
-                let res
+                payload.loading = true;
+                let res;
                 try {
                     res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', {
                         id: this.groupId,
                         systemId: payload.id
-                    })
+                    });
                     res.data.forEach(item => {
-                        item.loading = false
-                        item.tableData = []
-                        item.count = 0
-                    })
-                    payload.templates = res.data
+                        item.loading = false;
+                        item.tableData = [];
+                        item.count = 0;
+                    });
+                    payload.templates = res.data;
                     if (payload.custom_policy_count) {
                         payload.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
@@ -167,92 +167,106 @@
                             count: payload.custom_policy_count,
                             loading: false,
                             tableData: []
-                        })
+                        });
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    payload.loading = false
+                    payload.loading = false;
                     if (res.data.length === 1) {
                         this.$nextTick(() => {
-                            this.$refs[`rTemplateItem${payload.id}`][0].handleExpanded()
-                        })
+                            this.$refs[`rTemplateItem${payload.id}`][0].handleExpanded();
+                        });
                     }
                 }
             },
 
             handleExpanded (flag, item) {
                 if (!flag) {
-                    return
+                    return;
                 }
-                this.getGroupTemplateList(item)
+                this.getGroupTemplateList(item);
             },
 
             async handleTemplateExpanded (flag, item) {
                 if (!flag) {
-                    return
+                    return;
                 }
                 if (item.count > 0) {
-                    this.getGroupCustomPolicy(item)
-                    return
+                    this.getGroupCustomPolicy(item);
+                    return;
                 }
-                this.getGroupTemplateDetail(item)
+                this.getGroupTemplateDetail(item);
             },
 
             async getGroupTemplateDetail (item) {
-                item.loading = true
+                item.loading = true;
                 try {
                     const res = await this.$store.dispatch('userGroup/getGroupTemplateDetail', {
                         id: this.groupId,
                         templateId: item.id
-                    })
-                    const tableData = res.data.actions.map(item => new Policy({ ...item, policy_id: 1 }, 'detail'))
-                    this.$set(item, 'tableData', tableData)
+                    });
+                    // // mock数据
+                    // res.data.actions.forEach((element, index) => {
+                    //     element.resource_groups = [{
+                    //         id: index,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
+                    const tableData = res.data.actions.map(item => new Policy({ ...item, policy_id: 1 }, 'detail'));
+                    this.$set(item, 'tableData', tableData);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    item.loading = false
+                    item.loading = false;
                 }
             },
 
             async getGroupCustomPolicy (item) {
-                item.loading = true
+                item.loading = true;
                 try {
                     const res = await this.$store.dispatch('userGroup/getGroupPolicy', {
                         id: this.groupId,
                         systemId: item.system.id
-                    })
-                    const tableData = res.data.map(item => new Policy(item, 'detail'))
-                    this.$set(item, 'tableData', tableData)
+                    });
+                    // // mock数据
+                    // res.data.forEach((element, index) => {
+                    //     element.resource_groups = [{
+                    //         id: index,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
+                    const tableData = res.data.map(item => new Policy(item, 'detail'));
+                    this.$set(item, 'tableData', tableData);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    item.loading = false
+                    item.loading = false;
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-template-group-perm-slider {

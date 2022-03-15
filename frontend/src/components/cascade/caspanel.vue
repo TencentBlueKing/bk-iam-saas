@@ -45,8 +45,8 @@
     </div>
 </template>
 <script>
-    import iamCascadeOptionItem from './option-item.vue'
-    import cascadeInfo from './cascade.js'
+    import iamCascadeOptionItem from './option-item.vue';
+    import cascadeInfo from './cascade.js';
 
     export default {
         name: 'iamCascadeCaspanel',
@@ -91,100 +91,100 @@
                 selectedList: [],
                 selectedItem: {},
                 multipleSeleted: []
-            }
+            };
         },
         mounted () {
             this.$on('change-selected', (params) => {
-                const idInfo = params.idList
-                const valueList = [...idInfo]
+                const idInfo = params.idList;
+                const valueList = [...idInfo];
                 for (let i = 0; i < valueList.length; i++) {
                     for (let j = 0; j < this.list.length; j++) {
                         if (valueList[i] === this.list[j].id) {
-                            this.handleItemFn(this.list[j], true)
-                            valueList.splice(0, 1)
+                            this.handleItemFn(this.list[j], true);
+                            valueList.splice(0, 1);
                             this.$nextTick(() => {
                                 this.broadcast('iamCascadeCaspanel', 'change-selected', {
                                     idList: valueList
-                                })
-                            })
-                            return false
+                                });
+                            });
+                            return false;
                         }
                     }
                 }
-            })
+            });
             this.$on('multiple-selected', (params) => {
-                const valueList = params.idList
+                const valueList = params.idList;
                 // 改变最终选中态
                 const changeCheckStatus = (arr) => {
                     arr.forEach(item => {
                         if (valueList[valueList.length - 1] === item.id) {
-                            item.isSelected = params.isSelected
-                            item.isIndeterminate = false
-                            this.handleItemFn(item, true)
+                            item.isSelected = params.isSelected;
+                            item.isIndeterminate = false;
+                            this.handleItemFn(item, true);
                         }
                         if (item.children && item.children.length) {
-                            changeCheckStatus(item.children)
+                            changeCheckStatus(item.children);
                         }
-                    })
-                }
-                changeCheckStatus(this.list)
-            })
+                    });
+                };
+                changeCheckStatus(this.list);
+            });
             this.$on('on-clear', () => {
-                this.childrenList = []
-                this.selectedItem = {}
-            })
+                this.childrenList = [];
+                this.selectedItem = {};
+            });
         },
         methods: {
             // 点击事件
             cascadeClick (item) {
-                if (this.trigger !== 'click' && item.children && item.children.length) return
-                this.handleItem(item, false)
+                if (this.trigger !== 'click' && item.children && item.children.length) return;
+                this.handleItem(item, false);
             },
             cascadeHover (item) {
                 if (this.trigger === 'hover' && item.children && item.children.length) {
-                    this.handleItem(item, false)
+                    this.handleItem(item, false);
                 }
             },
             handleItem (item, fromInit = false) {
-                if (item.disabled) return
+                if (item.disabled) return;
 
                 if (this.isRemote) {
                     new Promise((resolve, reject) => {
-                        this.remoteMethod(item, resolve)
+                        this.remoteMethod(item, resolve);
                     }).then(() => {
-                        this.handleItemFn(item, fromInit)
+                        this.handleItemFn(item, fromInit);
                     }).catch(() => {
                         // console.error('catch')
                     }).finally(() => {
-                        item.isLoading = false
-                    })
+                        item.isLoading = false;
+                    });
                 } else {
-                    this.handleItemFn(item, fromInit)
+                    this.handleItemFn(item, fromInit);
                 }
             },
             handleItemFn (item, fromInit) {
                 if (item.parent) {
                     if (!item.children || !item.children.length) {
-                        return
+                        return;
                     }
                 }
                 // 清空数据
-                this.broadcast('iamCascadeCaspanel', 'on-clear')
-                this.childrenList = (item.children && item.children.length) ? item.children : []
+                this.broadcast('iamCascadeCaspanel', 'on-clear');
+                this.childrenList = (item.children && item.children.length) ? item.children : [];
                 // 当父级数据选中时，子集数据也选中(多选)
                 if (this.multiple && this.childrenList.length) {
                     // 使用递归对子集的子集也进行选中的操作
                     if (!this.checkAnyLevel) {
                         const childrenRecursive = (arr) => {
                             arr.forEach(child => {
-                                this.childSelected(child, item)
-                                this.childIndeterminate(child, item)
+                                this.childSelected(child, item);
+                                this.childIndeterminate(child, item);
                                 if (child.children && child.children.length) {
-                                    childrenRecursive(child.children)
+                                    childrenRecursive(child.children);
                                 }
-                            })
-                        }
-                        childrenRecursive(this.childrenList)
+                            });
+                        };
+                        childrenRecursive(this.childrenList);
                     }
                 }
                 // 子集展示
@@ -192,8 +192,8 @@
                     || (item.id !== this.selectedItem.id || item.name !== this.selectedItem.name)
                     || (item.id === this.selectedItem.id && item.name === this.selectedItem.name)
                 ) {
-                    this.selectedItem = item
-                    this.emitUpdate([item])
+                    this.selectedItem = item;
+                    this.emitUpdate([item]);
                 }
                 // multiple将数据存储在公共的一个选中的数组中
                 if (this.multiple) {
@@ -202,54 +202,55 @@
                         item: item,
                         checkAnyLevel: this.checkAnyLevel,
                         fromInit: fromInit
-                    })
+                    });
                 } else {
                     this.dispatch('iamCascade', 'on-id-change', {
                         item: item,
                         isLast: !(item.children && item.children.length),
                         checkAnyLevel: this.checkAnyLevel,
                         fromInit: fromInit
-                    })
+                    });
                 }
                 // 判断popoverWidth的层级
                 this.dispatch('iamCascade', 'on-popover-width', {
                     item: item
-                })
+                });
             },
             childSelected (child, item) {
                 if (child.disabled || (!item.isSelected && !item.isIndeterminate)) {
-                    child.isSelected = false
+                    child.isSelected = false;
                 } else if (item.isSelected) {
-                    child.isSelected = true
+                    child.isSelected = true;
                 }
             },
             childIndeterminate (child, item) {
                 if (child.disabled || (!item.isSelected && !item.isIndeterminate) || item.isSelected) {
-                    child.isIndeterminate = false
+                    child.isIndeterminate = false;
                 }
             },
             updateSelectedList (item) {
-                this.selectedList = [this.selectedItem].concat(item)
+                this.selectedList = [this.selectedItem].concat(item);
                 // 在每一个caspanel里面做自己的数据处理
                 if (!this.checkAnyLevel) {
                     item.forEach(itemItem => {
                         if (itemItem.children && itemItem.children.length) {
-                            itemItem.isSelected = itemItem.children.every(child => (child.isSelected || child.disabled))
+                            // eslint-disable-next-line max-len
+                            itemItem.isSelected = itemItem.children.every(child => (child.isSelected || child.disabled));
                             itemItem.isIndeterminate = itemItem.isSelected
                                 ? false
-                                : itemItem.children.some(child => (child.isSelected || child.isIndeterminate))
+                                : itemItem.children.some(child => (child.isSelected || child.isIndeterminate));
                         }
-                    })
+                    });
                 }
-                this.emitUpdate(this.selectedList)
+                this.emitUpdate(this.selectedList);
             },
             emitUpdate (selectedList) {
-                this.$emit('updateSelectedList', selectedList)
+                this.$emit('updateSelectedList', selectedList);
             },
             handleCheckItem (item) {
-                item.isSelected = !item.isSelected
-                item.isIndeterminate = false
+                item.isSelected = !item.isSelected;
+                item.isIndeterminate = false;
             }
         }
-    }
+    };
 </script>

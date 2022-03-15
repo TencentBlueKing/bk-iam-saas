@@ -24,22 +24,22 @@
  * IN THE SOFTWARE.
 */
 
-import path from 'path'
-import webpack from 'webpack'
-import TerserPlugin from 'terser-webpack-plugin'
-import chalk from 'chalk'
-import glob from 'glob'
-import ora from 'ora'
+import path from 'path';
+import webpack from 'webpack';
+import TerserPlugin from 'terser-webpack-plugin';
+import chalk from 'chalk';
+import glob from 'glob';
+import ora from 'ora';
 
-import config from './config'
+import config from './config';
 
-const ret = glob.sync('../static/lib**', { mark: true, cwd: __dirname })
+const ret = glob.sync('../static/lib**', { mark: true, cwd: __dirname });
 
-const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
+const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 const configMap = {
     production: config.build,
     development: config.dev
-}
+};
 
 if (!ret.length) {
     // 需要打包到一起的 js 文件
@@ -48,7 +48,7 @@ if (!ret.length) {
         'vuex',
         'vue-router',
         'axios'
-    ]
+    ];
 
     const dllConf = {
         mode,
@@ -89,15 +89,15 @@ if (!ret.length) {
             }),
             new webpack.optimize.OccurrenceOrderPlugin()
         ]
-    }
+    };
 
-    const spinner = ora('building dll...')
-    spinner.start()
+    const spinner = ora('building dll...');
+    spinner.start();
 
     webpack(dllConf, (err, stats) => {
-        spinner.stop()
+        spinner.stop();
         if (err) {
-            throw err
+            throw err;
         }
         process.stdout.write(stats.toString({
             colors: true,
@@ -105,13 +105,13 @@ if (!ret.length) {
             children: false,
             chunks: false,
             chunkModules: false
-        }) + '\n\n')
+        }) + '\n\n');
 
         if (stats.hasErrors()) {
-            console.log(chalk.red('  Build failed with errors.\n'))
-            process.exit(1)
+            console.log(chalk.red('  Build failed with errors.\n'));
+            process.exit(1);
         }
 
-        console.log(chalk.cyan('  DLL Build complete.\n'))
-    })
+        console.log(chalk.cyan('  DLL Build complete.\n'));
+    });
 }

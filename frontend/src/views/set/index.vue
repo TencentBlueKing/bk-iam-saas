@@ -16,9 +16,9 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import SuperManager from './components/render-super-manager'
-    import SystemManager from './components/render-system-manager'
+    import { mapGetters } from 'vuex';
+    import SuperManager from './components/render-super-manager';
+    import SystemManager from './components/render-system-manager';
     export default {
         name: '',
         components: {
@@ -34,7 +34,7 @@
                 active: 'SuperManager',
                 curRole: 'staff',
                 isLoading: true
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
@@ -42,29 +42,29 @@
         watch: {
             user: {
                 handler (value) {
-                    const role = value.role.type || 'staff'
-                    this.handlePanels(role)
+                    const role = value.role.type || 'staff';
+                    this.handlePanels(role);
                 },
                 deep: true
             }
         },
         created () {
-            const role = this.user.role.type || 'staff'
-            this.handlePanels(role)
+            const role = this.user.role.type || 'staff';
+            this.handlePanels(role);
         },
         methods: {
             handleDataReady (payload) {
-                this.isLoading = !payload
+                this.isLoading = !payload;
             },
 
             handlePanels (payload) {
                 if (payload === 'system_manager') {
-                    this.panels = this.panels.filter(item => item.name === 'SystemManager')
-                    this.active = 'SystemManager'
+                    this.panels = this.panels.filter(item => item.name === 'SystemManager');
+                    this.active = 'SystemManager';
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-admin-set-wrapper {

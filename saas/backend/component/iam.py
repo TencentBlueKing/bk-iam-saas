@@ -13,15 +13,15 @@ from typing import Dict, List, Tuple
 
 from django.conf import settings
 
-from backend.common.error_codes import error_codes
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
 from backend.util.cache import region
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
-from .http import http_delete, http_get, http_post, http_put, logger
-from .util import execute_all_data_by_paging, list_all_data_by_paging
+from .constants import ComponentEnum
+from .http import http_delete, http_get, http_post, http_put
+from .util import do_blueking_http_request, execute_all_data_by_paging, list_all_data_by_paging
 
 DEFAULT_SYSTEM_FIELDS = "id,name,name_en,description,description_en"
 DEFAULT_ACTION_FIELDS = "id,name,name_en,description,description_en"
@@ -38,44 +38,14 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
     }
     if settings.BK_IAM_HOST_TYPE == "apigateway":
         headers["x-bkapi-authorization"] = json_dumps(
-            {"bk_app_code": settings.APP_ID, "bk_app_secret": settings.APP_TOKEN}
+            {"bk_app_code": settings.APP_CODE, "bk_app_secret": settings.APP_SECRET}
         )
     elif settings.BK_IAM_HOST_TYPE == "direct":
-        headers.update({"X-Bk-App-Code": settings.APP_ID, "X-Bk-App-Secret": settings.APP_TOKEN})
+        headers.update({"X-Bk-App-Code": settings.APP_CODE, "X-Bk-App-Secret": settings.APP_SECRET})
 
     url = url_join(settings.BK_IAM_HOST, url_path)
-    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
-    ok, data = http_func(**kwargs)
-    # remove sensitive info
-    kwargs["headers"] = {}
-
-    # process result
-    if not ok:
-        message = "iam api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
-        logger.error(message)
-        raise error_codes.REMOTE_REQUEST_ERROR.format(f'request iam api error: {data["error"]}')
-
-    code = data["code"]
-    message = data["message"]
-
-    if code == 0:
-        return data["data"]
-
-    logger.warning(
-        "iam api warning, request_id: %s, method: %s, info: %s, code: %d message: %s",
-        local.request_id,
-        http_func.__name__,
-        kwargs,
-        code,
-        message,
-    )
-
-    error_message = (
-        f"Request=[{http_func.__name__} {url_path} request_id={local.request_id}],"
-        f"Response[code={code}, message={message}]"
-    )
-    raise error_codes.IAM_REQUEST_ERROR.format(error_message)
+    return do_blueking_http_request(ComponentEnum.IAM.value, http_func, url, data, headers, timeout)
 
 
 def list_system(fields: str = DEFAULT_SYSTEM_FIELDS) -> List[Dict]:
@@ -205,15 +175,6 @@ def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
     return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
 
 
-def list_subject(_type: str, limit: int = 10, offset: int = 0) -> Dict:
-    """
-    获取subject列表
-    """
-    url_path = "/api/v1/web/subjects"
-    params = {"type": _type, "limit": limit, "offset": offset}
-    return _call_iam_api(http_get, url_path, data=params)
-
-
 def list_all_subject(_type: str) -> List[Dict]:
     """
     获取某个类型的所有Subject
@@ -312,22 +273,6 @@ def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str
     return _call_iam_api(http_delete, url_path, data=params)
 
 
-def delete_subject_members_by_auto_paging(_type: str, id: str, members: List[dict]) -> None:
-    """通过自动分页批量删除subject的成员"""
-
-    def delete_paging_subject_members(paging_data):
-        """[分页]添加subject的成员"""
-        url_path = "/api/v1/web/subject-members"
-        params = {
-            "type": _type,
-            "id": id,
-            "members": paging_data,
-        }
-        _call_iam_api(http_delete, url_path, data=params)
-
-    return execute_all_data_by_paging(delete_paging_subject_members, members, 1000)
-
-
 def add_subject_members(_type: str, id: str, policy_expired_at: int, members: List[dict]) -> Dict[str, int]:
     """
     批量添加subject的成员
@@ -341,23 +286,6 @@ def add_subject_members(_type: str, id: str, policy_expired_at: int, members: Li
     }
     permission_logger.info("iam subject add member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_post, url_path, data=params)
-
-
-def add_subject_members_by_auto_paging(_type: str, id: str, policy_expired_at: int, members: List[dict]) -> None:
-    """通过自动分页批量添加subject的成员"""
-
-    def add_paging_subject_members(paging_data):
-        """[分页]添加subject的成员"""
-        url_path = "/api/v1/web/subject-members"
-        params = {
-            "type": _type,
-            "id": id,
-            "members": paging_data,
-            "policy_expired_at": policy_expired_at,
-        }
-        _call_iam_api(http_post, url_path, data=params)
-
-    return execute_all_data_by_paging(add_paging_subject_members, members, 1000)
 
 
 def list_system_policy(system_id: str, subject_type: str, subject_id: str, template_id: int = 0) -> List[Dict]:

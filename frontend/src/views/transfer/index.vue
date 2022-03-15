@@ -67,12 +67,12 @@
 </template>
 <script>
     // import _ from 'lodash'
-    import BkUserSelector from '@blueking/user-selector'
+    import BkUserSelector from '@blueking/user-selector';
 
-    import { bus } from '@/common/bus'
-    import Group from './group.vue'
-    import Custom from './custom.vue'
-    import Manager from './manager.vue'
+    import { bus } from '@/common/bus';
+    import Group from './group.vue';
+    import Custom from './custom.vue';
+    import Manager from './manager.vue';
 
     export default {
         name: '',
@@ -96,20 +96,20 @@
                 pageContainer: null,
                 submitLoading: false,
                 enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
-            }
+            };
         },
         created () {
             // this.fetchCategories()
         },
         mounted () {
-            this.pageContainer = document.querySelector('.main-scroller')
+            this.pageContainer = document.querySelector('.main-scroller');
             bus.$on('nav-resize', flag => {
                 if (flag) {
-                    this.fixedActionPaddingLeft = '284px'
+                    this.fixedActionPaddingLeft = '284px';
                 } else {
-                    this.fixedActionPaddingLeft = '84px'
+                    this.fixedActionPaddingLeft = '84px';
                 }
-            })
+            });
         },
         methods: {
             // async fetchCategories () {
@@ -171,65 +171,65 @@
             //     }
             // },
             handleGroupSelection (list) {
-                this.groupSelectData.splice(0, this.groupSelectData.length, ...list)
+                this.groupSelectData.splice(0, this.groupSelectData.length, ...list);
             },
             handleCustomSelection (data) {
                 // this.customSelectData.splice(0, this.customSelectData.length, ...list)
-                this.customSelectData = Object.assign({}, data)
+                this.customSelectData = Object.assign({}, data);
             },
             handleManagerSelection (list) {
-                this.managerSelectData.splice(0, this.managerSelectData.length, ...list)
+                this.managerSelectData.splice(0, this.managerSelectData.length, ...list);
             },
             handleRtxFocus () {
-                this.isShowMemberError = false
+                this.isShowMemberError = false;
             },
             handleRtxBlur () {
-                this.isShowMemberError = this.formData.members.length < 1
+                this.isShowMemberError = this.formData.members.length < 1;
             },
             handleReasonInput () {
-                this.isShowReasonError = false
-                this.reasonValidateText = ''
+                this.isShowReasonError = false;
+                this.reasonValidateText = '';
             },
             handleRtxChange (payload) {
-                this.isShowMemberError = false
-                this.formData.members = payload
+                this.isShowMemberError = false;
+                this.formData.members = payload;
             },
 
             handleReasonBlur (payload) {
                 if (payload === '') {
-                    this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`)
-                    this.isShowReasonError = true
+                    this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`);
+                    this.isShowReasonError = true;
                 }
                 if (!this.isShowReasonError) {
-                    const maxLength = 100
+                    const maxLength = 100;
                     if (payload.trim().length > maxLength) {
-                        this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`)
-                        this.isShowReasonError = true
+                        this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`);
+                        this.isShowReasonError = true;
                     }
                 }
             },
 
             handleReasonChange (value) {
-                this.formData.reason = value
+                this.formData.reason = value;
             },
 
             handleValidator () {
-                const maxLength = 32
-                const { reason, members } = this.formData
+                const maxLength = 32;
+                const { reason, members } = this.formData;
                 if (reason === '') {
-                    this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`)
-                    this.isShowReasonError = true
+                    this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`);
+                    this.isShowReasonError = true;
                 }
                 if (!this.isShowNameError) {
                     if (reason.trim().length > maxLength) {
-                        this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`)
-                        this.isShowReasonError = true
+                        this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由最长不超过100个字符']`);
+                        this.isShowReasonError = true;
                     }
                 }
 
-                this.isShowMemberError = members.length < 1
+                this.isShowMemberError = members.length < 1;
 
-                return !this.isShowReasonError && !this.isShowMemberError
+                return !this.isShowReasonError && !this.isShowMemberError;
             },
 
             async submit () {
@@ -242,41 +242,41 @@
                         delay: 1500,
                         theme: 'error',
                         message: this.$t(`m.permTransfer['还未选择权限']`)
-                    })
-                    return
+                    });
+                    return;
                 }
                 if (!this.handleValidator()) {
                     const top = this.$refs.formWrapper.getBoundingClientRect().top
-                        + this.pageContainer.scrollTop
+                        + this.pageContainer.scrollTop;
 
                     this.pageContainer.scrollTo({
                         top: top - 61, // 减去顶导的高度 61
                         behavior: 'smooth'
-                    })
-                    return
+                    });
+                    return;
                 }
 
-                const groupIds = []
+                const groupIds = [];
                 this.groupSelectData.forEach(item => {
-                    groupIds.push(item.id)
-                })
+                    groupIds.push(item.id);
+                });
 
-                const roleIds = []
+                const roleIds = [];
                 this.managerSelectData.forEach(item => {
-                    roleIds.push(item.id)
-                })
+                    roleIds.push(item.id);
+                });
 
-                const customPolicies = []
+                const customPolicies = [];
                 Object.keys(this.customSelectData).forEach(key => {
                     const customPolicy = {
                         system_id: key,
                         policy_ids: []
-                    }
+                    };
                     this.customSelectData[key].forEach(policyInfo => {
-                        customPolicy.policy_ids.push(policyInfo.policy_id)
-                    })
-                    customPolicies.push(customPolicy)
-                })
+                        customPolicy.policy_ids.push(policyInfo.policy_id);
+                    });
+                    customPolicies.push(customPolicy);
+                });
 
                 const submitData = {
                     handover_to: this.formData.members[0],
@@ -286,11 +286,11 @@
                         role_ids: roleIds,
                         custom_policies: customPolicies
                     }
-                }
+                };
 
                 try {
-                    this.submitLoading = true
-                    await this.$store.dispatch('perm/permTransfer', submitData)
+                    this.submitLoading = true;
+                    await this.$store.dispatch('perm/permTransfer', submitData);
                     this.$bkMessage({
                         theme: 'success',
                         delay: 500,
@@ -298,11 +298,11 @@
                         onClose: () => {
                             this.$router.push({
                                 name: 'myPerm'
-                            })
+                            });
                         }
-                    })
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -310,9 +310,9 @@
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.submitLoading = false
+                    this.submitLoading = false;
                 }
 
                 // const customData = []
@@ -410,10 +410,10 @@
             goPermTransferHistory () {
                 this.$router.push({
                     name: 'permTransferHistory'
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './index.css';

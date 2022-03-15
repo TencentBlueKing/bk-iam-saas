@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-09 19:30+0800\n"
+"POT-Creation-Date: 2022-02-11 14:34+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,281 +18,548 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: backend/account/views.py:69
+#: backend/account/models.py:51
+msgid "username"
+msgstr ""
+
+#: backend/account/models.py:54 backend/account/models.py:145
+msgid "Required. 64 characters or fewer. Letters, digits and underlined only."
+msgstr ""
+
+#: backend/account/models.py:59
+msgid ""
+"Enter a valid openid. This value may contain only letters, numbers and "
+"underlined characters."
+msgstr ""
+
+#: backend/account/models.py:67
+msgid "A user with that openid already exists."
+msgstr ""
+
+#: backend/account/models.py:72
+msgid "nick name"
+msgstr ""
+
+#: backend/account/models.py:75
+msgid "Required. 64 characters or fewer."
+msgstr ""
+
+#: backend/account/models.py:78
+msgid "staff status"
+msgstr ""
+
+#: backend/account/models.py:80
+msgid "Designates whether the user can log into this admin site."
+msgstr ""
+
+#: backend/account/models.py:83
+msgid "active"
+msgstr ""
+
+#: backend/account/models.py:86
+msgid ""
+"Designates whether this user should be treated as active. Unselect this "
+"instead of deleting accounts."
+msgstr ""
+
+#: backend/account/models.py:90
+msgid "date joined"
+msgstr ""
+
+#: backend/account/models.py:100
+msgid "user"
+msgstr ""
+
+#: backend/account/models.py:101
+msgid "users"
+msgstr ""
+
+#: backend/account/models.py:149
+msgid ""
+"Enter a valid key. This value may contain only letters, numbers and "
+"underlined characters."
+msgstr ""
+
+#: backend/account/models.py:157
+msgid "user property"
+msgstr ""
+
+#: backend/account/models.py:158
+msgid "user properties"
+msgstr ""
+
+#: backend/account/views.py:80
 msgid "您没有该角色权限，无法切换到该角色"
 msgstr ""
 
-#: backend/apps/application/constants.py:35
-msgid "审批中"
-msgstr ""
-
-#: backend/apps/application/constants.py:35
-msgid "通过"
-msgstr ""
-
-#: backend/apps/application/constants.py:35
-msgid "拒绝"
-msgstr ""
-
-#: backend/apps/application/constants.py:35
-msgid "已取消"
-msgstr ""
-
-#: backend/apps/application/views.py:51
-msgid "用户admin默认拥有任意权限, 无需申请"
-msgstr ""
-
-#: backend/apps/application/views.py:128
-msgid "只有申请人能取消"
-msgstr ""
-
-#: backend/apps/application/views.py:286
-msgid "非分级管理员({})的成员，无权限申请修改"
-msgstr ""
-
-#: backend/apps/approval/views.py:317 backend/apps/role/views.py:636
-msgid "非分级管理员({})的用户组，无权限续期"
-msgstr ""
-
-#: backend/apps/group/serializers.py:38 backend/apps/group/serializers.py:141
-msgid "用户组名称不能与已有的重复"
-msgstr ""
-
-#: backend/apps/organization/constants.py:12
-msgid "在职"
-msgstr ""
-
-#: backend/apps/organization/constants.py:12
-msgid "离职"
-msgstr ""
-
-#: backend/apps/organization/constants.py:21
-msgid "全量"
-msgstr ""
-
-#: backend/apps/organization/constants.py:21
-msgid "单个用户"
-msgstr ""
-
-#: backend/apps/organization/constants.py:31
-msgid "正在执行"
-msgstr ""
-
-#: backend/apps/organization/constants.py:31
-msgid "执行成功"
-msgstr ""
-
-#: backend/apps/organization/constants.py:31
-msgid "执行失败"
-msgstr ""
-
-#: backend/apps/policy/views.py:57 backend/biz/action.py:79
-msgid "申请数据或已过期"
-msgstr ""
-
-#: backend/apps/role/views.py:245
-msgid "非分级管理员({})的成员，无权限修改"
-msgstr ""
-
-#: backend/apps/role/views.py:525
-msgid "系统{}的常用操作不能超过{}个"
-msgstr ""
-
-#: backend/apps/role/views.py:529
-msgid "名称: {} 已存在"
-msgstr ""
-
-#: backend/apps/template/serializers.py:51 backend/apps/template/views.py:207
-msgid "重复的权限模板名称"
-msgstr ""
-
-#: backend/apps/template/serializers.py:162 backend/service/constants.py:27
-msgid "用户组"
-msgstr ""
-
-#: backend/audit/detail.py:63 backend/audit/detail.py:111
-#: backend/audit/detail.py:146
-msgid "名称: {}, 描述: {}"
-msgstr ""
-
-#: backend/biz/action.py:82
-msgid "申请数据与系统不一致"
-msgstr ""
-
-#: backend/biz/application.py:150 backend/biz/application.py:160
-msgid "无权限变更申请，无需提交"
-msgstr ""
-
-#: backend/biz/application.py:253
-#, python-brace-format
-msgid ""
-"系统[{system_id}]的审批流程[{process_id}]包含不支持的IAM审批角色"
-"[{processors}]"
-msgstr ""
-
-#: backend/biz/application.py:441
-#, python-brace-format
-msgid ""
-"用户组[{group_id}]的审批流程[{process_id}]包含不支持的IAM审批角色"
-"[{processors}]"
-msgstr ""
-
-#: backend/biz/application.py:594
-#, python-brace-format
-msgid ""
-"申请编辑或创建分级管理员的审批流程[{process_id}]包含不支持的IAM审批角色"
-"[{processors}]"
-msgstr ""
-
-#: backend/biz/application.py:677
-msgid "不支持 {} 申请类型"
-msgstr ""
-
-#: backend/biz/resource.py:173
+#: backend/api/authorization/serializers.py:60 backend/biz/resource.py:150
 msgid "无限制"
 msgstr ""
 
-#: backend/biz/role.py:197
+#: backend/api/management/serializers.py:106
+msgid "用户组名称{}不能重复"
+msgstr ""
+
+#: backend/apps/application/views.py:65
+msgid "用户admin默认拥有任意权限, 无需申请"
+msgstr ""
+
+#: backend/apps/application/views.py:314
+msgid "非分级管理员({})的成员，无权限申请修改"
+msgstr ""
+
+#: backend/apps/approval/views.py:270 backend/apps/role/views/role.py:638
+msgid "非分级管理员({})的用户组，无权限续期"
+msgstr ""
+
+#: backend/apps/group/serializers.py:142
+msgid "用户组名称不能与已有的重复"
+msgstr ""
+
+#: backend/apps/group/serializers.py:285
+msgid "授权的模板有重复"
+msgstr ""
+
+#: backend/apps/group/serializers.py:289
+msgid "单次授权模板数最多{}个"
+msgstr ""
+
+#: backend/apps/group/serializers.py:293
+msgid "授权的自定义权限系统有重复"
+msgstr ""
+
+#: backend/apps/group/serializers.py:297
+msgid "单次授权自定义系统数最多{}个"
+msgstr ""
+
+#: backend/apps/group/views.py:258
+msgid "用户组({})不在当前用户身份可访问的范围内"
+msgstr ""
+
+#: backend/apps/group/views.py:632
+msgid "模板: {} 没有操作: {} 的权限"
+msgstr ""
+
+#: backend/apps/handover/constants.py:27 backend/apps/handover/constants.py:44
+msgid "正在交接"
+msgstr ""
+
+#: backend/apps/handover/constants.py:28 backend/apps/handover/constants.py:45
+msgid "交接成功"
+msgstr ""
+
+#: backend/apps/handover/constants.py:29 backend/apps/handover/constants.py:48
+msgid "交接失败"
+msgstr ""
+
+#: backend/apps/handover/constants.py:30
+msgid "部分失败"
+msgstr ""
+
+#: backend/apps/handover/constants.py:63
+msgid "用户组权限"
+msgstr ""
+
+#: backend/apps/handover/constants.py:64 backend/apps/role/constants.py:48
+msgid "自定义权限"
+msgstr ""
+
+#: backend/apps/handover/constants.py:65
+msgid "管理员权限"
+msgstr ""
+
+#: backend/apps/model_builder/validators.py:252
+#, python-brace-format
+msgid "操作(action) id={_type_id} 在常用操作(common_actions)中被引用"
+msgstr ""
+
+#: backend/apps/model_builder/validators.py:259
+#, python-brace-format
+msgid "操作(action) id={_type_id} 在操作组(action_groups)中被引用"
+msgstr ""
+
+#: backend/apps/model_builder/validators.py:267
+#, python-brace-format
+msgid "实例视图(instance_selection) id={_type_id} 在操作(action)中被引用"
+msgstr ""
+
+#: backend/apps/model_builder/validators.py:274
+#, python-brace-format
+msgid ""
+"资源类型(resource_type) id={_type_id} 在实例视图(instance_selection)中被引用"
+msgstr ""
+
+#: backend/apps/model_builder/validators.py:281
+#, python-brace-format
+msgid "资源类型(resource_type) id={_type_id} 在操作(action)中被引用"
+msgstr ""
+
+#: backend/apps/model_builder/views.py:83
+msgid "唯一ID已存在"
+msgstr ""
+
+#: backend/apps/model_builder/views.py:223
+msgid "系统不能被删除"
+msgstr ""
+
+#: backend/apps/model_builder/views.py:262
+msgid "暂时不支持这种type"
+msgstr ""
+
+#: backend/apps/model_builder/views.py:503
+msgid "当前只支持resource_type/instance_selection/action"
+msgstr ""
+
+#: backend/apps/organization/constants.py:21
+msgid "在职"
+msgstr ""
+
+#: backend/apps/organization/constants.py:21
+msgid "离职"
+msgstr ""
+
+#: backend/apps/organization/constants.py:30
+msgid "全量"
+msgstr ""
+
+#: backend/apps/organization/constants.py:30
+msgid "单个用户"
+msgstr ""
+
+#: backend/apps/organization/constants.py:40
+msgid "正在执行"
+msgstr ""
+
+#: backend/apps/organization/constants.py:40
+msgid "执行成功"
+msgstr ""
+
+#: backend/apps/organization/constants.py:40
+msgid "执行失败"
+msgstr ""
+
+#: backend/apps/organization/constants.py:54
+msgid "周期同步"
+msgstr ""
+
+#: backend/apps/organization/constants.py:54
+msgid "手动同步"
+msgstr ""
+
+#: backend/apps/policy/views.py:76
+msgid "请求的system与缓存策略数据的system不一致"
+msgstr ""
+
+#: backend/apps/role/constants.py:48
+msgid "模板权限"
+msgstr ""
+
+#: backend/apps/role/constants.py:48
+msgid "资源实例"
+msgstr ""
+
+#: backend/apps/role/views/role.py:224
+msgid "非分级管理员({})的成员，无权限修改"
+msgstr ""
+
+#: backend/apps/role/views/role.py:528
+msgid "系统{}的常用操作不能超过{}个"
+msgstr ""
+
+#: backend/apps/role/views/role.py:532
+msgid "名称: {} 已存在"
+msgstr ""
+
+#: backend/apps/template/serializers.py:186 backend/service/constants.py:30
+msgid "用户组"
+msgstr ""
+
+#: backend/apps/template/views.py:560 backend/biz/template.py:343
+msgid "预提交的任务不存在, 禁止提交!"
+msgstr ""
+
+#: backend/audit/detail.py:85 backend/audit/detail.py:156
+#: backend/audit/detail.py:184
+msgid "名称: {}, 描述: {}"
+msgstr ""
+
+#: backend/biz/application.py:601
+msgid "只有申请人能取消"
+msgstr ""
+
+#: backend/biz/group.py:316
+msgid "用户组正在授权, 不能删除!"
+msgstr ""
+
+#: backend/biz/group.py:408
+msgid "部分权限模板正在更新, 不能授权!"
+msgstr ""
+
+#: backend/biz/group.py:415
+msgid "部分权限模板或自定义权限已经在授权中, 不能重复授权!"
+msgstr ""
+
+#: backend/biz/group.py:447
+msgid "系统: {} 模板: {} 校验错误: {}"
+msgstr ""
+
+#: backend/biz/group.py:458
+msgid "系统: {} 的操作: {} 权限已存在"
+msgstr ""
+
+#: backend/biz/group.py:530
+msgid ""
+"用户组({})已有{}个成员，不可再添加{}个成员，否则超出用户组最大成员数量{}的限"
+"制"
+msgstr ""
+
+#: backend/biz/group.py:544
+msgid "被授权对象: {} {} 加入的用户组数量已超过最大值 {}"
+msgstr ""
+
+#: backend/biz/group.py:555 backend/biz/group.py:563
+msgid "用户组名称已存在"
+msgstr ""
+
+#: backend/biz/group.py:582
+msgid "系统: {} 的操作: {} 权限已存在, 只能新增, 不能修改!"
+msgstr ""
+
+#: backend/biz/open.py:37
+msgid "申请数据已过期或不存在"
+msgstr ""
+
+#: backend/biz/policy.py:1421 backend/biz/policy.py:1426
+msgid "资源组不存在"
+msgstr ""
+
+#: backend/biz/policy.py:1456
+msgid "{}: {} 资源类型不存在"
+msgstr ""
+
+#: backend/biz/policy.py:1465
+msgid "批量删除实例不能清空所有条件"
+msgstr ""
+
+#: backend/biz/policy.py:1491
+msgid "用户组没有{}操作的权限"
+msgstr ""
+
+#: backend/biz/role.py:346
+msgid "名称[{}]已存在，请修改为其他名称"
+msgstr ""
+
+#: backend/biz/role.py:358
+msgid ""
+"正在申请的单据中名称[{}]已存在，请修改为其他名称，或等单据被处理后再提交"
+msgstr ""
+
+#: backend/biz/role.py:536
 msgid "{} 系统不在角色的授权范围中"
 msgstr ""
 
-#: backend/biz/role.py:207
+#: backend/biz/role.py:546 backend/biz/role.py:655
 msgid "{} 操作不在角色的授权范围内"
 msgstr ""
 
-#: backend/biz/role.py:212
+#: backend/biz/role.py:636
 msgid "{} 操作配置的资源范围不满足角色的授权范围"
 msgstr ""
 
-#: backend/biz/role.py:225
-msgid "{} 系统不在角色的管理范围中"
-msgstr ""
-
-#: backend/biz/role.py:302
+#: backend/biz/role.py:735
 msgid "部门({})不满足角色的授权范围"
 msgstr ""
 
-#: backend/biz/role.py:313
+#: backend/biz/role.py:746
 msgid "用户({})不满足角色的授权范围"
 msgstr ""
 
-#: backend/common/error_codes.py:107
+#: backend/biz/template.py:108 backend/biz/template.py:339
+msgid "更新任务正在运行!"
+msgstr ""
+
+#: backend/biz/template.py:122
+msgid "权限模板存在授权的用户组, 不能删除!"
+msgstr ""
+
+#: backend/biz/template.py:181 backend/biz/template.py:192
+#: backend/biz/template.py:214
+msgid "预提交的任务不存在!"
+msgstr ""
+
+#: backend/biz/template.py:227
+msgid "有用户组正在授权, 禁止提交新的更新任务!"
+msgstr ""
+
+#: backend/biz/template.py:230
+msgid "模板操作未变更, 无需更新!"
+msgstr ""
+
+#: backend/biz/template.py:235
+msgid "有其它的模板更新任务存在, 禁止提交新的更新任务!"
+msgstr ""
+
+#: backend/biz/template.py:265
+msgid "权限模板名称已存在"
+msgstr ""
+
+#: backend/biz/template.py:274
+msgid "模板: {} 不存在"
+msgstr ""
+
+#: backend/biz/template.py:278
+msgid "用户组: {} 不能授权已授权的模板: {}"
+msgstr ""
+
+#: backend/biz/template.py:283
+msgid "模板: {} 的操作列表与授权信息不一致"
+msgstr ""
+
+#: backend/biz/template.py:300
+msgid "提交数据中存在模板未授权的用户组!"
+msgstr ""
+
+#: backend/biz/template.py:307
+msgid "提交操作数据{}与模板预更新的数据{}不一致!"
+msgstr ""
+
+#: backend/biz/template.py:315
+msgid "权限模板正在更新, 不能进行下一步操作!"
+msgstr ""
+
+#: backend/biz/template.py:332
+msgid "权限模板授权的用户组更新信息不完整! 缺少以下action: {}"
+msgstr ""
+
+#: backend/common/error_codes.py:100
 msgid "用户未登录或登录态失效，请使用登录链接重新登录"
 msgstr ""
 
-#: backend/common/error_codes.py:108
+#: backend/common/error_codes.py:101
 msgid "没有访问权限"
 msgstr ""
 
-#: backend/common/error_codes.py:109
+#: backend/common/error_codes.py:102
 msgid "数据不存在"
 msgstr ""
 
-#: backend/common/error_codes.py:111
+#: backend/common/error_codes.py:104
 msgid "请求失败"
 msgstr ""
 
-#: backend/common/error_codes.py:112
+#: backend/common/error_codes.py:105
+msgid "与已有资源冲突(重名等)"
+msgstr ""
+
+#: backend/common/error_codes.py:106
 msgid "参数校验失败"
 msgstr ""
 
-#: backend/common/error_codes.py:113
+#: backend/common/error_codes.py:107
 msgid "请求第三方接口失败"
 msgstr ""
 
-#: backend/common/error_codes.py:114
+#: backend/common/error_codes.py:108
 msgid "Json格式错误"
 msgstr ""
 
-#: backend/common/error_codes.py:115
+#: backend/common/error_codes.py:109
 msgid "不支持当前的请求方法"
 msgstr ""
 
-#: backend/common/error_codes.py:116
+#: backend/common/error_codes.py:110
 msgid "参数错误"
 msgstr ""
 
-#: backend/common/error_codes.py:117
+#: backend/common/error_codes.py:111
 msgid "操作检查错误"
 msgstr ""
 
-#: backend/common/error_codes.py:118
+#: backend/common/error_codes.py:112
 msgid "用户组转出错误"
 msgstr ""
 
-#: backend/common/error_codes.py:121
+#: backend/common/error_codes.py:113
+msgid "数值错误"
+msgstr ""
+
+#: backend/common/error_codes.py:115
+msgid "存在重复任务"
+msgstr ""
+
+#: backend/common/error_codes.py:117
 msgid "请求第三方API错误"
 msgstr ""
 
-#: backend/common/error_codes.py:122
+#: backend/common/error_codes.py:118
 msgid "ESB请求返回码非0"
 msgstr ""
 
-#: backend/common/error_codes.py:125
+#: backend/common/error_codes.py:121
 msgid "IAM后台请求返回码非0"
 msgstr ""
 
-#: backend/common/error_codes.py:128
+#: backend/common/error_codes.py:122
+msgid "请求ENGINE错误"
+msgstr ""
+
+#: backend/common/error_codes.py:125
 msgid "接入系统资源接口请求失败"
 msgstr ""
 
-#: backend/common/error_codes.py:129
+#: backend/common/error_codes.py:126
 msgid "接入系统注册的API认证信息不合法"
 msgstr ""
 
-#: backend/common/error_codes.py:130
+#: backend/common/error_codes.py:127
 msgid "API参数校验失败"
 msgstr ""
 
-#: backend/common/error_codes.py:131
+#: backend/common/error_codes.py:128
 msgid "接入系统资源接口请求API认证失败"
 msgstr ""
 
-#: backend/common/error_codes.py:132
+#: backend/common/error_codes.py:129
 msgid "接入系统不存在请求的资源类型或未实现该资源的查询方法"
 msgstr ""
 
-#: backend/common/error_codes.py:133
+#: backend/common/error_codes.py:130
 msgid "搜索Keyword参数校验失败"
 msgstr ""
 
-#: backend/common/error_codes.py:134
+#: backend/common/error_codes.py:131
 msgid "接入系统需返回的资源内容过多，拒绝返回数据"
 msgstr ""
 
-#: backend/common/error_codes.py:135
+#: backend/common/error_codes.py:132
 msgid "请求频率超出接入系统API频率限制"
 msgstr ""
 
-#: backend/common/error_codes.py:136
+#: backend/common/error_codes.py:133
 msgid "接入系统自身接口异常"
 msgstr ""
 
-#: backend/common/error_codes.py:137
+#: backend/common/error_codes.py:134
 msgid "接入系统自身接口返回数据进行JSON解析出错"
 msgstr ""
 
-#: backend/common/error_codes.py:138
+#: backend/common/error_codes.py:135
 msgid "接入系统自身接口返回数据不符合要求"
 msgstr ""
 
-#: backend/common/error_codes.py:141
-msgid "用户管理请求返回码非0"
+#: backend/common/error_codes.py:142
+msgid "ITSM流程里存在IAM不支持的流程处理者"
 msgstr ""
 
-#: backend/common/error_codes.py:144
-msgid "ITSM请求返回码非0"
-msgstr ""
-
-#: backend/common/time.py:24
+#: backend/common/time.py:33
 msgid "已过期"
 msgstr ""
 
-#: backend/common/time.py:25
+#: backend/common/time.py:34
 msgid "永久"
 msgstr ""
 
-#: backend/common/time.py:51
+#: backend/common/time.py:60
 #, fuzzy, python-brace-format
 #| msgid "{total_day} day"
 #| msgid_plural "{total_day} days"
@@ -300,181 +567,126 @@ msgid "{total_second} second"
 msgid_plural "{total_second} seconds"
 msgstr[0] "{total_second} 秒"
 
-#: backend/common/time.py:57
+#: backend/common/time.py:66
 #, python-brace-format
 msgid "{total_minute} minute"
 msgid_plural "{total_minute} minutes"
 msgstr[0] "{total_minute} 分钟"
 
-#: backend/common/time.py:63
+#: backend/common/time.py:72
 #, python-brace-format
 msgid "{total_hour} hour"
 msgid_plural "{total_hour} hours"
 msgstr[0] "{total_hour} 小时"
 
-#: backend/common/time.py:66
+#: backend/common/time.py:75
 #, python-brace-format
 msgid "{total_day} day"
 msgid_plural "{total_day} days"
 msgstr[0] "{total_day} 天"
 
-#: backend/service/approval.py:221
+#: backend/plugins/approval_process/itsm.py:80
 msgid "ITSM未内置[{}]"
 msgstr ""
 
-#: backend/service/approval.py:228
+#: backend/service/approval.py:76
 msgid "不支持申请类型为[{}]拥有默认审批流程"
 msgstr ""
 
-#: backend/service/constants.py:27
+#: backend/service/constants.py:30
 msgid "用户"
 msgstr ""
 
-#: backend/service/constants.py:27
+#: backend/service/constants.py:30
 msgid "部门"
 msgstr ""
 
-#: backend/service/constants.py:48
+#: backend/service/constants.py:91
 msgid "实例与属性"
 msgstr ""
 
-#: backend/service/constants.py:48
+#: backend/service/constants.py:91
 msgid "实例"
 msgstr ""
 
-#: backend/service/constants.py:48
+#: backend/service/constants.py:91
 msgid "属性"
 msgstr ""
 
-#: backend/service/group.py:64
-msgid ""
-"用户组({})已有{}个成员，不可再添加{}个成员，否则超出用户组最大成员数量{}的限"
-"制"
+#: backend/service/constants.py:255
+msgid "审批中"
 msgstr ""
 
-#: backend/service/group.py:147
-msgid "被授权对象: {} {} 加入的用户组数量已超过最大值 {}"
+#: backend/service/constants.py:255
+msgid "通过"
 msgstr ""
 
-#: backend/service/group.py:197
+#: backend/service/constants.py:255
+msgid "拒绝"
+msgstr ""
+
+#: backend/service/constants.py:255
+msgid "已取消"
+msgstr ""
+
+#: backend/service/constants.py:267
+msgid "时间"
+msgstr ""
+
+#: backend/service/constants.py:277
+msgid "时区"
+msgstr ""
+
+#: backend/service/constants.py:278
+msgid "时分秒"
+msgstr ""
+
+#: backend/service/constants.py:279
+msgid "WEEKDAY"
+msgstr ""
+
+#: backend/service/constants.py:295
+msgid "星期天"
+msgstr ""
+
+#: backend/service/constants.py:296
+msgid "星期一"
+msgstr ""
+
+#: backend/service/constants.py:297
+msgid "星期二"
+msgstr ""
+
+#: backend/service/constants.py:298
+msgid "星期三"
+msgstr ""
+
+#: backend/service/constants.py:299
+msgid "星期四"
+msgstr ""
+
+#: backend/service/constants.py:300
+msgid "星期五"
+msgstr ""
+
+#: backend/service/constants.py:301
+msgid "星期六"
+msgstr ""
+
+#: backend/service/role.py:528
 msgid "权限模板 [{}] 关联了其它用户组, 请移除关系后再转移."
 msgstr ""
 
-#: backend/service/policy/application.py:92
-msgid "申请{}操作权限时只能新增, 不能删除"
+#: backend/service/template.py:142
+msgid "模板{}没有{}操作的权限"
 msgstr ""
 
-#: backend/service/policy/base.py:254
-msgid "权限不存在"
+#: backend/trans/application.py:75
+msgid "无权限变更申请，无需提交"
 msgstr ""
 
-#: backend/service/policy/base.py:263
-msgid "{}: {} 资源类型不存在"
-msgstr ""
-
-#: backend/service/policy/base.py:268
-msgid "任意条件不能批量删除实例"
-msgstr ""
-
-#: backend/service/policy/base.py:287
-msgid "批量删除实例不能清空所有条件"
-msgstr ""
-
-#: backend/service/role.py:409
-msgid "名称[{}]已存在，请修改为其他名称"
-msgstr ""
-
-#: backend/service/role.py:418
+#: backend/trans/application.py:88
 msgid ""
-"正在申请的单据中名称[{}]已存在，请修改为其他名称，或等单据被处理后再提交"
-msgstr ""
-
-#: backend/service/template.py:318
-msgid "被授权对象: {} {} 授权 {} 系统下的权限模板数量已超过最大值 {}"
-msgstr ""
-
-#: blueapps/account/admin.py:15
-msgid "Personal info"
-msgstr ""
-
-#: blueapps/account/admin.py:18
-msgid "Permissions"
-msgstr ""
-
-#: blueapps/account/admin.py:22
-msgid "Important dates"
-msgstr ""
-
-#: blueapps/account/apps.py:9
-msgid "account"
-msgstr ""
-
-#: blueapps/account/models.py:64
-msgid "username"
-msgstr ""
-
-#: blueapps/account/models.py:67 blueapps/account/models.py:219
-msgid "Required. 64 characters or fewer. Letters, digits and underlined only."
-msgstr ""
-
-#: blueapps/account/models.py:72
-msgid ""
-"Enter a valid openid. This value may contain only letters, numbers and "
-"underlined characters."
-msgstr ""
-
-#: blueapps/account/models.py:77
-msgid "A user with that openid already exists."
-msgstr ""
-
-#: blueapps/account/models.py:82
-msgid "nick name"
-msgstr ""
-
-#: blueapps/account/models.py:85
-msgid "Required. 64 characters or fewer."
-msgstr ""
-
-#: blueapps/account/models.py:88
-msgid "staff status"
-msgstr ""
-
-#: blueapps/account/models.py:90
-msgid "Designates whether the user can log into this admin site."
-msgstr ""
-
-#: blueapps/account/models.py:94
-msgid "active"
-msgstr ""
-
-#: blueapps/account/models.py:96
-msgid ""
-"Designates whether this user should be treated as active. Unselect this "
-"instead of deleting accounts."
-msgstr ""
-
-#: blueapps/account/models.py:100
-msgid "date joined"
-msgstr ""
-
-#: blueapps/account/models.py:110
-msgid "user"
-msgstr ""
-
-#: blueapps/account/models.py:111
-msgid "users"
-msgstr ""
-
-#: blueapps/account/models.py:224
-msgid ""
-"Enter a valid key. This value may contain only letters, numbers and "
-"underlined characters."
-msgstr ""
-
-#: blueapps/account/models.py:232
-msgid "user property"
-msgstr ""
-
-#: blueapps/account/models.py:233
-msgid "user properties"
+"操作 [{}] 关联的资源类型 [{}] 单次申请限{}个实例，实例权限数过多不利于您后期"
+"维护，更多实例建议您申请范围权限。"
 msgstr ""

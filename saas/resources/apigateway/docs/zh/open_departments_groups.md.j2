@@ -1,0 +1,33 @@
+### 查询一个部门加入的组列表
+
+
+#### Parameters
+
+| 字段 | 类型 | 是否必须 | 位置 | 描述 |
+| :--- | :--- | :--- |:---|:--- |
+| department_id | string | 是 | path | 部门 ID |
+
+示例: `inherit=true`
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [
+        {
+            "type": "group",
+            "id": "143",
+            "name": "测试用户组A"
+        },
+        {
+            "type": "group",
+            "id": "176",
+            "name": "测试用户组B"
+        }
+    ]
+}
+```

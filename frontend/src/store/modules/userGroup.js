@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserGroupList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/groups/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/groups/?${json2Query(params)}`, config);
         },
 
         /**
@@ -61,8 +61,8 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserGroupDetail ({ commit, state, dispatch }, params, config) {
-            const { id } = params
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/`, config)
+            const { id } = params;
+            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/`, config);
         },
 
         /**
@@ -77,7 +77,7 @@ export default {
          * @return {Promise} promise 对象
          */
         addUserGroup ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/groups/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/groups/`, params, config);
         },
 
         /**
@@ -92,10 +92,10 @@ export default {
          * @return {Promise} promise 对象
          */
         editUserGroup ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const { id } = requestParams
-            delete requestParams.id
-            return http.put(`${AJAX_URL_PREFIX}/groups/${id}/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const { id } = requestParams;
+            delete requestParams.id;
+            return http.put(`${AJAX_URL_PREFIX}/groups/${id}/`, requestParams, config);
         },
 
         /**
@@ -110,8 +110,8 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteUserGroup ({ commit, state, dispatch }, params, config) {
-            const { id } = params
-            return http.delete(`${AJAX_URL_PREFIX}/groups/${id}/`, config)
+            const { id } = params;
+            return http.delete(`${AJAX_URL_PREFIX}/groups/${id}/`, config);
         },
 
         /**
@@ -126,10 +126,10 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserGroupMemberList ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const { id } = requestParams
-            delete requestParams.id
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/members/?${json2Query(requestParams)}`, config)
+            const requestParams = Object.assign({}, params);
+            const { id } = requestParams;
+            delete requestParams.id;
+            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/members/?${json2Query(requestParams)}`, config);
         },
 
         /**
@@ -144,10 +144,10 @@ export default {
          * @return {Promise} promise 对象
          */
         addUserGroupMember ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const { id } = requestParams
-            delete requestParams.id
-            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/members/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const { id } = requestParams;
+            delete requestParams.id;
+            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/members/`, requestParams, config);
         },
 
         /**
@@ -162,10 +162,10 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteUserGroupMember ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const { id } = requestParams
-            delete requestParams.id
-            return http.delete(`${AJAX_URL_PREFIX}/groups/${id}/members/`, { data: requestParams }, config)
+            const requestParams = Object.assign({}, params);
+            const { id } = requestParams;
+            delete requestParams.id;
+            return http.delete(`${AJAX_URL_PREFIX}/groups/${id}/members/`, { data: requestParams }, config);
         },
 
         /**
@@ -180,7 +180,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserGroupTemplateList ({ commit, state, dispatch }, { id, systemId }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/templates/?system_id=${systemId}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/templates/?system_id=${systemId}`, config);
         },
 
         /**
@@ -195,10 +195,10 @@ export default {
          * @return {Promise} promise 对象
          */
         addUserGroupPerm ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const { id } = requestParams
-            delete requestParams.id
-            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/templates/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const { id } = requestParams;
+            delete requestParams.id;
+            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/templates/`, requestParams, config);
         },
 
         /**
@@ -213,7 +213,7 @@ export default {
          * @return {Promise} promise 对象
          */
         userGroupTransfer ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/groups/transfer/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/groups/transfer/`, params, config);
         },
 
         /**
@@ -228,7 +228,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getGroupSystems ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/systems/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/systems/`, config);
         },
 
         /**
@@ -243,7 +243,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getGroupTemplateDetail ({ commit, state, dispatch }, { id, templateId }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/templates/${templateId}/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/templates/${templateId}/`, config);
         },
 
         /**
@@ -258,7 +258,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getGroupPolicy ({ commit, state, dispatch }, { id, systemId }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/policies/?system_id=${systemId}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/policies/?system_id=${systemId}`, config);
         },
 
         /**
@@ -273,7 +273,7 @@ export default {
          * @return {Promise} promise 对象
          */
         updateGroupPolicy ({ commit, state, dispatch }, { id, data }, config) {
-            return http.put(`${AJAX_URL_PREFIX}/groups/${id}/policies/`, data, config)
+            return http.put(`${AJAX_URL_PREFIX}/groups/${id}/policies/`, data, config);
         },
 
         /**
@@ -288,7 +288,7 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteGroupPolicy ({ commit, state, dispatch }, { id, data }, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/groups/${id}/policies/`, { data }, config)
+            return http.delete(`${AJAX_URL_PREFIX}/groups/${id}/policies/`, { data }, config);
         },
 
         /**
@@ -303,7 +303,7 @@ export default {
          * @return {Promise} promise 对象
          */
         groupPolicyCompare ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/policies/condition_compare/`, data, config)
+            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/policies/condition_compare/`, data, config);
         },
 
         /**
@@ -318,7 +318,7 @@ export default {
          * @return {Promise} promise 对象
          */
         groupTemplateCompare ({ commit, state, dispatch }, { id, templateId, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/templates/${templateId}/condition_compare/`, data, config)
+            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/templates/${templateId}/condition_compare/`, data, config);
         },
 
         /**
@@ -333,7 +333,7 @@ export default {
          * @return {Promise} promise 对象
          */
         addUserGroupPolicy ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/policies/`, data, config)
+            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/policies/`, data, config);
         }
     }
-}
+};

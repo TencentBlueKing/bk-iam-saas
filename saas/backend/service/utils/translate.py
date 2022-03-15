@@ -9,11 +9,19 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Type
 
 from backend.common.error_codes import error_codes
-from backend.service.constants import ANY_ID
+from backend.service.constants import ANY_ID, PolicyEnvConditionTypeEnum
 from backend.util.json import json_dumps
+
+from .environment import BaseEnvCondition, HMSEnvCondition, TZEnvCondition, WeekdayEnvCondition
+
+ENV_TYPE_CONDITION_MAP: Dict[str, Type[BaseEnvCondition]] = {
+    PolicyEnvConditionTypeEnum.TZ.value: TZEnvCondition,
+    PolicyEnvConditionTypeEnum.HMS.value: HMSEnvCondition,
+    PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvCondition,
+}
 
 
 class ResourceExpressionTranslator:
@@ -21,40 +29,45 @@ class ResourceExpressionTranslator:
     翻译资源条件到后端表达式
     """
 
-    def translate(self, resources: List[Dict]) -> str:
+    def translate(self, system_id: str, resource_groups: List[Dict]) -> str:
         """
-        resources: [
+        resource_groups: [
           {
-            "system_id": "string",
-            "type": "string",
-            "name": "string",
-            "condition": [
+            "id: "",
+            "related_resource_types": [
               {
-                "id": "string",
-                "instances": [
-                  {
-                    "type": "string",
-                    "name": "string",
-                    "path": [
-                      [
-                        {
-                          "type": "string",
-                          "type_name": "string",
-                          "id": "string",
-                          "name": "string"
-                        }
-                      ]
-                    ]
-                  }
-                ],
-                "attributes": [
+                "system_id": "string",
+                "type": "string",
+                "name": "string",
+                "condition": [
                   {
                     "id": "string",
-                    "name": "string",
-                    "values": [
+                    "instances": [
+                      {
+                        "type": "string",
+                        "name": "string",
+                        "path": [
+                          [
+                            {
+                              "type": "string",
+                              "type_name": "string",
+                              "id": "string",
+                              "name": "string"
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    "attributes": [
                       {
                         "id": "string",
-                        "name": "string"
+                        "name": "string",
+                        "values": [
+                          {
+                            "id": "string",
+                            "name": "string"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -64,21 +77,52 @@ class ResourceExpressionTranslator:
           }
         ]
         """
-        expression = [
-            {"system": r["system_id"], "type": r["type"], "expression": self._translate_condition(r)}
-            for r in resources
-        ]
+        content = [self._translate_resource_group(system_id, r) for r in resource_groups]
+        if len(content) == 1:
+            expression = content[0]
+        else:
+            expression = {"OR": {"content": content}}
 
-        return json_dumps(expression)  # 去掉json自动生成的空格
+        return json_dumps(expression)
+
+    def _translate_resource_group(self, system_id: str, resource_group: Dict[str, Any]) -> Dict[str, Any]:
+        content = [self._translate_related_resource_types(resource_group["related_resource_types"])]
+        env_expressions = self._translate_environments(system_id, resource_group["environments"])
+        content.extend(env_expressions)
+        if len(content) == 1:
+            return content[0]
+
+        return {"AND": {"content": content}}
+
+    def _translate_environments(self, system_id: str, environments: List[Dict[str, Any]]) -> List[Dict]:
+        expressions = []
+        for env in environments:
+            for condition in env["condition"]:
+                translator = ENV_TYPE_CONDITION_MAP[condition["type"]](
+                    system_id, [v["value"] for v in condition["values"]]
+                )
+                expressions.extend(translator.trans())
+        return expressions
+
+    def _translate_related_resource_types(self, related_resource_types: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        转换一个resource_group中的条件
+        """
+        content = [self._translate_condition(r) for r in related_resource_types]
+        if len(content) == 1:
+            return content[0]
+
+        return {"AND": {"content": content}}
 
     def _translate_condition(self, resource: Dict) -> Dict:
         """
         表达式转换, 转换SaaS的条件为后端的表达式
         """
+        system_id, _type = resource["system_id"], resource["type"]
 
         # 条件为空, 表示任意
         if len(resource["condition"]) == 0:
-            return {"Any": {"id": []}}
+            return {"Any": {self._gen_field_name(system_id, _type, "id"): []}}
 
         content = []
 
@@ -86,7 +130,7 @@ class ResourceExpressionTranslator:
             # 转换实例选择, 每个path中的链路之间是OR
             instance_content = []
             for i in c["instances"]:
-                instance_content.append(self._translate_instance(resource["type"], i))
+                instance_content.append(self._translate_instance(system_id, _type, i))
 
             if len(instance_content) == 0:
                 instance = {}
@@ -98,7 +142,7 @@ class ResourceExpressionTranslator:
             # 转换属性选择, 每个属性之间是AND
             attribute_content = []
             for a in c["attributes"]:
-                attribute_content.append(self._translate_attribute(a))
+                attribute_content.append(self._translate_attribute(system_id, _type, a))
 
             if len(attribute_content) == 0:
                 attribute = {}
@@ -128,7 +172,10 @@ class ResourceExpressionTranslator:
         # 多组condition之间是OR
         return {"OR": {"content": content}}
 
-    def _translate_attribute(self, attribute: Dict) -> Dict:
+    def _gen_field_name(self, system_id: str, _type: str, _id: str):
+        return ".".join([system_id, _type, _id])
+
+    def _translate_attribute(self, system_id: str, _type: str, attribute: Dict) -> Dict:
         """
         转换单个attribute
         """
@@ -141,17 +188,17 @@ class ResourceExpressionTranslator:
             # bool属性值只能有一个
             if len(values) != 1:
                 raise error_codes.INVALID_ARGS.format("bool value must has one")
-            return {"Bool": {attribute["id"]: values}}
+            return {"Bool": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
 
         if isinstance(values[0], (int, float)):
-            return {"NumericEquals": {attribute["id"]: values}}
+            return {"NumericEquals": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
 
         if isinstance(values[0], str):
-            return {"StringEquals": {attribute["id"]: values}}
+            return {"StringEquals": {self._gen_field_name(system_id, _type, attribute["id"]): values}}
 
         raise error_codes.INVALID_ARGS.format("values only support (bool, int, float, str)")
 
-    def _translate_instance(self, _type: str, instance: Dict) -> Dict[str, Any]:
+    def _translate_instance(self, system_id: str, _type: str, instance: Dict) -> Dict[str, Any]:
         """
         转换单个instance
         """
@@ -181,14 +228,21 @@ class ResourceExpressionTranslator:
                 paths.append(translate_path(p))
 
         if ids:
-            content.append({"StringEquals": {"id": ids}})
+            content.append({"StringEquals": {self._gen_field_name(system_id, _type, "id"): ids}})
 
         if paths:
-            content.append({"StringPrefix": {"_bk_iam_path_": paths}})
+            content.append({"StringPrefix": {self._gen_field_name(system_id, _type, "_bk_iam_path_"): paths}})
 
         for path, ids in path_ids.items():
             content.append(
-                {"AND": {"content": [{"StringEquals": {"id": ids}}, {"StringPrefix": {"_bk_iam_path_": [path]}}]}}
+                {
+                    "AND": {
+                        "content": [
+                            {"StringEquals": {self._gen_field_name(system_id, _type, "id"): ids}},
+                            {"StringPrefix": {self._gen_field_name(system_id, _type, "_bk_iam_path_"): [path]}},
+                        ]
+                    }
+                }
             )
 
         if len(content) == 0:

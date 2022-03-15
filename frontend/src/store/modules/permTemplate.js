@@ -24,11 +24,11 @@
  * IN THE SOFTWARE.
 */
 
-import _ from 'lodash'
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import _ from 'lodash';
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,16 +46,16 @@ export default {
     },
     mutations: {
         updateAction (state, payload) {
-            state.actions = _.cloneDeep(payload)
+            state.actions = _.cloneDeep(payload);
         },
         updatePreActionIds (state, payload) {
-            state.preActionIds = _.cloneDeep(payload)
+            state.preActionIds = _.cloneDeep(payload);
         },
         updateCloneActions (state, payload) {
-            state.cloneActions = _.cloneDeep(payload)
+            state.cloneActions = _.cloneDeep(payload);
         },
         updatePreGroupOnePage (state, payload) {
-            state.preGroupOnePage = payload
+            state.preGroupOnePage = payload;
         }
     },
     actions: {
@@ -71,7 +71,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getTemplateList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/templates/?${json2Query(params)}`, config);
         },
 
         /**
@@ -86,7 +86,7 @@ export default {
          * @return {Promise} promise 对象
          */
         createTemplate ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/templates/`, params, config);
         },
 
         /**
@@ -101,10 +101,10 @@ export default {
          * @return {Promise} promise 对象
          */
         updateTemplate ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const id = requestParams.id
-            delete requestParams.id
-            return http.patch(`${AJAX_URL_PREFIX}/templates/${id}/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            return http.patch(`${AJAX_URL_PREFIX}/templates/${id}/`, requestParams, config);
         },
 
         /**
@@ -119,7 +119,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getTemplateDetail ({ commit, state, dispatch }, { id, grouping }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/?grouping=${grouping}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/?grouping=${grouping}`, config);
         },
 
         /**
@@ -134,10 +134,10 @@ export default {
          * @return {Promise} promise 对象
          */
         getTemplateMember ({ commit, state, dispatch }, params, config) {
-            const id = params.id
-            const requestParams = Object.assign({}, params)
-            delete requestParams.id
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/members/?${json2Query(requestParams)}`, config)
+            const id = params.id;
+            const requestParams = Object.assign({}, params);
+            delete requestParams.id;
+            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/members/?${json2Query(requestParams)}`, config);
         },
 
         /**
@@ -152,10 +152,10 @@ export default {
          * @return {Promise} promise 对象
          */
         addTemplateMember ({ commit, state, dispatch }, params, config) {
-            const id = params.id
-            const requestParams = Object.assign({}, params)
-            delete requestParams.id
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/members/`, requestParams, config)
+            const id = params.id;
+            const requestParams = Object.assign({}, params);
+            delete requestParams.id;
+            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/members/`, requestParams, config);
         },
 
         /**
@@ -170,8 +170,8 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteTemplateMember ({ commit, state, dispatch }, params, config) {
-            const id = params.id
-            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/members/`, { data: params.data }, config)
+            const id = params.id;
+            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/members/`, { data: params.data }, config);
         },
 
         /**
@@ -186,7 +186,7 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteTemplate ({ commit, state, dispatch }, { id }, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/`, {}, config)
+            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/`, {}, config);
         },
 
         /**
@@ -201,7 +201,7 @@ export default {
          * @return {Promise} promise 对象
          */
         templateCompare ({ commit, state, dispatch }, { templateId, version }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${templateId}/compare/?version=${version}`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/templates/${templateId}/compare/?version=${version}`, {}, config);
         },
 
         /**
@@ -216,10 +216,10 @@ export default {
          * @return {Promise} promise 对象
          */
         templateConditionCompare ({ commit, state, dispatch }, params, config) {
-            const id = params.id
-            const requestParams = Object.assign({}, params)
-            delete requestParams.id
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/condition_compare/`, requestParams, config)
+            const id = params.id;
+            const requestParams = Object.assign({}, params);
+            delete requestParams.id;
+            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/condition_compare/`, requestParams, config);
         },
 
         /**
@@ -234,10 +234,10 @@ export default {
          * @return {Promise} promise 对象
          */
         templateAuthObjectSync ({ commit, state, dispatch }, params, config) {
-            const id = params.templateId
-            const requestParams = Object.assign({}, params)
-            delete requestParams.templateId
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/sync/`, requestParams, config)
+            const id = params.templateId;
+            const requestParams = Object.assign({}, params);
+            delete requestParams.templateId;
+            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/sync/`, requestParams, config);
         },
 
         /**
@@ -252,7 +252,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getCommonAction ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/common_actions/?system_id=${params.systemId}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/common_actions/?system_id=${params.systemId}`, config);
         },
 
         /**
@@ -267,7 +267,7 @@ export default {
          * @return {Promise} promise 对象
          */
         addCommonAction ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/common_actions/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/roles/common_actions/`, params, config);
         },
 
         /**
@@ -282,7 +282,7 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteCommonAction ({ commit, state, dispatch }, params, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/roles/common_actions/${params.id}/`, {}, config)
+            return http.delete(`${AJAX_URL_PREFIX}/roles/common_actions/${params.id}/`, {}, config);
         },
 
         /**
@@ -296,7 +296,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getAuthorizationScopeActions ({ commit, state, dispatch }, { systemId }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/authorization_scope_actions/?system_id=${systemId}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/authorization_scope_actions/?system_id=${systemId}`, config);
         },
 
         /**
@@ -311,7 +311,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getPreUpdateInfo ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, config);
         },
 
         /**
@@ -326,7 +326,7 @@ export default {
          * @return {Promise} promise 对象
          */
         addPreUpdateInfo ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, data, config)
+            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, data, config);
         },
 
         /**
@@ -341,7 +341,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getGroupsPreview ({ commit, state, dispatch }, { id, data }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/groups_preview/?${json2Query(data)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/groups_preview/?${json2Query(data)}`, config);
         },
 
         /**
@@ -356,7 +356,7 @@ export default {
          * @return {Promise} promise 对象
          */
         updateCommit ({ commit, state, dispatch }, { id }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/update_commit/`, config)
+            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/update_commit/`, config);
         },
 
         /**
@@ -371,7 +371,7 @@ export default {
          * @return {Promise} promise 对象
          */
         cancelPreUpdate ({ commit, state, dispatch }, { id }, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, {}, config)
+            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, {}, config);
         },
 
         /**
@@ -386,7 +386,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getCloneAction ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/clone_action/`, data, config)
+            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/clone_action/`, data, config);
         },
 
         /**
@@ -401,7 +401,7 @@ export default {
          * @return {Promise} promise 对象
          */
         preGroupSync ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_group_sync/`, data, config)
+            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_group_sync/`, data, config);
         }
     }
-}
+};

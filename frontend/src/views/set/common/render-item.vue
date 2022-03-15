@@ -35,19 +35,19 @@
         data () {
             return {
                 isExpanded: this.expanded
-            }
+            };
         },
         computed: {
             hasTitle () {
-                return this.title !== ''
+                return this.title !== '';
             }
         },
         watch: {
             expanded (value) {
-                this.isExpanded = !!value
+                this.isExpanded = !!value;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-render-perm {

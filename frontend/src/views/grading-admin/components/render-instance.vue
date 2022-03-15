@@ -33,11 +33,11 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import GradeAggregationPolicy from '@/model/grade-aggregation-policy'
-    import GradePolicy from '@/model/grade-policy'
-    import Condition from '@/model/condition'
-    import RenderInstanceTable from './render-instance-table'
+    import _ from 'lodash';
+    import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
+    import GradePolicy from '@/model/grade-policy';
+    import Condition from '@/model/condition';
+    import RenderInstanceTable from './render-instance-table';
     export default {
         name: '',
         components: {
@@ -67,35 +67,35 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: []
-            }
+            };
         },
         computed: {
             expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['展开选择']`)
+                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['展开选择']`);
             },
             isAggregateDisabled () {
                 return this.policyList.length < 1
                     || this.aggregations.length < 1
-                    || (this.policyList.length === 1 && !this.policyList[0].isAggregate)
+                    || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
             }
         },
         watch: {
             originalData: {
                 handler (value) {
                     if (value.length > 0) {
-                        this.policyList = value.map(item => new GradePolicy(item))
-                        const params = [...new Set(this.policyList.map(item => item.system_id))]
+                        this.policyList = value.map(item => new GradePolicy(item));
+                        const params = [...new Set(this.policyList.map(item => item.system_id))];
                         // 无新增的的系统时无需请求聚合数据
-                        const difference = params.filter(item => !this.curSystemId.includes(item))
+                        const difference = params.filter(item => !this.curSystemId.includes(item));
                         if (difference.length > 0) {
-                            this.curSystemId = [...this.curSystemId.concat(difference)]
-                            this.resetData()
+                            this.curSystemId = [...this.curSystemId.concat(difference)];
+                            this.resetData();
                             if (this.policyList.length > 1) {
-                                this.fetchAggregationAction(this.curSystemId.join(','))
+                                this.fetchAggregationAction(this.curSystemId.join(','));
                             }
                         } else {
-                            const data = this.getFilterAggregation(this.aggregationsBackup)
-                            this.aggregations = _.cloneDeep(data)
+                            const data = this.getFilterAggregation(this.aggregationsBackup);
+                            this.aggregations = _.cloneDeep(data);
                         }
                     }
                 },
@@ -104,32 +104,32 @@
         },
         methods: {
             async fetchAggregationAction (payload) {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: payload })
-                    const data = this.getFilterAggregation(res.data.aggregations)
-                    this.aggregationsBackup = _.cloneDeep(res.data.aggregations)
-                    this.aggregations = _.cloneDeep(data)
+                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: payload });
+                    const data = this.getFilterAggregation(res.data.aggregations);
+                    this.aggregationsBackup = _.cloneDeep(res.data.aggregations);
+                    this.aggregations = _.cloneDeep(data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             getFilterAggregation (payload) {
-                const curSelectActions = this.policyList.map(item => `${item.system_id}&${item.id}`)
+                const curSelectActions = this.policyList.map(item => `${item.system_id}&${item.id}`);
                 const aggregations = []
                 ;(payload || []).forEach(item => {
-                    const { actions, aggregate_resource_type } = item
-                    const curActions = actions.filter(_ => curSelectActions.includes(`${aggregate_resource_type.system_id}&${_.id}`))
+                    const { actions, aggregate_resource_type } = item;
+                    const curActions = actions.filter(_ => curSelectActions.includes(`${aggregate_resource_type.system_id}&${_.id}`));
                     if (curActions.length > 0) {
                         aggregations.push({
                             actions: curActions,
@@ -138,61 +138,61 @@
                                     _ => _.system_id === aggregate_resource_type.system_id
                                 ).system_name
                             })
-                        })
+                        });
                     }
-                })
-                return aggregations
+                });
+                return aggregations;
             },
 
             resetData () {
-                this.aggregationMap = []
-                this.aggregations = []
-                this.aggregationsBackup = []
-                this.aggregationsTableData = []
+                this.aggregationMap = [];
+                this.aggregations = [];
+                this.aggregationsBackup = [];
+                this.aggregationsTableData = [];
             },
 
             handleAggregateAction (payload) {
-                const aggregationAction = this.aggregations
-                const actionIds = []
+                const aggregationAction = this.aggregations;
+                const actionIds = [];
                 aggregationAction.forEach(item => {
-                    actionIds.push(...item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`))
-                })
+                    actionIds.push(...item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`));
+                });
                 if (!payload) {
-                    const aggregateArr = []
-                    const isHasAggregate = this.aggregationMap.length > 0
+                    const aggregateArr = [];
+                    const isHasAggregate = this.aggregationMap.length > 0;
                     if (isHasAggregate) {
                         for (let k = 0; k < aggregationAction.length; k++) {
-                            aggregateArr[k] = []
-                            const item = aggregationAction[k]
-                            const filterArray = this.policyList.filter(subItem => item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`).includes(`${subItem.system_id}&${subItem.id}`))
+                            aggregateArr[k] = [];
+                            const item = aggregationAction[k];
+                            const filterArray = this.policyList.filter(subItem => item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`).includes(`${subItem.system_id}&${subItem.id}`));
                             // 缓存新增加的操作权限数据
-                            const addArray = filterArray.filter(subItem => !this.aggregationsTableData.map(_ => `${_.system_id}&${_.id}`).includes(`${subItem.system_id}&${subItem.id}`))
+                            const addArray = filterArray.filter(subItem => !this.aggregationsTableData.map(_ => `${_.system_id}&${_.id}`).includes(`${subItem.system_id}&${subItem.id}`));
                             if (addArray.length > 0) {
-                                this.aggregationsTableData.push(...addArray)
+                                this.aggregationsTableData.push(...addArray);
                             }
                             const temAction = filterArray.map(sub => {
-                                const { id, name, system_id } = sub
-                                const curCondition = sub.related_resource_types[0].condition
+                                const { id, name, system_id } = sub;
+                                const curCondition = sub.related_resource_types[0].condition;
                                 return {
                                     id,
                                     system_id,
                                     name,
                                     condition: curCondition.map(v => {
-                                        const obj = {}
+                                        const obj = {};
                                         if (v.hasOwnProperty('instance')) {
-                                            obj.instances = _.cloneDeep(v.instance)
+                                            obj.instances = _.cloneDeep(v.instance);
                                         }
                                         if (v.hasOwnProperty('attribute')) {
-                                            obj.attributes = _.cloneDeep(v.attribute)
+                                            obj.attributes = _.cloneDeep(v.attribute);
                                         }
-                                        return obj
+                                        return obj;
                                     }).filter(_ => Object.keys(_).length > 0)
-                                }
-                            })
+                                };
+                            });
                             for (let i = 0; i < temAction.length; i++) {
                                 for (let j = i + 1; j < temAction.length; j++) {
-                                    const origin = temAction[i]
-                                    const target = temAction[j]
+                                    const origin = temAction[i];
+                                    const target = temAction[j];
                                     // const originObj = {
                                     //     expired_at: origin.expired_at,
                                     //     expired_display: origin.expired_display,
@@ -217,54 +217,54 @@
                                     //     aggregateArr[k].push(origin)
                                     //     aggregateArr[k].push(target)
                                     // }
-                                    aggregateArr[k].push(_.cloneDeep(origin))
-                                    aggregateArr[k].push(_.cloneDeep(target))
+                                    aggregateArr[k].push(_.cloneDeep(origin));
+                                    aggregateArr[k].push(_.cloneDeep(target));
                                 }
                             }
                         }
                     }
                     // aggregateArr 去重
-                    const tempAggregateArr = []
+                    const tempAggregateArr = [];
                     aggregateArr.forEach((item, index) => {
-                        tempAggregateArr[index] = []
+                        tempAggregateArr[index] = [];
                         item.forEach(subItem => {
                             if (!tempAggregateArr[index].map(v => `${v.system_id}&${v.id}`).includes(`${subItem.system_id}&${subItem.id}`)) {
-                                tempAggregateArr[index].push(subItem)
+                                tempAggregateArr[index].push(subItem);
                             }
-                        })
-                    })
+                        });
+                    });
                     const practicalAggregationAction = isHasAggregate ? aggregationAction.filter((item, index) => {
-                        return tempAggregateArr[index].length > 0
-                    }) : aggregationAction
-                    const tempActionIds = []
+                        return tempAggregateArr[index].length > 0;
+                    }) : aggregationAction;
+                    const tempActionIds = [];
                     practicalAggregationAction.forEach(item => {
-                        tempActionIds.push(...item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`))
-                    })
+                        tempActionIds.push(...item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`));
+                    });
                     const aggregations = practicalAggregationAction.filter(item => {
-                        const target = item.actions.map(v => v.id).sort()
+                        const target = item.actions.map(v => v.id).sort();
                         const existData = this.policyList.find(subItem => {
-                            return subItem.isAggregate && _.isEqual(target, subItem.actions.map(v => v.id).sort())
-                        })
-                        return !existData
+                            return subItem.isAggregate && _.isEqual(target, subItem.actions.map(v => v.id).sort());
+                        });
+                        return !existData;
                     }).map((item, index) => {
                         if (isHasAggregate) {
-                            const curData = tempAggregateArr[index]
-                            const actionDifference = item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`).filter(_ => !curData.map(sub => `${sub.system_id}&${sub.id}`).includes(_))
-                            tempActionIds.push(...actionDifference)
+                            const curData = tempAggregateArr[index];
+                            const actionDifference = item.actions.map(_ => `${item.aggregate_resource_type.system_id}&${_.id}`).filter(_ => !curData.map(sub => `${sub.system_id}&${sub.id}`).includes(_));
+                            tempActionIds.push(...actionDifference);
                             const isAllEqualFlag = (() => {
-                                let isAllEqual = true
+                                let isAllEqual = true;
                                 for (let i = 0; i < curData.length; i++) {
                                     if (i !== curData.length - 1) {
-                                        const target = curData[i].condition
-                                        const origin = curData[i + 1].condition
+                                        const target = curData[i].condition;
+                                        const origin = curData[i + 1].condition;
                                         if (!_.isEqual(target, origin) || target.length < 1 || origin.length < 1) {
-                                            isAllEqual = false
-                                            break
+                                            isAllEqual = false;
+                                            break;
                                         }
                                     }
                                 }
-                                return isAllEqual
-                            })()
+                                return isAllEqual;
+                            })();
                             // console.warn('curData[0]: ')
                             // console.warn(curData[0])
                             // item.isRemoteSucceed = true
@@ -286,30 +286,30 @@
                                 //     item.expired_display = curData[0].expired_display
                                 // }
                                 if (curData[0].condition.length > 0 && item.tag === 'add') {
-                                    const pathData = curData[0].condition[0].instances[0].path
+                                    const pathData = curData[0].condition[0].instances[0].path;
                                     item.instances = pathData.map(v => {
                                         return {
                                             id: v[0].id,
                                             name: v[0].name
-                                        }
-                                    })
-                                    item.selectValue = pathData.map(v => v[0].id)
+                                        };
+                                    });
+                                    item.selectValue = pathData.map(v => v[0].id);
                                 } else {
-                                    item.instances = []
-                                    item.selectValue = []
+                                    item.instances = [];
+                                    item.selectValue = [];
                                 }
                                 const obj = this.aggregationMap.find(
                                     v => _.isEqual(v.actions.sort(), item.actions.map(_ => _.id).sort())
-                                )
+                                );
                                 if (obj) {
-                                    item.selectList = obj.selectList || []
+                                    item.selectList = obj.selectList || [];
                                 }
                             } else {
-                                item.selectValue = []
-                                item.instances = []
+                                item.selectValue = [];
+                                item.instances = [];
                             }
 
-                            item.isRemoteSucceed = item.isAggregate && item.selectList.length > 0
+                            item.isRemoteSucceed = item.isAggregate && item.selectList.length > 0;
                         } else {
                             // const tempList = this.policyList.filter(v => item.actions.map(_ => _.id).includes(v.id)).map(sub => {
                             //     const { expired_at, expired_display, id, name, tag } = sub
@@ -383,20 +383,20 @@
                             //     // }
                             // }
                         }
-                        return new GradeAggregationPolicy(item)
-                    })
-                    this.policyList = this.policyList.filter(item => !tempActionIds.includes(`${item.system_id}&${item.id}`))
-                    this.policyList.unshift(...aggregations)
-                    this.aggregationMap = []
-                    return
+                        return new GradeAggregationPolicy(item);
+                    });
+                    this.policyList = this.policyList.filter(item => !tempActionIds.includes(`${item.system_id}&${item.id}`));
+                    this.policyList.unshift(...aggregations);
+                    this.aggregationMap = [];
+                    return;
                 }
-                const aggregationData = []
-                const newTableData = []
+                const aggregationData = [];
+                const newTableData = [];
                 this.policyList.forEach(item => {
                     if (!item.isAggregate) {
-                        newTableData.push(item)
+                        newTableData.push(item);
                     } else {
-                        aggregationData.push(_.cloneDeep(item))
+                        aggregationData.push(_.cloneDeep(item));
                         if (
                             !this.aggregationMap.some(
                                 v => _.isEqual(v.actions.sort(), item.actions.map(_ => _.id).sort())
@@ -405,35 +405,35 @@
                             this.aggregationMap.push({
                                 actions: item.actions.map(_ => _.id),
                                 selectList: item.selectList
-                            })
+                            });
                         }
                     }
-                })
+                });
                 // console.warn('aggregationMap: ')
                 // console.warn(this.aggregationMap)
-                this.policyList = _.cloneDeep(newTableData)
-                const reallyActionIds = actionIds.filter(item => !this.policyList.map(v => `${v.system_id}&${v.id}`).includes(item))
+                this.policyList = _.cloneDeep(newTableData);
+                const reallyActionIds = actionIds.filter(item => !this.policyList.map(v => `${v.system_id}&${v.id}`).includes(item));
                 reallyActionIds.forEach(item => {
                     // 优先从已有权限取值
-                    const curObj = this.aggregationsTableData.find(_ => _.id === item)
+                    const curObj = this.aggregationsTableData.find(_ => _.id === item);
                     // const curObj = (() => {
                     //     const filterList = this.policyList.filter(v => this.aggregationsTableData.map(_ => _.id).includes(v.id))
                     //     return filterList.find(_ => _.id === item)
                     // })()
                     if (curObj) {
-                        this.policyList.unshift(curObj)
+                        this.policyList.unshift(curObj);
                     } else {
-                        const curAction = this.policyList.find(_ => `${_.system_id}&${_.id}` === item)
-                        const curAggregation = aggregationData.find(_ => _.actions.map(v => `${_.system_id}&${v.id}`).includes(item))
-                        this.policyList.unshift(new GradePolicy({ ...curAction, tag: 'add' }, 'add'))
+                        const curAction = this.policyList.find(_ => `${_.system_id}&${_.id}` === item);
+                        const curAggregation = aggregationData.find(_ => _.actions.map(v => `${_.system_id}&${v.id}`).includes(item));
+                        this.policyList.unshift(new GradePolicy({ ...curAction, tag: 'add' }, 'add'));
                         if (curAggregation && curAggregation.instances.length > 0) {
-                            const curData = this.policyList[0]
+                            const curData = this.policyList[0];
                             const instances = (function () {
-                                const arr = []
-                                const aggregateResourceType = curAggregation.aggregateResourceType
-                                const { id, name, system_id } = aggregateResourceType
+                                const arr = [];
+                                const aggregateResourceType = curAggregation.aggregateResourceType;
+                                const { id, name, system_id } = aggregateResourceType;
                                 curAggregation.instances.forEach(v => {
-                                    const curItem = arr.find(_ => _.type === id)
+                                    const curItem = arr.find(_ => _.type === id);
                                     if (curItem) {
                                         curItem.path.push([{
                                             id: v.id,
@@ -441,7 +441,7 @@
                                             system_id,
                                             type: id,
                                             type_name: name
-                                        }])
+                                        }]);
                                     } else {
                                         arr.push({
                                             name,
@@ -453,35 +453,35 @@
                                                 type: id,
                                                 type_name: name
                                             }]]
-                                        })
+                                        });
                                     }
-                                })
-                                return arr
-                            })()
+                                });
+                                return arr;
+                            })();
                             if (instances.length > 0) {
                                 curData.related_resource_types.forEach(subItem => {
-                                    subItem.condition = [new Condition({ instances }, '', 'add')]
-                                })
+                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                });
                             }
                         }
                     }
-                })
-                console.warn(this.policyList)
+                });
+                console.warn(this.policyList);
             },
 
             handleSelect () {
-                this.$emit('on-add')
+                this.$emit('on-add');
             },
 
             handleDelete (payload) {
-                this.$emit('on-delete', payload)
+                this.$emit('on-delete', payload);
             },
 
             handleGetValue () {
-                return this.$refs.resourceInstanceRef && this.$refs.resourceInstanceRef.handleGetValue()
+                return this.$refs.resourceInstanceRef && this.$refs.resourceInstanceRef.handleGetValue();
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-grade-admin-select-wrapper {

@@ -48,7 +48,7 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
+    import _ from 'lodash';
 
     export default {
         name: 'infinite-tree',
@@ -76,14 +76,14 @@
                 type: String,
                 default: 'all',
                 validator (val) {
-                    return ['all', 'only-click', 'only-radio'].includes(val)
+                    return ['all', 'only-click', 'only-radio'].includes(val);
                 }
             },
             location: {
                 type: String,
                 default: 'dialog',
                 validator (val) {
-                    return ['dialog', 'page'].includes(val)
+                    return ['dialog', 'page'].includes(val);
                 }
             },
             isRatingManager: {
@@ -100,54 +100,54 @@
                 startIndex: 0,
                 endIndex: 0,
                 clickTriggerTypeBat: this.clickTriggerType
-            }
+            };
         },
         computed: {
             ghostStyle () {
                 return {
                     height: this.visiableData.length * this.itemHeight + 'px'
-                }
+                };
             },
             // allData 中 visiable 为 true 的数据，visiable 属性辅助设置展开收起的
             // 当父节点收起时，子节点的 visiable 为 false
             visiableData () {
-                return this.allData.filter(item => item.visiable)
+                return this.allData.filter(item => item.visiable);
             },
             // 页面渲染的数据
             renderData () {
                 // 渲染 visiable 为 true 并且在可视区的，这里要注意，必须要先 filter visiable 然后 slice，不能反过来
-                return this.visiableData.slice(this.startIndex, this.endIndex)
+                return this.visiableData.slice(this.startIndex, this.endIndex);
             },
             isExistDialog () {
-                return this.location === 'dialog'
+                return this.location === 'dialog';
             },
             nameStyle () {
                 return (payload) => {
                     if (payload.type === 'user') {
                         return {
                             'maxWidth': 'calc(100% - 50px)'
-                        }
+                        };
                     }
-                    let otherOffset = 14 + 17 + 22 + 33 + 35
+                    let otherOffset = 14 + 17 + 22 + 33 + 35;
                     // loading 时需计算loading的宽度
                     if (payload.loading) {
-                        otherOffset += 20
+                        otherOffset += 20;
                     }
                     if (payload.async) {
-                        otherOffset += 14
+                        otherOffset += 14;
                     }
                     return {
                         'maxWidth': `calc(100% - ${otherOffset}px)`
-                    }
-                }
+                    };
+                };
             }
         },
         watch: {
             clickTriggerType (val) {
                 if (!val) {
-                    this.clickTriggerTypeBat = 'all'
+                    this.clickTriggerTypeBat = 'all';
                 }
-                this.clickTriggerTypeBat = val
+                this.clickTriggerTypeBat = val;
             }
         },
         created () {
@@ -155,9 +155,9 @@
         mounted () {
             const height = this.$el.clientHeight === 0
                 ? parseInt(window.getComputedStyle(this.$el).height, 10)
-                : this.$el.clientHeight
+                : this.$el.clientHeight;
 
-            this.endIndex = Math.ceil(height / this.itemHeight)
+            this.endIndex = Math.ceil(height / this.itemHeight);
         },
         destroyed () {
         },
@@ -170,14 +170,14 @@
             getNodeStyle (node) {
                 return {
                     paddingLeft: (node.async ? node.level : node.level + 1) * this.leftBaseIndent + 'px'
-                }
+                };
             },
 
             /**
              * 滚动回调函数
              */
             rootScroll: _.throttle(function () {
-                this.updateRenderData(this.$el.scrollTop)
+                this.updateRenderData(this.$el.scrollTop);
             }, 0),
 
             /**
@@ -187,14 +187,14 @@
              */
             updateRenderData (scrollTop = 0) {
                 // 可视区显示的条数
-                const count = Math.ceil(this.$el.clientHeight / this.itemHeight)
+                const count = Math.ceil(this.$el.clientHeight / this.itemHeight);
                 // 滚动后可视区新的 startIndex
-                const newStartIndex = Math.floor(scrollTop / this.itemHeight)
+                const newStartIndex = Math.floor(scrollTop / this.itemHeight);
                 // 滚动后可视区新的 endIndex
-                const newEndIndex = newStartIndex + count
-                this.startIndex = newStartIndex
-                this.endIndex = newEndIndex
-                this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`
+                const newEndIndex = newStartIndex + count;
+                this.startIndex = newStartIndex;
+                this.endIndex = newEndIndex;
+                this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`;
             },
 
             /**
@@ -204,37 +204,37 @@
              */
             nodeClick (node) {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
                 if ((node.level === 0 || (node.async && node.disabled)) && !this.isRatingManager) {
-                    this.expandNode(node)
-                    return
+                    this.expandNode(node);
+                    return;
                 }
                 if (!node.disabled) {
                     if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
-                        node.is_selected = !node.is_selected
+                        node.is_selected = !node.is_selected;
                         // type为user时需校验不用组织下的相同用户让其禁选
                         if (node.type === 'user') {
-                            this.handleBanUser(node, node.is_selected)
+                            this.handleBanUser(node, node.is_selected);
                         }
-                        this.$emit('on-select', node.is_selected, node)
+                        this.$emit('on-select', node.is_selected, node);
                     }
                 }
                 if (['all', 'only-click'].includes(this.clickTriggerTypeBat)) {
                     if (node.level === 0 && !this.isRatingManager) {
-                        this.expandNode(node)
+                        this.expandNode(node);
                     }
-                    this.$emit('on-click', node)
+                    this.$emit('on-click', node);
                 }
             },
 
             handleBanUser (node, flag) {
                 this.allData.forEach(item => {
                     if (item.username === node.username && item.id !== node.id) {
-                        item.disabled = flag
-                        item.is_selected = flag
+                        item.disabled = flag;
+                        item.is_selected = flag;
                     }
-                })
+                });
             },
 
             /**
@@ -245,25 +245,25 @@
              */
             expandNode (node, isExpand) {
                 if (isExpand) {
-                    node.expanded = isExpand
+                    node.expanded = isExpand;
                 } else {
-                    node.expanded = !node.expanded
+                    node.expanded = !node.expanded;
                 }
 
                 if (node.children && node.children.length) {
-                    const children = this.allData.filter(item => item.parentNodeId === node.id)
+                    const children = this.allData.filter(item => item.parentNodeId === node.id);
                     children.forEach(child => {
-                        child.visiable = node.expanded
+                        child.visiable = node.expanded;
                         if (child.async && !node.expanded) {
-                            this.collapseNode(child)
+                            this.collapseNode(child);
                         }
-                    })
+                    });
                 } else {
                     if (node.async) {
-                        this.$emit('async-load-nodes', node)
+                        this.$emit('async-load-nodes', node);
                     }
                 }
-                this.$emit('expand-node', node)
+                this.$emit('expand-node', node);
             },
 
             /**
@@ -275,11 +275,11 @@
             collapseNode (node) {
                 node.expanded = false
                 ;(node.children || []).forEach(child => {
-                    child.visiable = false
+                    child.visiable = false;
                     if (child.async && !node.expanded) {
-                        this.collapseNode(child)
+                        this.collapseNode(child);
                     }
-                })
+                });
             },
 
             /**
@@ -289,27 +289,27 @@
                 this.allData.forEach(item => {
                     // 父节点
                     if (item.async) {
-                        item.showRadio = flag
+                        item.showRadio = flag;
                     }
-                })
+                });
             },
 
             handleNodeClick (node) {
                 if (node.disabled || this.isDisabled) {
-                    return
+                    return;
                 }
-                node.is_selected = !node.is_selected
+                node.is_selected = !node.is_selected;
                 if (node.type === 'user') {
-                    this.handleBanUser(node, node.is_selected)
+                    this.handleBanUser(node, node.is_selected);
                 }
-                this.$emit('on-select', node.is_selected, node)
+                this.$emit('on-select', node.is_selected, node);
             },
 
             /**
              * radio 选择回调
              */
             nodeChange (newVal, oldVal, localVal, node) {
-                this.$emit('on-select', newVal, node)
+                this.$emit('on-select', newVal, node);
             },
 
             /**
@@ -318,9 +318,9 @@
             clearAllIsSelectedStatus () {
                 this.allData.forEach(item => {
                     if (!item.disabled) {
-                        item.is_selected = false
+                        item.is_selected = false;
                     }
-                })
+                });
             },
 
             /**
@@ -333,12 +333,12 @@
             setSingleSelectedStatus (nodeKey, username, isSelected) {
                 this.allData.forEach(item => {
                     if (username === item.username || nodeKey === item.id) {
-                        item.is_selected = isSelected
+                        item.is_selected = isSelected;
                     }
-                })
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .infinite-tree {

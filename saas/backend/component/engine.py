@@ -17,7 +17,9 @@ from backend.common.local import local
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
-from .http import http_post, logger
+from .constants import ComponentEnum
+from .http import http_post
+from .util import do_blueking_http_request
 
 
 def _call_engine_api(http_func, url_path, data, timeout=30):
@@ -31,47 +33,17 @@ def _call_engine_api(http_func, url_path, data, timeout=30):
 
     if settings.BK_IAM_ENGINE_HOST_TYPE == "apigateway":
         headers["x-bkapi-authorization"] = json_dumps(
-            {"bk_app_code": settings.APP_ID, "bk_app_secret": settings.APP_TOKEN}
+            {"bk_app_code": settings.APP_CODE, "bk_app_secret": settings.APP_SECRET}
         )
 
     if settings.BK_IAM_ENGINE_HOST_TYPE == "direct":
-        headers.update({"X-Bk-App-Code": settings.APP_ID, "X-Bk-App-Secret": settings.APP_TOKEN})
+        headers.update({"X-Bk-App-Code": settings.APP_CODE, "X-Bk-App-Secret": settings.APP_SECRET})
 
     url = url_join(settings.BK_IAM_ENGINE_HOST, f"/api/v1/engine{url_path}")
     if settings.BK_IAM_ENGINE_HOST_TYPE == "direct":
         url = url_join(settings.BK_IAM_ENGINE_HOST, f"/api/v1{url_path}")
-    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
-    ok, data = http_func(**kwargs)
-    # remove sensitive info
-    kwargs["headers"] = {}
-
-    # process result
-    if not ok:
-        message = "engine api failed, method: %s, info: %s" % (http_func.__name__, kwargs)
-        logger.error(message)
-        raise error_codes.ENGINE_REQUEST_ERROR.format(f'request engine api error: {data["error"]}')
-
-    code = data["code"]
-    message = data["message"]
-
-    if code == 0:
-        return data["data"]
-
-    logger.warning(
-        "engine api warning, request_id: %s, method: %s, info: %s, code: %d message: %s",
-        local.request_id,
-        http_func.__name__,
-        kwargs,
-        code,
-        message,
-    )
-
-    error_message = (
-        f"Request=[{http_func.__name__} {url_path} request_id={local.request_id}],"
-        f"Response[code={code}, message={message}]"
-    )
-    raise error_codes.ENGINE_REQUEST_ERROR.format(error_message)
+    return do_blueking_http_request(ComponentEnum.ENGINE.value, http_func, url, data, headers, timeout)
 
 
 def batch_query_subjects(data: List[Dict[str, Any]]):
