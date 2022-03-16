@@ -550,6 +550,20 @@ class GroupCheckBiz:
         if Group.objects.filter(name=name, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
 
+    def check_role_group_limit(self, role_id: int, new_group_count: int):
+        """
+        检查角色下的用户组数量是否超限
+        """
+        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_group_limit"]
+        role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
+        if len(role_group_ids) + new_group_count > limit:
+            raise error_codes.VALIDATE_ERROR.format(
+                _("分级管理员({})已有{}个用户组，不可再添加{}个用户组，否则超出分级管理员最大用户组数量{}的限制").format(
+                    role_id, len(role_group_ids), new_group_count, limit
+                ),
+                True,
+            )
+
     def batch_check_role_group_names_unique(self, role_id: int, names: List[str]):
         """
         批量检查角色的用户组名字是否唯一

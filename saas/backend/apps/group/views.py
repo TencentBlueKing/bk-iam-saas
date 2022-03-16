@@ -129,6 +129,8 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
 
         # 用户组名称在角色内唯一
         self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"])
+        # 用户组数量在角色内是否超限
+        self.group_check_biz.check_role_group_limit(request.role.id, 1)
 
         # 检测成员是否满足管理的授权范围
         members = parse_obj_as(List[Subject], data["members"])

@@ -13,7 +13,9 @@ from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.role.serializers import RatingMangerBaseInfoSZL, RoleScopeSubjectSLZ
-from backend.service.constants import GroupMemberType
+from backend.biz.role import RoleCheckBiz
+from backend.service.constants import GroupMemberType, SubjectType
+from backend.service.models import Subject
 
 
 class ManagementSourceSystemSLZ(serializers.Serializer):
@@ -63,6 +65,16 @@ class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBas
 
 class ManagementGradeManagerMembersSLZ(serializers.Serializer):
     members = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)
+
+    def validate(self, data):
+        """
+        校验成员加入的分级管理员数是否超过限制
+        """
+        role_check_biz = RoleCheckBiz()
+        for username in data["members"]:
+            # subject加入的分级管理员数量不能超过最大值
+            role_check_biz.check_subject_grade_manager_limit(Subject(type=SubjectType.USER.value, id=username))
+        return data
 
 
 class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
