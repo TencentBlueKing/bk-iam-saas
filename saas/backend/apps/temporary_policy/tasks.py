@@ -12,7 +12,7 @@ from celery import task
 from django.conf import settings
 from django.db import transaction
 
-from backend.apps.policy.models import TemporaryPolicy
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.time import db_time
 from backend.component import iam
 
