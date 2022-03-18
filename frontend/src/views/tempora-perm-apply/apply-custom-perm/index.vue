@@ -1,7 +1,7 @@
 <template>
     <div>
         <!-- 申请自定义权限正常跳转 -->
-        <smart-action class="biz-perm-apply" v-if="!isNoPermApplay && !isNoPermissionsSet">
+        <smart-action class="biz-perm-apply">
             <render-horizontal-block :required="true" ext-cls="apply-way-wrapper" :label="$t(`m.permApply['选择操作']`)">
                 <render-search>
                     <bk-select
@@ -210,249 +210,6 @@
                 </bk-button>
             </div>
         </smart-action>
-        <!-- 用户组权限申请默认页面 -->
-        <smart-action class="applpForPermission" v-if="isNoPermissionsSet && isShowHasUserGroup">
-            <bk-radio-group v-model="checkRadio" @change="handlerChange">
-                <div class="groupPermissionQequest" :class="{ 'blueBorder': isShowUserGroup }">
-                    <render-horizontal-block>
-                        <div class="userGroup">
-                            <div class="userGroupRadio">
-                                <bk-radio :value="'userGroup'">{{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组（包含更多可申请权限）']`)}}</bk-radio>
-                            </div>
-                            <div class="info">
-                                {{ $t(`m.info['如果需要更多用户组权限']`) }},
-                                {{ $t(`m.info['可前往']`) }}
-                                <bk-button
-                                    text
-                                    theme="primary"
-                                    style="font-size: 12px;"
-                                    @click="handleToUserGroup">
-                                    {{ $t(`m.info['申请用户组权限']`) }}
-                                </bk-button>
-                            </div>
-                        </div>
-                        <div v-if="isShowUserGroup">
-                            <bk-transition name="collapse">
-                                <div>
-                                    <div class="user-group-table">
-                                        <bk-table
-                                            ref="groupTableRef"
-                                            ext-cls="user-group-table"
-                                            :class="{ 'set-border': tableLoading }"
-                                            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-                                            :data="tableList"
-                                            @select="handlerOneChange"
-                                            @select-all="handlerAllChange"
-                                            :cell-attributes="handleCellAttributes">
-                                            <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
-                                            <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
-                                                <template slot-scope="{ row }">
-                                                    <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
-                                                    <template v-if="!setDefaultSelect(row)">
-                                                        <Icon type="error-fill" class="error-icon" />
-                                                        <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
-                                                        <bk-button
-                                                            text
-                                                            theme="primary"
-                                                            style="font-size: 12px;"
-                                                            @click="handleBatchRenewal">
-                                                            {{ $t(`m.permApply['去续期']`) }}
-                                                        </bk-button>
-                                                    </template>
-                                                </template>
-                                            </bk-table-column>
-                                            <bk-table-column :label="$t(`m.userGroup['描述']`)">
-                                                <template slot-scope="{ row }">
-                                                    <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
-                                                </template>
-                                            </bk-table-column>
-                                            <bk-table-column :label="$t(`m.userGroup['所属分级管理员']`)">
-                                                <template slot-scope="{ row }">
-                                                    <span :class="row.role && row.role.name ? 'can-view' : ''"
-                                                        :title="row.role && row.role.name ? row.role.name : ''"
-                                                        @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
-                                                </template>
-                                            </bk-table-column>
-                                        </bk-table>
-                                        <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
-                                    </div>
-                                    <div class="applicationPeriod">
-                                        <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
-                                            <section ref="expiredAtRef">
-                                                <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
-                                                <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.permApply['请选择申请期限']`) }}</p>
-                                            </section>
-                                        </render-horizontal-block>
-                                    </div>
-                                    <div class="reason">
-                                        <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
-                                            <section ref="resInstanceReasonRef">
-                                                <bk-input
-                                                    type="textarea"
-                                                    v-model="reason"
-                                                    :maxlength="255"
-                                                    :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
-                                                    @input="handleReasonInput"
-                                                    @blur="handleReasonBlur">
-                                                </bk-input>
-                                                <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
-                                            </section>
-                                        </render-horizontal-block>
-                                    </div>
-                                    <div class="buttonBox">
-                                        <bk-button
-                                            theme="primary"
-                                            :loading="buttonLoading"
-                                            @click="handleSubmit">
-                                            {{ $t(`m.common['提交']`) }}
-                                        </bk-button>
-                                        <bk-button
-                                            style="margin-left: 10px;"
-                                            @click="handleCancel">
-                                            {{ $t(`m.common['取消']`) }}
-                                        </bk-button>
-                                    </div>
-                                </div>
-                            </bk-transition>
-                        </div>
-                    </render-horizontal-block>
-                </div>
-                <!-- 独立申请权限 -->
-                <div class="IndependentApplication" :class="{ 'blueBorder': isShowIndependent }">
-                    <render-horizontal-block>
-                        <div class="independent">
-                            <bk-radio :value="'independent'">{{$t(`m.permApply['你也可以继续申请独立权限']`)}}</bk-radio>
-                            <div class="info">
-                                {{ $t(`m.info['如果需要更多自定义权限']`) }}，
-                                {{ $t(`m.info['可前往']`) }}
-                                <bk-button
-                                    text
-                                    theme="primary"
-                                    style="font-size: 12px;"
-                                    @click="handleToCustompermissions">
-                                    {{ $t(`m.info['申请自定义权限']`) }}
-                                </bk-button>
-                            </div>
-                        </div>
-                        <div v-if="isShowIndependent">
-                            <bk-transition name="bk-fade-in-ease">
-                                <div>
-                                    <div class="tableData">
-                                        <resource-instance-table
-                                            :list="newTableList"
-                                            :original-list="tableDataBackup"
-                                            :system-id="systemValue"
-                                            ref="resInstanceTableRef"
-                                            @on-select="handleResourceSelect"
-                                            @on-realted-change="handleRelatedChange" />
-                                    </div>
-                                    <div class="reason">
-                                        <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
-                                            <section ref="resInstanceReasonRef">
-                                                <bk-input
-                                                    type="textarea"
-                                                    v-model="reason"
-                                                    :maxlength="255"
-                                                    :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
-                                                    @input="handleReasonInput"
-                                                    @blur="handleReasonBlur">
-                                                </bk-input>
-                                                <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
-                                            </section>
-                                        </render-horizontal-block>
-                                    </div>
-                                    <div class="buttonBox">
-                                        <bk-button
-                                            theme="primary"
-                                            :loading="buttonLoading"
-                                            @click="handleApplySubmit">
-                                            {{ $t(`m.common['提交']`) }}
-                                        </bk-button>
-                                        <bk-button
-                                            style="margin-left: 10px;"
-                                            @click="handleCancel">
-                                            {{ $t(`m.common['取消']`) }}
-                                        </bk-button>
-                                    </div>
-                                </div>
-                            </bk-transition>
-                        </div>
-                    </render-horizontal-block>
-                </div>
-            </bk-radio-group>
-        </smart-action>
-        <!-- 无权限组时页面 -->
-        <smart-action class="noPermissionPage blueBorder" v-if="isNoPermissionsSet && !isShowHasUserGroup ">
-            <render-horizontal-block>
-                <div class="tableData">
-                    <bk-alert type="info">
-                        <div slot="title">
-                            {{ $t(`m.info['没有匹配到合适的用户组']`) }}，
-                            {{ $t(`m.info['如需要可继续前往']`) }}
-                            <bk-button
-                                text
-                                theme="primary"
-                                style="font-size: 12px;"
-                                @click="handleToUserGroup">
-                                {{ $t(`m.info['申请用户组权限']`) }}
-                            </bk-button>
-                        </div>
-                    </bk-alert>
-                </div>
-                <div class="requestIndependent">
-                    <div class="requestIndependentText">{{$t(`m.permApply['你可以申请独立权限']`)}}</div>
-                    <div class="info">
-                        {{ $t(`m.info['如果需要更多自定义权限']`) }}，
-                        {{ $t(`m.info['可前往']`) }}
-                        <bk-button
-                            text
-                            theme="primary"
-                            style="font-size: 12px;"
-                            @click="handleToCustompermissions">
-                            {{ $t(`m.info['申请自定义权限']`) }}
-                        </bk-button>
-                    </div>
-                </div>
-                <div class="tableData">
-                    <resource-instance-table
-                        :cache-id="routerQuery.cache_id"
-                        :list="newTableList"
-                        :original-list="tableDataBackup"
-                        :system-id="systemValue"
-                        ref="resInstanceTableRef"
-                        @on-select="handleResourceSelect"
-                        @on-realted-change="handleRelatedChange" />
-                </div>
-                <div class="reason">
-                    <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
-                        <section ref="resInstanceReasonRef">
-                            <bk-input
-                                type="textarea"
-                                v-model="reason"
-                                :maxlength="255"
-                                :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
-                                @input="handleReasonInput"
-                                @blur="handleReasonBlur">
-                            </bk-input>
-                            <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
-                        </section>
-                    </render-horizontal-block>
-                </div>
-                <div class="buttonBox">
-                    <bk-button
-                        theme="primary"
-                        :loading="buttonLoading"
-                        @click="handleApplySubmit">
-                        {{ $t(`m.common['提交']`) }}
-                    </bk-button>
-                    <bk-button
-                        style="margin-left: 10px;"
-                        @click="handleCancel">
-                        {{ $t(`m.common['取消']`) }}
-                    </bk-button>
-                </div>
-            </render-horizontal-block>
-        </smart-action>
         <render-perm-sideslider
             :show="isShowPermSidesilder"
             :name="curGroupName"
@@ -492,7 +249,6 @@
     import Policy from '@/model/policy';
     import AggregationPolicy from '@/model/aggregation-policy';
     import Condition from '@/model/condition';
-    import IamDeadline from '@/components/iam-deadline/horizontal';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
     export default {
@@ -500,7 +256,6 @@
         components: {
             RenderActionTag,
             ResourceInstanceTable,
-            IamDeadline,
             RenderPermSideslider
         },
         data () {
@@ -517,6 +272,7 @@
                 isShowActionError: false,
                 isShowReasonError: false,
                 routerQuery: {},
+                routerParams: {},
                 linearActionList: [],
 
                 requestQueue: ['action', 'aggregate', 'commonAction'],
@@ -604,6 +360,8 @@
         watch: {
             '$route': {
                 handler (value) {
+                    console.log('value', value);
+                    debugger;
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -611,10 +369,25 @@
                             cache_id
                         });
                         this.sysAndtid = true;
+                    } else if (value.query.system_id) {
+                        this.routerQuery = Object.assign({}, {
+                            system_id: value.query.system_id,
+                            cache_id: '',
+                            ids: value.query.ids
+                        });
+                        this.sysAndtid = true;
                     } else {
                         this.routerQuery = Object.assign({}, {
                             system_id: '',
                             cache_id: ''
+                        });
+                    }
+
+                    if (value.params.ids) {
+                        const { ids, temporaryTableData } = value.params;
+                        this.routerParams = Object.assign({}, {
+                            ids,
+                            temporaryTableData
                         });
                     }
                 },
@@ -669,6 +442,7 @@
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
                     if (res.data.count > 0) {
+                        console.log('1111', res.data);
                         this.isShowHasUserGroup = true;
                     }
                     this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
@@ -798,6 +572,7 @@
                     await this.fetchUserGroupList();
                     // 获取个人用户的用户组列表
                     await this.fetchCurUserGroup();
+                    this.handleActionTagChange(true, this.routerParams.ids);
                 }
             },
 
@@ -951,6 +726,7 @@
                 }
             },
             handleActionTagChange (flag, payload) {
+                console.log('payload', flag, payload);
                 if (payload.length < 1 || this.originalCustomTmplList.length < 1) {
                     return;
                 }
@@ -967,11 +743,16 @@
                     const differenceSetIds = temps.filter(v => !this.tableData.map(sub => sub.id).includes(v));
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v);
+                        if (this.routerParams.temporaryTableData.length) {
+                            // eslint-disable-next-line max-len
+                            // data.resource_groups = this.routerParams.temporaryTableData.find(e => e.id === data.id).resource_groups;
+                        }
                         if (!data.resource_groups || !data.resource_groups.length) {
                             data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : [];
                         }
                         this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom', false, true));
                     });
+                    console.log('this.tableData', this.tableData);
                 } else {
                     this.tableData = this.tableData.filter(v => !temps.includes(v.id));
                     this.tableData.forEach(item => {
@@ -1530,6 +1311,7 @@
             },
             
             handleActionChecked (newVal, oldVal, val, actData, payload) {
+                console.log('newVal', newVal, actData, payload);
                 const data = this.linearActionList.find(item => item.id === actData.id);
                 this.isShowActionError = false;
                 if (!newVal) {
@@ -1623,6 +1405,7 @@
             },
 
             handleSubActionChecked (newVal, oldVal, val, actData, payload, item) {
+                console.log('newVal', newVal, actData, payload, item);
                 const data = this.linearActionList.find(v => v.id === actData.id);
                 this.isShowActionError = false;
                 if (!newVal) {
@@ -1788,6 +1571,7 @@
                         this.$set(item, 'actionsAllChecked', isAllChecked);
                         this.$set(item, 'actionsAllDisabled', isAllDisabled);
                     }
+                    console.log('111222');
                 });
 
                 this.linearActionList = _.cloneDeep(linearActions);

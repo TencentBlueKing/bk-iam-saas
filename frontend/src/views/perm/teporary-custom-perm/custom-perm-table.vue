@@ -315,9 +315,9 @@
                     this.policyList = res.data.map(item => {
                         // eslint-disable-next-line max-len
                         item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
+                        item.related_actions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
                         return new PermPolicy(item);
                     });
-                    console.log('this.policyList', this.policyList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -585,10 +585,37 @@
             },
 
             // 跳转到临时权限
-            handleToTemporaryCustomApply () {
+            handleToTemporaryCustomApply (data) {
+                console.log('data', data);
+                this.getTemporaryCustomRelatedActions(data);
                 this.$router.push({
-                    name: 'applyProvisionPerm'
+                    name: 'applyProvisionPerm',
+                    params: { ids: this.applyAgiagnIds, temporaryTableData: this.TemporaryCustomTableData },
+                    query: {
+                        system_id: this.systemId
+                    }
                 });
+            },
+            
+            // 获取相对关系
+            getTemporaryCustomRelatedActions (data) {
+                this.applyAgiagnIds = [data.id];
+                const hash = {};
+                const TemporaryCustomTableData = this.policyList.reduce((prev, item) => {
+                    if (data.related_actions.includes(item.id)) {
+                        // eslint-disable-next-line no-unused-expressions
+                        hash[item.id] ? '' : hash[item.id] = true && this.applyAgiagnIds.push(item.id)
+                            && prev.push({ id: item.id, resource_groups: item.resource_groups });
+                    }
+                    return prev;
+                }, [{ id: data.id, resource_groups: data.resource_groups }]);
+                this.TemporaryCustomTableData = [...TemporaryCustomTableData].map(e => {
+                    e.resource_groups.forEach(item => {
+                        item.id = '';
+                    });
+                    return e;
+                });
+                console.log('this.TemporaryCustomTableData', this.TemporaryCustomTableData);
             }
         }
     };
