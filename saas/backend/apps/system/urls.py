@@ -14,4 +14,10 @@ from . import views
 
 urlpatterns = [
     path("", views.SystemViewSet.as_view({"get": "list"}), name="system.list_system"),
+    # 获取指定系统的资源类别
+    path(
+        "resource_types/",
+        views.ResourceTypeViewSet.as_view({"get": "list_resource_types"}),
+        name="system.list_resource_types",
+    ),
 ]

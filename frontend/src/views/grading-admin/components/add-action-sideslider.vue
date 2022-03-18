@@ -57,7 +57,7 @@
                         <div class="custom-tmpl-wrapper" v-for="(customTmpl, index) in systemData[curSystem].list" :key="index">
                             <label class="bk-label" style="line-height: 20px;">
                                 <span class="name">{{ customTmpl.name }}</span>
-                                <span class="select-all" @click.stop="handleSelectAll(customTmpl, index)">（{{ customTmpl.text }}）</span>
+                                <span class="select-all" data-test-id="grading_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">（{{ customTmpl.text }}）</span>
                             </label>
                             <div
                                 :class="['choose-perm-tmpl', { 'set-style': index !== systemData[curSystem].list.length - 1 }]">
@@ -127,7 +127,10 @@
             </template>
         </div>
         <div slot="footer" style="padding-left: 30px;">
-            <bk-button theme="primary" :disabled="isDisabled" @click="handleSubmit">{{ $t(`m.common['确定']`) }}</bk-button>
+            <bk-button theme="primary" :disabled="isDisabled" @click="handleSubmit"
+                data-test-id="grading_btn_addActionConfirm">
+                {{ $t(`m.common['确定']`) }}
+            </bk-button>
             <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
     </bk-sideslider>

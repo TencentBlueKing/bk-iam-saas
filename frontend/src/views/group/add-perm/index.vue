@@ -4,7 +4,7 @@
             :label="$t(`m.userGroup['组权限']`)">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
-                    <section class="action-wrapper" @click.stop="handleAddPerm">
+                    <section class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
                         <Icon bk type="plus-circle-shape" />
                         <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
                     </section>

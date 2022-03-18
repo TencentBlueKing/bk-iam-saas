@@ -64,6 +64,7 @@ INSTALLED_APPS += (
     "backend.audit",
     "backend.debug",
     "backend.apps.handover",
+    "backend.apps.mgmt",
 )
 
 # 这里是默认的中间件，大部分情况下，不需要改动
@@ -219,6 +220,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.long_task.tasks.retry_long_task",
         "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
     },
+    # "periodic_delete_unreferenced_expressions": {
+    #     "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
+    #     "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
+    # },
 }
 
 # celery settings
@@ -350,7 +355,7 @@ PUB_SUB_REDIS_DB = os.environ.get("BKAPP_PUB_SUB_REDIS_DB", 0)
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.environ.get("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower()
+    "enable_permission_handover": os.environ.get("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "True").lower()
     == "true",
 }
 
@@ -360,7 +365,7 @@ IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "tr
 # apigateway 相关配置
 # NOTE: it sdk will read settings.BK_APP_CODE and settings.BK_APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = os.environ.get("BK_APIGATEWAY_URL", "") + "/api/{api_name}/"
+BK_API_URL_TMPL = os.environ.get("BK_API_URL_TMPL", "")
 INSTALLED_APPS += ("apigw_manager.apigw",)
 BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")

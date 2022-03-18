@@ -6,7 +6,9 @@
                 direction="left"
                 :style="{ top: '-15px', left: '80px' }"
                 :content="$t(`m.guide['创建模板']`)" />
-            <bk-button theme="primary" @click="handleCreate">{{ $t(`m.common['新建']`) }}</bk-button>
+            <bk-button theme="primary" @click="handleCreate" data-test-id="permTemplate_btn_create">
+                {{ $t(`m.common['新建']`) }}
+            </bk-button>
             <!-- <bk-button style="margin-left: 10px;" :disabled="!isCanBatchDelete" @click="handleBatchDelete">
                     批量删除
                 </bk-button> -->

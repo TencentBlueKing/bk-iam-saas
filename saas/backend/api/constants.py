@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import List
+
 from aenum import LowerStrEnum, auto, skip
 
 from backend.util.enum import ChoicesEnum
@@ -24,7 +26,6 @@ class BKNonEntityUser(ChoicesEnum, LowerStrEnum):
     # 双下划线是为了避免与实体用户名冲突
     BK__UNVERIFIED_USER = auto()
     BK__ANONYMOUS_USER = auto()
-
     _choices_labels = skip(
         (
             # 主要用于API调用时，ESB/APIGW传递过来的Jwt.user.verified为False时，Jwt.user.username是不可信的，有可能是很随意的字符串
@@ -34,3 +35,13 @@ class BKNonEntityUser(ChoicesEnum, LowerStrEnum):
             (BK__ANONYMOUS_USER, "匿名用户，即空用户"),
         )
     )
+
+
+class BaseAPIEnum(ChoicesEnum, LowerStrEnum):
+    """获取管理类API、超级管理类API、授权类API 的枚举信息"""
+
+    @classmethod
+    def info(cls) -> List:
+        enum_dict = dict(cls.get_choices())
+        api_info = [{"api": api, "name": enum_dict[api]} for api in enum_dict]
+        return api_info

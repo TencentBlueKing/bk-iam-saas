@@ -24,14 +24,6 @@
                 @click="handleGoPermTransfer">
                 {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
-            <bk-button
-                v-if="enablePermissionHandover.toLowerCase() === 'true'"
-                data-test-id="myPerm_btn_applyPerm"
-                text
-                style="position: absolute; top: 5px; right: 0;"
-                @click="goPermTransferHistory">
-                {{ $t(`m.permTransfer['交接历史']`) }}
-            </bk-button>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
         <template v-if="isEmpty">
@@ -197,12 +189,6 @@
             handleGoPermTransfer () {
                 this.$router.push({
                     name: 'permTransfer'
-                })
-            },
-            // 权限交接历史
-            goPermTransferHistory () {
-                this.$router.push({
-                    name: 'permTransferHistory'
                 })
             }
         }

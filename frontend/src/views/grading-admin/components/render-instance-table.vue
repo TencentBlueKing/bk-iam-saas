@@ -404,6 +404,7 @@
                         && !item.isAggregate
                         && relatedActions.includes(item.id)
                         && curData.system_id === item.system_id
+                        && item.related_resource_types
                         && !item.related_resource_types.every(sub => sub.empty)
                 }))
                 if (relatedList.length > 0) {
@@ -447,6 +448,7 @@
                 }
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        && item.related_resource_types[0]
                         && sub.system_id === item.related_resource_types[0].system_id && !sub.isExpiredAtDisabled)
                     if (curIndex > -1) {
                         this.tableList.splice(curIndex, 1, new GradePolicy({
