@@ -226,11 +226,11 @@
                     });
                 } finally {
                     groupSystem.loading = false;
-                    if (res.data.length === 1) {
-                        this.$nextTick(() => {
-                            this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
-                        });
-                    }
+                    // if (res.data.length === 1) {
+                    //     this.$nextTick(() => {
+                    //         this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+                    //     });
+                    // }
                 }
             },
 
@@ -269,7 +269,7 @@
              * @return {*}
              */
             async handleTemplateExpanded (flag, item) {
-                console.log('详情', item);
+                console.log('flag', flag);
                 if (!flag) {
                     this.$set(item, 'isEdit', false);
                     return;

@@ -525,15 +525,15 @@
                 const scopeAction = this.authorization[systemId];
                 const actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id));
                 const conditions = actions.map(
-                    item => item.related_resource_types[0].condition
+                    item => item.resource_groups[0].related_resource_types[0].condition
                 ).filter(_ => _.length > 0);
                 if (conditions.length < 1) {
                     return [];
                 }
                 const instances = actions.map(item =>
                     (
-                        item.related_resource_types[0].condition[0]
-                        && item.related_resource_types[0].condition[0].instances
+                        item.resource_groups[0].related_resource_types[0].condition[0]
+                        && item.resource_groups[0].related_resource_types[0].condition[0].instances
                     ) || []
                 );
                 const tempData = [];
@@ -1363,60 +1363,70 @@
                 const aggregations = [];
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
+                        const groupResourceTypes = [];
                         const { type, id, name, environment, description } = item;
-                        const relatedResourceTypes = [];
-                        if (item.related_resource_types.length > 0) {
-                            item.related_resource_types.forEach(resItem => {
-                                if (resItem.empty) {
-                                    resItem.isError = true;
-                                    flag = true;
-                                }
-                                const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-                                    ? resItem.condition.map(conItem => {
-                                        const { id, instance, attribute } = conItem;
-                                        const attributeList = (attribute && attribute.length > 0)
-                                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                                            : [];
-                                        const instanceList = (instance && instance.length > 0)
-                                            ? instance.map(({ name, type, paths }) => {
-                                                const tempPath = _.cloneDeep(paths);
-                                                tempPath.forEach(pathItem => {
-                                                    pathItem.forEach(pathSubItem => {
-                                                        delete pathSubItem.disabled;
-                                                    });
-                                                });
+                        if (item.resource_groups.length > 0) {
+                            item.resource_groups.forEach(groupItem => {
+                                const relatedResourceTypes = [];
+                                if (groupItem.related_resource_types.length > 0) {
+                                    groupItem.related_resource_types.forEach(resItem => {
+                                        if (resItem.empty) {
+                                            resItem.isError = true;
+                                            flag = true;
+                                        }
+                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                            ? resItem.condition.map(conItem => {
+                                                const { id, instance, attribute } = conItem;
+                                                const attributeList = (attribute && attribute.length > 0)
+                                                    ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                                                    : [];
+                                                const instanceList = (instance && instance.length > 0)
+                                                    ? instance.map(({ name, type, paths }) => {
+                                                        const tempPath = _.cloneDeep(paths);
+                                                        tempPath.forEach(pathItem => {
+                                                            pathItem.forEach(pathSubItem => {
+                                                                delete pathSubItem.disabled;
+                                                            });
+                                                        });
+                                                        return {
+                                                            name,
+                                                            type,
+                                                            path: tempPath
+                                                        };
+                                                    })
+                                                    : [];
                                                 return {
-                                                    name,
-                                                    type,
-                                                    path: tempPath
+                                                    id,
+                                                    instances: instanceList,
+                                                    attributes: attributeList
                                                 };
                                             })
                                             : [];
-                                        return {
-                                            id,
-                                            instances: instanceList,
-                                            attributes: attributeList
-                                        };
-                                    })
-                                    : [];
-                                relatedResourceTypes.push({
-                                    type: resItem.type,
-                                    system_id: resItem.system_id,
-                                    name: resItem.name,
-                                    condition: conditionList.filter(
-                                        item => item.instances.length > 0 || item.attributes.length > 0
-                                    )
+                                        relatedResourceTypes.push({
+                                            type: resItem.type,
+                                            system_id: resItem.system_id,
+                                            name: resItem.name,
+                                            condition: conditionList.filter(
+                                                item => item.instances.length > 0 || item.attributes.length > 0
+                                            )
+                                        });
+                                    });
+                                }
+
+                                groupResourceTypes.push({
+                                    id: groupItem.id,
+                                    related_resource_types: relatedResourceTypes
                                 });
                             });
                             // 强制刷新下
-                            item.related_resource_types = _.cloneDeep(item.related_resource_types);
+                            item.resource_groups = _.cloneDeep(item.resource_groups);
                         }
                         const params = {
                             type,
                             name,
                             id,
                             description,
-                            related_resource_types: relatedResourceTypes,
+                            resource_groups: groupResourceTypes,
                             environment
                         };
                         actionList.push(_.cloneDeep(params));

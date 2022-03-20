@@ -8,7 +8,7 @@
                 ext-cls="apply-content-table"
                 border
                 :cell-class-name="getCellClass">
-                <bk-table-column :label="$t(`m.common['操作']`)">
+                <bk-table-column :label="$t(`m.common['操作']`)" min-width="160">
                     <template slot-scope="{ row }">
                         <Icon
                             type="pin"
@@ -18,7 +18,7 @@
                         <span :title="row.name">{{ row.name }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" width="491">
+                <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="360">
                     <template slot-scope="{ row }">
                         <template v-if="!row.isEmpty">
                             <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
@@ -47,7 +47,7 @@
                         </template>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t(`m.common['生效条件']`)" width="500">
+                <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
                     <template slot-scope="{ row, $index }">
                         <div class="condition-table-cell">
                             <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
@@ -70,7 +70,7 @@
                         <!-- <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div> -->
                     </template>
                 </bk-table-column>
-                <bk-table-column prop="expired_dis" :label="$t(`m.common['申请期限']`)"></bk-table-column>
+                <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['申请期限']`)"></bk-table-column>
             </bk-table>
         </render-vertical-block>
         <bk-sideslider
