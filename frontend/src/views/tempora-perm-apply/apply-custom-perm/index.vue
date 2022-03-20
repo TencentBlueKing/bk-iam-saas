@@ -361,7 +361,6 @@
             '$route': {
                 handler (value) {
                     console.log('value', value);
-                    debugger;
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -442,7 +441,6 @@
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
                     if (res.data.count > 0) {
-                        console.log('1111', res.data);
                         this.isShowHasUserGroup = true;
                     }
                     this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
@@ -572,7 +570,9 @@
                     await this.fetchUserGroupList();
                     // 获取个人用户的用户组列表
                     await this.fetchCurUserGroup();
-                    this.handleActionTagChange(true, this.routerParams.ids);
+                    if (this.routerParams.ids) {
+                        this.handleActionTagChange(true, this.routerParams.ids);
+                    }
                 }
             },
 
@@ -726,7 +726,6 @@
                 }
             },
             handleActionTagChange (flag, payload) {
-                console.log('payload', flag, payload);
                 if (payload.length < 1 || this.originalCustomTmplList.length < 1) {
                     return;
                 }
@@ -743,16 +742,17 @@
                     const differenceSetIds = temps.filter(v => !this.tableData.map(sub => sub.id).includes(v));
                     differenceSetIds.forEach(v => {
                         const data = this.linearActionList.find(act => act.id === v);
-                        if (this.routerParams.temporaryTableData.length) {
+                        // eslint-disable-next-line max-len
+                        const isTempora = this.routerParams.temporaryTableData && this.routerParams.temporaryTableData.length > 0;
+                        if (isTempora) {
                             // eslint-disable-next-line max-len
-                            // data.resource_groups = this.routerParams.temporaryTableData.find(e => e.id === data.id).resource_groups;
+                            data.resource_groups = this.routerParams.temporaryTableData.find(e => e.id === data.id).resource_groups;
                         }
                         if (!data.resource_groups || !data.resource_groups.length) {
                             data.resource_groups = data.related_resource_types.length ? [{ id: '', related_resource_types: data.related_resource_types }] : [];
                         }
-                        this.tableData.unshift(new Policy({ ...data, tag: 'add' }, 'custom', false, true));
+                        this.tableData.unshift(new Policy({ ...data, tag: 'add', isTempora }, isTempora ? '' : 'custom', false, true));
                     });
-                    console.log('this.tableData', this.tableData);
                 } else {
                     this.tableData = this.tableData.filter(v => !temps.includes(v.id));
                     this.tableData.forEach(item => {
@@ -1071,7 +1071,6 @@
                     });
                     return tempAction;
                 })();
-                console.log('this.aggregationsBackup', this.aggregationsBackup);
                 this.aggregationsBackup.forEach((item, index) => {
                     const tempObj = _.cloneDeep(item);
                     const tempAction = tempObj.actions.map(_ => _.id);
@@ -1083,7 +1082,6 @@
                 });
                 aggregationAction = aggregationAction.filter(item => item.actions.length > 1);
                 this.aggregations = _.cloneDeep(aggregationAction);
-                console.log('this.aggregations', this.aggregations);
             },
 
             handleAggregateActionChange (payload) {
@@ -1163,8 +1161,6 @@
                 aggregationAction.forEach(item => {
                     actionIds.push(...item.actions.map(_ => _.id));
                 });
-                console.log('this.tableData', this.tableData);
-                console.log('this.aggregationsTableData', this.aggregationsTableData);
                 if (payload) {
                     // 缓存新增加的操作权限数据
                     aggregationAction.forEach(item => {
@@ -1172,7 +1168,6 @@
                             subItem => item.actions.map(_ => _.id).includes(subItem.id)
                         );
 
-                        console.log('filterArray', filterArray);
                         const addArray = _.cloneDeep(filterArray.filter(
                             subItem => !this.aggregationsTableData.map(_ => _.id).includes(subItem.id)
                         ));
@@ -1191,11 +1186,9 @@
                             subItem => item.actions.map(act => act.id).includes(subItem.id)
                         );
 
-                        console.log('existTableData', existTableData);
                         if (existTableData.length > 0) {
                             item.tag = existTableData.every(subItem => subItem.tag === 'unchanged') ? 'unchanged' : 'add';
                             const tempObj = existTableData.find(subItem => subItem.tag === 'add');
-                            console.log('tempObj', tempObj);
                             if (tempObj) {
                                 item.expired_at = tempObj.expired_at || 15552000;
                                 item.expired_display = tempObj.expired_display || this.$t(`m.common['6个月']`);
@@ -1209,7 +1202,6 @@
                                 );
                                 // 是否都选择了实例
                                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none'); // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
-                                console.log('isAllHasInstance', isAllHasInstance);
                                 if (isAllHasInstance) {
                                     const instances = conditions.map(subItem => subItem.map(v => v.instance || []));
                                     let isAllEqual = true;
@@ -1219,9 +1211,6 @@
                                             break;
                                         }
                                     }
-                                    // console.log('instances: ')
-                                    // console.log(instances)
-                                    console.log('isAllEqual: ', isAllEqual);
                                     if (isAllEqual) {
                                         const instanceData = instances[0][0][0];
                                         if (instanceData && instanceData.path) {
@@ -1233,7 +1222,6 @@
                                             });
                                         }
                                     } else {
-                                        console.log('instances', instances);
                                         item.instances = [];
                                     }
                                 } else {
@@ -1311,7 +1299,6 @@
             },
             
             handleActionChecked (newVal, oldVal, val, actData, payload) {
-                console.log('newVal', newVal, actData, payload);
                 const data = this.linearActionList.find(item => item.id === actData.id);
                 this.isShowActionError = false;
                 if (!newVal) {
@@ -1381,7 +1368,6 @@
                         }
                     }
 
-                    console.log('actData', actData);
                     this.handleRelatedActions(actData, false);
                     payload.count--;
                     return;
@@ -1405,7 +1391,6 @@
             },
 
             handleSubActionChecked (newVal, oldVal, val, actData, payload, item) {
-                console.log('newVal', newVal, actData, payload, item);
                 const data = this.linearActionList.find(v => v.id === actData.id);
                 this.isShowActionError = false;
                 if (!newVal) {
@@ -1571,7 +1556,6 @@
                         this.$set(item, 'actionsAllChecked', isAllChecked);
                         this.$set(item, 'actionsAllDisabled', isAllDisabled);
                     }
-                    console.log('111222');
                 });
 
                 this.linearActionList = _.cloneDeep(linearActions);
@@ -1635,7 +1619,6 @@
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params);
-                    console.log(res.data, params);
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
                         // eslint-disable-next-line max-len
@@ -1677,7 +1660,6 @@
                     }));
                     console.log('this.tableData', this.tableData);
                     this.tableDataBackup = _.cloneDeep(this.tableData);
-                    console.log('this.tableDataBackup', this.tableDataBackup);
                     this.aggregationsTableData = _.cloneDeep(this.tableData);
                 } catch (e) {
                     console.error(e);

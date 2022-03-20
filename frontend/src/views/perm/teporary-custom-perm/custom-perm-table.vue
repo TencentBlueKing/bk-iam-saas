@@ -585,15 +585,16 @@
             },
 
             // 跳转到临时权限
-            handleToTemporaryCustomApply (data) {
-                console.log('data', data);
-                this.getTemporaryCustomRelatedActions(data);
-                this.$router.push({
-                    name: 'applyProvisionPerm',
-                    params: { ids: this.applyAgiagnIds, temporaryTableData: this.TemporaryCustomTableData },
-                    query: {
-                        system_id: this.systemId
-                    }
+            async handleToTemporaryCustomApply (data) {
+                await this.getTemporaryCustomRelatedActions(data);
+                this.$nextTick(() => {
+                    this.$router.push({
+                        name: 'applyProvisionPerm',
+                        params: { ids: this.applyAgiagnIds, temporaryTableData: this.TemporaryCustomTableData },
+                        query: {
+                            system_id: this.systemId
+                        }
+                    });
                 });
             },
             
@@ -611,11 +612,11 @@
                 }, [{ id: data.id, resource_groups: data.resource_groups }]);
                 this.TemporaryCustomTableData = [...TemporaryCustomTableData].map(e => {
                     e.resource_groups.forEach(item => {
+                        console.log('item', item);
                         item.id = '';
                     });
                     return e;
                 });
-                console.log('this.TemporaryCustomTableData', this.TemporaryCustomTableData);
             }
         }
     };

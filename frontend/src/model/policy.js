@@ -39,6 +39,7 @@ export default class Policy {
         this.description = payload.description;
         this.count = payload.count || 0;
         this.tag = payload.tag || '';
+        this.isTempora = payload.isTempora || false;
         this.isShowCustom = false;
         this.customValue = '';
         this.environment = payload.environment || {};
@@ -93,7 +94,8 @@ export default class Policy {
 
         this.resource_groups = payload.resource_groups.reduce((prev, item) => {
             const relatedRsourceTypes = item.related_resource_types.map(
-                item => new RelateResourceTypes(item, action, flag, instanceNotDisabled, this.isNew)
+                item => new RelateResourceTypes({ ...item, isTempora: payload.isTempora },
+                    action, flag, instanceNotDisabled, this.isNew)
             );
             
             if ((this.related_environments && !!this.related_environments.length)) {
