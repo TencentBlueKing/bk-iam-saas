@@ -5,7 +5,7 @@
             :data="policyList"
             border
             :cell-class-name="getCellClass">
-            <bk-table-column :label="$t(`m.common['操作']`)">
+            <bk-table-column :label="$t(`m.common['操作']`)" min-width="120">
                 <template slot-scope="{ row }">
                     <span :title="row.name">{{ row.name }}</span>
                 </template>
@@ -43,7 +43,7 @@
                     </template>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="360">
+            <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
                 <template slot-scope="{ row }">
                     <div class="condition-table-cell" v-if="!!row.related_environments.length">
                         <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
