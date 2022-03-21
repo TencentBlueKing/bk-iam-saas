@@ -95,7 +95,7 @@ class PolicyQueryService:
         """
         查询subject指定系统下的临时权限
         """
-        qs = TemporaryPolicy.objects.filter(system_id=system_id, subject_type=subject.type)
+        qs = TemporaryPolicy.objects.filter(system_id=system_id, subject_type=subject.type, subject_id=subject.id)
         return [Policy.from_db_model(one, one.expired_at) for one in qs]
 
     def _trans_from_queryset(self, system_id: str, subject: Subject, queryset) -> List[Policy]:
