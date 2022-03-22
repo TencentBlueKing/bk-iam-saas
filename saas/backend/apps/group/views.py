@@ -72,6 +72,7 @@ from .serializers import (
     GroupTransferSLZ,
     GroupUpdateSLZ,
     MemberSLZ,
+    SearchMemberSLZ,
 )
 
 permission_logger = logging.getLogger("permission")
@@ -245,6 +246,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
+        query_serializer=SearchMemberSLZ(label="keyword"),
         auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: MemberSLZ(label="成员")},
         tags=["group"],
@@ -256,6 +258,15 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         checker = RoleObjectRelationChecker(request.role)
         if not checker.check_group(group):
             raise error_codes.FORBIDDEN.format(message=_("用户组({})不在当前用户身份可访问的范围内").format(group.id), replace=True)
+
+        if request.query_params.get("keyword"):
+            slz = SearchMemberSLZ(data=request.query_params)
+            slz.is_valid(raise_exception=True)
+            keyword = slz.validated_data["keyword"].lower()
+
+            group_members = self.biz.search_member_by_keyword(group.id, keyword)
+
+            return Response({"results": [one.dict() for one in group_members]})
 
         pagination = LimitOffsetPagination()
         limit = pagination.get_limit(request)

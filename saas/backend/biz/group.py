@@ -509,6 +509,14 @@ class GroupBiz:
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
 
+    def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
+        """根据关键词 获取指定用户组成员列表"""
+        maximum_number_of_member = 1000
+        _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
+        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
+
+        return hit_members
+
 
 class GroupCheckBiz:
     svc = GroupService()
