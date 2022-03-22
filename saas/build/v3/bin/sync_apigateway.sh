@@ -28,7 +28,7 @@ if_error_then_exit $? "sync_apigw_stage fail"
 log_info "done sync_apigw_stage"
 
 log_info "do sync_apigw_resources..."
-python manage.py sync_apigw_resources -f resources/apigateway/bk_apigw_resources_bk-iam.yaml
+python manage.py sync_apigw_resources -f resources/apigateway/bk_apigw_resources_bk-iam.yaml --delete
 if_error_then_exit $? "sync_apigw_resources fail"
 log_info "done sync_apigw_resources"
 

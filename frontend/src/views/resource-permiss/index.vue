@@ -141,7 +141,8 @@
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
                 <template slot-scope="{ row }">
-                    {{row.name}}
+                    {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
+                    
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.resourcePermiss['用户类型']`)">

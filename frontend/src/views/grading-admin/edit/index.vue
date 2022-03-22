@@ -667,7 +667,7 @@
                 window.changeDialog = true;
                 payload.forEach(e => {
                     if (!e.resource_groups || !e.resource_groups.length) {
-                        e.resource_groups = e.related_resource_types.length ? [{ id: '', related_resource_types: e.related_resource_types }] : [];
+                        e.resource_groups = (e.related_resource_types && e.related_resource_types.length) ? [{ id: '', related_resource_types: e.related_resource_types }] : [];
                     }
                 });
                 this.originalList = _.cloneDeep(payload);

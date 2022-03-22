@@ -168,6 +168,7 @@
                         :list="tableData"
                         :original-list="tableDataBackup"
                         :system-id="systemValue"
+                        :button-loading="buttonLoading"
                         ref="resInstanceTableRef"
                         @on-select="handleResourceSelect"
                         @on-realted-change="handleRelatedChange" />
