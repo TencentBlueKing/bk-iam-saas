@@ -48,7 +48,7 @@ def cachedmethod(cache=default_cache, key=_method_key, timeout=None):
     def decorator(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
-            namespace = f"{method.__module__}:{method.__qualname__}:{method.__name__}"
+            namespace = f"{method.__module__}:{method.__qualname__}"
             k = key(self, *args, **kwargs, namespace=namespace)
             return cache.get_or_set(k, lambda: method(self, *args, **kwargs), timeout)
 
