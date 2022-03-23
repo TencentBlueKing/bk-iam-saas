@@ -76,6 +76,9 @@ import access from './modules/access';
 // 资源权限模块
 import resourcePermiss from './modules/resource-permiss';
 
+// 临时权限模块
+import applyProvisionPerm from './modules/apply-provision-perm';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -87,6 +90,14 @@ const currentNav = [
         id: 'permApplyNav',
         rkey: 'applyJoinUserGroup',
         path: `${SITE_URL}apply-join-user-group`,
+        disabled: false
+    },
+    {
+        icon: 'perm-apply',
+        name: il8n('nav', '临时权限申请'),
+        id: 'provisionPermApplyNav',
+        rkey: 'applyProvisionPerm',
+        path: `${SITE_URL}apply-provision-perm`,
         disabled: false
     },
     {
@@ -218,7 +229,8 @@ const store = new Vuex.Store({
         renewal,
         audit,
         access,
-        resourcePermiss
+        resourcePermiss,
+        applyProvisionPerm
     },
     state: {
         mainContentLoading: false,
