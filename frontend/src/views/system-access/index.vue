@@ -93,7 +93,7 @@
                     <div class="info-right ml20">
                         <p class="info-title">{{$t(`m.nav['系统接入']`)}}</p>
                         <p class="info">蓝鲸权限中心提供了体验DEMO、接入文档、多语言SDK、接入视频，帮助开发者更快地实现权限接入。</p>
-                        <bk-button theme="primary">{{$t(`m.access['去接入']`)}}</bk-button>
+                        <bk-button theme="primary" @click="goCreate">{{$t(`m.access['去接入']`)}}</bk-button>
                     </div>
                 </div>
                 <div class="help-list">
@@ -152,17 +152,17 @@
                             }
                         ]
                     },
-                    {
-                        name: 'DEMO',
-                        urlInfo: [
-                            {
-                                'text': '立即体验', url: 'http://www.qq.com'
-                            },
-                            {
-                                'text': '源码下载', url: 'http://www.qq.com'
-                            }
-                        ]
-                    },
+                    // {
+                    //     name: 'DEMO',
+                    //     urlInfo: [
+                    //         {
+                    //             'text': '立即体验', url: 'http://www.qq.com'
+                    //         },
+                    //         {
+                    //             'text': '源码下载', url: 'http://www.qq.com'
+                    //         }
+                    //     ]
+                    // },
                     {
                         name: '鉴权SDK',
                         urlInfo: [
