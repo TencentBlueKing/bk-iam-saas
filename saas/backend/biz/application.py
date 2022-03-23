@@ -25,6 +25,7 @@ from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
 from backend.apps.template.models import PermTemplatePolicyAuthorized
+from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
@@ -128,7 +129,7 @@ class ApprovalProcessorBiz:
         """获取超级管理员成员员"""
         return Role.objects.get(type=RoleType.SUPER_MANAGER.value).members
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def get_system_manager_members(self, system_id: str) -> str:
         """获取系统管理员成员"""
         return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=system_id).members

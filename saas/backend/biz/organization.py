@@ -10,11 +10,11 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict
 
+from backend.common.cache import cached
 from backend.component import usermgr
-from backend.util.cache import region
 
 
-@region.cache_on_arguments()
+@cached(timeout=5 * 60)
 def _get_category_dict() -> Dict[int, str]:
     """获取所有目录的ID与Name映射"""
     # TODO: 需要修改为直接读取DB数据，避免因为usermgr的及时变更引起未同步前的数据不一致问题
