@@ -152,17 +152,17 @@
                             }
                         ]
                     },
-                    {
-                        name: 'DEMO',
-                        urlInfo: [
-                            {
-                                'text': '立即体验', url: 'http://www.qq.com'
-                            },
-                            {
-                                'text': '源码下载', url: 'http://www.qq.com'
-                            }
-                        ]
-                    },
+                    // {
+                    //     name: 'DEMO',
+                    //     urlInfo: [
+                    //         {
+                    //             'text': '立即体验', url: 'http://www.qq.com'
+                    //         },
+                    //         {
+                    //             'text': '源码下载', url: 'http://www.qq.com'
+                    //         }
+                    //     ]
+                    // },
                     {
                         name: '鉴权SDK',
                         urlInfo: [
