@@ -70,14 +70,15 @@ class HealthChecker:
         Check whether a redis cache is alive by pinging it.
         """
         try:
-            from django_redis import get_redis_connection
             from redis.exceptions import ConnectionError
+
+            from backend.common.redis import get_redis_connection
         except ImportError as e:
             logger.exception("redis module import fail")
             return False, f"redis module import fail, error: {str(e)}"
 
         try:
-            get_redis_connection("default").ping()
+            get_redis_connection().ping()
         except ConnectionError as e:
             logger.exception("redis ping test fail")
             return False, f"redis ping test fail, error: {str(e)}"
