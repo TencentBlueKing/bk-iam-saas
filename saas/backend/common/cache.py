@@ -84,7 +84,7 @@ def cached(cache=default_cache, key_function=_default_key_function, timeout=DEFA
     return decorator
 
 
-def cachedmethod(cache=default_cache, key_function=_method_key_function, timeout=None):
+def cachedmethod(cache=default_cache, key_function=_method_key_function, timeout=DEFAULT_TIMEOUT):
     """Decorator to wrap a class or instance method with a memorizing
     callable that saves results in a cache.
     """

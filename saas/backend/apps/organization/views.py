@@ -34,10 +34,10 @@ from backend.apps.organization.serializers import (
     UserQuerySLZ,
 )
 from backend.apps.organization.tasks import sync_organization
+from backend.common.cache import cachedmethod
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.component import usermgr
 from backend.service.constants import PermissionCodeEnum
-from backend.util.cache import region
 
 
 class CategoryViewSet(GenericViewSet):
@@ -137,7 +137,7 @@ class OrganizationViewSet(GenericViewSet):
 
     paginator = None  # 去掉swagger中的limit offset参数
 
-    @region.cache_on_arguments(expiration_time=60 * 5)
+    @cachedmethod(timeout=60 * 5)
     def get_search_data(self, keyword, is_exact, limit):
         """
         获取search数据

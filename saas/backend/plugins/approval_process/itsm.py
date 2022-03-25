@@ -12,11 +12,11 @@ from typing import List
 
 from django.utils.translation import gettext as _
 
+from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.component import itsm
 from backend.service.constants import IAM_SUPPORT_PROCESSOR_TYPES, ApplicationTypeEnum, ProcessorSourceEnum
 from backend.service.models import ApprovalProcess, ApprovalProcessNode, ApprovalProcessWithNode
-from backend.util.cache import region
 from backend.util.enum import ChoicesEnum
 
 from .base import ApprovalProcessProvider
@@ -38,13 +38,13 @@ APPLICATION_TYPE_DEFAULT_PROCESS_DICT = {
 class ITSMApprovalProcessProvider(ApprovalProcessProvider):
     """ITSM提供审批流程"""
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def list(self) -> List[ApprovalProcess]:
         """查询审批流程列表，所有流程"""
         processes = itsm.list_process()
         return [ApprovalProcess(**p) for p in processes]
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def list_with_nodes(self, application_type: ApplicationTypeEnum) -> List[ApprovalProcessWithNode]:
         """审批流程列表，查询指定申请类型的流程列表，并附带流程节点
         1. 对于ITSM, 不支持通过条件过滤出指定申请类型的，只能手动匹配

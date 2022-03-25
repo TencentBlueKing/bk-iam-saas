@@ -13,9 +13,9 @@ from typing import Dict, List, Tuple
 
 from django.conf import settings
 
+from backend.common.cache import cached
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
-from backend.util.cache import region
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
@@ -64,7 +64,7 @@ def get_system(system_id: str, fields: str = DEFAULT_SYSTEM_FIELDS) -> Dict:
     return _call_iam_api(http_get, url_path, data={"fields": fields})
 
 
-@region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+@cached(timeout=60)  # 缓存1分钟
 def list_resource_type(systems: List[str], fields: str = DEFAULT_RESOURCE_TYPE_FIELDS) -> Dict[str, List[Dict]]:
     """
     查询系统的资源类型
@@ -74,7 +74,7 @@ def list_resource_type(systems: List[str], fields: str = DEFAULT_RESOURCE_TYPE_F
     return _call_iam_api(http_get, url_path, data=params)
 
 
-@region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+@cached(timeout=60)  # 缓存1分钟
 def list_action(system_id: str, fields: str = DEFAULT_ACTION_FIELDS) -> List[Dict]:
     """
     获取系统的所有action列表
@@ -91,7 +91,7 @@ def get_action(system_id: str, action_id: str) -> Dict:
     return _call_iam_api(http_get, url_path, data={})
 
 
-@region.cache_on_arguments(expiration_time=60)
+@cached(timeout=60)
 def list_instance_selection(system_id: str) -> List[Dict]:
     """
     获取系统的实例视图列表

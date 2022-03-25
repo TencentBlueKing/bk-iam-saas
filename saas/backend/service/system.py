@@ -10,8 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List, Optional
 
+from backend.common.cache import cachedmethod
 from backend.component import iam
-from backend.util.cache import region
 
 from .models import System
 
@@ -36,7 +36,7 @@ class SystemService:
         system = iam.get_system(system_id)
         return System(**system)
 
-    @region.cache_on_arguments(expiration_time=5 * 60)  # 5分钟过期
+    @cachedmethod(timeout=5 * 60)  # 5分钟过期
     def list_client(self, system_id: str) -> List[str]:
         """
         查询可访问系统的clients
