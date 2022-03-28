@@ -29,7 +29,7 @@ def get_redis_connection():
     复用Django Cache其配置的Redis Cache的Redis Client Connection
     这样可以不需要根据Redis配置来生成Redis Client Connection
     Note：
-    1. 这里返回的是原生Redis Connection，所以Django Cache里配置的KEY_PREFIX、TIMEOUT、VERSION都不会生效
-    2. 使用时为了避免与Cache的key冲突，需要先查看
+    这里返回的是原生Redis Connection，所以Django Cache里配置的KEY_PREFIX、TIMEOUT、VERSION都不会生效
+    所以使用时为了避免与Cache的key冲突，必须配合 make_redis_key方法一起使用
     """
     return get_django_cache_redis_connection(alias=CacheEnum.REDIS.value)

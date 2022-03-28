@@ -5,7 +5,7 @@ from django.core.cache import caches
 from django.utils.translation import gettext as _
 from pydantic.tools import parse_obj_as
 
-from backend.common.cache import CacheEnum, CacheSceneKeyPrefixEnum
+from backend.common.cache import CacheEnum, CacheKeyPrefixEnum
 from backend.common.error_codes import error_codes
 from backend.util.uuid import gen_uuid
 
@@ -22,7 +22,7 @@ class ApplicationPolicyListCache:
 
     def _make_key(self, cache_id: str) -> str:
         """生成Key, 由于直接使用django Cache，其会自动处理项目级别的前缀，这里不需要添加上"""
-        return f"{CacheSceneKeyPrefixEnum.UNAUTHORIZED_JUMP_APPLICATION.value}:{cache_id}"
+        return f"{CacheKeyPrefixEnum.UNAUTHORIZED_JUMP_APPLICATION.value}:{cache_id}"
 
     def _get(self, cache_id: str) -> Dict:
         key = self._make_key(cache_id)

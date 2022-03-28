@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple
 
 from django.core.cache import caches
 
-from backend.common.cache import CacheEnum, CacheSceneKeyPrefixEnum, cachedmethod
+from backend.common.cache import CacheEnum, CacheKeyPrefixEnum, cachedmethod
 from backend.component import iam, resource_provider
 from backend.service.models.resource import ResourceApproverAttribute
 from backend.util.basic import chunked
@@ -97,7 +97,7 @@ class ResourceIDNameCache:
         """
         生成Key
         """
-        prefix = CacheSceneKeyPrefixEnum.CALLBACK_RESOURCE_NAME.value
+        prefix = CacheKeyPrefixEnum.CALLBACK_RESOURCE_NAME.value
         return f"{prefix}:{self.system_id}:{self.resource_type_id}:{resource_id}"
 
     def set(self, id_name_map: Dict[str, str]):

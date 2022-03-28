@@ -13,7 +13,7 @@ from typing import Any, Optional
 from aenum import LowerStrEnum, auto
 from django.core.cache import caches
 
-from .cache import CacheEnum, CacheSceneKeyPrefixEnum
+from .cache import CacheEnum, CacheKeyPrefixEnum
 
 
 class LockTypeEnum(LowerStrEnum):
@@ -41,7 +41,7 @@ class RedisLock:
         """
         生成key
         """
-        key = f"{CacheSceneKeyPrefixEnum.LOCK.value}:{type_}"
+        key = f"{CacheKeyPrefixEnum.LOCK.value}:{type_}"
         if suffix is not None:
             key += f":{suffix}"
         return key
