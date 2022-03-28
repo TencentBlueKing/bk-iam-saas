@@ -392,7 +392,7 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
 
 
 class ManagementGroupActionPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
-    """用户组权限 - 自定义权限 - 操作"""
+    """用户组权限 - 自定义权限 - 操作级别变更"""
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
@@ -409,7 +409,7 @@ class ManagementGroupActionPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
     policy_operation_biz = PolicyOperationBiz()
 
     @swagger_auto_schema(
-        operation_description="用户组权限回收",
+        operation_description="用户组权限删除",
         request_body=ManagementGroupPolicyDeleteSLZ(label="权限"),
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
