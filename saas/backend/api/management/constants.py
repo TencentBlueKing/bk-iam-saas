@@ -35,6 +35,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     GROUP_MEMBER_DELETE = auto()
     # 用户组权限
     GROUP_POLICY_GRANT = auto()
+    GROUP_POLICY_REVOKE = auto()
     # 用户相关
     USER_ROLE_LIST = auto()
     USER_ROLE_GROUP_LIST = auto()
@@ -61,6 +62,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             (GROUP_MEMBER_DELETE, "删除用户组成员"),
             # 用户组权限
             (GROUP_POLICY_GRANT, "授权用户组"),
+            (GROUP_POLICY_REVOKE, "回收用户组权限"),
             # 用户相关
             (USER_ROLE_LIST, "获取用户加入的分级管理员列表"),
             (USER_ROLE_GROUP_LIST, "获取某个分级管理员下用户加入的用户组列表"),

@@ -45,7 +45,7 @@ urlpatterns = [
     # 用户组自定义权限
     path(
         "groups/<int:id>/policies/",
-        views.ManagementGroupPolicyViewSet.as_view({"post": "create"}),
+        views.ManagementGroupPolicyViewSet.as_view({"post": "create", "delete": "destroy"}),
         name="open.management.group_policy",
     ),
     # 用户
