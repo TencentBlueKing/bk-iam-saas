@@ -126,6 +126,25 @@ class RoleService:
         role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
         return self.list_by_ids(role_ids)
 
+    def list_user_role_with_system_permission(self, user_id: str) -> List[UserRole]:
+        """查询用户 拥有对应接入系统的超级权限角色列表"""
+        role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
+        role_types = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value]
+        roles = Role.objects.filter(id__in=role_ids, type__in=role_types)
+        data = []
+
+        for role in roles:
+            enabled_detail = RoleUserSystemPermission.objects.filter(role_id=role.id).first().enabled_detail
+            if user_id in enabled_detail["enabled_users"] or enabled_detail["global_enabled"]:
+                data.append(UserRole(
+                    id=role.id,
+                    type=role.type,
+                    name=role.name,
+                    name_en=role.name_en,
+                    description=role.description,
+                ))
+        return data
+
     def list_members_by_role_id(self, role_id: int):
         """查询指定角色的成员列表"""
         members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))

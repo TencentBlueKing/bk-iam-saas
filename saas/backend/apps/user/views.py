@@ -16,6 +16,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.account.serializers import AccountRoleSLZ
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.audit import SubjectGroupDeleteAuditProvider
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
@@ -161,4 +162,22 @@ class UserCommonActionViewSet(GenericViewSet):
         if system_id:
             data = self.role_biz.list_system_common_actions(system_id)
 
+        return Response([one.dict() for one in data])
+
+
+class RoleWithPermView(GenericViewSet):
+
+    paginator = None  # 去掉swagger中的limit offset参数
+
+    biz = RoleBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户角色权限",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+
+        data = self.biz.list_user_role_with_system_permission(user_id=request.user.username)
         return Response([one.dict() for one in data])
