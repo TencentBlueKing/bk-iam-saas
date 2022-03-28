@@ -14,15 +14,14 @@ import re
 import traceback
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from aenum import LowerStrEnum, auto
 from django.conf import settings
-from django.core.cache import DEFAULT_CACHE_ALIAS
 from django.utils import timezone
-from django_redis import get_redis_connection
 
 from backend.common.local import Singleton, get_local
+from backend.common.redis import get_redis_connection, make_redis_key
 from backend.util.json import json_dumps
 
 __all__ = ["RedisStorage", "http_trace", "log_api_error_trace", "log_task_error_trace"]
@@ -109,19 +108,31 @@ class RedisObserver(DebugObserver):
 
 class RedisStorage:
     ttl = settings.MAX_DEBUG_TRACE_TTL
-    queue_key = "iam:debug:queue"
+    key_prefix = "debug"
     queue_size = settings.MAX_DEBUG_TRACE_COUNT
 
     def __init__(self) -> None:
-        self.cli = get_redis_connection(DEFAULT_CACHE_ALIAS)
+        self.cli = get_redis_connection()
         self.cleaner = SensitiveCleaner()
 
+    def _make_key(self, key):
+        return make_redis_key(f"{self.key_prefix}:{key}")
+
+    @property
+    def queue_key(self):
+        return self._make_key("queue")
+
+    def _make_task_key(self, day: Optional[str] = None):
+        if day is None:
+            day = timezone.now().strftime("%Y%m%d")
+        return self._make_key(f"task:{day}")
+
     def get(self, key):
-        value = self.cli.get(self._gen_redis_key(key))
+        value = self.cli.get(self._make_key(key))
         return json.loads(value) if value else value
 
     def list_task_debug(self, day):
-        task_key = f"iam:debug:task:{day}"
+        task_key = self._make_task_key(day=day)
         keys = self.cli.lrange(task_key, 0, -1)
 
         if not keys:
@@ -129,7 +140,7 @@ class RedisStorage:
 
         with self.cli.pipeline(transaction=False) as pipe:
             for raw_key in keys:
-                pipe.get(self._gen_redis_key(str(raw_key, encoding="utf-8")))
+                pipe.get(self._make_key(str(raw_key, encoding="utf-8")))
             results = pipe.execute()
 
         return [json.loads(one) for one in results if one]
@@ -146,17 +157,10 @@ class RedisStorage:
     def _set(self, data):
         key = data["id"]
         clean_data = self.cleaner.clean(data)
-        self.cli.set(self._gen_redis_key(key), json_dumps(clean_data), ex=self.ttl)
+        self.cli.set(self._make_key(key), json_dumps(clean_data), ex=self.ttl)
 
         # 保持队列长度
         self._fixed_size(key)
-
-    def _gen_redis_key(self, key):
-        return f"iam:debug:{key}"
-
-    def _gen_task_key(self):
-        day = timezone.now().strftime("%Y%m%d")
-        return f"iam:debug:task:{day}"
 
     def _fixed_size(self, key):
         """
@@ -177,11 +181,11 @@ class RedisStorage:
 
         with self.cli.pipeline(transaction=False) as pipe:
             for raw_key in del_keys:
-                pipe.delete(self._gen_redis_key(str(raw_key, encoding="utf-8")))
+                pipe.delete(self._make_key(str(raw_key, encoding="utf-8")))
             pipe.execute()
 
     def _append_task(self, _id):
-        key = self._gen_task_key()
+        key = self._make_task_key()
         self.cli.lpush(key, _id)
         self.cli.expire(key, self.ttl)
 

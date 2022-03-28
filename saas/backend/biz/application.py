@@ -25,6 +25,7 @@ from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
 from backend.apps.template.models import PermTemplatePolicyAuthorized
+from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
@@ -52,7 +53,6 @@ from backend.service.models import (
 )
 from backend.service.role import RoleService
 from backend.service.system import SystemService
-from backend.util.cache import region
 
 from .application_process import InstanceAproverHandler, PolicyProcess, PolicyProcessHandler
 from .group import GroupBiz, GroupMemberExpiredAtBean
@@ -123,17 +123,17 @@ class ApprovalProcessorBiz:
 
     svc = RoleService()
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def get_super_manager_members(self) -> str:
         """获取超级管理员成员员"""
         return Role.objects.get(type=RoleType.SUPER_MANAGER.value).members
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def get_system_manager_members(self, system_id: str) -> str:
         """获取系统管理员成员"""
         return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=system_id).members
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def get_grade_manager_members_by_group_id(self, group_id: int) -> str:
         """获取分级管理员"""
         return self.svc.get_role_by_group_id(group_id).members
@@ -292,7 +292,7 @@ class ApplicationBiz:
 
         return ApplicantInfo(username=applicant, organization=applicant_departments)
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def _gen_application_system(self, system_id: str) -> ApplicationSystem:
         """生成申请的系统信息"""
         system = self.system_svc.get(system_id)
