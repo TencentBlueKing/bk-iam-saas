@@ -67,9 +67,9 @@
     </bk-sideslider>
 </template>
 <script>
-    import _ from 'lodash'
-    import TopologyInput from '@/components/choose-ip/topology-input'
-    import { leaveConfirm } from '@/common/leave-confirm'
+    import _ from 'lodash';
+    import TopologyInput from '@/components/choose-ip/topology-input';
+    import { leaveConfirm } from '@/common/leave-confirm';
     export default {
         name: '',
         components: {
@@ -87,7 +87,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             defaultList: {
@@ -110,66 +110,66 @@
                 listLoading: false,
                 isScrollBottom: false,
                 curSelectedIds: []
-            }
+            };
         },
         computed: {
             curPlaceholder () {
                 if (this.params.name) {
-                    return `${this.$t(`m.common['搜索']`)} ${this.params.name}`
+                    return `${this.$t(`m.common['搜索']`)} ${this.params.name}`;
                 }
-                return ''
+                return '';
             },
             curTitle () {
                 if (this.params.name) {
-                    return `${this.$t(`m.common['选择']`)} ${this.params.name}`
+                    return `${this.$t(`m.common['选择']`)} ${this.params.name}`;
                 }
-                return ''
+                return '';
             },
             isHasDefaultData () {
-                return this.defaultList.length > 0
+                return this.defaultList.length > 0;
             }
         },
         watch: {
             show: {
                 handler (value) {
                     if (value) {
-                        this.pageChangeAlertMemo = window.changeAlert
-                        window.changeAlert = 'iamSidesider'
+                        this.pageChangeAlertMemo = window.changeAlert;
+                        window.changeAlert = 'iamSidesider';
                         if (this.isHasDefaultData) {
-                            this.setSelectList(this.defaultList)
+                            this.setSelectList(this.defaultList);
                         } else {
-                            this.fetchData(true)
+                            this.fetchData(true);
                         }
                     } else {
-                        window.changeAlert = this.pageChangeAlertMemo
+                        window.changeAlert = this.pageChangeAlertMemo;
                     }
                 },
                 immediate: true
             },
             value: {
                 handler (value) {
-                    this.curSelectedList = _.cloneDeep(value)
+                    this.curSelectedList = _.cloneDeep(value);
                 },
                 deep: true
             },
             curSelectedList: {
                 handler (value) {
                     if (value.length < 1) {
-                        this.curSelectedIds = []
+                        this.curSelectedIds = [];
                     } else {
-                        this.curSelectedIds = value.map(item => item.id)
+                        this.curSelectedIds = value.map(item => item.id);
                     }
                 },
                 immediate: true
             }
         },
         created () {
-            this.pageChangeAlertMemo = false
+            this.pageChangeAlertMemo = false;
         },
         methods: {
             async fetchData (isLoading = false, listLoading = false) {
-                this.loading = isLoading
-                this.listLoading = listLoading
+                this.loading = isLoading;
+                this.listLoading = listLoading;
                 const params = {
                     keyword: this.searchValue,
                     limit: this.pagination.limit,
@@ -178,38 +178,38 @@
                     parent_type: '',
                     system_id: this.params.system_id,
                     type: this.params.id
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params)
-                    this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
-                    this.selectList = res.data.results || []
+                    const res = await this.$store.dispatch('permApply/getResources', params);
+                    this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+                    this.selectList = res.data.results || [];
                     this.selectList.forEach(item => {
-                        item.checked = this.curSelectedIds.includes(item.id)
-                    })
+                        item.checked = this.curSelectedIds.includes(item.id);
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.loading = false
-                    this.listLoading = false
+                    this.loading = false;
+                    this.listLoading = false;
                 }
             },
 
             async handleScroll (event) {
                 if (this.isScrollBottom || this.isHasDefaultData) {
-                    return
+                    return;
                 }
                 if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
-                    window.changeAlert = true
-                    ++this.pagination.current
+                    window.changeAlert = true;
+                    ++this.pagination.current;
                     if (this.pagination.current <= this.pagination.totalPage) {
-                        this.isScrollBottom = true
+                        this.isScrollBottom = true;
                         const params = {
                             keyword: this.searchValue,
                             limit: this.pagination.limit,
@@ -218,114 +218,114 @@
                             parent_type: '',
                             system_id: this.params.system_id,
                             type: this.params.id
-                        }
+                        };
                         try {
-                            const res = await this.$store.dispatch('permApply/getResources', params)
+                            const res = await this.$store.dispatch('permApply/getResources', params);
                             this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
                             ;(res.data.results || []).forEach(item => {
-                                item.checked = this.curSelectedIds.includes(item.id)
-                            })
-                            this.selectList.push(...res.data.results || [])
+                                item.checked = this.curSelectedIds.includes(item.id);
+                            });
+                            this.selectList.push(...res.data.results || []);
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             this.bkMessageInstance = this.$bkMessage({
                                 limit: 1,
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
+                            });
                         } finally {
-                            this.isScrollBottom = false
-                            event.target.scrollTo(0, event.target.scrollTop - 1)
+                            this.isScrollBottom = false;
+                            event.target.scrollTo(0, event.target.scrollTop - 1);
                         }
                     }
                 } else {
-                    this.isScrollBottom = false
+                    this.isScrollBottom = false;
                 }
             },
 
             handleSearch (payload) {
-                window.changeAlert = true
-                this.searchValue = payload
+                window.changeAlert = true;
+                this.searchValue = payload;
                 if (this.isFilter && payload === '') {
-                    this.isFilter = false
+                    this.isFilter = false;
                 } else {
-                    this.isFilter = true
+                    this.isFilter = true;
                 }
                 this.pagination = Object.assign({}, {
                     current: 1,
                     totalPage: 0,
                     limit: 23
-                })
+                });
                 if (this.isHasDefaultData) {
-                    this.setSearchData()
-                    return
+                    this.setSearchData();
+                    return;
                 }
-                this.fetchData(false, true)
+                this.fetchData(false, true);
             },
 
             async setSelectList (payload) {
                 const setData = async () => {
                     return new Promise((resolve, reject) => {
                         setTimeout(() => {
-                            resolve(payload)
-                        }, 300)
-                    })
-                }
-                this.listLoading = true
+                            resolve(payload);
+                        }, 300);
+                    });
+                };
+                this.listLoading = true;
                 try {
-                    const res = await setData()
-                    this.selectList = _.cloneDeep(res)
+                    const res = await setData();
+                    this.selectList = _.cloneDeep(res);
                     this.selectList.forEach(item => {
-                        item.checked = this.curSelectedIds.includes(item.id)
-                    })
+                        item.checked = this.curSelectedIds.includes(item.id);
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.listLoading = false
+                    this.listLoading = false;
                 }
             },
 
             setSearchData () {
-                let templateList = this.defaultList
+                let templateList = this.defaultList;
                 if (this.searchValue !== '') {
-                    templateList = this.defaultList.filter(item => item.display_name.indexOf(this.searchValue) > -1)
+                    templateList = this.defaultList.filter(item => item.display_name.indexOf(this.searchValue) > -1);
                 }
-                this.setSelectList(templateList)
+                this.setSelectList(templateList);
             },
 
             handleClear () {
-                window.changeAlert = true
-                this.curSelectedList = []
+                window.changeAlert = true;
+                this.curSelectedList = [];
                 this.selectList.forEach(item => {
-                    item.checked = false
-                })
+                    item.checked = false;
+                });
             },
 
             handleRemove ({ id }) {
-                window.changeAlert = true
-                this.curSelectedList = this.curSelectedList.filter(item => item.id !== id)
-                const len = this.selectList.length
+                window.changeAlert = true;
+                this.curSelectedList = this.curSelectedList.filter(item => item.id !== id);
+                const len = this.selectList.length;
                 for (let i = 0; i < len; i++) {
                     if (this.selectList[i].id === id) {
-                        this.selectList[i].checked = false
-                        break
+                        this.selectList[i].checked = false;
+                        break;
                     }
                 }
             },
 
             handleSelected (value, trueValue, falseValue, payload) {
-                window.changeAlert = true
+                window.changeAlert = true;
                 if (value) {
-                    this.curSelectedList.push({ ...payload })
+                    this.curSelectedList.push({ ...payload });
                 } else {
-                    this.curSelectedList = this.curSelectedList.filter(item => item.id !== payload.id)
+                    this.curSelectedList = this.curSelectedList.filter(item => item.id !== payload.id);
                 }
             },
 
@@ -334,32 +334,32 @@
                     current: 1,
                     totalPage: 0,
                     limit: 23
-                })
-                this.searchValue = ''
-                this.curSelectedList = []
-                this.selectList = []
-                this.isScrollBottom = false
+                });
+                this.searchValue = '';
+                this.curSelectedList = [];
+                this.selectList = [];
+                this.isScrollBottom = false;
             },
 
             handleSave () {
-                window.changeAlert = false
-                this.$emit('update:show', false)
-                this.$emit('on-selected', _.cloneDeep(this.curSelectedList))
-                this.resetData()
+                window.changeAlert = false;
+                this.$emit('update:show', false);
+                this.$emit('on-selected', _.cloneDeep(this.curSelectedList));
+                this.resetData();
             },
 
             handleCancel () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
-                    cancelHandler = leaveConfirm()
+                    cancelHandler = leaveConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.$emit('update:show', false)
-                    this.resetData()
-                }, _ => _)
+                    this.$emit('update:show', false);
+                    this.resetData();
+                }, _ => _);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-aggregate-resource-sideslider-cls {

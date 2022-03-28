@@ -34,7 +34,7 @@ class ManagementResourcePathNodeSLZ(serializers.Serializer):
 
 
 class ManagementResourcePathsSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID", required=True)
+    system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     paths = serializers.ListField(
         label="批量层级",
@@ -56,11 +56,9 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
 
 class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
     authorization_scopes = serializers.ListField(
-        label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), required=True, allow_empty=False
+        label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(
-        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), required=True, allow_empty=False
-    )
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
 
 
 class ManagementGradeManagerMembersSLZ(serializers.Serializer):

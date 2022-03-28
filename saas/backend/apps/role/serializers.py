@@ -13,7 +13,7 @@ import time
 from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
-from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceSLZ, ResourceTypeSLZ
+from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleCommonAction, RoleUser
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
@@ -76,23 +76,25 @@ class RoleInstanceSLZ(InstanceSLZ):
 
 
 class RoleConditionSLZ(ConditionSLZ):
-    instances = serializers.ListField(label="拓扑选择", required=True, child=RoleInstanceSLZ(label="拓扑实例"))
+    instances = serializers.ListField(label="拓扑选择", child=RoleInstanceSLZ(label="拓扑实例"))
 
 
 class RoleResourceTypeSLZ(ResourceTypeSLZ):
-    condition = serializers.ListField(label="生效条件", child=RoleConditionSLZ(label="条件"), required=True)
+    condition = serializers.ListField(label="生效条件", child=RoleConditionSLZ(label="条件"))
+
+
+class RoleResourceGroupSLZ(ResourceGroupSLZ):
+    related_resource_types = serializers.ListField(label="资源类型条件", child=RoleResourceTypeSLZ(label="资源类型"))
 
 
 class GradeManagerActionSLZ(serializers.Serializer):
-    id = serializers.CharField(label="操作ID", required=True)
-    related_resource_types = serializers.ListField(
-        label="资源类型条件", child=RoleResourceTypeSLZ(label="资源类型"), required=True
-    )
+    id = serializers.CharField(label="操作ID")
+    resource_groups = serializers.ListField(label="资源条件组", child=RoleResourceGroupSLZ(label="资源条件组"))
 
 
 class RoleScopeAuthorizationSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统id", max_length=32)
-    actions = serializers.ListField(label="操作策略", child=GradeManagerActionSLZ(label="策略"), required=True)
+    actions = serializers.ListField(label="操作策略", child=GradeManagerActionSLZ(label="策略"))
     aggregations = serializers.ListField(
         label="聚合操作", child=BaseAggActionListSLZ(label="聚合操作"), required=False, default=list
     )
@@ -109,18 +111,14 @@ class RoleScopeAuthorizationSLZ(serializers.Serializer):
 class RatingMangerBaseInfoSZL(serializers.Serializer):
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
-    members = serializers.ListField(
-        label="成员列表", child=serializers.CharField(label="用户ID", max_length=64), required=True
-    )
+    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=64))
 
 
 class RatingMangerCreateSLZ(RatingMangerBaseInfoSZL):
     authorization_scopes = serializers.ListField(
-        label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), required=True, allow_empty=False
+        label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(
-        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), required=True, allow_empty=False
-    )
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
 
     def validate(self, data):
         if len(data["authorization_scopes"]) != len({sys["system_id"] for sys in data["authorization_scopes"]}):
@@ -137,9 +135,7 @@ class RoleIdSLZ(serializers.Serializer):
 
 
 class RatingMangerListSchemaSLZ(serializers.Serializer):
-    members = serializers.ListField(
-        label="成员列表", child=serializers.CharField(label="用户ID", max_length=128), required=True
-    )
+    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=128))
 
     class Meta:
         model = Role
@@ -148,16 +144,14 @@ class RatingMangerListSchemaSLZ(serializers.Serializer):
 
 class RoleScopeAuthorizationSchemaSLZ(serializers.Serializer):
     system = SystemInfoSLZ(label="系统信息")
-    actions = serializers.ListField(label="操作策略", child=GradeManagerActionSLZ(label="策略"), required=True)
+    actions = serializers.ListField(label="操作策略", child=GradeManagerActionSLZ(label="策略"))
 
 
 class RatingMangerDetailSchemaSLZ(RatingMangerListSchemaSLZ):
     authorization_scopes = serializers.ListField(
-        label="系统操作", child=RoleScopeAuthorizationSchemaSLZ(label="系统操作"), required=True, allow_empty=False
+        label="系统操作", child=RoleScopeAuthorizationSchemaSLZ(label="系统操作"), allow_empty=False
     )
-    subject_scopes = serializers.ListField(
-        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), required=True, allow_empty=False
-    )
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
 
     class Meta:
         model = Role
@@ -224,9 +218,7 @@ class SystemManagerSLZ(RatingMangerListSLZ):
 
 
 class SystemManagerMemberUpdateSLZ(serializers.Serializer):
-    members = serializers.ListField(
-        label="成员列表", child=serializers.CharField(label="用户ID", max_length=128), required=True
-    )
+    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=128))
 
 
 class MemberSystemPermissionUpdateSLZ(serializers.Serializer):
@@ -278,7 +270,7 @@ class RoleGroupMemberRenewSLZ(serializers.Serializer):
     id = serializers.CharField(label="成员id")
     parent_type = serializers.ChoiceField(label="父级类型", choices=[(SubjectType.GROUP.value, "用户组")])
     parent_id = serializers.CharField(label="父级ID")
-    expired_at = serializers.IntegerField(label="过期时间", required=True, max_value=PERMANENT_SECONDS)
+    expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
     def validate_expired_at(self, value):
         """

@@ -118,10 +118,10 @@
 </template>
 
 <script>
-    import _ from 'lodash'
-    import IamSearchSelect from '@/components/iam-search-select'
-    import { leaveConfirm } from '@/common/leave-confirm'
-    import { fuzzyRtxSearch } from '@/common/rtx'
+    import _ from 'lodash';
+    import IamSearchSelect from '@/components/iam-search-select';
+    import { leaveConfirm } from '@/common/leave-confirm';
+    import { fuzzyRtxSearch } from '@/common/rtx';
 
     export default {
         name: '',
@@ -144,13 +144,13 @@
             aggregation: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             authorization: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             groupId: {
@@ -182,68 +182,70 @@
                 authorizationScope: {},
                 requestQueueBySys: [],
                 requestQueueByTemplate: [],
-                selectLength: ''
-            }
+                selectLength: '',
+                selection: []
+            };
         },
         computed: {
             isDisabled () {
-                return this.requestQueueBySys.length > 0 || this.requestQueueByTemplate.length > 0
+                return this.requestQueueBySys.length > 0 || this.requestQueueByTemplate.length > 0;
             }
         },
         watch: {
             customPerm: {
                 handler (value) {
-                    this.actionCount = value.length
-                    this.sysCount = [...new Set(value.map(item => item.system_id))].length
+                    this.actionCount = value.length;
+                    this.sysCount = [...new Set(value.map(item => item.system_id))].length;
                 },
                 immediate: true
             },
             aggregation: {
                 handler (value) {
-                    this.aggregationData = _.cloneDeep(value)
-                    this.curSelectedSystem = Object.keys(this.aggregationData)
+                    this.aggregationData = _.cloneDeep(value);
+                    this.curSelectedSystem = Object.keys(this.aggregationData);
                 },
                 immediate: true
             },
             authorization: {
                 handler (value) {
-                    this.authorizationScope = _.cloneDeep(value)
+                    this.authorizationScope = _.cloneDeep(value);
                 },
                 immediate: true
             },
             template: {
                 handler (value) {
-                    this.tempalteDetailList = _.cloneDeep(value)
-                    this.curSelectedTemplate = this.tempalteDetailList.map(item => item.id)
+                    this.tempalteDetailList = _.cloneDeep(value);
+                    this.curSelectedTemplate = this.tempalteDetailList.map(item => item.id);
                 },
                 immediate: true
             },
             isShow: {
                 handler (value) {
                     if (value) {
-                        this.pageChangeAlertMemo = window.changeAlert
-                        window.changeAlert = 'iamSidesider'
-                        this.resetData()
-                        this.currentSelectList = this.template.map(item => item.id)
-                        this.fetchData(false, true)
+                        this.pageChangeAlertMemo = window.changeAlert;
+                        window.changeAlert = 'iamSidesider';
+                        this.resetData();
+                        this.currentSelectList = this.template.map(item => item.id);
+                        this.fetchData(false, true);
                     } else {
-                        window.changeAlert = this.pageChangeAlertMemo
+                        window.changeAlert = this.pageChangeAlertMemo;
+                        this.selection = [];
                     }
                 },
                 immediate: true
             },
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             currentSelectList: {
                 handler (value) {
-                    this.selectLength = value.length
+                    this.selectLength = value.length;
                 },
                 immediate: true
             }
         },
         created () {
-            this.pageChangeAlertMemo = false
+            this.pageChangeAlertMemo = false;
             this.searchData = [
                 {
                     id: 'name',
@@ -265,67 +267,68 @@
                     name: this.$t(`m.common['描述']`),
                     disabled: true
                 }
-            ]
+            ];
         },
         methods: {
             async fetchData (tableLoading = false, loading = false) {
-                this.tableLoading = tableLoading
-                this.isLoading = loading
+                this.tableLoading = tableLoading;
+                this.isLoading = loading;
                 const params = {
                     ...this.searchParams,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
+                };
                 if (this.groupId) {
-                    params.group_id = this.groupId
+                    params.group_id = this.groupId;
                 }
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params)
-                    this.pagination.count = res.data.count
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.count = res.data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                     this.$nextTick(() => {
                         this.tableList.forEach(item => {
                             if (this.currentSelectList.includes(item.id)) {
-                                this.$refs.permTemplateTableRef.toggleRowSelection(item, true)
+                                this.$refs.permTemplateTableRef.toggleRowSelection(item, true);
                             }
-                        })
-                    })
+                        });
+                    });
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
-                    this.isLoading = false
+                    this.tableLoading = false;
+                    this.isLoading = false;
                 }
             },
 
             getIsSelect (row, index) {
-                return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled
+                return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled;
             },
 
             handleRefresh () {
-                window.changeAlert = true
+                window.changeAlert = true;
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 0,
                     limit: 10,
                     showSelectionCount: false
-                })
-                this.currentBackup = 1
-                this.currentSelectList = []
-                this.requestQueueBySys = []
-                this.requestQueueByTemplate = []
-                this.fetchData(true)
+                });
+                this.currentBackup = 1;
+                this.currentSelectList = [];
+                this.requestQueueBySys = [];
+                this.requestQueueByTemplate = [];
+                this.selection = [];
+                this.fetchData(true);
             },
 
             handleGoToAdd () {
-                window.open(`${window.SITE_URL}perm-template-create`, '_blank')
+                window.open(`${window.SITE_URL}perm-template-create`, '_blank');
             },
 
             resetData () {
@@ -334,105 +337,115 @@
                     count: 0,
                     limit: 10,
                     showSelectionCount: false
-                })
-                this.currentBackup = 1
-                this.searchValue = []
-                this.currentSelectList = []
-                this.searchParams = {}
+                });
+                this.currentBackup = 1;
+                this.searchValue = [];
+                this.currentSelectList = [];
+                this.searchParams = {};
             },
 
             handleCancel () {
                 if (this.selectLength !== 0) {
-                    let cancelHandler = Promise.resolve()
+                    let cancelHandler = Promise.resolve();
                     if (window.changeAlert) {
-                        cancelHandler = leaveConfirm()
+                        cancelHandler = leaveConfirm();
                     }
                     cancelHandler.then(() => {
-                        this.$emit('update:isShow', false)
-                        this.resetData()
-                    }, _ => _)
+                        this.$emit('update:isShow', false);
+                        this.resetData();
+                    }, _ => _);
                 } else {
-                    this.$emit('update:isShow', false)
+                    this.$emit('update:isShow', false);
                 }
             },
 
             handleSubmit () {
-                this.$emit('update:isShow', false)
-                this.$emit('on-submit', this.tempalteDetailList, this.aggregationData, this.authorizationScope)
+                this.$emit('update:isShow', false);
+                this.$emit('on-submit', this.tempalteDetailList, this.aggregationData, this.authorizationScope);
             },
 
             hadleAddCustomPerm () {
-                window.changeAlert = true
-                this.$emit('on-add-custom')
+                window.changeAlert = true;
+                this.$emit('on-add-custom');
             },
 
             hadleEditCustomPerm () {
-                window.changeAlert = true
-                this.$emit('on-edit-custom')
+                window.changeAlert = true;
+                this.$emit('on-edit-custom');
             },
 
             handleViewTemplateDetail (payload) {
-                this.$emit('on-view', payload)
+                this.$emit('on-view', payload);
             },
 
             handleRemoteRtx (value) {
                 return fuzzyRtxSearch(value)
                     .then(data => {
-                        return data.results
-                    })
+                        return data.results;
+                    });
             },
 
             handleRemoteSystem (value) {
                 return this.$store.dispatch('system/getSystems')
                     .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1)
-                    })
+                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
+                    });
             },
 
             handlePageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                window.changeAlert = true
-                this.pagination.current = page
-                this.fetchData(true)
+                window.changeAlert = true;
+                this.pagination.current = page;
+                this.fetchData(true);
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                window.changeAlert = true
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchData(true)
+                window.changeAlert = true;
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchData(true);
             },
 
-            handlerChange (selection, row) {
-                window.changeAlert = true
-                const checked = selection.length >= this.currentSelectList.length
-                this.currentSelectList = [...selection.map(item => item.id)]
+            async handlerChange (selection, row) {
+                window.changeAlert = true;
+                if (!this.curSelectedTemplate.includes(row.id)) {
+                    const obj = {};
+                    this.selection = [...this.selection, ...selection].reduce((pre, item) => {
+                        // eslint-disable-next-line no-unused-expressions
+                        obj[item.id] ? '' : obj[item.id] = true && pre.push(item);
+                        return pre;
+                    }, []);
+                } else {
+                    this.selection = this.selection.filter(item => item.id !== row.id);
+                }
+                const checked = this.selection.length >= this.currentSelectList.length;
+                this.currentSelectList = [...selection.map(item => item.id)];
                 if (checked) {
                     if (!this.curSelectedSystem.includes(row.system.id)) {
-                        this.curSelectedSystem.push(row.system.id)
-                        this.requestQueueBySys = ['aggregation', 'authorization']
-                        this.fetchAggregationAction(row.system.id)
-                        this.fetchAuthorizationScopeActions(row.system.id)
+                        this.curSelectedSystem.push(row.system.id);
+                        this.requestQueueBySys = ['aggregation', 'authorization'];
+                        this.fetchAggregationAction(row.system.id);
+                        this.fetchAuthorizationScopeActions(row.system.id);
                     }
                     if (!this.curSelectedTemplate.includes(row.id)) {
-                        this.curSelectedTemplate.push(row.id)
-                        this.requestQueueByTemplate = ['templateDetail']
-                        this.fetchTemplateDetail(row.id)
+                        this.curSelectedTemplate.push(row.id);
+                        this.requestQueueByTemplate = ['templateDetail'];
+                        this.fetchTemplateDetail(row.id);
                     }
                 } else {
-                    this.curSelectedSystem = this.curSelectedSystem.filter(item => item !== row.system.id)
-                    this.curSelectedTemplate = this.curSelectedTemplate.filter(item => item !== row.id)
+                    this.curSelectedSystem = this.curSelectedSystem.filter(item => item !== row.system.id);
+                    this.curSelectedTemplate = this.curSelectedTemplate.filter(item => item !== row.id);
 
-                    this.tempalteDetailList = this.tempalteDetailList.filter(item => item.id !== row.id)
-                    delete this.aggregationData[row.id]
-                    delete this.authorizationScope[row.id]
+                    this.tempalteDetailList = this.tempalteDetailList.filter(item => item.id !== row.id);
+                    delete this.aggregationData[row.id];
+                    delete this.authorizationScope[row.id];
                 }
 
-                const selected = this.tempalteDetailList.map(item => item.id)
-                this.currentSelectList.push(...selected)
-                this.currentSelectList = [...new Set(this.currentSelectList)]
+                const selected = this.tempalteDetailList.map(item => item.id);
+                this.currentSelectList.push(...selected);
+                this.currentSelectList = [...new Set(this.currentSelectList)];
             },
 
             async fetchAuthorizationScopeActions (id) {
@@ -440,64 +453,65 @@
                     const res = await this.$store.dispatch(
                         'permTemplate/getAuthorizationScopeActions',
                         { systemId: id }
-                    )
-                    this.authorizationScope[id] = res.data.filter(item => item.id !== '*')
+                    );
+                    this.authorizationScope[id] = res.data.filter(item => item.id !== '*');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueueBySys.shift()
+                    this.requestQueueBySys.shift();
                 }
             },
 
             async fetchTemplateDetail (id) {
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: false })
-                    this.tempalteDetailList.push(res.data)
+                    const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: false });
+                    this.tempalteDetailList.push(res.data);
+                    console.log('this.tempalteDetailList1', this.tempalteDetailList);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueueByTemplate.shift()
+                    this.requestQueueByTemplate.shift();
                 }
             },
 
             async fetchAggregationAction (id) {
                 try {
-                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: id })
-                    this.aggregationData[id] = res.data.aggregations
+                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: id });
+                    this.aggregationData[id] = res.data.aggregations;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueueBySys.shift()
+                    this.requestQueueBySys.shift();
                 }
             },
 
             handleSearch (payload, result) {
-                window.changeAlert = true
-                this.searchParams = payload
-                this.searchList = result
-                this.resetPagination()
-                this.fetchData(true)
+                window.changeAlert = true;
+                this.searchParams = payload;
+                this.searchList = result;
+                this.resetPagination();
+                this.fetchData(true);
             },
 
             resetPagination () {
@@ -505,32 +519,32 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             quickSearchMethod (value) {
-                window.changeAlert = true
+                window.changeAlert = true;
                 return {
                     name: this.$t(`m.common['关键字']`),
                     id: 'keyword',
                     values: [value]
-                }
+                };
             },
 
             handleSliderClose () {
-                this.$emit('update:isShow', false)
-                this.$emit('animation-end')
+                this.$emit('update:isShow', false);
+                this.$emit('animation-end');
             },
 
             handleEdit (data) {
-                window.localStorage.setItem('iam-header-title-cache', `${this.$t(`m.nav['编辑权限模板']`)}(${data.name})`)
+                window.localStorage.setItem('iam-header-title-cache', `${this.$t(`m.nav['编辑权限模板']`)}(${data.name})`);
                 this.$router.push({
                     name: 'permTemplateEdit',
                     params: { id: data.id, systemId: data.system.id }
-                })
+                });
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

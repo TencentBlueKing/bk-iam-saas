@@ -93,7 +93,7 @@
                     <div class="info-right ml20">
                         <p class="info-title">{{$t(`m.nav['系统接入']`)}}</p>
                         <p class="info">蓝鲸权限中心提供了体验DEMO、接入文档、多语言SDK、接入视频，帮助开发者更快地实现权限接入。</p>
-                        <bk-button theme="primary">{{$t(`m.access['去接入']`)}}</bk-button>
+                        <bk-button theme="primary" @click="goCreate">{{$t(`m.access['去接入']`)}}</bk-button>
                     </div>
                 </div>
                 <div class="help-list">
@@ -109,7 +109,7 @@
     </div>
 </template>
 <script>
-    import { buildURLParams } from '@/common/url'
+    import { buildURLParams } from '@/common/url';
 
     export default {
         name: 'system-access-index',
@@ -152,17 +152,17 @@
                             }
                         ]
                     },
-                    {
-                        name: 'DEMO',
-                        urlInfo: [
-                            {
-                                'text': '立即体验', url: 'http://www.qq.com'
-                            },
-                            {
-                                'text': '源码下载', url: 'http://www.qq.com'
-                            }
-                        ]
-                    },
+                    // {
+                    //     name: 'DEMO',
+                    //     urlInfo: [
+                    //         {
+                    //             'text': '立即体验', url: 'http://www.qq.com'
+                    //         },
+                    //         {
+                    //             'text': '源码下载', url: 'http://www.qq.com'
+                    //         }
+                    //     ]
+                    // },
                     {
                         name: '鉴权SDK',
                         urlInfo: [
@@ -181,44 +181,44 @@
                         ]
                     }
                 ]
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         created () {
-            const currentQueryCache = this.getCurrentQueryCache()
+            const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
+                    this.pagination.limit = currentQueryCache.limit;
+                    this.pagination.current = currentQueryCache.current;
                 }
             }
         },
         methods: {
             async fetchPageData () {
-                await this.fetchModelingList()
+                await this.fetchModelingList();
             },
 
             handleOpenMoreLink () {
-                window.open(`${window.PRODUCT_DOC_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`)
+                window.open(`${window.PRODUCT_DOC_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`);
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination
-                const queryParams = { limit, current }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
-                return queryParams
+                const { limit, current } = this.pagination;
+                const queryParams = { limit, current };
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                return queryParams;
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('templateList', JSON.stringify(payload))
+                window.localStorage.setItem('templateList', JSON.stringify(payload));
             },
 
             getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('templateList'))
+                return JSON.parse(window.localStorage.getItem('templateList'));
             },
 
             resetPagination () {
@@ -226,34 +226,34 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             async fetchModelingList (isLoading = false) {
-                this.tableLoading = isLoading
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
+                this.tableLoading = isLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('access/getModelingList', params)
-                    this.pagination.count = res.data.count
+                    const res = await this.$store.dispatch('access/getModelingList', params);
+                    this.pagination.count = res.data.count;
                     res.data.results = res.data.results.length && res.data.results.sort(
-                        (a, b) => new Date(b.updated_time) - new Date(a.updated_time))
+                        (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
                         
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
@@ -263,42 +263,42 @@
                     params: {
                         id: payload.id
                     }
-                })
+                });
             },
 
             goCreate () {
                 this.$router.push({
                     name: 'systemAccessCreate'
-                })
+                });
             },
 
             handlePageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchModelingList(true)
+                this.pagination.current = page;
+                this.fetchModelingList(true);
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchModelingList(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchModelingList(true);
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             showHelpDialog () {
-                this.helpDialog = true
+                this.helpDialog = true;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-system-access-wrapper {

@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRatingManagerList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/?${json2Query(params)}`, config);
         },
 
         /**
@@ -61,7 +61,7 @@ export default {
          * @return {Promise} promise 对象
          */
         addRatingManager ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/grade_managers/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/roles/grade_managers/`, params, config);
         },
 
         /**
@@ -76,7 +76,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRatingManagerDetail ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/`, config);
         },
 
         /**
@@ -91,7 +91,7 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteRatingManager ({ commit, state, dispatch }, { id }, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/roles/${id}/members/`, { data: {} }, config)
+            return http.delete(`${AJAX_URL_PREFIX}/roles/${id}/members/`, { data: {} }, config);
         },
 
         /**
@@ -106,7 +106,7 @@ export default {
          * @return {Promise} promise 对象
          */
         actionAggregation ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/actions/aggregation/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/actions/aggregation/`, params, config);
         },
 
         /**
@@ -121,7 +121,7 @@ export default {
          * @return {Promise} promise 对象
          */
         updateCurrentRole ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/accounts/user/roles/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/accounts/user/roles/`, params, config);
         },
 
         /**
@@ -135,7 +135,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRoleSubjectScope ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/subject_scope/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/subject_scope/`, config);
         },
 
         /**
@@ -150,7 +150,7 @@ export default {
          * @return {Promise} promise 对象
          */
         queryRolesUsers ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/users/query/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/roles/users/query/`, params, config);
         },
 
         /**
@@ -164,7 +164,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getSuperManager ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, config);
         },
 
         /**
@@ -179,7 +179,7 @@ export default {
          * @return {Promise} promise 对象
          */
         addSuperManager ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, params, config);
         },
 
         /**
@@ -194,7 +194,7 @@ export default {
          * @return {Promise} promise 对象
          */
         editSuperManager ({ commit, state, dispatch }, params, config) {
-            return http.put(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, params, config)
+            return http.put(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, params, config);
         },
 
         /**
@@ -209,7 +209,7 @@ export default {
          * @return {Promise} promise 对象
          */
         deleteSuperManager ({ commit, state, dispatch }, params, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, { data: params }, config)
+            return http.delete(`${AJAX_URL_PREFIX}/roles/super_manager/members/`, { data: params }, config);
         },
 
         /**
@@ -223,7 +223,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getSystemManager ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/system_manager/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/system_manager/`, config);
         },
 
         /**
@@ -238,10 +238,10 @@ export default {
          * @return {Promise} promise 对象
          */
         editSystemManagerMember ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const id = requestParams.id
-            delete requestParams.id
-            return http.put(`${AJAX_URL_PREFIX}/roles/system_manager/${id}/members/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            return http.put(`${AJAX_URL_PREFIX}/roles/system_manager/${id}/members/`, requestParams, config);
         },
 
         /**
@@ -256,14 +256,14 @@ export default {
          * @return {Promise} promise 对象
          */
         editSystemManagerPerm ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const id = requestParams.id
-            delete requestParams.id
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
             return http.put(
                 `${AJAX_URL_PREFIX}/roles/system_manager/${id}/member_system_permissions/`,
                 requestParams,
                 config
-            )
+            );
         },
 
         /**
@@ -278,10 +278,10 @@ export default {
          * @return {Promise} promise 对象
          */
         editRatingManager ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const id = requestParams.id
-            delete requestParams.id
-            return http.put(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            return http.put(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/`, requestParams, config);
         },
 
         /**
@@ -296,7 +296,7 @@ export default {
          * @return {Promise} promise 对象
          */
         addRatingManagerWithGeneral ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/grade_manager/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/grade_manager/`, params, config);
         },
 
         /**
@@ -311,10 +311,10 @@ export default {
          * @return {Promise} promise 对象
          */
         updateRatingManager ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const id = requestParams.id
-            delete requestParams.id
-            return http.patch(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            return http.patch(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/`, requestParams, config);
         },
 
         /**
@@ -329,7 +329,7 @@ export default {
          * @return {Promise} promise 对象
          */
         editRatingManagerWithGeneral ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/grade_manager_updated/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/grade_manager_updated/`, params, config);
         },
 
         /**
@@ -344,7 +344,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getGradeMembers ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/${id}/members/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/${id}/members/`, config);
         },
 
         /**
@@ -359,7 +359,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getScopeHasUser ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/auth_scope_include_user_roles/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/auth_scope_include_user_roles/`, config);
         }
     }
-}
+};

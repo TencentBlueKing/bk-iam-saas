@@ -2,7 +2,7 @@
     <bk-sideslider
         :is-show.sync="isShowSideslider"
         :title="title"
-        :width="880"
+        :width="1250"
         ext-cls="iam-group-perm-sideslider"
         :quick-close="true"
         @animation-end="handleAnimationEnd">
@@ -22,7 +22,7 @@
     </bk-sideslider>
 </template>
 <script>
-    import GroupPermNew from '@/views/group/detail/group-perm-new.vue'
+    import GroupPermNew from '@/views/group/detail/group-perm-new.vue';
 
     export default {
         name: '',
@@ -56,16 +56,16 @@
                 tabActive: 'perm',
                 isShowSideslider: false,
                 isLoading: true
-            }
+            };
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowSideslider = !!value
+                    this.isShowSideslider = !!value;
                     if (this.isShowSideslider) {
                         setTimeout(() => {
-                            this.isLoading = false
-                        }, 300)
+                            this.isLoading = false;
+                        }, 300);
                     }
                 },
                 immediate: true
@@ -73,10 +73,10 @@
         },
         methods: {
             handleAnimationEnd () {
-                this.$emit('animation-end')
+                this.$emit('animation-end');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-group-perm-sideslider {

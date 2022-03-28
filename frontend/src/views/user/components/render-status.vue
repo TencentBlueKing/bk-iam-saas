@@ -31,14 +31,14 @@
                     'Failed': this.$t(`m.user['失败']`),
                     'Running': this.$t(`m.user['同步中']`)
                 }
-            }
+            };
         },
         computed: {
             isSuccess () {
-                return this.status === 'Succeed'
+                return this.status === 'Succeed';
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-audit-status-item {

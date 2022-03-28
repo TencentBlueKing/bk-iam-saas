@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @param {Boolean} toggleTabLoading toggleTabLoading 值
          */
         updateToggleTabLoading (state, toggleTabLoading) {
-            state.toggleTabLoading = toggleTabLoading
+            state.toggleTabLoading = toggleTabLoading;
         }
     },
     actions: {
@@ -61,7 +61,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getCurrentSystemList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/principals/users/${params.userId}/systems/`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/principals/users/${params.userId}/systems/`, {}, config);
         },
 
         /**
@@ -75,7 +75,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserDepartments ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/principals/users/${params.userId}/departments/`, {}, config)
+            return http.get(`${AJAX_URL_PREFIX}/principals/users/${params.userId}/departments/`, {}, config);
         },
 
         /**
@@ -89,9 +89,9 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserGroups ({ commit, state, dispatch }, params, config) {
-            const userId = params.userId
-            delete params.userId
-            return http.get(`${AJAX_URL_PREFIX}/principals/users/${userId}/groups/?${json2Query(params)}`, {}, config)
+            const userId = params.userId;
+            delete params.userId;
+            return http.get(`${AJAX_URL_PREFIX}/principals/users/${userId}/groups/?${json2Query(params)}`, {}, config);
         },
 
         /**
@@ -106,13 +106,13 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserPermission ({ commit, state, dispatch }, params, config) {
-            const userId = params.userId
-            delete params.userId
+            const userId = params.userId;
+            delete params.userId;
             return http.get(
                 `${AJAX_URL_PREFIX}/principals/users/${userId}/permissions/?${json2Query(params)}`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -127,15 +127,15 @@ export default {
          * @return {Promise} promise 对象
          */
         getGroupPermission ({ commit, state, dispatch }, params, config) {
-            const groupId = params.group_id
-            delete params.group_id
-            const userId = params.userId
-            delete params.userId
+            const groupId = params.group_id;
+            delete params.group_id;
+            const userId = params.userId;
+            delete params.userId;
 
             const url = userId
                 ? `${AJAX_URL_PREFIX}/principals/users/${userId}/groups/${groupId}/permissions/?${json2Query(params)}`
-                : `${AJAX_URL_PREFIX}/principals/groups/${groupId}/permissions/?${json2Query(params)}`
-            return http.get(url, {}, config)
+                : `${AJAX_URL_PREFIX}/principals/groups/${groupId}/permissions/?${json2Query(params)}`;
+            return http.get(url, {}, config);
         },
 
         /**
@@ -150,13 +150,13 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserPermissionFilterParamsList ({ commit, state, dispatch }, params, config) {
-            const userId = params.userId
-            delete params.userId
+            const userId = params.userId;
+            delete params.userId;
             return http.get(
                 `${AJAX_URL_PREFIX}/principals/users/${userId}/permissions/fields/?${json2Query(params)}`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -171,9 +171,9 @@ export default {
          * @return {Promise} promise 对象
          */
         quitGroup ({ commit, state, dispatch }, params, config) {
-            const userId = params.userId
-            delete params.userId
-            return http.delete(`${AJAX_URL_PREFIX}/principals/users/${userId}/groups/`, { data: params }, config)
+            const userId = params.userId;
+            delete params.userId;
+            return http.delete(`${AJAX_URL_PREFIX}/principals/users/${userId}/groups/`, { data: params }, config);
         },
 
         /**
@@ -188,13 +188,13 @@ export default {
          * @return {Promise} promise 对象
          */
         getDepartmentSystem ({ commit, state, dispatch }, params, config) {
-            const userId = params.userId
-            const departmentId = params.departmentId
+            const userId = params.userId;
+            const departmentId = params.departmentId;
             return http.get(
                 `${AJAX_URL_PREFIX}/principals/users/${userId}/departments/${departmentId}/systems/`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -209,17 +209,17 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserDepartmentPermission ({ commit, state, dispatch }, params, config) {
-            const paramsTemp = Object.assign({}, params)
-            const userId = paramsTemp.userId
-            const departmentId = paramsTemp.departmentId
-            delete paramsTemp.userId
-            delete paramsTemp.departmentId
+            const paramsTemp = Object.assign({}, params);
+            const userId = paramsTemp.userId;
+            const departmentId = paramsTemp.departmentId;
+            delete paramsTemp.userId;
+            delete paramsTemp.departmentId;
             return http.get(
                 `${AJAX_URL_PREFIX}/principals/users/${userId}/departments/${departmentId}/permissions/?`
                     + json2Query(paramsTemp),
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -234,17 +234,17 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserDepartmentPermissionFilterParamsList ({ commit, state, dispatch }, params, config) {
-            const paramsTemp = Object.assign({}, params)
-            const userId = paramsTemp.userId
-            const departmentId = paramsTemp.departmentId
-            delete paramsTemp.userId
-            delete paramsTemp.departmentId
+            const paramsTemp = Object.assign({}, params);
+            const userId = paramsTemp.userId;
+            const departmentId = paramsTemp.departmentId;
+            delete paramsTemp.userId;
+            delete paramsTemp.departmentId;
             return http.get(
                 `${AJAX_URL_PREFIX}/principals/users/${userId}/departments/${departmentId}/permissions/fields/?`
                     + json2Query(paramsTemp),
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -259,14 +259,14 @@ export default {
          * @return {Promise} promise 对象
          */
         batchDeleteUserPermission ({ commit, state, dispatch }, params, config) {
-            const paramsTemp = Object.assign({}, params)
-            const userId = paramsTemp.userId
-            delete paramsTemp.userId
+            const paramsTemp = Object.assign({}, params);
+            const userId = paramsTemp.userId;
+            delete paramsTemp.userId;
             return http.delete(
                 `${AJAX_URL_PREFIX}/principals/users/${userId}/permissions/`,
                 { data: paramsTemp },
                 config
-            )
+            );
         },
 
         /**
@@ -286,7 +286,7 @@ export default {
                 `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/templates/`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -301,9 +301,9 @@ export default {
          * @return {Promise} promise 对象
          */
         getTemplateDetail ({ commit, state, dispatch }, params = {}, config) {
-            const id = params.id
-            delete params.id
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/?${json2Query(params)}`, {}, config)
+            const id = params.id;
+            delete params.id;
+            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/?${json2Query(params)}`, {}, config);
         },
 
         /**
@@ -323,7 +323,7 @@ export default {
                 `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/groups/`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -338,15 +338,15 @@ export default {
          * @return {Promise} promise 对象
          */
         getGroupTemplates ({ commit, state, dispatch }, params = {}, config) {
-            const id = params.id
-            delete params.id
+            const id = params.id;
+            delete params.id;
 
             return http.get(
                 // `/app/index?${json2Query(params)}&id=${id}&invoke=getGroupTemplates`,
                 `${AJAX_URL_PREFIX}/groups/${id}/templates/`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -366,7 +366,7 @@ export default {
                 `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -386,7 +386,7 @@ export default {
                 `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/templates/`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -406,7 +406,7 @@ export default {
                     + params.systemId,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -421,16 +421,16 @@ export default {
          * @return {Promise} promise 对象
          */
         quitPermTemplates ({ commit, state, dispatch }, params = {}, config) {
-            const subjectType = params.subjectType
-            delete params.subjectType
-            const subjectId = params.subjectId
-            delete params.subjectId
+            const subjectType = params.subjectType;
+            delete params.subjectType;
+            const subjectId = params.subjectId;
+            delete params.subjectId;
 
             return http.delete(
                 `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/templates/?${json2Query(params)}`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -445,17 +445,17 @@ export default {
          * @return {Promise} promise 对象
          */
         quitGroupTemplates ({ commit, state, dispatch }, params = {}, config) {
-            const subjectType = params.subjectType
-            delete params.subjectType
-            const subjectId = params.subjectId
-            delete params.subjectId
+            const subjectType = params.subjectType;
+            delete params.subjectType;
+            const subjectId = params.subjectId;
+            delete params.subjectId;
 
             return http.delete(
                 `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/groups/?${json2Query(params)}`,
                 // ?type=group&id=groupid
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -475,7 +475,7 @@ export default {
                 // ?type=group&id=groupid
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -490,17 +490,17 @@ export default {
          * @return {Promise} promise 对象
          */
         addDepartTemplates ({ commit, state, dispatch }, params = {}, config) {
-            const requestParams = Object.assign({}, params)
-            const subjectType = requestParams.subjectType
-            delete requestParams.subjectType
-            const subjectId = requestParams.subjectId
-            delete requestParams.subjectId
+            const requestParams = Object.assign({}, params);
+            const subjectType = requestParams.subjectType;
+            delete requestParams.subjectType;
+            const subjectId = requestParams.subjectId;
+            delete requestParams.subjectId;
 
             return http.post(
                 `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/templates/`,
                 requestParams,
                 config
-            )
+            );
         },
 
         /**
@@ -518,7 +518,7 @@ export default {
                 `${AJAX_URL_PREFIX}/users/groups/`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -537,7 +537,7 @@ export default {
                 `${AJAX_URL_PREFIX}/handover/`,
                 params,
                 config
-            )
+            );
         },
 
         /**
@@ -556,7 +556,7 @@ export default {
                 // `/handover/records/?mock-file=index&invoke=getTransferHistory`,
                 {},
                 config
-            )
+            );
         },
 
         /**
@@ -571,14 +571,14 @@ export default {
          * @return {Promise} promise 对象
          */
         getTransferHistoryDetail ({ commit, state, dispatch }, params = {}, config) {
-            const id = params.id
-            delete params.id
+            const id = params.id;
+            delete params.id;
             return http.get(
                 `${AJAX_URL_PREFIX}/handover/records/${id}/tasks/?${json2Query(params)}`,
                 // `/handover/records/?mock-file=index&invoke=getTransferHistoryDetail&id=${id}`,
                 {},
                 config
-            )
+            );
         }
     }
-}
+};

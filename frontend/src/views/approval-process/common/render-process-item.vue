@@ -66,37 +66,37 @@
                 isToggle: false,
                 tips: this.$t(`m.common['暂未开放']`),
                 value: -1
-            }
+            };
         },
         computed: {
             curSelectName () {
                 if (this.list.length > 0 && this.value !== -1) {
-                    const data = this.list.find(item => item.id === this.value)
-                    return data ? data.name || '' : ''
+                    const data = this.list.find(item => item.id === this.value);
+                    return data ? data.name || '' : '';
                 }
-                return ''
+                return '';
             },
             curTitle () {
                 if (this.list.length > 0 && this.value !== -1) {
-                    const tempData = this.list.find(item => item.id === this.value)
+                    const tempData = this.list.find(item => item.id === this.value);
                     if (tempData && tempData.node_names) {
-                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${tempData.node_names.join(' -> ')}`
+                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${tempData.node_names.join(' -> ')}`;
                     }
-                    return ''
+                    return '';
                 }
-                return ''
+                return '';
             }
         },
         watch: {
             isOpen: {
                 handler (value) {
-                    this.curOpenStatus = !!value
+                    this.curOpenStatus = !!value;
                 },
                 immediate: true
             },
             curValue: {
                 handler (val) {
-                    this.value = val
+                    this.value = val;
                 },
                 immediate: true
             }
@@ -113,7 +113,7 @@
             },
 
             handleProcessSelect (value, option) {
-                this.$emit('selected', value)
+                this.$emit('selected', value);
             },
 
             handleOpenCreateLink () {
@@ -122,18 +122,18 @@
             },
 
             handleSelectToggle (payload) {
-                this.isToggle = payload
+                this.isToggle = payload;
             },
 
             setValue (payload) {
-                this.value = payload
+                this.value = payload;
             },
 
             handleStatusChange (payload) {
-                this.$emit('change', payload)
+                this.$emit('change', payload);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-approval-process-set-item {

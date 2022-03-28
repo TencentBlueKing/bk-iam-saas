@@ -26,7 +26,7 @@
 
 export default class RequestQueue {
     constructor () {
-        this.queue = []
+        this.queue = [];
     }
 
     /**
@@ -38,9 +38,9 @@ export default class RequestQueue {
      */
     get (id) {
         if (typeof id === 'undefined') {
-            return this.queue
+            return this.queue;
         }
-        return this.queue.filter(request => request.requestId === id)
+        return this.queue.filter(request => request.requestId === id);
     }
 
     /**
@@ -49,7 +49,7 @@ export default class RequestQueue {
      * @param {Object} newRequest 请求对象
      */
     set (newRequest) {
-        this.queue.push(newRequest)
+        this.queue.push(newRequest);
         // if (!this.queue.some(request => request.requestId === newRequest.requestId)) {
         //     this.queue.push(newRequest)
         // }
@@ -66,7 +66,7 @@ export default class RequestQueue {
         //     const index = this.queue.indexOf(target)
         //     this.queue.splice(index, 1)
         // }
-        this.queue = [...this.queue.filter(request => request.requestId !== id)]
+        this.queue = [...this.queue.filter(request => request.requestId !== id)];
     }
 
     /**
@@ -78,32 +78,32 @@ export default class RequestQueue {
      * @return {Promise} promise 对象
      */
     cancel (requestIds, msg = 'request canceled') {
-        let cancelQueue = []
+        let cancelQueue = [];
         if (typeof requestIds === 'undefined') {
-            cancelQueue = [...this.queue]
+            cancelQueue = [...this.queue];
         } else if (requestIds instanceof Array) {
             requestIds.forEach(requestId => {
-                const cancelRequest = this.get(requestId)
+                const cancelRequest = this.get(requestId);
                 if (cancelRequest) {
-                    cancelQueue = [...cancelQueue, ...cancelRequest]
+                    cancelQueue = [...cancelQueue, ...cancelRequest];
                 }
-            })
+            });
         } else {
-            const cancelRequest = this.get(requestIds)
+            const cancelRequest = this.get(requestIds);
             if (cancelRequest) {
-                cancelQueue = [...cancelQueue, ...cancelRequest]
+                cancelQueue = [...cancelQueue, ...cancelRequest];
             }
         }
 
         try {
             cancelQueue.forEach(request => {
-                const requestId = request.requestId
-                this.delete(requestId)
-                request.cancelExcutor({ type: 'cancel', msg: `${msg}: ${requestId}` })
-            })
-            return Promise.resolve(requestIds)
+                const requestId = request.requestId;
+                this.delete(requestId);
+                request.cancelExcutor({ type: 'cancel', msg: `${msg}: ${requestId}` });
+            });
+            return Promise.resolve(requestIds);
         } catch (error) {
-            return Promise.reject(error)
+            return Promise.reject(error);
         }
     }
 }

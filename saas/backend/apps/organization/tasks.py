@@ -55,6 +55,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
         )
         SyncErrorLog.objects.create_error_log(record.id, exception_msg, traceback_msg)
         return record.id
+
     try:
         # 1. SaaS 从用户管理同步组织架构
         # 用户
@@ -98,8 +99,8 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     except Exception:  # pylint: disable=broad-except
         sync_status = SyncTaskStatus.Failed.value
         exception_msg = "sync_organization error"
-        traceback_msg = traceback.format_exc()
         logger.exception(exception_msg)
+        traceback_msg = traceback.format_exc()
 
     SyncRecord.objects.filter(id=record.id).update(status=sync_status, updated_time=timezone.now())
     if sync_status == SyncTaskStatus.Failed.value:

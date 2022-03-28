@@ -44,8 +44,8 @@
 </template>
 
 <script>
-    import Policy from '@/model/policy'
-    import ComparePermTable from './compare-perm-table'
+    import Policy from '@/model/policy';
+    import ComparePermTable from './compare-perm-table';
 
     export default {
         name: '',
@@ -64,7 +64,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -75,32 +75,32 @@
                 tableList: [],
                 curId: '',
                 initRequestQueue: ['policy']
-            }
+            };
         },
         computed: {
             syncDisabled () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isLoading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             }
         },
         watch: {
             isShow: {
                 handler (value) {
-                    this.isVisible = !!value
+                    this.isVisible = !!value;
                 },
                 immediate: true
             },
             params: {
                 handler (value) {
                     if (value.version) {
-                        this.initRequestQueue = ['policy']
-                        this.fetchData()
+                        this.initRequestQueue = ['policy'];
+                        this.fetchData();
                     } else {
-                        this.initRequestQueue = []
-                        this.tableList = []
-                        this.curId = ''
+                        this.initRequestQueue = [];
+                        this.tableList = [];
+                        this.curId = '';
                     }
                 },
                 immediate: true
@@ -108,38 +108,38 @@
         },
         methods: {
             async fetchData (payload) {
-                const { templateId, version } = this.params
+                const { templateId, version } = this.params;
                 try {
-                    const res = await this.$store.dispatch('permTemplate/templateCompare', { templateId, version })
-                    this.tableList = res.data.map(item => new Policy(item))
+                    const res = await this.$store.dispatch('permTemplate/templateCompare', { templateId, version });
+                    this.tableList = res.data.map(item => new Policy(item));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.initRequestQueue.shift()
+                    this.initRequestQueue.shift();
                 }
             },
 
             handleOnCompare (payload) {
-                const { action_id, related_resource_types, action_name, tag } = payload
-                this.curId = payload.action_id
-                const paramsList = []
+                const { action_id, related_resource_types, action_name, tag } = payload;
+                this.curId = payload.action_id;
+                const paramsList = [];
                 related_resource_types.forEach(item => {
-                    const condition = []
+                    const condition = [];
                     item.condition.forEach(item => {
-                        const { id, attribute, instance } = item
+                        const { id, attribute, instance } = item;
                         condition.push({
                             id,
                             attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
                             instances: instance ? instance.filter(item => item.path.length > 0) : []
-                        })
-                    })
+                        });
+                    });
                     paramsList.push({
                         id: this.params.templateId,
                         action_id,
@@ -152,42 +152,42 @@
                             condition: tag === 'add' ? [] : condition
                         },
                         tabType: 'resource'
-                    })
-                })
+                    });
+                });
                 this.$emit('on-view', {
                     action_name,
                     params: paramsList
-                })
+                });
             },
 
             async handleSync () {
-                this.syncLoading = true
-                const { id, type, templateId } = this.params
+                this.syncLoading = true;
+                const { id, type, templateId } = this.params;
                 try {
-                    await this.$store.dispatch('permTemplate/templateAuthObjectSync', { id, type, templateId })
-                    this.messageSuccess(this.$t(`m.permTemplate['同步成功']`), 2000)
-                    this.isVisible = false
-                    this.$emit('animation-end')
-                    this.$emit('on-sync')
+                    await this.$store.dispatch('permTemplate/templateAuthObjectSync', { id, type, templateId });
+                    this.messageSuccess(this.$t(`m.permTemplate['同步成功']`), 2000);
+                    this.isVisible = false;
+                    this.$emit('animation-end');
+                    this.$emit('on-sync');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.syncLoading = false
+                    this.syncLoading = false;
                 }
             },
 
             handleSliderClose () {
-                this.$emit('animation-end')
+                this.$emit('animation-end');
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

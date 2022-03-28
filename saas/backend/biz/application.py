@@ -61,7 +61,7 @@ from .role import RoleBiz, RoleInfo, RoleInfoBean
 from .subject import SubjectInfoList
 from .template import TemplateBiz
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 
 
 class BaseApplicationDataBean(BaseModel):
@@ -151,8 +151,9 @@ class ApprovedPassApplicationBiz:
         system_id = data["system"]["id"]
         actions = data["actions"]
 
-        policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], actions), need_ignore_path=True)
-        self.policy_operation_biz.alter(system_id=system_id, subject=subject, policies=policy_list.policies)
+        self.policy_operation_biz.alter(
+            system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
+        )
 
     def _renew_action(self, subject: Subject, data: Dict):
         """用户自定义权限续期"""
@@ -170,7 +171,10 @@ class ApprovedPassApplicationBiz:
                 self.group_biz.add_members(group["id"], [subject], expired_at)
             except Group.DoesNotExist:
                 # 若审批通过时，用户组已经被删除，则直接忽略
-                logger.info(f"group({group['id']}) has been deleted before the application is approved")
+                logger.error(
+                    f"subject {subject} join group({group['id']}) fail! "
+                    "the group has been deleted before the application is approved"
+                )
 
     def _renew_group(self, subject: Subject, data: Dict):
         """用户组续期"""
@@ -333,7 +337,7 @@ class ApplicationBiz:
             )
             new_data_list.append((application_data, process))
 
-        # 7. 循环创建申请单
+        # 8. 循环创建申请单
         applications = []
         for _data, _process in new_data_list:
             application = self.svc.create_for_policy(_data, _process)

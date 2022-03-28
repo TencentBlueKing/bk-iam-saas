@@ -100,7 +100,7 @@
         submitLoading: false,
         // 添加了还未保存的
         isNewAdd: true
-    })
+    });
 
     export default {
         props: {
@@ -114,14 +114,14 @@
                 isLoading: false,
                 resourceTypeList: [],
                 resourceTypeListBackup: []
-            }
+            };
         },
         computed: {
             /**
              * modelingId
              */
             modelingId () {
-                return this.$route.params.id
+                return this.$route.params.id;
             }
         },
         watch: {
@@ -154,11 +154,11 @@
                                 { regex: /^(\/[A-Za-z0-9_-]+(\/?))+$/, message: this.$t(`m.verify['请输入正确的系统回调接口']`), trigger: 'blur' }
 
                             ]
-                        }
-                        this.isLoading = true
-                        await this.fetchResourceType()
+                        };
+                        this.isLoading = true;
+                        await this.fetchResourceType();
                     } else {
-                        window.changeAlert = this.pageChangeAlertMemo
+                        window.changeAlert = this.pageChangeAlertMemo;
                     }
                 },
                 immediate: true
@@ -175,33 +175,33 @@
                         data: {
                             type: 'resource_type'
                         }
-                    })
-                    const resourceTypeList = []
-                    resourceTypeList.splice(0, 0, ...(res.data || []))
+                    });
+                    const resourceTypeList = [];
+                    resourceTypeList.splice(0, 0, ...(res.data || []));
                     if (!resourceTypeList.length) {
-                        resourceTypeList.push(getDefaultData())
+                        resourceTypeList.push(getDefaultData());
                     } else {
                         resourceTypeList.forEach(item => {
-                            item.expanded = false
-                            item.title = item.name
-                            item.isEdit = false
-                            item.submitLoading = false
-                            item.isNewAdd = false
-                        })
+                            item.expanded = false;
+                            item.title = item.name;
+                            item.isEdit = false;
+                            item.submitLoading = false;
+                            item.isNewAdd = false;
+                        });
                     }
-                    this.resourceTypeList.splice(0, this.resourceTypeList.length, ...resourceTypeList)
-                    this.resourceTypeListBackup = JSON.parse(JSON.stringify(resourceTypeList))
+                    this.resourceTypeList.splice(0, this.resourceTypeList.length, ...resourceTypeList);
+                    this.resourceTypeListBackup = JSON.parse(JSON.stringify(resourceTypeList));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
@@ -217,11 +217,11 @@
                             id: val.trim()
 
                         }
-                    })
-                    return !res.data.exists
+                    });
+                    return !res.data.exists;
                 } catch (e) {
-                    console.error(e)
-                    return false
+                    console.error(e);
+                    return false;
                 }
             },
 
@@ -229,12 +229,12 @@
              * 保存资源类型
              */
             saveResourceType (item, index) {
-                const formComp = this.$refs[`resourceTypeForm${index}`]
+                const formComp = this.$refs[`resourceTypeForm${index}`];
                 if (formComp && formComp[0]) {
                     formComp[0].validate().then(async validator => {
                         try {
-                            this.rules.id = this.rules.id.filter(t => t.type !== 'dynamicValidator') // 校验通过重置规则
-                            item.submitLoading = true
+                            this.rules.id = this.rules.id.filter(t => t.type !== 'dynamicValidator'); // 校验通过重置规则
+                            item.submitLoading = true;
                             await this.$store.dispatch('access/updateModeling', {
                                 id: this.modelingId,
                                 data: {
@@ -248,27 +248,27 @@
                                         }
                                     }
                                 }
-                            })
-                            item.title = item.name
-                            item.isEdit = false
-                            item.isNewAdd = false
-                            this.messageSuccess(this.$t(`m.access['保存资源类型成功']`), 1000)
-                            this.$emit('on-refresh-system-list', 'resourceType')
-                            this.addValidatorRules()
+                            });
+                            item.title = item.name;
+                            item.isEdit = false;
+                            item.isNewAdd = false;
+                            this.messageSuccess(this.$t(`m.access['保存资源类型成功']`), 1000);
+                            this.$emit('on-refresh-system-list', 'resourceType');
+                            this.addValidatorRules();
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             this.bkMessageInstance = this.$bkMessage({
                                 limit: 1,
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
+                            });
                         } finally {
-                            item.submitLoading = false
-                            this.resourceTypeListBackup = JSON.parse(JSON.stringify(this.resourceTypeList))
+                            item.submitLoading = false;
+                            this.resourceTypeListBackup = JSON.parse(JSON.stringify(this.resourceTypeList));
                         }
                     }, validator => {
-                        console.warn(validator)
-                    })
+                        console.warn(validator);
+                    });
                 }
             },
 
@@ -280,8 +280,8 @@
                     name: 'bkTooltips',
                     content: item.name,
                     placement: 'right'
-                }
-                const me = this
+                };
+                const me = this;
                 me.$bkInfo({
                     title: this.$t(`m.access['确认删除下列资源类型？']`),
                     confirmLoading: true,
@@ -294,66 +294,66 @@
                     ),
                     confirmFn: async () => {
                         try {
-                            item.submitLoading = true
+                            item.submitLoading = true;
                             await me.$store.dispatch('access/deleteModeling', {
                                 id: me.modelingId,
                                 data: {
                                     id: item.id,
                                     type: 'resource_type'
                                 }
-                            })
+                            });
 
-                            const resourceTypeList = []
-                            resourceTypeList.splice(0, 0, ...me.resourceTypeList)
-                            resourceTypeList.splice(index, 1)
-                            me.resourceTypeList.splice(0, me.resourceTypeList.length, ...resourceTypeList)
+                            const resourceTypeList = [];
+                            resourceTypeList.splice(0, 0, ...me.resourceTypeList);
+                            resourceTypeList.splice(index, 1);
+                            me.resourceTypeList.splice(0, me.resourceTypeList.length, ...resourceTypeList);
 
-                            me.messageSuccess(me.$t(`m.access['删除资源类型成功']`), 1000)
-                            this.$emit('on-refresh-system-list', 'resourceType')
-                            return true
+                            me.messageSuccess(me.$t(`m.access['删除资源类型成功']`), 1000);
+                            this.$emit('on-refresh-system-list', 'resourceType');
+                            return true;
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             me.bkMessageInstance = me.$bkMessage({
                                 limit: 1,
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
-                            return false
+                            });
+                            return false;
                         } finally {
-                            item.submitLoading = false
-                            me.resourceTypeListBackup = JSON.parse(JSON.stringify(me.resourceTypeList))
+                            item.submitLoading = false;
+                            me.resourceTypeListBackup = JSON.parse(JSON.stringify(me.resourceTypeList));
                         }
                     }
-                })
+                });
             },
 
             /**
              * edit
              */
             editInstanceSelection (item) {
-                item.isEdit = true
-                this.rules.id = this.rules.id.filter(t => t.type !== 'dynamicValidator') // 编辑时实例ID不可编辑不校验规则
+                item.isEdit = true;
+                this.rules.id = this.rules.id.filter(t => t.type !== 'dynamicValidator'); // 编辑时实例ID不可编辑不校验规则
             },
 
             /**
              * add
              */
             add () {
-                this.addValidatorRules()
-                const resourceTypeList = []
-                resourceTypeList.splice(0, 0, ...(this.resourceTypeList))
-                resourceTypeList.push(getDefaultData())
-                this.resourceTypeList.splice(0, this.resourceTypeList.length, ...resourceTypeList)
-                this.resourceTypeListBackup = JSON.parse(JSON.stringify(resourceTypeList))
+                this.addValidatorRules();
+                const resourceTypeList = [];
+                resourceTypeList.splice(0, 0, ...(this.resourceTypeList));
+                resourceTypeList.push(getDefaultData());
+                this.resourceTypeList.splice(0, this.resourceTypeList.length, ...resourceTypeList);
+                this.resourceTypeListBackup = JSON.parse(JSON.stringify(resourceTypeList));
             },
 
             /**
              * addValidatorRules
              */
             addValidatorRules () {
-                const dynamicValidatorRulesLength = this.rules.id.filter(e => e.type === 'dynamicValidator').length
+                const dynamicValidatorRulesLength = this.rules.id.filter(e => e.type === 'dynamicValidator').length;
                 if (!dynamicValidatorRulesLength) {
-                    this.rules.id.push({ type: 'dynamicValidator', validator: this.checkName, message: this.$t(`m.verify['资源类型ID已被占用']`), trigger: 'blur' }) // 需要添加是否被占用规则
+                    this.rules.id.push({ type: 'dynamicValidator', validator: this.checkName, message: this.$t(`m.verify['资源类型ID已被占用']`), trigger: 'blur' }); // 需要添加是否被占用规则
                 }
             },
 
@@ -361,24 +361,24 @@
              * 取消编辑
              */
             cancelEdit (index) {
-                const formComp = this.$refs[`resourceTypeForm${index}`]
+                const formComp = this.$refs[`resourceTypeForm${index}`];
                 if (formComp && formComp[0]) {
-                    formComp[0].clearError()
+                    formComp[0].clearError();
                 }
-                this.addValidatorRules()
-                const curItem = this.resourceTypeList[index]
+                this.addValidatorRules();
+                const curItem = this.resourceTypeList[index];
                 // 如果是未保存过的，那么取消的时候直接删除
                 if (curItem.isNewAdd) {
-                    const resourceTypeList = []
-                    resourceTypeList.splice(0, 0, ...this.resourceTypeList)
-                    resourceTypeList.splice(index, 1)
-                    this.resourceTypeList.splice(0, this.resourceTypeList.length, ...resourceTypeList)
+                    const resourceTypeList = [];
+                    resourceTypeList.splice(0, 0, ...this.resourceTypeList);
+                    resourceTypeList.splice(index, 1);
+                    this.resourceTypeList.splice(0, this.resourceTypeList.length, ...resourceTypeList);
                 } else {
-                    const originalExpanded = curItem.expanded
-                    const originalItem = Object.assign({}, this.resourceTypeListBackup[index])
-                    originalItem.isEdit = false
-                    originalItem.expanded = originalExpanded
-                    this.$set(this.resourceTypeList, index, originalItem)
+                    const originalExpanded = curItem.expanded;
+                    const originalItem = Object.assign({}, this.resourceTypeListBackup[index]);
+                    originalItem.isEdit = false;
+                    originalItem.expanded = originalExpanded;
+                    this.$set(this.resourceTypeList, index, originalItem);
                 }
             },
 
@@ -386,7 +386,7 @@
              * 隐藏侧边栏
              */
             hideSideslider () {
-                const invalidItemList = this.resourceTypeList.filter(item => item.isEdit && !item.isNewAdd)
+                const invalidItemList = this.resourceTypeList.filter(item => item.isEdit && !item.isNewAdd);
                 if (invalidItemList.length) {
                     this.$bkInfo({
                         title: this.$t(`m.access['请先保存下列资源类型']`),
@@ -398,33 +398,33 @@
                                             name: 'bkTooltips',
                                             content: invalidItem.name,
                                             placement: 'right'
-                                        }
+                                        };
                                         return (
                                             <p>
                                                 <span title={ invalidItem.name } v-bk-tooltips={ directive }>
                                                     { invalidItem.name }
                                                 </span>
                                             </p>
-                                        )
+                                        );
                                     })
                                 }
                             </div>
                         )
-                    })
-                    return
+                    });
+                    return;
                 }
-                this.$emit('update:isShow', false)
-                this.$emit('on-cancel')
+                this.$emit('update:isShow', false);
+                this.$emit('on-cancel');
             },
 
             /**
              * 展开
              */
             handleExpanded (item) {
-                item.expanded = !item.expanded
+                item.expanded = !item.expanded;
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

@@ -18,10 +18,10 @@
     </div>
 </template>
 <script>
-    import BasicInfo from './basic-info'
-    import PermTable from './perm-table'
-    import PermPolicy from '@/model/my-perm-policy'
-    import RenderProcess from '../common/render-process'
+    import BasicInfo from './basic-info';
+    import PermTable from './perm-table';
+    import PermPolicy from '@/model/my-perm-policy';
+    import RenderProcess from '../common/render-process';
     export default {
         name: '',
         components: {
@@ -33,7 +33,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             loading: {
@@ -49,44 +49,44 @@
                 systemName: '',
                 systemId: '',
                 status: ''
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowAction () {
-                return this.status === 'pending'
+                return this.status === 'pending';
             },
             isShowPage () {
-                return !this.isLoading && this.tableList.length > 0
+                return !this.isLoading && this.tableList.length > 0;
             },
             isEmpty () {
-                return !this.isLoading && this.tableList.length < 1
+                return !this.isLoading && this.tableList.length < 1;
             },
             system () {
                 if (this.systemName !== '' && this.systemId !== '') {
                     return {
                         system_name: this.systemName,
                         system_id: this.systemId
-                    }
+                    };
                 }
-                return {}
+                return {};
             }
         },
         watch: {
             params: {
                 handler (value) {
                     if (Object.keys(value).length > 0) {
-                        this.initRequestQueue = ['detail']
-                        this.fetchData(value.id)
+                        this.initRequestQueue = ['detail'];
+                        this.fetchData(value.id);
                     } else {
-                        this.initRequestQueue = []
-                        this.status = ''
-                        this.basicInfo = {}
-                        this.tableList = []
-                        this.systemName = ''
-                        this.systemId = ''
+                        this.initRequestQueue = [];
+                        this.status = '';
+                        this.basicInfo = {};
+                        this.tableList = [];
+                        this.systemName = '';
+                        this.systemId = '';
                     }
                 },
                 immediate: true
@@ -95,11 +95,11 @@
         methods: {
             async fetchData (id) {
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id })
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url
-                    } = res.data
+                    } = res.data;
                     this.basicInfo = {
                         sn,
                         type,
@@ -108,30 +108,30 @@
                         reason,
                         created_time,
                         ticket_url
-                    }
-                    this.systemName = data.system.name
-                    this.systemId = data.system.id
-                    this.status = status
-                    this.tableList = data.actions.map(item => new PermPolicy(item))
+                    };
+                    this.systemName = data.system.name;
+                    this.systemId = data.system.id;
+                    this.status = status;
+                    this.tableList = data.actions.map(item => new PermPolicy(item));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.initRequestQueue.shift()
+                    this.initRequestQueue.shift();
                 }
             },
 
             handleCancel () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-apply-detail-wrapper {

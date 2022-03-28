@@ -14,7 +14,7 @@
     </div>
 </template>
 <script>
-    import operationGroup from '@/images/operation-group.png'
+    import operationGroup from '@/images/operation-group.png';
     export default {
         name: 'PopContent',
         props: {
@@ -33,10 +33,10 @@
         },
         computed: {
             isImage () {
-                return typeof this.image === 'string'
+                return typeof this.image === 'string';
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .img-cls{

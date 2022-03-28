@@ -64,87 +64,87 @@
                 systemExpanded: true,
                 isSelectAllChecked: false,
                 systemSelectData: []
-            }
+            };
         },
         mounted () {
-            this.fetchData()
+            this.fetchData();
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getSystemManager')
-                    const systemListAll = res.data || []
-                    this.systemListAll.splice(0, this.systemListAll.length, ...systemListAll)
+                    const res = await this.$store.dispatch('role/getSystemManager');
+                    const systemListAll = res.data || [];
+                    this.systemListAll.splice(0, this.systemListAll.length, ...systemListAll);
                     const systemListRender = res.data.length > 5
-                        ? res.data.slice(0, 5) : res.data
-                    this.systemListRender.splice(0, this.systemListRender.length, ...systemListRender)
-                    this.isEmpty = systemListAll.length < 1
+                        ? res.data.slice(0, 5) : res.data;
+                    this.systemListRender.splice(0, this.systemListRender.length, ...systemListRender);
+                    this.isEmpty = systemListAll.length < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handlesystemExpanded () {
-                this.systemExpanded = !this.systemExpanded
+                this.systemExpanded = !this.systemExpanded;
             },
 
             handleSelectAll (selection) {
-                this.isSelectAllChecked = !!selection.length
+                this.isSelectAllChecked = !!selection.length;
 
                 if (this.isSelectAllChecked) {
                     this.systemSelectData.splice(
                         0,
                         this.systemSelectData.length,
                         ...this.systemListAll
-                    )
+                    );
                 }
                 
-                this.$emit('system-selection-change', this.systemSelectData)
+                this.$emit('system-selection-change', this.systemSelectData);
             },
 
             handleSelectionChange (selection) {
-                this.isSelectAllChecked = selection.length === this.systemListAll.length
-                this.systemSelectData.splice(0, this.systemSelectData.length, ...selection)
+                this.isSelectAllChecked = selection.length === this.systemListAll.length;
+                this.systemSelectData.splice(0, this.systemSelectData.length, ...selection);
 
-                this.$emit('system-selection-change', this.systemSelectData)
+                this.$emit('system-selection-change', this.systemSelectData);
             },
 
             handlesystemShowAll () {
-                this.systemShowAll = !this.systemShowAll
+                this.systemShowAll = !this.systemShowAll;
                 if (this.systemShowAll) {
                     this.systemListRender.splice(
                         0,
                         this.systemListRender.length,
                         ...this.systemListAll
-                    )
+                    );
                 } else {
                     this.systemListRender.splice(
                         0,
                         this.systemListRender.length,
                         ...(this.systemListAll.length > 5 ? this.systemListAll.slice(0, 5) : this.systemListAll)
-                    )
+                    );
                 }
                 if (this.isSelectAllChecked) {
-                    this.$refs.systemTable.clearSelection()
-                    this.$refs.systemTable.toggleAllSelection()
+                    this.$refs.systemTable.clearSelection();
+                    this.$refs.systemTable.toggleAllSelection();
                 }
             },
 
             tableRowKey (row) {
-                return row.id + '__' + row.name
+                return row.id + '__' + row.name;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './group.css';

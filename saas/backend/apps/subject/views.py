@@ -66,7 +66,9 @@ class SubjectGroupViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        permission_logger.info("subject group delete by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s group deleted by user %s", subject.type, subject.id, request.user.username
+        )
 
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:
@@ -149,7 +151,9 @@ class SubjectPolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
 
-        permission_logger.info("subject policy delete by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s policy deleted by user %s", subject.type, subject.id, request.user.username
+        )
 
         # 为了记录审计日志，需要在删除前查询
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
@@ -178,12 +182,15 @@ class SubjectPolicyViewSet(GenericViewSet):
         data = slz.validated_data
 
         policy_id = kwargs["pk"]
+        resource_group_id = data["resource_group_id"]
         resource_system_id = data["system_id"]
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
 
-        permission_logger.info("subject policy delete partial by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s policy deleted partial by user %s", subject.type, subject.id, request.user.username
+        )
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
@@ -191,6 +198,7 @@ class SubjectPolicyViewSet(GenericViewSet):
             system_id,
             subject,
             policy_id,
+            resource_group_id,
             resource_system_id,
             resource_type,
             condition_ids,
@@ -201,3 +209,41 @@ class SubjectPolicyViewSet(GenericViewSet):
         audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
 
         return Response({})
+
+
+class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
+
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="Policy删除资源组",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["subject"],
+    )
+    @view_audit_decorator(SubjectPolicyDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        policy_id = kwargs["pk"]
+        resource_group_id = kwargs["resource_group_id"]
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+
+        permission_logger.info(
+            "subject type=%s, id=%s policy delete via resource group id %s by user %s",
+            subject.type,
+            subject.id,
+            resource_group_id,
+            request.user.username,
+        )
+
+        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
+        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        # 删除权限
+        update_policy = self.policy_operation_biz.delete_by_resource_group_id(
+            system_id, subject, policy_id, resource_group_id
+        )
+
+        # 写入审计上下文
+        audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
+
+        return Response()

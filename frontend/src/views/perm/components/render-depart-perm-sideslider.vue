@@ -31,8 +31,8 @@
 </template>
 <script>
     // import _ from 'lodash'
-    import RenderPermItem from '../organization-perm/render-perm'
-    import DetailTable from '../organization-perm/detail-table'
+    import RenderPermItem from '../organization-perm/render-perm';
+    import DetailTable from '../organization-perm/detail-table';
     export default {
         name: '',
         components: {
@@ -58,19 +58,19 @@
                 orgTemplateList: [],
                 isShowSideslider: false,
                 requestQueue: ['list']
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.requestQueue.length > 0
+                return this.requestQueue.length > 0;
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowSideslider = !!value
+                    this.isShowSideslider = !!value;
                     if (this.isShowSideslider) {
-                        this.fetchData()
+                        this.fetchData();
                     }
                 },
                 immediate: true
@@ -82,34 +82,34 @@
                     const res = await this.$store.dispatch('perm/getOrgTemplates', {
                         subjectId: this.departId,
                         subjectType: 'department'
-                    })
-                    const data = res.data || []
+                    });
+                    const data = res.data || [];
                     data.forEach(item => {
-                        item.displayName = `${item.name}（${item.system.name}）`
-                        item.expanded = false
-                    })
-                    this.orgTemplateList.splice(0, this.orgTemplateList.length, ...data)
+                        item.displayName = `${item.name}（${item.system.name}）`;
+                        item.expanded = false;
+                    });
+                    this.orgTemplateList.splice(0, this.orgTemplateList.length, ...data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.requestQueue.shift()
+                    this.requestQueue.shift();
                 }
             },
 
             handleAnimationEnd () {
-                this.orgTemplateList = []
-                this.requestQueue = ['list']
-                this.$emit('animation-end')
+                this.orgTemplateList = [];
+                this.requestQueue = ['list'];
+                this.$emit('animation-end');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-depart-perm-sideslider {

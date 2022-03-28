@@ -25,6 +25,7 @@ from functools import partial
 from urllib.parse import urlparse
 
 import requests
+from django.conf import settings
 
 from backend.common.debug import http_trace
 from backend.metrics import component_request_duration, get_component_by_url
@@ -39,31 +40,39 @@ def _gen_header():
     return headers
 
 
+session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(
+    pool_connections=settings.REQUESTS_POOL_CONNECTIONS, pool_maxsize=settings.REQUESTS_POOL_MAXSIZE
+)
+session.mount("https://", adapter)
+session.mount("http://", adapter)
+
+
 def _http_request(method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None):
     trace_func = partial(http_trace, method=method, url=url, data=data)
 
     st = time.time()
     try:
         if method == "GET":
-            resp = requests.get(
+            resp = session.get(
                 url=url, headers=headers, params=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "HEAD":
-            resp = requests.head(url=url, headers=headers, verify=verify, cert=cert, cookies=cookies)
+            resp = session.head(url=url, headers=headers, verify=verify, cert=cert, cookies=cookies)
         elif method == "POST":
-            resp = requests.post(
+            resp = session.post(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "DELETE":
-            resp = requests.delete(
+            resp = session.delete(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "PUT":
-            resp = requests.put(
+            resp = session.put(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "PATCH":
-            resp = requests.patch(
+            resp = session.patch(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         else:

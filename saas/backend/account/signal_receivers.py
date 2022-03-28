@@ -24,4 +24,4 @@ def sync_user(sender, user, **kwargs):
         Syncer().sync_single_user(user.username)
     except Exception:  # pylint: disable=broad-except
         # 异常仅仅记录日志，不报错，不影响登录逻辑
-        logger.exception("sync single user exception when user logged in")
+        logger.exception(f"sync single user fail when user {user.username} logged in")

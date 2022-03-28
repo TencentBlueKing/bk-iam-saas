@@ -9,7 +9,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-import logging
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -21,8 +20,6 @@ from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
-
-logger = logging.getLogger("celery")
 
 
 class BaseHandoverHandler(ABC):

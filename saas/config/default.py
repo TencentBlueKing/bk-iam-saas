@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -8,42 +9,40 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import hashlib
-from urllib.parse import urlparse
 
+import os
+
+import djcelery
 from celery.schedules import crontab
 
-from blueapps.conf.default_settings import *  # noqa
-from blueapps.conf.log import get_logging_config_dict
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# 这里是默认的 INSTALLED_APPS，大部分情况下，不需要改动
-# 如果你已经了解每个默认 APP 的作用，确实需要去掉某些 APP，请去掉下面的注释，然后修改
-# INSTALLED_APPS = (
-#     'bkoauth',
-#     # 框架自定义命令
-#     'blueapps.contrib.bk_commands',
-#     'django.contrib.admin',
-#     'django.contrib.auth',
-#     'django.contrib.contenttypes',
-#     'django.contrib.sessions',
-#     'django.contrib.sites',
-#     'django.contrib.messages',
-#     'django.contrib.staticfiles',
-#     # account app
-#     'blueapps.account',
-# )
 
-# 请在这里加入你的自定义 APP
-INSTALLED_APPS += (
-    # framework
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
+
+ALLOWED_HOSTS = ["*"]
+
+
+# Application definition
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.sites",
+    "django.contrib.messages",
+    "backend.account",
     "rest_framework",
     "django_filters",
     "drf_yasg",
     "corsheaders",
     "mptt",
     "django_prometheus",
-    # backend apps
-    "backend.account",
+    "djcelery",
+    "apigw_manager.apigw",
     "backend.apps.system",
     "backend.apps.action",
     "backend.apps.policy",
@@ -65,17 +64,12 @@ INSTALLED_APPS += (
     "backend.debug",
     "backend.apps.handover",
     "backend.apps.mgmt",
-)
+]
 
-# 这里是默认的中间件，大部分情况下，不需要改动
-# 如果你已经了解每个默认 MIDDLEWARE 的作用，确实需要去掉某些 MIDDLEWARE，或者改动先后顺序，请去掉下面的注释，然后修改
-MIDDLEWARE = (
-    # profile record
+
+MIDDLEWARE = [
     "backend.common.middlewares.CustomProfilerMiddleware",
-    # prometheus
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    # request instance provider
-    "blueapps.middleware.request_provider.RequestProvider",
     "backend.common.middlewares.RequestProvider",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -83,72 +77,100 @@ MIDDLEWARE = (
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    # 跨域检测中间件， 默认关闭
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django.middleware.security.SecurityMiddleware",
-    # 蓝鲸静态资源服务
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    # Auth middleware
     "backend.account.middlewares.LoginMiddleware",
-    # Timezone middleware
     "backend.account.middlewares.TimezoneMiddleware",
-    # Role Auth middleware
     "backend.account.middlewares.RoleAuthenticationMiddleware",
-    # exception middleware
-    "blueapps.core.exceptions.middleware.AppExceptionMiddleware",
-    # prometheus
     "django_prometheus.middleware.PrometheusAfterMiddleware",
-)
+    "backend.common.middlewares.AppExceptionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+]
 
-# 自定义中间件
-MIDDLEWARE += ("corsheaders.middleware.CorsMiddleware",)
 
-# 所有环境的日志级别可以在这里配置
-# LOG_LEVEL = 'INFO'
+ROOT_URLCONF = "urls"
 
-# STATIC_VERSION_BEGIN
-# 静态资源文件(js,css等）在APP上线更新后, 由于浏览器有缓存,
-# 可能会造成没更新的情况. 所以在引用静态资源的地方，都把这个加上
-# Django 模板中：<script src="/a.js?v={{ STATIC_VERSION }}"></script>
-# mako 模板中：<script src="/a.js?v=${ STATIC_VERSION }"></script>
-# 如果静态资源修改了以后，上线前改这个版本号即可
-# STATIC_VERSION_END
-STATIC_VERSION = "1.0"
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "resources/templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
-# local time
+# DB router
+DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
+
+
+# Password validation
+# https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
+
+AUTHENTICATION_BACKENDS = ("backend.account.backends.TokenBackend",)
+
+AUTH_USER_MODEL = "account.User"
+
+AUTH_PASSWORD_VALIDATORS = []
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/2.2/topics/i18n/
+
+LANGUAGE_CODE = "zh-hans"
+
+LANGUAGE_COOKIE_NAME = "blueking_language"
+
+LANGUAGE_COOKIE_PATH = "/"
+
+TIME_ZONE = "Asia/Shanghai"
+
+USE_I18N = True
+
+USE_L10N = True
+
 USE_TZ = True
 
-# i18n
-USE_I18N = True
-USE_L10N = True
-LANGUAGE_CODE = "zh-hans"
-LANGUAGE_COOKIE_NAME = "blueking_language"
-LANGUAGE_COOKIE_PATH = "/"
 LOCALE_PATHS = (os.path.join(BASE_DIR, "resources/locale"),)
 
-# load logging settings
-LOGGING = get_logging_config_dict(locals())
 
-# 初始化管理员列表，列表中的人员将拥有预发布环境和正式环境的管理员权限
-# 注意：请在首次提测和上线前修改，之后的修改将不会生效
-INIT_SUPERUSER = []
+# static
+STATIC_VERSION = "1.0"
 
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# 使用mako模板时，默认打开的过滤器：h(过滤html)
-MAKO_DEFAULT_FILTERS = ["h"]
-
-# BKUI是否使用了history模式
-IS_BKUI_HISTORY_MODE = False
-
-# 是否需要对AJAX弹窗登录强行打开
-IS_AJAX_PLAIN_MODE = False
+WHITENOISE_STATIC_PREFIX = "/staticfiles/"
 
 
-"""
-以下为框架代码 请勿修改
-"""
+# cookie
+SESSION_COOKIE_NAME = "bkiam_sessionid"
+
+SESSION_COOKIE_AGE = 60 * 60 * 24  # 1天
+
+# cors
+CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
+
+
+# restframework
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
+    "PAGE_SIZE": 10,
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_RENDERER_CLASSES": ("backend.common.renderers.BKAPIRenderer",),
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+}
+
 
 # CELERY 开关，使用时请改为 True，否则请保持为False。启动方式为以下两行命令：
 # worker: python manage.py celery worker -l info
@@ -167,6 +189,12 @@ CELERYD_CONCURRENCY = os.getenv("BK_CELERYD_CONCURRENCY", 2)
 CELERY_IMPORTS = (
     "backend.apps.organization.tasks",
     "backend.apps.role.tasks",
+    "backend.apps.application.tasks",
+    "backend.apps.user.tasks",
+    "backend.apps.group.tasks",
+    "backend.apps.action.tasks",
+    "backend.apps.policy.tasks",
+    "backend.audit.tasks",
     "backend.publisher.tasks",
     "backend.long_task.tasks",
 )
@@ -220,165 +248,167 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.long_task.tasks.retry_long_task",
         "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
     },
-    # "periodic_delete_unreferenced_expressions": {
-    #     "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
-    #     "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
-    # },
+    "periodic_delete_unreferenced_expressions": {
+        "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
+        "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
+    },
 }
 
-# celery settings
-if IS_USE_CELERY:
-    INSTALLED_APPS = locals().get("INSTALLED_APPS", [])
-    import djcelery
+CELERY_ENABLE_UTC = True
 
-    INSTALLED_APPS += ("djcelery",)
-    djcelery.setup_loader()
-    CELERY_ENABLE_UTC = True
-    CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
-    CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
+CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 
-# remove disabled apps
-if locals().get("DISABLED_APPS"):
-    INSTALLED_APPS = locals().get("INSTALLED_APPS", [])
-    DISABLED_APPS = locals().get("DISABLED_APPS", [])
+CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
 
-    INSTALLED_APPS = [_app for _app in INSTALLED_APPS if _app not in DISABLED_APPS]
+# close celery hijack root logger
+CELERYD_HIJACK_ROOT_LOGGER = False
 
-    _keys = (
-        "AUTHENTICATION_BACKENDS",
-        "DATABASE_ROUTERS",
-        "FILE_UPLOAD_HANDLERS",
-        "MIDDLEWARE",
-        "PASSWORD_HASHERS",
-        "TEMPLATE_LOADERS",
-        "STATICFILES_FINDERS",
-        "TEMPLATE_CONTEXT_PROCESSORS",
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+
+# 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
+# V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
+# V2 Smart只有BK_BROKER_URL
+if "RABBITMQ_HOST" in os.environ:
+    BROKER_URL = "amqp://{user}:{password}@{host}:{port}/{vhost}".format(
+        user=os.getenv("RABBITMQ_USER"),
+        password=os.getenv("RABBITMQ_PASSWORD"),
+        host=os.getenv("RABBITMQ_HOST"),
+        port=os.getenv("RABBITMQ_PORT"),
+        vhost=os.getenv("RABBITMQ_VHOST"),
     )
+else:
+    BROKER_URL = os.getenv("BK_BROKER_URL")
 
-    import itertools
 
-    for _app, _key in itertools.product(DISABLED_APPS, _keys):
-        if locals().get(_key) is None:
-            continue
-        locals()[_key] = tuple([_item for _item in locals()[_key] if not _item.startswith(_app + ".")])
+djcelery.setup_loader()
 
-# Django RestFramework
-REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
-    "PAGE_SIZE": 10,
-    "TEST_REQUEST_DEFAULT_FORMAT": "json",
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_RENDERER_CLASSES": ("backend.common.renderers.BKAPIRenderer",),
-    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
-    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
-}
 
-# static file
-WHITENOISE_STATIC_PREFIX = "/staticfiles/"
-FORCE_SCRIPT_NAME = SITE_URL
-STATIC_URL = SITE_URL + "staticfiles/"
-AJAX_URL_PREFIX = SITE_URL + "api/v1"
+# sentry support
+if os.getenv("SENTRY_DSN"):
+    INSTALLED_APPS += ("raven.contrib.django.raven_compat",)
+    MIDDLEWARE += ("raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware",)
+    RAVEN_CONFIG = {
+        "dsn": os.getenv("SENTRY_DSN"),
+    }
 
-# iam host
-BK_IAM_HOST = os.environ.get("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
-BK_IAM_HOST_TYPE = os.environ.get("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
 
-# cors
-CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
-CORS_ORIGIN_WHITELIST = []  # 默认只支持同域名请求
+# tracing 相关配置
+# if enable, default false
+ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
+BKAPP_OTEL_INSTRUMENT_DB_API = os.getenv("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
+BKAPP_OTEL_SERVICE_NAME = os.getenv("BKAPP_OTEL_SERVICE_NAME") or "bk-iam"
+BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
+BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
+BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
 
-# cookie
-SESSION_COOKIE_NAME = "bkiam_sessionid"
-CSRF_COOKIE_NAME = "bkiam_csrftoken"
-SESSION_COOKIE_AGE = 60 * 60 * 24  # 1天
+if ENABLE_OTEL_TRACE:
+    INSTALLED_APPS += ("backend.tracing",)
 
-# version log
-VERSION_LOG_MD_FILES_DIR = os.path.join(BASE_DIR, "resources/version_log")
-
-# authorization limit
-# 授权对象授权用户组, 模板的最大限制
-SUBJECT_AUTHORIZATION_LIMIT = {
-    # 用户能加入的用户组的最大数量
-    "default_subject_group_limit": int(os.environ.get("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", 100)),
-    # 用户组能加入同一个系统的权限模板的最大数量
-    "default_subject_system_template_limit": int(os.environ.get("BKAPP_DEFAULT_SUBJECT_SYSTEM_TEMPLATE_LIMIT", 10)),
-    "subject_system_template_limit": {
-        # key: system_id, value: int
-    },  # 系统可自定义配置的 用户组能加入同一个系统的权限模板的最大数量
-    # 用户组成员最大数量
-    "group_member_limit": int(os.environ.get("BKAPP_GROUP_MEMBER_LIMIT", 500)),
-    # 用户组单次授权模板数
-    "group_auth_template_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", 10)),
-    # 用户组单次授权的系统数
-    "group_auth_system_once_limit": int(os.environ.get("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 10)),
-}
-
-# 授权的实例最大数量限制
-AUTHORIZATION_INSTANCE_LIMIT = int(os.environ.get("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", 200))
-
-# 策略中实例数量的最大限制
-SINGLE_POLICY_MAX_INSTANCES_LIMIT = int(os.environ.get("BKAPP_SINGLE_POLICY_MAX_INSTANCES_LIMIT", 10000))
-
-# 一次申请策略中中新增实例数量限制
-APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.environ.get("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", 20))
-
-# profile record
-PYINSTRUMENT_PROFILE_DIR = os.path.join(os.path.dirname(BASE_DIR), "logs", APP_CODE, "profiles")  # 默认在日志目录下
-ENABLE_PYINSTRUMENT = os.environ.get("BKAPP_ENABLE_PYINSTRUMENT", "False").lower() == "true"  # 需要开启时则配置环境变量
-
-# DB router
-DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
 
 # debug trace的过期时间
 MAX_DEBUG_TRACE_TTL = 7 * 24 * 60 * 60  # 7天
 # debug trace的最大数量
 MAX_DEBUG_TRACE_COUNT = 1000
 
+
+# profile record
+ENABLE_PYINSTRUMENT = os.getenv("BKAPP_ENABLE_PYINSTRUMENT", "False").lower() == "true"  # 需要开启时则配置环境变量
+PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
+
+
+# ---------------
+# app 自定义配置
+# ---------------
+
+
+# 初始化管理员列表，列表中的人员将拥有预发布环境和正式环境的管理员权限
+# 注意：请在首次提测和上线前修改，之后的修改将不会生效
+INIT_SUPERUSER = []
+
+
+# 是否是smart部署方式
+IS_SMART_DEPLOY = os.getenv("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"
+
+
+# version log
+VERSION_LOG_MD_FILES_DIR = os.path.join(BASE_DIR, "resources/version_log")
+
+
+# iam host
+BK_IAM_HOST = os.getenv("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
+BK_IAM_HOST_TYPE = os.getenv("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
+
+
+# iam engine host
+BK_IAM_ENGINE_HOST = os.getenv("BKAPP_IAM_ENGINE_HOST")
+BK_IAM_ENGINE_HOST_TYPE = os.getenv("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # direct/apigateway
+
+
+# authorization limit
+# 授权对象授权用户组, 模板的最大限制
+SUBJECT_AUTHORIZATION_LIMIT = {
+    # 用户能加入的用户组的最大数量
+    "default_subject_group_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", 100)),
+    # 用户组能加入同一个系统的权限模板的最大数量
+    "default_subject_system_template_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_SYSTEM_TEMPLATE_LIMIT", 10)),
+    "subject_system_template_limit": {
+        # key: system_id, value: int
+    },  # 系统可自定义配置的 用户组能加入同一个系统的权限模板的最大数量
+    # 用户组成员最大数量
+    "group_member_limit": int(os.getenv("BKAPP_GROUP_MEMBER_LIMIT", 500)),
+    # 用户组单次授权模板数
+    "group_auth_template_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", 10)),
+    # 用户组单次授权的系统数
+    "group_auth_system_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 10)),
+}
+
+# 授权的实例最大数量限制
+AUTHORIZATION_INSTANCE_LIMIT = int(os.getenv("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", 200))
+
+# 策略中实例数量的最大限制
+SINGLE_POLICY_MAX_INSTANCES_LIMIT = int(os.getenv("BKAPP_SINGLE_POLICY_MAX_INSTANCES_LIMIT", 10000))
+
+# 一次申请策略中中新增实例数量限制
+APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", 20))
+
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 
-# Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
-BK_APIGW_PUBLIC_KEY = os.environ.get("BKAPP_APIGW_PUBLIC_KEY", "")
+# 前端页面功能开关
+ENABLE_FRONT_END_FEATURES = {
+    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
+    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower() == "true",
+}
 
-# iam engine host
-BK_IAM_ENGINE_HOST = os.environ.get("BKAPP_IAM_ENGINE_HOST", "")
-BK_IAM_ENGINE_HOST_TYPE = os.environ.get("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # direct/apigateway
 
 # 用于发布订阅的Redis
-PUB_SUB_REDIS_HOST = os.environ.get("BKAPP_PUB_SUB_REDIS_HOST", "")
-PUB_SUB_REDIS_PORT = os.environ.get("BKAPP_PUB_SUB_REDIS_PORT", "")
-PUB_SUB_REDIS_PASSWORD = os.environ.get("BKAPP_PUB_SUB_REDIS_PASSWORD", "")
-PUB_SUB_REDIS_DB = os.environ.get("BKAPP_PUB_SUB_REDIS_DB", 0)
+PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")
+PUB_SUB_REDIS_PORT = os.getenv("BKAPP_PUB_SUB_REDIS_PORT")
+PUB_SUB_REDIS_PASSWORD = os.getenv("BKAPP_PUB_SUB_REDIS_PASSWORD")
+PUB_SUB_REDIS_DB = os.getenv("BKAPP_PUB_SUB_REDIS_DB", 0)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.environ.get("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.environ.get("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "True").lower()
-    == "true",
+    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
+    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "True").lower() == "true",
 }
 
-# 是否是smart部署方式
-IS_SMART_DEPLOY = os.environ.get("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"
+# Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
+BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
 
 # apigateway 相关配置
-# NOTE: it sdk will read settings.BK_APP_CODE and settings.BK_APP_SECRET, so you should set it
+# NOTE: it sdk will read settings.APP_CODE and settings.APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = os.environ.get("BK_API_URL_TMPL", "")
-INSTALLED_APPS += ("apigw_manager.apigw",)
-BK_IAM_BACKEND_SVC = os.environ.get("BK_IAM_BACKEND_SVC", "bkiam-web")
-BK_IAM_ENGINE_SVC = os.environ.get("BK_IAM_ENGINE_SVC", "bkiam-search-engine-web")
+BK_API_URL_TMPL = os.getenv("BK_API_URL_TMPL", "")
+BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
+BK_IAM_SAAS_SVC = os.getenv("BK_IAM_SAAS_SVC", "bkiam-saas-web")
+BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
 
-# tracing 相关配置
-# if enable, default false
-ENABLE_OTEL_TRACE = os.environ.get("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
-BKAPP_OTEL_INSTRUMENT_DB_API = os.environ.get("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
-BKAPP_OTEL_SERVICE_NAME = os.environ.get("BKAPP_OTEL_SERVICE_NAME", "") or "bk-iam"
-BKAPP_OTEL_SAMPLER = os.environ.get("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
-BKAPP_OTEL_BK_DATA_ID = int(os.environ.get("BKAPP_OTEL_BK_DATA_ID", "-1"))
-BKAPP_OTEL_GRPC_HOST = os.environ.get("BKAPP_OTEL_GRPC_HOST")
 
-if ENABLE_OTEL_TRACE:
-    INSTALLED_APPS += ("backend.tracing",)
+# Requests pool config
+REQUESTS_POOL_CONNECTIONS = int(os.getenv("REQUESTS_POOL_CONNECTIONS", 20))
+REQUESTS_POOL_MAXSIZE = int(os.getenv("REQUESTS_POOL_MAXSIZE", 20))

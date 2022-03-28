@@ -28,9 +28,9 @@
     </bk-dialog>
 </template>
 <script>
-    import _ from 'lodash'
-    import CompareCondition from '@/model/compare-condition'
-    import CompareDetail from '@/components/render-resource/compare-detail'
+    import _ from 'lodash';
+    import CompareCondition from '@/model/compare-condition';
+    import CompareDetail from '@/components/render-resource/compare-detail';
     export default {
         name: '',
         components: {
@@ -44,7 +44,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             title: {
@@ -60,21 +60,21 @@
                 searchParams: {},
                 conditionData: [],
                 total: 0
-            }
+            };
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             },
             params: {
                 handler (value) {
                     if (value.policy_id) {
-                        this.searchParams = _.cloneDeep(value)
+                        this.searchParams = _.cloneDeep(value);
                         if (this.isShowDialog) {
-                            this.fetchData()
+                            this.fetchData();
                         }
                     }
                 },
@@ -84,41 +84,41 @@
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('permApply/conditionCompare', this.searchParams)
-                    this.conditionData = res.data.map(item => new CompareCondition(item))
+                    const res = await this.$store.dispatch('permApply/conditionCompare', this.searchParams);
+                    this.conditionData = res.data.map(item => new CompareCondition(item));
                     if (this.conditionData.length > 0) {
                         if (this.conditionData[0].hasOwnProperty('instance')) {
-                            this.conditionData[0].instanceExpanded = true
+                            this.conditionData[0].instanceExpanded = true;
                         }
                         if (this.conditionData[0].hasOwnProperty('attribute')) {
-                            this.conditionData[0].attributeExpanded = true
+                            this.conditionData[0].attributeExpanded = true;
                         }
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handleBtnChange (payload) {
-                this.active = payload
+                this.active = payload;
             },
 
             handleAfterEditLeave () {
-                this.$emit('on-after-leave')
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-resource-preview-dialog {

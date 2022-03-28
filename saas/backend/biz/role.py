@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
 
@@ -29,6 +28,8 @@ from backend.biz.policy import (
     PathNodeBeanList,
     PolicyBean,
     PolicyBeanList,
+    RelatedResourceBean,
+    ResourceGroupBean,
     ThinSystem,
 )
 from backend.common.error_codes import APIException, error_codes
@@ -47,8 +48,6 @@ from backend.service.constants import (
 from backend.service.models import Attribute, Subject, System
 from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleInfo, RoleService
 from backend.service.system import SystemService
-
-logger = logging.getLogger("app")
 
 
 class RoleInfoBean(RoleInfo):
@@ -513,6 +512,7 @@ class RoleObjectRelationChecker:
 class RoleAuthorizationScopeChecker:
     """
     角色模板授权范围检查
+    TODO 结构变更重点修改
     """
 
     svc = RoleService()
@@ -555,7 +555,20 @@ class RoleAuthorizationScopeChecker:
             return paths
 
         policy_scope = PolicyBean.parse_obj(self.system_action_scope[system_id][action_id])
-        for rrt in policy_scope.related_resource_types:
+        match_paths: List[List[PathNodeBean]] = []
+        path_string_set: Set[str] = set()
+        for rg in policy_scope.resource_groups:
+            match_paths.extend(self._filter_path_match_resource_group(paths, rg, path_string_set))
+            # 如果所有的路径都能匹配授权范围, 直接返回
+            if len(match_paths) == len(paths):
+                break
+
+        return match_paths
+
+    def _filter_path_match_resource_group(
+        self, paths: List[List[PathNodeBean]], resource_group: ResourceGroupBean, path_string_set: Set[str]
+    ) -> List[List[PathNodeBean]]:
+        for rrt in resource_group.related_resource_types:
             scope_str_paths = []
             inside_paths = []
             for path_list in rrt.iter_path_list(ignore_attribute=True):
@@ -567,8 +580,10 @@ class RoleAuthorizationScopeChecker:
                 scope_str_paths.append(sp)
 
             for path in paths:
-                if self._is_path_match_scope_paths(path, scope_str_paths):
+                ps = PathNodeBeanList(path).to_path_string()
+                if ps not in path_string_set and self._is_path_match_scope_paths(path, scope_str_paths):
                     inside_paths.append(path)
+                    path_string_set.add(ps)
 
             paths = inside_paths
 
@@ -742,8 +757,29 @@ class ActionScopeDiffer:
         self.scope_policy = scope_policy
 
     def diff(self) -> bool:
-        for rt in self.template_policy.related_resource_types:
-            scope_rt = self.scope_policy.get_related_resource_type(rt.system_id, rt.type)
+        """
+        1. 遍历每个resource_group是否能包含
+        2. 只要有一个不能包含就不能判断在范围内
+        """
+        for rg in self.template_policy.resource_groups:
+            if not self._diff_related_resource_types(rg.related_resource_types, self.scope_policy):
+                return False
+
+        return True
+
+    def _diff_related_resource_types(
+        self, related_resource_types: List[RelatedResourceBean], scope_policy: PolicyBean
+    ) -> bool:
+        for rg in scope_policy.resource_groups:
+            if self._diff_scope_resource_group(related_resource_types, rg):
+                return True
+        return False
+
+    def _diff_scope_resource_group(
+        self, related_resource_types: List[RelatedResourceBean], scope_resource_group: ResourceGroupBean
+    ) -> bool:
+        for rt in related_resource_types:
+            scope_rt = scope_resource_group.get_related_resource_type(rt.system_id, rt.type)
             if not scope_rt:
                 return False
             if not self._diff_conditions(rt.condition, scope_rt.condition):
@@ -755,7 +791,7 @@ class ActionScopeDiffer:
         scope_paths = []
         for i in scope_instances:
             for p in i.path:
-                sp = PathNodeBeanList(p).to_path_string()
+                sp = p.to_path_string()
 
                 # 处理路径中存在*的情况
                 if sp.endswith(",*/"):
@@ -765,7 +801,7 @@ class ActionScopeDiffer:
 
         for i in template_instances:
             for p in i.path:
-                path = PathNodeBeanList(p).to_path_string()
+                path = p.to_path_string()
                 for sp in scope_paths:
                     if path.startswith(sp):
                         break

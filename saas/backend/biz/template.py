@@ -31,6 +31,7 @@ from backend.biz.policy import (
     PolicyBean,
     PolicyBeanList,
     RelatedResourceBean,
+    ResourceGroupBean,
     ThinAction,
     group_paths,
 )
@@ -41,6 +42,7 @@ from backend.service.action import ActionList, ActionService
 from backend.service.constants import RoleRelatedObjectType, SubjectType, TemplatePreUpdateStatus
 from backend.service.models import Action, ChainNode, Policy, Subject
 from backend.service.template import TemplateGroupPreCommit, TemplateService
+from backend.util.uuid import gen_uuid
 
 
 class TemplateCreateBean(BaseModel):
@@ -83,6 +85,7 @@ class TemplateNameDictBean(BaseModel):
 
 class TemplateBiz:
     svc = TemplateService()
+    action_svc = ActionService()
 
     def create(self, role_id: int, info: TemplateCreateBean, creator: str) -> PermTemplate:
         """
@@ -123,7 +126,13 @@ class TemplateBiz:
         """
         权限模板增加成员
         """
-        self.svc.grant_subject(system_id, template_id, subject, parse_obj_as(List[Policy], policies))
+        self.svc.grant_subject(
+            system_id,
+            template_id,
+            subject,
+            parse_obj_as(List[Policy], policies),
+            action_list=self.action_svc.new_action_list(system_id),
+        )
 
     def filter_not_auth_subjects(self, template_id, subjects: List[Subject]) -> List[Subject]:
         """
@@ -476,20 +485,29 @@ class TemplatePolicyCloneBiz:
         """
         生成clone的policy
         """
+        if len(source_policy.list_thin_resource_type()) != 1:
+            return None
+
         match_paths = []  # 能匹配实例视图前缀的资源路径
         match_path_hash_set = set()  # 用于去重
-        for path_list in source_policy.related_resource_types[0].iter_path_list():
-            for chain in chain_list.chains:
-                if not chain.is_match_path(path_list.nodes):
-                    continue
 
-                _hash = path_list.to_path_string()
-                if _hash in match_path_hash_set:
+        for rg in source_policy.resource_groups:
+            # NOTE 有环境属性的资源组不能生成
+            if len(rg.environments) != 0:
+                continue
+
+            for path_list in rg.related_resource_types[0].iter_path_list():
+                for chain in chain_list.chains:
+                    if not chain.is_match_path(list(path_list)):
+                        continue
+
+                    _hash = path_list.to_path_string()
+                    if _hash in match_path_hash_set:
+                        break
+
+                    match_path_hash_set.add(_hash)
+                    match_paths.append(list(path_list))
                     break
-
-                match_path_hash_set.add(_hash)
-                match_paths.append(path_list.nodes)
-                break
 
         if not match_paths:
             return None
@@ -511,7 +529,10 @@ class TemplatePolicyCloneBiz:
             RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
             for rrt in action.related_resource_types
         ]
-        return PolicyBean(action_id=action.id, related_resource_types=related_resource_types)
+        return PolicyBean(
+            action_id=action.id,
+            resource_groups=[ResourceGroupBean(id=gen_uuid(), related_resource_types=related_resource_types)],
+        )
 
     def gen_system_action_clone_config(
         self, system_id: str, new_action_ids: List[str], old_action_ids: List[str]

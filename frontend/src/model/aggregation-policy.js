@@ -24,77 +24,77 @@
  * IN THE SOFTWARE.
 */
 
-import _ from 'lodash'
-import il8n from '@/language'
-import { DURATION_LIST } from '@/common/constants'
+import _ from 'lodash';
+import il8n from '@/language';
+import { DURATION_LIST } from '@/common/constants';
 export default class AggregationPolicy {
     constructor (payload) {
-        this.isError = false
-        this.actions = payload.actions || []
-        this.aggregateResourceType = payload.aggregate_resource_type || {}
-        this.instances = payload.instances || []
-        this.isAggregate = true
-        this.expired_display = payload.expired_display || ''
-        this.isShowCustom = false
-        this.customValue = ''
-        this.tag = payload.tag || 'add'
-        this.canPaste = false
-        this.instancesBackup = _.cloneDeep(this.instances)
-        this.initExpiredAt(payload)
+        this.isError = false;
+        this.actions = payload.actions || [];
+        this.aggregateResourceType = payload.aggregate_resource_type || {};
+        this.instances = payload.instances || [];
+        this.isAggregate = true;
+        this.expired_display = payload.expired_display || '';
+        this.isShowCustom = false;
+        this.customValue = '';
+        this.tag = payload.tag || 'add';
+        this.canPaste = false;
+        this.instancesBackup = _.cloneDeep(this.instances);
+        this.initExpiredAt(payload);
     }
 
     initExpiredAt (payload) {
         if (!payload.hasOwnProperty('expired_at')) {
-            this.expired_at = 15552000
-            return
+            this.expired_at = 15552000;
+            return;
         }
-        this.expired_at = payload.expired_at
+        this.expired_at = payload.expired_at;
     }
 
     get empty () {
-        return this.instances.length < 1
+        return this.instances.length < 1;
     }
 
     get value () {
         if (this.empty) {
-            return il8n('verify', '请选择')
+            return il8n('verify', '请选择');
         }
-        return this.instances.map(item => item.name).join('；')
+        return this.instances.map(item => item.name).join('；');
     }
 
     get name () {
         if (this.actions.length < 1) {
-            return ''
+            return '';
         }
-        return this.actions.map(item => item.name).join('，')
+        return this.actions.map(item => item.name).join('，');
     }
 
     get key () {
         if (this.actions.length < 1) {
-            return ''
+            return '';
         }
-        return this.actions.map(item => item.id).join('')
+        return this.actions.map(item => item.id).join('');
     }
 
     get isCustomExpiredAt () {
         if (DURATION_LIST.includes(this.expired_at)) {
-            return false
+            return false;
         }
-        return true
+        return true;
     }
 
     get expiredAtPlaceholder () {
         if (DURATION_LIST.includes(this.expired_at)) {
-            return il8n('verify', '请选择')
+            return il8n('verify', '请选择');
         }
-        return this.expired_display
+        return this.expired_display;
     }
 
     get isNew () {
-        return this.tag === 'add'
+        return this.tag === 'add';
     }
 
     get isExpiredAtDisabled () {
-        return this.tag === 'unchanged'
+        return this.tag === 'unchanged';
     }
 }

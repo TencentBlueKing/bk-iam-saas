@@ -31,6 +31,7 @@ from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
+from backend.service.action import ActionService
 from backend.service.constants import RoleRelatedObjectType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
@@ -43,7 +44,7 @@ from backend.service.template import TemplateService
 from backend.util.time import utc_string_to_local
 from backend.util.uuid import gen_uuid
 
-from .action import ActionCheckBiz, ActionForCheck
+from .action import ActionCheckBiz, ActionResourceGroupForCheck
 from .subject import SubjectInfoList
 
 
@@ -115,6 +116,7 @@ class GroupBiz:
     group_attribute_svc = GroupAttributeService()
     engine_svc = EngineService()
     role_svc = RoleService()
+    action_svc = ActionService()
 
     # TODO 这里为什么是biz?
     action_check_biz = ActionCheckBiz()
@@ -222,20 +224,24 @@ class GroupBiz:
         # 检查新增的实例名字, 检查新增的实例是否满足角色的授权范围
         self.check_update_policies_resource_name_and_role_scope(role, system_id, template_id, policies, subject)
         # 检查策略是否与操作信息匹配
-        self.action_check_biz.check(system_id, [ActionForCheck.parse_obj(p.dict()) for p in policies])
+        self.action_check_biz.check_action_resource_group(
+            system_id, [ActionResourceGroupForCheck.parse_obj(p.dict()) for p in policies]
+        )
 
-        policy_list = PolicyBeanList(system_id, policies, need_ignore_path=True)
         # 设置过期时间为永久
-        for p in policy_list.policies:
+        for p in policies:
             p.set_expired_at(PERMANENT_SECONDS)
 
         # 自定义权限
         if template_id == 0:
-            self.policy_operation_biz.update(system_id, subject, policy_list.policies)
+            self.policy_operation_biz.update(system_id, subject, policies)
         # 权限模板权限
         else:
             self.template_svc.update_template_auth(
-                subject, template_id, parse_obj_as(List[Policy], policy_list.policies)
+                subject,
+                template_id,
+                parse_obj_as(List[Policy], policies),
+                action_list=self.action_svc.new_action_list(system_id),
             )
 
     def update_template_due_to_renamed_resource(

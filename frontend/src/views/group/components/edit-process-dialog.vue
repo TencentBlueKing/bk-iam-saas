@@ -65,42 +65,42 @@
                         process_name: '测试审批流程'
                     }
                 ]
-            }
+            };
         },
         computed: {
             disbaled () {
-                return this.curProcessValue === ''
+                return this.curProcessValue === '';
             }
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             },
             procssValue: {
                 handler (value) {
-                    this.curProcessValue = value
+                    this.curProcessValue = value;
                 },
                 immediate: true
             }
         },
         methods: {
             handleSumbitEdit () {
-                this.$emit('on-sumbit', this.curProcessValue)
+                this.$emit('on-sumbit', this.curProcessValue);
             },
 
             hideCancelEdit () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             },
 
             handleAfterEditLeave () {
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-edit-process-dialog {}

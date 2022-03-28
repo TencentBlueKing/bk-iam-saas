@@ -1,5 +1,6 @@
 logs
 .idea
+.envrc
 build.yml
 .codecc/
 .vscode/

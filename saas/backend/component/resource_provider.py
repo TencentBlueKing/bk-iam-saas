@@ -171,7 +171,7 @@ class ResourceProviderClient:
                 status=resp.status_code,
             ).observe(latency)
         except requests.exceptions.RequestException as e:
-            logger.exception(f"RequestException! {base_log_msg} ")
+            logger.exception(f"RequestException! {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 接口不可达
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
@@ -192,7 +192,7 @@ class ResourceProviderClient:
                 f"{request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
-            logger.error(f"RespDataException response_content: {resp.text}， error: {error}. {base_log_msg}")
+            logger.exception(f"ResponseDataException! response_content: {resp.text}， error: {error}. {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 数据异常，JSON解析出错
             raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(
@@ -204,7 +204,7 @@ class ResourceProviderClient:
             # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
             return resp["data"]
 
-        logger.error(f"Return Code Not Zero, resp: %s. {base_log_msg} ", resp)
+        logger.error(f"Return Code Not Zero! response_content: {resp}. {base_log_msg}")
 
         # code不同值代表不同意思，401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
         if code not in ResponseCodeToErrorDict:

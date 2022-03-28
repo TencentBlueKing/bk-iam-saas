@@ -16,27 +16,27 @@
     export default {
         name: 'app-auth',
         data () {
-            const loginCallbackURL = window.SITE_URL + 'static/login_success.html?is_ajax=1'
-            const iframeSrc = `${window.LOGIN_SERVICE_URL}/?app_code=1&c_url=${loginCallbackURL}`
+            const loginCallbackURL = window.SITE_URL + 'static/login_success.html?is_ajax=1';
+            const iframeSrc = `${window.LOGIN_SERVICE_URL}/?app_code=1&c_url=${loginCallbackURL}`;
             return {
                 iframeSrc: iframeSrc,
                 isShow: false
-            }
+            };
         },
         methods: {
             hideLoginModal () {
-                this.isShow = false
+                this.isShow = false;
             },
 
             showLoginModal (iframeSrc) {
-                const ver = +new Date()
-                this.iframeSrc = iframeSrc + '&ver=' + ver
+                const ver = +new Date();
+                this.iframeSrc = iframeSrc + '&ver=' + ver;
                 setTimeout(() => {
-                    this.isShow = true
-                }, 1000)
+                    this.isShow = true;
+                }, 1000);
             }
         }
-    }
+    };
 </script>
 
 <style scoped>

@@ -196,21 +196,21 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex';
 
-    import { leavePageConfirm } from '@/common/leave-page-confirm'
-    import iamCascade from '@/components/cascade'
-    import RenderAction from '../common/render-action'
-    import BasicInfo from './basic-info'
-    import PopContent from '../common/pop-content'
+    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    import iamCascade from '@/components/cascade';
+    import RenderAction from '../common/render-action';
+    import BasicInfo from './basic-info';
+    import PopContent from '../common/pop-content';
 
-    import ResourceTypeSideslider from './resource-type-sideslider'
-    import InstanceSelectionSideslider from './instance-selection-sideslider'
+    import ResourceTypeSideslider from './resource-type-sideslider';
+    import InstanceSelectionSideslider from './instance-selection-sideslider';
 
-    import beforeStepChangedMixin from '../common/before-stepchange'
+    import beforeStepChangedMixin from '../common/before-stepchange';
 
-    import resourceImage from '@/images/resource-type.png'
-    import operationImage from '@/images/operation.png'
+    import resourceImage from '@/images/resource-type.png';
+    import operationImage from '@/images/operation.png';
 
     const getDefaultActionData = () => ({
         id: '',
@@ -242,7 +242,7 @@
         // 添加了还未保存的
         isNewAdd: true,
         title: ''
-    })
+    });
 
     export default {
         name: '',
@@ -288,12 +288,12 @@
                 },
                 resourceImage,
                 operationImage
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
             modelingId () {
-                return this.$route.params.id
+                return this.$route.params.id;
             }
         },
         watch: {
@@ -301,20 +301,20 @@
                 const relatedActionList = v.filter(item => !item.isNewAdd).map(item => {
                     return {
                         id: item.id, name: item.name
-                    }
-                })
+                    };
+                });
 
-                this.relatedActionList.splice(0, this.relatedActionList.length, ...relatedActionList)
+                this.relatedActionList.splice(0, this.relatedActionList.length, ...relatedActionList);
             }
         },
         mounted () {
-            const stepNode = this.$refs.systemAccessStep.$el
+            const stepNode = this.$refs.systemAccessStep.$el;
             if (stepNode) {
-                const children = Array.from(stepNode.querySelectorAll('.bk-step') || [])
+                const children = Array.from(stepNode.querySelectorAll('.bk-step') || []);
                 children.forEach(child => {
-                    child.classList.remove('current')
-                })
-                children[1].classList.add('current')
+                    child.classList.remove('current');
+                });
+                children[1].classList.add('current');
             }
         },
         methods: {
@@ -326,18 +326,18 @@
                     if (value) {
                         // 通过拓扑选择 多选框已选中
                         if (row.selection_mode === 'instance') {
-                            row.selection_mode = 'all'
+                            row.selection_mode = 'all';
                         } else if (row.selection_mode === '') {
-                            row.selection_mode = 'attribute'
+                            row.selection_mode = 'attribute';
                         } else {
-                            row.selection_mode = ''
+                            row.selection_mode = '';
                         }
                     } else {
                         // 通过拓扑选择 多选框已选中
                         if (row.selection_mode === 'all') {
-                            row.selection_mode = 'instance'
+                            row.selection_mode = 'instance';
                         } else {
-                            row.selection_mode = ''
+                            row.selection_mode = '';
                         }
                     }
                 }
@@ -347,18 +347,18 @@
                     if (value) {
                         // 通过属性选择 多选框已选中
                         if (row.selection_mode === 'attribute') {
-                            row.selection_mode = 'all'
+                            row.selection_mode = 'all';
                         } else if (row.selection_mode === '') {
-                            row.selection_mode = 'instance'
+                            row.selection_mode = 'instance';
                         } else {
-                            row.selection_mode = ''
+                            row.selection_mode = '';
                         }
                     } else {
                         // 通过拓扑选择 多选框已选中
                         if (row.selection_mode === 'all') {
-                            row.selection_mode = 'attribute'
+                            row.selection_mode = 'attribute';
                         } else {
-                            row.selection_mode = ''
+                            row.selection_mode = '';
                         }
                     }
                 }
@@ -368,59 +368,59 @@
                     this.fetchSystemList('all'),
                     // this.fetchModeling()
                     this.fetchActionList()
-                ])
+                ]);
             },
 
             async fetchSystemList (type) {
                 try {
                     const res = await this.$store.dispatch('access/getSystemList', {
                         id: this.modelingId
-                    })
-                    const systemListResourceType = []
-                    const systemListInstanceSelections = []
-                    const list = res.data || []
+                    });
+                    const systemListResourceType = [];
+                    const systemListInstanceSelections = [];
+                    const list = res.data || [];
                     list.forEach(item => {
-                        const id = item[0]
-                        const sysResourceType = this.systemListResourceType.find(s => s.id === id)
-                        const sysInstanceSelections = this.systemListInstanceSelections.find(s => s.id === id)
+                        const id = item[0];
+                        const sysResourceType = this.systemListResourceType.find(s => s.id === id);
+                        const sysInstanceSelections = this.systemListInstanceSelections.find(s => s.id === id);
                         const obj = {
                             id: item[0],
                             name: item[1],
                             // TODO: cascade/caspanel.vue 的 handleItemFn 使用。目的是不允许选中第一层节点中没有子层级的节点，暂时先这么实现
                             parent: true
-                        }
+                        };
                         if (type === 'all' || type === 'resourceType') {
                             if (sysResourceType && sysResourceType.children) {
-                                obj.children = sysResourceType.children
+                                obj.children = sysResourceType.children;
                             }
-                            systemListResourceType.push(obj)
+                            systemListResourceType.push(obj);
                         }
                         if (type === 'all' || type === 'instanceSelection') {
                             if (sysInstanceSelections && sysInstanceSelections.children) {
-                                obj.children = sysInstanceSelections.children
+                                obj.children = sysInstanceSelections.children;
                             }
-                            systemListInstanceSelections.push(obj)
+                            systemListInstanceSelections.push(obj);
                         }
-                    })
+                    });
                     if (type === 'all' || type === 'resourceType') {
                         this.systemListResourceType.splice(
                             0,
                             this.systemListResourceType.length,
                             ...systemListResourceType
-                        )
+                        );
                     }
                     if (type === 'all' || type === 'instanceSelection') {
-                        this.systemListInstanceSelections = JSON.parse(JSON.stringify(systemListInstanceSelections))
+                        this.systemListInstanceSelections = JSON.parse(JSON.stringify(systemListInstanceSelections));
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -431,27 +431,27 @@
                         data: {
                             type: 'action'
                         }
-                    })
-                    const actionList = []
-                    actionList.splice(0, 0, ...(resModeling.data || []))
+                    });
+                    const actionList = [];
+                    actionList.splice(0, 0, ...(resModeling.data || []));
 
-                    const preloadResourceTypeListBySys = []
-                    const preloadResourceTypeListBySysParams = []
+                    const preloadResourceTypeListBySys = [];
+                    const preloadResourceTypeListBySysParams = [];
 
-                    const preloadInstanceSelectionsBySys = []
-                    const preloadInstanceSelectionsBySysParams = []
+                    const preloadInstanceSelectionsBySys = [];
+                    const preloadInstanceSelectionsBySysParams = [];
 
                     if (!actionList.length) {
-                        actionList.push(getDefaultActionData())
+                        actionList.push(getDefaultActionData());
                     } else {
                         actionList.forEach(item => {
-                            item.title = item.name
-                            item.isEdit = false
-                            item.isExpand = false
-                            item.loading = false
-                            item.isNewAdd = false
+                            item.title = item.name;
+                            item.isEdit = false;
+                            item.isExpand = false;
+                            item.loading = false;
+                            item.isNewAdd = false;
                             if (!item.related_resource_types || !item.related_resource_types.length) {
-                                item.isExpandAdvanced = false
+                                item.isExpandAdvanced = false;
                                 item.related_resource_types = [
                                     {
                                         resourceTypeCascadeValue: [],
@@ -466,9 +466,9 @@
                                             }
                                         ]
                                     }
-                                ]
+                                ];
                             } else {
-                                item.isExpandAdvanced = true
+                                item.isExpandAdvanced = true;
                                 item.related_resource_types.forEach(c => {
                                     if (!c.related_instance_selections) {
                                         c.related_instance_selections = [
@@ -477,83 +477,83 @@
                                                 id: '',
                                                 system_id: ''
                                             }
-                                        ]
+                                        ];
                                     } else {
                                         c.related_instance_selections.forEach(is => {
-                                            is.instanceSelectionsCascadeValue = [is.system_id, is.id]
-                                            preloadInstanceSelectionsBySysParams.push(is.system_id)
+                                            is.instanceSelectionsCascadeValue = [is.system_id, is.id];
+                                            preloadInstanceSelectionsBySysParams.push(is.system_id);
                                             preloadInstanceSelectionsBySys.push(this.$store.dispatch('access/getInstanceSelectionsListBySystem', {
                                                 id: this.modelingId,
                                                 data: {
                                                     system_id: is.system_id
                                                 }
-                                            }))
-                                        })
+                                            }));
+                                        });
                                     }
 
-                                    c.resourceTypeCascadeValue = [c.system_id, c.id]
+                                    c.resourceTypeCascadeValue = [c.system_id, c.id];
 
                                     // preloadResourceTypeListBySysParams 和 preloadResourceTypeListBySys 的顺序是一致的
-                                    preloadResourceTypeListBySysParams.push(c.system_id)
+                                    preloadResourceTypeListBySysParams.push(c.system_id);
                                     preloadResourceTypeListBySys.push(this.$store.dispatch('access/getResourceTypeListBySystem', {
                                         id: this.modelingId,
                                         data: {
                                             system_id: c.system_id
                                         }
-                                    }))
-                                })
+                                    }));
+                                });
                             }
-                        })
+                        });
                         if (preloadResourceTypeListBySys.length) {
-                            const resArr = await Promise.all(preloadResourceTypeListBySys)
+                            const resArr = await Promise.all(preloadResourceTypeListBySys);
                             resArr.forEach((res, index) => {
                                 const curSysData = this.systemListResourceType.find(
                                     sys => sys.id === preloadResourceTypeListBySysParams[index]
-                                )
+                                );
                                 if (curSysData) {
                                     curSysData.children = [];
                                     (res.data || []).forEach(d => {
                                         curSysData.children.push({
                                             ...d,
                                             isLoading: false
-                                        })
-                                    })
+                                        });
+                                    });
                                 }
-                            })
+                            });
                         }
                         if (preloadInstanceSelectionsBySys.length) {
-                            const resArr = await Promise.all(preloadInstanceSelectionsBySys)
+                            const resArr = await Promise.all(preloadInstanceSelectionsBySys);
                             resArr.forEach((res, index) => {
                                 const curSysData = this.systemListInstanceSelections.find(
                                     sys => sys.id === preloadInstanceSelectionsBySysParams[index]
-                                )
+                                );
                                 const curSysDataIndex = this.systemListInstanceSelections.findIndex(
                                     sys => sys.id === preloadInstanceSelectionsBySysParams[index]
-                                )
+                                );
                                 if (curSysData) {
                                     curSysData.children = [];
                                     (res.data || []).forEach(d => {
                                         curSysData.children.push({
                                             ...d,
                                             isLoading: false
-                                        })
-                                    })
-                                    this.$set(this.systemListInstanceSelections, curSysDataIndex, curSysData)
+                                        });
+                                    });
+                                    this.$set(this.systemListInstanceSelections, curSysDataIndex, curSysData);
                                 }
-                            })
+                            });
                         }
                     }
-                    this.actionList.splice(0, this.actionList.length, ...actionList)
-                    this.actionListBackup = JSON.parse(JSON.stringify(actionList))
+                    this.actionList.splice(0, this.actionList.length, ...actionList);
+                    this.actionListBackup = JSON.parse(JSON.stringify(actionList));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -573,59 +573,59 @@
             // },
 
             renderHeader (h, data) {
-                return <span class="related-instance-selections-header-cell">{ data.column.label }</span>
+                return <span class="related-instance-selections-header-cell">{ data.column.label }</span>;
             },
 
             handleResourceTypeChange (row, newValue, oldValue, selectList) {
-                row.system_id = row.resourceTypeCascadeValue[0]
+                row.system_id = row.resourceTypeCascadeValue[0];
                 // 只有一层的情况
-                row.id = row.resourceTypeCascadeValue[1] || row.resourceTypeCascadeValue[0]
+                row.id = row.resourceTypeCascadeValue[1] || row.resourceTypeCascadeValue[0];
             },
 
             handleInstanceSelectionsChange (resourceTypeRow, instanceSelectionRow, newValue, oldValue, selectList) {
-                instanceSelectionRow.system_id = instanceSelectionRow.instanceSelectionsCascadeValue[0]
+                instanceSelectionRow.system_id = instanceSelectionRow.instanceSelectionsCascadeValue[0];
                 // 只有一层的情况
                 instanceSelectionRow.id = instanceSelectionRow.instanceSelectionsCascadeValue[1]
-                    || instanceSelectionRow.instanceSelectionsCascadeValue[0]
+                    || instanceSelectionRow.instanceSelectionsCascadeValue[0];
             },
 
             /**
              * 显示添加资源类型侧边栏
              */
             showAddResourceType () {
-                this.isShowAddResourceTypeSideslider = true
+                this.isShowAddResourceTypeSideslider = true;
             },
 
             /**
              * 隐藏添加资源类型侧边栏
              */
             hideAddResourceType () {
-                this.isShowAddResourceTypeSideslider = false
+                this.isShowAddResourceTypeSideslider = false;
             },
 
             /**
              * 显示添加实例视图侧边栏
              */
             showAddInstanceSelection () {
-                this.isShowAddInstanceSelectionSideslider = true
+                this.isShowAddInstanceSelectionSideslider = true;
             },
 
             /**
              * 隐藏添加实例视图侧边栏
              */
             hideAddInstanceSelection () {
-                this.isShowAddInstanceSelectionSideslider = false
+                this.isShowAddInstanceSelectionSideslider = false;
             },
 
             /**
              * 新增操作
              */
             addAction () {
-                const actionList = []
-                actionList.splice(0, 0, ...this.actionList)
-                actionList.push(getDefaultActionData())
-                this.actionList.splice(0, this.actionList.length, ...actionList)
-                this.actionListBackup = JSON.parse(JSON.stringify(actionList))
+                const actionList = [];
+                actionList.splice(0, 0, ...this.actionList);
+                actionList.push(getDefaultActionData());
+                this.actionList.splice(0, this.actionList.length, ...actionList);
+                this.actionListBackup = JSON.parse(JSON.stringify(actionList));
             },
 
             /**
@@ -633,9 +633,9 @@
              */
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (columnIndex === 1) {
-                    return 'registry-action-table-cell-cls'
+                    return 'registry-action-table-cell-cls';
                 }
-                return ''
+                return '';
             },
 
             /**
@@ -643,14 +643,14 @@
              */
             delRelatedInstanceSelections (curAction, row, index) {
                 if (!curAction.isEdit) {
-                    return
+                    return;
                 }
 
-                const relatedInstanceSelections = []
-                relatedInstanceSelections.splice(0, 0, ...row.related_instance_selections)
-                relatedInstanceSelections.splice(index, 1)
+                const relatedInstanceSelections = [];
+                relatedInstanceSelections.splice(0, 0, ...row.related_instance_selections);
+                relatedInstanceSelections.splice(index, 1);
 
-                row.related_instance_selections = JSON.parse(JSON.stringify(relatedInstanceSelections))
+                row.related_instance_selections = JSON.parse(JSON.stringify(relatedInstanceSelections));
             },
 
             /**
@@ -658,9 +658,9 @@
              */
             addRelatedInstanceSelections (curAction, row) {
                 if (!curAction.isEdit) {
-                    return
+                    return;
                 }
-                row.related_instance_selections.push({ instanceSelectionsCascadeValue: [], id: '', system_id: '' })
+                row.related_instance_selections.push({ instanceSelectionsCascadeValue: [], id: '', system_id: '' });
             },
 
             /**
@@ -668,47 +668,47 @@
              */
             async fetchResourceTypeListBySystem (sys, resolve) {
                 if (sys.isLoading === false) {
-                    resolve(sys)
-                    return
+                    resolve(sys);
+                    return;
                 }
-                this.$set(sys, 'isLoading', true)
+                this.$set(sys, 'isLoading', true);
                 try {
                     const res = await this.$store.dispatch('access/getResourceTypeListBySystem', {
                         id: this.modelingId,
                         data: {
                             system_id: sys.id
                         }
-                    })
-                    const list = []
+                    });
+                    const list = [];
                     res.data.forEach(item => {
                         list.push({
                             ...item,
                             isLoading: false
-                        })
-                    })
-                    sys.children = list
-                    resolve(sys)
+                        });
+                    });
+                    sys.children = list;
+                    resolve(sys);
 
-                    const systemListResourceType = []
-                    systemListResourceType.splice(0, 0, ...this.systemListResourceType)
-                    const curSys = systemListResourceType.find(item => item.id === sys.id)
+                    const systemListResourceType = [];
+                    systemListResourceType.splice(0, 0, ...this.systemListResourceType);
+                    const curSys = systemListResourceType.find(item => item.id === sys.id);
                     if (curSys) {
-                        curSys.children = list
+                        curSys.children = list;
                         this.systemListResourceType.splice(
                             0,
                             this.systemListResourceType.length,
                             ...systemListResourceType
-                        )
+                        );
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -717,47 +717,47 @@
              */
             async fetchInstanceSelectionsListBySystem (sys, resolve) {
                 if (sys.isLoading === false) {
-                    resolve(sys)
-                    return
+                    resolve(sys);
+                    return;
                 }
-                this.$set(sys, 'isLoading', true)
+                this.$set(sys, 'isLoading', true);
                 try {
                     const res = await this.$store.dispatch('access/getInstanceSelectionsListBySystem', {
                         id: this.modelingId,
                         data: {
                             system_id: sys.id
                         }
-                    })
-                    const list = []
+                    });
+                    const list = [];
                     res.data.forEach(item => {
                         list.push({
                             ...item,
                             isLoading: false
-                        })
-                    })
-                    sys.children = list
-                    resolve(sys)
+                        });
+                    });
+                    sys.children = list;
+                    resolve(sys);
 
-                    const systemListInstanceSelections = []
-                    systemListInstanceSelections.splice(0, 0, ...this.systemListInstanceSelections)
-                    const curSys = systemListInstanceSelections.find(item => item.id === sys.id)
+                    const systemListInstanceSelections = [];
+                    systemListInstanceSelections.splice(0, 0, ...this.systemListInstanceSelections);
+                    const curSys = systemListInstanceSelections.find(item => item.id === sys.id);
                     if (curSys) {
-                        curSys.children = list
+                        curSys.children = list;
                         this.systemListInstanceSelections.splice(
                             0,
                             this.systemListInstanceSelections.length,
                             ...systemListInstanceSelections
-                        )
+                        );
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -765,28 +765,28 @@
              * handleExpanded
              */
             handleExpanded (item) {
-                item.isExpand = !item.isExpand
+                item.isExpand = !item.isExpand;
             },
 
             /**
              * handleBasicInfoChange
              */
             handleBasicInfoChange (value, item, index) {
-                window.changeDialog = true
-                item.id = value.id
-                item.name = value.name
-                item.name_en = value.name_en
-                item.type = value.type
-                item.description = value.description
-                item.description_en = value.description_en
+                window.changeDialog = true;
+                item.id = value.id;
+                item.name = value.name;
+                item.name_en = value.name_en;
+                item.type = value.type;
+                item.description = value.description;
+                item.description_en = value.description_en;
             },
 
             /**
              * addRelatedResource
              */
             addRelatedResource (item) {
-                const relatedResourceTypes = []
-                relatedResourceTypes.splice(0, 0, ...item.related_resource_types)
+                const relatedResourceTypes = [];
+                relatedResourceTypes.splice(0, 0, ...item.related_resource_types);
                 relatedResourceTypes.push({
                     resourceTypeCascadeValue: [],
                     id: '',
@@ -800,8 +800,8 @@
                         }
                     ],
                     instanceSelectionsCascadeValue: []
-                })
-                item.related_resource_types.splice(0, item.related_resource_types.length, ...relatedResourceTypes)
+                });
+                item.related_resource_types.splice(0, item.related_resource_types.length, ...relatedResourceTypes);
             },
 
             /**
@@ -809,80 +809,80 @@
              */
             delRelatedRelatedResource (item, isItemIndex, event) {
                 if (!item.isEdit) {
-                    return
+                    return;
                 }
-                isItemIndex = event.currentTarget.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute('data-table-row').split('-')[1]
-                const relatedResourceTypes = []
-                relatedResourceTypes.splice(0, 0, ...item.related_resource_types)
-                relatedResourceTypes.splice(isItemIndex, 1)
-                item.related_resource_types = JSON.parse(JSON.stringify(relatedResourceTypes))
+                isItemIndex = event.currentTarget.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute('data-table-row').split('-')[1];
+                const relatedResourceTypes = [];
+                relatedResourceTypes.splice(0, 0, ...item.related_resource_types);
+                relatedResourceTypes.splice(isItemIndex, 1);
+                item.related_resource_types = JSON.parse(JSON.stringify(relatedResourceTypes));
             },
 
             /**
              * saveAction
              */
             async saveAction (item, index) {
-                const formComp = this.$refs[`basicInfoRef${index}`]
-                console.log(formComp)
+                const formComp = this.$refs[`basicInfoRef${index}`];
+                console.log(formComp);
                 if (formComp && formComp[0]) {
                     try {
-                        await formComp[0].handleValidator()
+                        await formComp[0].handleValidator();
                     } catch (e) {
-                        this.scrollToLocation(this.$refs[`basicInfoContentRef${index}`][0])
-                        return
+                        this.scrollToLocation(this.$refs[`basicInfoContentRef${index}`][0]);
+                        return;
                     }
                     
                     // 依赖实例时才需要校验
                     if (item.related_resource_types.filter(t => t.selection_mode && !t.id).length) {
-                        this.messageError(this.$t(`m.access['资源实例选择方式至少选择一个']`), 1000)
-                        return
+                        this.messageError(this.$t(`m.access['资源实例选择方式至少选择一个']`), 1000);
+                        return;
                     }
 
-                    const instanceSelectionModeList = ['all', 'instance']
+                    const instanceSelectionModeList = ['all', 'instance'];
 
                     // 通过拓扑选择，但是没有选择实例视图的判断
                     // 选择实例视图组件在清空时，数组还是有数据的，所以用 system_id 来判断
                     const invalidLength = item.related_resource_types.filter(t =>
                         (instanceSelectionModeList.indexOf(t.selection_mode) > -1)
                         && (t.related_instance_selections.filter(is => !is.system_id).length)
-                    ).length
+                    ).length;
 
                     if (invalidLength) {
-                        this.messageError(this.$t(`m.access['通过拓扑选择时必须要选择实例视图']`), 1000)
-                        return
+                        this.messageError(this.$t(`m.access['通过拓扑选择时必须要选择实例视图']`), 1000);
+                        return;
                     }
 
-                    const relatedResourceTypes = []
+                    const relatedResourceTypes = [];
                     item.related_resource_types.forEach(t => {
                         if (t.system_id && t.id) {
                             const obj = {
                                 system_id: t.system_id,
                                 id: t.id,
                                 selection_mode: t.selection_mode
-                            }
+                            };
                             if (instanceSelectionModeList.indexOf(t.selection_mode) > -1) {
                                 if (t.related_instance_selections && t.related_instance_selections.length) {
-                                    obj.related_instance_selections = []
+                                    obj.related_instance_selections = [];
                                     t.related_instance_selections.forEach(is => {
                                         obj.related_instance_selections.push({
                                             system_id: is.system_id,
                                             id: is.id
-                                        })
-                                    })
+                                        });
+                                    });
                                 }
                             } else {
                                 t.related_instance_selections = [{
                                     instanceSelectionsCascadeValue: [],
                                     id: '',
                                     system_id: ''
-                                }]
+                                }];
                             }
-                            relatedResourceTypes.push(obj)
+                            relatedResourceTypes.push(obj);
                         }
-                    })
+                    });
 
                     try {
-                        item.loading = true
+                        item.loading = true;
                         await this.$store.dispatch('access/updateModeling', {
                             id: this.modelingId,
                             data: {
@@ -898,20 +898,20 @@
                                     related_actions: item.related_actions || []
                                 }
                             }
-                        })
-                        item.title = item.name
-                        item.isEdit = false
-                        item.isNewAdd = false
-                        this.messageSuccess(this.$t(`m.access['保存操作成功']`), 1000)
+                        });
+                        item.title = item.name;
+                        item.isEdit = false;
+                        item.isNewAdd = false;
+                        this.messageSuccess(this.$t(`m.access['保存操作成功']`), 1000);
                     } catch (e) {
-                        console.error(e)
+                        console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
                             message: e.message || e.data.msg || e.statusText
-                        })
+                        });
                     } finally {
-                        item.loading = false
+                        item.loading = false;
                     }
                 }
             },
@@ -920,27 +920,27 @@
              * cancelEdit
              */
             cancelEdit (index) {
-                const formComp = this.$refs[`basicInfoRef${index}`]
+                const formComp = this.$refs[`basicInfoRef${index}`];
                 if (formComp && formComp[0]) {
-                    formComp[0].resetError()
+                    formComp[0].resetError();
                 }
-                const curItem = this.actionList[index]
+                const curItem = this.actionList[index];
                 // 如果是未保存过的，那么取消的时候直接删除
                 if (curItem.isNewAdd) {
-                    const actionList = []
-                    actionList.splice(0, 0, ...this.actionList)
-                    actionList.splice(index, 1)
-                    this.actionList.splice(0, this.actionList.length, ...actionList)
+                    const actionList = [];
+                    actionList.splice(0, 0, ...this.actionList);
+                    actionList.splice(index, 1);
+                    this.actionList.splice(0, this.actionList.length, ...actionList);
 
-                    this.actionListBackup = JSON.parse(JSON.stringify(actionList))
+                    this.actionListBackup = JSON.parse(JSON.stringify(actionList));
                 } else {
-                    const originalExpanded = curItem.isExpand
-                    const originalExpandedAdvanced = curItem.isExpandAdvanced
-                    const originalItem = Object.assign({}, this.actionListBackup[index])
-                    originalItem.isEdit = false
-                    originalItem.isExpand = originalExpanded
-                    originalItem.isExpandAdvanced = originalExpandedAdvanced
-                    this.$set(this.actionList, index, originalItem)
+                    const originalExpanded = curItem.isExpand;
+                    const originalExpandedAdvanced = curItem.isExpandAdvanced;
+                    const originalItem = Object.assign({}, this.actionListBackup[index]);
+                    originalItem.isEdit = false;
+                    originalItem.isExpand = originalExpanded;
+                    originalItem.isExpandAdvanced = originalExpandedAdvanced;
+                    this.$set(this.actionList, index, originalItem);
                 }
             },
 
@@ -952,8 +952,8 @@
                     name: 'bkTooltips',
                     content: item.name,
                     placement: 'right'
-                }
-                const me = this
+                };
+                const me = this;
                 me.$bkInfo({
                     title: this.$t(`m.access['确认删除下列操作？']`),
                     confirmLoading: true,
@@ -966,44 +966,44 @@
                     ),
                     confirmFn: async () => {
                         try {
-                            item.loading = true
+                            item.loading = true;
                             await me.$store.dispatch('access/deleteModeling', {
                                 id: me.modelingId,
                                 data: {
                                     id: item.id,
                                     type: 'action'
                                 }
-                            })
+                            });
 
-                            const actionList = []
-                            actionList.splice(0, 0, ...me.actionList)
-                            actionList.splice(index, 1)
-                            me.actionList.splice(0, me.actionList.length, ...actionList)
+                            const actionList = [];
+                            actionList.splice(0, 0, ...me.actionList);
+                            actionList.splice(index, 1);
+                            me.actionList.splice(0, me.actionList.length, ...actionList);
 
-                            me.messageSuccess(me.$t(`m.access['删除操作成功']`), 1000)
-                            return true
+                            me.messageSuccess(me.$t(`m.access['删除操作成功']`), 1000);
+                            return true;
                         } catch (e) {
-                            console.error(e)
+                            console.error(e);
                             me.bkMessageInstance = me.$bkMessage({
                                 limit: 1,
                                 theme: 'error',
                                 message: e.message || e.data.msg || e.statusText
-                            })
-                            return false
+                            });
+                            return false;
                         } finally {
-                            item.loading = false
+                            item.loading = false;
                             this.$router.push({
                                 name: 'systemAccessRegistry',
                                 params: {
                                     id: this.modelingId
                                 }
-                            })
+                            });
                             this.$nextTick(() => {
-                                me.actionListBackup = JSON.parse(JSON.stringify(me.actionList))
-                            })
+                                me.actionListBackup = JSON.parse(JSON.stringify(me.actionList));
+                            });
                         }
                     }
-                })
+                });
             },
 
             /**
@@ -1011,11 +1011,11 @@
              */
             async handleSubmit (routerName) {
                 if (!this.actionList.length) {
-                    this.messageError(this.$t(`m.access['至少要注册一个操作']`), 1000)
-                    return
+                    this.messageError(this.$t(`m.access['至少要注册一个操作']`), 1000);
+                    return;
                 }
 
-                const invalidItemList = this.actionList.filter(item => item.isEdit)
+                const invalidItemList = this.actionList.filter(item => item.isEdit);
                 if (invalidItemList.length) {
                     this.$bkInfo({
                         title: this.$t(`m.access['请先保存所有操作']`),
@@ -1027,20 +1027,20 @@
                                             name: 'bkTooltips',
                                             content: invalidItem.name,
                                             placement: 'right'
-                                        }
+                                        };
                                         return (
                                             <p>
                                                 <span title={ invalidItem.name } v-bk-tooltips={ directive }>
                                                     { invalidItem.name }
                                                 </span>
                                             </p>
-                                        )
+                                        );
                                     })
                                 }
                             </div>
                         )
-                    })
-                    return
+                    });
+                    return;
                 }
 
                 // console.log('actionList', this.actionList)
@@ -1052,26 +1052,26 @@
                     params: {
                         id: this.modelingId
                     }
-                })
+                });
             },
 
             /**
              * handlePrev
              */
             handlePrev () {
-                let cancelHandler = Promise.resolve()
+                let cancelHandler = Promise.resolve();
                 if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm()
+                    cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
                     this.$router.push({
                         name: 'systemAccessAccess',
                         params: this.$route.params
-                    })
-                }, _ => _)
+                    });
+                }, _ => _);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     @import './index.css';

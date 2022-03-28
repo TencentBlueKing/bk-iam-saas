@@ -70,9 +70,9 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue'
-    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider'
+    import { mapGetters } from 'vuex';
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
+    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
 
     export default {
         name: '',
@@ -84,7 +84,7 @@
             data: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -111,52 +111,52 @@
                 pageLoading: false,
                 tableLoading: false
 
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
         },
         async created () {
-            await this.fetchPermGroups(false, true)
+            await this.fetchPermGroups(false, true);
         },
         methods: {
             /**
              * handleAnimationEnd
              */
             handleAnimationEnd () {
-                this.curGroupName = ''
-                this.curGroupId = ''
-                this.isShowPermSidesilder = false
+                this.curGroupName = '';
+                this.curGroupId = '';
+                this.isShowPermSidesilder = false;
             },
 
             /**
              * fetchPermGroups
              */
             async fetchPermGroups (isTableLoading = false, isPageLoading = false) {
-                this.tableLoading = isTableLoading
-                this.pageLoading = isPageLoading
-                const { type } = this.data
+                this.tableLoading = isTableLoading;
+                this.pageLoading = isPageLoading;
+                const { type } = this.data;
                 try {
                     const res = await this.$store.dispatch('perm/getPermGroups', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id
-                    })
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []))
-                    this.initPageConf()
-                    this.curPageData = this.getDataByPage(this.pageConf.current)
+                    });
+                    this.dataList.splice(0, this.dataList.length, ...(res.data || []));
+                    this.initPageConf();
+                    this.curPageData = this.getDataByPage(this.pageConf.current);
                 } catch (e) {
-                    this.$emit('toggle-loading', false)
-                    console.error(e)
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
-                    this.pageLoading = false
+                    this.tableLoading = false;
+                    this.pageLoading = false;
                 }
             },
 
@@ -164,18 +164,18 @@
              * initPageConf
              */
             initPageConf () {
-                this.pageConf.current = 1
-                const total = this.dataList.length
-                this.pageConf.count = total
+                this.pageConf.current = 1;
+                const total = this.dataList.length;
+                this.pageConf.count = total;
             },
 
             /**
              * handlePageChange
              */
             handlePageChange (page = 1) {
-                this.pageConf.current = page
-                const data = this.getDataByPage(page)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
+                this.pageConf.current = page;
+                const data = this.getDataByPage(page);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             },
 
             /**
@@ -187,83 +187,83 @@
              */
             getDataByPage (page) {
                 if (!page) {
-                    this.pageConf.current = page = 1
+                    this.pageConf.current = page = 1;
                 }
-                let startIndex = (page - 1) * this.pageConf.limit
-                let endIndex = page * this.pageConf.limit
+                let startIndex = (page - 1) * this.pageConf.limit;
+                let endIndex = page * this.pageConf.limit;
                 if (startIndex < 0) {
-                    startIndex = 0
+                    startIndex = 0;
                 }
                 if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length
+                    endIndex = this.dataList.length;
                 }
-                return this.dataList.slice(startIndex, endIndex)
+                return this.dataList.slice(startIndex, endIndex);
             },
 
             /**
              * pageLimitChange
              */
             pageLimitChange (currentLimit, prevLimit) {
-                this.pageConf.limit = currentLimit
-                this.pageConf.current = 1
-                this.handlePageChange(this.pageConf.current)
+                this.pageConf.limit = currentLimit;
+                this.pageConf.current = 1;
+                this.handlePageChange(this.pageConf.current);
             },
 
             /**
              * goDetail
              */
             goDetail (row) {
-                this.curGroupName = row.name
-                this.curGroupId = row.id
-                this.isShowPermSidesilder = true
+                this.curGroupName = row.name;
+                this.curGroupId = row.id;
+                this.isShowPermSidesilder = true;
             },
 
             /**
              * showQuitTemplates
              */
             showQuitTemplates (row) {
-                this.deleteDialogConf.visiable = true
-                this.deleteDialogConf.row = Object.assign({}, row)
-                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}【${row.name}】，${this.$t(`m.info['将不再继承该组的权限']`)}。`
+                this.deleteDialogConf.visiable = true;
+                this.deleteDialogConf.row = Object.assign({}, row);
+                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}【${row.name}】，${this.$t(`m.info['将不再继承该组的权限']`)}。`;
             },
 
             async confirmDelete () {
-                this.deleteDialogConf.loading = true
-                const { type } = this.data
+                this.deleteDialogConf.loading = true;
+                const { type } = this.data;
                 try {
                     await this.$store.dispatch('perm/quitGroupTemplates', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id,
                         type: 'group',
                         id: this.deleteDialogConf.row.id
-                    })
-                    this.cancelDelete()
-                    this.messageSuccess(this.$t(`m.info['退出成功']`), 2000)
-                    await this.fetchPermGroups(true)
+                    });
+                    this.cancelDelete();
+                    this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+                    await this.fetchPermGroups(true);
                 } catch (e) {
-                    this.deleteDialogConf.loading = false
-                    console.error(e)
+                    this.deleteDialogConf.loading = false;
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
             cancelDelete () {
-                this.deleteDialogConf.visiable = false
+                this.deleteDialogConf.visiable = false;
             },
 
             afterLeaveDelete () {
-                this.deleteDialogConf.row = Object.assign({}, {})
-                this.deleteDialogConf.msg = ''
-                this.deleteDialogConf.loading = false
+                this.deleteDialogConf.row = Object.assign({}, {});
+                this.deleteDialogConf.msg = '';
+                this.deleteDialogConf.loading = false;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-group-perm-wrapper {

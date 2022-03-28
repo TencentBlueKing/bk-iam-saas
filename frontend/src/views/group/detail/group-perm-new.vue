@@ -69,14 +69,15 @@
     </div>
 </template>
 <script>
-    // import _ from 'lodash'
-    import GroupPolicy from '@/model/group-policy'
-    import RenderPermItem from '../common/render-perm-item-new.vue'
-    import RenderTemplateItem from '../common/render-template-item.vue'
-    import RenderInstanceTable from '../components/render-instance-table.vue'
+    import _ from 'lodash';
+    import { mapGetters } from 'vuex';
+    import GroupPolicy from '@/model/group-policy';
+    import RenderPermItem from '../common/render-perm-item-new.vue';
+    import RenderTemplateItem from '../common/render-template-item.vue';
+    import RenderInstanceTable from '../components/render-instance-table.vue';
     // import GroupAggregationPolicy from '@/model/group-aggregation-policy'
     // import store from '@/store'
-    const CUSTOM_CUSTOM_TEMPLATE_ID = 0
+    const CUSTOM_CUSTOM_TEMPLATE_ID = 0;
 
     export default {
         name: '',
@@ -105,24 +106,25 @@
                 removingSingle: false,
                 isPermTemplateDetail: false,
                 role: ''
-            }
+            };
         },
         computed: {
+            ...mapGetters(['user']),
             isEmpty () {
-                return this.groupSystemList.length < 1
+                return this.groupSystemList.length < 1;
             },
             isEditMode () {
-                return this.mode === 'edit'
+                return this.mode === 'edit';
             },
             expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`)
+                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
             }
         },
         watch: {
             id: {
                 handler (value) {
-                    this.groupId = value
-                    this.handleInit()
+                    this.groupId = value;
+                    this.handleInit();
                 },
                 immediate: true
             }
@@ -135,68 +137,68 @@
         // },
         methods: {
             async handleInit () {
-                this.isLoading = true
-                this.$emit('on-init', true)
+                this.isLoading = true;
+                this.$emit('on-init', true);
                 try {
                     const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId })
                     ;(res.data || []).forEach(item => {
-                        item.expanded = false // 此处会在子组件更新为true
-                        item.loading = false
-                        item.templates = [] // 在getGroupTemplateList方法赋值
-                    })
-                    this.groupSystemList = res.data // groupSystemList会通过handleExpanded调用其他方法做属性的添加
-                    this.groupSystemListLength = res.data.length
+                        item.expanded = false; // 此处会在子组件更新为true
+                        item.loading = false;
+                        item.templates = []; // 在getGroupTemplateList方法赋值
+                    });
+                    this.groupSystemList = res.data; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
+                    this.groupSystemListLength = res.data.length;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
-                    this.$emit('on-init', false)
+                    this.isLoading = false;
+                    this.$emit('on-init', false);
                 }
             },
 
             handleAddPerm () {
-                window.changeAlert = false
+                window.changeAlert = false;
                 this.$router.push({
                     name: 'addGroupPerm',
                     params: {
                         id: this.id
                     }
-                })
+                });
             },
 
             handleEdit (paylaod) {
-                this.$set(paylaod, 'isEdit', true) // 事件会冒泡会触发handleExpanded方法
+                this.$set(paylaod, 'isEdit', true); // 事件会冒泡会触发handleExpanded方法
             },
 
             handleCancel (paylaod) {
-                this.$set(paylaod, 'isEdit', false)
+                this.$set(paylaod, 'isEdit', false);
             },
 
             async getGroupTemplateList (groupSystem) {
-                groupSystem.loading = true
-                let res
+                groupSystem.loading = true;
+                let res;
                 try {
                     res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', {
                         id: this.groupId,
                         systemId: groupSystem.id
-                    })
+                    });
 
                     res.data.forEach(item => {
-                        item.loading = false
-                        item.tableData = []
-                        item.tableDataBackup = []
-                        item.count = 0
-                        item.editLoading = false
-                        item.deleteLoading = false
-                    })
-                    groupSystem.templates = res.data // 赋值给展开项
+                        item.loading = false;
+                        item.tableData = [];
+                        item.tableDataBackup = [];
+                        item.count = 0;
+                        item.editLoading = false;
+                        item.deleteLoading = false;
+                    });
+                    groupSystem.templates = res.data; // 赋值给展开项
                     if (groupSystem.custom_policy_count) {
                         groupSystem.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
@@ -211,52 +213,52 @@
                             tableDataBackup: [],
                             editLoading: false,
                             deleteLoading: false
-                        })
+                        });
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    groupSystem.loading = false
-                    if (res.data.length === 1) {
-                        this.$nextTick(() => {
-                            this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded()
-                        })
-                    }
+                    groupSystem.loading = false;
+                    // if (res.data.length === 1) {
+                    //     this.$nextTick(() => {
+                    //         this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+                    //     });
+                    // }
                 }
             },
 
             // 进入之后会在子组件中触发执行
             handleExpanded (flag, item) {
                 if (!flag) {
-                    return
+                    return;
                 }
-                this.getGroupTemplateList(item)
-                this.fetchAuthorizationScopeActions(item.id)
+                this.getGroupTemplateList(item);
+                this.fetchAuthorizationScopeActions(item.id);
             },
 
             async fetchAuthorizationScopeActions (id) {
                 if (this.authorizationData[id]) {
-                    return
+                    return;
                 }
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: id })
-                    this.authorizationData[id] = res.data.filter(item => item.id !== '*')
+                    const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: id });
+                    this.authorizationData[id] = res.data.filter(item => item.id !== '*');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -267,98 +269,167 @@
              * @return {*}
              */
             async handleTemplateExpanded (flag, item) {
+                console.log('flag', flag);
                 if (!flag) {
-                    this.$set(item, 'isEdit', false)
-                    return
+                    this.$set(item, 'isEdit', false);
+                    return;
                 }
                 // count > 0 说明是自定义权限
+                await this.fetchActions(item);
                 if (item.count > 0) {
-                    this.getGroupCustomPolicy(item)
-                    return
+                    this.getGroupCustomPolicy(item);
+                    return;
                 }
-                this.getGroupTemplateDetail(item)
+                this.getGroupTemplateDetail(item);
             },
 
-            async getGroupTemplateDetail (item) {
-                item.loading = true
+            /**
+             * 获取系统对应的自定义操作
+             *
+             * @param {String} systemId 系统id
+             * 执行handleActionLinearData方法
+             */
+            async fetchActions (item) {
+                const params = {
+                    system_id: item.system.id,
+                    user_id: this.user.username
+                };
                 try {
-                    const res = await this.$store.dispatch('userGroup/getGroupTemplateDetail', {
-                        id: this.groupId,
-                        templateId: item.id
-                    })
-                    const tableData = res.data.actions.map(row => new GroupPolicy(
-                        { ...row, policy_id: 1 },
-                        'detail',
-                        'template',
-                        { system: res.data.system }
-                    ))
-                    const tableDataBackup = res.data.actions.map(row => new GroupPolicy(
-                        { ...row, policy_id: 1 },
-                        'detail',
-                        'template',
-                        { system: res.data.system }
-                    ))
-                    this.$set(item, 'tableData', tableData)
-                    this.$set(item, 'tableDataBackup', tableDataBackup)
+                    const res = await this.$store.dispatch('permApply/getActions', params);
+                    this.originalCustomTmplList = _.cloneDeep(res.data);
+                    this.handleActionLinearData();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
+                    });
+                }
+            },
+
+            handleActionLinearData () {
+                const linearActions = [];
+                this.originalCustomTmplList.forEach((item, index) => {
+                    item.actions.forEach(act => {
+                        linearActions.push(act);
                     })
+                    ;(item.sub_groups || []).forEach(sub => {
+                        sub.actions.forEach(act => {
+                            linearActions.push(act);
+                        });
+                    });
+                });
+
+                this.linearActionList = _.cloneDeep(linearActions);
+            },
+
+            async getGroupTemplateDetail (item) {
+                item.loading = true;
+                try {
+                    const res = await this.$store.dispatch('userGroup/getGroupTemplateDetail', {
+                        id: this.groupId,
+                        templateId: item.id
+                    });
+
+                    // // mock数据
+                    // res.data.actions.forEach(element => {
+                    //     element.resource_groups = [{
+                    //         id: 1,
+                    //         related_resource_types: element.related_resource_types
+                    //     }]
+                    // })
+                    const tableData = res.data.actions.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        return new GroupPolicy(
+                            { ...row, policy_id: 1 },
+                            'detail',
+                            'template',
+                            { system: res.data.system }
+                        );
+                    });
+                    const tableDataBackup = res.data.actions.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        return new GroupPolicy(
+                            { ...row, policy_id: 1 },
+                            'detail',
+                            'template',
+                            { system: res.data.system }
+                        );
+                    });
+                    this.$set(item, 'tableData', tableData);
+                    console.log('item.tableData', item.tableData);
+                    this.$set(item, 'tableDataBackup', tableDataBackup);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
                 } finally {
-                    item.loading = false
+                    item.loading = false;
                 }
             },
 
             async getGroupCustomPolicy (item) {
-                item.loading = true
+                item.loading = true;
                 try {
                     const res = await this.$store.dispatch('userGroup/getGroupPolicy', {
                         id: this.groupId,
                         systemId: item.system.id
-                    })
-
+                    });
                     const tableData = res.data.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
                         return new GroupPolicy(
                             row,
                             'detail', // 此属性为flag，会在related-resource-types赋值为add
                             'custom',
                             { system: item.system }
-                        )
-                    })
-                    const tableDataBackup = res.data.map(row => new GroupPolicy(
-                        row,
-                        'detail',
-                        'custom',
-                        { system: item.system }
-                    ))
-                    this.$set(item, 'tableData', tableData)
-                    this.$set(item, 'tableDataBackup', tableDataBackup)
+                        );
+                    });
+                    const tableDataBackup = res.data.map(row => {
+                        // eslint-disable-next-line max-len
+                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        return new GroupPolicy(
+                            row,
+                            'detail',
+                            'custom',
+                            { system: item.system }
+                        );
+                    });
+                    this.$set(item, 'tableData', tableData);
+                    this.$set(item, 'tableDataBackup', tableDataBackup);
+
+                    console.log('itemTableData', item);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    item.loading = false
+                    item.loading = false;
                 }
             },
 
             async handleSave (item, index, subItem, subIndex) {
-                const $ref = this.$refs[`${index}_${subIndex}_resourceTableRef`][0]
-                const { flag, actions } = $ref.getDataByNormal()
+                const $ref = this.$refs[`${index}_${subIndex}_resourceTableRef`][0];
+                const { flag, actions } = $ref.getDataByNormal();
                 if (flag) {
-                    return
+                    return;
                 }
-                subItem.editLoading = true
+                subItem.editLoading = true;
                 try {
                     await this.$store.dispatch('userGroup/updateGroupPolicy', {
                         id: this.groupId,
@@ -367,28 +438,28 @@
                             template_id: subItem.id,
                             actions
                         }
-                    })
+                    });
                     if (subItem.count > 0) {
-                        this.getGroupCustomPolicy(subItem)
+                        this.getGroupCustomPolicy(subItem);
                     } else {
-                        this.getGroupTemplateDetail(subItem)
+                        this.getGroupTemplateDetail(subItem);
                     }
-                    subItem.isEdit = false
+                    subItem.isEdit = false;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    subItem.editLoading = false
+                    subItem.editLoading = false;
                 }
             },
             handleDelete (item, subItem) {
-                this.removingSingle = false
+                this.removingSingle = false;
                 if (subItem.id > 0) {
                     this.deleteTempalte({
                         id: subItem.id,
@@ -398,7 +469,7 @@
                                 id: this.groupId
                             }]
                         }
-                    }, item, subItem)
+                    }, item, subItem);
                 } else {
                     this.deleteGroupPolicy({
                         id: this.groupId,
@@ -406,86 +477,86 @@
                             system_id: item.id,
                             ids: subItem.tableData.map(item => item.policy_id).join(',')
                         }
-                    }, item, subItem, true)
+                    }, item, subItem, true);
                 }
             },
 
             async deleteTempalte (params = {}, item, subItem) {
-                subItem.deleteLoading = true
+                subItem.deleteLoading = true;
                 try {
-                    await this.$store.dispatch('permTemplate/deleteTemplateMember', params)
-                    let filterLen = item.templates.filter(item => item.id !== CUSTOM_CUSTOM_TEMPLATE_ID).length
-                    const isExistCustom = item.templates.some(item => item.id === CUSTOM_CUSTOM_TEMPLATE_ID)
+                    await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
+                    let filterLen = item.templates.filter(item => item.id !== CUSTOM_CUSTOM_TEMPLATE_ID).length;
+                    const isExistCustom = item.templates.some(item => item.id === CUSTOM_CUSTOM_TEMPLATE_ID);
                     if (filterLen > 0) {
-                        --filterLen
-                        --item.template_count
+                        --filterLen;
+                        --item.template_count;
                     }
                     if (filterLen > 0 || isExistCustom) {
-                        this.getGroupTemplateList(item)
+                        this.getGroupTemplateList(item);
                     }
                     if (!filterLen && !isExistCustom) {
-                        this.handleInit()
+                        this.handleInit();
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    subItem.deleteLoading = false
+                    subItem.deleteLoading = false;
                 }
             },
 
             async deleteGroupPolicy (params = {}, item, subItem, flag) {
                 if (flag) {
-                    subItem.deleteLoading = true
+                    subItem.deleteLoading = true;
                 }
                 try {
-                    await this.$store.dispatch('userGroup/deleteGroupPolicy', params)
-                    const isExistTemplate = item.templates.some(item => item.id !== CUSTOM_CUSTOM_TEMPLATE_ID)
+                    await this.$store.dispatch('userGroup/deleteGroupPolicy', params);
+                    const isExistTemplate = item.templates.some(item => item.id !== CUSTOM_CUSTOM_TEMPLATE_ID);
                     if (item.custom_policy_count > 0 && this.removingSingle) {
-                        --item.custom_policy_count
+                        --item.custom_policy_count;
                     } else {
-                        item.custom_policy_count = 0
+                        item.custom_policy_count = 0;
                     }
-                    this.policyList = subItem
+                    this.policyList = subItem;
                     if (isExistTemplate) {
-                        this.getGroupTemplateList(item)
+                        this.getGroupTemplateList(item);
                     } else {
-                        this.handleInit()
+                        this.handleInit();
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
                     if (flag) {
-                        subItem.deleteLoading = false
+                        subItem.deleteLoading = false;
                     }
                 }
             },
 
             handleSingleDelete (data, item) {
-                this.removingSingle = true
+                this.removingSingle = true;
                 this.deleteGroupPolicy({
                     id: this.groupId,
                     data: {
                         system_id: item.id,
                         ids: data.policy_id
                     }
-                }, item, {}, false)
+                }, item, {}, false);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-user-group-perm-wrapper {

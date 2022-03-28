@@ -64,91 +64,91 @@
                 rateExpanded: true,
                 isSelectAllChecked: false,
                 rateSelectData: []
-            }
+            };
         },
         mounted () {
-            this.fetchData()
+            this.fetchData();
         },
         methods: {
             async fetchData () {
-                this.isLoading = true
+                this.isLoading = true;
                 try {
                     const res = await this.$store.dispatch('role/getRatingManagerList', {
                         limit: 1024, // 接口是分页接口...需要确认
                         offset: '',
                         name: ''
-                    })
-                    const rateListAll = res.data.results || []
-                    this.rateListAll.splice(0, this.rateListAll.length, ...rateListAll)
+                    });
+                    const rateListAll = res.data.results || [];
+                    this.rateListAll.splice(0, this.rateListAll.length, ...rateListAll);
                     const rateListRender = res.data.results.length > 5
-                        ? res.data.results.slice(0, 5) : res.data.results
-                    this.rateListRender.splice(0, this.rateListRender.length, ...rateListRender)
-                    this.isEmpty = rateListAll.length < 1
+                        ? res.data.results.slice(0, 5) : res.data.results;
+                    this.rateListRender.splice(0, this.rateListRender.length, ...rateListRender);
+                    this.isEmpty = rateListAll.length < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             handlerateExpanded () {
-                this.rateExpanded = !this.rateExpanded
+                this.rateExpanded = !this.rateExpanded;
             },
 
             handleSelectAll (selection) {
-                this.isSelectAllChecked = !!selection.length
+                this.isSelectAllChecked = !!selection.length;
 
                 if (this.isSelectAllChecked) {
                     this.rateSelectData.splice(
                         0,
                         this.rateSelectData.length,
                         ...this.rateListAll
-                    )
+                    );
                 }
                 
-                this.$emit('rate-selection-change', this.rateSelectData)
+                this.$emit('rate-selection-change', this.rateSelectData);
             },
 
             handleSelectionChange (selection) {
-                this.isSelectAllChecked = selection.length === this.rateListAll.length
-                this.rateSelectData.splice(0, this.rateSelectData.length, ...selection)
+                this.isSelectAllChecked = selection.length === this.rateListAll.length;
+                this.rateSelectData.splice(0, this.rateSelectData.length, ...selection);
 
-                this.$emit('rate-selection-change', this.rateSelectData)
+                this.$emit('rate-selection-change', this.rateSelectData);
             },
 
             handlerateShowAll () {
-                this.rateShowAll = !this.rateShowAll
+                this.rateShowAll = !this.rateShowAll;
                 if (this.rateShowAll) {
                     this.rateListRender.splice(
                         0,
                         this.rateListRender.length,
                         ...this.rateListAll
-                    )
+                    );
                 } else {
                     this.rateListRender.splice(
                         0,
                         this.rateListRender.length,
                         ...(this.rateListAll.length > 5 ? this.rateListAll.slice(0, 5) : this.rateListAll)
-                    )
+                    );
                 }
                 if (this.isSelectAllChecked) {
-                    this.$refs.rateTable.clearSelection()
-                    this.$refs.rateTable.toggleAllSelection()
+                    this.$refs.rateTable.clearSelection();
+                    this.$refs.rateTable.toggleAllSelection();
                 }
             },
 
             tableRowKey (row) {
-                return row.id + '__' + row.name
+                return row.id + '__' + row.name;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @import './group.css';

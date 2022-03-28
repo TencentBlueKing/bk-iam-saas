@@ -16,7 +16,7 @@
     </content-loader>
 </template>
 <script>
-    import { ContentLoader } from 'vue-content-loader'
+    import { ContentLoader } from 'vue-content-loader';
     export default {
         components: {
             ContentLoader
@@ -29,8 +29,8 @@
         },
         computed: {
             leftBlockPosition () {
-                return this.maxWidth - 420
+                return this.maxWidth - 420;
             }
         }
-    }
+    };
 </script>

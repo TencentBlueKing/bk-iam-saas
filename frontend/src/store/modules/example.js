@@ -24,8 +24,8 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
 export default {
     namespaced: true,
@@ -36,15 +36,15 @@ export default {
     actions: {
         // 待审批列表
         getWaitApproval ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=getWaitApproval`, params, config)
+            return http.get(`/app/index?invoke=getWaitApproval`, params, config);
         },
         // 审批记录
         getApprovalRecord ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=getApprovalRecord`, params, config)
+            return http.get(`/app/index?invoke=getApprovalRecord`, params, config);
         },
         // 审批记录
         getApprovalDetail ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=getApprovalDetail`, params, config)
+            return http.get(`/app/index?invoke=getApprovalDetail`, params, config);
         },
         /**
          * enterExample1 请求
@@ -57,7 +57,7 @@ export default {
          * @return {Promise} promise 对象
          */
         enterExample1 ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=enterExample1&${json2Query(params)}`, config)
+            return http.get(`/app/index?invoke=enterExample1&${json2Query(params)}`, config);
         },
 
         /**
@@ -71,7 +71,7 @@ export default {
          * @return {Promise} promise 对象
          */
         enterExample2 ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=enterExample2`, params, config)
+            return http.post(`/app/index?invoke=enterExample2`, params, config);
         },
 
         /**
@@ -85,7 +85,7 @@ export default {
          * @return {Promise} promise 对象
          */
         btn1 ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=btn1`, params, config)
+            return http.get(`/app/index?invoke=btn1`, params, config);
         },
 
         /**
@@ -99,7 +99,7 @@ export default {
          * @return {Promise} promise 对象
          */
         btn2 ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=btn2`, params, config)
+            return http.post(`/app/index?invoke=btn2`, params, config);
         },
 
         /**
@@ -113,7 +113,7 @@ export default {
          * @return {Promise} promise 对象
          */
         del ({ commit, state, dispatch }, params, config) {
-            return http.delete(`/app/index?invoke=del`, { data: params }, config)
+            return http.delete(`/app/index?invoke=del`, { data: params }, config);
         },
 
         /**
@@ -127,7 +127,7 @@ export default {
          * @return {Promise} promise 对象
          */
         same ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=same&${json2Query(params)}`, config)
+            return http.get(`/app/index?invoke=same&${json2Query(params)}`, config);
         },
 
         /**
@@ -141,7 +141,7 @@ export default {
          * @return {Promise} promise 对象
          */
         go ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=go&${json2Query(params)}`, config)
+            return http.get(`/app/index?invoke=go&${json2Query(params)}`, config);
         },
 
         /**
@@ -155,7 +155,7 @@ export default {
          * @return {Promise} promise 对象
          */
         postSame ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=postSame`, params, config)
+            return http.post(`/app/index?invoke=postSame`, params, config);
         },
 
         /**
@@ -169,7 +169,7 @@ export default {
          * @return {Promise} promise 对象
          */
         get ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=get&${json2Query(params)}`, config)
+            return http.get(`/app/index?invoke=get&${json2Query(params)}`, config);
         },
 
         /**
@@ -183,7 +183,7 @@ export default {
          * @return {Promise} promise 对象
          */
         post ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=post`, params, config)
+            return http.post(`/app/index?invoke=post`, params, config);
         },
 
         /**
@@ -197,7 +197,7 @@ export default {
          * @return {Promise} promise 对象
          */
         long ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=long&${json2Query(params)}`, config)
+            return http.get(`/app/index?invoke=long&${json2Query(params)}`, config);
         },
 
         /**
@@ -211,7 +211,7 @@ export default {
          * @return {Promise} promise 对象
          */
         long1 ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=long1&${json2Query(params)}`, config)
+            return http.get(`/app/index?invoke=long1&${json2Query(params)}`, config);
         }
     }
-}
+};

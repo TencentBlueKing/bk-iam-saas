@@ -24,6 +24,7 @@
  * IN THE SOFTWARE.
 */
 
+/* eslint-disable */
 module.exports = {
     root: true,
     parserOptions: {
@@ -525,14 +526,18 @@ module.exports = {
         // v-text 指令必须合法
         'vue/valid-v-text': 'error',
 
-        'codecc/comment-ratio': 'off'
+        'codecc/comment-ratio': 'off',
+
+        // eslint-disable-next-line no-dupe-keys
+        semi: ['error', 'always']
     },
     overrides: [
         {
             files: ['*.vue'],
             rules: {
-                indent: 'off'
+                indent: 'off',
+                semi: ['error', 'always']
             }
         }
     ]
-}
+};
