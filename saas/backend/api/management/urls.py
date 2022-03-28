@@ -16,7 +16,7 @@ urlpatterns = [
     # 分级管理员
     path(
         "grade_managers/",
-        views.ManagementGradeManagerViewSet.as_view({"post": "create"}),
+        views.ManagementGradeManagerViewSet.as_view({"get": "list", "post": "create"}),
         name="open.management.grade_manager",
     ),
     # 分级管理员成员

@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import Any, List
+from typing import Any, List, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -460,6 +460,23 @@ class RoleService:
         )
         # 查询角色
         return Role.objects.get(id=role_related_object.role_id)
+
+    def list_paging_role_for_system(self, system_id: str, limit: int = 10, offset: int = 0) -> Tuple[int, List[Role]]:
+        """查询某个系统通过API创建的分级管理员"""
+        # 需要过滤出source_system_id通过API创建的
+        system_role_queryset = RoleSource.objects.filter(
+            source_system_id=system_id,
+            source_type=RoleSourceTypeEnum.API.value,
+        )
+
+        # 分页
+        count = system_role_queryset.count()
+        system_role_ids = system_role_queryset.values_list("role_id", True)[offset, offset + limit]
+
+        # 获取Role详情
+        roles = Role.objects.filter(id__in=system_role_ids)
+
+        return count, roles
 
     def list_user_role_for_system(self, user_id: str, system_id: str) -> List[UserRole]:
         """

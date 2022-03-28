@@ -18,6 +18,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     """这里的枚举的是每个具体管理类API"""
 
     # 分级管理员
+    GRADE_MANAGER_LIST = auto()
     GRADE_MANAGER_CREATE = auto()
     GRADE_MANAGER_UPDATE = auto()
     GRADE_MANAGER_MEMBER_LIST = auto()
@@ -43,6 +44,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     _choices_labels = skip(
         (
             # 分级管理员
+            (GRADE_MANAGER_LIST, "获取分级管理员列表"),
             (GRADE_MANAGER_CREATE, "新建分级管理员"),
             (GRADE_MANAGER_UPDATE, "更新分级管理员"),
             (GRADE_MANAGER_MEMBER_LIST, "获取分级管理员成员列表"),
