@@ -27,6 +27,7 @@ from backend.api.management.serializers import (
     ManagementGroupGrantSLZ,
     ManagementGroupMemberDeleteSLZ,
     ManagementGroupMemberSLZ,
+    ManagementGroupPolicyDeleteSLZ,
     ManagementGroupRevokeSLZ,
 )
 from backend.api.mixins import ExceptionHandlerMixin
@@ -36,6 +37,7 @@ from backend.apps.group.audit import (
     GroupMemberCreateAuditProvider,
     GroupMemberDeleteAuditProvider,
     GroupPolicyCreateAuditProvider,
+    GroupPolicyDeleteAuditProvider,
     GroupPolicyUpdateAuditProvider,
     GroupUpdateAuditProvider,
 )
@@ -44,7 +46,7 @@ from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
-from backend.biz.policy import PolicyOperationBiz
+from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleType, SubjectType
@@ -385,5 +387,57 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
+
+        return Response({})
+
+
+class ManagementGroupActionPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
+    """用户组权限 - 自定义权限 - 操作"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_DELETE.value),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    group_biz = GroupBiz()
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户组权限回收",
+        request_body=ManagementGroupPolicyDeleteSLZ(label="权限"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    @view_audit_decorator(GroupPolicyDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        group = self.get_object()
+        # 序列化数据
+        serializer = ManagementGroupRevokeSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        system_id = data["system"]
+        action_ids = [a["id"] for a in data["actions"]]
+
+        # 查询将要被删除PolicyID列表
+        policies = self.policy_query_biz.list_by_subject(
+            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), action_ids
+        )
+
+        # 根据PolicyID删除策略
+        policy_ids = [p.policy_id for p in policies]
+        self.policy_operation_biz.delete_by_ids(
+            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_ids
+        )
+
+        # 写入审计上下文
+        audit_context_setter(group=group, system_id=system_id, policies=policies)
 
         return Response({})

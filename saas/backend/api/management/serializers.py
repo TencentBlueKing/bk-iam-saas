@@ -171,6 +171,11 @@ class ManagementGroupRevokeSLZ(ManagementRoleScopeAuthorizationSLZ):
     pass
 
 
+class ManagementGroupPolicyDeleteSLZ(serializers.Serializer):
+    system = serializers.CharField(label="授权的系统id", max_length=32)
+    actions = serializers.ListField(label="操作", child=ManagementActionSLZ(label="操作"), allow_empty=False)
+
+
 class ManagementGroupIDsSLZ(serializers.Serializer):
     group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
 

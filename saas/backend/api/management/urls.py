@@ -48,6 +48,12 @@ urlpatterns = [
         views.ManagementGroupPolicyViewSet.as_view({"post": "create", "delete": "destroy"}),
         name="open.management.group_policy",
     ),
+    # 用户组自定义权限 - 操作级别的变更，不涉及Resources
+    path(
+        "groups/<int:id>/actions/policies",
+        views.ManagementGroupActionPolicyViewSet.as_view({"delete": "destroy"}),
+        name="open.management.group_action",
+    ),
     # 用户
     path(
         "users/grade_managers/",
