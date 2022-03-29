@@ -42,7 +42,7 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
+                        <!-- <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
                             <bk-dropdown-menu
                                 align="left"
                                 ref="dropdown"
@@ -75,7 +75,7 @@
                                 @keyup.up.native="handleKeyup"
                                 @keyup.down.native="handleKeydown">
                             </bk-input>
-                        </div>
+                        </div> -->
                         <div class="member-tree-wrapper"
                             v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
                             v-if="isOrganization">
