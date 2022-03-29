@@ -374,11 +374,8 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "grade_manager_member_limit": int(os.getenv("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", 100)),
     # 默认每个系统可创建的分级管理数量
     "default_grade_manager_of_system_limit": int(os.getenv("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", 100)),
-    # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：
-    # base64.b64encode(json.dumps({"system_id1": number1, "system_id2": number2, ...}).encode("utf-8")).decode("utf-8")
-    # 解析值方式：json.loads(base64.b64decode(value).decode("utf-8"))
-    # "e30=" 解析后将是空字典，{}
-    "grade_manager_of_specified_systems_limit": os.getenv("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", "e30="),
+    # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
+    "grade_manager_of_specified_systems_limit": os.getenv("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", ""),
 }
 
 # 授权的实例最大数量限制

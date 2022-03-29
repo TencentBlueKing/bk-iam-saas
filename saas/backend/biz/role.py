@@ -394,6 +394,12 @@ class RoleCheckBiz:
         # 判断是否该系统有特殊配置限制数量
         value = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_of_specified_systems_limit"]
         try:
+            system_limits = {}
+            # 对value进行解析，value 格式为：system_id1:number1,system_id2:number2,...
+            split_system_limits = value.split(",") if value else []
+            for one_system_limit in split_system_limits:
+                system_limit = one_system_limit.split(":")
+                system_limits[system_limit[0].strip()] = int(system_limit[1].strip())
             system_limits = json.loads(base64.b64decode(value).decode("utf-8"))
         except Exception as error:
             logger.error(
