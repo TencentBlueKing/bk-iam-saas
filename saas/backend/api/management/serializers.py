@@ -61,6 +61,12 @@ class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBas
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
 
 
+class ManagementGradeManagerBasicInfoSZL(serializers.Serializer):
+    id = serializers.IntegerField(label="分级管理员ID")
+    name = serializers.CharField(label="分级管理员名称", max_length=128)
+    description = serializers.CharField(label="描述", allow_blank=True)
+
+
 class ManagementGradeManagerMembersSLZ(serializers.Serializer):
     members = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)
 
@@ -159,6 +165,15 @@ class ManagementUserGradeManagerQuerySLZ(ManagementUserQuerySLZ, ManagementSourc
 
 class ManagementGroupGrantSLZ(ManagementRoleScopeAuthorizationSLZ):
     pass
+
+
+class ManagementGroupRevokeSLZ(ManagementRoleScopeAuthorizationSLZ):
+    pass
+
+
+class ManagementGroupPolicyDeleteSLZ(serializers.Serializer):
+    system = serializers.CharField(label="授权的系统id", max_length=32)
+    actions = serializers.ListField(label="操作", child=ManagementActionSLZ(label="操作"), allow_empty=False)
 
 
 class ManagementGroupIDsSLZ(serializers.Serializer):

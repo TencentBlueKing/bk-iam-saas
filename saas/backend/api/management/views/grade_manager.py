@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -19,9 +20,11 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLo
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.permissions import ManagementAPIPermission
 from backend.api.management.serializers import (
+    ManagementGradeManagerBasicInfoSZL,
     ManagementGradeManagerCreateSLZ,
     ManagementGradeManagerMembersDeleteSLZ,
     ManagementGradeManagerMembersSLZ,
+    ManagementSourceSystemSLZ,
 )
 from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.role.audit import (
@@ -33,7 +36,7 @@ from backend.apps.role.models import Role, RoleSource, RoleUser
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleBiz, RoleCheckBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
+from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
@@ -45,6 +48,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, Exception
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.GRADE_MANAGER_CREATE.value),
+        "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.GRADE_MANAGER_LIST.value),
     }
 
     biz = RoleBiz()
@@ -91,6 +95,27 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, Exception
         audit_context_setter(role=role)
 
         return Response({"id": role.id})
+
+    @swagger_auto_schema(
+        operation_description="分级管理员列表",
+        auto_schema=PaginatedResponseSwaggerAutoSchema,
+        query_serializer=ManagementSourceSystemSLZ(),
+        responses={status.HTTP_200_OK: ManagementGradeManagerBasicInfoSZL(many=True)},
+        tags=["management.role.member"],
+    )
+    def list(self, request, *args, **kwargs):
+        serializer = ManagementSourceSystemSLZ(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # 分页参数
+        pagination = LimitOffsetPagination()
+        limit = pagination.get_limit(request)
+        offset = pagination.get_offset(request)
+
+        count, roles = self.biz.list_paging_role_for_system(data["system"], limit, offset)
+        results = ManagementGradeManagerBasicInfoSZL(roles, many=True).data
+        return Response({"count": count, "results": results})
 
 
 class ManagementGradeManagerMemberViewSet(ExceptionHandlerMixin, GenericViewSet):

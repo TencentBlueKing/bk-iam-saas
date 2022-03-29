@@ -27,6 +27,8 @@ from backend.api.management.serializers import (
     ManagementGroupGrantSLZ,
     ManagementGroupMemberDeleteSLZ,
     ManagementGroupMemberSLZ,
+    ManagementGroupPolicyDeleteSLZ,
+    ManagementGroupRevokeSLZ,
 )
 from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.group.audit import (
@@ -35,6 +37,8 @@ from backend.apps.group.audit import (
     GroupMemberCreateAuditProvider,
     GroupMemberDeleteAuditProvider,
     GroupPolicyCreateAuditProvider,
+    GroupPolicyDeleteAuditProvider,
+    GroupPolicyUpdateAuditProvider,
     GroupUpdateAuditProvider,
 )
 from backend.apps.group.models import Group
@@ -42,7 +46,7 @@ from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
-from backend.biz.policy import PolicyOperationBiz
+from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleType, SubjectType
@@ -302,6 +306,7 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
 
     management_api_permission = {
         "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_GRANT.value),
+        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_REVOKE.value),
     }
 
     lookup_field = "id"
@@ -335,7 +340,6 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
         policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
 
         # 组装数据进行对用户组权限处理
-        system_id = data["system"]
         template = GroupTemplateGrantBean(
             system_id=system_id,
             template_id=0,  # 自定义权限template_id为0
@@ -352,5 +356,88 @@ class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
+
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="用户组权限回收",
+        request_body=ManagementGroupGrantSLZ(label="权限"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    @view_audit_decorator(GroupPolicyUpdateAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        group = self.get_object()
+        # 序列化数据
+        serializer = ManagementGroupRevokeSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        system_id = data["system"]
+        action_ids = [a["id"] for a in data["actions"]]
+        resources = data["resources"]
+
+        # 将授权的权限数据转为PolicyBeanList
+        policy_list = self.trans.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
+
+        # Note: 这里不能使用 group_biz封装的"异步"变更权限（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
+        # 这里主要是针对自定义授权的回收，直接使用policy_biz提供的方法即可
+        self.policy_biz.revoke(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+
+        # 写入审计上下文
+        audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
+
+        return Response({})
+
+
+class ManagementGroupActionPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
+    """用户组权限 - 自定义权限 - 操作级别变更"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_DELETE.value),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    group_biz = GroupBiz()
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户组权限删除",
+        request_body=ManagementGroupPolicyDeleteSLZ(label="权限"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    @view_audit_decorator(GroupPolicyDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        group = self.get_object()
+        # 序列化数据
+        serializer = ManagementGroupRevokeSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        system_id = data["system"]
+        action_ids = [a["id"] for a in data["actions"]]
+
+        # 查询将要被删除PolicyID列表
+        policies = self.policy_query_biz.list_by_subject(
+            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), action_ids
+        )
+
+        # 根据PolicyID删除策略
+        policy_ids = [p.policy_id for p in policies]
+        self.policy_operation_biz.delete_by_ids(
+            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_ids
+        )
+
+        # 写入审计上下文
+        audit_context_setter(group=group, system_id=system_id, policies=policies)
 
         return Response({})
