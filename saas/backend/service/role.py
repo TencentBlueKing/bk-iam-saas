@@ -471,7 +471,11 @@ class RoleService:
 
         # 分页
         count = system_role_queryset.count()
-        system_role_ids = system_role_queryset.values_list("role_id", True)[offset, offset + limit]
+        system_role_ids = list(system_role_queryset.values_list("role_id", flat=True)[offset, offset + limit])
+
+        # 无数据则提前返回
+        if len(system_role_ids) == 0:
+            return 0, []
 
         # 获取Role详情
         roles = Role.objects.filter(id__in=system_role_ids)
