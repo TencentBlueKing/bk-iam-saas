@@ -78,6 +78,8 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, Exception
 
         # 名称唯一性检查
         self.role_check_biz.check_unique_name(data["name"])
+        # 检查该系统可创建的分级管理员数量是否超限
+        self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
 
         # 转换为RoleInfoBean，用于创建时使用
         role_info = self.trans.to_role_info(data)
@@ -138,6 +140,7 @@ class ManagementGradeManagerMemberViewSet(ExceptionHandlerMixin, GenericViewSet)
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
 
     biz = RoleBiz()
+    role_check_biz = RoleCheckBiz()
 
     @swagger_auto_schema(
         operation_description="分级管理员成员列表",
@@ -165,6 +168,9 @@ class ManagementGradeManagerMemberViewSet(ExceptionHandlerMixin, GenericViewSet)
         serializer.is_valid(raise_exception=True)
 
         members = list(set(serializer.validated_data["members"]))
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(members))
+
         # 批量添加成员(添加时去重)
         self.biz.add_grade_manager_members(role.id, members)
 

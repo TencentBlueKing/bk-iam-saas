@@ -8,18 +8,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import base64
+import json
+import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
 
+from django.conf import settings
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
+from rest_framework import serializers
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleUser, ScopeSubject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleSource, RoleUser, ScopeSubject
 from backend.apps.template.models import PermTemplate
 from backend.biz.policy import (
     ConditionBean,
@@ -42,12 +47,15 @@ from backend.service.constants import (
     ApplicationTypeEnum,
     RoleRelatedObjectType,
     RoleScopeSubjectType,
+    RoleSourceTypeEnum,
     RoleType,
     SubjectType,
 )
 from backend.service.models import Attribute, Subject, System
 from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleInfo, RoleService
 from backend.service.system import SystemService
+
+logger = logging.getLogger("app")
 
 
 class RoleInfoBean(RoleInfo):
@@ -354,6 +362,59 @@ class RoleCheckBiz:
         names = {i.data.get("name") for i in applications}
         if new_name in names:
             raise error_codes.CONFLICT_ERROR.format(_("正在申请的单据中名称[{}]已存在，请修改为其他名称，或等单据被处理后再提交").format(new_name), True)
+
+    def check_member_count(self, role_id: int, new_member_count: int):
+        """
+        检查分级管理员成员数据
+        """
+        exists_count = RoleUser.objects.filter(role_id=role_id).count()
+        member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"]
+        if exists_count + new_member_count > member_limit:
+            raise error_codes.VALIDATE_ERROR.format(
+                _("分级管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
+                    role_id, exists_count, new_member_count, member_limit
+                ),
+                True,
+            )
+
+    def check_subject_grade_manager_limit(self, subject: Subject):
+        """
+        检查subject加入的分级管理员数量是否超限
+        Note: 目前subject仅仅支持User
+        """
+        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["subject_grade_manager_limit"]
+        exists_count = RoleUser.objects.filter(username=subject.id).count()
+        if exists_count >= limit:
+            raise serializers.ValidationError(_("成员({}): 加入的分级管理员数量已超过最大值 {}").format(subject.id, limit))
+
+    def check_grade_manager_of_system_limit(self, system_id: str):
+        """
+        检查某个系统可创建的分级管理数量是否超限
+        """
+        default_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["default_grade_manager_of_system_limit"]
+        # 判断是否该系统有特殊配置限制数量
+        value = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_of_specified_systems_limit"]
+        try:
+            system_limits = {}
+            # 对value进行解析，value 格式为：system_id1:number1,system_id2:number2,...
+            split_system_limits = value.split(",") if value else []
+            for one_system_limit in split_system_limits:
+                system_limit = one_system_limit.split(":")
+                system_limits[system_limit[0].strip()] = int(system_limit[1].strip())
+            system_limits = json.loads(base64.b64decode(value).decode("utf-8"))
+        except Exception as error:
+            logger.error(
+                f"parse grade_manager_of_specified_systems_limit from setting failed, value:{value}, error: {error}"
+            )
+            system_limits = {}
+
+        limit = system_limits[system_id] if system_id in system_limits else default_limit
+
+        exists_count = RoleSource.objects.filter(
+            source_type=RoleSourceTypeEnum.API.value, source_system_id=system_id
+        ).count()
+        if exists_count >= limit:
+            raise serializers.ValidationError(_("系统({}): 创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
 
 
 class RoleListQuery:
