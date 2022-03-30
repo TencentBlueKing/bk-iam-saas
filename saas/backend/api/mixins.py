@@ -11,14 +11,14 @@ specific language governing permissions and limitations under the License.
 import json
 
 from django.utils import translation
-from rest_framework import exceptions
+from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import set_rollback
 
 from backend.biz.system import SystemBiz
 from backend.common.constants import DjangoLanguageEnum
-from backend.common.error_codes import error_codes
+from backend.common.error_codes import APIException, error_codes
 
 
 class SystemClientCheckMixin:
@@ -62,6 +62,20 @@ class ExceptionHandlerMixin:
                 "data": None,
             }
             return Response(data, headers={})
+
+        # NOTE: openapi 的 APIException 保持 status code 为 200
+        if isinstance(exc, APIException):
+            if (
+                exc.status_code > 399
+                and exc.status_code < 500
+                and exc.status_code
+                not in [
+                    status.HTTP_401_UNAUTHORIZED,
+                    status.HTTP_403_FORBIDDEN,
+                    status.HTTP_404_NOT_FOUND,
+                ]
+            ):
+                exc.status_code = status.HTTP_200_OK
 
         default_handler = api_settings.EXCEPTION_HANDLER
 

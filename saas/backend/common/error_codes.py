@@ -103,18 +103,18 @@ class ErrorCodes:
     FORBIDDEN = APIException(1902403, _("没有访问权限"), status_code=status.HTTP_403_FORBIDDEN)
     NOT_FOUND_ERROR = APIException(1902404, _("数据不存在"), status_code=status.HTTP_404_NOT_FOUND)
     # 通用错误
-    COMMON_ERROR = APIException(1902400, _("请求失败"))
-    CONFLICT_ERROR = APIException(1902409, _("与已有资源冲突(重名等)"))
-    VALIDATE_ERROR = APIException(1902412, _("参数校验失败"))
+    COMMON_ERROR = APIException(1902400, _("请求失败"), status_code=status.HTTP_400_BAD_REQUEST)
+    CONFLICT_ERROR = APIException(1902409, _("与已有资源冲突(重名等)"), status_code=status.HTTP_409_CONFLICT)
+    VALIDATE_ERROR = APIException(1902412, _("参数校验失败"), status_code=status.HTTP_400_BAD_REQUEST)
     COMPONENT_ERROR = APIException(1902413, _("请求第三方接口失败"))
-    JSON_FORMAT_ERROR = APIException(1902414, _("Json格式错误"))
-    METHOD_NOT_ALLOWED = APIException(1902415, _("不支持当前的请求方法"))
-    INVALID_ARGS = APIException(1902416, _("参数错误"))
-    ACTION_VALIDATE_ERROR = APIException(1902417, _("操作检查错误"))
-    GROUP_TRANSFER_ERROR = APIException(1902418, _("用户组转出错误"))
-    VALUE_ERROR = APIException(1902419, _("数值错误"))
+    JSON_FORMAT_ERROR = APIException(1902414, _("Json格式错误"), status_code=status.HTTP_400_BAD_REQUEST)
+    METHOD_NOT_ALLOWED = APIException(1902415, _("不支持当前的请求方法"), status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    INVALID_ARGS = APIException(1902416, _("参数错误"), status_code=status.HTTP_400_BAD_REQUEST)
+    ACTION_VALIDATE_ERROR = APIException(1902417, _("操作检查错误"), status_code=status.HTTP_400_BAD_REQUEST)
+    GROUP_TRANSFER_ERROR = APIException(1902418, _("用户组转出错误"), status_code=status.HTTP_400_BAD_REQUEST)
+    VALUE_ERROR = APIException(1902419, _("数值错误"), status_code=status.HTTP_400_BAD_REQUEST)
     # 任务重复错误
-    TASK_EXIST = APIException(1902420, _("存在重复任务"))
+    TASK_EXIST = APIException(1902420, _("存在重复任务"), status_code=status.HTTP_409_CONFLICT)
     # [ESB错误/component的公共错误(网络错误等等): 19020xx]
     REMOTE_REQUEST_ERROR = RemoteAPIException(1902000, _("请求第三方API错误"))
 
@@ -135,7 +135,7 @@ class ErrorCodes:
     RESOURCE_PROVIDER_DATA_INVALID = APIException(1902250, _("接入系统自身接口返回数据不符合要求"))
 
     # 通用系统错误
-    SYSTEM_ERROR = APIException(1902500, _("系统错误"))
+    SYSTEM_ERROR = APIException(1902500, _("系统错误"), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # [ITSM请求或处理等错误 19026xx]
     # ITSM_REQUEST_ERROR = RemoteAPIException(1902501, _("ITSM请求返回码非0"))
