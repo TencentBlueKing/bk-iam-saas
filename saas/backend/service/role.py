@@ -123,7 +123,7 @@ class RoleService:
 
     def list_user_role(self, user_id: str) -> List[UserRole]:
         """查询用户的角色列表"""
-        role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
+        role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
         return self.list_by_ids(role_ids)
 
     def list_user_role_with_permission(self, user_id: str) -> List[UserRole]:
