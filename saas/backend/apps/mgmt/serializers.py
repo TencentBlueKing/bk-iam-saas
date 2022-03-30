@@ -40,7 +40,12 @@ class AdminApiWhiteListSLZ(serializers.Serializer):
 
 class AdminApiAddWhiteListSLZ(serializers.Serializer):
     app_code = serializers.CharField(label="应用TOKEN")
-    api = serializers.ChoiceField(label="超级管理类API", choices=AdminAPIEnum.get_choices())
+    api = serializers.CharField(label="超级管理类API")
+
+    def validate_api(self, value):
+        if value == "*" or value in dict(AdminAPIEnum.get_choices()):
+            return value
+        raise serializers.ValidationError(f"api: {value} 非法")
 
 
 class AuthorizationApiWhiteListSLZ(serializers.Serializer):
@@ -111,4 +116,10 @@ class ManagementApiWhiteListSchemaSLZ(ManagementApiWhiteListSLZ):
 
 class ManagementApiAddWhiteListSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
-    api = serializers.ChoiceField(label="管理类API", choices=ManagementAPIEnum.get_choices())
+    api = serializers.CharField(label="管理类API")
+
+    def validate_api(self, value):
+        if value == "*" or value in dict(ManagementAPIEnum.get_choices()):
+            return value
+        raise serializers.ValidationError(f"api: {value} 非法")
+
