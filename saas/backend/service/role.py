@@ -126,24 +126,27 @@ class RoleService:
         role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
         return self.list_by_ids(role_ids)
 
-    def list_user_role_with_system_permission(self, user_id: str) -> List[UserRole]:
+    def list_user_role_with_permission(self, user_id: str) -> List[UserRole]:
         """查询用户 拥有对应接入系统的超级权限角色列表"""
         role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
-        role_types = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value]
-        roles = Role.objects.filter(id__in=role_ids, type__in=role_types)
-        data = []
+        roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
+        role_dict = {role.id: role for role in roles}
 
-        for role in roles:
-            enabled_detail = RoleUserSystemPermission.objects.filter(role_id=role.id).first().enabled_detail
+        role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
+        roles_with_permission = []
+
+        for role_user_system_perm in role_user_system_perms:
+            enabled_detail = role_user_system_perm.enabled_detail
             if user_id in enabled_detail["enabled_users"] or enabled_detail["global_enabled"]:
-                data.append(UserRole(
+                role = role_dict[role_user_system_perm.role_id]
+                roles_with_permission.append(UserRole(
                     id=role.id,
                     type=role.type,
                     name=role.name,
                     name_en=role.name_en,
                     description=role.description,
                 ))
-        return data
+        return roles_with_permission
 
     def list_members_by_role_id(self, role_id: int):
         """查询指定角色的成员列表"""

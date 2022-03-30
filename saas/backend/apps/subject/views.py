@@ -264,5 +264,5 @@ class SubjectRoleViewSet(GenericViewSet):
         tags=["subject"],
     )
     def list(self, request, *args, **kwargs):
-        data = self.biz.list_user_role_with_system_permission(user_id=request.user.username)
+        data = self.biz.list_user_role_with_permission(user_id=request.user.username)
         return Response([one.dict() for one in data])
