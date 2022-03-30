@@ -63,7 +63,8 @@ class ExceptionHandlerMixin:
             }
             return Response(data, headers={})
 
-        # NOTE: openapi 的 APIException 保持 status code 为 200
+        # NOTE: status code除了 401, 403, 404 会直接返回给调用方, 其余的都会返回200
+        # web api 的 status code 都改成了错误对应的值, 但是 openapi 为了调用方的兼容, 先保持都返回 200
         if isinstance(exc, APIException):
             if (
                 exc.status_code > 399
