@@ -73,21 +73,19 @@
             <div v-if="!resourceTypeData.isEmpty && searchType !== 'operate'">
                 <bk-form form-type="inline" class="pb10">
                     <iam-form-item class="pb20 form-item-resource" :label="$t(`m.common['资源实例']`)">
-                        <div class="resource-container">
-                            <div v-for="(_, _index) in resourceTypeData.resource_groups" :key="_.id">
-                                <div class="relation-content-item" v-for="(content, contentIndex) in
-                                    _.related_resource_types" :key="contentIndex">
-                                    <div class="content">
-                                        <render-condition
-                                            :ref="`condition_${$index}_${contentIndex}_ref`"
-                                            :value="content.value"
-                                            :is-empty="content.empty"
-                                            :params="curCopyParams"
-                                            :is-error="content.isLimitExceeded || content.isError"
-                                            @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
-                                    </div>
-                                    <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
+                        <div v-for="(_, _index) in resourceTypeData.resource_groups" :key="_.id" class="resource-container">
+                            <div class="relation-content-item" v-for="(content, contentIndex) in
+                                _.related_resource_types" :key="contentIndex">
+                                <div class="content">
+                                    <render-condition
+                                        :ref="`condition_${$index}_${contentIndex}_ref`"
+                                        :value="content.value"
+                                        :is-empty="content.empty"
+                                        :params="curCopyParams"
+                                        :is-error="content.isLimitExceeded || content.isError"
+                                        @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
                                 </div>
+                                <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
                             </div>
                         </div>
                     </iam-form-item>
