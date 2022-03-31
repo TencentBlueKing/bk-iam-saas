@@ -70,6 +70,8 @@ Vue.prototype.scrollToLocation = function ($ref) {
 
 Vue.use(VueI18n);
 
+console.log('start');
+
 const cn = require('./language/lang/zh');
 
 const en = require('./language/lang/en');

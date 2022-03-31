@@ -13,15 +13,15 @@ from typing import Dict, List, Tuple
 
 from django.conf import settings
 
-from backend.common.error_codes import error_codes
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
 from backend.util.cache import region
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
-from .http import http_delete, http_get, http_post, http_put, logger
-from .util import execute_all_data_by_paging, list_all_data_by_paging
+from .constants import ComponentEnum
+from .http import http_delete, http_get, http_post, http_put
+from .util import do_blueking_http_request, execute_all_data_by_paging, list_all_data_by_paging
 
 DEFAULT_SYSTEM_FIELDS = "id,name,name_en,description,description_en"
 DEFAULT_ACTION_FIELDS = "id,name,name_en,description,description_en"
@@ -44,37 +44,8 @@ def _call_iam_api(http_func, url_path, data, timeout=30):
         headers.update({"X-Bk-App-Code": settings.APP_CODE, "X-Bk-App-Secret": settings.APP_SECRET})
 
     url = url_join(settings.BK_IAM_HOST, url_path)
-    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
 
-    ok, data = http_func(**kwargs)
-    # remove sensitive info
-    kwargs["headers"] = {}
-
-    # process result
-    if not ok:
-        logger.error("iam api failed, method: %s, info: %s", http_func.__name__, kwargs)
-        raise error_codes.REMOTE_REQUEST_ERROR.format(f'request iam api error: {data["error"]}')
-
-    code = data["code"]
-    message = data["message"]
-
-    if code == 0:
-        return data["data"]
-
-    logger.warning(
-        "iam api warning, request_id: %s, method: %s, info: %s, code: %d message: %s",
-        local.request_id,
-        http_func.__name__,
-        kwargs,
-        code,
-        message,
-    )
-
-    error_message = (
-        f"Request=[{http_func.__name__} {url_path} request_id={local.request_id}],"
-        f"Response[code={code}, message={message}]"
-    )
-    raise error_codes.IAM_REQUEST_ERROR.format(error_message)
+    return do_blueking_http_request(ComponentEnum.IAM.value, http_func, url, data, headers, timeout)
 
 
 def list_system(fields: str = DEFAULT_SYSTEM_FIELDS) -> List[Dict]:

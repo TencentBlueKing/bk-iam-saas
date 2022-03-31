@@ -103,7 +103,7 @@ class TemplateBiz:
         """
         删除模板预更新锁
         """
-        lock = PermTemplatePreUpdateLock.objects.get_lock_not_running_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template_id)
         if not lock:
             return
 
@@ -173,7 +173,7 @@ class TemplateBiz:
         """
         查询模板预更新中的新增操作
         """
-        lock = PermTemplatePreUpdateLock.objects.get_lock_waiting_or_raise(template_id=template.id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_waiting_or_raise(template_id=template.id)
         return list(set(lock.action_ids) - set(template.action_ids))
 
     def sync_group_template_auth(self, group_id: int, template_id: int):
@@ -181,7 +181,7 @@ class TemplateBiz:
         同步用户组模板授权
         """
         # 查询需要删除的操作
-        lock = PermTemplatePreUpdateLock.objects.get_lock_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_or_raise(template_id=template_id)
         template = PermTemplate.objects.get_or_404(template_id)
         del_action_ids = list(set(template.action_ids) - set(lock.action_ids))
 
@@ -201,7 +201,7 @@ class TemplateBiz:
         """
         结束模板更新同步
         """
-        lock = PermTemplatePreUpdateLock.objects.get_lock_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_or_raise(template_id=template_id)
         template = PermTemplate.objects.get_or_404(template_id)
         template.action_ids = lock.action_ids
         with transaction.atomic():
@@ -220,7 +220,7 @@ class TemplateBiz:
             raise error_codes.VALIDATE_ERROR.format(_("模板操作未变更, 无需更新!"))
 
         template_id = template.id
-        lock = PermTemplatePreUpdateLock.objects.get_lock_not_running_or_raise(template_id=template_id)
+        lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template_id)
         if lock and set(lock.action_ids) != set(action_ids):
             raise error_codes.VALIDATE_ERROR.format(_("有其它的模板更新任务存在, 禁止提交新的更新任务!"))
 
@@ -523,7 +523,7 @@ class TemplatePolicyCloneBiz:
         """
         生成新的Policy
         """
-        instances = group_paths([PathNodeBeanList(one).dict() for one in paths])
+        instances = group_paths([PathNodeBeanList.parse_obj(one).dict() for one in paths])
         condition = ConditionBean(instances=instances, attributes=[])
         related_resource_types = [
             RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])

@@ -1,3 +1,49 @@
+# V1.7.8
+
+### 缺陷修复
+* 修复分级管理员下不能添加权限的问题
+* 新增系统接入说明
+* 修复用户组不存在导致用户组续期申请回调报错问题
+
+# V1.7.7
+
+### 功能优化
+* 环境属性功能release
+
+# V1.7.6
+
+### 功能优化
+* apigw 新增user-groups/department-groups两个开放 API
+* 变更原policy查询三个api的路径, 增加 /open/(但是保持向前兼容: 老的public=false, 新增三个新的)
+* apigw-manage 升级到 1.0.2
+* apigw配置后端由SaaS Web调整为SaaS API
+
+# V1.7.5
+
+### 功能优化
+* 对接APIGateway的SaaS Open API，其后端由bkiam-saas-web调整为 bkiam-saas-api
+
+### 缺陷修复
+* 修复前端用户组配置权限相关问题
+* 组织架构部门同步修复了部门lft/rght/level数据错误问题
+
+# V1.7.4
+
+### 缺陷修复
+* 修复healthz导致redis连接泄露问题
+* 修复前端用户组配置权限没有显示资源类型问题
+
+# V1.7.3
+
+### 缺陷修复
+* 修复自动注册apigateway配置错误
+
+# V1.7.2
+
+### 缺陷修复
+* 修复权限模板变更操作报错
+* 修复自动注册apigateway配置错误
+
 # V1.7.1
 
 ### 新增功能
