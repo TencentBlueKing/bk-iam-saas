@@ -373,20 +373,13 @@
                 this.tableLoading = !isExport;
                 let resourceInstances = _.cloneDeep(this.resourceInstances);
                 resourceInstances = resourceInstances.reduce((prev, item) => {
+                    const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
                     prev.push({
                         system_id: item.system_id,
-                        id: item.id || item.type,
+                        id: id,
                         type: item.type,
                         name: item.name,
-                        path: item.resourceInstancesPath && item.resourceInstancesPath.length
-                            ? item.resourceInstancesPath.reduce((p, e) => {
-                                p.push({
-                                    type: e.type,
-                                    id: e.id,
-                                    name: e.name
-                                });
-                                return p;
-                            }, []) : []
+                        path: resourceInstancesPath
                     });
                     return prev;
                 }, []);
@@ -431,6 +424,30 @@
                     });
                 } finally {
                     this.tableLoading = false;
+                }
+            },
+
+            handlePathData (data, type) {
+                if (data.resourceInstancesPath && data.resourceInstancesPath.length) {
+                    const lastIndex = data.resourceInstancesPath.length - 1;
+                    const path = data.resourceInstancesPath[lastIndex];
+                    let id = '';
+                    let resourceInstancesPath = [];
+                    if (type === path.type) {
+                        id = path.id;
+                        data.resourceInstancesPath.splice(lastIndex, 1);
+                    } else {
+                        id = '*';
+                    }
+                    resourceInstancesPath = data.resourceInstancesPath.reduce((p, e) => {
+                        p.push({
+                            type: e.type,
+                            id: e.id,
+                            name: e.name
+                        });
+                        return p;
+                    }, []);
+                    return { id, resourceInstancesPath };
                 }
             },
 
@@ -522,6 +539,7 @@
                     this.resourceInstances = [];
                 } else {
                     resItem.condition = data;
+                    console.log('data', data);
                     data.forEach(item => {
                         item.instance.forEach(e => {
                             resItem.resourceInstancesPath = e.path[0];
