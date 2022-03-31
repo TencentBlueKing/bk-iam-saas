@@ -161,7 +161,6 @@ CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Creden
 
 # restframework
 REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
     "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",

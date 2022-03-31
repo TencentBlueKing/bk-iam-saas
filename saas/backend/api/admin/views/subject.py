@@ -17,13 +17,12 @@ from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import AdminSubjectGroupSLZ
 from backend.api.authentication import ESBAuthentication
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.biz.group import GroupBiz
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.models import Subject
 
 
-class AdminSubjectGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
+class AdminSubjectGroupViewSet(GenericViewSet):
     """Subject的用户组"""
 
     paginator = None  # 去掉swagger中的limit offset参数

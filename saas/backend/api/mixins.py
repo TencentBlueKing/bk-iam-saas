@@ -8,17 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
-
-from django.utils import translation
-from rest_framework import exceptions, status
-from rest_framework.response import Response
-from rest_framework.settings import api_settings
-from rest_framework.views import set_rollback
+from rest_framework import exceptions
 
 from backend.biz.system import SystemBiz
-from backend.common.constants import DjangoLanguageEnum
-from backend.common.error_codes import APIException, error_codes
 
 
 class SystemClientCheckMixin:
@@ -34,50 +26,3 @@ class SystemClientCheckMixin:
             raise exceptions.PermissionDenied(
                 detail="app_code {} can not access system {}".format(app_code, system_id)
             )
-
-
-class ExceptionHandlerMixin:
-    """
-    open api 直接返回serializer的error
-    """
-
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
-        translation.activate(DjangoLanguageEnum.EN.value)
-        request.LANGUAGE_CODE = translation.get_language()
-
-    def get_exception_handler(self):
-        return self._exception_handler
-
-    def _exception_handler(self, exc, context):
-        """
-        返回serializer的error detail 到调用方
-        """
-        if isinstance(exc, exceptions.ValidationError):
-            set_rollback()
-            data = {
-                "result": False,
-                "code": error_codes.VALIDATE_ERROR.code,
-                "message": json.dumps(exc.detail),
-                "data": None,
-            }
-            return Response(data, headers={})
-
-        # NOTE: status code除了 401, 403, 404 会直接返回给调用方, 其余的都会返回200
-        # web api 的 status code 都改成了错误对应的值, 但是 openapi 为了调用方的兼容, 先保持都返回 200
-        if isinstance(exc, APIException):
-            if (
-                exc.status_code > 399
-                and exc.status_code < 500
-                and exc.status_code
-                not in [
-                    status.HTTP_401_UNAUTHORIZED,
-                    status.HTTP_403_FORBIDDEN,
-                    status.HTTP_404_NOT_FOUND,
-                ]
-            ):
-                exc.status_code = status.HTTP_200_OK
-
-        default_handler = api_settings.EXCEPTION_HANDLER
-
-        return default_handler(exc, context)

@@ -19,13 +19,12 @@ from backend.api.admin.filters import GroupFilter
 from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import AdminGroupBasicSLZ, AdminGroupMemberSLZ
 from backend.api.authentication import ESBAuthentication
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.group.models import Group
 from backend.biz.group import GroupBiz
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema
 
 
-class AdminGroupViewSet(ExceptionHandlerMixin, mixins.ListModelMixin, GenericViewSet):
+class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
     """用户组"""
 
     authentication_classes = [ESBAuthentication]
@@ -47,7 +46,7 @@ class AdminGroupViewSet(ExceptionHandlerMixin, mixins.ListModelMixin, GenericVie
         return super().list(request, *args, **kwargs)
 
 
-class AdminGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
+class AdminGroupMemberViewSet(GenericViewSet):
     """用户组成员"""
 
     authentication_classes = [ESBAuthentication]

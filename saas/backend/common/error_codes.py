@@ -11,8 +11,10 @@ specific language governing permissions and limitations under the License.
 Customized error handling for restapi framework
 """
 import copy
-from typing import Optional, Type
+from typing import Any, Dict, Optional, Type
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 
@@ -22,10 +24,13 @@ class CodeException(Exception):
 
     delimiter = ": "
 
-    def __init__(self, code: int, message: str, status_code: int = status.HTTP_200_OK):
+    def __init__(
+        self, code: int, message: str, status_code: int = status.HTTP_200_OK, data: Optional[Dict[str, Any]] = None
+    ):
         self.code = code
         self.message = message
         self.status_code = status_code
+        self.data = data
         # Default Error code
         self.code_name = "UNKNOWN_ERROR_CODE"
 
@@ -52,7 +57,7 @@ class CodeException(Exception):
     def as_json(self):
         # append the code_name
         message = "%s (%s)" % (self.message, self.code_name)
-        return {"result": False, "code": self.code, "message": message, "data": None}
+        return {"result": False, "code": self.code, "message": message, "data": self.data}
 
     def __str__(self):
         return "<ErrorCode %s:(%s)>" % (self.code, self.message)
@@ -86,6 +91,12 @@ def auto_configure_codenames(cls: Type):
     return cls
 
 
+def _get_login_url():
+    params = urlencode({"c_url": f"{settings.APP_URL}/login_success/", "app_code": settings.APP_CODE})
+    login_plain_url = f"{settings.LOGIN_SERVICE_PLAIN_URL}?{params}"
+    return {"login_url": settings.LOGIN_SERVICE_URL, "login_plain_url": login_plain_url}
+
+
 @auto_configure_codenames
 class ErrorCodes:
     """Error codes collection"""
@@ -99,7 +110,9 @@ class ErrorCodes:
 
     # [IAM SaaS 用户请求错误：19024xx]
     # 未登录/无权限/不存在
-    UNAUTHORIZED = APIException(1902401, _("用户未登录或登录态失效，请使用登录链接重新登录"), status_code=status.HTTP_401_UNAUTHORIZED)
+    UNAUTHORIZED = APIException(
+        1902401, _("用户未登录或登录态失效，请使用登录链接重新登录"), status_code=status.HTTP_401_UNAUTHORIZED, data=_get_login_url()
+    )
     FORBIDDEN = APIException(1902403, _("没有访问权限"), status_code=status.HTTP_403_FORBIDDEN)
     NOT_FOUND_ERROR = APIException(1902404, _("数据不存在"), status_code=status.HTTP_404_NOT_FOUND)
     # 通用错误
@@ -135,7 +148,7 @@ class ErrorCodes:
     RESOURCE_PROVIDER_DATA_INVALID = APIException(1902250, _("接入系统自身接口返回数据不符合要求"))
 
     # 通用系统错误
-    SYSTEM_ERROR = APIException(1902500, _("系统错误"), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    SYSTEM_ERROR = APIException(1902500, _("系统异常,请联系管理员处理"), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # [ITSM请求或处理等错误 19026xx]
     # ITSM_REQUEST_ERROR = RemoteAPIException(1902501, _("ITSM请求返回码非0"))

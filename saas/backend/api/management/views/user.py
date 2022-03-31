@@ -22,7 +22,6 @@ from backend.api.management.serializers import (
     ManagementUserGradeManagerQuerySLZ,
     ManagementUserQuerySLZ,
 )
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.biz.group import GroupBiz
@@ -32,7 +31,7 @@ from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectTy
 from backend.service.models import Subject
 
 
-class ManagementUserGradeManagerViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementUserGradeManagerViewSet(GenericViewSet):
     """用户加入的分级管理员"""
 
     paginator = None  # 去掉swagger中的limit offset参数
@@ -63,7 +62,7 @@ class ManagementUserGradeManagerViewSet(ExceptionHandlerMixin, GenericViewSet):
         return Response(resp_slz.data)
 
 
-class ManagementUserGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
     """用户在某个分级管理员下的用户组"""
 
     paginator = None  # 去掉swagger中的limit offset参数

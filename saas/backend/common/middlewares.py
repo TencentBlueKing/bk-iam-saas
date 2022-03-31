@@ -11,11 +11,29 @@ specific language governing permissions and limitations under the License.
 import json
 import logging
 import traceback
+from typing import Optional
 
 from django.conf import settings
-from django.http import Http404, JsonResponse
+from django.http import Http404
+from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 from pyinstrument.middleware import ProfilerMiddleware
+from rest_framework import status
+from rest_framework.exceptions import (
+    AuthenticationFailed,
+    MethodNotAllowed,
+    NotAuthenticated,
+    ParseError,
+    PermissionDenied,
+    ValidationError,
+)
+from rest_framework.response import Response
+from rest_framework.views import set_rollback
+
+from backend.common.constants import DjangoLanguageEnum
+from backend.common.debug import log_api_error_trace
+from backend.common.error_codes import CodeException, error_codes
+from backend.common.exception_handler import one_line_error
 
 try:
     from raven.contrib.django.raven_compat.models import sentry_exception_handler
@@ -80,50 +98,85 @@ class RequestProvider(object):
 
 
 class AppExceptionMiddleware(MiddlewareMixin):
-    def process_exception(self, request, exception):
+    def _is_open_api_request(self, request) -> bool:
+        return "/api/v1/open/" in request.path
+
+    def process_request(self, request):
+        # 如果是 openapi 请求, 设置默认语言为 english
+        # openapi 的错误信息返回为英文
+        if self._is_open_api_request(request):
+            translation.activate(DjangoLanguageEnum.EN.value)
+            request.LANGUAGE_CODE = translation.get_language()
+
+    def _exception_to_error(self, request, exc) -> Optional[CodeException]:
+        """把预期中的异常转换成error"""
+        if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
+            return error_codes.UNAUTHORIZED
+
+        if isinstance(exc, PermissionDenied):
+            return error_codes.FORBIDDEN
+
+        if isinstance(exc, MethodNotAllowed):
+            return error_codes.METHOD_NOT_ALLOWED.format(message=exc.detail)
+
+        if isinstance(exc, ParseError):
+            return error_codes.JSON_FORMAT_ERROR.format(message=exc.detail)
+
+        if isinstance(exc, ValidationError):
+            if self._is_open_api_request(request):
+                return error_codes.VALIDATE_ERROR.format(message=json.dumps(exc.detail), replace=True)
+
+            return error_codes.VALIDATE_ERROR.format(message=one_line_error(exc))
+
+        if isinstance(exc, CodeException):
+            # 回滚事务
+            set_rollback()
+            # 记录Debug信息
+            log_api_error_trace(request)
+
+            return exc
+
+        return None
+
+    def process_exception(self, request, exc):
         """
         app后台错误统一处理
         """
+        if isinstance(exc, Http404):
+            return None
 
-        self.exception = exception
-        self.request = request
+        error = self._exception_to_error(request, exc)
+        if error is None:
+            # 处理预期之外的异常
+            error = error_codes.SYSTEM_ERROR
 
-        # 用户未主动捕获的异常
-        logger.error(
-            ("""捕获未处理异常,异常具体堆栈->[%s], 请求URL->[%s], """ """请求方法->[%s] 请求参数->[%s]""")
-            % (
-                traceback.format_exc(),
-                request.path,
-                request.method,
-                json.dumps(getattr(request, request.method, None)),
+            # 用户未主动捕获的异常
+            logger.error(
+                ("""捕获未处理异常,异常具体堆栈->[%s], 请求URL->[%s], """ """请求方法->[%s] 请求参数->[%s]""")
+                % (
+                    traceback.format_exc(),
+                    request.path,
+                    request.method,
+                    json.dumps(getattr(request, request.method, None)),
+                )
             )
+
+            # 记录debug信息
+            log_api_error_trace(request, True)
+
+            # notify sentry
+            if sentry_exception_handler is not None:
+                sentry_exception_handler(request=request)
+
+        # NOTE: openapi 为了兼容调用方使用习惯, status code 默认返回 200
+        ignore_errors = (
+            error_codes.UNAUTHORIZED,
+            error_codes.FORBIDDEN,
+            error_codes.NOT_FOUND_ERROR,
+            error_codes.SYSTEM_ERROR,
         )
 
-        # 对于check开头函数进行遍历调用，如有满足条件的函数，则不屏蔽异常
-        check_funtions = self.get_check_functions()
-        for check_function in check_funtions:
-            if check_function():
-                return None
+        if self._is_open_api_request(request) and not isinstance(error, ignore_errors):
+            error.status_code = status.HTTP_200_OK
 
-        response = JsonResponse({"result": False, "code": "1902500", "message": "系统异常,请联系管理员处理", "data": None})
-        response.status_code = 500
-
-        # notify sentry
-        if sentry_exception_handler is not None:
-            sentry_exception_handler(request=request)
-
-        return response
-
-    def get_check_functions(self):
-        """获取需要判断的函数列表"""
-        return [
-            getattr(self, func) for func in dir(self) if func.startswith("check") and callable(getattr(self, func))
-        ]
-
-    def check_is_debug(self):
-        """判断是否是开发模式"""
-        return settings.DEBUG
-
-    def check_is_http404(self):
-        """判断是否基于Http404异常"""
-        return isinstance(self.exception, Http404)
+        return Response(error.as_json(), status=error.status_code)
