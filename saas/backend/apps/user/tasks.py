@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 from celery import task
 from django.conf import settings
 from django.core.paginator import Paginator
+from django.db.models import Max
 from django.template.loader import render_to_string
 
 from backend.apps.organization.constants import StaffStatus
@@ -31,16 +32,33 @@ from backend.util.url import url_join
 logger = logging.getLogger("celery")
 
 
+def _distribute_subtask(subtask, expired_at: int):
+    """子任务拆分"""
+    # 获取user表的最大id
+    q = User.objects.aggregate(max_id=Max("id"))
+    max_id = q.get("max_id")
+
+    size = 10000  # 每1万个id一个子任务
+    for i in range(0, max_id, 10000):
+        subtask.delay(i, i + size, expired_at)
+
+
 @task(ignore_result=True)
 def user_group_policy_expire_remind():
     """
     用户的用户组, 自定义权限过期检查
     """
+    expired_at = get_soon_expire_ts()
+    _distribute_subtask(user_group_policy_expire_remind_subtask, expired_at)
+
+
+@task(ignore_result=True)
+def user_group_policy_expire_remind_subtask(min_id: int, max_id: int, expired_at: int):
     policy_biz = PolicyQueryBiz()
     group_biz = GroupBiz()
 
     # 分页遍历所有的用户
-    qs = User.objects.filter(staff_status=StaffStatus.IN.value)
+    qs = User.objects.filter(staff_status=StaffStatus.IN.value, id__gt=min_id, id__lte=max_id)
     paginator = Paginator(qs, 100)
 
     base_url = url_join(settings.APP_URL, "/perm-renewal")
@@ -48,7 +66,6 @@ def user_group_policy_expire_remind():
     if not paginator.count:
         return
 
-    expired_at = get_soon_expire_ts()
     for i in paginator.page_range:
         for user in paginator.page(i):
             subject = Subject(type=SubjectType.USER.value, id=user.username)
@@ -79,14 +96,19 @@ def user_cleanup_expired_policy():
     """
     清理用户的长时间过期策略
     """
+    expired_at = int(db_time()) - settings.MAX_EXPIRED_POLICY_DELETE_TIME
+    _distribute_subtask(user_cleanup_expired_policy_subtask, expired_at)
+
+
+@task(ignore_result=True)
+def user_cleanup_expired_policy_subtask(min_id: int, max_id: int, expired_at: int):
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
 
-    expired_at = int(db_time()) - settings.MAX_EXPIRED_POLICY_DELETE_TIME
-    task_id = user_cleanup_expired_policy.request.id
+    task_id = user_cleanup_expired_policy_subtask.request.id
 
     # 分页遍历所有的用户
-    qs = User.objects.filter(staff_status=StaffStatus.IN.value)
+    qs = User.objects.filter(staff_status=StaffStatus.IN.value, id__gt=min_id, id__lte=max_id)
     paginator = Paginator(qs, 100)
 
     if not paginator.count:
@@ -103,8 +125,8 @@ def user_cleanup_expired_policy():
 
             # 分系统删除过期的策略
             sorted_policies = sorted(policies, key=lambda p: p.system.id)
-            for system_id, per_policies in groupby(sorted_policies, lambda p: p.system.id):
-                per_policies = list(per_policies)
+            for system_id, _per_policies in groupby(sorted_policies, lambda p: p.system.id):
+                per_policies = list(_per_policies)
                 policy_operation_biz.delete_by_ids(system_id, subject, [p.id for p in per_policies])
 
                 # 记审计信息
