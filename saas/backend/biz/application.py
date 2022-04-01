@@ -191,7 +191,18 @@ class ApprovedPassApplicationBiz:
 
     def _renew_group(self, subject: Subject, application: Application):
         """用户组续期"""
-        for group in application.data["groups"]:
+        groups = application.data["groups"]
+        qs = Group.objects.filter(id__in=[group["id"] for group in groups]).values_list("id", flat=True)
+        group_id_set = set(qs)
+
+        for group in groups:
+            if group["id"] not in group_id_set:
+                logger.error(
+                    f"subject {subject} renew group({group['id']}) fail! "
+                    "the group has been deleted before the application is approved"
+                )
+                continue
+
             self.group_biz.update_members_expired_at(
                 group["id"],
                 [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, policy_expired_at=group["expired_at"])],
