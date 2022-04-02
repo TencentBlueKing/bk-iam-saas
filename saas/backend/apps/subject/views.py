@@ -17,10 +17,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.account.permissions import role_perm_class
+from backend.account.serializers import AccountRoleSLZ
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicyPartDeleteSLZ, PolicySLZ, PolicySystemSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
+from backend.biz.role import RoleBiz
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum, SubjectRelationType
@@ -247,3 +249,20 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
         audit_context_setter(subject=subject, system_id=system_id, policies=[update_policy])
 
         return Response()
+
+
+class SubjectRoleViewSet(GenericViewSet):
+
+    paginator = None  # 去掉swagger中的limit offset参数
+
+    biz = RoleBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户角色权限",
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
+        tags=["subject"],
+    )
+    def list(self, request, *args, **kwargs):
+        data = self.biz.list_user_role_with_permission(user_id=request.user.username)
+        return Response([one.dict() for one in data])
