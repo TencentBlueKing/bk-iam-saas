@@ -84,7 +84,7 @@ class UserRole(BaseModel):
                     name=role.name,
                     name_en=role.name_en,
                     description=role.description,
-                )
+        )
 
 
 class UserRoleMember(BaseModel):
