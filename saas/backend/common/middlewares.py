@@ -27,13 +27,15 @@ from rest_framework.exceptions import (
     PermissionDenied,
     ValidationError,
 )
+from rest_framework.fields import ListField
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
+from rest_framework.settings import api_settings as drf_api_settings
 from rest_framework.views import set_rollback
 
 from backend.common.constants import DjangoLanguageEnum
 from backend.common.debug import log_api_error_trace
 from backend.common.error_codes import CodeException, error_codes
-from backend.common.exception_handler import one_line_error
 
 try:
     from raven.contrib.django.raven_compat.models import sentry_exception_handler
@@ -126,7 +128,7 @@ class AppExceptionMiddleware(MiddlewareMixin):
             if self._is_open_api_request(request):
                 return error_codes.VALIDATE_ERROR.format(message=json.dumps(exc.detail), replace=True)
 
-            return error_codes.VALIDATE_ERROR.format(message=one_line_error(exc))
+            return error_codes.VALIDATE_ERROR.format(message=_one_line_error(exc))
 
         if isinstance(exc, CodeException):
             # 回滚事务
@@ -152,7 +154,10 @@ class AppExceptionMiddleware(MiddlewareMixin):
 
             # 用户未主动捕获的异常
             logger.error(
-                ("""捕获未处理异常,异常具体堆栈->[%s], 请求URL->[%s], """ """请求方法->[%s] 请求参数->[%s]""")
+                (
+                    """catch unhandled exception, stack->[%s], request url->[%s], """
+                    """request method->[%s] request params->[%s]"""
+                )
                 % (
                     traceback.format_exc(),
                     request.path,
@@ -176,7 +181,51 @@ class AppExceptionMiddleware(MiddlewareMixin):
             error_codes.SYSTEM_ERROR,
         )
 
+        status_code = error.status_code
         if self._is_open_api_request(request) and not isinstance(error, ignore_errors):
-            error.status_code = status.HTTP_200_OK
+            status_code = status.HTTP_200_OK
 
-        return Response(error.as_json(), status=error.status_code)
+        return Response(error.as_json(), status=status_code)
+
+
+def _one_line_error(exc):
+    """
+    从 serializer ValidationError 中抽取一行的错误消息
+    """
+    detail = exc.detail
+
+    # handle ValidationError("error")
+    if isinstance(detail, list):
+        return detail[0]
+
+    key, error = next(iter(detail.items()))
+    if isinstance(error, list):
+        error = error[0]
+    elif isinstance(error, dict) and getattr(exc, "serializer", None):
+        if key in getattr(exc.serializer, "fields", {}):
+            field = exc.serializer.fields[key]
+            if isinstance(field, ListField):  # 处理嵌套的ListField
+                _, child = next(iter(error.items()))
+                child_error = ValidationError(child)
+                child_error.serializer = field.child
+                return _one_line_error(child_error)
+            elif isinstance(field, Serializer):  # 处理嵌套的serializer
+                child_error = ValidationError(error)
+                child_error.serializer = field
+                return _one_line_error(child_error)
+
+        if isinstance(exc.serializer, ListField):
+            _, child = next(iter(detail.items()))
+            child_error = ValidationError(child)
+            child_error.serializer = exc.serializer.child
+            return _one_line_error(child_error)
+
+    # handle non_field_errors, 非单个字段错误
+    if key == drf_api_settings.NON_FIELD_ERRORS_KEY:
+        return error
+
+    # handle custom is_valid, show label in error
+    if getattr(exc, "serializer", None) and key in exc.serializer.fields:
+        key = exc.serializer.fields[key].label
+
+    return f"{key}: {error}"
