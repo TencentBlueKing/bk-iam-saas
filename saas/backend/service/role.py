@@ -79,11 +79,11 @@ class UserRole(BaseModel):
     @classmethod
     def convert_from_role(cls, role):
         return cls(
-                    id=role.id,
-                    type=role.type,
-                    name=role.name,
-                    name_en=role.name_en,
-                    description=role.description,
+            id=role.id,
+            type=role.type,
+            name=role.name,
+            name_en=role.name_en,
+            description=role.description,
         )
 
 
