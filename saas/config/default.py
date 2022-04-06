@@ -371,13 +371,6 @@ APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANC
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 
-# 前端页面功能开关
-ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower() == "true",
-}
-
-
 # 用于发布订阅的Redis
 PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")
 PUB_SUB_REDIS_PORT = os.getenv("BKAPP_PUB_SUB_REDIS_PORT")
