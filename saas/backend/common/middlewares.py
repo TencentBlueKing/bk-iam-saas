@@ -32,17 +32,11 @@ from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings as drf_api_settings
 from rest_framework.views import set_rollback
+from sentry_sdk import capture_exception
 
 from backend.common.constants import DjangoLanguageEnum
 from backend.common.debug import log_api_error_trace
 from backend.common.error_codes import CodeException, error_codes
-
-try:
-    from raven.contrib.django.raven_compat.models import sentry_exception_handler
-# 兼容未有安装sentry的情况
-except ImportError:
-    sentry_exception_handler = None
-
 from backend.common.local import local
 
 logger = logging.getLogger("app")
@@ -157,21 +151,18 @@ class AppExceptionMiddleware(MiddlewareMixin):
                 (
                     """catch unhandled exception, stack->[%s], request url->[%s], """
                     """request method->[%s] request params->[%s]"""
-                )
-                % (
-                    traceback.format_exc(),
-                    request.path,
-                    request.method,
-                    json.dumps(getattr(request, request.method, None)),
-                )
+                ),
+                traceback.format_exc(),
+                request.path,
+                request.method,
+                json.dumps(getattr(request, request.method, None)),
             )
 
             # 记录debug信息
             log_api_error_trace(request, True)
 
             # notify sentry
-            if sentry_exception_handler is not None:
-                sentry_exception_handler(request=request)
+            capture_exception(exc)
 
         # NOTE: openapi 为了兼容调用方使用习惯, status code 默认返回 200
         ignore_errors = (
