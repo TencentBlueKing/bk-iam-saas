@@ -67,7 +67,7 @@ INSTALLED_APPS = [
 ]
 
 # 登录中间件
-LOGIN_MIDDLEWARE = os.getenv("BKAPP_LOGIN_MIDDLEWARE", "backend.account.middlewares.LoginMiddleware")
+_LOGIN_MIDDLEWARE = os.getenv("BKAPP_LOGIN_MIDDLEWARE", "backend.account.middlewares.LoginMiddleware")
 
 MIDDLEWARE = [
     "backend.common.middlewares.CustomProfilerMiddleware",
@@ -81,7 +81,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    LOGIN_MIDDLEWARE,
+    _LOGIN_MIDDLEWARE,
     "backend.account.middlewares.TimezoneMiddleware",
     "backend.account.middlewares.RoleAuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
