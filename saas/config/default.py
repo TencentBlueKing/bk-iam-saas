@@ -86,7 +86,7 @@ MIDDLEWARE = [
     "backend.account.middlewares.TimezoneMiddleware",
     "backend.account.middlewares.RoleAuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
-    "backend.common.middlewares.AppExceptionMiddleware",
+    "backend.common.middlewares.LanguageMiddleware",
     "corsheaders.middleware.CorsMiddleware",
 ]
 
@@ -163,6 +163,7 @@ CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Creden
 
 # restframework
 REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "backend.common.exception_handler.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
