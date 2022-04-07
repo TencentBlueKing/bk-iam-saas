@@ -66,6 +66,8 @@ INSTALLED_APPS = [
     "backend.apps.mgmt",
 ]
 
+# 登录中间件
+_LOGIN_MIDDLEWARE = os.getenv("BKAPP_LOGIN_MIDDLEWARE", "backend.account.middlewares.LoginMiddleware")
 
 MIDDLEWARE = [
     "backend.common.middlewares.CustomProfilerMiddleware",
@@ -79,7 +81,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "backend.account.middlewares.LoginMiddleware",
+    _LOGIN_MIDDLEWARE,
     "backend.account.middlewares.TimezoneMiddleware",
     "backend.account.middlewares.RoleAuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
@@ -114,7 +116,7 @@ DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
-AUTHENTICATION_BACKENDS = ("backend.account.backends.TokenBackend",)
+AUTHENTICATION_BACKENDS = (os.getenv("BKAPP_AUTHENTICATION_BACKEND", "backend.account.backends.TokenBackend"),)
 
 AUTH_USER_MODEL = "account.User"
 
