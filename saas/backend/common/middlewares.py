@@ -16,12 +16,7 @@ from django.conf import settings
 from django.http import Http404, JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 from pyinstrument.middleware import ProfilerMiddleware
-
-try:
-    from raven.contrib.django.raven_compat.models import sentry_exception_handler
-# 兼容未有安装sentry的情况
-except ImportError:
-    sentry_exception_handler = None
+from sentry_sdk import capture_exception
 
 from backend.common.local import local
 
@@ -109,8 +104,7 @@ class AppExceptionMiddleware(MiddlewareMixin):
         response.status_code = 500
 
         # notify sentry
-        if sentry_exception_handler is not None:
-            sentry_exception_handler(request=request)
+        capture_exception(exception)
 
         return response
 
