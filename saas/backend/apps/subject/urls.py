@@ -23,7 +23,7 @@ urlpatterns = [
                     name="subject.group",
                 ),
                 path(
-                    "roles_with_perm/",
+                    "roles/",
                     views.SubjectRoleViewSet.as_view({"get": "list"}),
                     name="subject.roles_with_permission",
                 ),

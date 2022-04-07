@@ -29,7 +29,7 @@ from backend.service.constants import PermissionCodeEnum, SubjectRelationType
 from backend.service.models import Subject
 
 from .audit import SubjectGroupDeleteAuditProvider, SubjectPolicyDeleteAuditProvider
-from .serializers import SubjectGroupSLZ, UserRelationSLZ
+from .serializers import QueryRoleSLZ, SubjectGroupSLZ, UserRelationSLZ
 
 permission_logger = logging.getLogger("permission")
 
@@ -259,10 +259,18 @@ class SubjectRoleViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户角色权限",
+        query_serializer=QueryRoleSLZ(label="query_role"),
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
         tags=["subject"],
     )
     def list(self, request, *args, **kwargs):
-        data = self.biz.list_user_role_with_permission(user_id=request.user.username)
+        slz = QueryRoleSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        with_perm = slz.validated_data["with_perm"]
+
+        if with_perm:
+            data = self.biz.list_user_role_with_permission(user_id=request.user.username)
+        else:
+            data = self.biz.list_user_role(request.user.username)
         return Response([one.dict() for one in data])

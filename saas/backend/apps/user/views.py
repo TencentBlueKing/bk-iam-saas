@@ -30,7 +30,7 @@ from backend.common.time import get_soon_expire_ts
 from backend.service.constants import SubjectRelationType, SubjectType
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
+from .serializers import GroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
 
 permission_logger = logging.getLogger("permission")
 
@@ -165,7 +165,7 @@ class UserCommonActionViewSet(GenericViewSet):
         return Response([one.dict() for one in data])
 
 
-class RoleWithPermView(GenericViewSet):
+class RoleViewSet(GenericViewSet):
 
     paginator = None  # 去掉swagger中的limit offset参数
 
@@ -173,11 +173,18 @@ class RoleWithPermView(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户角色权限",
+        query_serializer=QueryRoleSLZ(label="query_role"),
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
+        slz = QueryRoleSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        with_perm = slz.validated_data["with_perm"]
 
-        data = self.biz.list_user_role_with_permission(user_id=request.user.username)
+        if with_perm:
+            data = self.biz.list_user_role_with_permission(user_id=request.user.username)
+        else:
+            data = self.biz.list_user_role(request.user.username)
         return Response([one.dict() for one in data])

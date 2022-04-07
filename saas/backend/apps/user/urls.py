@@ -21,5 +21,5 @@ urlpatterns = [
         name="user.profile.newbie",
     ),
     path("common_actions/", views.UserCommonActionViewSet.as_view({"get": "list"}), name="user.common_action"),
-    path("roles_with_perm/", views.RoleWithPermView.as_view({"get": "list"}), name="user.role"),
+    path("roles/", views.RoleViewSet.as_view({"get": "list"}), name="user.role"),
 ]
