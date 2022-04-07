@@ -220,3 +220,10 @@ def _one_line_error(exc):
         key = exc.serializer.fields[key].label
 
     return f"{key}: {error}"
+
+
+def exception_handler(exc, context):
+    """
+    NOTE: 设置DRF默认不处理异常, 异常完全由AppExceptionMiddleware中间件处理
+    """
+    return None
