@@ -427,6 +427,7 @@
                         && !item.isAggregate
                         && relatedActions.includes(item.id)
                         && curData.system_id === item.system_id
+                        && item.resource_groups[this.curGroupIndex]
                         && !item.resource_groups[this.curGroupIndex].related_resource_types.every(sub => sub.empty);
                 }));
                 if (relatedList.length > 0) {
@@ -471,6 +472,7 @@
                 }
                 payload.forEach(item => {
                     const curIndex = this.tableList.findIndex(sub => sub.id === item.id
+                        && item.resource_groups[this.curGroupIndex]
                         && sub.system_id === item.resource_groups[this.curGroupIndex]
                             .related_resource_types[0].system_id && !sub.isExpiredAtDisabled);
                     if (curIndex > -1) {
