@@ -161,7 +161,6 @@ CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Creden
 
 # restframework
 REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
     "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
@@ -292,16 +291,10 @@ else:
 djcelery.setup_loader()
 
 
-# sentry support
-if os.getenv("SENTRY_DSN"):
-    INSTALLED_APPS += ("raven.contrib.django.raven_compat",)
-    MIDDLEWARE += ("raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware",)
-    RAVEN_CONFIG = {
-        "dsn": os.getenv("SENTRY_DSN"),
-    }
+# tracing: sentry support
+SENTRY_DSN = os.getenv("SENTRY_DSN")
 
-
-# tracing 相关配置
+# tracing: otel 相关配置
 # if enable, default false
 ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
 BKAPP_OTEL_INSTRUMENT_DB_API = os.getenv("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
@@ -310,7 +303,7 @@ BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
 BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
 BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
 
-if ENABLE_OTEL_TRACE:
+if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
 
 

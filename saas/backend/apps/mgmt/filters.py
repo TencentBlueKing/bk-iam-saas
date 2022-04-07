@@ -8,21 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework import exceptions
+from django_filters import rest_framework as filters
 
-from backend.biz.system import SystemBiz
+from backend.api.authorization.models import AuthAPIAllowListConfig
 
 
-class SystemClientCheckMixin:
-    system_biz = SystemBiz()
+class AuthorizationApiWhiteListFilter(filters.FilterSet):
+    type = filters.CharFilter(label="api类型")
 
-    def verify_system_client(self, system_id: str, app_code: str):
-        """
-        验证app_code是否能访问系统
-        """
-        clients = self.system_biz.list_client(system_id)
-
-        if app_code not in clients:
-            raise exceptions.PermissionDenied(
-                detail="app_code {} can not access system {}".format(app_code, system_id)
-            )
+    class Meta:
+        model = AuthAPIAllowListConfig
+        fields = ["type"]

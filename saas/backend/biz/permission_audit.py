@@ -100,7 +100,7 @@ class QueryAuthorizedSubjects(object):
         if self.resource_instances:
             resources = [
                 {
-                    "system": self.system_id,
+                    "system": resource_instance["system_id"],
                     "type": resource_instance["type"],
                     "id": resource_instance["id"],
                     "attribute": {"_bk_iam_path_": translate_path(resource_instance["path"])}
