@@ -13,9 +13,12 @@ from rest_framework import serializers
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.authorization.constants import AuthorizationAPIEnum
 from backend.api.management.constants import ManagementAPIEnum
+from backend.apps.group.models import Group
+from backend.apps.template.models import PermTemplate
 from backend.biz.system import SystemBiz
+from backend.long_task.constants import TaskStatus, TaskType
 
-from .constants import ApiType
+from .constants import ApiType, ObjectType
 
 
 class QueryApiSLZ(serializers.Serializer):
@@ -122,3 +125,52 @@ class ManagementApiAddWhiteListSLZ(serializers.Serializer):
         if value == "*" or value in dict(ManagementAPIEnum.get_choices()):
             return value
         raise serializers.ValidationError(f"api: {value} 非法")
+
+
+class QueryLongTaskSLZ(serializers.Serializer):
+    type = serializers.ChoiceField(label="长时任务类型", choices=TaskType.get_choices())
+
+
+class LongTaskSLZ(serializers.Serializer):
+    id = serializers.CharField(label="任务ID")
+    type = serializers.CharField(label="任务类型")
+    status = serializers.SerializerMethodField(label="任务状态")
+    object = serializers.SerializerMethodField(label="任务相关参数")
+
+    def get_status(self, obj):
+        return TaskStatus.get_choice_label(obj.status)
+
+    def get_object(self, obj):
+        args = obj.args
+        if obj.type == TaskType.GROUP_AUTHORIZATION.value:
+            id = args[0]["id"]
+            group = Group.objects.filter(id=id).first()
+            object = [
+                {
+                    "type": ObjectType.GROUP.value,
+                    "id": id,
+                    "name": group.name if group else ""
+                }
+            ]
+
+        elif obj.type == TaskType.TEMPLATE_UPDATE.value:
+            id = args[0]
+            template = PermTemplate.objects.filter(id=id).first()
+            object = [
+                {
+                    "type": ObjectType.TEMPLATE.value,
+                    "id": id,
+                    "name": template.name if template else ""
+                }
+            ]
+
+        return object
+
+
+class SubTaskSLZ(serializers.Serializer):
+    id = serializers.CharField(label="子任务ID")
+    status = serializers.SerializerMethodField(label="状态")
+    exception = serializers.CharField(label="异常信息")
+
+    def get_status(self, obj):
+        return TaskStatus.get_choice_label(obj.status)
