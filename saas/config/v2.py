@@ -110,7 +110,7 @@ AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 
 # 只对正式环境日志级别进行配置，可以在这里修改
-LOG_LEVEL = "ERROR"
+LOG_LEVEL = os.getenv("BKAPP_LOG_LEVEL", "ERROR")
 
 _LOG_DIR = os.path.join(os.path.join(os.getenv("BK_LOG_DIR", "/data/apps/logs/"), APP_CODE))
 
