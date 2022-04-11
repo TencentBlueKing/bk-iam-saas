@@ -379,7 +379,10 @@ export const m = {
         '普通成员': 'rank and file',
         '退出登录': 'log out',
         '我的分级管理员': 'My grading administrator',
-        '资源权限管理': 'Resource rights management'
+        '资源权限管理': 'Resource rights management',
+        '发起需求': 'Initiate demand',
+        '工作台': 'Workbench',
+        '开发者': 'Developers'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
