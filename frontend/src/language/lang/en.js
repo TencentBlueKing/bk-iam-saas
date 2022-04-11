@@ -213,7 +213,9 @@ export const m = {
         '类型': 'Type',
         '查询类型': 'Query type',
         '确定同步': 'Confirm sync',
-        '新增模板': 'Add a template'
+        '新增模板': 'Add a template',
+        '导出': 'export',
+        '查询': 'Search'
     },
     // 校验
     verify: {
@@ -376,7 +378,8 @@ export const m = {
         '编辑权限模板': 'Edit',
         '普通成员': 'rank and file',
         '退出登录': 'log out',
-        '我的分级管理员': 'My grading administrator'
+        '我的分级管理员': 'My grading administrator',
+        '资源权限管理': 'Resource rights management'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -580,7 +583,12 @@ export const m = {
         '触发类型': 'Trigger type',
         '日志详情': 'Log details',
         '成功': 'Succeed',
-        '失败': 'Failed'
+        '失败': 'Failed',
+        '同步记录': 'Synchronized records',
+        '定时同步': 'timing sync',
+        '手动同步': 'Manual sync',
+        '选择日期范围': 'Select date range',
+        '同步失败排查指引': 'Sync Failure Troubleshooting Guide'
     },
     grading: {
         '分级管理员': 'Grading Manager',
@@ -653,7 +661,8 @@ export const m = {
         '来源': 'Source',
         '加入分级管理员流程搜索提示': 'Enter the rate manager name or description，Press Enter to search',
         '分级管理员名称': 'Rate Manager Name',
-        '审批节点': 'Approval node'
+        '审批节点': 'Approval node',
+        '请输入关键字搜索': 'Please enter a keyword to search'
     },
     guide: {
         '操作和资源实例': 'This range indicates which resource permissions you can assign',
@@ -826,7 +835,12 @@ export const m = {
         '有权限的成员': 'Authorized members',
         '权限类型': 'Permission type',
         '条数展示': 'Number of impressions',
-        '用户类型': 'user type'
+        '用户类型': 'user type',
+        '请选择查询类型': 'Please select a query type',
+        '系统必填': 'system required',
+        '操作必填': 'Action required',
+        '请选择资源实例': 'Please select a resource instance',
+        '请输入用户、用户组，按Enter搜索': 'Please enter the user, user group, and press Enter to search'
     }
 }
 export default {
