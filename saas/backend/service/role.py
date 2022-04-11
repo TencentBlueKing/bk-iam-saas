@@ -131,25 +131,24 @@ class RoleService:
 
         return parse_obj_as(List[AuthScopeSystem], json.loads(role_scope.content))
 
-    def list_user_role(self, user_id: str) -> List[UserRole]:
+    def list_user_role(self, user_id: str, with_permission: bool = False) -> List[UserRole]:
         """查询用户的角色列表"""
         role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
+
+        if with_permission:
+            roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
+            role_dict = {role.id: role for role in roles}
+
+            role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
+            roles_with_permission = []
+
+            for role_user_system_perm in role_user_system_perms:
+                if user_id in role_user_system_perm.enabled_users or role_user_system_perm.global_enabled:
+                    role = role_dict[role_user_system_perm.role_id]
+                    roles_with_permission.append(UserRole.convert_from_role(role))
+            return roles_with_permission
+
         return self.list_by_ids(role_ids)
-
-    def list_user_role_with_permission(self, user_id: str) -> List[UserRole]:
-        """查询用户 拥有对应接入系统的超级权限角色列表"""
-        role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
-        roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
-        role_dict = {role.id: role for role in roles}
-
-        role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
-        roles_with_permission = []
-
-        for role_user_system_perm in role_user_system_perms:
-            if user_id in role_user_system_perm.enabled_users or role_user_system_perm.global_enabled:
-                role = role_dict[role_user_system_perm.role_id]
-                roles_with_permission.append(UserRole.convert_from_role(role))
-        return roles_with_permission
 
     def list_members_by_role_id(self, role_id: int):
         """查询指定角色的成员列表"""
