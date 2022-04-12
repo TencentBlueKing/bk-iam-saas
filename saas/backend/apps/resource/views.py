@@ -33,7 +33,7 @@ class ResourceViewSet(GenericViewSet):
         tags=["resource"],
     )
     def list(self, request, *args, **kwargs):
-        slz = ResourceQuerySLZ(data=request.query_params)
+        slz = ResourceQuerySLZ(data=request.data)
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
