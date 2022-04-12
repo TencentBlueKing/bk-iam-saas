@@ -85,6 +85,9 @@ class FirstNodeList:
     def __hash__(self):
         return hash(tuple(self.nodes))
 
+    def __eq__(self, other) -> bool:
+        return self.nodes == other.nodes
+
     def to_resource_type_list(self):
         return [node.dict() for node in self.nodes]
 
