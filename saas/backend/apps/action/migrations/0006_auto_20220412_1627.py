@@ -9,7 +9,7 @@ def genarate_new_aggregate_action(apps, schema_editor):
     AggregateAction = apps.get_model("action", "AggregateAction")
     AggregateAction.objects.all().delete()
 
-    generate_action_aggregate.delay()
+    generate_action_aggregate()
 
 
 class Migration(migrations.Migration):
