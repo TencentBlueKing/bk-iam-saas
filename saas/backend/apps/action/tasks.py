@@ -9,9 +9,10 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import defaultdict
-from typing import Optional
+from typing import Dict, List, Optional
 
 from celery import task
+from pydantic import parse_obj_as
 
 from backend.apps.action.models import AggregateAction
 from backend.biz.system import SystemBiz
@@ -26,7 +27,7 @@ def generate_action_aggregate():
     systems = SystemBiz().list()
     action_svc = ActionService()
 
-    # 编译每个系统
+    # 遍历每个系统
     for system in systems:
         system_id = system.id
         actions = action_svc.list(system_id)
@@ -63,7 +64,7 @@ def generate_action_aggregate():
 
             agg_action = AggregateAction(system_id=system_id)
             agg_action.action_ids = action_ids
-            agg_action.aggregate_resource_type = {"system_id": resource_type[0], "id": resource_type[1]}
+            agg_action.aggregate_resource_type = resource_type.to_resource_type_list()
             create_agg_actions.append(agg_action)
 
         # 执行CURD
@@ -77,7 +78,18 @@ def generate_action_aggregate():
             AggregateAction.objects.filter(id__in=[agg_action.id for agg_action in delete_agg_actions]).delete()
 
 
-def query_exists_aggregate_actions(system_id):
+class FirstNodeList:
+    def __init__(self, nodes: List[ChainNode]) -> None:
+        self.nodes = sorted(nodes, key=lambda node: hash(node))  # 保持节点顺序
+
+    def __hash__(self):
+        return hash(tuple(self.nodes))
+
+    def to_resource_type_list(self):
+        return [node.dict() for node in self.nodes]
+
+
+def query_exists_aggregate_actions(system_id) -> Dict[FirstNodeList, AggregateAction]:
     """
     查询已存在的聚合操作配置
     """
@@ -85,11 +97,12 @@ def query_exists_aggregate_actions(system_id):
     resource_type_agg_action = {}
     for aa in agg_actions:
         resource_type = aa.aggregate_resource_type
-        resource_type_agg_action[(resource_type["system_id"], resource_type["id"])] = aa
+        node_list = parse_obj_as(List[ChainNode], resource_type)
+        resource_type_agg_action[FirstNodeList(node_list)] = aa
     return resource_type_agg_action
 
 
-def aggregate_actions_group_by_selection_node(actions):
+def aggregate_actions_group_by_selection_node(actions) -> Dict[FirstNodeList, List[str]]:
     """
     使用实例视图的节点聚合操作
     """
@@ -99,30 +112,30 @@ def aggregate_actions_group_by_selection_node(actions):
         if len(action.related_resource_types) != 1:
             continue
 
-        first_node = get_action_selection_first_node(action)
-        if first_node is None:
+        first_node_list = get_action_selection_first_node_list(action)
+        if first_node_list is None:
             continue
 
-        resource_type_actions[(first_node.system_id, first_node.id)].append(action.id)
+        resource_type_actions[first_node_list].append(action.id)
 
     return resource_type_actions
 
 
-def get_action_selection_first_node(action: Action) -> Optional[ChainNode]:
+def get_action_selection_first_node_list(action: Action) -> Optional[FirstNodeList]:
     """
     获取操作的关联的资源类型的实例视图的第一个节点
-    如果有多个实例视图, 多个实例视图的第一个节点必须一样才返回
+    如果有多个实例视图, 返回多个实例视图的第一个节点, 并且去重
     !!!只能用于只关联了1个资源类型的操作
     """
     resource_type = action.related_resource_types[0]
     if not resource_type.instance_selections:
         return None
 
-    first_node = resource_type.instance_selections[0].resource_type_chain[0]
+    first_node_set = set()
     # 遍历余下的所有实例视图, 如果第一个节点与第一个视图的第一个节点不一致, 返回None
-    for instance_selection in resource_type.instance_selections[1:]:
-        other_first_node = instance_selection.resource_type_chain[0]
-        if first_node.system_id != other_first_node.system_id or first_node.id != other_first_node.id:
-            return None
+    for instance_selection in resource_type.instance_selections:
+        first_node = instance_selection.resource_type_chain[0]
+        if first_node not in first_node_set:
+            first_node_set.add(first_node)
 
-    return first_node
+    return FirstNodeList(list(first_node_set))
