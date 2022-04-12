@@ -11,11 +11,18 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 
+class AncestorSLZ(serializers.Serializer):
+    system_id = serializers.CharField(allow_blank=True, allow_null=True, default="")
+    type = serializers.CharField(label="祖先资源类型")
+    id = serializers.CharField(label="祖先资源ID")
+
+
 class ResourceQuerySLZ(serializers.Serializer):
     system_id = serializers.CharField()
     type = serializers.CharField(label="资源类型")
-    parent_type = serializers.CharField(label="父资源类型", allow_blank=True)
-    parent_id = serializers.CharField(label="父资源ID", allow_blank=True)
+    ancestors = serializers.ListField(
+        label="祖先类型", child=AncestorSLZ(label="父节点"), allow_empty=True, default=list, required=False
+    )
     keyword = serializers.CharField(label="搜索关键词", required=False, allow_blank=True, allow_null=True)
     limit = serializers.IntegerField(label="分页Limit", min_value=1, max_value=100)
     offset = serializers.IntegerField(label="分页offset", min_value=0)
