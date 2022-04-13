@@ -190,6 +190,7 @@
                         type="textarea"
                         v-model="reason"
                         :maxlength="255"
+                        :placeholder="$t(`m.verify['请输入']`)"
                         :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
                         @input="handleReasonInput"
                         @blur="handleReasonBlur">
@@ -292,6 +293,7 @@
                                                     type="textarea"
                                                     v-model="reason"
                                                     :maxlength="255"
+                                                    :placeholder="$t(`m.verify['请输入']`)"
                                                     :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
                                                     @input="handleReasonInput"
                                                     @blur="handleReasonBlur">
@@ -354,6 +356,7 @@
                                                     type="textarea"
                                                     v-model="reason"
                                                     :maxlength="255"
+                                                    :placeholder="$t(`m.verify['请输入']`)"
                                                     :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
                                                     @input="handleReasonInput"
                                                     @blur="handleReasonBlur">
@@ -431,6 +434,7 @@
                                 type="textarea"
                                 v-model="reason"
                                 :maxlength="255"
+                                :placeholder="$t(`m.verify['请输入']`)"
                                 :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
                                 @input="handleReasonInput"
                                 @blur="handleReasonBlur">

@@ -94,7 +94,7 @@ msgstr "You don’t have permission for this role and cannot switch to this role
 
 #: backend/api/authorization/serializers.py:60 backend/biz/resource.py:150
 msgid "无限制"
-msgstr ""
+msgstr "unlimited"
 
 #: backend/api/management/serializers.py:106
 #, fuzzy

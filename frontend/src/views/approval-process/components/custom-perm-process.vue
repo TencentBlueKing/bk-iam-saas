@@ -55,6 +55,7 @@
                                 :value="row.process_id"
                                 :clearable="false"
                                 searchable
+                                :search-placeholder="$t(`m.approvalProcess['请输入关键字搜索']`)"
                                 @selected="handleProcessSelect(...arguments, row)"
                                 @toggle="handleSelectToggle(...arguments, row)">
                                 <bk-option v-for="option in list"

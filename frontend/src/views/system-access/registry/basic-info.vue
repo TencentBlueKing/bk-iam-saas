@@ -44,7 +44,7 @@
                 v-model="formData.description_en"
                 :disabled="!formData.isEdit"
                 @change="handleChange('description_en', ...arguments)"
-                :placeholder="$t(`m.verify['请输入操作英文描述']`)">
+                :placeholder="$t(`m.access['请输入操作英文描述']`)">
             </bk-input>
         </iam-form-item>
     </bk-form>
