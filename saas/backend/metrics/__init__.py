@@ -22,6 +22,7 @@ class ComponentEnum(LowerStrEnum):
     USERMGR = auto()
     ESB = auto()
     CMSI = auto()
+    LOGIN = auto()
 
 
 def get_component_by_url(url: str) -> str:
@@ -38,6 +39,8 @@ def get_component_by_url(url: str) -> str:
         return ComponentEnum.ESB.value
     elif "/api/c/compapi/cmsi/" in path:
         return ComponentEnum.CMSI.value
+    elif "/api/c/compapi/v2/bk_login/" in path or "/is_login/" in path or "/user/get_info" in path:
+        return ComponentEnum.LOGIN.value
     return "unknown"
 
 
