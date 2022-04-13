@@ -28,7 +28,7 @@ class ResourceViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="资源实例列表",
         auto_schema=PaginatedResponseSwaggerAutoSchema,
-        query_serializer=ResourceQuerySLZ,
+        request_body=ResourceQuerySLZ(label="资源查询参数"),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
         tags=["resource"],
     )
