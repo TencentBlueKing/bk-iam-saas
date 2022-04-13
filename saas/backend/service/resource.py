@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from redis.exceptions import RedisError
 
@@ -170,12 +170,13 @@ class ResourceProvider:
         return count, [ResourceAttributeValue(**i) for i in results]
 
     def list_instance(
-        self, parent_type: str = "", parent_id: str = "", limit: int = 10, offset: int = 0
+        self, ancestors: List[Dict[str, str]], limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
         """根据上级资源获取某个资源实例列表"""
-        filter_condition = {}
-        if parent_type and parent_id:
-            filter_condition["parent"] = {"type": parent_type, "id": parent_id}
+        filter_condition: Dict[str, Any] = {}
+        if ancestors:
+            filter_condition["ancestors"] = ancestors
+            filter_condition["parent"] = {"type": ancestors[-1]["type"], "id": ancestors[-1]["id"]}
         page = {"limit": limit, "offset": offset}
         count, results = self.client.list_instance(filter_condition, page)
 

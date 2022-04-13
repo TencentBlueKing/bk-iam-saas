@@ -14,7 +14,7 @@ from . import views
 
 urlpatterns = [
     # 获取资源实例列表
-    path("", views.ResourceViewSet.as_view({"get": "list"}), name="resource.list_resource"),
+    path("", views.ResourceViewSet.as_view({"post": "list"}), name="resource.list_resource"),
     # 获取资源的属性列表
     path(
         "attributes/",

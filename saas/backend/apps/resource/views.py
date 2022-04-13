@@ -28,18 +28,17 @@ class ResourceViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="资源实例列表",
         auto_schema=PaginatedResponseSwaggerAutoSchema,
-        query_serializer=ResourceQuerySLZ,
+        request_body=ResourceQuerySLZ(label="资源查询参数"),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
         tags=["resource"],
     )
     def list(self, request, *args, **kwargs):
-        slz = ResourceQuerySLZ(data=request.query_params)
+        slz = ResourceQuerySLZ(data=request.data)
         slz.is_valid(raise_exception=True)
 
         system_id = slz.validated_data["system_id"]
         resource_type_id = slz.validated_data["type"]
-        parent_id = slz.validated_data["parent_id"]
-        parent_type = slz.validated_data["parent_type"]
+        ancestors = slz.validated_data["ancestors"]
         keyword = slz.validated_data.get("keyword") or ""
         # 分页
         limit = slz.validated_data["limit"]
@@ -48,13 +47,15 @@ class ResourceViewSet(GenericViewSet):
         # TODO：通过这个接口这样就把所有接入系统的资源拉取到？那么相当于用户访问iam saas就可以访问到接入系统所有资源，是否合理？如何鉴权？
         # 是否有keyword，如果有，则是搜索
         if keyword:
+            parent_type, parent_id = "", ""
+            if ancestors:
+                parent_type, parent_id = ancestors[-1]["type"], ancestors[-1]["id"]
+
             count, results = self.biz.search_instance_for_topology(
                 system_id, resource_type_id, keyword, parent_type, parent_id, limit, offset
             )
         else:
-            count, results = self.biz.list_instance_for_topology(
-                system_id, resource_type_id, parent_type, parent_id, limit, offset
-            )
+            count, results = self.biz.list_instance_for_topology(system_id, resource_type_id, ancestors, limit, offset)
 
         return Response({"count": count, "results": [i.dict() for i in results]})
 
