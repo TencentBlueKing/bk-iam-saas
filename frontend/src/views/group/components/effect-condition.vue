@@ -97,7 +97,7 @@
             value: {
                 handler (val) {
                     if (this.isEmpty) {
-                        this.curValue = '请选择生效条件，默认无限制';
+                        this.curValue = this.$t(`m.permApply['请选择生效条件，默认无限制']`);
                     } else {
                         this.curValue = val.reduce((p, v) => {
                             let curValue = '';
