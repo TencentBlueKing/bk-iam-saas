@@ -16,6 +16,9 @@ class AncestorSLZ(serializers.Serializer):
     type = serializers.CharField(label="祖先资源类型")
     id = serializers.CharField(label="祖先资源ID")
 
+    class Meta:
+        ref_name = "ResourceAncestorSLZ"
+
 
 class ResourceQuerySLZ(serializers.Serializer):
     system_id = serializers.CharField()
