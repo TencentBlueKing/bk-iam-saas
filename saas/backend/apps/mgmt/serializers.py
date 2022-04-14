@@ -142,8 +142,10 @@ class LongTaskSLZ(serializers.Serializer):
         super().__init__(*args, **kwargs)
 
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
-            group_ids = [task_detail.args[0]["id"] for task_detail in self.instance if task_detail.type == TaskType.GROUP_AUTHORIZATION.value]
-            template_ids = [task_detail.args[0] for task_detail in self.instance if task_detail.type == TaskType.TEMPLATE_UPDATE.value]
+            group_ids = [task_detail.args[0]["id"] for task_detail in self.instance if
+                         task_detail.type == TaskType.GROUP_AUTHORIZATION.value]
+            template_ids = [task_detail.args[0] for task_detail in self.instance if
+                            task_detail.type == TaskType.TEMPLATE_UPDATE.value]
             self._template_name_dict = TemplateBiz().get_template_name_dict_by_ids(template_ids)
             self._group_name_dict = GroupBiz().get_group_name_dict_by_ids(group_ids)
 
