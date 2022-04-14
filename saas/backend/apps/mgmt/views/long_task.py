@@ -16,7 +16,7 @@ from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import RolePermission
 from backend.apps.mgmt.filters import LongTaskFilter
-from backend.apps.mgmt.serializers import LongTaskSLZ, QueryLongTaskSLZ, SubTaskSLZ
+from backend.apps.mgmt.serializers import LongTaskSLZ, SubTaskSLZ
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.long_task.constants import TaskStatus
 from backend.long_task.models import SubTaskState, TaskDetail
@@ -38,7 +38,6 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="长时任务列表",
-        query_serializer=QueryLongTaskSLZ(label="long_task"),
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: LongTaskSLZ(label="长时任务列表", many=True)},
         tags=["mgmt.api"],

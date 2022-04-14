@@ -19,7 +19,7 @@ from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
 from backend.long_task.constants import TaskStatus, TaskType
 
-from .constants import ApiType, LongTaskObjType
+from .constants import ApiType, LongTaskObjectType
 
 
 class QueryApiSLZ(serializers.Serializer):
@@ -128,10 +128,6 @@ class ManagementApiAddWhiteListSLZ(serializers.Serializer):
         raise serializers.ValidationError(f"api: {value} 非法")
 
 
-class QueryLongTaskSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="长时任务类型", choices=TaskType.get_choices())
-
-
 class LongTaskSLZ(serializers.Serializer):
     id = serializers.CharField(label="任务ID")
     type = serializers.CharField(label="任务类型")
@@ -141,11 +137,16 @@ class LongTaskSLZ(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        group_ids = []
+        template_ids = []
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
-            group_ids = [task_detail.args[0]["id"] for task_detail in self.instance if
-                         task_detail.type == TaskType.GROUP_AUTHORIZATION.value]
-            template_ids = [task_detail.args[0] for task_detail in self.instance if
-                            task_detail.type == TaskType.TEMPLATE_UPDATE.value]
+            for task_detail in self.instance:
+                if task_detail.type == TaskType.GROUP_AUTHORIZATION.value:
+                    group_ids.append(task_detail.args[0]["id"])
+
+                if task_detail.type == TaskType.TEMPLATE_UPDATE.value:
+                    template_ids.append(task_detail.args[0])
+
             self._template_name_dict = TemplateBiz().get_template_name_dict_by_ids(template_ids)
             self._group_name_dict = GroupBiz().get_group_name_dict_by_ids(group_ids)
 
@@ -158,7 +159,7 @@ class LongTaskSLZ(serializers.Serializer):
             id = args[0]["id"]
             object = [
                 {
-                    "type": LongTaskObjType.GROUP.value,
+                    "type": LongTaskObjectType.GROUP.value,
                     "id": id,
                     "name": self._group_name_dict.get(int(id), "")
                 }
@@ -168,7 +169,7 @@ class LongTaskSLZ(serializers.Serializer):
             id = args[0]
             object = [
                 {
-                    "type": LongTaskObjType.TEMPLATE.value,
+                    "type": LongTaskObjectType.TEMPLATE.value,
                     "id": id,
                     "name": self._template_name_dict.get(id, "")
                 }

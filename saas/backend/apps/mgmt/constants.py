@@ -29,7 +29,7 @@ class ApiType(ChoicesEnum, LowerStrEnum):
     )
 
 
-class LongTaskObjType(ChoicesEnum, LowerStrEnum):
+class LongTaskObjectType(ChoicesEnum, LowerStrEnum):
     """长时任务 参数类型"""
 
     GROUP = auto()
