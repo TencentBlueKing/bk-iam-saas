@@ -142,7 +142,7 @@
                         </template>
                         <template v-else>
                             <!-- 44 -->
-                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId">
+                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId && !row.isNew">
                                 <!-- 55 -->
                                 <div class="mock-disabled-select">{{row.expired_display}}</div>
                             </template>

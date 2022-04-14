@@ -62,8 +62,8 @@ CACHES = {
 # 判断是否为本地开发环境
 IS_LOCAL = not os.getenv("BKPAAS_ENVIRONMENT", False)
 
-APP_CODE = os.getenv("BKPAAS_APP_CODE", "bk_iam")
-APP_SECRET = os.getenv("BKPAAS_APP_SECRET", "af76be9c-2b24-4006-a68e-e66abcfd67af")
+APP_CODE = BK_APP_CODE = os.getenv("BKPAAS_APP_CODE", "bk_iam")
+APP_SECRET = BK_APP_SECRET = os.getenv("BKPAAS_APP_SECRET", "af76be9c-2b24-4006-a68e-e66abcfd67af")
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -111,11 +111,12 @@ AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 
 # 只对正式环境日志级别进行配置，可以在这里修改
-LOG_LEVEL = "ERROR"
+LOG_LEVEL = os.getenv("BKAPP_LOG_LEVEL", "ERROR")
 
 _LOG_CLASS = "logging.handlers.RotatingFileHandler"
 
 if IS_LOCAL:
+    LOG_LEVEL = "DEBUG"
     _LOG_DIR = os.path.join(os.path.dirname(BASE_DIR), "logs", APP_CODE)
     _LOG_NAME_PREFIX = os.getenv("BKPAAS_LOG_NAME_PREFIX", APP_CODE)
     _LOGGING_FORMAT = {
@@ -280,7 +281,7 @@ LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL", "/")
 LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
 
 # 蓝鲸PASS平台URL
-BK_PAAS_HOST = os.getenv("BK_PAAS_HOST")
+BK_PAAS_HOST = os.getenv("BK_PAAS_HOST", os.getenv("BKPAAS_URL"))
 
 # 用于 用户认证、用户信息获取 的蓝鲸主机
 BK_PAAS_INNER_HOST = os.getenv("BK_PAAS2_URL", os.getenv("BK_PAAS_INNER_HOST", BK_PAAS_HOST))

@@ -110,6 +110,8 @@ class HealthChecker:
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("celery ping test fail")
             return False, f"celery ping test fail, error: {str(e)}"
+        finally:
+            new_app.close()
 
         return True, "ok"
 

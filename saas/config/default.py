@@ -66,6 +66,8 @@ INSTALLED_APPS = [
     "backend.apps.mgmt",
 ]
 
+# 登录中间件
+_LOGIN_MIDDLEWARE = os.getenv("BKAPP_LOGIN_MIDDLEWARE", "backend.account.middlewares.LoginMiddleware")
 
 MIDDLEWARE = [
     "backend.common.middlewares.CustomProfilerMiddleware",
@@ -79,7 +81,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "backend.account.middlewares.LoginMiddleware",
+    _LOGIN_MIDDLEWARE,
     "backend.account.middlewares.TimezoneMiddleware",
     "backend.account.middlewares.RoleAuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
@@ -114,7 +116,7 @@ DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
-AUTHENTICATION_BACKENDS = ("backend.account.backends.TokenBackend",)
+AUTHENTICATION_BACKENDS = (os.getenv("BKAPP_AUTHENTICATION_BACKEND", "backend.account.backends.TokenBackend"),)
 
 AUTH_USER_MODEL = "account.User"
 
@@ -286,16 +288,10 @@ else:
 djcelery.setup_loader()
 
 
-# sentry support
-if os.getenv("SENTRY_DSN"):
-    INSTALLED_APPS += ("raven.contrib.django.raven_compat",)
-    MIDDLEWARE += ("raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware",)
-    RAVEN_CONFIG = {
-        "dsn": os.getenv("SENTRY_DSN"),
-    }
+# tracing: sentry support
+SENTRY_DSN = os.getenv("SENTRY_DSN")
 
-
-# tracing 相关配置
+# tracing: otel 相关配置
 # if enable, default false
 ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
 BKAPP_OTEL_INSTRUMENT_DB_API = os.getenv("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
@@ -304,7 +300,7 @@ BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
 BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
 BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
 
-if ENABLE_OTEL_TRACE:
+if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
 
 
@@ -377,13 +373,6 @@ APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANC
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 
-# 前端页面功能开关
-ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower() == "true",
-}
-
-
 # 用于发布订阅的Redis
 PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")
 PUB_SUB_REDIS_PORT = os.getenv("BKAPP_PUB_SUB_REDIS_PORT")
@@ -404,7 +393,7 @@ BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
 BK_APIGW_NAME = "bk-iam"
 BK_API_URL_TMPL = os.getenv("BK_API_URL_TMPL", "")
 BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
-BK_IAM_SAAS_SVC = os.getenv("BK_IAM_SAAS_SVC", "bkiam-saas-web")
+BK_IAM_SAAS_API_SVC = os.getenv("BK_IAM_SAAS_API_SVC", "bkiam-saas-api")
 BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
 

@@ -267,11 +267,11 @@ class GroupBiz:
         转换类型
         """
         groups = Group.objects.filter(id__in=[int(one.id) for one in relations if one.type == SubjectType.GROUP.value])
-        relation_dict = {one.id: one for one in relations}
+        group_dict = {g.id: g for g in groups}
         relation_beans: List[SubjectGroupBean] = []
-        for group in groups:
-            relation = relation_dict.get(str(group.id))
-            if not relation:
+        for relation in relations:
+            group = group_dict.get(int(relation.id))
+            if not group:
                 continue
             relation_beans.append(
                 SubjectGroupBean(
@@ -285,6 +285,7 @@ class GroupBiz:
                     department_name=relation.department_name,
                 )
             )
+
         return relation_beans
 
     def list_subject_group(self, subject: Subject, is_recursive: bool = False) -> List[SubjectGroupBean]:
@@ -507,6 +508,14 @@ class GroupBiz:
         return GroupRoleDict(
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
+
+    def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
+        """根据关键词 获取指定用户组成员列表"""
+        maximum_number_of_member = 1000
+        _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
+        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
+
+        return hit_members
 
 
 class GroupCheckBiz:

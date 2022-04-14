@@ -29,6 +29,7 @@ from backend.apps.mgmt.audit import (
     ManagementApiWhiteListDeleteAuditProvider,
 )
 from backend.apps.mgmt.constants import WHITE_LIST_API_ENUM_MAP
+from backend.apps.mgmt.filters import AuthorizationApiWhiteListFilter
 from backend.apps.mgmt.serializers import (
     AdminApiAddWhiteListSLZ,
     AdminApiWhiteListSLZ,
@@ -143,6 +144,7 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     queryset = AuthAPIAllowListConfig.objects.all()
     serializer_class = AuthorizationApiWhiteListSLZ
+    filterset_class = AuthorizationApiWhiteListFilter
 
     @swagger_auto_schema(
         operation_description="授权类API白名单列表",
