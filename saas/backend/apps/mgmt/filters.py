@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from django_filters import rest_framework as filters
 
 from backend.api.authorization.models import AuthAPIAllowListConfig
+from backend.long_task.models import TaskDetail
 
 
 class AuthorizationApiWhiteListFilter(filters.FilterSet):
@@ -18,4 +19,12 @@ class AuthorizationApiWhiteListFilter(filters.FilterSet):
 
     class Meta:
         model = AuthAPIAllowListConfig
+        fields = ["type"]
+
+
+class LongTaskFilter(filters.FilterSet):
+    type = filters.CharFilter(label="长时任务类型")
+
+    class Meta:
+        model = TaskDetail
         fields = ["type"]

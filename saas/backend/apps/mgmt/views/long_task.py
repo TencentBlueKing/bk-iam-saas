@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import RolePermission
+from backend.apps.mgmt.filters import LongTaskFilter
 from backend.apps.mgmt.serializers import LongTaskSLZ, QueryLongTaskSLZ, SubTaskSLZ
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.long_task.constants import TaskStatus
@@ -31,6 +32,9 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
         "retrieve": PermissionCodeEnum.MANAGE_LONG_TASK.value,
         "retry": PermissionCodeEnum.MANAGE_LONG_TASK.value
     }
+    queryset = TaskDetail.objects.all()
+    serializer_class = LongTaskSLZ
+    filterset_class = LongTaskFilter
 
     @swagger_auto_schema(
         operation_description="长时任务列表",
@@ -40,12 +44,7 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
         tags=["mgmt.api"],
     )
     def list(self, request, *args, **kwargs):
-        slz = QueryLongTaskSLZ(data=request.query_params)
-        slz.is_valid(raise_exception=True)
-        long_task_type = slz.validated_data["type"]
-        task_detail = LongTaskSLZ(TaskDetail.objects.filter(type=long_task_type), many=True).data
-
-        return Response({"count": len(task_detail), "results": task_detail})
+        return super().list(self, *args, **kwargs)
 
     @swagger_auto_schema(
         operation_description="长时任务详情",
@@ -55,9 +54,9 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         task_id = kwargs["id"]
-        sub_task = SubTaskSLZ(SubTaskState.objects.filter(task_id=task_id), many=True).data
+        sub_task = SubTaskState.objects.filter(task_id=task_id)
 
-        return Response({"count": len(sub_task), "results": sub_task})
+        return Response(SubTaskSLZ(sub_task, many=True).data)
 
     @swagger_auto_schema(
         operation_description="长时任务失败重试",
