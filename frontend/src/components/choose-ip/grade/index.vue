@@ -754,8 +754,9 @@
                     offset: 0,
                     system_id: this.curChain[0].system_id,
                     type: this.curChain[0].id,
-                    parent_type: '',
-                    parent_id: '',
+                    // parent_type: '',
+                    // parent_id: '',
+                    ancestors: [],
                     keyword: this.curKeyword
                 };
                 try {
@@ -992,7 +993,8 @@
                 const params = {
                     limit: this.limit,
                     offset: 0,
-                    parent_id: node.id,
+                    // parent_id: node.id,
+                    ancestors: [],
                     keyword: ''
                 };
 
@@ -1003,12 +1005,18 @@
                 }
 
                 let placeholder = '';
+                let parentType = '';
+                let parentData = [];
+                const ancestorItem = {};
 
                 if (node.childType !== '') {
                     params.system_id = this.curChain[chainLen - 1].system_id;
                     params.type = node.childType;
-                    params.parent_type = this.curChain[chainLen - 1].id;
+                    parentType = this.curChain[chainLen - 1].id;
                     placeholder = this.curChain[chainLen - 1].name;
+
+                    ancestorItem.system_id = this.curChain[chainLen - 1].system_id;
+                    ancestorItem.type = this.curChain[chainLen - 1].id;
                 } else {
                     // 针对用户管理的自身递归的逻辑做的兼容处理
                     const tempData = this.curChain[node.level + 1]
@@ -1016,11 +1024,26 @@
                         : this.curChain[chainLen - 1];
                     params.system_id = tempData.system_id;
                     params.type = tempData.id;
-                    params.parent_type = this.curChain[node.level]
+                    parentType = this.curChain[node.level]
                         ? this.curChain[node.level].id
                         : this.curChain[chainLen - 1].id;
                     placeholder = tempData.name;
+
+                    ancestorItem.system_id = this.curChain[node.level].system_id;
+                    ancestorItem.type = this.curChain[node.level].id;
                 }
+
+                if (node.parentChain.length) {
+                    parentData = node.parentChain.reduce((p, e) => {
+                        p.push({
+                            system_id: e.system_id,
+                            id: e.id,
+                            type: e.type
+                        });
+                        return p;
+                    }, []);
+                }
+                params.ancestors.push(...parentData, ancestorItem);
 
                 const curLevel = node.level + 1;
                 let isAsync = chainLen > (curLevel + 1);
@@ -1028,7 +1051,7 @@
                 parentChain.push({
                     name: node.name,
                     id: node.id,
-                    type: params.parent_type,
+                    type: parentType,
                     system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level] ? this.curChain[node.level].system_id : this.curChain[chainLen - 1].system_id,
                     child_type: node.childType || ''
                 });
@@ -1307,18 +1330,28 @@
                 const params = {
                     limit: this.limit,
                     offset: this.limit * (node.current - 1),
-                    parent_id: node.level > 0 ? node.parentSyncId : '',
+                    ancestors: [],
+                    // parent_id: node.level > 0 ? node.parentSyncId : '',
                     keyword
                 };
 
                 if (node.level > chainLen - 1) {
                     params.system_id = this.curChain[chainLen - 1].system_id;
                     params.type = this.curChain[chainLen - 1].id;
-                    params.parent_type = this.curChain[chainLen - 1].id || '';
                 } else {
                     params.system_id = this.curChain[node.level].system_id;
                     params.type = this.curChain[node.level].id;
-                    params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : '';
+                }
+                if (node.parentChain.length) {
+                    const parentData = node.parentChain.reduce((p, e) => {
+                        p.push({
+                            system_id: e.system_id,
+                            id: e.id,
+                            type: e.type
+                        });
+                        return p;
+                    }, []);
+                    params.ancestors.push(...parentData);
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params);
