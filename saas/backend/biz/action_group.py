@@ -193,7 +193,7 @@ class ActionGroupBiz:
                     result[action.id].extend(
                         [a.id for a in action_group.actions if a.id != action.id]
                     )  # 兼容可能一个操作在多个分组中
-                    break
+                    continue
 
             if not action_group.sub_groups:
                 continue
