@@ -31,7 +31,17 @@ export default class GroupAggregationPolicy {
     constructor (payload) {
         this.isError = false;
         this.actions = payload.actions || [];
-        this.aggregateResourceType = payload.aggregate_resource_type || {};
+        this.aggregateResourceType = payload.aggregate_resource_types || [];
+        // this.aggregateResourceType = [
+        //     { id: 'cloud',
+        //         name: '云区域',
+        //         system_id: 'bk_nodeman'
+        //     },
+        //     { id: 'biz',
+        //         name: '业务',
+        //         system_id: 'bk_cmdb'
+        //     }
+        // ];
         this.instances = payload.instances || [];
         this.instancesBackup = _.cloneDeep(this.instances);
         this.isAggregate = true;
@@ -39,6 +49,7 @@ export default class GroupAggregationPolicy {
         this.system_name = payload.actions[0].detail.system.name;
         this.canPaste = false;
         this.aggregationId = payload.aggregationId || '';
+        this.instancesDisplayData = payload.instancesDisplayData || {};
         this.initDetailData(this.actions);
     }
 

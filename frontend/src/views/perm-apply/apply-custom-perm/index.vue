@@ -1062,19 +1062,17 @@
                     });
                     const aggregations = []
                     ;(res.data.aggregations || []).forEach(item => {
-                        const { actions, aggregate_resource_type } = item;
+                        const { actions, aggregate_resource_types } = item;
                         const curActions = actions.filter(_ => actionIds.includes(_.id));
                         if (curActions.length > 0) {
                             aggregations.push({
                                 actions: curActions,
-                                aggregate_resource_type
+                                aggregate_resource_types
                             });
                         }
                     });
                     this.aggregationsBackup = _.cloneDeep(aggregations);
                     this.aggregations = aggregations;
-
-                    console.log('this.originalCustomTmplList', this.originalCustomTmplList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -1295,7 +1293,6 @@
                     });
                     return tempAction;
                 })();
-                console.log('this.aggregationsBackup', this.aggregationsBackup);
                 this.aggregationsBackup.forEach((item, index) => {
                     const tempObj = _.cloneDeep(item);
                     const tempAction = tempObj.actions.map(_ => _.id);
@@ -1307,7 +1304,6 @@
                 });
                 aggregationAction = aggregationAction.filter(item => item.actions.length > 1);
                 this.aggregations = _.cloneDeep(aggregationAction);
-                console.log('this.aggregations', this.aggregations);
             },
 
             handleAggregateActionChange (payload) {
@@ -1396,7 +1392,6 @@
                             subItem => item.actions.map(_ => _.id).includes(subItem.id)
                         );
 
-                        console.log('filterArray', filterArray);
                         const addArray = _.cloneDeep(filterArray.filter(
                             subItem => !this.aggregationsTableData.map(_ => _.id).includes(subItem.id)
                         ));
@@ -1415,11 +1410,9 @@
                             subItem => item.actions.map(act => act.id).includes(subItem.id)
                         );
 
-                        console.log('existTableData', existTableData);
                         if (existTableData.length > 0) {
                             item.tag = existTableData.every(subItem => subItem.tag === 'unchanged') ? 'unchanged' : 'add';
                             const tempObj = existTableData.find(subItem => subItem.tag === 'add');
-                            console.log('tempObj', tempObj);
                             if (tempObj) {
                                 item.expired_at = tempObj.expired_at || 15552000;
                                 item.expired_display = tempObj.expired_display || this.$t(`m.common['6个月']`);
@@ -1433,7 +1426,6 @@
                                 );
                                 // 是否都选择了实例
                                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none'); // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
-                                console.log('isAllHasInstance', isAllHasInstance);
                                 if (isAllHasInstance) {
                                     const instances = conditions.map(subItem => subItem.map(v => v.instance || []));
                                     let isAllEqual = true;
@@ -1443,9 +1435,6 @@
                                             break;
                                         }
                                     }
-                                    // console.log('instances: ')
-                                    // console.log(instances)
-                                    console.log('isAllEqual: ', isAllEqual);
                                     if (isAllEqual) {
                                         const instanceData = instances[0][0][0];
                                         if (instanceData && instanceData.path) {
@@ -1457,7 +1446,6 @@
                                             });
                                         }
                                     } else {
-                                        console.log('instances', instances);
                                         item.instances = [];
                                     }
                                 } else {
@@ -1497,7 +1485,7 @@
                             const instances = (function () {
                                 const arr = [];
                                 const aggregateResourceType = curAggregation.aggregateResourceType;
-                                const { id, name, system_id } = aggregateResourceType;
+                                const { id, name, system_id } = aggregateResourceType[0];
                                 curAggregation.instances.forEach(v => {
                                     const curItem = arr.find(_ => _.type === id);
                                     if (curItem) {
@@ -1604,7 +1592,6 @@
                         }
                     }
 
-                    console.log('actData', actData);
                     this.handleRelatedActions(actData, false);
                     payload.count--;
                     return;
@@ -1854,7 +1841,6 @@
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params);
-                    console.log(res.data, params);
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
                         // eslint-disable-next-line max-len
@@ -1894,9 +1880,7 @@
                     this.newTableList = _.cloneDeep(this.tableData.filter(item => {
                         return !item.isExpiredAtDisabled;
                     }));
-                    console.log('this.tableData', this.tableData);
                     this.tableDataBackup = _.cloneDeep(this.tableData);
-                    console.log('this.tableDataBackup', this.tableDataBackup);
                     this.aggregationsTableData = _.cloneDeep(this.tableData);
                 } catch (e) {
                     console.error(e);
