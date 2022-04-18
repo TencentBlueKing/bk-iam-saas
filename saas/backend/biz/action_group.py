@@ -8,7 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List, Optional
+from collections import defaultdict
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 from pydantic.tools import parse_obj_as
@@ -162,3 +163,27 @@ class ActionGroupBiz:
             if sub_group is not None:
                 return sub_group
         return None
+
+    def get_action_same_group_dict(self, system_id: str, action_ids: List[str]) -> Dict[str, List[str]]:
+        """
+        生成相同操作分组字典
+
+        resoult = {
+            action_id: [action_id, action_id, ...] # 同一个分组的action_id
+        }
+        """
+        result: Dict[str, List[str]] = defaultdict(list)
+
+        action_groups = self.action_group_svc.list(system_id)
+        if not action_groups:
+            return result
+
+        for action_group in action_groups:
+            for action in action_group.actions:
+                if action.id in action_ids:
+                    result[action.id].extend(
+                        [a.id for a in action_group.actions if a.id != action.id]
+                    )  # 兼容可能一个操作在多个分组中
+                    continue
+
+        return result

@@ -20,7 +20,7 @@ from backend.biz.policy import (
     ResourceGroupBean,
     group_paths,
 )
-from backend.service.action import ActionService
+from backend.service.action import ActionList, ActionService
 from backend.service.constants import SelectionMode
 from backend.service.models import Action, InstanceSelection, RelatedResourceType
 from backend.service.models.instance_selection import PathResourceType
@@ -59,7 +59,9 @@ class RelatedPolicyBiz:
 
         return related_policies
 
-    def _create_related_policy(self, policy: PolicyBean, action: Action) -> Optional[PolicyBean]:
+    def _create_related_policy(
+        self, policy: PolicyBean, action: Action, only_same_type: bool = False
+    ) -> Optional[PolicyBean]:
         """
         创建单个依赖操作的权限
 
@@ -109,7 +111,7 @@ class RelatedPolicyBiz:
                     new_rrt = self._filter_condition_of_same_type(rrt, action_rrt)
                     if new_rrt:
                         new_rrt_list.append(new_rrt)
-            else:
+            elif not only_same_type:
                 new_rrt = self._filter_condition_of_different_type(rg.related_resource_types, action_rrt)
                 if new_rrt:
                     new_rrt_list.append(new_rrt)
@@ -326,3 +328,31 @@ class RelatedPolicyBiz:
 
             return path
         return None
+
+    def create_recommend_policies(
+        self, policy: PolicyBean, action_list: ActionList, recommend_action_id: List[str]
+    ) -> List[PolicyBean]:
+        """
+        创建权限派生的推荐权限
+        """
+        action = action_list.get(policy.action_id)
+        if not action:
+            return []
+
+        # 遍历操作推荐的操作, 生成推荐操作权限
+        recommend_policies: List[PolicyBean] = []
+        for _id in recommend_action_id:
+            recommend_action = action_list.get(_id)
+            if not recommend_action:
+                continue
+
+            related_policy = self._create_related_policy(
+                policy, recommend_action, only_same_type=True
+            )  # 只生成有相同资源类型的关联操作
+            if related_policy:
+                recommend_policies.append(related_policy)
+
+        for p in recommend_policies:
+            p.set_expired_at(policy.expired_at)
+
+        return recommend_policies
