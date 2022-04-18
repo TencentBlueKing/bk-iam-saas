@@ -11,9 +11,10 @@ specific language governing permissions and limitations under the License.
 # 目标是统一使用page_size/page参数
 # WebAPI: 使用config/default.py里DEFAULT_PAGINATION_CLASS默认配置的CustomLimitOffsetPagination，后续需要前端配合一起调整为page_size/page参数
 # OpenAPI:
-# 已开放接口admin.list_groups/admin.list_group_member/mgmt.list_group_member使用CompatiblePageNumberPagination兼容limit/offset和page_size/page
+# 对于已开放接口admin.list_groups/admin.list_group_member/mgmt.list_group/mgmt.list_group_member使用CompatiblePagination兼容limit/offset和page_size/page
 # 对于OpenAPI新接口，需要ViewSet需要显示配置pagination_class=CustomPageNumberPagination
 from collections import OrderedDict
+from typing import List
 
 from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
 from rest_framework.response import Response
@@ -42,6 +43,12 @@ class CustomPageNumberPagination(PageNumberPagination):
     """该分页器继承PageNumberPagination后只对用于Open API返回的数据里去除previous和next参数"""
 
     page_size_query_param = "page_size"
+    # last_page_strings是用于支持page_number为last类似字符串的请求，这里不需要与模板结合的值
+    last_page_strings: List[str] = []
+
+    def get_page_number(self, request, paginator=None):
+        """由于last_page_strings为[]，所以paginator允许为空列表"""
+        return super().get_page_number(request, paginator)
 
     def get_paginated_response(self, data):
         return Response(OrderedDict([("count", self.page.paginator.count), ("results", data)]))
@@ -59,7 +66,7 @@ class CustomPageNumberPagination(PageNumberPagination):
         }
 
 
-class CompatiblePageNumberPagination(CustomPageNumberPagination):
+class CompatiblePagination(CustomPageNumberPagination):
     """默认page_size/page分页参数，兼容limit/offset"""
 
     limit_query_param = "limit"
@@ -72,10 +79,14 @@ class CompatiblePageNumberPagination(CustomPageNumberPagination):
 
         return super().get_page_size(request)
 
-    def get_page_number(self, request, paginator):
+    def get_page_number(self, request, paginator=None):
+        """
+        @parma paginator 当且仅当page_query_param 为 self.last_page_strings不为空时才会使用到，
+        目前last_page_strings默认为空，所以paginator默认为None
+        """
         # 优先使用page参数，如果不存在而offset参数存在，则使用offset推算出page
         if self.page_query_param not in request.query_params and self.offset_query_param in request.query_params:
-            page_size = paginator.per_page
+            page_size = self.get_page_size(request)
             offset = self._get_offset(request)
             # Note: 这里默认offset可整除page_size，对于无法整除，说明之前offset/limit没有被正确用于分页
             request.query_params[self.page_query_param] = (offset // page_size) + 1

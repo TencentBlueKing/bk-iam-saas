@@ -21,7 +21,7 @@ from backend.api.authentication import ESBAuthentication
 from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.group.models import Group
 from backend.biz.group import GroupBiz
-from backend.common.pagination import CompatiblePageNumberPagination
+from backend.common.pagination import CompatiblePagination
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema
 
 
@@ -36,7 +36,7 @@ class AdminGroupViewSet(ExceptionHandlerMixin, mixins.ListModelMixin, GenericVie
     queryset = Group.objects.all()
     serializer_class = AdminGroupBasicSLZ
     filterset_class = GroupFilter
-    pagination_class = CompatiblePageNumberPagination
+    pagination_class = CompatiblePagination
 
     @swagger_auto_schema(
         operation_description="用户组列表",
@@ -58,7 +58,7 @@ class AdminGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
 
     queryset = Group.objects.all()
     lookup_field = "id"
-    pagination_class = CompatiblePageNumberPagination
+    pagination_class = CompatiblePagination
 
     biz = GroupBiz()
 
@@ -72,9 +72,9 @@ class AdminGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
         group = self.get_object()
 
         # 分页参数
-        pagination = CompatiblePageNumberPagination()
+        pagination = CompatiblePagination()
         limit = pagination.get_page_size(request)
-        offset = (pagination.get_page_number(request, None) - 1) * limit
+        offset = (pagination.get_page_number(request) - 1) * limit
 
         count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
