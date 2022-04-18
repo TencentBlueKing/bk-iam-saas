@@ -34,4 +34,9 @@ urlpatterns = [
         views.BatchPolicyResourceCopyViewSet.as_view({"post": "create"}),
         name="policy.resource_copy",
     ),
+    path(
+        "recommend_policy/",
+        views.RecommendPolicyViewSet.as_view({"get": "list"}),
+        name="policy.generate_recommend_policy",
+    ),
 ]
