@@ -60,10 +60,12 @@ class RelatedPolicyBiz:
         return related_policies
 
     def _create_related_policy(
-        self, policy: PolicyBean, action: Action, only_same_type: bool = False
+        self, policy: PolicyBean, action: Action, exclude_diff_type_action: bool = False
     ) -> Optional[PolicyBean]:
         """
         创建单个依赖操作的权限
+
+        exclude_diff_type_action: 是否排除资源类型不同的操作
 
         1. 不支持关联多个资源类型的依赖操作
         2. 依赖操作不关联资源类型, 直接创建权限
@@ -111,7 +113,7 @@ class RelatedPolicyBiz:
                     new_rrt = self._filter_condition_of_same_type(rrt, action_rrt)
                     if new_rrt:
                         new_rrt_list.append(new_rrt)
-            elif not only_same_type:
+            elif not exclude_diff_type_action:
                 new_rrt = self._filter_condition_of_different_type(rg.related_resource_types, action_rrt)
                 if new_rrt:
                     new_rrt_list.append(new_rrt)
@@ -330,7 +332,7 @@ class RelatedPolicyBiz:
         return None
 
     def create_recommend_policies(
-        self, policy: PolicyBean, action_list: ActionList, recommend_action_id: List[str]
+        self, policy: PolicyBean, action_list: ActionList, recommend_action_ids: List[str]
     ) -> List[PolicyBean]:
         """
         创建权限派生的推荐权限
@@ -341,13 +343,13 @@ class RelatedPolicyBiz:
 
         # 遍历操作推荐的操作, 生成推荐操作权限
         recommend_policies: List[PolicyBean] = []
-        for _id in recommend_action_id:
+        for _id in recommend_action_ids:
             recommend_action = action_list.get(_id)
             if not recommend_action:
                 continue
 
             recommend_policy = self._create_related_policy(
-                policy, recommend_action, only_same_type=True
+                policy, recommend_action, exclude_diff_type_action=True
             )  # 只生成有相同资源类型的关联操作
             if recommend_policy:
                 recommend_policies.append(recommend_policy)

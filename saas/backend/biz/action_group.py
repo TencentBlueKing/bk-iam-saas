@@ -168,7 +168,7 @@ class ActionGroupBiz:
         """
         生成相同操作分组字典
 
-        resoult = {
+        result = {
             action_id: [action_id, action_id, ...] # 同一个分组的action_id
         }
         """
@@ -178,12 +178,12 @@ class ActionGroupBiz:
         if not action_groups:
             return result
 
-        self._find_action_same_group(action_groups, action_ids, result)
+        result = self._find_action_same_group(action_groups, action_ids, result)
         return result
 
     def _find_action_same_group(
         self, action_groups: List[ActionGroup], action_ids: List[str], result: Dict[str, List[str]]
-    ):
+    ) -> Dict[str, List[str]]:
         """
         查找action_id在同一个分组中的其他操作
         """
@@ -199,3 +199,5 @@ class ActionGroupBiz:
                 continue
 
             self._find_action_same_group(action_group.sub_groups, action_ids, result)
+
+        return result
