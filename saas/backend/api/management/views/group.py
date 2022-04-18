@@ -44,6 +44,7 @@ from backend.audit.audit import add_audit, audit_context_setter, view_audit_deco
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyOperationBiz
 from backend.biz.role import RoleBiz, RoleListQuery
+from backend.common.pagination import CompatiblePageNumberPagination
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
@@ -214,6 +215,7 @@ class ManagementGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
 
     lookup_field = "id"
     queryset = Group.objects.all()
+    pagination_class = CompatiblePageNumberPagination
 
     biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -229,9 +231,9 @@ class ManagementGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
         group = self.get_object()
 
         # 分页参数
-        pagination = LimitOffsetPagination()
-        limit = pagination.get_limit(request)
-        offset = pagination.get_offset(request)
+        pagination = CompatiblePageNumberPagination()
+        limit = pagination.get_page_size(request)
+        offset = (pagination.get_page_number(request, None) - 1) * limit
 
         count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
