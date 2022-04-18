@@ -386,7 +386,7 @@ class RecommendPolicyViewSet(GenericViewSet):
     application_policy_list_cache = ApplicationPolicyListCache()
 
     @swagger_auto_schema(
-        operation_description="生成依赖操作",
+        operation_description="生成推荐操作",
         query_serializer=ActionQuerySLZ,
         auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: RecommendActionPolicy(label="推荐操作策略")},
@@ -424,13 +424,15 @@ class RecommendPolicyViewSet(GenericViewSet):
                 policy_list.add(p)  # 合并相同action的策略
         policy_list.fill_empty_fields()
 
-        # 生成推荐的操作
+        # 生成推荐的操作, 排除已生成推荐策略的操作
         actions, action_id_set = [], set()
         for action_id in chain(*list(recommend_action_dict.values())):
             if action_id in action_id_set:  # 去重
                 continue
 
             action_id_set.add(action_id)
+            if policy_list.get(action_id):
+                continue
 
             action = action_list.get(action_id)
             if not action:

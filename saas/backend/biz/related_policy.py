@@ -346,11 +346,11 @@ class RelatedPolicyBiz:
             if not recommend_action:
                 continue
 
-            related_policy = self._create_related_policy(
+            recommend_policy = self._create_related_policy(
                 policy, recommend_action, only_same_type=True
             )  # 只生成有相同资源类型的关联操作
-            if related_policy:
-                recommend_policies.append(related_policy)
+            if recommend_policy:
+                recommend_policies.append(recommend_policy)
 
         for p in recommend_policies:
             p.set_expired_at(policy.expired_at)

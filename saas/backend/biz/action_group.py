@@ -178,12 +178,24 @@ class ActionGroupBiz:
         if not action_groups:
             return result
 
+        self._find_action_same_group(action_groups, action_ids, result)
+        return result
+
+    def _find_action_same_group(
+        self, action_groups: List[ActionGroup], action_ids: List[str], result: Dict[str, List[str]]
+    ):
+        """
+        查找action_id在同一个分组中的其他操作
+        """
         for action_group in action_groups:
             for action in action_group.actions:
                 if action.id in action_ids:
                     result[action.id].extend(
                         [a.id for a in action_group.actions if a.id != action.id]
                     )  # 兼容可能一个操作在多个分组中
-                    continue
+                    break
 
-        return result
+            if not action_group.sub_groups:
+                continue
+
+            self._find_action_same_group(action_group.sub_groups, action_ids, result)
