@@ -33,6 +33,7 @@
             </iam-form-item>
             <iam-form-item :label="$t(`m.common['描述']`)">
                 <bk-input :value="formData.description"
+                    :placeholder="$t(`m.verify['请输入']`)"
                     type="textarea" maxlength="255"
                     data-test-id="grading_input_desc"
                     @change="handleDescChange" />
