@@ -172,21 +172,17 @@ class ActionGroupBiz:
             action_id: [action_id, action_id, ...] # 同一个分组的action_id
         }
         """
-        result: Dict[str, List[str]] = defaultdict(list)
-
         action_groups = self.action_group_svc.list(system_id)
         if not action_groups:
-            return result
+            return {}
 
-        result = self._find_action_same_group(action_groups, action_ids, result)
-        return result
+        return self._find_action_same_group(action_groups, action_ids)
 
-    def _find_action_same_group(
-        self, action_groups: List[ActionGroup], action_ids: List[str], result: Dict[str, List[str]]
-    ) -> Dict[str, List[str]]:
+    def _find_action_same_group(self, action_groups: List[ActionGroup], action_ids: List[str]) -> Dict[str, List[str]]:
         """
         查找action_id在同一个分组中的其他操作
         """
+        result: Dict[str, List[str]] = defaultdict(list)
         for action_group in action_groups:
             for action in action_group.actions:
                 if action.id in action_ids:
@@ -198,6 +194,9 @@ class ActionGroupBiz:
             if not action_group.sub_groups:
                 continue
 
-            self._find_action_same_group(action_group.sub_groups, action_ids, result)
+            sub_result = self._find_action_same_group(action_group.sub_groups, action_ids)
+
+            for k, v in sub_result.items():
+                result[k].extend(v)
 
         return result
