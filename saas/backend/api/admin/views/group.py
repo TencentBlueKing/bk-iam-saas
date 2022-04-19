@@ -57,7 +57,6 @@ class AdminGroupMemberViewSet(GenericViewSet):
 
     queryset = Group.objects.all()
     lookup_field = "id"
-    pagination_class = CompatiblePagination
 
     biz = GroupBiz()
 
@@ -71,9 +70,7 @@ class AdminGroupMemberViewSet(GenericViewSet):
         group = self.get_object()
 
         # 分页参数
-        pagination = CompatiblePagination()
-        limit = pagination.get_page_size(request)
-        offset = (pagination.get_page_number(request) - 1) * limit
+        limit, offset = CompatiblePagination().get_limit_offset_pair(request)
 
         count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
