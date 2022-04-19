@@ -30,12 +30,13 @@ export default class GradeAggregationPolicy {
     constructor (payload) {
         this.isError = false;
         this.actions = payload.actions || [];
-        this.aggregateResourceType = payload.aggregate_resource_type || {};
+        this.aggregateResourceType = payload.aggregate_resource_types || [];
         this.instances = payload.instances || [];
         this.instancesBackup = _.cloneDeep(this.instances);
         this.isAggregate = true;
         this.system_id = payload.actions[0].system_id;
-        this.system_name = payload.aggregate_resource_type.system_name;
+        this.system_name = payload.system_name;
+        this.instancesDisplayData = payload.instancesDisplayData || {};
         this.$id = payload.$id || '';
         this.canPaste = false;
     }

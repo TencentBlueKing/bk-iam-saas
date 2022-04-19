@@ -395,17 +395,16 @@
                 });
                 let aggregations = []
                 ;(payload || []).forEach(item => {
-                    const { actions, aggregate_resource_type, $id } = item;
+                    const { actions, aggregate_resource_types, $id } = item;
                     const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
                     if (curActions.length > 0) {
                         aggregations.push({
                             actions: curActions,
-                            aggregate_resource_type: Object.assign(aggregate_resource_type, {
-                                system_name: this.policyList.find(
-                                    _ => _.system_id === curActions[0].system_id
-                                ).system_name
-                            }),
-                            $id
+                            aggregate_resource_types,
+                            $id,
+                            system_name: this.policyList.find(
+                                _ => _.system_id === curActions[0].system_id
+                            ).system_name
                         });
                     }
                 });
