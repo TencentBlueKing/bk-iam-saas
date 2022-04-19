@@ -23,7 +23,7 @@ from backend.util.json import json_dumps
 from .constants import AuditObjectType, AuditSourceType, AuditStatus, AuditType
 
 # 用于缓存每个月审计表模型
-AuditModels: Dict[str, Type[Any]] = {}
+_audit_models: Dict[str, Type[Any]] = {}
 
 
 class Event(BaseModel):
@@ -105,7 +105,7 @@ def _get_model(name: str, suffix: str = ""):
         suffix = timezone.now().strftime("%Y%m")
 
     key = f"{name}_{suffix}"
-    cls = AuditModels.get(key)
+    cls = _audit_models.get(key)
     if cls is not None:
         return cls
 
@@ -116,7 +116,7 @@ def _get_model(name: str, suffix: str = ""):
         with _get_connection().schema_editor() as schema_editor:
             schema_editor.create_model(cls)
 
-    AuditModels[key] = cls
+    _audit_models[key] = cls
     return cls
 
 
