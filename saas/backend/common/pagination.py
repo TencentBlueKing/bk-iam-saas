@@ -14,7 +14,6 @@ specific language governing permissions and limitations under the License.
 # 对于已开放接口admin.list_groups/admin.list_group_member/mgmt.list_group/mgmt.list_group_member使用CompatiblePagination兼容limit/offset和page_size/page
 # 对于OpenAPI新接口，需要ViewSet需要显示配置pagination_class=CustomPageNumberPagination
 from collections import OrderedDict
-from typing import List
 
 from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
 from rest_framework.response import Response
@@ -43,12 +42,23 @@ class CustomPageNumberPagination(PageNumberPagination):
     """该分页器继承PageNumberPagination后只对用于Open API返回的数据里去除previous和next参数"""
 
     page_size_query_param = "page_size"
-    # last_page_strings是用于支持page_number为last类似字符串的请求，这里不需要与模板结合的值
-    last_page_strings: List[str] = []
+
+    def _positive_int(self, integer_string, strict=False, cutoff=None):
+        """
+        Cast a string to a strictly positive integer.
+        copied from https://github.com/encode/django-rest-framework/blob/master/rest_framework/pagination.py#L22
+        """
+        ret = int(integer_string)
+        if ret < 0 or (ret == 0 and strict):
+            raise ValueError()
+        if cutoff:
+            return min(ret, cutoff)
+        return ret
 
     def get_page_number(self, request, paginator=None):
-        """由于last_page_strings为[]，所以paginator允许为空列表"""
-        return super().get_page_number(request, paginator)
+        """重载：去除支持page_number='last'等用于模板渲染的表达，仅仅支持数字"""
+        page_number = request.query_params.get(self.page_query_param, 1)
+        return self._positive_int(page_number, strict=True)
 
     def get_paginated_response(self, data):
         return Response(OrderedDict([("count", self.page.paginator.count), ("results", data)]))
@@ -73,32 +83,40 @@ class CompatiblePagination(CustomPageNumberPagination):
     offset_query_param = "offset"
 
     def get_page_size(self, request):
+        page_size_query_param = self.page_size_query_param
         # 优先使用page_size参数，如果不存在而limit参数存在，则使用limit代替page_size
         if self.page_size_query_param not in request.query_params and self.limit_query_param in request.query_params:
-            request.query_params[self.page_size_query_param] = request.query_params[self.limit_query_param]
+            page_size_query_param = self.limit_query_param
 
-        return super().get_page_size(request)
+        try:
+            return self._positive_int(
+                request.query_params[page_size_query_param], strict=True, cutoff=self.max_page_size
+            )
+        except (KeyError, ValueError):
+            pass
+
+        return self.page_size
 
     def get_page_number(self, request, paginator=None):
         """
-        @parma paginator 当且仅当page_query_param 为 self.last_page_strings不为空时才会使用到，
-        目前last_page_strings默认为空，所以paginator默认为None
+        重载：去除支持page_number='last'等用于模板渲染的表达，仅仅支持数字
+        支持从offset计算出page_number
+        @parma paginator，默认None，其他值也无效
         """
+        page_number = request.query_params.get(self.page_query_param, 1)
         # 优先使用page参数，如果不存在而offset参数存在，则使用offset推算出page
         if self.page_query_param not in request.query_params and self.offset_query_param in request.query_params:
             page_size = self.get_page_size(request)
             offset = self._get_offset(request)
             # Note: 这里默认offset可整除page_size，对于无法整除，说明之前offset/limit没有被正确用于分页
-            request.query_params[self.page_query_param] = (offset // page_size) + 1
+            page_number = (offset // page_size) + 1
 
-        return super().get_page_number(request, paginator)
+        return self._positive_int(page_number, strict=True)
 
     def _get_offset(self, request):
         try:
-            offset = int(request.query_params[self.offset_query_param])
+            return self._positive_int(
+                request.query_params[self.offset_query_param],
+            )
         except (KeyError, ValueError):
-            offset = 0
-
-        if offset < 0:
             return 0
-        return offset
