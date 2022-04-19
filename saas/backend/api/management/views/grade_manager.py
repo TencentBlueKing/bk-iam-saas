@@ -11,7 +11,6 @@ specific language governing permissions and limitations under the License.
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -35,6 +34,7 @@ from backend.apps.role.models import Role, RoleSource, RoleUser
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleBiz, RoleCheckBiz
+from backend.common.pagination import CustomPageNumberPagination
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
@@ -49,6 +49,8 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.GRADE_MANAGER_CREATE.value),
         "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.GRADE_MANAGER_LIST.value),
     }
+
+    pagination_class = CustomPageNumberPagination
 
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
@@ -110,9 +112,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         data = serializer.validated_data
 
         # 分页参数
-        pagination = LimitOffsetPagination()
-        limit = pagination.get_limit(request)
-        offset = pagination.get_offset(request)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
 
         count, roles = self.biz.list_paging_role_for_system(data["system"], limit, offset)
         results = ManagementGradeManagerBasicInfoSZL(roles, many=True).data

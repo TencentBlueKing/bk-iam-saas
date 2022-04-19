@@ -66,6 +66,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -111,9 +112,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         role = self.get_object()
 
         # 分页参数
-        pagination = CompatiblePagination()
-        limit = pagination.get_page_size(request)
-        offset = (pagination.get_page_number(request) - 1) * limit
+        limit, offset = CompatiblePagination().get_limit_offset_pair(request)
 
         # 查询当前分级管理员可以管理的用户组
         group_queryset = RoleListQuery(role, None).query_group()
@@ -235,9 +234,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         group = self.get_object()
 
         # 分页参数
-        pagination = CompatiblePagination()
-        limit = pagination.get_page_size(request)
-        offset = (pagination.get_page_number(request) - 1) * limit
+        limit, offset = CompatiblePagination().get_limit_offset_pair(request)
 
         count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
