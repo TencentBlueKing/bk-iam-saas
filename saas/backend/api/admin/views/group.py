@@ -57,6 +57,7 @@ class AdminGroupMemberViewSet(GenericViewSet):
 
     queryset = Group.objects.all()
     lookup_field = "id"
+    pagination_class = CompatiblePagination
 
     biz = GroupBiz()
 

@@ -66,6 +66,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -217,6 +218,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
 
     lookup_field = "id"
     queryset = Group.objects.all()
+    pagination_class = CompatiblePagination
 
     biz = GroupBiz()
     group_check_biz = GroupCheckBiz()

@@ -50,6 +50,8 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.GRADE_MANAGER_LIST.value),
     }
 
+    pagination_class = CustomPageNumberPagination
+
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     trans = GradeManagerTrans()
