@@ -96,6 +96,14 @@ const currentNav = [
                 rkey: 'applyJoinUserGroup',
                 path: `${SITE_URL}apply-join-user-group`,
                 disabled: false
+            },
+            {
+                icon: 'perm-apply',
+                name: il8n('nav', '临时权限申请'),
+                id: 'provisionPermApplyNav',
+                rkey: 'applyProvisionPerm',
+                path: `${SITE_URL}apply-provision-perm`,
+                disabled: false
             }
         ]
     },
