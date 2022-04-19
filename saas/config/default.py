@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "backend.debug",
     "backend.apps.handover",
     "backend.apps.mgmt",
+    "backend.apps.temporary_policy",
 ]
 
 # 登录中间件
@@ -85,7 +86,7 @@ MIDDLEWARE = [
     "backend.account.middlewares.TimezoneMiddleware",
     "backend.account.middlewares.RoleAuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
-    "backend.common.middlewares.AppExceptionMiddleware",
+    "backend.common.middlewares.LanguageMiddleware",
     "corsheaders.middleware.CorsMiddleware",
 ]
 
@@ -162,7 +163,7 @@ CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Creden
 
 # restframework
 REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
+    "EXCEPTION_HANDLER": "backend.common.exception_handler.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
@@ -199,6 +200,7 @@ CELERY_IMPORTS = (
     "backend.audit.tasks",
     "backend.publisher.tasks",
     "backend.long_task.tasks",
+    "backend.apps.temporary_policy.tasks",
 )
 
 CELERYBEAT_SCHEDULE = {
@@ -253,6 +255,10 @@ CELERYBEAT_SCHEDULE = {
     "periodic_delete_unreferenced_expressions": {
         "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
         "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
+    },
+    "periodic_clean_expired_temporary_policies": {
+        "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
+        "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
 }
 
@@ -370,8 +376,14 @@ SINGLE_POLICY_MAX_INSTANCES_LIMIT = int(os.getenv("BKAPP_SINGLE_POLICY_MAX_INSTA
 # 一次申请策略中中新增实例数量限制
 APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", 20))
 
+# 临时权限一个操作最大数量
+TEMPORARY_POLICY_LIMIT = int(os.getenv("BKAPP_TEMPORARY_POLICY_LIMIT", 10))
+
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
+
+# 最长已过期临时权限期限
+MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 
 # 用于发布订阅的Redis
 PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")

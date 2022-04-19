@@ -179,6 +179,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
     JOIN_RATING_MANAGER = auto()
     CREATE_RATING_MANAGER = auto()
     UPDATE_RATING_MANAGER = auto()
+    GRANT_TEMPORARY_ACTION = auto()
 
     _choices_labels = skip(
         (
@@ -189,6 +190,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
             (JOIN_RATING_MANAGER, "加入分级管理员"),
             (CREATE_RATING_MANAGER, "创建分级管理员"),
             (UPDATE_RATING_MANAGER, "修改分级管理员"),
+            (GRANT_TEMPORARY_ACTION, "临时权限申请"),
         )
     )
 

@@ -28,7 +28,6 @@ from backend.api.management.serializers import (
     ManagementGroupMemberDeleteSLZ,
     ManagementGroupMemberSLZ,
 )
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.group.audit import (
     GroupCreateAuditProvider,
     GroupDeleteAuditProvider,
@@ -50,7 +49,7 @@ from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
 
-class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementGradeManagerGroupViewSet(GenericViewSet):
     """用户组"""
 
     authentication_classes = [ESBAuthentication]
@@ -131,7 +130,7 @@ class ManagementGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
         return Response({"count": count, "results": results})
 
 
-class ManagementGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementGroupViewSet(GenericViewSet):
     """用户组"""
 
     authentication_classes = [ESBAuthentication]
@@ -200,7 +199,7 @@ class ManagementGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
         return Response({})
 
 
-class ManagementGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementGroupMemberViewSet(GenericViewSet):
     """用户组成员"""
 
     authentication_classes = [ESBAuthentication]
@@ -294,7 +293,7 @@ class ManagementGroupMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
         return Response({})
 
 
-class ManagementGroupPolicyViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementGroupPolicyViewSet(GenericViewSet):
     """用户组权限 - 自定义权限"""
 
     authentication_classes = [ESBAuthentication]
