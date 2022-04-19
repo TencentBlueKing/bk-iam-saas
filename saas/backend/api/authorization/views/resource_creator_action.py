@@ -13,7 +13,6 @@ from rest_framework import serializers, status
 from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.resource_creator_action import ResourceCreatorActionBiz
 from backend.common.swagger import ResponseSwaggerAutoSchema
@@ -28,7 +27,7 @@ from ..permissions import AuthorizationAPIPermission
 from ..serializers import BatchResourceCreatorActionSLZ, ResourceCreatorActionAttributeSLZ, ResourceCreatorActionSLZ
 
 
-class ResourceCreatorActionView(AuthViewMixin, ExceptionHandlerMixin, APIView):
+class ResourceCreatorActionView(AuthViewMixin, APIView):
     """
     新建关联授权
     """
@@ -80,7 +79,7 @@ class ResourceCreatorActionView(AuthViewMixin, ExceptionHandlerMixin, APIView):
         return self.batch_policy_response(policies)
 
 
-class BatchResourceCreatorActionView(AuthViewMixin, ExceptionHandlerMixin, APIView):
+class BatchResourceCreatorActionView(AuthViewMixin, APIView):
     """
     新建关联授权 - 批量资源实例
     """
@@ -132,7 +131,7 @@ class BatchResourceCreatorActionView(AuthViewMixin, ExceptionHandlerMixin, APIVi
         return self.batch_policy_response(policies)
 
 
-class ResourceCreatorActionAttributeView(AuthViewMixin, ExceptionHandlerMixin, APIView):
+class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
     """
     新建关联授权 - 属性授权
     """

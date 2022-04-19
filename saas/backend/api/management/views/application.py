@@ -18,7 +18,6 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLo
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.permissions import ManagementAPIPermission
 from backend.api.management.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
 from backend.biz.group import GroupCheckBiz
 from backend.common.swagger import ResponseSwaggerAutoSchema
@@ -26,7 +25,7 @@ from backend.service.constants import ApplicationTypeEnum, SubjectType
 from backend.service.models import Subject
 
 
-class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, ExceptionHandlerMixin, GenericViewSet):
+class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
     """用户组申请单"""
 
     authentication_classes = [ESBAuthentication]

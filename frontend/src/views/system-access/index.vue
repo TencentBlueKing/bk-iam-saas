@@ -4,8 +4,7 @@
             <bk-button theme="primary" @click="goCreate">{{ $t(`m.common['新增']`) }}</bk-button>
             <div slot="right" class="right">
                 <bk-button theme="primary" class="right" text @click="showHelpDialog">
-                    <!-- {{ $t(`m.common['编辑']`) }} -->
-                    接入帮助
+                    {{ $t(`m.access['接入帮助']`) }}
                 </bk-button>
             </div>
         </render-search>

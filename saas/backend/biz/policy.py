@@ -973,11 +973,157 @@ class PolicyBean(Policy):
         return is_changed
 
 
-class PolicyBeanList:
+class PolicyBeanListMixin:
     action_svc = ActionService()
     resource_type_svc = ResourceTypeService()
     resource_biz = ResourceBiz()
 
+    def __init__(
+        self,
+        system_id: str,
+        policies: List[PolicyBean],
+    ) -> None:
+        self.system_id = system_id
+        self.policies = policies
+
+    def get_system_id_set(self) -> Set[str]:
+        """
+        获取所有node相关的system_id集合
+        """
+        return set.union(*[one.get_system_id_set() for one in self.policies]) if self.policies else set()
+
+    def fill_empty_fields(self):
+        """
+        填充PolicyBean中默认为空的字段
+        """
+        system_id_set = self.get_system_id_set()
+        resource_type_dict = self.resource_type_svc.get_resource_type_dict(list(system_id_set))
+        action_list = self.action_svc.new_action_list(self.system_id)
+
+        for policy in self.policies:
+            action = action_list.get(policy.action_id)
+            if not action:
+                continue
+            policy.fill_empty_fields(action, resource_type_dict)
+
+    def check_instance_selection(self):
+        """
+        检查实例视图
+        如果视图需要忽略路径, 则修改路径
+        """
+        action_list = self.action_svc.new_action_list(self.system_id)
+        for p in self.policies:
+            action = action_list.get(p.action_id)
+            if not action:
+                continue
+
+            p.check_instance_selection(action)
+
+    def _list_path_node(self, is_ignore_big_policy=False) -> List[PathNodeBean]:
+        """
+        查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点
+        is_ignore_big_policy: 是否忽略大的策略，大策略是指策略里的实例数量大于1000，
+          主要是用于自动更新策略里的资源实例名称时避免大数量的请求接入系统（1000是权限中心的回调接口协议里规定的）
+        """
+        nodes = []
+        for p in self.policies:
+            # 这里是定制逻辑：基于fetch_instance_info限制，避免出现大策略
+            if is_ignore_big_policy and p.count_all_type_instance() > FETCH_MAX_LIMIT:
+                continue
+            nodes.extend(p.list_path_node())
+        return nodes
+
+    def check_resource_name(self):
+        """
+        校验策略里包含资源实例名称与ID是否匹配，主要用于防止前端提交数据的错误
+        特别注意：该函数只能用于校验新增的策略，不能校验老策略，因为老的资源实例可能被删除或重命名了
+        """
+        # 获取策略里的资源的所有节点
+        path_nodes = self._list_path_node()
+        # 查询资源实例的实际名称
+        resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
+
+        # 校验从接入系统查询的资源实例名称与提交的数据里的名称是否一致
+        for node in path_nodes:
+            real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
+            # 任意需要特殊判断：只要包含无限制即可
+            if node.id == ANY_ID and real_name.lower() in node.name.lower():
+                continue
+            # 接入系统查询不到 或者 名称不一致则需要报错提示
+            if not real_name or real_name != node.name:
+                raise error_codes.INVALID_ARGS.format(
+                    "resource(system_id:{}, type:{}, id:{}, name:{}, real_name: {}) name not match".format(
+                        node.system_id, node.type, node.id, node.name, real_name
+                    )
+                )
+
+    def check_instance_count_limit(self):
+        """
+        检查策略里的实例数量，避免大规模实例超限
+        """
+        for p in self.policies:
+            for c in p.list_resource_type_instance_count():
+                if c.count > settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT:
+                    raise error_codes.VALIDATE_ERROR.format(
+                        "操作 [{}] 关联的资源类型 [{}] 实例数已达上限{}个，请改用范围或者属性授权。".format(
+                            p.action_id, c.type, settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT
+                        )
+                    )
+
+    def get_renamed_resources(self) -> Dict[PathNodeBean, str]:
+        """查询已经被重命名的资源实例"""
+        # 获取策略里的资源的所有节点，防御性措施：忽略大策略，避免给接入系统请求压力
+        path_nodes = self._list_path_node(is_ignore_big_policy=True)
+        # 查询资源实例的实际名称
+        resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
+
+        # 查询出已经名称已变更的资源
+        renamed_resources: Dict[PathNodeBean, str] = {}
+        for node in path_nodes:
+            real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
+            # 任意则无需更新
+            if node.id == ANY_ID:
+                continue
+
+            # 如果real_name 查询不到，则忽略，Note: 不可删除策略里的资源
+            if not real_name:
+                continue
+
+            # 名称不一致，说明资源重命名了，需要更新
+            if real_name != node.name:
+                renamed_resources[node] = real_name
+
+        return renamed_resources
+
+    def auto_update_resource_name(self) -> List[PolicyBean]:
+        """
+        策略里存储的资源名称可能已经变了，需要进行更新
+        Note: 该函数仅用于需要对外展示策略数据时调用，不会自动更新DB里数据
+        """
+        # 由于自动更新并非核心功能，若接入系统查询有问题，也需要正常显示
+        try:
+            # 获取策略里被重命名的资源实例
+            renamed_resources = self.get_renamed_resources()
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("biz policy auto_update_resource_name: get_renamed_resources fail")
+            return []
+
+        # 没有任何被重命名的资源实例，则无需更新策略
+        if len(renamed_resources) == 0:
+            return []
+
+        # 修改即将对外展示数据
+        changed_policies = []
+        for p in self.policies:
+            is_changed = p.update_resource_name(renamed_resources)
+            # 若策略里有资源实例重名了，则记录起来，用于后续修改DB数据
+            if is_changed:
+                changed_policies.append(p)
+
+        return changed_policies
+
+
+class PolicyBeanList(PolicyBeanListMixin):
     def __init__(
         self,
         system_id: str,
@@ -1001,26 +1147,6 @@ class PolicyBeanList:
 
         if need_check_instance_selection:
             self.check_instance_selection()
-
-    def fill_empty_fields(self):
-        """
-        填充PolicyBean中默认为空的字段
-        """
-        system_id_set = self.get_system_id_set()
-        resource_type_dict = self.resource_type_svc.get_resource_type_dict(list(system_id_set))
-        action_list = self.action_svc.new_action_list(self.system_id)
-
-        for policy in self.policies:
-            action = action_list.get(policy.action_id)
-            if not action:
-                continue
-            policy.fill_empty_fields(action, resource_type_dict)
-
-    def get_system_id_set(self) -> Set[str]:
-        """
-        获取所有node相关的system_id集合
-        """
-        return set.union(*[one.get_system_id_set() for one in self.policies]) if self.policies else set()
 
     def get(self, action_id: str) -> Optional[PolicyBean]:
         return self._policy_dict.get(action_id, None)
@@ -1132,121 +1258,19 @@ class PolicyBeanList:
     def to_svc_policies(self):
         return parse_obj_as(List[Policy], self.policies)
 
-    def check_instance_selection(self):
-        """
-        检查实例视图
-        如果视图需要忽略路径, 则修改路径
-        """
-        action_list = self.action_svc.new_action_list(self.system_id)
-        for p in self.policies:
-            action = action_list.get(p.action_id)
-            if not action:
-                continue
 
-            p.check_instance_selection(action)
+class TemporaryPolicyBeanList(PolicyBeanListMixin):
+    def __init__(
+        self,
+        system_id: str,
+        policies: List[PolicyBean],
+        need_fill_empty_fields: bool = False,
+    ) -> None:
+        self.system_id = system_id
+        self.policies = policies
 
-    def _list_path_node(self, is_ignore_big_policy=False) -> List[PathNodeBean]:
-        """
-        查询策略包含的资源范围 - 所有路径上的节点，包括叶子节点
-        is_ignore_big_policy: 是否忽略大的策略，大策略是指策略里的实例数量大于1000，
-          主要是用于自动更新策略里的资源实例名称时避免大数量的请求接入系统（1000是权限中心的回调接口协议里规定的）
-        """
-        nodes = []
-        for p in self.policies:
-            # 这里是定制逻辑：基于fetch_instance_info限制，避免出现大策略
-            if is_ignore_big_policy and p.count_all_type_instance() > FETCH_MAX_LIMIT:
-                continue
-            nodes.extend(p.list_path_node())
-        return nodes
-
-    def check_resource_name(self):
-        """
-        校验策略里包含资源实例名称与ID是否匹配，主要用于防止前端提交数据的错误
-        特别注意：该函数只能用于校验新增的策略，不能校验老策略，因为老的资源实例可能被删除或重命名了
-        """
-        # 获取策略里的资源的所有节点
-        path_nodes = self._list_path_node()
-        # 查询资源实例的实际名称
-        resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
-
-        # 校验从接入系统查询的资源实例名称与提交的数据里的名称是否一致
-        for node in path_nodes:
-            real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
-            # 任意需要特殊判断：只要包含无限制即可
-            if node.id == ANY_ID and real_name in node.name:
-                continue
-            # 接入系统查询不到 或者 名称不一致则需要报错提示
-            if not real_name or real_name != node.name:
-                raise error_codes.INVALID_ARGS.format(
-                    "resource(system_id:{}, type:{}, id:{}, name:{}, real_name: {}) name not match".format(
-                        node.system_id, node.type, node.id, node.name, real_name
-                    )
-                )
-
-    def check_instance_count_limit(self):
-        """
-        检查策略里的实例数量，避免大规模实例超限
-        """
-        for p in self.policies:
-            for c in p.list_resource_type_instance_count():
-                if c.count > settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT:
-                    raise error_codes.VALIDATE_ERROR.format(
-                        "操作 [{}] 关联的资源类型 [{}] 实例数已达上限{}个，请改用范围或者属性授权。".format(
-                            p.action_id, c.type, settings.SINGLE_POLICY_MAX_INSTANCES_LIMIT
-                        )
-                    )
-
-    def get_renamed_resources(self) -> Dict[PathNodeBean, str]:
-        """查询已经被重命名的资源实例"""
-        # 获取策略里的资源的所有节点，防御性措施：忽略大策略，避免给接入系统请求压力
-        path_nodes = self._list_path_node(is_ignore_big_policy=True)
-        # 查询资源实例的实际名称
-        resource_name_dict = self.resource_biz.fetch_resource_name(parse_obj_as(List[ResourceNodeBean], path_nodes))
-
-        # 查询出已经名称已变更的资源
-        renamed_resources: Dict[PathNodeBean, str] = {}
-        for node in path_nodes:
-            real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
-            # 任意则无需更新
-            if node.id == ANY_ID:
-                continue
-
-            # 如果real_name 查询不到，则忽略，Note: 不可删除策略里的资源
-            if not real_name:
-                continue
-
-            # 名称不一致，说明资源重命名了，需要更新
-            if real_name != node.name:
-                renamed_resources[node] = real_name
-
-        return renamed_resources
-
-    def auto_update_resource_name(self) -> List[PolicyBean]:
-        """
-        策略里存储的资源名称可能已经变了，需要进行更新
-        Note: 该函数仅用于需要对外展示策略数据时调用，不会自动更新DB里数据
-        """
-        # 由于自动更新并非核心功能，若接入系统查询有问题，也需要正常显示
-        try:
-            # 获取策略里被重命名的资源实例
-            renamed_resources = self.get_renamed_resources()
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("biz policy auto_update_resource_name: get_renamed_resources fail")
-            return []
-
-        # 没有任何被重命名的资源实例，则无需更新策略
-        if len(renamed_resources) == 0:
-            return []
-
-        # 修改即将对外展示数据
-        changed_policies = []
-        for p in self.policies:
-            is_changed = p.update_resource_name(renamed_resources)
-            # 若策略里有资源实例重名了，则记录起来，用于后续修改DB数据
-            if is_changed:
-                changed_policies.append(p)
-
-        return changed_policies
+        if need_fill_empty_fields:
+            self.fill_empty_fields()
 
 
 class SystemCounterBean(SystemCounter):
@@ -1294,6 +1318,12 @@ class PolicyQueryBiz:
         policy_list = self.new_policy_list(system_id, subject, action_ids)
         return policy_list.policies
 
+    def list_temporary_by_subject(self, system_id: str, subject: Subject) -> List[PolicyBean]:
+        """查询subject指定系统的临时权限策略"""
+        policies = self.svc.list_temporary_by_subject(system_id, subject)
+        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return pl.policies
+
     def new_policy_list(
         self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
     ) -> PolicyBeanList:
@@ -1311,12 +1341,25 @@ class PolicyQueryBiz:
         policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
         return policy_list
 
+    def list_temporary_by_policy_ids(
+        self, system_id: str, subject: Subject, policy_ids: List[int]
+    ) -> List[PolicyBean]:
+        """
+        通过policy_ids查询临时权限
+        """
+        policies = self.svc.list_temporary_by_policy_ids(system_id, subject, policy_ids)
+        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return pl.policies
+
     def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
         """
         查询subject有权限的系统-policy数量信息
         """
-        system_list = self.system_svc.new_system_list()
         system_counts = self.svc.list_system_counter_by_subject(subject)
+        return self._system_counter_to_system_counter_bean(system_counts)
+
+    def _system_counter_to_system_counter_bean(self, system_counts: List[SystemCounter]) -> List[SystemCounterBean]:
+        system_list = self.system_svc.new_system_list()
         system_count_beans = parse_obj_as(List[SystemCounterBean], system_counts)
 
         for scb in system_count_beans:
@@ -1326,6 +1369,13 @@ class PolicyQueryBiz:
             scb.fill_empty_fields(system)
 
         return system_count_beans
+
+    def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
+        """
+        查询subject有权限的系统-临时policy数量信息
+        """
+        system_counts = self.svc.list_temporary_system_counter_by_subject(subject)
+        return self._system_counter_to_system_counter_bean(system_counts)
 
     def get_policy_resource_type_conditions(
         self, subject: Subject, policy_id: int, resource_group_id: str, resource_system: str, resource_type: str
@@ -1405,6 +1455,12 @@ class PolicyOperationBiz:
         删除policies
         """
         self.svc.delete_by_ids(system_id, subject, policy_ids)
+
+    def delete_temporary_policies_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
+        """
+        删除临时权限
+        """
+        self.svc.delete_temporary_policies_by_ids(system_id, subject, policy_ids)
 
     @method_decorator(policy_change_lock)
     def delete_by_resource_group_id(
@@ -1567,6 +1623,17 @@ class PolicyOperationBiz:
 
         # 返回的是所有策略，包括未被更新的
         return policy_list.policies
+
+    def create_temporary_policies(self, system_id: str, subject: Subject, policies: List[PolicyBean]):
+        """
+        创建临时权限
+        """
+        self.svc.create_temporary_policies(
+            system_id,
+            subject,
+            policies=parse_obj_as(List[Policy], policies),
+            action_list=self.action_svc.new_action_list(system_id),
+        )
 
 
 def group_paths(paths: List[List[Dict]]) -> List[InstanceBean]:

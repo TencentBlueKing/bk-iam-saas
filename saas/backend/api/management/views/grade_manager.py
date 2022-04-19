@@ -26,7 +26,6 @@ from backend.api.management.serializers import (
     ManagementGradeManagerMembersSLZ,
     ManagementSourceSystemSLZ,
 )
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.role.audit import (
     RoleCreateAuditProvider,
     RoleMemberCreateAuditProvider,
@@ -41,7 +40,7 @@ from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, ExceptionHandlerMixin, GenericViewSet):
+class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
     """分级管理员"""
 
     authentication_classes = [ESBAuthentication]
@@ -120,7 +119,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, Exception
         return Response({"count": count, "results": results})
 
 
-class ManagementGradeManagerMemberViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementGradeManagerMemberViewSet(GenericViewSet):
     """分级管理员成员"""
 
     paginator = None  # 去掉swagger中的limit offset参数
