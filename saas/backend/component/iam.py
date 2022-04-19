@@ -526,3 +526,52 @@ def delete_unreferenced_expressions():
     """删除未被引用的expression"""
     url_path = "/api/v1/web/unreferenced-expressions"
     return _call_iam_api(http_delete, url_path, data={})
+
+
+def create_temporary_policies(
+    system_id: str,
+    subject_type: str,
+    subject_id: str,
+    policies: List[Dict],
+) -> Dict:
+    """
+    创建临时权限
+
+    policies: [{
+        "action_id": "view_host",
+        "resource_expression": "",
+        "environment": "",
+        "expired_at": 4102444800
+    }]
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/temporary-policies"
+    data = {
+        "subject": {"type": subject_type, "id": subject_id},
+        "policies": policies,
+    }
+    permission_logger.info("iam create temporary policies url: %s, data: %s", url_path, data)
+    result = _call_iam_api(http_post, url_path, data=data)
+    return result
+
+
+def delete_temporary_policies(system_id: str, subject_type: str, subject_id: str, policy_ids: List[int]) -> None:
+    """
+    删除临时权限
+    """
+    url_path = "/api/v1/web/temporary-policies"
+    data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
+    permission_logger.info("iam delete temporary policies url: %s, data: %s", url_path, data)
+    result = _call_iam_api(http_delete, url_path, data=data)
+    return result
+
+
+def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
+    """
+    删除指定过期时间前的临时权限策略
+    """
+    url_path = "/api/v1/web/temporary-policies/before_expired_at"
+    params = {
+        "expired_at": expired_at,
+    }
+    permission_logger.info("iam delete temporary policies before expired_at url: %s, params: %s", url_path, params)
+    return _call_iam_api(http_delete, url_path, data=params)

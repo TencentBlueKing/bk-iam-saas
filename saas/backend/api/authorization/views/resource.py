@@ -13,7 +13,6 @@ from rest_framework import serializers, status
 from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.models import Subject
@@ -26,7 +25,7 @@ from ..permissions import AuthorizationAPIPermission
 from ..serializers import AuthBatchInstanceSLZ, AuthBatchPathSLZ, AuthInstanceSLZ, AuthPathSLZ
 
 
-class AuthInstanceView(AuthViewMixin, ExceptionHandlerMixin, APIView):
+class AuthInstanceView(AuthViewMixin, APIView):
     """
     单个资源授权回收
     """
@@ -71,7 +70,7 @@ class AuthInstanceView(AuthViewMixin, ExceptionHandlerMixin, APIView):
         return self.policy_response(policies[0])
 
 
-class AuthPathView(AuthViewMixin, ExceptionHandlerMixin, APIView):
+class AuthPathView(AuthViewMixin, APIView):
     """
     单个拓扑层级授权/回收
     """
@@ -116,7 +115,7 @@ class AuthPathView(AuthViewMixin, ExceptionHandlerMixin, APIView):
         return self.policy_response(policies[0])
 
 
-class AuthBatchInstanceView(AuthViewMixin, ExceptionHandlerMixin, APIView):
+class AuthBatchInstanceView(AuthViewMixin, APIView):
     """
     批量操作批量资源授权回收
     """
@@ -161,7 +160,7 @@ class AuthBatchInstanceView(AuthViewMixin, ExceptionHandlerMixin, APIView):
         return self.batch_policy_response(policies)
 
 
-class AuthBatchPathView(AuthViewMixin, ExceptionHandlerMixin, APIView):
+class AuthBatchPathView(AuthViewMixin, APIView):
     """
     批量操作批量拓扑层级授权/回收
     """

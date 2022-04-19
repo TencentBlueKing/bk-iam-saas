@@ -539,8 +539,9 @@
                     offset: 0,
                     system_id: this.curChain[0].system_id,
                     type: this.curChain[0].id,
-                    parent_type: '',
-                    parent_id: '',
+                    // parent_type: '',
+                    // parent_id: '',
+                    ancestors: [],
                     keyword: this.curKeyword
                 };
                 try {
@@ -735,6 +736,7 @@
             },
 
             async handleAsyncNodes (node, index, flag) {
+                console.log('handleAsyncNodes', node);
                 window.changeAlert = true;
                 const asyncItem = {
                     ...ASYNC_ITEM,
@@ -749,7 +751,8 @@
                 const params = {
                     limit: this.limit,
                     offset: 0,
-                    parent_id: node.id,
+                    // parent_id: node.id,
+                    ancestors: [],
                     keyword: ''
                 };
 
@@ -760,12 +763,18 @@
                 }
 
                 let placeholder = '';
+                let parentType = '';
+                let parentData = [];
+                const ancestorItem = {};
 
                 if (node.childType !== '') {
                     params.system_id = this.curChain[chainLen - 1].system_id;
                     params.type = node.childType;
-                    params.parent_type = this.curChain[chainLen - 1].id;
+                    parentType = this.curChain[chainLen - 1].id;
                     placeholder = this.curChain[chainLen - 1].name;
+                    
+                    ancestorItem.system_id = this.curChain[chainLen - 1].system_id;
+                    ancestorItem.type = this.curChain[chainLen - 1].id;
                 } else {
                     const isExistNextChain = !!this.curChain[node.level + 1];
                     params.system_id = isExistNextChain
@@ -776,12 +785,28 @@
                         ? this.curChain[node.level + 1].id
                         : this.curChain[chainLen - 1].id;
 
-                    params.parent_type = this.curChain[node.level].id;
+                    parentType = this.curChain[node.level].id;
 
                     placeholder = isExistNextChain
                         ? this.curChain[node.level + 1].name
                         : this.curChain[chainLen - 1].name;
+                    
+                    ancestorItem.system_id = this.curChain[node.level].system_id;
+                    ancestorItem.type = this.curChain[node.level].id;
                 }
+                ancestorItem.id = node.id;
+                
+                if (node.parentChain.length) {
+                    parentData = node.parentChain.reduce((p, e) => {
+                        p.push({
+                            system_id: e.system_id,
+                            id: e.id,
+                            type: e.type
+                        });
+                        return p;
+                    }, []);
+                }
+                params.ancestors.push(...parentData, ancestorItem);
 
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params);
@@ -798,7 +823,7 @@
                     parentChain.push({
                         name: node.name,
                         id: node.id,
-                        type: params.parent_type,
+                        type: parentType,
                         system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level].system_id,
                         child_type: node.childType || ''
                     });
@@ -926,6 +951,7 @@
             },
 
             async handleLoadMore (node, index) {
+                console.log('handleLoadMore', node, index);
                 window.changeAlert = true;
                 node.current = node.current + 1;
                 node.loadingMore = true;
@@ -940,18 +966,29 @@
                 const params = {
                     limit: this.limit,
                     offset: this.limit * (node.current - 1),
-                    parent_id: node.level > 0 ? node.parentSyncId : '',
+                    ancestors: [],
+                    // parent_id: node.level > 0 ? node.parentSyncId : '',
                     keyword
                 };
 
                 if (node.level > chainLen - 1) {
                     params.system_id = this.curChain[chainLen - 1].system_id;
                     params.type = this.curChain[chainLen - 1].id;
-                    params.parent_type = this.curChain[chainLen - 1].id || '';
+                    // params.parent_type = this.curChain[chainLen - 1].id || '';
                 } else {
                     params.system_id = this.curChain[node.level].system_id;
                     params.type = this.curChain[node.level].id;
-                    params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : '';
+                }
+                if (node.parentChain.length) {
+                    const parentData = node.parentChain.reduce((p, e) => {
+                        p.push({
+                            system_id: e.system_id,
+                            id: e.id,
+                            type: e.type
+                        });
+                        return p;
+                    }, []);
+                    params.ancestors.push(...parentData);
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params);

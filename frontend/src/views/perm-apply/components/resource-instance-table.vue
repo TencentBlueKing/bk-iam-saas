@@ -26,7 +26,12 @@
                 <template slot-scope="{ row, $index }">
                     <!-- isAggregate代表批量编辑状态 -->
                     <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                        <label class="resource-type-name">{{ row.aggregateResourceType.name }}</label>
+                        <!-- <label class="resource-type-name">{{ row.aggregateResourceType.name }}</label> -->
+                        <div class="bk-button-group tab-button">
+                            <bk-button v-for="(item, index) in row.aggregateResourceType"
+                                :key="item.id" @click="selectResourceType(index)"
+                                :class="selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}</bk-button>
+                        </div>
                         <div class="group-container">
                             <render-condition
                                 :ref="`condition_${$index}_aggregateRef`"
@@ -142,7 +147,7 @@
                         </template>
                         <template v-else>
                             <!-- 44 -->
-                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId">
+                            <template v-if="row.isShowRelatedText && row.inOriginalList && !cacheId && !row.isNew">
                                 <!-- 55 -->
                                 <div class="mock-disabled-select">{{row.expired_display}}</div>
                             </template>
@@ -350,7 +355,8 @@
                 tipsContent: {
                     content: '提示信息',
                     html: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>'
-                }
+                },
+                selectedIndex: 0
             };
         },
         computed: {
@@ -492,13 +498,25 @@
             },
 
             handlerSelectAggregateRes (payload) {
-                this.tableList[this.aggregateIndex].instances = payload.map(item => {
+                const instances = payload.map(item => {
                     return {
                         id: item.id,
                         name: item.display_name
                     };
                 });
                 this.tableList[this.aggregateIndex].isError = false;
+                const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
+                const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
+                this.tableList[this.aggregateIndex].instancesDisplayData = {
+                    ...instancesDisplayData,
+                    [instanceKey]: instances
+                };
+                this.tableList[this.aggregateIndex].instances = [];
+
+                for (const key in this.tableList[this.aggregateIndex].instancesDisplayData) {
+                    // eslint-disable-next-line max-len
+                    this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
+                }
                 this.$emit('on-select', this.tableList[this.aggregateIndex]);
             },
 
@@ -623,9 +641,11 @@
             },
 
             showAggregateResourceInstance (data, index) {
-                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType);
+                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[this.selectedIndex]);
                 this.aggregateIndex = index;
-                this.aggregateValue = _.cloneDeep(data.instances.map(item => {
+                const instanceKey = data.aggregateResourceType[this.selectedIndex].id;
+                if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
+                this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
                     return {
                         id: item.id,
                         display_name: item.name
@@ -1412,19 +1432,23 @@
                         }
                         actionList.push(_.cloneDeep(params));
                     } else {
-                        const { actions, aggregateResourceType, instances } = item;
+                        const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
                         if (instances.length < 1) {
                             item.isError = true;
                             flag = true;
                         } else {
+                            const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
+                                const obj = {};
+                                obj.id = e.id;
+                                obj.system_id = e.system_id;
+                                obj.instances = instancesDisplayData[e.id];
+                                p.push(obj);
+                                return p;
+                            }, []);
                             const params = {
                                 actions,
                                 expired_at: item.expired_at === '' ? tempExpiredAt : Number(item.expired_at),
-                                aggregate_resource_type: {
-                                    id: aggregateResourceType.id,
-                                    system_id: aggregateResourceType.system_id,
-                                    instances
-                                }
+                                aggregate_resource_types: aggregateResourceTypes
                             };
                             if (params.expired_at !== PERMANENT_TIMESTAMP) {
                                 params.expired_at = params.expired_at + this.user.timestamp;
@@ -1508,6 +1532,10 @@
                     this.isShowResourceInstanceEffectTime = false;
                     this.resetDataAfterClose();
                 }, _ => _);
+            },
+
+            selectResourceType (index) {
+                this.selectedIndex = index;
             }
         }
     };

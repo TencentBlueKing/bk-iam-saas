@@ -27,4 +27,5 @@ urlpatterns = [
     ),
     path("group_renew/", views.ApplicationByRenewGroupView.as_view(), name="application.group.renew"),
     path("policy_renew/", views.ApplicationByRenewPolicyView.as_view(), name="application.policy.renew"),
+    path("temporary_policy/", views.ApplicationByTemporaryPolicyView.as_view(), name="application.temporary_policy"),
 ]
