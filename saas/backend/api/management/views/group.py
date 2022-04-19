@@ -13,7 +13,6 @@ from typing import List
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -43,6 +42,7 @@ from backend.audit.audit import add_audit, audit_context_setter, view_audit_deco
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyOperationBiz
 from backend.biz.role import RoleBiz, RoleListQuery
+from backend.common.pagination import CompatiblePagination
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
@@ -105,9 +105,9 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         role = self.get_object()
 
         # 分页参数
-        pagination = LimitOffsetPagination()
-        limit = pagination.get_limit(request)
-        offset = pagination.get_offset(request)
+        pagination = CompatiblePagination()
+        limit = pagination.get_page_size(request)
+        offset = (pagination.get_page_number(request) - 1) * limit
 
         # 查询当前分级管理员可以管理的用户组
         group_queryset = RoleListQuery(role, None).query_group()
@@ -213,6 +213,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
 
     lookup_field = "id"
     queryset = Group.objects.all()
+    pagination_class = CompatiblePagination
 
     biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -228,9 +229,9 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         group = self.get_object()
 
         # 分页参数
-        pagination = LimitOffsetPagination()
-        limit = pagination.get_limit(request)
-        offset = pagination.get_offset(request)
+        pagination = CompatiblePagination()
+        limit = pagination.get_page_size(request)
+        offset = (pagination.get_page_number(request) - 1) * limit
 
         count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]

@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
@@ -21,6 +20,7 @@ from backend.api.admin.serializers import AdminGroupBasicSLZ, AdminGroupMemberSL
 from backend.api.authentication import ESBAuthentication
 from backend.apps.group.models import Group
 from backend.biz.group import GroupBiz
+from backend.common.pagination import CompatiblePagination
 from backend.common.swagger import PaginatedResponseSwaggerAutoSchema
 
 
@@ -35,6 +35,7 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = Group.objects.all()
     serializer_class = AdminGroupBasicSLZ
     filterset_class = GroupFilter
+    pagination_class = CompatiblePagination
 
     @swagger_auto_schema(
         operation_description="用户组列表",
@@ -56,6 +57,7 @@ class AdminGroupMemberViewSet(GenericViewSet):
 
     queryset = Group.objects.all()
     lookup_field = "id"
+    pagination_class = CompatiblePagination
 
     biz = GroupBiz()
 
@@ -69,9 +71,9 @@ class AdminGroupMemberViewSet(GenericViewSet):
         group = self.get_object()
 
         # 分页参数
-        pagination = LimitOffsetPagination()
-        limit = pagination.get_limit(request)
-        offset = pagination.get_offset(request)
+        pagination = CompatiblePagination()
+        limit = pagination.get_page_size(request)
+        offset = (pagination.get_page_number(request) - 1) * limit
 
         count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
