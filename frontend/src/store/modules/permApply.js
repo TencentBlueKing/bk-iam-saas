@@ -135,7 +135,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getResources ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/resources/?${json2Query(params)}`, config);
+            return http.post(`${AJAX_URL_PREFIX}/resources/`, params, config);
         },
 
         /**

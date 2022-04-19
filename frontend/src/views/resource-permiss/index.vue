@@ -9,6 +9,7 @@
                             style="width: 504px; background: #fff"
                             v-model="searchType"
                             :clearable="true"
+                            :placeholder="$t(`m.verify['请选择']`)"
                             @change="handlSearchChange">
                             <bk-option v-for="option in searchTypeList"
                                 :key="option.value"
@@ -16,7 +17,7 @@
                                 :name="option.name">
                             </bk-option>
                         </bk-select>
-                        <p class="error-tips" v-if="searchTypeError">请选择查询类型</p>
+                        <p class="error-tips" v-if="searchTypeError">{{$t(`m.resourcePermiss['请选择查询类型']`)}}</p>
                     </iam-form-item>
                 </bk-form>
             </div>
@@ -27,6 +28,7 @@
                             style="width: 200px; background: #fff"
                             v-model="systemId"
                             :clearable="true"
+                            :placeholder="$t(`m.verify['请选择']`)"
                             @change="handleCascadeChange">
                             <bk-option v-for="option in systemList"
                                 :key="option.id"
@@ -34,13 +36,14 @@
                                 :name="`${option.name} (${option.id})`">
                             </bk-option>
                         </bk-select>
-                        <p class="error-tips" v-if="systemIdError">系统必填</p>
+                        <p class="error-tips" v-if="systemIdError">{{$t(`m.resourcePermiss['系统必填']`)}}</p>
                     </iam-form-item>
                     <iam-form-item :label="$t(`m.permApply['选择操作']`)" class="pb20 form-item-resourc">
                         <bk-select
                             style="width: 200px; background: #fff"
                             v-model="actionId"
                             :clearable="true"
+                            :placeholder="$t(`m.verify['请选择']`)"
                             @selected="handleSelected">
                             <bk-option v-for="option in processesList"
                                 :key="option.id"
@@ -48,7 +51,7 @@
                                 :name="`${option.name} (${option.id})`">
                             </bk-option>
                         </bk-select>
-                        <p class="error-tips" v-if="actionIdError">操作必填</p>
+                        <p class="error-tips" v-if="actionIdError">{{$t(`m.resourcePermiss['操作必填']`)}}</p>
                     </iam-form-item>
                 </bk-form>
             </div>
@@ -59,6 +62,7 @@
                         <bk-select
                             style="width: 200px; background: #fff"
                             v-model="permissionType"
+                            :placeholder="$t(`m.verify['请选择']`)"
                             :clearable="true">
                             <bk-option v-for="option in typeList"
                                 :key="option.value"
@@ -85,7 +89,7 @@
                                         :is-error="content.isLimitExceeded || content.isError"
                                         @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
                                 </div>
-                                <p class="error-tips" v-if="resourceTypeError && content.empty">请选择资源实例</p>
+                                <p class="error-tips" v-if="resourceTypeError && content.empty">{{$t(`m.resourcePermiss['请选择资源实例']`)}}</p>
                             </div>
                         </div>
                     </iam-form-item>
@@ -99,7 +103,8 @@
                         <bk-select
                             style="width: 200px; background: #fff"
                             v-model="limit"
-                            :clearable="true">
+                            :clearable="true"
+                            :placeholder="$t(`m.verify['请选择']`)">
                             <bk-option v-for="option in limitList"
                                 :key="option"
                                 :id="option"
@@ -124,7 +129,7 @@
             <bk-input
                 :clearable="true"
                 v-model="searchValue"
-                placeholder="请输入用户、用户组，按Enter搜索"
+                :placeholder="$t(`m.resourcePermiss['请输入用户、用户组，按Enter搜索']`)"
                 :right-icon="'bk-icon icon-search'"
                 style="width: 420px;"
                 @enter="handleSearch">
@@ -140,12 +145,11 @@
             <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
                 <template slot-scope="{ row }">
                     {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
-                    
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.resourcePermiss['用户类型']`)">
                 <template slot-scope="{ row }">
-                    {{row.type === 'user' ? '用户' : '用户组'}}
+                    {{row.type === 'user' ? $t(`m.nav['用户']`) : $t(`m.nav['用户组']`)}}
                 </template>
             </bk-table-column>
         </bk-table>
@@ -207,7 +211,7 @@
                 systemId: '',
                 actionId: '',
                 processesList: [],
-                typeList: [{ name: '自定义权限', value: 'custom' }, { name: '模板权限', value: 'template' }],
+                typeList: [{ name: this.$t(`m.resourcePermiss['自定义权限']`), value: 'custom' }, { name: this.$t(`m.resourcePermiss['模板权限']`), value: 'template' }],
                 permissionType: '',
                 groupValue: '1-1',
                 limit: 100,
@@ -226,7 +230,7 @@
                 groupIndex: -1,
                 params: {},
                 resourceInstances: [],
-                searchTypeList: [{ name: '实例权限', value: 'resource_instance' }, { name: '操作权限', value: 'operate' }],
+                searchTypeList: [{ name: this.$t(`m.resourcePermiss['实例权限']`), value: 'resource_instance' }, { name: this.$t(`m.resourcePermiss['操作权限']`), value: 'operate' }],
                 searchType: '',
                 searchValue: '',
                 systemIdError: false,

@@ -219,7 +219,10 @@ export const m = {
         '类型': 'Type',
         '查询类型': 'Query type',
         '确定同步': 'Confirm sync',
-        '新增模板': 'Add a template'
+        '新增模板': 'Add a template',
+        '导出': 'export',
+        '查询': 'Search',
+        '生效条件': 'Effective condition'
     },
     // 校验
     verify: {
@@ -383,7 +386,11 @@ export const m = {
         '编辑权限模板': 'Edit',
         '普通成员': 'rank and file',
         '退出登录': 'log out',
-        '我的分级管理员': 'My grading administrator'
+        '我的分级管理员': 'My grading administrator',
+        '资源权限管理': 'Resource rights management',
+        '发起需求': 'Initiate demand',
+        '工作台': 'Workbench',
+        '开发者': 'Developers'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -424,7 +431,8 @@ export const m = {
         '你也可以继续申请独立权限': 'You can also continue to apply for independent access',
         '你可以申请独立权限': 'You can apply for independent access',
         '你已获得该组权限，但是已过期': 'You have been granted permission for this group, but it has expired',
-        '去续期': 'Go to renew'
+        '去续期': 'Go to renew',
+        '请选择生效条件，默认无限制': 'Please select the effective conditions, the default is unlimited'
     },
     myApply: {
         '申请列表': 'Apply List',
@@ -590,7 +598,12 @@ export const m = {
         '触发类型': 'Trigger type',
         '日志详情': 'Log details',
         '成功': 'Succeed',
-        '失败': 'Failed'
+        '失败': 'Failed',
+        '同步记录': 'Synchronized records',
+        '定时同步': 'timing sync',
+        '手动同步': 'Manual sync',
+        '选择日期范围': 'Select date range',
+        '同步失败排查指引': 'Sync Failure Troubleshooting Guide'
     },
     grading: {
         '分级管理员': 'Grading Manager',
@@ -663,7 +676,8 @@ export const m = {
         '来源': 'Source',
         '加入分级管理员流程搜索提示': 'Enter the rate manager name or description，Press Enter to search',
         '分级管理员名称': 'Rate Manager Name',
-        '审批节点': 'Approval node'
+        '审批节点': 'Approval node',
+        '请输入关键字搜索': 'Please enter a keyword to search'
     },
     guide: {
         '操作和资源实例': 'This range indicates which resource permissions you can assign',
@@ -808,7 +822,76 @@ export const m = {
         '常用操作可以让用户在申请权限时可以一次性选择某一类角色需要的操作。': 'Common operations allow users to select the operations required by a certain type of role at one time when applying for permissions.',
         '什么是实例视图？': 'What is an instance view?',
         '实例视图代表一种资源类型的实例数据获取途径，一种资源类型的实例视图可以有多种。': 'An instance view represents a way to obtain instance data of a resource type, and there can be multiple instance views of a resource type.',
-        '请输入实例视图英文名': 'Please enter the English name of the instance view'
+        '请输入实例视图英文名': 'Please enter the English name of the instance view',
+        '接入帮助': 'Access help',
+        '系统中文名称': 'System Chinese name',
+        '系统英文名称': 'System English name',
+        '系统回调地址': 'System callback address',
+        '系统健康检查地址': 'System health check address',
+        '系统中文描述': 'System description in Chinese',
+        '系统英文描述': 'System description in English',
+        '请输入接入的系统中文名称': 'Please enter the Chinese name of the connected system',
+        '请输入接入的系统英文名称': 'Please enter the English name of the connected system',
+        '请输入接入的系统回调地址': 'Please enter the access system callback address',
+        '请输入接入的系统健康检查地址': 'Please enter the access system health check address',
+        '请输入系统中文描述': 'Please enter the system description in Chinese',
+        '请输入系统英文描述': 'Please enter the system description in English',
+        '注册系统': 'registration system',
+        '注册操作': 'register operation',
+        '体验优化': 'Experience optimization',
+        '完成': 'Finish',
+        '基础信息': 'basic info',
+        '新增操作': 'Add action',
+        '操作ID': 'Operation ID',
+        '操作类型': 'Operation type',
+        '操作中文名': 'Operation Chinese name',
+        '操作英文名': 'Operation English name',
+        '操作中文描述': 'Chinese description of operation',
+        '操作英文描述': 'English description of operation',
+        '高级配置': 'Advanced configuration',
+        '依赖资源': 'dependent resources',
+        '依赖操作': 'dependent operation',
+        '新增依赖资源': 'Add dependent resources',
+        '至少要注册一个操作': 'At least one action must be registered',
+        '请输入操作ID': 'Please enter an action ID',
+        '请选择操作类型': 'Please select an action type',
+        '请输入操作中文名': 'Please enter the Chinese name of the operation',
+        '请输入操作英文名': 'Please enter the English name of the operation',
+        '请输入操作中文描述': 'Please enter a description of the operation in Chinese',
+        '请输入操作英文描述': 'Please enter a description of the operation in English',
+        '资源类型': 'Resource Type',
+        '实例视图': 'instance view',
+        '资源实例选择方式': 'How to select a resource instance',
+        '添加常用操作': 'Add common actions',
+        '操作分组': 'Action group',
+        '暂无未分组操作': 'No ungrouped operations yet',
+        '新增操作分组': 'Add operation group',
+        '新增常用分组': 'Add frequently used groups',
+        '常用操作名称': 'Common Action Names',
+        '请输入常用操作名称': 'Please enter a common action name',
+        '常用操作英文名称': 'English name of common operation',
+        '请输入常用操作英文名称': 'Please enter the English name of the common operation',
+        '编辑分组': 'Edit group',
+        '父分组名称': 'parent group name',
+        '添加同级分组': 'Add peer group',
+        '添加子分组': 'Add subgroup',
+        '确认删除子分组？': 'Are you sure you want to delete the subgroup?',
+        '删除操作子分组成功': 'Delete operation subgroup succeeded',
+        '请输入分组名称': 'Please enter a group name',
+        '请选择分组操作': 'Please select a grouping action',
+        '分组名称': 'Group Name',
+        '分组操作': 'Group Operation',
+        '分组英文名称': 'English name',
+        '请输入分组英文名称': 'Please enter the English name of the group',
+        'SDK鉴权 (Python/Go )': 'SDK Authentication (Python/Go)',
+        '下载权限模型配置成功': '下载权限模型配置成功',
+        '下载权限模型配置失败': '下载权限模型配置失败',
+        '请先保存所有操作': '请先保存所有操作',
+        '建模完成': 'Modeling completed',
+        '请根据开发语言选择接口实现方式': 'Please select the language',
+        '使用API鉴权(其他)': 'Use API authentication (other)',
+        '查看API鉴权接口': 'View API authentication interface',
+        '访问': 'access'
     },
     permTransfer: {
         '权限交接': 'Authority transfer',
@@ -836,7 +919,16 @@ export const m = {
         '有权限的成员': 'Authorized members',
         '权限类型': 'Permission type',
         '条数展示': 'Number of impressions',
-        '用户类型': 'user type'
+        '用户类型': 'user type',
+        '请选择查询类型': 'Please select a query type',
+        '系统必填': 'system required',
+        '操作必填': 'Action required',
+        '请选择资源实例': 'Please select a resource instance',
+        '请输入用户、用户组，按Enter搜索': 'Please enter the user, user group, and press Enter to search',
+        '实例权限': 'instance permissions',
+        '操作权限': 'Operation authority',
+        '自定义权限': 'custom permissions',
+        '模板权限': 'Template permissions'
     }
 }
 export default {

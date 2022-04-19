@@ -174,8 +174,7 @@
                     keyword: this.searchValue,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1),
-                    parent_id: '',
-                    parent_type: '',
+                    ancestors: [],
                     system_id: this.params.system_id,
                     type: this.params.id
                 };
@@ -214,8 +213,7 @@
                             keyword: this.searchValue,
                             limit: this.pagination.limit,
                             offset: this.pagination.limit * (this.pagination.current - 1),
-                            parent_id: '',
-                            parent_type: '',
+                            ancestors: [],
                             system_id: this.params.system_id,
                             type: this.params.id
                         };

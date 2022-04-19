@@ -1047,7 +1047,7 @@ class PolicyBeanListMixin:
         for node in path_nodes:
             real_name = resource_name_dict.get_attribute(ResourceNodeBean.parse_obj(node))
             # 任意需要特殊判断：只要包含无限制即可
-            if node.id == ANY_ID and real_name in node.name:
+            if node.id == ANY_ID and real_name.lower() in node.name.lower():
                 continue
             # 接入系统查询不到 或者 名称不一致则需要报错提示
             if not real_name or real_name != node.name:
