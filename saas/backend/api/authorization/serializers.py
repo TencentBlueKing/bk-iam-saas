@@ -107,7 +107,8 @@ class AuthInstanceSLZ(BaseAuthSLZ, AuthActionSLZ):
 
 
 class AuthPathSLZ(BaseAuthSLZ, AuthActionSLZ):
-    resources = serializers.ListField(label="资源拓扑", child=ResourcePathSLZ(label="拓扑"), allow_empty=False)
+    # 如果action是与资源实例无关的，那么resources允许为空列表，但是字段还是要有，保持格式一致
+    resources = serializers.ListField(label="资源拓扑", child=ResourcePathSLZ(label="拓扑"), allow_empty=True)
 
 
 class SimpleInstanceSLZ(serializers.Serializer):
@@ -150,7 +151,8 @@ class BatchResourcePathSLZ(serializers.Serializer):
 
 
 class AuthBatchPathSLZ(BaseAuthSLZ, AuthActionsSLZ):
-    resources = serializers.ListField(label="资源拓扑", child=BatchResourcePathSLZ(label="匹配资源拓扑"), allow_empty=False)
+    # 如果action是与资源实例无关的，那么resources允许为空列表，但是字段还是要有，保持格式一致
+    resources = serializers.ListField(label="资源拓扑", child=BatchResourcePathSLZ(label="匹配资源拓扑"), allow_empty=True)
 
     def validate(self, data):
         operate = data["operate"]

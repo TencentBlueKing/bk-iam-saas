@@ -352,8 +352,12 @@ BK_IAM_ENGINE_HOST_TYPE = os.getenv("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # d
 # authorization limit
 # 授权对象授权用户组, 模板的最大限制
 SUBJECT_AUTHORIZATION_LIMIT = {
+    # -------- 用户 ---------
     # 用户能加入的用户组的最大数量
     "default_subject_group_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", 100)),
+    # 用户能加入的分级管理员的最大数量
+    "subject_grade_manager_limit": int(os.getenv("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", 100)),
+    # -------- 用户组 ---------
     # 用户组能加入同一个系统的权限模板的最大数量
     "default_subject_system_template_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_SYSTEM_TEMPLATE_LIMIT", 10)),
     "subject_system_template_limit": {
@@ -365,6 +369,15 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "group_auth_template_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", 10)),
     # 用户组单次授权的系统数
     "group_auth_system_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 10)),
+    # -------- 分级管理员 ---------
+    # 一个分级管理员可创建的用户组个数
+    "grade_manager_group_limit": int(os.getenv("BKAPP_GRADE_MANAGER_GROUP_LIMIT", 100)),
+    # 一个分级管理员可添加的成员个数
+    "grade_manager_member_limit": int(os.getenv("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", 100)),
+    # 默认每个系统可创建的分级管理数量
+    "default_grade_manager_of_system_limit": int(os.getenv("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", 100)),
+    # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
+    "grade_manager_of_specified_systems_limit": os.getenv("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", ""),
 }
 
 # 授权的实例最大数量限制

@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -19,9 +20,11 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLo
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.permissions import ManagementAPIPermission
 from backend.api.management.serializers import (
+    ManagementGradeManagerBasicInfoSZL,
     ManagementGradeManagerCreateSLZ,
     ManagementGradeManagerMembersDeleteSLZ,
     ManagementGradeManagerMembersSLZ,
+    ManagementSourceSystemSLZ,
 )
 from backend.apps.role.audit import (
     RoleCreateAuditProvider,
@@ -32,7 +35,7 @@ from backend.apps.role.models import Role, RoleSource, RoleUser
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleBiz, RoleCheckBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
+from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
@@ -44,6 +47,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.GRADE_MANAGER_CREATE.value),
+        "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.GRADE_MANAGER_LIST.value),
     }
 
     biz = RoleBiz()
@@ -73,6 +77,8 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 
         # 名称唯一性检查
         self.role_check_biz.check_unique_name(data["name"])
+        # 检查该系统可创建的分级管理员数量是否超限
+        self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
 
         # 转换为RoleInfoBean，用于创建时使用
         role_info = self.trans.to_role_info(data)
@@ -90,6 +96,27 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         audit_context_setter(role=role)
 
         return Response({"id": role.id})
+
+    @swagger_auto_schema(
+        operation_description="分级管理员列表",
+        auto_schema=PaginatedResponseSwaggerAutoSchema,
+        query_serializer=ManagementSourceSystemSLZ(),
+        responses={status.HTTP_200_OK: ManagementGradeManagerBasicInfoSZL(many=True)},
+        tags=["management.role.member"],
+    )
+    def list(self, request, *args, **kwargs):
+        serializer = ManagementSourceSystemSLZ(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # 分页参数
+        pagination = LimitOffsetPagination()
+        limit = pagination.get_limit(request)
+        offset = pagination.get_offset(request)
+
+        count, roles = self.biz.list_paging_role_for_system(data["system"], limit, offset)
+        results = ManagementGradeManagerBasicInfoSZL(roles, many=True).data
+        return Response({"count": count, "results": results})
 
 
 class ManagementGradeManagerMemberViewSet(GenericViewSet):
@@ -112,6 +139,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
 
     biz = RoleBiz()
+    role_check_biz = RoleCheckBiz()
 
     @swagger_auto_schema(
         operation_description="分级管理员成员列表",
@@ -139,6 +167,9 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         members = list(set(serializer.validated_data["members"]))
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(members))
+
         # 批量添加成员(添加时去重)
         self.biz.add_grade_manager_members(role.id, members)
 

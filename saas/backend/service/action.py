@@ -12,8 +12,8 @@ from typing import List, Optional
 
 from pydantic import parse_obj_as
 
+from backend.common.cache import cachedmethod
 from backend.component import iam
-from backend.util.cache import region
 
 from .models import Action
 
@@ -38,7 +38,7 @@ class ActionService:
         "related_actions,related_environments"
     )
 
-    @region.cache_on_arguments(expiration_time=60)
+    @cachedmethod(timeout=60)
     def list(self, system_id: str) -> List[Action]:
         """获取系统的Action列表"""
         actions = iam.list_action(system_id, fields=self.full_fields)

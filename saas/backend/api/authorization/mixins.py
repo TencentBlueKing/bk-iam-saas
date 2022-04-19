@@ -18,10 +18,10 @@ from backend.api.constants import ALLOW_ANY
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleBiz
+from backend.common.cache import cachedmethod
 from backend.common.error_codes import APIException, error_codes
 from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
-from backend.util.cache import region
 
 from .constants import AllowListMatchOperationEnum, AllowListObjectOperationSep, AuthorizationAPIEnum, OperateEnum
 from .models import AuthAPIAllowListConfig
@@ -64,7 +64,7 @@ class AllowItem:
 class AuthorizationAPIAllowListCheckMixin:
     """授权API相关白名单控制"""
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存一分钟
+    @cachedmethod(timeout=60)  # 缓存一分钟
     def _list_system_allow_list(self, api: str, system_id: str) -> List[AllowItem]:
         """查询系统某类API的白名单"""
         allow_list = AuthAPIAllowListConfig.objects.filter(type=api, system_id=system_id)
