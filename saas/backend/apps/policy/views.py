@@ -430,10 +430,7 @@ class RecommendPolicyViewSet(GenericViewSet):
         for action_id in chain(*list(recommend_action_dict.values())):
             if action_id in action_id_set:  # 去重
                 continue
-
             action_id_set.add(action_id)
-            if policy_list.get(action_id):
-                continue
 
             action = action_list.get(action_id)
             if not action:
