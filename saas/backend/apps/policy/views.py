@@ -379,6 +379,8 @@ class RecommendPolicyViewSet(GenericViewSet):
     生成推荐操作
     """
 
+    paginator = None  # 去掉swagger中的limit offset参数
+
     action_biz = ActionBiz()
     action_group_biz = ActionGroupBiz()
     related_policy_biz = RelatedPolicyBiz()
