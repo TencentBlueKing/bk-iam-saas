@@ -35,7 +35,7 @@ urlpatterns = [
         name="policy.resource_copy",
     ),
     path(
-        "recommend/",
+        "recommended/",
         views.RecommendPolicyViewSet.as_view({"get": "list"}),
         name="policy.generate_recommend_policy",
     ),
