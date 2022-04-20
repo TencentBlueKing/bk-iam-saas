@@ -30,7 +30,12 @@
             <bk-table-column :resizable="false" :label="$t(`m.grading['资源实例范围']`)" min-width="240">
                 <template slot-scope="{ row, $index }">
                     <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                        <label class="resource-type-name">{{ row.aggregateResourceType.name }}</label>
+                        <div class="bk-button-group tab-button">
+                            <bk-button v-for="(item, index) in row.aggregateResourceType"
+                                :key="item.id" @click="selectResourceType(index)"
+                                :class="selectedIndex === index ? 'is-selected' : ''"
+                                size="small">{{item.name}}</bk-button>
+                        </div>
                         <render-condition
                             :ref="`condition_${$index}_aggregateRef`"
                             :value="row.value"
@@ -200,7 +205,8 @@
                 curAggregateResourceType: {},
                 curCopyParams: {},
                 sliderLoading: false,
-                systemFilter: []
+                systemFilter: [],
+                selectedIndex: 0
 
             };
         },
@@ -368,9 +374,12 @@
             },
 
             showAggregateResourceInstance (data, index) {
-                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType);
+                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[this.selectedIndex]);
                 this.aggregateIndex = index;
-                this.aggregateValue = _.cloneDeep(data.instances.map(item => {
+                const instanceKey = data.aggregateResourceType[this.selectedIndex].id;
+                console.log('instanceKey', data, instanceKey);
+                if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
+                this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
                     return {
                         id: item.id,
                         display_name: item.name
@@ -381,13 +390,26 @@
 
             handlerSelectAggregateRes (payload) {
                 window.changeDialog = true;
-                this.tableList[this.aggregateIndex].instances = payload.map(item => {
+                const instances = payload.map(item => {
                     return {
                         id: item.id,
                         name: item.display_name
                     };
                 });
                 this.tableList[this.aggregateIndex].isError = false;
+                const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
+                const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
+                this.tableList[this.aggregateIndex].instancesDisplayData = {
+                    ...instancesDisplayData,
+                    [instanceKey]: instances
+                };
+                this.tableList[this.aggregateIndex].instances = [];
+
+                for (const key in this.tableList[this.aggregateIndex].instancesDisplayData) {
+                    // eslint-disable-next-line max-len
+                    this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
+                }
+                console.log('this.tableList[this.aggregateIndex]', this.tableList[this.aggregateIndex]);
                 this.$emit('on-select', this.tableList[this.aggregateIndex]);
             },
 
@@ -1086,21 +1108,25 @@
                             actionList.push(params);
                         }
                     } else {
-                        const { actions, aggregateResourceType, instances } = item;
+                        const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
                         if (instances.length < 1) {
                             item.isError = true;
                             flag = true;
                         }
                         if (instances.length > 0) {
+                            const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
+                                const obj = {};
+                                obj.id = e.id;
+                                obj.system_id = e.system_id;
+                                obj.instances = instancesDisplayData[e.id];
+                                p.push(obj);
+                                return p;
+                            }, []);
                             const aggregateParams = {
                                 system_id: item.system_id,
                                 aggregations: [{
                                     actions,
-                                    aggregate_resource_type: {
-                                        id: aggregateResourceType.id,
-                                        system_id: aggregateResourceType.system_id,
-                                        instances
-                                    }
+                                    aggregate_resource_types: aggregateResourceTypes
                                 }],
                                 actions: []
                             };
@@ -1203,6 +1229,9 @@
                     flag,
                     actions: actionList
                 };
+            },
+            selectResourceType (index) {
+                this.selectedIndex = index;
             }
         }
     };
@@ -1309,5 +1338,9 @@
             background-color: #f5f6fa!important;
             border-color: #dcdee5!important;
         }
+    }
+
+    .tab-button{
+        margin-bottom: 10px;
     }
 </style>
