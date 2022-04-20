@@ -420,8 +420,9 @@ class RecommendPolicyViewSet(GenericViewSet):
             recommend_policies = self.related_policy_biz.create_recommend_policies(
                 policy, action_list, recommend_action_ids
             )
-            for p in recommend_policies:
-                policy_list.add(p)  # 合并相同action的策略
+
+            policy_list.add(PolicyBeanList(system_id, recommend_policies))  # 合并去重
+
         policy_list.fill_empty_fields()
 
         # 生成推荐的操作, 排除已生成推荐策略的操作
