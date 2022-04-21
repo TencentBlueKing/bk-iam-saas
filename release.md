@@ -1,3 +1,14 @@
+# V1.7.14
+
+### 新增功能
+* 接入系统回调查询实例列表支持传祖先实例
+* 聚合操作支持同时聚合多种资源类型
+
+# V1.7.13
+
+### 功能优化
+* OpenAPI分页参数调整为page_size/page，对于admin.list_group/admin.list_group_member/mgmt.list_group/mgmt.list_group_member已开放接口，兼容limit/offset
+
 # V1.7.12
 
 ### 缺陷修复
