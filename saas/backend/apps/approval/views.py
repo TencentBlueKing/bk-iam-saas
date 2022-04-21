@@ -162,6 +162,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
                     "system_id": system_id,
                     "action_id": action.id,
                     "action_name": action.name,
+                    "action_name_en": action.name_en,
                     "process_id": process.id,
                     "process_name": process.name,
                 }
