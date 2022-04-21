@@ -487,7 +487,7 @@
                                 if (existDatas.length > 1) {
                                     const temp = existDatas.find(sub => sub.aggregationId !== '') || {};
                                     item.aggregationId = temp.aggregationId || guid();
-                                    item.aggregateResourceType = aggItem.aggregate_resource_type;
+                                    item.aggregateResourceType = aggItem.aggregate_resource_types;
                                 }
                             }
                         });
@@ -637,7 +637,7 @@
                             }
                             tempData.push(new GroupAggregationPolicy({
                                 aggregationId: key,
-                                aggregate_resource_type: value[0].aggregateResourceType,
+                                aggregate_resource_types: value[0].aggregateResourceType,
                                 actions: value,
                                 instances: curInstances
                             }));

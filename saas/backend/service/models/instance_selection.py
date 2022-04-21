@@ -36,6 +36,12 @@ class ChainNode(BaseModel):
     def match_chain_node(self, node: "ChainNode") -> bool:
         return self.system_id == node.system_id and self.id == node.id
 
+    def __hash__(self):
+        return hash((self.system_id, self.id))
+
+    def __eq__(self, other) -> bool:
+        return self.system_id == other.system_id and self.id == other.id
+
 
 # NOTE: 这里存在system_id / ignore_iam_path, 用于上层业务
 class InstanceSelection(BaseModel):
