@@ -27,5 +27,5 @@ class AggregateActionsService:
         return AggregateActions(
             system_id=model.system_id,
             actions=[{"system_id": model.system_id, "id": _id} for _id in model.action_ids],
-            aggregate_resource_type=model.aggregate_resource_type,
+            aggregate_resource_types=model.aggregate_resource_type,
         )

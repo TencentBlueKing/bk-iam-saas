@@ -27,4 +27,4 @@ class AggregateAction(BaseModel):
 class AggregateActions(BaseModel):
     system_id: str
     actions: List[AggregateAction]
-    aggregate_resource_type: AggregateResourceType
+    aggregate_resource_types: List[AggregateResourceType]

@@ -33,7 +33,7 @@ class AggregateActionBean(AggregateAction):
 class AggregateActionsBean(BaseModel):
     system_id: str
     actions: List[AggregateActionBean]
-    aggregate_resource_type: AggregateResourceTypeBean
+    aggregate_resource_types: List[AggregateResourceTypeBean]
 
 
 class AggregateActionsList:
@@ -41,7 +41,12 @@ class AggregateActionsList:
         self.aggregate_actions = aggregate_action_list
 
     def _list_resource_type_system_id(self):
-        return list({one.aggregate_resource_type.system_id for one in self.aggregate_actions})
+        system_ids_set = set()
+        for aa in self.aggregate_actions:
+            for art in aa.aggregate_resource_types:
+                system_ids_set.add(art.system_id)
+
+        return list(system_ids_set)
 
     def fill_action_name(self):
         action_svc = ActionService()
@@ -56,11 +61,9 @@ class AggregateActionsList:
         system_ids = self._list_resource_type_system_id()
         name_provider = ResourceTypeService().get_resource_type_dict(system_ids)
 
-        for one in self.aggregate_actions:
-            resource_type = one.aggregate_resource_type
-            resource_type.name, resource_type.name_en = name_provider.get_name(
-                resource_type.system_id, resource_type.id
-            )
+        for aa in self.aggregate_actions:
+            for art in aa.aggregate_resource_types:
+                art.name, art.name_en = name_provider.get_name(art.system_id, art.id)
 
 
 class AggregateActionsBiz:
