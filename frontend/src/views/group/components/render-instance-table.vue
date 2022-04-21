@@ -63,11 +63,11 @@
                     </template>
                     <template v-else>
                         <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                            <!-- <label class="resource-type-name">{{ row.aggregateResourceType[0].name }}</label> -->
-                            <div class="bk-button-group tab-button">
+                            <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">{{ row.aggregateResourceType[0].name }}</label>
+                            <div class="bk-button-group tab-button" v-else>
                                 <bk-button v-for="(item, index) in row.aggregateResourceType"
-                                    :key="item.id" @click="selectResourceType(index)"
-                                    :class="selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}</bk-button>
+                                    :key="item.id" @click="selectResourceType(row, index)"
+                                    :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}</bk-button>
                             </div>
                             <render-condition
                                 :ref="`condition_${$index}_aggregateRef`"
@@ -473,6 +473,7 @@
                     };
                 });
                 this.tableList[this.aggregateIndex].isError = false;
+                this.selectedIndex = this.tableList[this.aggregateIndex].selectedIndex;
                 const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
                 const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
                 this.tableList[this.aggregateIndex].instancesDisplayData = {
@@ -555,9 +556,11 @@
                     ) || []
                 );
                 const tempData = [];
-                const resources = instances.map(item => item[0].path).map(item => item.map(v => v.map(_ => _.id)));
+                console.log('instances', instances, this.selectedIndex);
+                const resources = instances.map(item => item[this.selectedIndex].path)
+                    .map(item => item.map(v => v.map(_ => _.id)));
                 const resourceList = instances
-                    .map(item => item[0].path)
+                    .map(item => item[this.selectedIndex].path)
                     .map(item => item.map(v => v.map(({ id, name }) => ({ id, name }))))
                     .flat(2);
                 resources.forEach(item => {
@@ -699,9 +702,9 @@
             },
             showAggregateResourceInstance (data, index) {
                 window.changeDialog = true;
-                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[this.selectedIndex]);
+                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[data.selectedIndex]);
                 this.aggregateIndex = index;
-                const instanceKey = data.aggregateResourceType[this.selectedIndex].id;
+                const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
                 if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
                 this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
                     return {
@@ -711,7 +714,7 @@
                 }));
                 this.defaultSelectList = this.getScopeActionResource(
                     data.actions,
-                    data.aggregateResourceType.id,
+                    data.aggregateResourceType[data.selectedIndex].id,
                     data.system_id
                 );
                 this.isShowAggregateSideslider = true;
@@ -1324,11 +1327,14 @@
                                 sub.system_id = sub.detail.system.id;
                             });
                             const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
-                                const obj = {};
-                                obj.id = e.id;
-                                obj.system_id = e.system_id;
-                                obj.instances = instancesDisplayData[e.id];
-                                p.push(obj);
+                                console.log('instancesDisplayData[e.id]', instancesDisplayData[e.id]);
+                                if (instancesDisplayData[e.id]) {
+                                    const obj = {};
+                                    obj.id = e.id;
+                                    obj.system_id = e.system_id;
+                                    obj.instances = instancesDisplayData[e.id];
+                                    p.push(obj);
+                                }
                                 return p;
                             }, []);
                             aggregationParam = {
@@ -1479,7 +1485,11 @@
                 };
             },
 
-            selectResourceType (index) {
+            selectResourceType (data, index) {
+                // console.log('index', index, data);
+                // console.log('tableIndex', tableIndex);
+                // this.selectedIndex = index;
+                data.selectedIndex = index;
                 this.selectedIndex = index;
             }
         }

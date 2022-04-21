@@ -38,6 +38,7 @@ export default class GradeAggregationPolicy {
         this.system_name = payload.system_name;
         this.instancesDisplayData = payload.instancesDisplayData || {};
         this.$id = payload.$id || '';
+        this.selectedIndex = payload.selectedIndex || 0;
         this.canPaste = false;
     }
 

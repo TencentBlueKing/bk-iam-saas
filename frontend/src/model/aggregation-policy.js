@@ -41,6 +41,7 @@ export default class AggregationPolicy {
         this.canPaste = false;
         this.instancesBackup = _.cloneDeep(this.instances);
         this.instancesDisplayData = payload.instancesDisplayData || {};
+        this.selectedIndex = payload.selectedIndex || 0;
         this.initExpiredAt(payload);
     }
 
