@@ -31,7 +31,7 @@ export default class AggregationPolicy {
     constructor (payload) {
         this.isError = false;
         this.actions = payload.actions || [];
-        this.aggregateResourceType = payload.aggregate_resource_type || {};
+        this.aggregateResourceType = payload.aggregate_resource_types || [];
         this.instances = payload.instances || [];
         this.isAggregate = true;
         this.expired_display = payload.expired_display || '';
@@ -40,6 +40,7 @@ export default class AggregationPolicy {
         this.tag = payload.tag || 'add';
         this.canPaste = false;
         this.instancesBackup = _.cloneDeep(this.instances);
+        this.instancesDisplayData = payload.instancesDisplayData || {};
         this.initExpiredAt(payload);
     }
 
