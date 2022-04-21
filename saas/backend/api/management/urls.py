@@ -19,6 +19,11 @@ urlpatterns = [
         views.ManagementGradeManagerViewSet.as_view({"get": "list", "post": "create"}),
         name="open.management.grade_manager",
     ),
+    path(
+        "grade_managers/<int:id>/",
+        views.ManagementGradeManagerViewSet.as_view({"put": "update"}),
+        name="open.management.grade_manager",
+    ),
     # 分级管理员成员
     path(
         "grade_managers/<int:id>/members/",

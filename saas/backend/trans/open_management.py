@@ -127,3 +127,16 @@ class GradeManagerTrans(ManagementCommonTrans):
         data["authorization_scopes"] = authorization_scopes
 
         return RoleInfoBean.parse_obj(data)
+
+    def to_role_info_for_update(self, data):
+        """
+        将分级管理的信息数据转换为 RoleInfoBean，用于后续分级管理员更新
+        data结构与to_role_info的data一致，但可能只有部分字段
+        """
+        # 由于data里只有部分字段，并不完全满足转换，其他字段需要为空值
+        full_data = {"name": "", "description": "", "members": [], "subject_scopes": [], "authorization_scopes": []}
+        for field in full_data:
+            if field in data:
+                full_data[field] = data[field]
+
+        return self.to_role_info(full_data)

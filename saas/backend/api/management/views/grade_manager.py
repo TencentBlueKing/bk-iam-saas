@@ -23,12 +23,14 @@ from backend.api.management.serializers import (
     ManagementGradeManagerCreateSLZ,
     ManagementGradeManagerMembersDeleteSLZ,
     ManagementGradeManagerMembersSLZ,
+    ManagementGradeManagerUpdateSLZ,
     ManagementSourceSystemSLZ,
 )
 from backend.apps.role.audit import (
     RoleCreateAuditProvider,
     RoleMemberCreateAuditProvider,
     RoleMemberDeleteAuditProvider,
+    RoleUpdateAuditProvider,
 )
 from backend.apps.role.models import Role, RoleSource, RoleUser
 from backend.apps.role.serializers import RoleIdSLZ
@@ -47,9 +49,12 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.GRADE_MANAGER_CREATE.value),
+        "update": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GRADE_MANAGER_UPDATE.value),
         "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.GRADE_MANAGER_LIST.value),
     }
 
+    lookup_field = "id"
+    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
     pagination_class = CustomPageNumberPagination
 
     biz = RoleBiz()
@@ -98,6 +103,47 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         audit_context_setter(role=role)
 
         return Response({"id": role.id})
+
+    @swagger_auto_schema(
+        operation_description="更新分级管理员",
+        request_body=ManagementGradeManagerUpdateSLZ(label="更新分级管理员"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role"],
+    )
+    @view_audit_decorator(RoleUpdateAuditProvider)
+    def update(self, request, *args, **kwargs):
+        """
+        更新分级管理员
+        Note: 这里可授权范围和可授权人员范围均是全覆盖的，只对body里传入的字段进行更新
+        """
+        role = self.get_object()
+
+        serializer = ManagementGradeManagerUpdateSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # 数据校验
+        if "name" in data:
+            # 名称唯一性检查
+            self.role_check_biz.check_unique_name(data["name"], role.name)
+
+        if "authorization_scopes" in data:
+            # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+            role_source = RoleSource.objects.get(source_type=RoleSourceTypeEnum.API.value, role_id=role.id)
+            auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
+            self.verify_system_scope(role_source.source_system_id, auth_system_ids)
+
+        # 转换为RoleInfoBean
+        role_info = self.trans.to_role_info_for_update(data)
+
+        # 更新
+        self.biz.update(role, role_info, request.user.username, update_fields=list(data.keys()))
+
+        # 审计
+        audit_context_setter(role=role)
+
+        return Response({})
 
     @swagger_auto_schema(
         operation_description="分级管理员列表",
