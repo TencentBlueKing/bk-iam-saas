@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -28,6 +28,7 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.common.error_codes import error_codes
 from backend.component import iam
 from backend.util.json import json_dumps
+from backend.util.model import PartialModel
 
 from .constants import (
     DEAULT_RESOURCE_GROUP_ID,
@@ -84,7 +85,7 @@ class UserRoleMember(BaseModel):
     members: list
 
 
-class RoleInfo(BaseModel):
+class RoleInfo(PartialModel):
     code: str = ""
     name: str
     name_en: str = ""
@@ -197,11 +198,10 @@ class RoleService:
         if subjects:
             ScopeSubject.objects.bulk_create(subjects)
 
-    def update(self, role: Role, info: RoleInfo, updater: str, update_fields: Optional[List[str]] = None):
+    def update(self, role: Role, info: RoleInfo, updater: str):
         """更新Role"""
-        # 默认None时，全部更新
-        if update_fields is None:
-            update_fields = ["name", "description", "members", "authorization_scopes", "subject_scopes"]
+        # 查询实际RoleInfo里哪些字段可用
+        update_fields = info.get_partial_fields()
 
         with transaction.atomic():
             # 基本信息
@@ -219,11 +219,11 @@ class RoleService:
                 self._update_members(role, info.members)
 
             # 可授权的权限范围
-            if "authorization_scopes":
+            if "authorization_scopes" in update_fields:
                 self.update_role_auth_scope(role.id, info.authorization_scopes)
 
             # 可授权的人员范围
-            if "subject_scopes":
+            if "subject_scopes" in update_fields:
                 self._update_role_subject_scope(role.id, info.subject_scopes)
 
     def _update_members(self, role: Role, members: List[str], need_sync_backend_role: bool = False):

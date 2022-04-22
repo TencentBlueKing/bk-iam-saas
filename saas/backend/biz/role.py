@@ -145,11 +145,11 @@ class RoleBiz:
         """
         return self.svc.create(info, creator)
 
-    def update(self, role: Role, info: RoleInfoBean, updater: str, update_fields=None):
+    def update(self, role: Role, info: RoleInfoBean, updater: str):
         """
         更新分级管理员
         """
-        return self.svc.update(role, info, updater, update_fields)
+        return self.svc.update(role, info, updater)
 
     def modify_system_manager_members(self, role_id: int, members: List[str]):
         """修改系统管理员的成员"""

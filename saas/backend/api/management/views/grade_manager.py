@@ -138,7 +138,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         role_info = self.trans.to_role_info_for_update(data)
 
         # 更新
-        self.biz.update(role, role_info, request.user.username, update_fields=list(data.keys()))
+        self.biz.update(role, role_info, request.user.username)
 
         # 审计
         audit_context_setter(role=role)
