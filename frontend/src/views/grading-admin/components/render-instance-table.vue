@@ -30,10 +30,12 @@
             <bk-table-column :resizable="false" :label="$t(`m.grading['资源实例范围']`)" min-width="240">
                 <template slot-scope="{ row, $index }">
                     <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                        <div class="bk-button-group tab-button">
+                        <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">
+                            {{ row.aggregateResourceType[0].name }}</label>
+                        <div class="bk-button-group tab-button" v-else>
                             <bk-button v-for="(item, index) in row.aggregateResourceType"
-                                :key="item.id" @click="selectResourceType(index)"
-                                :class="selectedIndex === index ? 'is-selected' : ''"
+                                :key="item.id" @click="selectResourceType(row, index)"
+                                :class="row.selectedIndex === index ? 'is-selected' : ''"
                                 size="small">{{item.name}}</bk-button>
                         </div>
                         <render-condition
@@ -374,9 +376,9 @@
             },
 
             showAggregateResourceInstance (data, index) {
-                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[this.selectedIndex]);
+                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[data.selectedIndex]);
                 this.aggregateIndex = index;
-                const instanceKey = data.aggregateResourceType[this.selectedIndex].id;
+                const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
                 console.log('instanceKey', data, instanceKey);
                 if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
                 this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
@@ -397,6 +399,7 @@
                     };
                 });
                 this.tableList[this.aggregateIndex].isError = false;
+                this.selectedIndex = this.tableList[this.aggregateIndex].selectedIndex;
                 const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
                 const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
                 this.tableList[this.aggregateIndex].instancesDisplayData = {
@@ -1115,11 +1118,13 @@
                         }
                         if (instances.length > 0) {
                             const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
-                                const obj = {};
-                                obj.id = e.id;
-                                obj.system_id = e.system_id;
-                                obj.instances = instancesDisplayData[e.id];
-                                p.push(obj);
+                                if (instancesDisplayData[e.id] && instancesDisplayData[e.id].length) {
+                                    const obj = {};
+                                    obj.id = e.id;
+                                    obj.system_id = e.system_id;
+                                    obj.instances = instancesDisplayData[e.id];
+                                    p.push(obj);
+                                }
                                 return p;
                             }, []);
                             const aggregateParams = {
@@ -1230,7 +1235,8 @@
                     actions: actionList
                 };
             },
-            selectResourceType (index) {
+            selectResourceType (data, index) {
+                data.selectedIndex = index;
                 this.selectedIndex = index;
             }
         }

@@ -1440,15 +1440,28 @@
                                         }
                                     }
                                     if (isAllEqual) {
-                                        const instanceData = instances[0][0][0];
-                                        if (instanceData && instanceData.path) {
-                                            item.instances = instanceData.path.map(pathItem => {
+                                        // const instanceData = instances[0][0][0];
+                                        // if (instanceData && instanceData.path) {
+                                        //     item.instances = instanceData.path.map(pathItem => {
+                                        //         return {
+                                        //             id: pathItem[0].id,
+                                        //             name: pathItem[0].name
+                                        //         };
+                                        //     });
+                                        // }
+                                        const instanceData = instances[0][0];
+                                        item.instances = [];
+                                        instanceData.map(pathItem => {
+                                            const instance = pathItem.path.map(e => {
                                                 return {
-                                                    id: pathItem[0].id,
-                                                    name: pathItem[0].name
+                                                    id: e[0].id,
+                                                    name: e[0].name,
+                                                    type: e[0].type
                                                 };
                                             });
-                                        }
+                                            item.instances.push(...instance);
+                                        });
+                                        this.setInstancesDisplayData(item);
                                     } else {
                                         item.instances = [];
                                     }
@@ -1489,30 +1502,32 @@
                             const instances = (function () {
                                 const arr = [];
                                 const aggregateResourceType = curAggregation.aggregateResourceType;
-                                const { id, name, system_id } = aggregateResourceType[0];
-                                curAggregation.instances.forEach(v => {
-                                    const curItem = arr.find(_ => _.type === id);
-                                    if (curItem) {
-                                        curItem.path.push([{
-                                            id: v.id,
-                                            name: v.name,
-                                            system_id,
-                                            type: id,
-                                            type_name: name
-                                        }]);
-                                    } else {
-                                        arr.push({
-                                            name,
-                                            type: id,
-                                            path: [[{
+                                aggregateResourceType.forEach(aggregateResourceItem => {
+                                    const { id, name, system_id } = aggregateResourceItem;
+                                    curAggregation.instances.forEach(v => {
+                                        const curItem = arr.find(_ => _.type === id);
+                                        if (curItem) {
+                                            curItem.path.push([{
                                                 id: v.id,
                                                 name: v.name,
                                                 system_id,
                                                 type: id,
                                                 type_name: name
-                                            }]]
-                                        });
-                                    }
+                                            }]);
+                                        } else {
+                                            arr.push({
+                                                name,
+                                                type: id,
+                                                path: [[{
+                                                    id: v.id,
+                                                    name: v.name,
+                                                    system_id,
+                                                    type: id,
+                                                    type_name: name
+                                                }]]
+                                            });
+                                        }
+                                    });
                                 });
                                 return arr;
                             })();
@@ -1524,6 +1539,20 @@
                         }
                     }
                 });
+            },
+
+            // 设置InstancesDisplayData
+            setInstancesDisplayData (data) {
+                data.instancesDisplayData = data.instances.reduce((p, v) => {
+                    if (!p[v['type']]) {
+                        p[v['type']] = [];
+                    }
+                    p[v['type']].push({
+                        id: v.id,
+                        name: v.name
+                    });
+                    return p;
+                }, {});
             },
             
             handleActionChecked (newVal, oldVal, val, actData, payload) {
