@@ -701,6 +701,7 @@
                 this.showMessage(this.$t(`m.info['批量粘贴成功']`));
             },
             showAggregateResourceInstance (data, index) {
+                this.selectedIndex = data.selectedIndex;
                 window.changeDialog = true;
                 this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[data.selectedIndex]);
                 this.aggregateIndex = index;
@@ -1327,8 +1328,7 @@
                                 sub.system_id = sub.detail.system.id;
                             });
                             const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
-                                console.log('instancesDisplayData[e.id]', instancesDisplayData[e.id]);
-                                if (instancesDisplayData[e.id]) {
+                                if (instancesDisplayData[e.id] && instancesDisplayData[e.id].length) {
                                     const obj = {};
                                     obj.id = e.id;
                                     obj.system_id = e.system_id;

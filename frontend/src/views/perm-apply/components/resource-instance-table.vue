@@ -1439,7 +1439,7 @@
                             flag = true;
                         } else {
                             const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
-                                if (instancesDisplayData[e.id]) {
+                                if (instancesDisplayData[e.id] && instancesDisplayData[e.id].length) {
                                     const obj = {};
                                     obj.id = e.id;
                                     obj.system_id = e.system_id;
