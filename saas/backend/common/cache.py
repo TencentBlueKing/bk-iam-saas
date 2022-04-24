@@ -13,6 +13,7 @@ from enum import Enum
 
 from aenum import LowerStrEnum, auto
 from django.core.cache import cache as default_cache
+from django.core.cache import caches
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 
 
@@ -95,3 +96,54 @@ def cachedmethod(cache=default_cache, key_function=_method_key_function, timeout
         return wrapper
 
     return decorator
+
+
+class Cache:
+    """
+    Cache用于避免直接使用Django Caches时导致不同场景的前缀Key冲突问题，使用各个场景更专注于自身业务逻辑缓冲和key生成
+    Cache所有方法都基于Django Cache的BaseCache，只封装了项目所需方法
+    """
+
+    def __init__(self, type_, key_prefix):
+        self.cache = caches[type_]
+        self.type = type_
+        self.key_prefix = key_prefix
+        # 支持获取锁的特性
+        self.is_support_lock_feature = type_ in [CacheEnum.REDIS.value]
+
+    def _make_key(self, key):
+        return f"{self.key_prefix}:{key}"
+
+    def get(self, key, default=None, version=None):
+        key = self._make_key(key)
+        return self.cache.get(key, default, version)
+
+    def set(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
+        key = self._make_key(key)
+        self.cache.set(key, value, timeout, version)
+
+    def get_many(self, keys, version=None):
+        if not keys:
+            return {}
+
+        map_keys = {self._make_key(k): k for k in keys}
+
+        results = self.get_many(map_keys.keys(), version)
+
+        data = {}
+        for key in map_keys:
+            if key not in results:
+                continue
+            data[map_keys[key]] = results[key]
+        return data
+
+    def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None):
+        map_key_data = {self._make_key(key): value for key, value in data.items()}
+        self.cache.set_many(map_key_data, timeout, version)
+
+    def lock(self, key, version=None, timeout=None, sleep=0.1, blocking_timeout=None, client=None):
+        if not self.is_support_lock_feature:
+            raise NotImplementedError(f"{self.type} cache not support lock")
+
+        key = self._make_key(key)
+        return self.cache.lock(key, version, timeout, sleep, blocking_timeout, client)

@@ -11,9 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-from django.core.cache import caches
-
-from backend.common.cache import CacheEnum, CacheKeyPrefixEnum, cachedmethod
+from backend.common.cache import Cache, CacheEnum, CacheKeyPrefixEnum, cachedmethod
 from backend.component import iam, resource_provider
 from backend.service.models.resource import ResourceApproverAttribute
 from backend.util.basic import chunked
@@ -91,14 +89,13 @@ class ResourceIDNameCache:
     def __init__(self, system_id: str, resource_type_id: str):
         self.system_id = system_id
         self.resource_type_id = resource_type_id
-        self.cache = caches[CacheEnum.REDIS.value]
+        self.cache = Cache(CacheEnum.REDIS.value, CacheKeyPrefixEnum.CALLBACK_RESOURCE_NAME.value)
 
     def _make_key(self, resource_id: str) -> str:
         """
         生成Key
         """
-        prefix = CacheKeyPrefixEnum.CALLBACK_RESOURCE_NAME.value
-        return f"{prefix}:{self.system_id}:{self.resource_type_id}:{resource_id}"
+        return f"{self.system_id}:{self.resource_type_id}:{resource_id}"
 
     def set(self, id_name_map: Dict[str, str]):
         """
@@ -109,7 +106,7 @@ class ResourceIDNameCache:
         # 缓存有问题，不影响正常逻辑
         try:
             self.cache.set_many(data, timeout=5 * 60)
-        except Exception:
+        except Exception:  # noqa
             logger.exception("set resource id:name cache fail")
 
     def get(self, ids: List[str]) -> Dict[str, Optional[str]]:
@@ -117,21 +114,21 @@ class ResourceIDNameCache:
         获取缓存内容，对于缓存不存在的，则返回为空
         无法获取到的缓存的ID，则不包含在返回Dict里
         """
-        map_keys = {self._make_key(_id): _id for _id in ids}
+        map_keys = {self._make_key(id_): id_ for id_ in ids}
 
         # 缓存有问题，不影响正常逻辑
         try:
             results = self.cache.get_many(list(map_keys.keys()))
-        except Exception:
+        except Exception:  # noqa
             logger.exception("get resource id:name cache fail")
             results = {}
 
         data = {}
-        for key, _id in map_keys.items():
+        for key, id_ in map_keys.items():
             value = results.get(key)
             if value is None:
                 continue
-            data[_id] = value
+            data[id_] = value
 
         return data
 
