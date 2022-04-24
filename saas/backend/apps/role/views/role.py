@@ -180,6 +180,8 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 名称唯一性检查
         self.role_check_biz.check_unique_name(data["name"], role.name)
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 查询已有的策略范围
         old_scopes = self.biz.list_auth_scope(role.id)
@@ -215,6 +217,8 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 名称唯一性检查
         self.role_check_biz.check_unique_name(data["name"], role.name)
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 非超级管理员 且 并非分级管理员成员，则无法更新基本信息
         if (
@@ -223,7 +227,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         ):
             raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True)
 
-        self.biz.update(role, RoleInfoBean.parse_obj(data), user_id, partial=True)
+        self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
         audit_context_setter(role=role)
 

@@ -64,8 +64,11 @@ INSTALLED_APPS = [
     "backend.debug",
     "backend.apps.handover",
     "backend.apps.mgmt",
+    "backend.apps.temporary_policy",
 ]
 
+# 登录中间件
+_LOGIN_MIDDLEWARE = os.getenv("BKAPP_LOGIN_MIDDLEWARE", "backend.account.middlewares.LoginMiddleware")
 
 MIDDLEWARE = [
     "backend.common.middlewares.CustomProfilerMiddleware",
@@ -79,11 +82,11 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "backend.account.middlewares.LoginMiddleware",
+    _LOGIN_MIDDLEWARE,
     "backend.account.middlewares.TimezoneMiddleware",
     "backend.account.middlewares.RoleAuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
-    "backend.common.middlewares.AppExceptionMiddleware",
+    "backend.common.middlewares.LanguageMiddleware",
     "corsheaders.middleware.CorsMiddleware",
 ]
 
@@ -114,7 +117,7 @@ DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
-AUTHENTICATION_BACKENDS = ("backend.account.backends.TokenBackend",)
+AUTHENTICATION_BACKENDS = (os.getenv("BKAPP_AUTHENTICATION_BACKEND", "backend.account.backends.TokenBackend"),)
 
 AUTH_USER_MODEL = "account.User"
 
@@ -160,7 +163,7 @@ CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Creden
 
 # restframework
 REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "backend.common.exception_handler.custom_exception_handler",
+    "EXCEPTION_HANDLER": "backend.common.exception_handler.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
@@ -197,6 +200,7 @@ CELERY_IMPORTS = (
     "backend.audit.tasks",
     "backend.publisher.tasks",
     "backend.long_task.tasks",
+    "backend.apps.temporary_policy.tasks",
 )
 
 CELERYBEAT_SCHEDULE = {
@@ -252,6 +256,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
         "schedule": crontab(minute=0, hour=4),  # 每天凌晨4时执行
     },
+    "periodic_clean_expired_temporary_policies": {
+        "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
+        "schedule": crontab(minute=0, hour="*"),  # 每小时执行
+    },
 }
 
 CELERY_ENABLE_UTC = True
@@ -286,16 +294,10 @@ else:
 djcelery.setup_loader()
 
 
-# sentry support
-if os.getenv("SENTRY_DSN"):
-    INSTALLED_APPS += ("raven.contrib.django.raven_compat",)
-    MIDDLEWARE += ("raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware",)
-    RAVEN_CONFIG = {
-        "dsn": os.getenv("SENTRY_DSN"),
-    }
+# tracing: sentry support
+SENTRY_DSN = os.getenv("SENTRY_DSN")
 
-
-# tracing 相关配置
+# tracing: otel 相关配置
 # if enable, default false
 ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
 BKAPP_OTEL_INSTRUMENT_DB_API = os.getenv("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
@@ -304,7 +306,7 @@ BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
 BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
 BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
 
-if ENABLE_OTEL_TRACE:
+if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
 
 
@@ -350,8 +352,12 @@ BK_IAM_ENGINE_HOST_TYPE = os.getenv("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # d
 # authorization limit
 # 授权对象授权用户组, 模板的最大限制
 SUBJECT_AUTHORIZATION_LIMIT = {
+    # -------- 用户 ---------
     # 用户能加入的用户组的最大数量
     "default_subject_group_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", 100)),
+    # 用户能加入的分级管理员的最大数量
+    "subject_grade_manager_limit": int(os.getenv("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", 100)),
+    # -------- 用户组 ---------
     # 用户组能加入同一个系统的权限模板的最大数量
     "default_subject_system_template_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_SYSTEM_TEMPLATE_LIMIT", 10)),
     "subject_system_template_limit": {
@@ -363,6 +369,15 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "group_auth_template_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", 10)),
     # 用户组单次授权的系统数
     "group_auth_system_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 10)),
+    # -------- 分级管理员 ---------
+    # 一个分级管理员可创建的用户组个数
+    "grade_manager_group_limit": int(os.getenv("BKAPP_GRADE_MANAGER_GROUP_LIMIT", 100)),
+    # 一个分级管理员可添加的成员个数
+    "grade_manager_member_limit": int(os.getenv("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", 100)),
+    # 默认每个系统可创建的分级管理数量
+    "default_grade_manager_of_system_limit": int(os.getenv("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", 100)),
+    # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
+    "grade_manager_of_specified_systems_limit": os.getenv("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", ""),
 }
 
 # 授权的实例最大数量限制
@@ -374,15 +389,14 @@ SINGLE_POLICY_MAX_INSTANCES_LIMIT = int(os.getenv("BKAPP_SINGLE_POLICY_MAX_INSTA
 # 一次申请策略中中新增实例数量限制
 APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", 20))
 
+# 临时权限一个操作最大数量
+TEMPORARY_POLICY_LIMIT = int(os.getenv("BKAPP_TEMPORARY_POLICY_LIMIT", 10))
+
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 
-# 前端页面功能开关
-ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "False").lower() == "true",
-}
-
+# 最长已过期临时权限期限
+MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 
 # 用于发布订阅的Redis
 PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")

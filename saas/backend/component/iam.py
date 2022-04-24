@@ -13,9 +13,9 @@ from typing import Dict, List, Tuple
 
 from django.conf import settings
 
+from backend.common.cache import cached
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
-from backend.util.cache import region
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
@@ -64,7 +64,7 @@ def get_system(system_id: str, fields: str = DEFAULT_SYSTEM_FIELDS) -> Dict:
     return _call_iam_api(http_get, url_path, data={"fields": fields})
 
 
-@region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+@cached(timeout=60)  # 缓存1分钟
 def list_resource_type(systems: List[str], fields: str = DEFAULT_RESOURCE_TYPE_FIELDS) -> Dict[str, List[Dict]]:
     """
     查询系统的资源类型
@@ -74,7 +74,7 @@ def list_resource_type(systems: List[str], fields: str = DEFAULT_RESOURCE_TYPE_F
     return _call_iam_api(http_get, url_path, data=params)
 
 
-@region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+@cached(timeout=60)  # 缓存1分钟
 def list_action(system_id: str, fields: str = DEFAULT_ACTION_FIELDS) -> List[Dict]:
     """
     获取系统的所有action列表
@@ -91,7 +91,7 @@ def get_action(system_id: str, action_id: str) -> Dict:
     return _call_iam_api(http_get, url_path, data={})
 
 
-@region.cache_on_arguments(expiration_time=60)
+@cached(timeout=60)
 def list_instance_selection(system_id: str) -> List[Dict]:
     """
     获取系统的实例视图列表
@@ -526,3 +526,52 @@ def delete_unreferenced_expressions():
     """删除未被引用的expression"""
     url_path = "/api/v1/web/unreferenced-expressions"
     return _call_iam_api(http_delete, url_path, data={})
+
+
+def create_temporary_policies(
+    system_id: str,
+    subject_type: str,
+    subject_id: str,
+    policies: List[Dict],
+) -> Dict:
+    """
+    创建临时权限
+
+    policies: [{
+        "action_id": "view_host",
+        "resource_expression": "",
+        "environment": "",
+        "expired_at": 4102444800
+    }]
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/temporary-policies"
+    data = {
+        "subject": {"type": subject_type, "id": subject_id},
+        "policies": policies,
+    }
+    permission_logger.info("iam create temporary policies url: %s, data: %s", url_path, data)
+    result = _call_iam_api(http_post, url_path, data=data)
+    return result
+
+
+def delete_temporary_policies(system_id: str, subject_type: str, subject_id: str, policy_ids: List[int]) -> None:
+    """
+    删除临时权限
+    """
+    url_path = "/api/v1/web/temporary-policies"
+    data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
+    permission_logger.info("iam delete temporary policies url: %s, data: %s", url_path, data)
+    result = _call_iam_api(http_delete, url_path, data=data)
+    return result
+
+
+def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
+    """
+    删除指定过期时间前的临时权限策略
+    """
+    url_path = "/api/v1/web/temporary-policies/before_expired_at"
+    params = {
+        "expired_at": expired_at,
+    }
+    permission_logger.info("iam delete temporary policies before expired_at url: %s, params: %s", url_path, params)
+    return _call_iam_api(http_delete, url_path, data=params)

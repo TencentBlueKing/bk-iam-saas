@@ -76,41 +76,68 @@ import access from './modules/access';
 // 资源权限模块
 import resourcePermiss from './modules/resource-permiss';
 
+// 临时权限模块
+import applyProvisionPerm from './modules/apply-provision-perm';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
 
 const currentNav = [
     {
-        icon: 'perm-apply',
-        name: il8n('nav', '权限申请'),
-        id: 'permApplyNav',
-        rkey: 'applyJoinUserGroup',
-        path: `${SITE_URL}apply-join-user-group`,
-        disabled: false
+        icon: 'perm-manage',
+        name: il8n('nav', '发起需求'),
+        rkey: 'initiateDemand',
+        children: [
+            {
+                icon: 'perm-apply',
+                name: il8n('nav', '权限申请'),
+                id: 'permApplyNav',
+                rkey: 'applyJoinUserGroup',
+                path: `${SITE_URL}apply-join-user-group`,
+                disabled: false
+            },
+            {
+                icon: 'perm-apply',
+                name: il8n('nav', '临时权限申请'),
+                id: 'provisionPermApplyNav',
+                rkey: 'applyProvisionPerm',
+                path: `${SITE_URL}apply-provision-perm`,
+                disabled: false
+            }
+        ]
     },
+
     {
-        icon: 'my-apply',
-        id: 'applyNav',
-        rkey: 'apply',
-        name: il8n('nav', '我的申请'),
-        path: `${SITE_URL}apply`,
-        disabled: false
+        icon: 'perm-manage',
+        name: il8n('nav', '工作台'),
+        rkey: 'initiateDemand',
+        children: [
+            {
+                icon: 'my-apply',
+                id: 'applyNav',
+                rkey: 'apply',
+                name: il8n('nav', '我的申请'),
+                path: `${SITE_URL}apply`,
+                disabled: false
+            },
+            {
+                icon: 'my-approval',
+                id: 'approvalNav',
+                rkey: 'approval',
+                name: il8n('nav', '我的审批')
+            },
+            {
+                icon: 'my-perm',
+                id: 'myPermNav',
+                rkey: 'myPerm',
+                name: il8n('nav', '我的权限'),
+                path: `${SITE_URL}my-perm`,
+                disabled: false
+            }
+        ]
     },
-    {
-        icon: 'my-approval',
-        id: 'approvalNav',
-        rkey: 'approval',
-        name: il8n('nav', '我的审批')
-    },
-    {
-        icon: 'my-perm',
-        id: 'myPermNav',
-        rkey: 'myPerm',
-        name: il8n('nav', '我的权限'),
-        path: `${SITE_URL}my-perm`,
-        disabled: false
-    },
+    
     {
         icon: 'perm-manage',
         name: il8n('nav', '权限管理'),
@@ -193,12 +220,19 @@ const currentNav = [
 
 if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
     currentNav.push({
-        icon: 'system-access',
-        id: 'systemAccessNav',
-        rkey: 'systemAccess',
-        name: il8n('nav', '系统接入'),
-        path: `${SITE_URL}system-access`,
-        disabled: true
+        icon: 'perm-manage',
+        name: il8n('nav', '开发者'),
+        rkey: 'Developers',
+        children: [
+            {
+                icon: 'system-access',
+                id: 'systemAccessNav',
+                rkey: 'systemAccess',
+                name: il8n('nav', '系统接入'),
+                path: `${SITE_URL}system-access`,
+                disabled: true
+            }
+        ]
     });
 }
 
@@ -218,7 +252,8 @@ const store = new Vuex.Store({
         renewal,
         audit,
         access,
-        resourcePermiss
+        resourcePermiss,
+        applyProvisionPerm
     },
     state: {
         mainContentLoading: false,

@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import Any, List
+from typing import Any, List, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -28,6 +28,7 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.common.error_codes import error_codes
 from backend.component import iam
 from backend.util.json import json_dumps
+from backend.util.model import PartialModel
 
 from .constants import (
     DEAULT_RESOURCE_GROUP_ID,
@@ -94,7 +95,7 @@ class UserRoleMember(BaseModel):
     members: list
 
 
-class RoleInfo(BaseModel):
+class RoleInfo(PartialModel):
     code: str = ""
     name: str
     name_en: str = ""
@@ -218,18 +219,33 @@ class RoleService:
         if subjects:
             ScopeSubject.objects.bulk_create(subjects)
 
-    def update(self, role: Role, info: RoleInfo, updater: str, partial=False):
+    def update(self, role: Role, info: RoleInfo, updater: str):
         """更新Role"""
+        # 查询实际RoleInfo里哪些字段可用
+        update_fields = info.get_partial_fields()
+
         with transaction.atomic():
-            role.name = info.name
-            role.name_en = info.name_en
-            role.description = info.description
+            # 基本信息
+            if "name" in update_fields:
+                role.name = info.name
+                role.name_en = info.name_en
+            if "description" in update_fields:
+                role.description = info.description
+
             role.updater = updater
             role.save()
 
-            self._update_members(role, info.members)
-            if not partial:
-                self._update_role_scope(role.id, info.subject_scopes, info.authorization_scopes)
+            # 分级管理员成员
+            if "members" in update_fields:
+                self._update_members(role, info.members)
+
+            # 可授权的权限范围
+            if "authorization_scopes" in update_fields:
+                self.update_role_auth_scope(role.id, info.authorization_scopes)
+
+            # 可授权的人员范围
+            if "subject_scopes" in update_fields:
+                self._update_role_subject_scope(role.id, info.subject_scopes)
 
     def _update_members(self, role: Role, members: List[str], need_sync_backend_role: bool = False):
         """更新Role成员"""
@@ -270,14 +286,6 @@ class RoleService:
                 role.type,
                 role.code or "SUPER",
             )
-
-    def _update_role_scope(self, role_id: int, subjects: List[Subject], systems: List[AuthScopeSystem]):
-        """更新Role的授权范围"""
-        # 1. 修改系统操作的限制范围
-        self.update_role_auth_scope(role_id, systems)
-
-        # 2. 修改授权对象的限制范围
-        self._update_role_subject_scope(role_id, subjects)
 
     def update_role_auth_scope(self, role_id: int, systems: List[AuthScopeSystem]):
         """更新Role可授权的权限范围"""
@@ -481,6 +489,27 @@ class RoleService:
         )
         # 查询角色
         return Role.objects.get(id=role_related_object.role_id)
+
+    def list_paging_role_for_system(self, system_id: str, limit: int = 10, offset: int = 0) -> Tuple[int, List[Role]]:
+        """查询某个系统通过API创建的分级管理员"""
+        # 需要过滤出source_system_id通过API创建的
+        system_role_queryset = RoleSource.objects.filter(
+            source_system_id=system_id,
+            source_type=RoleSourceTypeEnum.API.value,
+        )
+
+        # 分页
+        count = system_role_queryset.count()
+        system_role_ids = list(system_role_queryset.values_list("role_id", flat=True)[offset, offset + limit])
+
+        # 无数据则提前返回
+        if len(system_role_ids) == 0:
+            return 0, []
+
+        # 获取Role详情
+        roles = Role.objects.filter(id__in=system_role_ids)
+
+        return count, roles
 
     def list_user_role_for_system(self, user_id: str, system_id: str) -> List[UserRole]:
         """

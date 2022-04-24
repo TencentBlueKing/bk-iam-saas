@@ -421,18 +421,15 @@ class AuthScopeActionColumnValue(BaseModel):
     """权限表格每一列的值"""
 
     action: BaseDictStrValue
-    related_resource_types: ActionRelatedResourceTypeInfo
+    resource_groups: ResourceGroupInfo
 
     @classmethod
     def from_policy(cls, policy: ApplicationPolicyInfo):
         if len(policy.resource_groups) == 0:
-            related_resource_types = ActionRelatedResourceTypeInfo(value=[BaseDictStrValue(value="无需关联实例")])
+            resource_groups = ResourceGroupInfo(value=[BaseDictStrValue(value="无需关联实例")])
         else:
-            # NOTE: 当前默认只有一组
-            related_resource_types = ActionRelatedResourceTypeInfo.from_resource_types(
-                policy.resource_groups[0].related_resource_types
-            )
-        return cls(action=BaseDictStrValue(value=policy.name), related_resource_types=related_resource_types)
+            resource_groups = ResourceGroupInfo.from_resource_groups(policy.resource_groups)
+        return cls(action=BaseDictStrValue(value=policy.name), resource_groups=resource_groups)
 
 
 class AuthScopeActionTable(BaseModel):

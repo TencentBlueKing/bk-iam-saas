@@ -177,3 +177,49 @@ class ApplicationDataTrans:
         )
 
         return application_data
+
+    def from_grant_temporary_policy_application(self, applicant: str, data: Dict) -> ActionApplicationDataBean:
+        """来着临时权限申请的数据转换
+        data来着 backend.apps.application.serializers.ApplicationSLZ
+        """
+        # data数据有两种，操作聚合的和非聚合的
+        system_id = data["system"]["id"]
+
+        # 1. 转换数据结构
+        policy_list = self.policy_trans.from_aggregate_actions_and_actions(system_id, data)
+
+        # 2. 校验每个操作用户已有的权限不能超过10条
+        self._check_temporary_policy(applicant, system_id, policy_list)
+
+        # 3. 检查每个操作新增的资源实例数量不超过限制
+        self._check_application_policy_instance_count_limit(policy_list)
+
+        # 4. 转换为ApplicationBiz创建申请单所需数据结构
+        application_data = ActionApplicationDataBean(
+            applicant=applicant, policy_list=policy_list, reason=data["reason"]
+        )
+
+        return application_data
+
+    def _check_temporary_policy(self, applicant: str, system_id: str, policy_list: PolicyBeanList) -> PolicyBeanList:
+        """检查临时权限"""
+
+        # NOTE: 临时权限的申请过期时间限制由前端处理
+
+        # 1. 校验资源名称
+        policy_list.check_resource_name()
+
+        # 2. 获取某个系统的所有的临时权限, 包括过期的
+        old_policies = self.policy_query_biz.list_temporary_by_subject(
+            system_id,
+            Subject(type=SubjectType.USER.value, id=applicant),
+        )
+
+        for p in policy_list.policies:
+            count = len([one for one in old_policies if one.action_id == p.action_id]) + 1
+            if count > settings.TEMPORARY_POLICY_LIMIT:
+                raise error_codes.VALIDATE_ERROR.format(
+                    _("临时权限操作 [{}] 申请限最大{}条，临时权限过多不利于您后期维护，建议您删除部分权限再申请。").format(
+                        p.action_id, settings.TEMPORARY_POLICY_LIMIT
+                    )
+                )

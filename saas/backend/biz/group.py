@@ -94,6 +94,13 @@ class GroupRoleDict(BaseModel):
         return self.data.get(group_id)
 
 
+class GroupNameDict(BaseModel):
+    data: Dict[int, str]
+
+    def get(self, group_id: int, default=""):
+        return self.data.get(group_id, default)
+
+
 class GroupMemberExpiredAtBean(GroupMemberExpiredAt):
     pass
 
@@ -509,6 +516,13 @@ class GroupBiz:
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
 
+    def get_group_name_dict_by_ids(self, group_ids: List[int]) -> GroupNameDict:
+        """
+        获取用户组id: name的字典
+        """
+        queryset = Group.objects.filter(id__in=group_ids).only("name")
+        return GroupNameDict(data={one.id: one.name for one in queryset})
+
     def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
         """根据关键词 获取指定用户组成员列表"""
         maximum_number_of_member = 1000
@@ -557,6 +571,20 @@ class GroupCheckBiz:
             role_group_ids.remove(group_id)
         if Group.objects.filter(name=name, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
+
+    def check_role_group_limit(self, role_id: int, new_group_count: int):
+        """
+        检查角色下的用户组数量是否超限
+        """
+        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_group_limit"]
+        role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
+        if len(role_group_ids) + new_group_count > limit:
+            raise error_codes.VALIDATE_ERROR.format(
+                _("分级管理员({})已有{}个用户组，不可再添加{}个用户组，否则超出分级管理员最大用户组数量{}的限制").format(
+                    role_id, len(role_group_ids), new_group_count, limit
+                ),
+                True,
+            )
 
     def batch_check_role_group_names_unique(self, role_id: int, names: List[str]):
         """

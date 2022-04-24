@@ -1,3 +1,35 @@
+# V1.8.0
+
+### 新增功能
+* 临时权限
+
+# V1.7.14
+
+### 新增功能
+* 接入系统回调查询实例列表支持传祖先实例
+* 聚合操作支持同时聚合多种资源类型
+
+# V1.7.13
+
+### 功能优化
+* OpenAPI分页参数调整为page_size/page，对于admin.list_group/admin.list_group_member/mgmt.list_group/mgmt.list_group_member已开放接口，兼容limit/offset
+
+# V1.7.12
+
+### 缺陷修复
+* 修复国际化的相关问题
+* 优化导航菜单
+* 修复已知bug
+
+# V1.7.11
+
+### 缺陷修复
+* 修复分级管理员申请单ITSM展示问题
+* 修复前端合并选择实例问题
+
+### 功能优化
+* sentry sdk切换
+
 # V1.7.10
 
 ### 缺陷修复

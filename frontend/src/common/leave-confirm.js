@@ -43,6 +43,8 @@ export const leaveConfirm = () => {
                     textAlign: 'center'
                 }
             }, il8n('info', '确认离开当前页')),
+            okText: il8n('common', '确定'),
+            cancelText: il8n('common', '取消'),
             confirmFn: () => {
                 window.changeAlert = false;
                 resolve();

@@ -435,6 +435,7 @@
                     return arr;
                 })();
                 const curAction = payload.actions.map(item => `${payload.system_id}&${item.id}`);
+                console.log('this.aggregationsTableData', this.aggregationsTableData, instances);
                 if (instances.length > 0) {
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(`${item.system_id}&${item.id}`)) {
@@ -479,23 +480,25 @@
                         curSelectActions.push(`${item.system_id}&${item.id}`);
                     }
                 });
+                console.log('this.policyList', this.policyList);
                 let aggregations = []
                 ;(payload || []).forEach(item => {
-                    const { actions, aggregate_resource_type, $id } = item;
+                    console.log('item', item);
+                    const { actions, aggregate_resource_types, $id } = item;
                     const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
                     if (curActions.length > 0) {
                         aggregations.push({
                             actions: curActions,
-                            aggregate_resource_type: Object.assign(aggregate_resource_type, {
-                                system_name: this.policyList.find(
-                                    _ => _.system_id === curActions[0].system_id
-                                ).system_name
-                            }),
-                            $id
+                            aggregate_resource_types,
+                            $id,
+                            system_name: this.policyList.find(
+                                _ => _.system_id === curActions[0].system_id
+                            ).system_name
                         });
                     }
                 });
                 aggregations = aggregations.filter(item => item.actions.length > 1);
+                console.log('aggregations', aggregations);
                 return aggregations;
             },
 
@@ -584,6 +587,7 @@
                 reallyActionIds.forEach(item => {
                     // 优先从缓存值中取值
                     const curObj = this.aggregationsTableData.find(_ => `${_.system_id}&${_.id}` === item);
+                    console.log('curObj', curObj);
                     if (curObj) {
                         this.policyList.unshift(curObj);
                     } else {

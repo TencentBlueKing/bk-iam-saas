@@ -10,12 +10,13 @@ specific language governing permissions and limitations under the License.
 """
 import time
 
+from django.conf import settings
 from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleCommonAction, RoleUser
-from backend.biz.role import RoleBiz
+from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.biz.subject import SubjectInfoList
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import (
@@ -27,6 +28,7 @@ from backend.service.constants import (
     RoleScopeSubjectType,
     SubjectType,
 )
+from backend.service.models import Subject
 
 from .constants import PermissionTypeEnum
 
@@ -111,7 +113,21 @@ class RoleScopeAuthorizationSLZ(serializers.Serializer):
 class RatingMangerBaseInfoSZL(serializers.Serializer):
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
-    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=64))
+    members = serializers.ListField(
+        label="成员列表",
+        child=serializers.CharField(label="用户ID", max_length=64),
+        max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
+    )
+
+    def validate(self, data):
+        """
+        校验成员加入的分级管理员数是否超过限制
+        """
+        role_check_biz = RoleCheckBiz()
+        for username in data["members"]:
+            # subject加入的分级管理员数量不能超过最大值
+            role_check_biz.check_subject_grade_manager_limit(Subject(type=SubjectType.USER.value, id=username))
+        return data
 
 
 class RatingMangerCreateSLZ(RatingMangerBaseInfoSZL):

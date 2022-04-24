@@ -320,31 +320,33 @@
             handleResourceSelect (payload) {
                 window.changeDialog = true;
                 const instances = (function () {
-                    const { id, name, system_id } = payload.aggregateResourceType;
                     const arr = [];
-                    payload.instances.forEach(v => {
-                        const curItem = arr.find(_ => _.type === id);
-                        if (curItem) {
-                            curItem.path.push([{
-                                id: v.id,
-                                name: v.name,
-                                system_id,
-                                type: id,
-                                type_name: name
-                            }]);
-                        } else {
-                            arr.push({
-                                name,
-                                type: id,
-                                path: [[{
+                    payload.aggregateResourceType.forEach(resourceItem => {
+                        const { id, name, system_id } = resourceItem;
+                        payload.instancesDisplayData[id] && payload.instancesDisplayData[id].forEach(v => {
+                            const curItem = arr.find(_ => _.type === id);
+                            if (curItem) {
+                                curItem.path.push([{
                                     id: v.id,
                                     name: v.name,
                                     system_id,
                                     type: id,
                                     type_name: name
-                                }]]
-                            });
-                        }
+                                }]);
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                });
+                            }
+                        });
                     });
                     return arr;
                 })();
@@ -395,17 +397,16 @@
                 });
                 let aggregations = []
                 ;(payload || []).forEach(item => {
-                    const { actions, aggregate_resource_type, $id } = item;
+                    const { actions, aggregate_resource_types, $id } = item;
                     const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
                     if (curActions.length > 0) {
                         aggregations.push({
                             actions: curActions,
-                            aggregate_resource_type: Object.assign(aggregate_resource_type, {
-                                system_name: this.policyList.find(
-                                    _ => _.system_id === curActions[0].system_id
-                                ).system_name
-                            }),
-                            $id
+                            aggregate_resource_types,
+                            $id,
+                            system_name: this.policyList.find(
+                                _ => _.system_id === curActions[0].system_id
+                            ).system_name
                         });
                     }
                 });
