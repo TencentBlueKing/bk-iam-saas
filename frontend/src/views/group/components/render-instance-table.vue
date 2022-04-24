@@ -67,7 +67,9 @@
                             <div class="bk-button-group tab-button" v-else>
                                 <bk-button v-for="(item, index) in row.aggregateResourceType"
                                     :key="item.id" @click="selectResourceType(row, index)"
-                                    :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}</bk-button>
+                                    :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
+                                    <span v-if="row.instancesDisplayData[item.id]">({{row.instancesDisplayData[item.id].length}})</span>
+                                </bk-button>
                             </div>
                             <render-condition
                                 :ref="`condition_${$index}_aggregateRef`"
@@ -488,6 +490,7 @@
                     // eslint-disable-next-line max-len
                     this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
                 }
+                console.log('this.tableList[this.aggregateIndex]', this.tableList[this.aggregateIndex]);
                 this.$emit('on-select', this.tableList[this.aggregateIndex]);
             },
             handleRowMouseEnter (index, event, row) {
