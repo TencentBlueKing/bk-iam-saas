@@ -77,6 +77,16 @@ class UserRole(BaseModel):
     name_en: str
     description: str
 
+    @classmethod
+    def convert_from_role(cls, role):
+        return cls(
+            id=role.id,
+            type=role.type,
+            name=role.name,
+            name_en=role.name_en,
+            description=role.description,
+        )
+
 
 class UserRoleMember(BaseModel):
     id: int
@@ -122,10 +132,24 @@ class RoleService:
 
         return parse_obj_as(List[AuthScopeSystem], json.loads(role_scope.content))
 
-    def list_user_role(self, user_id: str) -> List[UserRole]:
+    def list_user_role(self, user_id: str, with_permission: bool = False) -> List[UserRole]:
         """查询用户的角色列表"""
-        role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
-        return self.list_by_ids(role_ids)
+        role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
+
+        if not with_permission:
+            return self.list_by_ids(role_ids)
+
+        roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
+        role_dict = {role.id: role for role in roles}
+
+        role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
+        roles_with_permission = []
+
+        for role_user_system_perm in role_user_system_perms:
+            if user_id in role_user_system_perm.enabled_users or role_user_system_perm.global_enabled:
+                role = role_dict[role_user_system_perm.role_id]
+                roles_with_permission.append(UserRole.convert_from_role(role))
+        return roles_with_permission
 
     def list_members_by_role_id(self, role_id: int):
         """查询指定角色的成员列表"""
@@ -134,10 +158,7 @@ class RoleService:
 
     def list_by_ids(self, role_ids: List[int]) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
-        data = [
-            UserRole(id=role.id, type=role.type, name=role.name, name_en=role.name_en, description=role.description)
-            for role in roles
-        ]
+        data = [UserRole.convert_from_role(role) for role in roles]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
         sort_index = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]
