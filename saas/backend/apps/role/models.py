@@ -187,6 +187,9 @@ class RoleRelatedObject(BaseModel):
         verbose_name = "角色关联资源"
         verbose_name_plural = "角色关联资源"
         unique_together = ["role_id", "object_type", "object_id"]
+        indexes = [
+            models.Index(fields=["object_id", "object_type"]),
+        ]
 
 
 class RoleCommonAction(BaseModel):
