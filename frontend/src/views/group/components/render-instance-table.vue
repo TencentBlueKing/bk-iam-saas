@@ -490,7 +490,6 @@
                     // eslint-disable-next-line max-len
                     this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
                 }
-                console.log('this.tableList[this.aggregateIndex]', this.tableList[this.aggregateIndex]);
                 this.$emit('on-select', this.tableList[this.aggregateIndex]);
             },
             handleRowMouseEnter (index, event, row) {
@@ -561,7 +560,6 @@
                     ) || []
                 );
                 const tempData = [];
-                console.log('instances', instances, this.selectedIndex);
                 const resources = instances.map(item => item[this.selectedIndex].path)
                     .map(item => item.map(v => v.map(_ => _.id)));
                 const resourceList = instances
@@ -1533,12 +1531,8 @@
             },
 
             selectResourceType (data, index) {
-                // console.log('index', index, data);
-                // console.log('tableIndex', tableIndex);
-                // this.selectedIndex = index;
                 data.selectedIndex = index;
                 this.selectedIndex = index;
-                console.log(this.selectedIndex);
             }
         }
     };
