@@ -227,7 +227,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         ):
             raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True)
 
-        self.biz.update(role, RoleInfoBean.parse_obj(data), user_id, partial=True)
+        self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
         audit_context_setter(role=role)
 
