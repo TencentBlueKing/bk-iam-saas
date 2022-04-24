@@ -70,11 +70,11 @@ export default class GroupAggregationPolicy {
         let str = '';
         this.aggregateResourceType.forEach(item => {
             if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-                str = `${str}；${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
+                str = `${str}，${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
             } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
                 for (const key in this.instancesDisplayData) {
                     if (item.id === key) {
-                        str = `${str}；已选择：${this.instancesDisplayData[item.id].length}个${item.name}`;
+                        str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
                     }
                 }
             }
