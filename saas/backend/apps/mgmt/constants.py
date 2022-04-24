@@ -29,6 +29,17 @@ class ApiType(ChoicesEnum, LowerStrEnum):
     )
 
 
+class LongTaskObjectType(ChoicesEnum, LowerStrEnum):
+    """长时任务 参数类型"""
+
+    GROUP = auto()
+    TEMPLATE = auto()
+
+    _choices_labels = skip(
+        ((GROUP, _("用户组")), (TEMPLATE, _("模板")))
+    )
+
+
 WHITE_LIST_API_ENUM_MAP = {
     ApiType.MANAGEMENT_API.value: ManagementAPIEnum,
     ApiType.ADMIN_API.value: AdminAPIEnum,
