@@ -64,7 +64,7 @@ class AllowItem:
 class AuthorizationAPIAllowListCheckMixin:
     """授权API相关白名单控制"""
 
-    @cachedmethod(timeout=60)  # 缓存一分钟
+    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def _list_system_allow_list(self, api: str, system_id: str) -> List[AllowItem]:
         """查询系统某类API的白名单"""
         allow_list = AuthAPIAllowListConfig.objects.filter(type=api, system_id=system_id)
