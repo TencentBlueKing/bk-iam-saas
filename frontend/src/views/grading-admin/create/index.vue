@@ -437,12 +437,14 @@
                     return arr;
                 })();
                 const curAction = payload.actions.map(item => `${payload.system_id}&${item.id}`);
-                console.log('this.aggregationsTableData', this.aggregationsTableData, instances);
                 if (instances.length > 0) {
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(`${item.system_id}&${item.id}`)) {
-                            item.related_resource_types && item.related_resource_types.forEach(subItem => {
-                                subItem.condition = [new Condition({ instances }, '', 'add')];
+                            item.resource_groups.forEach(groupItem => {
+                                groupItem.related_resource_types
+                                    && groupItem.related_resource_types.forEach(subItem => {
+                                        subItem.condition = [new Condition({ instances }, '', 'add')];
+                                    });
                             });
                         }
                     });
@@ -549,9 +551,6 @@
                                     break;
                                 }
                             }
-                            console.log('instances: ');
-                            console.log(instances);
-                            console.log('isAllEqual: ' + isAllEqual);
                             if (isAllEqual) {
                                 // const instanceData = instances[0][0][0];
                                 // item.instances = instanceData.path.map(pathItem => {
@@ -600,7 +599,6 @@
                 reallyActionIds.forEach(item => {
                     // 优先从缓存值中取值
                     const curObj = this.aggregationsTableData.find(_ => `${_.system_id}&${_.id}` === item);
-                    console.log('curObj', curObj);
                     if (curObj) {
                         this.policyList.unshift(curObj);
                     } else {
