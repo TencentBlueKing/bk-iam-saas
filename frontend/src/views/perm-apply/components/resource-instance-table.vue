@@ -31,7 +31,7 @@
                             <bk-button v-for="(item, index) in row.aggregateResourceType"
                                 :key="item.id" @click="selectResourceType(row, index)"
                                 :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
-                                <span v-if="row.instancesDisplayData[item.id]">
+                                <span v-if="row.instancesDisplayData && row.instancesDisplayData[item.id].length">
                                     ({{row.instancesDisplayData[item.id].length}})</span>
                             </bk-button>
                         </div>

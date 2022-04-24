@@ -68,7 +68,7 @@
                                 <bk-button v-for="(item, index) in row.aggregateResourceType"
                                     :key="item.id" @click="selectResourceType(row, index)"
                                     :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
-                                    <span v-if="row.instancesDisplayData[item.id]">({{row.instancesDisplayData[item.id].length}})</span>
+                                    <span v-if="row.instancesDisplayData && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
                                 </bk-button>
                             </div>
                             <render-condition
@@ -598,9 +598,7 @@
                 payload.canPaste = false;
             },
             handlerAggregateOnCopy (payload, index) {
-                if (!this.instanceKey) {
-                    this.instanceKey = payload.aggregateResourceType[payload.selectedIndex].id;
-                }
+                this.instanceKey = payload.aggregateResourceType[payload.selectedIndex].id;
                 window.changeDialog = true;
                 this.curCopyKey = `${payload.aggregateResourceType[payload.selectedIndex].system_id}${payload.aggregateResourceType[payload.selectedIndex].id}`;
                 this.curAggregateResourceType = payload.aggregateResourceType[payload.selectedIndex];
@@ -1540,6 +1538,7 @@
                 // this.selectedIndex = index;
                 data.selectedIndex = index;
                 this.selectedIndex = index;
+                console.log(this.selectedIndex);
             }
         }
     };
