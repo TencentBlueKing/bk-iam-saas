@@ -317,7 +317,9 @@
                 footerPosition: 'center',
                 newRow: '',
                 role: '',
-                selectedIndex: 0
+                selectedIndex: 0,
+                instanceKey: '',
+                curCopyDataId: ''
             };
         },
         computed: {
@@ -593,10 +595,14 @@
                 payload.canPaste = false;
             },
             handlerAggregateOnCopy (payload, index) {
+                if (!this.instanceKey) {
+                    this.instanceKey = payload.aggregateResourceType[payload.selectedIndex].id;
+                }
                 window.changeDialog = true;
-                this.curCopyKey = `${payload.aggregateResourceType.system_id}${payload.aggregateResourceType.id}`;
-                this.curAggregateResourceType = payload.aggregateResourceType;
-                this.curCopyData = _.cloneDeep(payload.instances);
+                this.curCopyKey = `${payload.aggregateResourceType[payload.selectedIndex].system_id}${payload.aggregateResourceType[payload.selectedIndex].id}`;
+                this.curAggregateResourceType = payload.aggregateResourceType[payload.selectedIndex];
+                this.curCopyData = _.cloneDeep(payload.instancesDisplayData[this.instanceKey]);
+                this.curCopyDataId = payload.aggregationId;
                 this.curCopyMode = 'aggregate';
                 this.showMessage(this.$t(`m.info['实例复制']`));
                 this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(true);
@@ -680,19 +686,35 @@
                 }
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
-                        item.related_resource_types.forEach((subItem, subItemIndex) => {
-                            if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                                subItem.condition = _.cloneDeep(tempCurData);
-                                subItem.isError = false;
-                                this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
-                            }
+                        item.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types
+                                && groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
+                                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                                        subItem.condition = _.cloneDeep(tempCurData);
+                                        subItem.isError = false;
+                                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
+                                    }
+                                });
                         });
                     } else {
-                        if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
-                            item.instances = _.cloneDeep(tempArrgegateData);
-                            item.isError = false;
-                            this.$emit('on-select', item);
-                        }
+                        item.aggregateResourceType.forEach(aggregateResourceItem => {
+                            if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey && this.curCopyDataId !== item.aggregationId) {
+                                if (Object.keys(item.instancesDisplayData).length) {
+                                    item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempArrgegateData);
+                                    item.instances = this.setInstanceData(item.instancesDisplayData);
+                                } else {
+                                    item.instances = _.cloneDeep(tempArrgegateData);
+                                    this.setInstancesDisplayData(item);
+                                }
+                            }
+                        });
+                        item.isError = false;
+                        this.$emit('on-select', item);
+                        // if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                        //     item.instances = _.cloneDeep(tempArrgegateData);
+                        //     item.isError = false;
+                        //     this.$emit('on-select', item);
+                        // }
                     }
                 });
                 payload.isError = false;
@@ -700,12 +722,36 @@
                 this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(false);
                 this.showMessage(this.$t(`m.info['批量粘贴成功']`));
             },
+
+            // 设置instances
+            setInstanceData (data) {
+                return Object.keys(data).reduce((p, v) => {
+                    p.push(...data[v]);
+                    return p;
+                }, []);
+            },
+
+            // 设置InstancesDisplayData
+            setInstancesDisplayData (data) {
+                data.instancesDisplayData = data.instances.reduce((p, v) => {
+                    if (!p[this.instanceKey]) {
+                        p[this.instanceKey] = [];
+                    }
+                    p[this.instanceKey].push({
+                        id: v.id,
+                        name: v.name
+                    });
+                    return p;
+                }, {});
+            },
+
             showAggregateResourceInstance (data, index) {
                 this.selectedIndex = data.selectedIndex;
                 window.changeDialog = true;
                 this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[data.selectedIndex]);
                 this.aggregateIndex = index;
                 const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
+                this.instanceKey = instanceKey;
                 if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
                 this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
                     return {

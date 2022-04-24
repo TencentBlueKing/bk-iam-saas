@@ -354,8 +354,11 @@
                 if (instances.length > 0) {
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(`${item.system_id}&${item.id}`)) {
-                            item.related_resource_types && item.related_resource_types.forEach(subItem => {
-                                subItem.condition = [new Condition({ instances }, '', 'add')];
+                            item.resource_groups.forEach(groupItem => {
+                                groupItem.related_resource_types
+                                    && groupItem.related_resource_types.forEach(subItem => {
+                                        subItem.condition = [new Condition({ instances }, '', 'add')];
+                                    });
                             });
                         }
                     });

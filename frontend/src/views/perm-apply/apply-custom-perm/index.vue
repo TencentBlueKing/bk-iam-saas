@@ -1355,25 +1355,31 @@
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(item.id)) {
                             if (item.tag === 'unchanged') {
-                                item.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition.forEach(conditionItem => {
-                                        conditionItem.instance.forEach(instanceItem => {
-                                            if (instanceItem.type === instances[0].type) {
-                                                selectPath = selectPath.filter(v => {
-                                                    const target = v.map(_ => `${_.type}${_.id}`).sort();
-                                                    return instanceItem.path.map(pathItem => pathItem.map(v => `${v.type}${v.id}`).sort()).filter(pathSub => _.isEqual(target, pathSub)).length < 1;
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition.forEach(conditionItem => {
+                                                conditionItem.instance.forEach(instanceItem => {
+                                                    if (instanceItem.type === instances[0].type) {
+                                                        selectPath = selectPath.filter(v => {
+                                                            const target = v.map(_ => `${_.type}${_.id}`).sort();
+                                                            return instanceItem.path.map(pathItem => pathItem.map(v => `${v.type}${v.id}`).sort()).filter(pathSub => _.isEqual(target, pathSub)).length < 1;
+                                                        });
+                                                        if (selectPath.length > 0) {
+                                                            instanceItem.path.push(...selectPath);
+                                                            instanceItem.paths.push(...selectPath);
+                                                        }
+                                                    }
                                                 });
-                                                if (selectPath.length > 0) {
-                                                    instanceItem.path.push(...selectPath);
-                                                    instanceItem.paths.push(...selectPath);
-                                                }
-                                            }
+                                            });
                                         });
-                                    });
                                 });
                             } else {
-                                item.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                        });
                                 });
                             }
                         }
@@ -1532,8 +1538,11 @@
                                 return arr;
                             })();
                             if (instances.length > 0) {
-                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                curData.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                        });
                                 });
                             }
                         }
@@ -1611,8 +1620,11 @@
                                             curData.expired_at = item.expired_at;
                                             curData.expired_display = item.expired_display;
                                             if (instances.length > 0) {
-                                                curData.related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')]; // 选择的时候flag为add 代表为新增数据  侧边栏数据disabled为false可选择
+                                                curData.resource_groups.forEach(groupItem => {
+                                                    groupItem.related_resource_types
+                                                        && groupItem.related_resource_types.forEach(subItem => {
+                                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                        });
                                                 });
                                             }
                                             this.tableData.splice(i, 1, curData);
@@ -1703,8 +1715,11 @@
                                             curData.expired_at = item.expired_at;
                                             curData.expired_display = item.expired_display;
                                             if (instances.length > 0) {
-                                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                curData.resource_groups.forEach(groupItem => {
+                                                    groupItem.related_resource_types
+                                                        && groupItem.related_resource_types.forEach(subItem => {
+                                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                        });
                                                 });
                                             }
                                             this.tableData.splice(i, 1, curData);
