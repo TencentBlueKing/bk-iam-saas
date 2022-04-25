@@ -1,4 +1,4 @@
-FROM node:14.17.6  AS builder
+FROM node:14.17.6 AS builder
 
 COPY ./ /app
 WORKDIR /app
@@ -13,7 +13,7 @@ RUN rm /etc/apt/sources.list && \
     echo "deb-src https://mirrors.cloud.tencent.com/debian buster main contrib non-free" >> /etc/apt/sources.list && \
     echo "deb-src https://mirrors.cloud.tencent.com/debian buster-updates main contrib non-free" >> /etc/apt/sources.list
 
-RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://mirrors.tencent.com/pypi/simple/' > ~/.pip/pip.conf
+RUN mkdir ~/.pip &&  printf '[global]\nindex-url = https://mirrors.cloud.tencent.com/pypi/simple/' > ~/.pip/pip.conf
 
 RUN apt-get update && apt-get install -y gcc libssl-dev default-libmysqlclient-dev build-essential
 
