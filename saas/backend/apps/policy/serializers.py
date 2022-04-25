@@ -37,7 +37,7 @@ class ResourceSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     type_name = serializers.CharField(label="资源类型名称", allow_blank=True)
-    id = serializers.CharField(label="资源实例ID")
+    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(label="资源实例ID名称", allow_blank=True, trim_whitespace=False)
 
 

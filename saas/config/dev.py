@@ -14,7 +14,6 @@ DEBUG = True
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
 # 本地开发数据库设置
 # USE FOLLOWING SQL TO CREATE THE DATABASE NAMED APP_CODE
 # SQL: CREATE DATABASE `framework_py` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci; # noqa: E501
@@ -36,7 +35,6 @@ DATABASES = {
         "PORT": "3306",
     },
 }
-
 
 # cache
 REDIS_HOST = "localhost"
@@ -89,10 +87,8 @@ CACHES = {
 # 当Redis Cache 使用IGNORE_EXCEPTIONS时，设置指定的 logger 输出异常
 DJANGO_REDIS_LOGGER = "app"
 
-
 # celery
 BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
-
 
 # cors
 CORS_ORIGIN_WHITELIST = []
