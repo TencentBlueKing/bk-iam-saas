@@ -302,14 +302,14 @@ class RoleGroupMembersRenewSLZ(serializers.Serializer):
 
 
 class ResourceInstancePathSLZ(serializers.Serializer):
-    id = serializers.CharField(label="资源实例ID")
+    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     type = serializers.CharField(label="资源实例类型")
     name = serializers.CharField(label="资源实例名")
 
 
 class ResourceInstancesSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID", required=True)
-    id = serializers.CharField(label="资源实例ID", required=True)
+    id = serializers.CharField(label="资源实例ID", required=True, max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     type = serializers.CharField(label="资源实例类型", required=True)
     name = serializers.CharField(label="资源实例名", required=True)
     path = serializers.ListField(

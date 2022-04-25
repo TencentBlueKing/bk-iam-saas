@@ -8,13 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from rest_framework import serializers
 
 
 class AncestorSLZ(serializers.Serializer):
     system_id = serializers.CharField(allow_blank=True, allow_null=True, default="")
     type = serializers.CharField(label="祖先资源类型")
-    id = serializers.CharField(label="祖先资源ID")
+    id = serializers.CharField(label="祖先资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
 
     class Meta:
         ref_name = "ResourceAncestorSLZ"
@@ -32,7 +33,7 @@ class ResourceQuerySLZ(serializers.Serializer):
 
 
 class BaseInfoSLZ(serializers.Serializer):
-    id = serializers.CharField(label="ID")
+    id = serializers.CharField(label="ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     display_name = serializers.CharField(label="展示名称")
     child_type = serializers.CharField(label="子资源类型")
 

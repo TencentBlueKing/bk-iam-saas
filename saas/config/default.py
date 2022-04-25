@@ -18,15 +18,12 @@ from celery.schedules import crontab
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
-
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -90,7 +87,6 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
 ]
 
-
 ROOT_URLCONF = "urls"
 
 TEMPLATES = [
@@ -109,59 +105,39 @@ TEMPLATES = [
     },
 ]
 
-
 # DB router
 DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
 
-
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
-
 AUTHENTICATION_BACKENDS = (os.getenv("BKAPP_AUTHENTICATION_BACKEND", "backend.account.backends.TokenBackend"),)
-
 AUTH_USER_MODEL = "account.User"
-
 AUTH_PASSWORD_VALIDATORS = []
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
-
 LANGUAGE_CODE = "zh-hans"
-
 LANGUAGE_COOKIE_NAME = "blueking_language"
-
 LANGUAGE_COOKIE_PATH = "/"
-
 TIME_ZONE = "Asia/Shanghai"
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
-
 LOCALE_PATHS = (os.path.join(BASE_DIR, "resources/locale"),)
-
 
 # static
 STATIC_VERSION = "1.0"
-
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
 WHITENOISE_STATIC_PREFIX = "/staticfiles/"
-
 
 # cookie
 SESSION_COOKIE_NAME = "bkiam_sessionid"
-
 SESSION_COOKIE_AGE = 60 * 60 * 24  # 1天
 
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 
-
-# restframework
+# rest_framework
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "backend.common.exception_handler.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
@@ -179,15 +155,24 @@ REST_FRAMEWORK = {
 # worker: python manage.py celery worker -l info
 # beat: python manage.py celery beat -l info
 IS_USE_CELERY = True
-
 # 连接 BROKER 超时时间
 BROKER_CONNECTION_TIMEOUT = 1  # 单位秒
 # CELERY与RabbitMQ增加60秒心跳设置项
 BROKER_HEARTBEAT = 60
-
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = os.getenv("BK_CELERYD_CONCURRENCY", 2)
-
+# 与周期任务配置的定时相关UTC
+CELERY_ENABLE_UTC = True
+# 周期任务beat生产者来源
+CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
+# Celery队列名称
+CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
+# close celery hijack root logger
+CELERYD_HIJACK_ROOT_LOGGER = False
+# Celery 消息序列化
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
 # CELERY 配置，申明任务的文件路径，即包含有 @task 装饰器的函数文件
 CELERY_IMPORTS = (
     "backend.apps.organization.tasks",
@@ -202,7 +187,6 @@ CELERY_IMPORTS = (
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
 )
-
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
@@ -261,21 +245,6 @@ CELERYBEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
 }
-
-CELERY_ENABLE_UTC = True
-
-CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
-
-CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
-
-# close celery hijack root logger
-CELERYD_HIJACK_ROOT_LOGGER = False
-
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-
-
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
 # V2 Smart只有BK_BROKER_URL
@@ -289,14 +258,11 @@ if "RABBITMQ_HOST" in os.environ:
     )
 else:
     BROKER_URL = os.getenv("BK_BROKER_URL")
-
-
+# 使用djcelery配合celery，支持周期任务通过DB设置等场景
 djcelery.setup_loader()
-
 
 # tracing: sentry support
 SENTRY_DSN = os.getenv("SENTRY_DSN")
-
 # tracing: otel 相关配置
 # if enable, default false
 ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
@@ -305,16 +271,13 @@ BKAPP_OTEL_SERVICE_NAME = os.getenv("BKAPP_OTEL_SERVICE_NAME") or "bk-iam"
 BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
 BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
 BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
-
 if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
-
 
 # debug trace的过期时间
 MAX_DEBUG_TRACE_TTL = 7 * 24 * 60 * 60  # 7天
 # debug trace的最大数量
 MAX_DEBUG_TRACE_COUNT = 1000
-
 
 # profile record
 ENABLE_PYINSTRUMENT = os.getenv("BKAPP_ENABLE_PYINSTRUMENT", "False").lower() == "true"  # 需要开启时则配置环境变量
@@ -324,30 +287,23 @@ PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
 # ---------------
 # app 自定义配置
 # ---------------
-
-
 # 初始化管理员列表，列表中的人员将拥有预发布环境和正式环境的管理员权限
 # 注意：请在首次提测和上线前修改，之后的修改将不会生效
 INIT_SUPERUSER = []
 
-
 # 是否是smart部署方式
 IS_SMART_DEPLOY = os.getenv("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"
 
-
 # version log
 VERSION_LOG_MD_FILES_DIR = os.path.join(BASE_DIR, "resources/version_log")
-
 
 # iam host
 BK_IAM_HOST = os.getenv("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
 BK_IAM_HOST_TYPE = os.getenv("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
 
-
 # iam engine host
 BK_IAM_ENGINE_HOST = os.getenv("BKAPP_IAM_ENGINE_HOST")
 BK_IAM_ENGINE_HOST_TYPE = os.getenv("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # direct/apigateway
-
 
 # authorization limit
 # 授权对象授权用户组, 模板的最大限制
@@ -379,24 +335,20 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
     "grade_manager_of_specified_systems_limit": os.getenv("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", ""),
 }
-
 # 授权的实例最大数量限制
 AUTHORIZATION_INSTANCE_LIMIT = int(os.getenv("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", 200))
-
 # 策略中实例数量的最大限制
 SINGLE_POLICY_MAX_INSTANCES_LIMIT = int(os.getenv("BKAPP_SINGLE_POLICY_MAX_INSTANCES_LIMIT", 10000))
-
 # 一次申请策略中中新增实例数量限制
 APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", 20))
-
 # 临时权限一个操作最大数量
 TEMPORARY_POLICY_LIMIT = int(os.getenv("BKAPP_TEMPORARY_POLICY_LIMIT", 10))
-
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
-
 # 最长已过期临时权限期限
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
+# 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
+MAX_LENGTH_OF_RESOURCE_ID = int(os.getenv("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", 36))
 
 # 用于发布订阅的Redis
 PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")
@@ -421,7 +373,6 @@ BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
 BK_IAM_SAAS_API_SVC = os.getenv("BK_IAM_SAAS_API_SVC", "bkiam-saas-api")
 BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
-
 
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = int(os.getenv("REQUESTS_POOL_CONNECTIONS", 20))

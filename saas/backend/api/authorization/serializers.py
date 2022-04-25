@@ -41,14 +41,14 @@ class SubjectSLZ(serializers.Serializer):
 class ResourceInstanceSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
-    id = serializers.CharField(label="资源ID")
+    id = serializers.CharField(label="资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(label="资源名称", trim_whitespace=False)
 
 
 class PathNodeSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID", default="", allow_blank=True, required=False)
     type = serializers.CharField(label="资源类型")
-    id = serializers.CharField(label="资源实例ID")
+    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(label="资源实例ID名称", allow_blank=True, trim_whitespace=False)
 
     def validate(self, attrs):
@@ -112,7 +112,7 @@ class AuthPathSLZ(BaseAuthSLZ, AuthActionSLZ):
 
 
 class SimpleInstanceSLZ(serializers.Serializer):
-    id = serializers.CharField(label="资源ID")
+    id = serializers.CharField(label="资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(label="资源名称", trim_whitespace=False)
 
 
@@ -180,11 +180,11 @@ class ResourceCreatorActionBaseInfoSLZ(AuthSystemSLZ, AuthResourceTypeSLZ):
 class AncestorSLZ(serializers.Serializer):
     system = serializers.CharField(label="祖先资源的系统ID")
     type = serializers.CharField(label="祖先资源类型")
-    id = serializers.CharField(label="祖先资源ID")
+    id = serializers.CharField(label="祖先资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
 
 
 class SingleInstanceSLZ(serializers.Serializer):
-    id = serializers.CharField(label="资源ID")
+    id = serializers.CharField(label="资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(label="资源名称", trim_whitespace=False)
     ancestors = serializers.ListField(label="祖先", child=AncestorSLZ(label="祖先层级"), allow_empty=True, required=False)
 
