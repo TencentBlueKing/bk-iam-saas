@@ -669,9 +669,7 @@
             },
 
             handlerAggregateOnCopy (payload, index) {
-                if (!this.instanceKey) {
-                    this.instanceKey = payload.aggregateResourceType[payload.selectedIndex].id;
-                }
+                this.instanceKey = payload.aggregateResourceType[payload.selectedIndex].id;
                 this.curCopyKey = `${payload.aggregateResourceType[payload.selectedIndex].system_id}${payload.aggregateResourceType[payload.selectedIndex].id}`;
                 this.curAggregateResourceType = payload.aggregateResourceType[payload.selectedIndex];
                 this.curCopyData = _.cloneDeep(payload.instancesDisplayData[this.instanceKey]);
@@ -782,7 +780,7 @@
                     const instances = (() => {
                         const arr = [];
                         const { id, name, system_id } = this.curAggregateResourceType;
-                        this.curCopyData.forEach(v => {
+                        this.curCopyData && this.curCopyData.forEach(v => {
                             const curItem = arr.find(_ => _.type === id);
                             if (curItem) {
                                 curItem.path.push([{
@@ -867,6 +865,14 @@
                 }, {});
             },
 
+            // 设置正常粘贴InstancesDisplayData
+            setNomalInstancesDisplayData (data, key) {
+                data.instancesDisplayData[key] = data.instances.map(e => ({
+                    id: e.id,
+                    name: e.name
+                }));
+            },
+
             handlerOnBatchPaste (payload, content, index, subIndex) {
                 window.changeDialog = true;
                 let tempCurData = ['none'];
@@ -877,7 +883,7 @@
                     }
                     // 预计算是否存在 聚合后的数据 可以粘贴
                     const flag = this.tableList.some(item => !!item.isAggregate
-                        && `${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey);
+                        && `${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey);
                     if (flag) {
                         if (this.curCopyData.length < 1) {
                             tempCurData = [];
@@ -921,7 +927,7 @@
                                     });
                                 });
                             } else {
-                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                                if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
                                     item.instances = _.cloneDeep(tempArrgegateData);
                                     item.isError = false;
                                     this.$emit('on-select', item);
@@ -943,9 +949,12 @@
                                     });
                                 }
                             } else {
-                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                                if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
+                                    this.instanceKey = item.aggregateResourceType[item.selectedIndex].id;
                                     item.instances = _.cloneDeep(tempArrgegateData);
+                                    this.setNomalInstancesDisplayData(item, this.instanceKey);
                                     item.isError = false;
+                                    this.instanceKey = ''; // 重置
                                     this.$emit('on-select', item);
                                 }
                             }
