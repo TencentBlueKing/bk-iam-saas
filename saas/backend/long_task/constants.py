@@ -28,6 +28,4 @@ class TaskType(ChoicesEnum, LowerStrEnum):
     TEMPLATE_UPDATE = auto()
     GROUP_AUTHORIZATION = auto()
 
-    _choices_labels = skip(
-        ((TEMPLATE_UPDATE, _("模板更新")), (GROUP_AUTHORIZATION, _("用户组授权")))
-    )
+    _choices_labels = skip(((TEMPLATE_UPDATE, _("模板更新")), (GROUP_AUTHORIZATION, _("用户组授权"))))

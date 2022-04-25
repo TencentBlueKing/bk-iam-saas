@@ -66,7 +66,7 @@ license = "MIT License"
 [tool.poetry.dependencies]
 python = "3.6.6"
 # blueapps requirement
-Django = "2.2.25"
+Django = "2.2.27"
 mysqlclient = "2.0.1"
 MarkupSafe = "1.1.1"
 Mako = "1.0.6"
@@ -80,7 +80,7 @@ six = "1.15.0"
 httplib2 = "0.19.0"
 # framework
 djangorestframework = "3.13.0"
-django-filter = "2.3.0"
+django-filter = "2.4.0"
 django-cors-headers = "3.4.0"
 Werkzeug = "1.0.1"
 drf-yasg = "1.20.0"

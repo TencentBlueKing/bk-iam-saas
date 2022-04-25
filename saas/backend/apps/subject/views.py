@@ -255,7 +255,6 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
         return Response()
 
 
-
 class SubjectRoleViewSet(GenericViewSet):
 
     paginator = None  # 去掉swagger中的limit offset参数

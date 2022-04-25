@@ -30,7 +30,7 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
     action_permission = {
         "list": PermissionCodeEnum.MANAGE_LONG_TASK.value,
         "retrieve": PermissionCodeEnum.MANAGE_LONG_TASK.value,
-        "retry": PermissionCodeEnum.MANAGE_LONG_TASK.value
+        "retry": PermissionCodeEnum.MANAGE_LONG_TASK.value,
     }
     queryset = TaskDetail.objects.all()
     serializer_class = LongTaskSLZ

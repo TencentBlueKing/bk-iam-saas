@@ -70,6 +70,6 @@ urlpatterns = [
                     name="mgmt.long_task",
                 ),
             ]
-        )
-    )
+        ),
+    ),
 ]
