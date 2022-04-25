@@ -35,9 +35,7 @@ class LongTaskObjectType(ChoicesEnum, LowerStrEnum):
     GROUP = auto()
     TEMPLATE = auto()
 
-    _choices_labels = skip(
-        ((GROUP, _("用户组")), (TEMPLATE, _("模板")))
-    )
+    _choices_labels = skip(((GROUP, _("用户组")), (TEMPLATE, _("模板"))))
 
 
 WHITE_LIST_API_ENUM_MAP = {

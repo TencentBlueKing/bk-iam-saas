@@ -356,7 +356,7 @@ dev = ["tox", "bump2version (<1)", "sphinx (<2)", "importlib-metadata (<3)", "im
 
 [[package]]
 name = "django"
-version = "2.2.25"
+version = "2.2.27"
 description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
 category = "main"
 optional = false
@@ -406,7 +406,7 @@ six = "*"
 
 [[package]]
 name = "django-filter"
-version = "2.3.0"
+version = "2.4.0"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
 category = "main"
 optional = false
@@ -1534,7 +1534,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "3.6.6"
-content-hash = "819f8fe00a3e058bd7ae67629b7db5b146fcc5f9a1b6917523604f8ae546ed72"
+content-hash = "79d89a58cfecc903b9018622e6baa3856020fc64d9ce58fda59cd6fe4e9f2613"
 
 [metadata.files]
 aenum = [
@@ -1754,8 +1754,8 @@ deprecated = [
     {file = "Deprecated-1.2.13.tar.gz", hash = "sha256:43ac5335da90c31c24ba028af536a91d41d53f9e6901ddb021bcc572ce44e38d"},
 ]
 django = [
-    {file = "Django-2.2.25-py3-none-any.whl", hash = "sha256:08bad7ef7e90286b438dbe1412c3e633fbc7b96db04735f0c7baadeed52f3fad"},
-    {file = "Django-2.2.25.tar.gz", hash = "sha256:b1e65eaf371347d4b13eb7e061b09786c973061de95390c327c85c1e2aa2349c"},
+    {file = "Django-2.2.27-py3-none-any.whl", hash = "sha256:90763c764738586b11d7e1f44828032c153366e43ad7f782908193a1bb2d6d92"},
+    {file = "Django-2.2.27.tar.gz", hash = "sha256:1ee37046b0bf2b61e83b3a01d067323516ec3b6f2b17cd49b1326dd4ba9dc913"},
 ]
 django-celery = [
     {file = "django-celery-3.2.1.tar.gz", hash = "sha256:926a65bcee6bf2d192a80239f1ec591e1834ff19a547f61762e57fc0dcc5975f"},
@@ -1769,8 +1769,8 @@ django-dynamic-fixture = [
     {file = "django-dynamic-fixture-3.1.1.tar.gz", hash = "sha256:90d9d68ec373dce97a4a9ba3ec6a39cf10918e9c222fdf231074cfb668d14ea2"},
 ]
 django-filter = [
-    {file = "django-filter-2.3.0.tar.gz", hash = "sha256:11e63dd759835d9ba7a763926ffb2662cf8a6dcb4c7971a95064de34dbc7e5af"},
-    {file = "django_filter-2.3.0-py3-none-any.whl", hash = "sha256:616848eab6fc50193a1b3730140c49b60c57a3eda1f7fc57fa8505ac156c6c75"},
+    {file = "django-filter-2.4.0.tar.gz", hash = "sha256:84e9d5bb93f237e451db814ed422a3a625751cbc9968b484ecc74964a8696b06"},
+    {file = "django_filter-2.4.0-py3-none-any.whl", hash = "sha256:e00d32cebdb3d54273c48f4f878f898dced8d5dfaad009438fe61ebdf535ace1"},
 ]
 django-js-asset = [
     {file = "django-js-asset-1.2.2.tar.gz", hash = "sha256:c163ae80d2e0b22d8fb598047cd0dcef31f81830e127cfecae278ad574167260"},

@@ -158,21 +158,13 @@ class LongTaskSLZ(serializers.Serializer):
         if obj.type == TaskType.GROUP_AUTHORIZATION.value:
             id = args[0]["id"]
             object = [
-                {
-                    "type": LongTaskObjectType.GROUP.value,
-                    "id": id,
-                    "name": self._group_name_dict.get(int(id), "")
-                }
+                {"type": LongTaskObjectType.GROUP.value, "id": id, "name": self._group_name_dict.get(int(id), "")}
             ]
 
         elif obj.type == TaskType.TEMPLATE_UPDATE.value:
             id = args[0]
             object = [
-                {
-                    "type": LongTaskObjectType.TEMPLATE.value,
-                    "id": id,
-                    "name": self._template_name_dict.get(id, "")
-                }
+                {"type": LongTaskObjectType.TEMPLATE.value, "id": id, "name": self._template_name_dict.get(id, "")}
             ]
 
         return object

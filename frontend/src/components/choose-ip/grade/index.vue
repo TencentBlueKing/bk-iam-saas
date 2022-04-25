@@ -1033,6 +1033,8 @@
                     ancestorItem.type = this.curChain[node.level].id;
                 }
 
+                ancestorItem.id = node.id;
+
                 if (node.parentChain.length) {
                     parentData = node.parentChain.reduce((p, e) => {
                         p.push({
