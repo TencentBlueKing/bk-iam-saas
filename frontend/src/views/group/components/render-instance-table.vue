@@ -751,10 +751,24 @@
 
             // 设置正常粘贴InstancesDisplayData
             setNomalInstancesDisplayData (data, key) {
-                data.instancesDisplayData[key] = data.instances.map(e => ({
-                    id: e.id,
-                    name: e.name
-                }));
+                this.selectedIndex = data.aggregateResourceType.findIndex(e => e.id === key);
+                const defaultSelectList = this.getScopeActionResource(
+                    data.actions,
+                    key,
+                    data.system_id
+                ).map(e => e.id);
+                if (!defaultSelectList.length) return;
+                data.instancesDisplayData[key] = [];
+                data.instances.forEach(e => {
+                    if (defaultSelectList.includes(e.id)) {
+                        data.instancesDisplayData[key].push(
+                            {
+                                id: e.id,
+                                name: e.name
+                            }
+                        );
+                    }
+                });
             },
 
             showAggregateResourceInstance (data, index) {
@@ -1134,8 +1148,12 @@
                         return;
                     }
                     // 预计算是否存在 聚合后的数据 可以粘贴
-                    const flag = this.tableList.some(item => !!item.isAggregate
-                        && `${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey);
+                    // const flag = this.tableList.some(item => !!item.isAggregate
+                    //     && `${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey);
+                    const flag = this.tableList.some(item => {
+                        return !!item.isAggregate
+                            && item.aggregateResourceType.some(e => `${e.system_id}${e.id}` === this.curCopyKey);
+                    });
                     if (flag) {
                         if (this.curCopyData.length < 1) {
                             tempCurData = [];
@@ -1201,14 +1219,16 @@
                                     });
                                 }
                             } else {
-                                if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
-                                    this.instanceKey = item.aggregateResourceType[item.selectedIndex].id;
-                                    item.instances = _.cloneDeep(tempArrgegateData);
-                                    this.setNomalInstancesDisplayData(item, this.instanceKey);
-                                    item.isError = false;
-                                    this.instanceKey = ''; // 重置
-                                    this.$emit('on-select', item);
-                                }
+                                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                                    if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
+                                        item.instances = _.cloneDeep(tempArrgegateData);
+                                        this.instanceKey = aggregateResourceItem.id;
+                                        this.setNomalInstancesDisplayData(item, this.instanceKey);
+                                        this.instanceKey = ''; // 重置
+                                        item.isError = false;
+                                    }
+                                });
+                                this.$emit('on-select', item);
                             }
                         });
                     }
