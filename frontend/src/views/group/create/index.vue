@@ -46,6 +46,7 @@
                         is-edit
                         mode="create"
                         ref="resInstanceTableRef"
+                        :is-group="isGroup && !isSuperManager"
                         :list="tableList"
                         :authorization="curAuthorizationData"
                         :original-list="tableListBackup"
@@ -187,7 +188,8 @@
                     isShow: false,
                     id: ''
                 },
-                curMap: null
+                curMap: null,
+                isGroup: true
             };
         },
         computed: {
@@ -262,6 +264,9 @@
             },
             isRatingManager () {
                 return this.user.role.type === 'rating_manager';
+            },
+            isSuperManager () {
+                return this.user.role.type === 'super_manager';
             },
             curAuthorizationData () {
                 const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
@@ -684,6 +689,7 @@
                     tempList.push(...list);
                 });
                 this.tableList = _.cloneDeep(tempList);
+                console.log('this.tableList', this.tableList);
             },
 
             setInstancesDisplayData (data) {
