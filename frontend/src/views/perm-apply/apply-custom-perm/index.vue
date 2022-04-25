@@ -1349,7 +1349,6 @@
                     });
                     return arr;
                 })();
-                console.log('instances', instances);
                 let selectPath = instances[0].path;
                 if (instances.length > 0) {
                     this.aggregationsTableData.forEach(item => {

@@ -269,7 +269,6 @@
                 });
 
                 this.tableList.push(...tempList);
-                console.log('this.tableList', this.tableList);
                 this.tableListBackup = _.cloneDeep(this.tableList);
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
@@ -332,7 +331,6 @@
                     });
                     return arr;
                 })();
-                console.log('instances', instances);
                 if (instances.length > 0) {
                     const actions = this.curMap.get(payload.aggregationId);
                     actions.forEach(item => {
