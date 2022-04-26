@@ -558,17 +558,19 @@
                 if (conditions.length < 1) {
                     return [];
                 }
-                const instances = actions.map(item =>
-                    (
+                const instances = actions.map(item => {
+                    return (
                         item.resource_groups[0].related_resource_types[0].condition[0]
                         && item.resource_groups[0].related_resource_types[0].condition[0].instances
-                    ) || []
+                    ).filter(e => e.type === id) || [];
+                }
+                    
                 );
                 const tempData = [];
-                const resources = instances.map(item => item[this.selectedIndex] && item[this.selectedIndex].path)
-                    .map(item => item && item.map(v => v.map(_ => _.id)));
+                const resources = instances.map(item => item[0]
+                    && item[0].path).map(item => item && item.map(v => v.map(_ => _.id)));
                 const resourceList = instances
-                    .map(item => item[this.selectedIndex] && item[this.selectedIndex].path)
+                    .map(item => item[0] && item[0].path)
                     .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
                     .flat(2);
                 resources.forEach(item => {
