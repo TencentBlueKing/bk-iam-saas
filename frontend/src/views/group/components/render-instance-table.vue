@@ -176,7 +176,6 @@
             :show.sync="isShowAggregateSideslider"
             :params="aggregateResourceParams"
             :value="aggregateValue"
-            :is-group="isGroup"
             :default-list="defaultSelectList"
             @on-selected="handlerSelectAggregateRes" />
 
@@ -558,14 +557,12 @@
                 if (conditions.length < 1) {
                     return [];
                 }
+
                 const instances = actions.map(item => {
-                    return (
-                        item.resource_groups[0].related_resource_types[0].condition[0]
-                        && item.resource_groups[0].related_resource_types[0].condition[0].instances
-                    ).filter(e => e.type === id) || [];
-                }
-                    
-                );
+                    const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
+                        && item.resource_groups[0].related_resource_types[0].condition[0].instances;
+                    return (instancesItem && instancesItem.filter(e => e.type === id)) || [];
+                });
                 const tempData = [];
                 const resources = instances.map(item => item[0]
                     && item[0].path).map(item => item && item.map(v => v.map(_ => _.id)));
@@ -575,7 +572,7 @@
                     .flat(2);
                 resources.forEach(item => {
                     item && item.forEach(subItem => {
-                        if (resources.every(v => v.some(vItem => vItem[0] === subItem[0]))) {
+                        if (resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]))) {
                             tempData.push(subItem[0]);
                         }
                     });
