@@ -176,6 +176,7 @@
             :show.sync="isShowAggregateSideslider"
             :params="aggregateResourceParams"
             :value="aggregateValue"
+            :is-group="isGroup"
             :default-list="defaultSelectList"
             @on-selected="handlerSelectAggregateRes" />
 
@@ -278,6 +279,10 @@
                 default: false
             },
             isAllExpanded: {
+                type: Boolean,
+                default: false
+            },
+            isGroup: {
                 type: Boolean,
                 default: false
             }
@@ -553,21 +558,23 @@
                 if (conditions.length < 1) {
                     return [];
                 }
-                const instances = actions.map(item =>
-                    (
+                const instances = actions.map(item => {
+                    return (
                         item.resource_groups[0].related_resource_types[0].condition[0]
                         && item.resource_groups[0].related_resource_types[0].condition[0].instances
-                    ) || []
+                    ).filter(e => e.type === id) || [];
+                }
+                    
                 );
                 const tempData = [];
-                const resources = instances.map(item => item[this.selectedIndex].path)
-                    .map(item => item.map(v => v.map(_ => _.id)));
+                const resources = instances.map(item => item[0]
+                    && item[0].path).map(item => item && item.map(v => v.map(_ => _.id)));
                 const resourceList = instances
-                    .map(item => item[this.selectedIndex].path)
-                    .map(item => item.map(v => v.map(({ id, name }) => ({ id, name }))))
+                    .map(item => item[0] && item[0].path)
+                    .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
                     .flat(2);
                 resources.forEach(item => {
-                    item.forEach(subItem => {
+                    item && item.forEach(subItem => {
                         if (resources.every(v => v.some(vItem => vItem[0] === subItem[0]))) {
                             tempData.push(subItem[0]);
                         }
@@ -653,7 +660,7 @@
                     const instances = (() => {
                         const arr = [];
                         const { id, name, system_id } = this.curAggregateResourceType;
-                        this.curCopyData.forEach(v => {
+                        this.curCopyData && this.curCopyData.forEach(v => {
                             const curItem = arr.find(_ => _.type === id);
                             if (curItem) {
                                 curItem.path.push([{
@@ -742,6 +749,28 @@
                     });
                     return p;
                 }, {});
+            },
+
+            // 设置正常粘贴InstancesDisplayData
+            setNomalInstancesDisplayData (data, key) {
+                this.selectedIndex = data.aggregateResourceType.findIndex(e => e.id === key);
+                const defaultSelectList = this.getScopeActionResource(
+                    data.actions,
+                    key,
+                    data.system_id
+                ).map(e => e.id);
+                if (!defaultSelectList.length) return;
+                data.instancesDisplayData[key] = [];
+                data.instances.forEach(e => {
+                    if (defaultSelectList.includes(e.id)) {
+                        data.instancesDisplayData[key].push(
+                            {
+                                id: e.id,
+                                name: e.name
+                            }
+                        );
+                    }
+                });
             },
 
             showAggregateResourceInstance (data, index) {
@@ -1121,8 +1150,12 @@
                         return;
                     }
                     // 预计算是否存在 聚合后的数据 可以粘贴
-                    const flag = this.tableList.some(item => !!item.isAggregate
-                        && `${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey);
+                    // const flag = this.tableList.some(item => !!item.isAggregate
+                    //     && `${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey);
+                    const flag = this.tableList.some(item => {
+                        return !!item.isAggregate
+                            && item.aggregateResourceType.some(e => `${e.system_id}${e.id}` === this.curCopyKey);
+                    });
                     if (flag) {
                         if (this.curCopyData.length < 1) {
                             tempCurData = [];
@@ -1166,7 +1199,7 @@
                                     });
                                 });
                             } else {
-                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                                if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
                                     item.instances = _.cloneDeep(tempArrgegateData);
                                     item.isError = false;
                                     this.$emit('on-select', item);
@@ -1188,11 +1221,16 @@
                                     });
                                 }
                             } else {
-                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
-                                    item.instances = _.cloneDeep(tempArrgegateData);
-                                    item.isError = false;
-                                    this.$emit('on-select', item);
-                                }
+                                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                                    if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
+                                        item.instances = _.cloneDeep(tempArrgegateData);
+                                        this.instanceKey = aggregateResourceItem.id;
+                                        this.setNomalInstancesDisplayData(item, this.instanceKey);
+                                        this.instanceKey = ''; // 重置
+                                        item.isError = false;
+                                    }
+                                });
+                                this.$emit('on-select', item);
                             }
                         });
                     }
