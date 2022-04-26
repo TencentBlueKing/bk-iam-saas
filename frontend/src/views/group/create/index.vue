@@ -46,7 +46,6 @@
                         is-edit
                         mode="create"
                         ref="resInstanceTableRef"
-                        :is-group="isGroup && !isSuperManager"
                         :list="tableList"
                         :authorization="curAuthorizationData"
                         :original-list="tableListBackup"
@@ -188,8 +187,7 @@
                     isShow: false,
                     id: ''
                 },
-                curMap: null,
-                isGroup: true
+                curMap: null
             };
         },
         computed: {

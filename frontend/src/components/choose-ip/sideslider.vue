@@ -93,10 +93,6 @@
             defaultList: {
                 type: Array,
                 default: () => []
-            },
-            isGroup: {
-                type: Boolean,
-                default: false
             }
         },
         data () {
@@ -142,11 +138,7 @@
                         if (this.isHasDefaultData) {
                             this.setSelectList(this.defaultList);
                         } else {
-                            if (this.isGroup) {
-                                this.setSelectList(this.defaultList);
-                            } else {
-                                this.fetchData(true);
-                            }
+                            this.fetchData(true);
                         }
                     } else {
                         window.changeAlert = this.pageChangeAlertMemo;
