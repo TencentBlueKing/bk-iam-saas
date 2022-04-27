@@ -51,21 +51,35 @@ export MYSQL_USER="root"
 export MYSQL_PASSWORD=""
 export MYSQL_HOST="localhost"
 export MYSQL_PORT=3306
-export REDIS_HOST="localhost"             # redis host
-export REDIS_PORT=6379                    # redis port
-export REDIS_PASSWORD=""                  # redis password
-export REDIS_DB=0                         # redis db
+export REDIS_HOST="localhost"                        # redis host
+export REDIS_PORT=6379                               # redis port
+export REDIS_PASSWORD=""                             # redis password
+export REDIS_DB=0                                    # redis db
+export BROKER_URL="amqp://guest:guest@localhost:5672//"
+export BK_IAM_V3_INNER_HOST="http://127.0.0.1:9000"  # 权限中心后台地址
 ```
 
+或者在config目录下新增.env文件, 写入变量, 程序启动时会自动加载:
 
-2) 在项目config目录下添加本地配置 local_settings.py
-
-```python
-# -*- coding: utf-8 -*-
-BK_IAM_HOST = "http://127.0.0.1:9000"  # 权限中心后台地址
-
-BROKER_URL = "amqp://guest:guest@localhost:5672//"  # rabbitmq 地址
 ```
+APP_ID="bk_iam"
+APP_TOKEN="{你的权限中心应用 TOKEN}"
+BK_PAAS_HOST="{开发环境 PAAS 域名}"  # 蓝鲸智云开发者中心的域名，形如：http://paas.bking.com
+APP_URL="{你的权限中心访问域名}"      # 蓝鲸智权限中心的域名，形如：http://iam.bking.com:8000
+BKAPP_ENABLE_PYINSTRUMENT="true"
+MYSQL_NAME="bk_iam"
+MYSQL_USER="root"
+MYSQL_PASSWORD=""
+MYSQL_HOST="localhost"
+MYSQL_PORT=3306
+REDIS_HOST="localhost"                        # redis host
+REDIS_PORT=6379                               # redis port
+REDIS_PASSWORD=""                             # redis password
+REDIS_DB=0                                    # redis db
+BROKER_URL="amqp://guest:guest@localhost:5672//"
+BK_IAM_V3_INNER_HOST="http://127.0.0.1:9000"  # 权限中心后台地址
+```
+
 
 ## 创建并初始化数据库  
 

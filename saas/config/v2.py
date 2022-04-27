@@ -125,7 +125,7 @@ CORS_ORIGIN_WHITELIST = (
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 # 站点URL
-SITE_URL = env.str("BK_SITE_URL", default="/o/%s/" % APP_CODE)
+SITE_URL = env.str("BK_SITE_URL", default=f"/o/{APP_CODE}/")
 FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
