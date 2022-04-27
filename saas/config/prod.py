@@ -10,8 +10,8 @@ specific language governing permissions and limitations under the License.
 from .default import *  # noqa
 
 if "BKPAAS_ENVIRONMENT" in os.environ:
-    # V3 Smart/容器化 配置
-    from .v3 import *  # noqa
+    # 容器化 配置
+    from .ce import *  # noqa
 else:
     # V2 Smart 配置
     from .v2 import *  # noqa

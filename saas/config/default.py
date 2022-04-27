@@ -9,14 +9,21 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
 import os
 
 import djcelery
+import environ
 from celery.schedules import crontab
+
+# environ
+env = environ.Env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# load environment variables from .env file
+if os.path.isfile(os.path.join(BASE_DIR, ".env")):
+    environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -65,7 +72,7 @@ INSTALLED_APPS = [
 ]
 
 # 登录中间件
-_LOGIN_MIDDLEWARE = os.getenv("BKAPP_LOGIN_MIDDLEWARE", "backend.account.middlewares.LoginMiddleware")
+_LOGIN_MIDDLEWARE = env.str("BKAPP_LOGIN_MIDDLEWARE", default="backend.account.middlewares.LoginMiddleware")
 
 MIDDLEWARE = [
     "backend.common.middlewares.CustomProfilerMiddleware",
@@ -110,7 +117,7 @@ DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
-AUTHENTICATION_BACKENDS = (os.getenv("BKAPP_AUTHENTICATION_BACKEND", "backend.account.backends.TokenBackend"),)
+AUTHENTICATION_BACKENDS = (env.str("BKAPP_AUTHENTICATION_BACKEND", default="backend.account.backends.TokenBackend"),)
 AUTH_USER_MODEL = "account.User"
 AUTH_PASSWORD_VALIDATORS = []
 
@@ -160,7 +167,7 @@ BROKER_CONNECTION_TIMEOUT = 1  # 单位秒
 # CELERY与RabbitMQ增加60秒心跳设置项
 BROKER_HEARTBEAT = 60
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
-CELERYD_CONCURRENCY = os.getenv("BK_CELERYD_CONCURRENCY", 2)
+CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
 # 与周期任务配置的定时相关UTC
 CELERY_ENABLE_UTC = True
 # 周期任务beat生产者来源
@@ -248,29 +255,29 @@ CELERYBEAT_SCHEDULE = {
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
 # V2 Smart只有BK_BROKER_URL
-if "RABBITMQ_HOST" in os.environ:
+if "RABBITMQ_HOST" in env:
     BROKER_URL = "amqp://{user}:{password}@{host}:{port}/{vhost}".format(
-        user=os.getenv("RABBITMQ_USER"),
-        password=os.getenv("RABBITMQ_PASSWORD"),
-        host=os.getenv("RABBITMQ_HOST"),
-        port=os.getenv("RABBITMQ_PORT"),
-        vhost=os.getenv("RABBITMQ_VHOST"),
+        user=env.str("RABBITMQ_USER"),
+        password=env.str("RABBITMQ_PASSWORD"),
+        host=env.str("RABBITMQ_HOST"),
+        port=env.str("RABBITMQ_PORT"),
+        vhost=env.str("RABBITMQ_VHOST"),
     )
 else:
-    BROKER_URL = os.getenv("BK_BROKER_URL")
+    BROKER_URL = env.str("BK_BROKER_URL", default="")
 # 使用djcelery配合celery，支持周期任务通过DB设置等场景
 djcelery.setup_loader()
 
 # tracing: sentry support
-SENTRY_DSN = os.getenv("SENTRY_DSN")
+SENTRY_DSN = env.str("SENTRY_DSN", default="")
 # tracing: otel 相关配置
 # if enable, default false
-ENABLE_OTEL_TRACE = os.getenv("BKAPP_ENABLE_OTEL_TRACE", "False").lower() == "true"
-BKAPP_OTEL_INSTRUMENT_DB_API = os.getenv("BKAPP_OTEL_INSTRUMENT_DB_API", "True").lower() == "true"
-BKAPP_OTEL_SERVICE_NAME = os.getenv("BKAPP_OTEL_SERVICE_NAME") or "bk-iam"
-BKAPP_OTEL_SAMPLER = os.getenv("BKAPP_OTEL_SAMPLER", "parentbased_always_off")
-BKAPP_OTEL_BK_DATA_ID = int(os.getenv("BKAPP_OTEL_BK_DATA_ID", "-1"))
-BKAPP_OTEL_GRPC_HOST = os.getenv("BKAPP_OTEL_GRPC_HOST")
+ENABLE_OTEL_TRACE = env.bool("BKAPP_ENABLE_OTEL_TRACE", default=False)
+BKAPP_OTEL_INSTRUMENT_DB_API = env.bool("BKAPP_OTEL_INSTRUMENT_DB_API", default=True)
+BKAPP_OTEL_SERVICE_NAME = env.str("BKAPP_OTEL_SERVICE_NAME", default="bk-iam")
+BKAPP_OTEL_SAMPLER = env.str("BKAPP_OTEL_SAMPLER", default="parentbased_always_off")
+BKAPP_OTEL_BK_DATA_ID = env.int("BKAPP_OTEL_BK_DATA_ID", default=-1)
+BKAPP_OTEL_GRPC_HOST = env.str("BKAPP_OTEL_GRPC_HOST", default="")
 if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
 
@@ -280,7 +287,7 @@ MAX_DEBUG_TRACE_TTL = 7 * 24 * 60 * 60  # 7天
 MAX_DEBUG_TRACE_COUNT = 1000
 
 # profile record
-ENABLE_PYINSTRUMENT = os.getenv("BKAPP_ENABLE_PYINSTRUMENT", "False").lower() == "true"  # 需要开启时则配置环境变量
+ENABLE_PYINSTRUMENT = env.bool("BKAPP_ENABLE_PYINSTRUMENT", default=False)  # 需要开启时则配置环境变量
 PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
 
 
@@ -291,89 +298,86 @@ PYINSTRUMENT_PROFILE_DIR = os.path.join(BASE_DIR, "profiles")
 # 注意：请在首次提测和上线前修改，之后的修改将不会生效
 INIT_SUPERUSER = []
 
-# 是否是smart部署方式
-IS_SMART_DEPLOY = os.getenv("BKAPP_IS_SMART_DEPLOY", "True").lower() == "true"
-
 # version log
 VERSION_LOG_MD_FILES_DIR = os.path.join(BASE_DIR, "resources/version_log")
 
 # iam host
-BK_IAM_HOST = os.getenv("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:9081")
-BK_IAM_HOST_TYPE = os.getenv("BKAPP_IAM_HOST_TYPE", "direct")  # direct/apigateway
+BK_IAM_HOST = env.str("BK_IAM_V3_INNER_HOST", default="http://bkiam.service.consul:9081")
+BK_IAM_HOST_TYPE = env.str("BKAPP_IAM_HOST_TYPE", default="direct")  # direct/apigateway
 
 # iam engine host
-BK_IAM_ENGINE_HOST = os.getenv("BKAPP_IAM_ENGINE_HOST")
-BK_IAM_ENGINE_HOST_TYPE = os.getenv("BKAPP_IAM_ENGINE_HOST_TYPE", "direct")  # direct/apigateway
+BK_IAM_ENGINE_HOST = env.str("BKAPP_IAM_ENGINE_HOST", default="")
+BK_IAM_ENGINE_HOST_TYPE = env.str("BKAPP_IAM_ENGINE_HOST_TYPE", default="direct")  # direct/apigateway
 
 # authorization limit
 # 授权对象授权用户组, 模板的最大限制
 SUBJECT_AUTHORIZATION_LIMIT = {
     # -------- 用户 ---------
     # 用户能加入的用户组的最大数量
-    "default_subject_group_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", 100)),
+    "default_subject_group_limit": env.int("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", default=100),
     # 用户能加入的分级管理员的最大数量
-    "subject_grade_manager_limit": int(os.getenv("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", 100)),
+    "subject_grade_manager_limit": env.int("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", default=100),
     # -------- 用户组 ---------
     # 用户组能加入同一个系统的权限模板的最大数量
-    "default_subject_system_template_limit": int(os.getenv("BKAPP_DEFAULT_SUBJECT_SYSTEM_TEMPLATE_LIMIT", 10)),
+    "default_subject_system_template_limit": env.int("BKAPP_DEFAULT_SUBJECT_SYSTEM_TEMPLATE_LIMIT", default=10),
     "subject_system_template_limit": {
         # key: system_id, value: int
     },  # 系统可自定义配置的 用户组能加入同一个系统的权限模板的最大数量
     # 用户组成员最大数量
-    "group_member_limit": int(os.getenv("BKAPP_GROUP_MEMBER_LIMIT", 500)),
+    "group_member_limit": env.int("BKAPP_GROUP_MEMBER_LIMIT", default=500),
     # 用户组单次授权模板数
-    "group_auth_template_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", 10)),
+    "group_auth_template_once_limit": env.int("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", default=10),
     # 用户组单次授权的系统数
-    "group_auth_system_once_limit": int(os.getenv("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", 10)),
+    "group_auth_system_once_limit": env.int("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", default=10),
     # -------- 分级管理员 ---------
     # 一个分级管理员可创建的用户组个数
-    "grade_manager_group_limit": int(os.getenv("BKAPP_GRADE_MANAGER_GROUP_LIMIT", 100)),
+    "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=100),
     # 一个分级管理员可添加的成员个数
-    "grade_manager_member_limit": int(os.getenv("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", 100)),
+    "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=100),
     # 默认每个系统可创建的分级管理数量
-    "default_grade_manager_of_system_limit": int(os.getenv("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", 100)),
+    "default_grade_manager_of_system_limit": env.int("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", default=100),
     # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
-    "grade_manager_of_specified_systems_limit": os.getenv("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", ""),
+    "grade_manager_of_specified_systems_limit": env.str("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", default=""),
 }
 # 授权的实例最大数量限制
-AUTHORIZATION_INSTANCE_LIMIT = int(os.getenv("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", 200))
+AUTHORIZATION_INSTANCE_LIMIT = env.int("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", default=200)
 # 策略中实例数量的最大限制
-SINGLE_POLICY_MAX_INSTANCES_LIMIT = int(os.getenv("BKAPP_SINGLE_POLICY_MAX_INSTANCES_LIMIT", 10000))
+SINGLE_POLICY_MAX_INSTANCES_LIMIT = env.int("BKAPP_SINGLE_POLICY_MAX_INSTANCES_LIMIT", default=10000)
 # 一次申请策略中中新增实例数量限制
-APPLY_POLICY_ADD_INSTANCES_LIMIT = int(os.getenv("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", 20))
+APPLY_POLICY_ADD_INSTANCES_LIMIT = env.int("BKAPP_APPLY_POLICY_ADD_INSTANCES_LIMIT", default=20)
 # 临时权限一个操作最大数量
-TEMPORARY_POLICY_LIMIT = int(os.getenv("BKAPP_TEMPORARY_POLICY_LIMIT", 10))
+TEMPORARY_POLICY_LIMIT = env.int("BKAPP_TEMPORARY_POLICY_LIMIT", default=10)
 # 最长已过期权限删除期限
 MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 # 最长已过期临时权限期限
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
-MAX_LENGTH_OF_RESOURCE_ID = int(os.getenv("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", 36))
+MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
 
 # 用于发布订阅的Redis
-PUB_SUB_REDIS_HOST = os.getenv("BKAPP_PUB_SUB_REDIS_HOST")
-PUB_SUB_REDIS_PORT = os.getenv("BKAPP_PUB_SUB_REDIS_PORT")
-PUB_SUB_REDIS_PASSWORD = os.getenv("BKAPP_PUB_SUB_REDIS_PASSWORD")
-PUB_SUB_REDIS_DB = os.getenv("BKAPP_PUB_SUB_REDIS_DB", 0)
+PUB_SUB_REDIS_HOST = env.str("BKAPP_PUB_SUB_REDIS_HOST", default="")
+PUB_SUB_REDIS_PORT = env.str("BKAPP_PUB_SUB_REDIS_PORT", default="")
+PUB_SUB_REDIS_PASSWORD = env.str("BKAPP_PUB_SUB_REDIS_PASSWORD", default="")
+PUB_SUB_REDIS_DB = env.int("BKAPP_PUB_SUB_REDIS_DB", default=0)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
-    "enable_model_build": os.getenv("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", "False").lower() == "true",
-    "enable_permission_handover": os.getenv("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", "True").lower() == "true",
+    "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
+    "enable_permission_handover": env.bool("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", default=True),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
-BK_APIGW_PUBLIC_KEY = os.getenv("BKAPP_APIGW_PUBLIC_KEY")
+BK_APIGW_PUBLIC_KEY = env.str("BKAPP_APIGW_PUBLIC_KEY", default="")
 
 # apigateway 相关配置
 # NOTE: it sdk will read settings.APP_CODE and settings.APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = os.getenv("BK_API_URL_TMPL", "")
-BK_IAM_BACKEND_SVC = os.getenv("BK_IAM_BACKEND_SVC", "bkiam-web")
-BK_IAM_SAAS_API_SVC = os.getenv("BK_IAM_SAAS_API_SVC", "bkiam-saas-api")
-BK_IAM_ENGINE_SVC = os.getenv("BK_IAM_ENGINE_SVC", "bkiam-search-engine")
+BK_API_URL_TMPL = env.str("BK_API_URL_TMPL", default="")
+BK_IAM_BACKEND_SVC = env.str("BK_IAM_BACKEND_SVC", default="bkiam-web")
+BK_IAM_SAAS_API_SVC = env.str("BK_IAM_SAAS_API_SVC", default="bkiam-saas-api")
+BK_IAM_ENGINE_SVC = env.str("BK_IAM_ENGINE_SVC", default="bkiam-search-engine")
 BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/docs/")
 
 # Requests pool config
-REQUESTS_POOL_CONNECTIONS = int(os.getenv("REQUESTS_POOL_CONNECTIONS", 20))
-REQUESTS_POOL_MAXSIZE = int(os.getenv("REQUESTS_POOL_MAXSIZE", 20))
+REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
+REQUESTS_POOL_MAXSIZE = env.int("REQUESTS_POOL_MAXSIZE", default=20)

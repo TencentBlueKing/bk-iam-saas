@@ -46,6 +46,11 @@ export APP_TOKEN="{你的权限中心应用 TOKEN}"
 export BK_PAAS_HOST="{开发环境 PAAS 域名}"  # 蓝鲸智云开发者中心的域名，形如：http://paas.bking.com
 export APP_URL="{你的权限中心访问域名}"      # 蓝鲸智权限中心的域名，形如：http://iam.bking.com:8000
 export BKAPP_ENABLE_PYINSTRUMENT="true"
+export MYSQL_NAME="bk_iam"
+export MYSQL_USER="root"
+export MYSQL_PASSWORD=""
+export MYSQL_HOST="localhost"
+export MYSQL_PORT=3306
 export BKAPP_REDIS_HOST="localhost"       # redis host
 export BKAPP_REDIS_PORT=6379              # redis port
 export BKAPP_REDIS_PASSWORD=""            # redis password
@@ -57,17 +62,6 @@ export BKAPP_REDIS_DB=0                   # redis db
 
 ```python
 # -*- coding: utf-8 -*-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "bk_iam",
-        "USER": "",  # 本地数据库账号
-        "PASSWORD": "",  # 本地数据库密码
-        "HOST": "localhost",
-        "PORT": "3306",
-    }
-}
-
 BK_IAM_HOST = "http://127.0.0.1:9000"  # 权限中心后台地址
 
 BROKER_URL = "amqp://guest:guest@localhost:5672//"  # rabbitmq 地址
