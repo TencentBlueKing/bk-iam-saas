@@ -22,8 +22,7 @@ env = environ.Env()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # load environment variables from .env file
-if os.path.isfile(os.path.join(BASE_DIR, ".env")):
-    environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+environ.Env.read_env()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
