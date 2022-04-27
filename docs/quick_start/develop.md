@@ -51,10 +51,10 @@ export MYSQL_USER="root"
 export MYSQL_PASSWORD=""
 export MYSQL_HOST="localhost"
 export MYSQL_PORT=3306
-export BKAPP_REDIS_HOST="localhost"       # redis host
-export BKAPP_REDIS_PORT=6379              # redis port
-export BKAPP_REDIS_PASSWORD=""            # redis password
-export BKAPP_REDIS_DB=0                   # redis db
+export REDIS_HOST="localhost"             # redis host
+export REDIS_PORT=6379                    # redis port
+export REDIS_PASSWORD=""                  # redis password
+export REDIS_DB=0                         # redis db
 ```
 
 
