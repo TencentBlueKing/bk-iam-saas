@@ -62,15 +62,17 @@ class ESBAuthentication(BaseAuthentication):
 
     def verify_credentials(self, credentials):
         public_key = self._get_jwt_public_key(credentials["from"])
-        jwt_payload = self._decode_jwt(credentials["jwt"], public_key)
+        jwt_header = jwt.get_unverified_header(credentials["jwt"])
+
+        jwt_payload = self._decode_jwt(credentials["jwt"], public_key, issuer=jwt_header.get("iss") or "APIGW")
         if not jwt_payload:
             return False, None
 
         return True, jwt_payload
 
-    def _decode_jwt(self, content, public_key):
+    def _decode_jwt(self, content, public_key, issuer="APIGW"):
         try:
-            return jwt.decode(content, public_key, issuer="APIGW")
+            return jwt.decode(content, public_key, issuer=issuer)
         except Exception:  # pylint: disable=broad-except
             logger.exception("decode jwt fail, jwt: %s", content)
             return None
