@@ -14,34 +14,34 @@ import string
 from urllib.parse import urlparse
 
 from . import RequestIDFilter
-from .default import BASE_DIR
+from .default import BASE_DIR, env
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQL_NAME"),
-        "USER": os.getenv("MYSQL_USER"),
-        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
-        "HOST": os.getenv("MYSQL_HOST"),
-        "PORT": os.getenv("MYSQL_PORT"),
+        "NAME": env.str("MYSQL_NAME"),
+        "USER": env.str("MYSQL_USER"),
+        "PASSWORD": env.str("MYSQL_PASSWORD"),
+        "HOST": env.str("MYSQL_HOST"),
+        "PORT": env.int("MYSQL_PORT"),
     },
     "audit": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("AUDIT_DB_NAME") or os.getenv("MYSQL_NAME"),
-        "USER": os.getenv("AUDIT_DB_USERNAME") or os.getenv("MYSQL_USER"),
-        "PASSWORD": os.getenv("AUDIT_DB_PASSWORD") or os.getenv("MYSQL_PASSWORD"),
-        "HOST": os.getenv("AUDIT_DB_HOST") or os.getenv("MYSQL_HOST"),
-        "PORT": os.getenv("AUDIT_DB_PORT") or os.getenv("MYSQL_PORT"),
+        "NAME": env.str("AUDIT_DB_NAME", default=env.str("MYSQL_NAME")),
+        "USER": env.str("AUDIT_DB_USERNAME", default=env.str("MYSQL_USER")),
+        "PASSWORD": env.str("AUDIT_DB_PASSWORD", default=env.str("MYSQL_PASSWORD")),
+        "HOST": env.str("AUDIT_DB_HOST", default=env.str("MYSQL_HOST")),
+        "PORT": env.int("AUDIT_DB_PORT", default=env.int("MYSQL_PORT")),
     },
 }
 
 # cache
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-REDIS_DB = os.getenv("REDIS_DB", 0)
+REDIS_HOST = env.str("REDIS_HOST")
+REDIS_PORT = env.str("REDIS_PORT")
+REDIS_PASSWORD = env.str("REDIS_PASSWORD")
+REDIS_DB = env.int("REDIS_DB", default=0)
 
 CACHES = {
     # 默认缓存是本地内存，使用最近最少使用（LRU）的淘汰策略，使用pickle 序列化数据
@@ -90,15 +90,15 @@ DJANGO_REDIS_LOGGER = "app"
 
 
 # 判断是否为本地开发环境
-IS_LOCAL = not os.getenv("BKPAAS_ENVIRONMENT", False)
+IS_LOCAL = not env.str("BKPAAS_ENVIRONMENT", default="")
 
-APP_CODE = BK_APP_CODE = os.getenv("BKPAAS_APP_CODE", "bk_iam")
-APP_SECRET = BK_APP_SECRET = os.getenv("BKPAAS_APP_SECRET", "af76be9c-2b24-4006-a68e-e66abcfd67af")
+APP_CODE = BK_APP_CODE = env.str("BKPAAS_APP_CODE", default="bk_iam")
+APP_SECRET = BK_APP_SECRET = env.str("BKPAAS_APP_SECRET", default="af76be9c-2b24-4006-a68e-e66abcfd67af")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = APP_SECRET
 
-APP_URL = os.getenv("BK_IAM_APP_URL", "")
+APP_URL = env.str("BK_IAM_APP_URL", default="")
 
 # csrf
 _BK_PAAS_HOST_PARSE_URL = urlparse(APP_URL)
@@ -125,18 +125,18 @@ CORS_ORIGIN_WHITELIST = (
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 # 站点URL
-SITE_URL = os.getenv("BKPAAS_SUB_PATH", "/")
+SITE_URL = env.str("BKPAAS_SUB_PATH", default="/")
 FORCE_SCRIPT_NAME = SITE_URL
 STATIC_URL = SITE_URL + "staticfiles/"
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 # 只对正式环境日志级别进行配置，可以在这里修改
-LOG_LEVEL = os.getenv("BKAPP_LOG_LEVEL", "ERROR")
+LOG_LEVEL = env.str("BKAPP_LOG_LEVEL", default="ERROR")
 _LOG_CLASS = "logging.handlers.RotatingFileHandler"
 if IS_LOCAL:
     LOG_LEVEL = "DEBUG"
     _LOG_DIR = os.path.join(os.path.dirname(BASE_DIR), "logs", APP_CODE)
-    _LOG_NAME_PREFIX = os.getenv("BKPAAS_LOG_NAME_PREFIX", APP_CODE)
+    _LOG_NAME_PREFIX = env.str("BKPAAS_LOG_NAME_PREFIX", default=APP_CODE)
     _LOGGING_FORMAT = {
         "format": (
             "%(levelname)s [%(asctime)s] %(pathname)s "
@@ -146,9 +146,9 @@ if IS_LOCAL:
         "datefmt": "%Y-%m-%d %H:%M:%S",
     }
 else:
-    _LOG_DIR = os.getenv("BKPAAS_APP_LOG_PATH", "/")
+    _LOG_DIR = env.str("BKPAAS_APP_LOG_PATH", default="/")
     _RAND_STR = "".join(random.sample(string.ascii_letters + string.digits, 4))
-    _LOG_NAME_PREFIX = "%s-%s" % (os.getenv("BKPAAS_PROCESS_TYPE"), _RAND_STR)
+    _LOG_NAME_PREFIX = "%s-%s" % (env.str("BKPAAS_PROCESS_TYPE", default=_RAND_STR))
 
     _LOGGING_FORMAT = {
         "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
@@ -287,16 +287,16 @@ LOGGING = {
 
 APP_API_URL = APP_URL  # 前后端分离架构下, APP_URL 与 APP_API_URL 不一样
 
-BK_COMPONENT_API_URL = os.getenv("BK_COMPONENT_API_URL")
+BK_COMPONENT_API_URL = env.str("BK_COMPONENT_API_URL", default="")
 BK_COMPONENT_INNER_API_URL = BK_COMPONENT_API_URL
 
-BK_ITSM_APP_URL = os.getenv("BK_ITSM_APP_URL")
+BK_ITSM_APP_URL = env.str("BK_ITSM_APP_URL", default="")
 
-LOGIN_SERVICE_URL = os.getenv("BK_LOGIN_URL", "/")
+LOGIN_SERVICE_URL = env.str("BK_LOGIN_URL", default="/")
 LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
 
 # 蓝鲸PASS平台URL
-BK_PAAS_HOST = os.getenv("BK_PAAS_HOST", os.getenv("BKPAAS_URL"))
+BK_PAAS_HOST = env.str("BK_PAAS_HOST", default=env.str("BKPAAS_URL", default=""))
 
 # 用于 用户认证、用户信息获取 的蓝鲸主机
-BK_PAAS_INNER_HOST = os.getenv("BK_PAAS2_URL", os.getenv("BK_PAAS_INNER_HOST", BK_PAAS_HOST))
+BK_PAAS_INNER_HOST = env.str("BK_PAAS2_URL", default=env.str("BK_PAAS_INNER_HOST", default=BK_PAAS_HOST))
