@@ -148,7 +148,7 @@ if IS_LOCAL:
 else:
     _LOG_DIR = env.str("BKPAAS_APP_LOG_PATH", default="/")
     _RAND_STR = "".join(random.sample(string.ascii_letters + string.digits, 4))
-    _LOG_NAME_PREFIX = "%s-%s" % (env.str("BKPAAS_PROCESS_TYPE", default=_RAND_STR))
+    _LOG_NAME_PREFIX = "%s-%s" % (env.str("BKPAAS_PROCESS_TYPE"), _RAND_STR)
 
     _LOGGING_FORMAT = {
         "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
