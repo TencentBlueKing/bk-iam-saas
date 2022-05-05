@@ -70,7 +70,7 @@ class ESBAuthentication(BaseAuthentication):
 
     def _decode_jwt(self, content, public_key):
         try:
-            return jwt.decode(content, public_key, issuer="APIGW")
+            return jwt.decode(content, public_key, options={"verify_iss": False})
         except Exception:  # pylint: disable=broad-except
             logger.exception("decode jwt fail, jwt: %s", content)
             return None
