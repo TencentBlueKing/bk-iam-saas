@@ -63,11 +63,13 @@
                     </template>
                     <template v-else>
                         <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                            <!-- <label class="resource-type-name">{{ row.aggregateResourceType[0].name }}</label> -->
-                            <div class="bk-button-group tab-button">
+                            <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">{{ row.aggregateResourceType[0].name }}</label>
+                            <div class="bk-button-group tab-button" v-else>
                                 <bk-button v-for="(item, index) in row.aggregateResourceType"
-                                    :key="item.id" @click="selectResourceType(index)"
-                                    :class="selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}</bk-button>
+                                    :key="item.id" @click="selectResourceType(row, index)"
+                                    :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
+                                    <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
+                                </bk-button>
                             </div>
                             <render-condition
                                 :ref="`condition_${$index}_aggregateRef`"
@@ -278,6 +280,10 @@
             isAllExpanded: {
                 type: Boolean,
                 default: false
+            },
+            isGroup: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -317,7 +323,9 @@
                 footerPosition: 'center',
                 newRow: '',
                 role: '',
-                selectedIndex: 0
+                selectedIndex: 0,
+                instanceKey: '',
+                curCopyDataId: ''
             };
         },
         computed: {
@@ -473,6 +481,7 @@
                     };
                 });
                 this.tableList[this.aggregateIndex].isError = false;
+                this.selectedIndex = this.tableList[this.aggregateIndex].selectedIndex;
                 const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
                 const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
                 this.tableList[this.aggregateIndex].instancesDisplayData = {
@@ -548,21 +557,22 @@
                 if (conditions.length < 1) {
                     return [];
                 }
-                const instances = actions.map(item =>
-                    (
-                        item.resource_groups[0].related_resource_types[0].condition[0]
-                        && item.resource_groups[0].related_resource_types[0].condition[0].instances
-                    ) || []
-                );
+
+                const instances = actions.map(item => {
+                    const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
+                        && item.resource_groups[0].related_resource_types[0].condition[0].instances;
+                    return (instancesItem && instancesItem.filter(e => e.type === id)) || [];
+                });
                 const tempData = [];
-                const resources = instances.map(item => item[0].path).map(item => item.map(v => v.map(_ => _.id)));
+                const resources = instances.map(item => item[0]
+                    && item[0].path).map(item => item && item.map(v => v.map(_ => _.id)));
                 const resourceList = instances
-                    .map(item => item[0].path)
-                    .map(item => item.map(v => v.map(({ id, name }) => ({ id, name }))))
+                    .map(item => item[0] && item[0].path)
+                    .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
                     .flat(2);
                 resources.forEach(item => {
-                    item.forEach(subItem => {
-                        if (resources.every(v => v.some(vItem => vItem[0] === subItem[0]))) {
+                    item && item.forEach(subItem => {
+                        if (resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]))) {
                             tempData.push(subItem[0]);
                         }
                     });
@@ -590,10 +600,12 @@
                 payload.canPaste = false;
             },
             handlerAggregateOnCopy (payload, index) {
+                this.instanceKey = payload.aggregateResourceType[payload.selectedIndex].id;
                 window.changeDialog = true;
-                this.curCopyKey = `${payload.aggregateResourceType.system_id}${payload.aggregateResourceType.id}`;
-                this.curAggregateResourceType = payload.aggregateResourceType;
-                this.curCopyData = _.cloneDeep(payload.instances);
+                this.curCopyKey = `${payload.aggregateResourceType[payload.selectedIndex].system_id}${payload.aggregateResourceType[payload.selectedIndex].id}`;
+                this.curAggregateResourceType = payload.aggregateResourceType[payload.selectedIndex];
+                this.curCopyData = _.cloneDeep(payload.instancesDisplayData[this.instanceKey]);
+                this.curCopyDataId = payload.aggregationId;
                 this.curCopyMode = 'aggregate';
                 this.showMessage(this.$t(`m.info['实例复制']`));
                 this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(true);
@@ -645,7 +657,7 @@
                     const instances = (() => {
                         const arr = [];
                         const { id, name, system_id } = this.curAggregateResourceType;
-                        this.curCopyData.forEach(v => {
+                        this.curCopyData && this.curCopyData.forEach(v => {
                             const curItem = arr.find(_ => _.type === id);
                             if (curItem) {
                                 curItem.path.push([{
@@ -677,19 +689,35 @@
                 }
                 this.tableList.forEach(item => {
                     if (!item.isAggregate) {
-                        item.related_resource_types.forEach((subItem, subItemIndex) => {
-                            if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                                subItem.condition = _.cloneDeep(tempCurData);
-                                subItem.isError = false;
-                                this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
-                            }
+                        item.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types
+                                && groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
+                                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                                        subItem.condition = _.cloneDeep(tempCurData);
+                                        subItem.isError = false;
+                                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
+                                    }
+                                });
                         });
                     } else {
-                        if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
-                            item.instances = _.cloneDeep(tempArrgegateData);
-                            item.isError = false;
-                            this.$emit('on-select', item);
-                        }
+                        item.aggregateResourceType.forEach(aggregateResourceItem => {
+                            if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey && this.curCopyDataId !== item.aggregationId) {
+                                if (Object.keys(item.instancesDisplayData).length) {
+                                    item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempArrgegateData);
+                                    item.instances = this.setInstanceData(item.instancesDisplayData);
+                                } else {
+                                    item.instances = _.cloneDeep(tempArrgegateData);
+                                    this.setInstancesDisplayData(item);
+                                }
+                            }
+                        });
+                        item.isError = false;
+                        this.$emit('on-select', item);
+                        // if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                        //     item.instances = _.cloneDeep(tempArrgegateData);
+                        //     item.isError = false;
+                        //     this.$emit('on-select', item);
+                        // }
                     }
                 });
                 payload.isError = false;
@@ -697,11 +725,58 @@
                 this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(false);
                 this.showMessage(this.$t(`m.info['批量粘贴成功']`));
             },
+
+            // 设置instances
+            setInstanceData (data) {
+                return Object.keys(data).reduce((p, v) => {
+                    p.push(...data[v]);
+                    return p;
+                }, []);
+            },
+
+            // 设置InstancesDisplayData
+            setInstancesDisplayData (data) {
+                data.instancesDisplayData = data.instances.reduce((p, v) => {
+                    if (!p[this.instanceKey]) {
+                        p[this.instanceKey] = [];
+                    }
+                    p[this.instanceKey].push({
+                        id: v.id,
+                        name: v.name
+                    });
+                    return p;
+                }, {});
+            },
+
+            // 设置正常粘贴InstancesDisplayData
+            setNomalInstancesDisplayData (data, key) {
+                this.selectedIndex = data.aggregateResourceType.findIndex(e => e.id === key);
+                const defaultSelectList = this.getScopeActionResource(
+                    data.actions,
+                    key,
+                    data.system_id
+                ).map(e => e.id);
+                if (!defaultSelectList.length) return;
+                data.instancesDisplayData[key] = [];
+                data.instances.forEach(e => {
+                    if (defaultSelectList.includes(e.id)) {
+                        data.instancesDisplayData[key].push(
+                            {
+                                id: e.id,
+                                name: e.name
+                            }
+                        );
+                    }
+                });
+            },
+
             showAggregateResourceInstance (data, index) {
+                this.selectedIndex = data.selectedIndex;
                 window.changeDialog = true;
-                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[this.selectedIndex]);
+                this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[data.selectedIndex]);
                 this.aggregateIndex = index;
-                const instanceKey = data.aggregateResourceType[this.selectedIndex].id;
+                const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
+                this.instanceKey = instanceKey;
                 if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
                 this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
                     return {
@@ -711,7 +786,7 @@
                 }));
                 this.defaultSelectList = this.getScopeActionResource(
                     data.actions,
-                    data.aggregateResourceType.id,
+                    data.aggregateResourceType[data.selectedIndex].id,
                     data.system_id
                 );
                 this.isShowAggregateSideslider = true;
@@ -1072,8 +1147,12 @@
                         return;
                     }
                     // 预计算是否存在 聚合后的数据 可以粘贴
-                    const flag = this.tableList.some(item => !!item.isAggregate
-                        && `${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey);
+                    // const flag = this.tableList.some(item => !!item.isAggregate
+                    //     && `${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey);
+                    const flag = this.tableList.some(item => {
+                        return !!item.isAggregate
+                            && item.aggregateResourceType.some(e => `${e.system_id}${e.id}` === this.curCopyKey);
+                    });
                     if (flag) {
                         if (this.curCopyData.length < 1) {
                             tempCurData = [];
@@ -1117,7 +1196,7 @@
                                     });
                                 });
                             } else {
-                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                                if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
                                     item.instances = _.cloneDeep(tempArrgegateData);
                                     item.isError = false;
                                     this.$emit('on-select', item);
@@ -1139,11 +1218,16 @@
                                     });
                                 }
                             } else {
-                                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
-                                    item.instances = _.cloneDeep(tempArrgegateData);
-                                    item.isError = false;
-                                    this.$emit('on-select', item);
-                                }
+                                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                                    if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
+                                        item.instances = _.cloneDeep(tempArrgegateData);
+                                        this.instanceKey = aggregateResourceItem.id;
+                                        this.setNomalInstancesDisplayData(item, this.instanceKey);
+                                        this.instanceKey = ''; // 重置
+                                        item.isError = false;
+                                    }
+                                });
+                                this.$emit('on-select', item);
                             }
                         });
                     }
@@ -1324,11 +1408,13 @@
                                 sub.system_id = sub.detail.system.id;
                             });
                             const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
-                                const obj = {};
-                                obj.id = e.id;
-                                obj.system_id = e.system_id;
-                                obj.instances = instancesDisplayData[e.id];
-                                p.push(obj);
+                                if (instancesDisplayData[e.id] && instancesDisplayData[e.id].length) {
+                                    const obj = {};
+                                    obj.id = e.id;
+                                    obj.system_id = e.system_id;
+                                    obj.instances = instancesDisplayData[e.id];
+                                    p.push(obj);
+                                }
                                 return p;
                             }, []);
                             aggregationParam = {
@@ -1479,7 +1565,8 @@
                 };
             },
 
-            selectResourceType (index) {
+            selectResourceType (data, index) {
+                data.selectedIndex = index;
                 this.selectedIndex = index;
             }
         }

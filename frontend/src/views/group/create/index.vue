@@ -263,6 +263,9 @@
             isRatingManager () {
                 return this.user.role.type === 'rating_manager';
             },
+            isSuperManager () {
+                return this.user.role.type === 'super_manager';
+            },
             curAuthorizationData () {
                 const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
                 return data;
@@ -417,31 +420,33 @@
                 // debugger
                 window.changeDialog = true;
                 const instances = (function () {
-                    const { id, name, system_id } = payload.aggregateResourceType;
                     const arr = [];
-                    payload.instances.forEach(v => {
-                        const curItem = arr.find(_ => _.type === id);
-                        if (curItem) {
-                            curItem.path.push([{
-                                id: v.id,
-                                name: v.name,
-                                system_id,
-                                type: id,
-                                type_name: name
-                            }]);
-                        } else {
-                            arr.push({
-                                name,
-                                type: id,
-                                path: [[{
+                    payload.aggregateResourceType.forEach(resourceItem => {
+                        const { id, name, system_id } = resourceItem;
+                        payload.instancesDisplayData[id] && payload.instancesDisplayData[id].forEach(v => {
+                            const curItem = arr.find(_ => _.type === id);
+                            if (curItem) {
+                                curItem.path.push([{
                                     id: v.id,
                                     name: v.name,
                                     system_id,
                                     type: id,
                                     type_name: name
-                                }]]
-                            });
-                        }
+                                }]);
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                });
+                            }
+                        });
                     });
                     return arr;
                 })();
@@ -592,6 +597,7 @@
             handleAggregateAction (payload) {
                 const tempData = [];
                 let templateIds = [];
+                let instancesDisplayData = {};
                 if (payload) {
                     // debugger
                     this.tableList.forEach(item => {
@@ -621,14 +627,30 @@
                                 console.log('instances: ');
                                 console.log(instances);
                                 console.log('isAllEqual: ' + isAllEqual);
+                                console.log('value', value);
                                 if (isAllEqual) {
-                                    const instanceData = instances[0][0][0];
-                                    curInstances = instanceData.path.map(pathItem => {
-                                        return {
-                                            id: pathItem[0].id,
-                                            name: pathItem[0].name
-                                        };
+                                    // const instanceData = instances[0][0][0];
+                                    // curInstances = instanceData.path.map(pathItem => {
+                                    //     return {
+                                    //         id: pathItem[0].id,
+                                    //         name: pathItem[0].name
+                                    //     };
+                                    // });
+                                    const instanceData = instances[0][0];
+                                    console.log('instanceData', instanceData);
+                                    curInstances = [];
+                                    instanceData.forEach(pathItem => {
+                                        const instance = pathItem.path.map(e => {
+                                            return {
+                                                id: e[0].id,
+                                                name: e[0].name,
+                                                type: e[0].type
+                                            };
+                                        });
+                                        curInstances.push(...instance);
                                     });
+                                    instancesDisplayData = this.setInstancesDisplayData(curInstances);
+                                    console.log('instancesDisplayData', instancesDisplayData);
                                 } else {
                                     curInstances = [];
                                 }
@@ -639,7 +661,8 @@
                                 aggregationId: key,
                                 aggregate_resource_types: value[0].aggregateResourceType,
                                 actions: value,
-                                instances: curInstances
+                                instances: curInstances,
+                                instancesDisplayData
                             }));
                         }
                         templateIds.push(value[0].detail.id);
@@ -664,6 +687,22 @@
                     tempList.push(...list);
                 });
                 this.tableList = _.cloneDeep(tempList);
+                console.log('this.tableList', this.tableList);
+            },
+
+            setInstancesDisplayData (data) {
+                console.log('data', data);
+                const instancesDisplayData = data.reduce((p, v) => {
+                    if (!p[v['type']]) {
+                        p[v['type']] = [];
+                    }
+                    p[v['type']].push({
+                        id: v.id,
+                        name: v.name
+                    });
+                    return p;
+                }, {});
+                return instancesDisplayData;
             },
 
             /**

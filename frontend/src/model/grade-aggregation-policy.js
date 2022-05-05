@@ -30,14 +30,15 @@ export default class GradeAggregationPolicy {
     constructor (payload) {
         this.isError = false;
         this.actions = payload.actions || [];
+        this.instancesDisplayData = payload.instancesDisplayData || {};
         this.aggregateResourceType = payload.aggregate_resource_types || [];
         this.instances = payload.instances || [];
         this.instancesBackup = _.cloneDeep(this.instances);
         this.isAggregate = true;
         this.system_id = payload.actions[0].system_id;
         this.system_name = payload.system_name;
-        this.instancesDisplayData = payload.instancesDisplayData || {};
         this.$id = payload.$id || '';
+        this.selectedIndex = payload.selectedIndex || 0;
         this.canPaste = false;
     }
 
@@ -49,7 +50,19 @@ export default class GradeAggregationPolicy {
         if (this.empty) {
             return il8n('verify', '请选择');
         }
-        return this.instances.map(item => item.name).join('；');
+        let str = '';
+        this.aggregateResourceType.forEach(item => {
+            if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
+                str = `${str}，${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
+            } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
+                for (const key in this.instancesDisplayData) {
+                    if (item.id === key) {
+                        str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
+                    }
+                }
+            }
+        });
+        return str.substring(1, str.length);
     }
 
     get name () {
