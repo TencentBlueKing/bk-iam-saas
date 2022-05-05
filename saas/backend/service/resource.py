@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from redis.exceptions import RedisError
 
@@ -151,6 +151,16 @@ class ResourceProvider:
         # 缓存服务
         self.id_name_cache = ResourceIDNameCache(system_id, resource_type_id)
 
+    def _get_page_params(self, limit: int, offset: int) -> Dict[str, int]:
+        """生成分页参数"""
+        return {
+            "page_size": limit,
+            "page": (offset // limit) + 1,
+            # 新的标准是page_size/page, 兼容之前协议limit/offset
+            "limit": limit,
+            "offset": offset,
+        }
+
     def list_attr(self) -> List[ResourceAttribute]:
         """查询某个资源类型可用于配置权限的属性列表"""
         return [
@@ -165,18 +175,19 @@ class ResourceProvider:
     ) -> Tuple[int, List[ResourceAttributeValue]]:
         """获取一个资源类型某个属性的值列表"""
         filter_condition = {"keyword": keyword}
-        page = {"limit": limit, "offset": offset}
+        page = self._get_page_params(limit, offset)
         count, results = self.client.list_attr_value(attr, filter_condition, page)
         return count, [ResourceAttributeValue(**i) for i in results]
 
     def list_instance(
-        self, parent_type: str = "", parent_id: str = "", limit: int = 10, offset: int = 0
+        self, ancestors: List[Dict[str, str]], limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
         """根据上级资源获取某个资源实例列表"""
-        filter_condition = {}
-        if parent_type and parent_id:
-            filter_condition["parent"] = {"type": parent_type, "id": parent_id}
-        page = {"limit": limit, "offset": offset}
+        filter_condition: Dict[str, Any] = {}
+        if ancestors:
+            filter_condition["ancestors"] = ancestors
+            filter_condition["parent"] = {"type": ancestors[-1]["type"], "id": ancestors[-1]["id"]}
+        page = self._get_page_params(limit, offset)
         count, results = self.client.list_instance(filter_condition, page)
 
         # 转换成需要的数据
@@ -195,7 +206,7 @@ class ResourceProvider:
         filter_condition: Dict = {"keyword": keyword}
         if parent_type and parent_id:
             filter_condition["parent"] = {"type": parent_type, "id": parent_id}
-        page = {"limit": limit, "offset": offset}
+        page = self._get_page_params(limit, offset)
         count, results = self.client.search_instance(filter_condition, page)
 
         # 转换成需要的数据
