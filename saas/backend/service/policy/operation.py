@@ -24,6 +24,10 @@ from .query import PolicyList, new_backend_policy_list_by_subject
 
 
 class PolicyOperationService:
+    def delete_backend_policy_by_action(self, system_id: str, action_id: str):
+        """删除指定操作的后台策略"""
+        iam.delete_action_policies(system_id, action_id)
+
     def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """
         删除指定policy_id的策略

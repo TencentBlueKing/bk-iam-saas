@@ -48,6 +48,7 @@ from .approval import (
 )
 from .group import GroupAttributes
 from .instance_selection import ChainNode, InstanceSelection, PathResourceType, RawInstanceSelection
+from .model_event import ModelEvent
 from .policy import (
     Attribute,
     BackendThinPolicy,
@@ -140,4 +141,5 @@ __all__ = [
     "Attribute",
     "ResourceGroup",
     "ResourceGroupList",
+    "ModelEvent",
 ]
