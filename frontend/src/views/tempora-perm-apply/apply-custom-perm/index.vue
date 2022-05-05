@@ -360,7 +360,6 @@
         watch: {
             '$route': {
                 handler (value) {
-                    console.log('value', value);
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -849,8 +848,6 @@
                     });
                     this.aggregationsBackup = _.cloneDeep(aggregations);
                     this.aggregations = aggregations;
-
-                    console.log('this.originalCustomTmplList', this.originalCustomTmplList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -1096,31 +1093,33 @@
             handleResourceSelect (payload) {
                 const curAction = payload.actions.map(item => item.id);
                 const instances = (function () {
-                    const { id, name, system_id } = payload.aggregateResourceType;
                     const arr = [];
-                    payload.instances.forEach(v => {
-                        const curItem = arr.find(_ => _.type === id);
-                        if (curItem) {
-                            curItem.path.push([{
-                                id: v.id,
-                                name: v.name,
-                                system_id,
-                                type: id,
-                                type_name: name
-                            }]);
-                        } else {
-                            arr.push({
-                                name,
-                                type: id,
-                                path: [[{
+                    payload.aggregateResourceType.forEach(resourceItem => {
+                        const { id, name, system_id } = resourceItem;
+                        payload.instancesDisplayData[id] && payload.instancesDisplayData[id].forEach(v => {
+                            const curItem = arr.find(_ => _.type === id);
+                            if (curItem) {
+                                curItem.path.push([{
                                     id: v.id,
                                     name: v.name,
                                     system_id,
                                     type: id,
                                     type_name: name
-                                }]]
-                            });
-                        }
+                                }]);
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                });
+                            }
+                        });
                     });
                     return arr;
                 })();
@@ -1129,25 +1128,31 @@
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(item.id)) {
                             if (item.tag === 'unchanged') {
-                                item.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition.forEach(conditionItem => {
-                                        conditionItem.instance.forEach(instanceItem => {
-                                            if (instanceItem.type === instances[0].type) {
-                                                selectPath = selectPath.filter(v => {
-                                                    const target = v.map(_ => `${_.type}${_.id}`).sort();
-                                                    return instanceItem.path.map(pathItem => pathItem.map(v => `${v.type}${v.id}`).sort()).filter(pathSub => _.isEqual(target, pathSub)).length < 1;
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition.forEach(conditionItem => {
+                                                conditionItem.instance.forEach(instanceItem => {
+                                                    if (instanceItem.type === instances[0].type) {
+                                                        selectPath = selectPath.filter(v => {
+                                                            const target = v.map(_ => `${_.type}${_.id}`).sort();
+                                                            return instanceItem.path.map(pathItem => pathItem.map(v => `${v.type}${v.id}`).sort()).filter(pathSub => _.isEqual(target, pathSub)).length < 1;
+                                                        });
+                                                        if (selectPath.length > 0) {
+                                                            instanceItem.path.push(...selectPath);
+                                                            instanceItem.paths.push(...selectPath);
+                                                        }
+                                                    }
                                                 });
-                                                if (selectPath.length > 0) {
-                                                    instanceItem.path.push(...selectPath);
-                                                    instanceItem.paths.push(...selectPath);
-                                                }
-                                            }
+                                            });
                                         });
-                                    });
                                 });
                             } else {
-                                item.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                        });
                                 });
                             }
                         }
@@ -1212,15 +1217,19 @@
                                         }
                                     }
                                     if (isAllEqual) {
-                                        const instanceData = instances[0][0][0];
-                                        if (instanceData && instanceData.path) {
-                                            item.instances = instanceData.path.map(pathItem => {
+                                        const instanceData = instances[0][0];
+                                        item.instances = [];
+                                        instanceData.map(pathItem => {
+                                            const instance = pathItem.path.map(e => {
                                                 return {
-                                                    id: pathItem[0].id,
-                                                    name: pathItem[0].name
+                                                    id: e[0].id,
+                                                    name: e[0].name,
+                                                    type: e[0].type
                                                 };
                                             });
-                                        }
+                                            item.instances.push(...instance);
+                                        });
+                                        this.setInstancesDisplayData(item);
                                     } else {
                                         item.instances = [];
                                     }
@@ -1289,13 +1298,30 @@
                                 return arr;
                             })();
                             if (instances.length > 0) {
-                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                curData.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                        });
                                 });
                             }
                         }
                     }
                 });
+            },
+
+            // 设置InstancesDisplayData
+            setInstancesDisplayData (data) {
+                data.instancesDisplayData = data.instances.reduce((p, v) => {
+                    if (!p[v['type']]) {
+                        p[v['type']] = [];
+                    }
+                    p[v['type']].push({
+                        id: v.id,
+                        name: v.name
+                    });
+                    return p;
+                }, {});
             },
             
             handleActionChecked (newVal, oldVal, val, actData, payload) {
@@ -1354,8 +1380,11 @@
                                             curData.expired_at = item.expired_at;
                                             curData.expired_display = item.expired_display;
                                             if (instances.length > 0) {
-                                                curData.related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')]; // 选择的时候flag为add 代表为新增数据  侧边栏数据disabled为false可选择
+                                                curData.resource_groups.forEach(groupItem => {
+                                                    groupItem.related_resource_types
+                                                        && groupItem.related_resource_types.forEach(subItem => {
+                                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                        });
                                                 });
                                             }
                                             this.tableData.splice(i, 1, curData);
@@ -1446,8 +1475,11 @@
                                             curData.expired_at = item.expired_at;
                                             curData.expired_display = item.expired_display;
                                             if (instances.length > 0) {
-                                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                curData.resource_groups.forEach(groupItem => {
+                                                    groupItem.related_resource_types
+                                                        && groupItem.related_resource_types.forEach(subItem => {
+                                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                        });
                                                 });
                                             }
                                             this.tableData.splice(i, 1, curData);
@@ -1658,7 +1690,6 @@
                     this.newTableList = _.cloneDeep(this.tableData.filter(item => {
                         return !item.isExpiredAtDisabled;
                     }));
-                    console.log('this.tableData', this.tableData);
                     this.tableDataBackup = _.cloneDeep(this.tableData);
                     this.aggregationsTableData = _.cloneDeep(this.tableData);
                 } catch (e) {
@@ -1792,8 +1823,6 @@
                     reason: this.reason
                 };
                 this.buttonLoading = true;
-                console.log('params', params);
-                debugger;
                 try {
                     await this.$store.dispatch('applyProvisionPerm/permTemporaryApply', params);
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);

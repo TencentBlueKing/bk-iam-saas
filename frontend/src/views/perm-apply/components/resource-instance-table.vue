@@ -1095,7 +1095,7 @@
                     const instances = (() => {
                         const arr = [];
                         const { id, name, system_id } = this.curAggregateResourceType;
-                        this.curCopyData.forEach(v => {
+                        this.curCopyData && this.curCopyData.forEach(v => {
                             const curItem = arr.find(_ => _.type === id);
                             if (curItem) {
                                 curItem.path.push([{
