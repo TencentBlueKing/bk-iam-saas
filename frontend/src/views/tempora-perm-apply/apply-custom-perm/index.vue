@@ -838,12 +838,12 @@
                     });
                     const aggregations = []
                     ;(res.data.aggregations || []).forEach(item => {
-                        const { actions, aggregate_resource_type } = item;
+                        const { actions, aggregate_resource_types } = item;
                         const curActions = actions.filter(_ => actionIds.includes(_.id));
                         if (curActions.length > 0) {
                             aggregations.push({
                                 actions: curActions,
-                                aggregate_resource_type
+                                aggregate_resource_types
                             });
                         }
                     });
@@ -1260,7 +1260,7 @@
                             const curData = this.tableData[0];
                             const instances = (function () {
                                 const arr = [];
-                                const aggregateResourceType = curAggregation.aggregateResourceType;
+                                const aggregateResourceType = curAggregation.aggregateResourceType[0];
                                 const { id, name, system_id } = aggregateResourceType;
                                 curAggregation.instances.forEach(v => {
                                     const curItem = arr.find(_ => _.type === id);
