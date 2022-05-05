@@ -28,3 +28,7 @@ class SubjectGroupSLZ(serializers.Serializer):
     description = serializers.CharField(label="描述", allow_blank=True)
     department_id = serializers.IntegerField(label="部门ID", help_text="0则为个人，其他为继承的部门ID")
     department_name = serializers.CharField(label="部门名称")
+
+
+class QueryRoleSLZ(serializers.Serializer):
+    with_perm = serializers.BooleanField(label="角色是否带权限")

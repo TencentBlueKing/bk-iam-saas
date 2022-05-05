@@ -9,23 +9,29 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from aenum import LowerStrEnum, auto, skip
-from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
 
 
-class TaskStatus(ChoicesEnum):
-    PENDING = 0
-    RUNNING = 1
-    SUCCESS = 2
-    FAILURE = 3
-    CANCEL = 4
+class OperateEnum(ChoicesEnum, LowerStrEnum):
+    GROUP_UPDATE = auto()
+    GROUP_DELETE = auto()
+    GROUP_MEMBER_CREATE = auto()
+    GROUP_MEMBER_DELETE = auto()
+    GROUP_POLICY_CREATE = auto()
+    GROUP_POLICY_DELETE = auto()
+    GROUP_POLICY_UPDATE = auto()
+    GROUP_MEMBER_RENEW = auto()
 
-    _choices_labels = skip(((PENDING, "未开始"), (RUNNING, "运行中"), (SUCCESS, "成功"), (FAILURE, "失败"), (CANCEL, "取消")))
-
-
-class TaskType(ChoicesEnum, LowerStrEnum):
-    TEMPLATE_UPDATE = auto()
-    GROUP_AUTHORIZATION = auto()
-
-    _choices_labels = skip(((TEMPLATE_UPDATE, _("模板更新")), (GROUP_AUTHORIZATION, _("用户组授权"))))
+    _choices_labels = skip(
+        (
+            (GROUP_UPDATE, "修改用户组"),
+            (GROUP_DELETE, "删除用户组"),
+            (GROUP_MEMBER_CREATE, "添加用户组成员"),
+            (GROUP_MEMBER_DELETE, "删除用户组成员"),
+            (GROUP_POLICY_CREATE, "用户组添加权限"),
+            (GROUP_POLICY_DELETE, "用户组删除权限"),
+            (GROUP_POLICY_UPDATE, "用户组更新权限"),
+            (GROUP_MEMBER_RENEW, "用户组成员续期"),
+        )
+    )

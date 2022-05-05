@@ -16,6 +16,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.account.serializers import AccountRoleSLZ
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.audit import SubjectGroupDeleteAuditProvider
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
@@ -29,7 +30,7 @@ from backend.common.time import get_soon_expire_ts
 from backend.service.constants import SubjectRelationType, SubjectType
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
+from .serializers import GroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
 
 permission_logger = logging.getLogger("permission")
 
@@ -162,3 +163,25 @@ class UserCommonActionViewSet(GenericViewSet):
             data = self.role_biz.list_system_common_actions(system_id)
 
         return Response([one.dict() for one in data])
+
+
+class RoleViewSet(GenericViewSet):
+
+    paginator = None  # 去掉swagger中的limit offset参数
+
+    biz = RoleBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户角色权限",
+        query_serializer=QueryRoleSLZ(label="query_role"),
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = QueryRoleSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        with_perm = slz.validated_data["with_perm"]
+
+        user_roles = self.biz.list_user_role(request.user.username, with_perm)
+        return Response([one.dict() for one in user_roles])

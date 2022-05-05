@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from functools import wraps
 from typing import List
 
 from django.shortcuts import get_object_or_404
@@ -54,6 +55,7 @@ from .audit import (
     GroupTransferAuditProvider,
     GroupUpdateAuditProvider,
 )
+from .constants import OperateEnum
 from .filters import GroupFilter, GroupTemplateSystemFilter
 from .serializers import (
     GroupAddMemberSLZ,
@@ -76,6 +78,29 @@ from .serializers import (
 )
 
 permission_logger = logging.getLogger("permission")
+
+
+def check_readonly_group(operation):
+    """用户组可读检测"""
+
+    def decorate(func):
+        @wraps(func)
+        def wrapper(view, request, *args, **kwargs):
+            group = view.get_object()
+            readonly = group.readonly
+
+            if readonly:
+                raise error_codes.FORBIDDEN.format(
+                    message=_("只读用户组({})无法进行({})操作！").format(group.id, operation), replace=True
+                )
+
+            response = func(view, request, *args, **kwargs)
+
+            return response
+
+        return wrapper
+
+    return decorate
 
 
 class GroupQueryMixin:
@@ -196,6 +221,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         tags=["group"],
     )
     @view_audit_decorator(GroupUpdateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_UPDATE.label)
     def update(self, request, *args, **kwargs):
         group = self.get_object()
         serializer = GroupUpdateSLZ(group, data=request.data)
@@ -221,6 +247,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         tags=["group"],
     )
     @view_audit_decorator(GroupDeleteAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()
 
@@ -286,6 +313,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberCreateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_CREATE.label)
     def create(self, request, *args, **kwargs):
         serializer = GroupAddMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -320,6 +348,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberDeleteAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         serializer = GroupDeleteMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -357,6 +386,7 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberRenewAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_RENEW.label)
     def create(self, request, *args, **kwargs):
         serializer = GroupMemberUpdateExpiredAtSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -450,6 +480,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupTemplateCreateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_CREATE.label)
     def create(self, request, *args, **kwargs):
         serializer = GroupAuthorizationSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -499,6 +530,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupPolicyDeleteAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         slz = PolicyDeleteSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
@@ -530,6 +562,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupPolicyUpdateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_UPDATE.label)
     def update(self, request, *args, **kwargs):
         group = self.get_object()
 

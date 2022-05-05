@@ -28,6 +28,7 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.common.error_codes import error_codes
 from backend.component import iam
 from backend.util.json import json_dumps
+from backend.util.model import PartialModel
 
 from .constants import (
     DEAULT_RESOURCE_GROUP_ID,
@@ -76,6 +77,16 @@ class UserRole(BaseModel):
     name_en: str
     description: str
 
+    @classmethod
+    def convert_from_role(cls, role):
+        return cls(
+            id=role.id,
+            type=role.type,
+            name=role.name,
+            name_en=role.name_en,
+            description=role.description,
+        )
+
 
 class UserRoleMember(BaseModel):
     id: int
@@ -84,7 +95,7 @@ class UserRoleMember(BaseModel):
     members: list
 
 
-class RoleInfo(BaseModel):
+class RoleInfo(PartialModel):
     code: str = ""
     name: str
     name_en: str = ""
@@ -121,10 +132,24 @@ class RoleService:
 
         return parse_obj_as(List[AuthScopeSystem], json.loads(role_scope.content))
 
-    def list_user_role(self, user_id: str) -> List[UserRole]:
+    def list_user_role(self, user_id: str, with_permission: bool = False) -> List[UserRole]:
         """查询用户的角色列表"""
-        role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
-        return self.list_by_ids(role_ids)
+        role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
+
+        if not with_permission:
+            return self.list_by_ids(role_ids)
+
+        roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
+        role_dict = {role.id: role for role in roles}
+
+        role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
+        roles_with_permission = []
+
+        for role_user_system_perm in role_user_system_perms:
+            if user_id in role_user_system_perm.enabled_users or role_user_system_perm.global_enabled:
+                role = role_dict[role_user_system_perm.role_id]
+                roles_with_permission.append(UserRole.convert_from_role(role))
+        return roles_with_permission
 
     def list_members_by_role_id(self, role_id: int):
         """查询指定角色的成员列表"""
@@ -133,10 +158,7 @@ class RoleService:
 
     def list_by_ids(self, role_ids: List[int]) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
-        data = [
-            UserRole(id=role.id, type=role.type, name=role.name, name_en=role.name_en, description=role.description)
-            for role in roles
-        ]
+        data = [UserRole.convert_from_role(role) for role in roles]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
         sort_index = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]
@@ -197,18 +219,33 @@ class RoleService:
         if subjects:
             ScopeSubject.objects.bulk_create(subjects)
 
-    def update(self, role: Role, info: RoleInfo, updater: str, partial=False):
+    def update(self, role: Role, info: RoleInfo, updater: str):
         """更新Role"""
+        # 查询实际RoleInfo里哪些字段可用
+        update_fields = info.get_partial_fields()
+
         with transaction.atomic():
-            role.name = info.name
-            role.name_en = info.name_en
-            role.description = info.description
+            # 基本信息
+            if "name" in update_fields:
+                role.name = info.name
+                role.name_en = info.name_en
+            if "description" in update_fields:
+                role.description = info.description
+
             role.updater = updater
             role.save()
 
-            self._update_members(role, info.members)
-            if not partial:
-                self._update_role_scope(role.id, info.subject_scopes, info.authorization_scopes)
+            # 分级管理员成员
+            if "members" in update_fields:
+                self._update_members(role, info.members)
+
+            # 可授权的权限范围
+            if "authorization_scopes" in update_fields:
+                self.update_role_auth_scope(role.id, info.authorization_scopes)
+
+            # 可授权的人员范围
+            if "subject_scopes" in update_fields:
+                self._update_role_subject_scope(role.id, info.subject_scopes)
 
     def _update_members(self, role: Role, members: List[str], need_sync_backend_role: bool = False):
         """更新Role成员"""
@@ -249,14 +286,6 @@ class RoleService:
                 role.type,
                 role.code or "SUPER",
             )
-
-    def _update_role_scope(self, role_id: int, subjects: List[Subject], systems: List[AuthScopeSystem]):
-        """更新Role的授权范围"""
-        # 1. 修改系统操作的限制范围
-        self.update_role_auth_scope(role_id, systems)
-
-        # 2. 修改授权对象的限制范围
-        self._update_role_subject_scope(role_id, subjects)
 
     def update_role_auth_scope(self, role_id: int, systems: List[AuthScopeSystem]):
         """更新Role可授权的权限范围"""

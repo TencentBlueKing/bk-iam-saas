@@ -61,7 +61,58 @@ class ManagementCommonTrans(OpenCommonTrans):
 class GradeManagerTrans(ManagementCommonTrans):
     """处理分级管理员数据转换"""
 
-    def to_role_info(self, data: Dict) -> RoleInfoBean:
+    def _preprocess_authorization_scopes(self, data_authorization_scopes):
+        """
+        预处理authorization_scopes，保证可用于RoleInfoBean的转换
+        data_authorization_scopes: [
+            {
+                system,
+                actions: [
+                    {
+                        id,
+                    },
+                    ...
+                ],
+                resources: [
+                    {
+                        system,
+                        type,
+                        paths: [
+                            [
+                                {
+                                    system,
+                                    type,
+                                    id,
+                                    name,
+                                }
+                            ]
+                        ]
+                    },
+                    ...
+                ]
+            }
+        ]
+        """
+        # 授权可范围数据转换为策略格式的auth_scopes
+        system_authorization_scope_dict = defaultdict(list)
+        for auth_scope in data_authorization_scopes:
+            system_id = auth_scope["system"]
+            resources = auth_scope["resources"]
+            action_ids = [action["id"] for action in auth_scope["actions"]]
+            # 转换为策略列表(转换时会对action、实例视图等进行校验)
+            policy_list = self.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
+            # 由于RoleInfoBean需要的action_id是以id表示，而非action_id，所以PolicyBean转为字典时需要用其别名
+            policies = [p.dict(by_alias=True) for p in policy_list.policies]
+            system_authorization_scope_dict[system_id].extend(policies)
+
+        # 将按system分组的数据转为authorization_scopes
+        authorization_scopes = [
+            {"system_id": system_id, "actions": policies}
+            for system_id, policies in system_authorization_scope_dict.items()
+        ]
+        return authorization_scopes
+
+    def to_role_info(self, data) -> RoleInfoBean:
         """
         将分级管理的信息数据转换为 RoleInfoBean，用于后续分级管理员创建
         data: {
@@ -106,24 +157,17 @@ class GradeManagerTrans(ManagementCommonTrans):
             ]
         }
         """
-        # 将授权的权限范围数据转换为策略格式的auth_scopes
-        system_authorization_scope_dict = defaultdict(list)
-        for auth_scope in data["authorization_scopes"]:
-            system_id = auth_scope["system"]
-            resources = auth_scope["resources"]
-            action_ids = [action["id"] for action in auth_scope["actions"]]
-            # 转换为策略列表(转换时会对action、实例视图等进行校验)
-            policy_list = self.to_policy_list_for_batch_action_and_resources(system_id, action_ids, resources)
-            # 由于RoleInfoBean需要的action_id是以id表示，而非action_id，所以PolicyBean转为字典时需要用其别名
-            policies = [p.dict(by_alias=True) for p in policy_list.policies]
-            system_authorization_scope_dict[system_id].extend(policies)
-
-        # 将按system分组的数据转为authorization_scopes
-        authorization_scopes = [
-            {"system_id": system_id, "actions": policies}
-            for system_id, policies in system_authorization_scope_dict.items()
-        ]
         # 替换掉data里原有的authorization_scopes
-        data["authorization_scopes"] = authorization_scopes
+        data["authorization_scopes"] = self._preprocess_authorization_scopes(data["authorization_scopes"])
 
         return RoleInfoBean.parse_obj(data)
+
+    def to_role_info_for_update(self, data):
+        """
+        将分级管理的信息数据转换为 RoleInfoBean，用于后续分级管理员更新
+        data结构与to_role_info的data一致，但可能只有部分字段
+        """
+        if "authorization_scopes" in data:
+            # 替换掉data里原有的authorization_scopes
+            data["authorization_scopes"] = self._preprocess_authorization_scopes(data["authorization_scopes"])
+        return RoleInfoBean.from_partial_data(data)

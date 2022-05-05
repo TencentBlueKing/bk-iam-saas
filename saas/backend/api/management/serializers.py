@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
@@ -29,7 +30,7 @@ class ManagementActionSLZ(serializers.Serializer):
 class ManagementResourcePathNodeSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
-    id = serializers.CharField(label="资源实例ID")
+    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(
         label="资源实例ID名称", allow_blank=True, trim_whitespace=False
     )  # 路径节点存在无限制，当id="*"则name可以为空
@@ -61,6 +62,24 @@ class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBas
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+
+
+class ManagementGradeManagerUpdateSLZ(serializers.Serializer):
+    name = serializers.CharField(label="分级管理员名称", max_length=128, required=False)
+    description = serializers.CharField(label="描述", allow_blank=True, required=False)
+
+    authorization_scopes = serializers.ListField(
+        label="可授权的权限范围",
+        child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"),
+        required=False,
+        allow_empty=False,
+    )
+    subject_scopes = serializers.ListField(
+        label="授权对象",
+        child=RoleScopeSubjectSLZ(label="授权对象"),
+        required=False,
+        allow_empty=False,
+    )
 
 
 class ManagementGradeManagerBasicInfoSZL(serializers.Serializer):

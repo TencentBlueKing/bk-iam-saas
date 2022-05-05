@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Any, MutableMapping, Union
 
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.serializers import empty
 
@@ -26,7 +27,7 @@ class ASInstanceSLZ(serializers.Serializer):
 
     system = serializers.CharField(label="系统ID", default="", allow_blank=True, required=False)
     type = serializers.CharField(label="资源类型")
-    id = serializers.CharField(label="资源ID")
+    id = serializers.CharField(label="资源ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
 
 
 class ASResourceTypeSLZ(serializers.Serializer):

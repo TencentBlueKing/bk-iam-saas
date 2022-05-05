@@ -94,6 +94,13 @@ class GroupRoleDict(BaseModel):
         return self.data.get(group_id)
 
 
+class GroupNameDict(BaseModel):
+    data: Dict[int, str]
+
+    def get(self, group_id: int, default=""):
+        return self.data.get(group_id, default)
+
+
 class GroupMemberExpiredAtBean(GroupMemberExpiredAt):
     pass
 
@@ -508,6 +515,13 @@ class GroupBiz:
         return GroupRoleDict(
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
+
+    def get_group_name_dict_by_ids(self, group_ids: List[int]) -> GroupNameDict:
+        """
+        获取用户组id: name的字典
+        """
+        queryset = Group.objects.filter(id__in=group_ids).only("name")
+        return GroupNameDict(data={one.id: one.name for one in queryset})
 
     def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
         """根据关键词 获取指定用户组成员列表"""
