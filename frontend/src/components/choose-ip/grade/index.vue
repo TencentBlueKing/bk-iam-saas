@@ -374,18 +374,31 @@
                 const params = {
                     limit: this.limit,
                     offset: 0,
-                    parent_id: node.level > 0 ? node.parentSyncId : '',
+                    ancestors: [],
+                    // parent_id: node.level > 0 ? node.parentSyncId : '',
                     keyword: value
                 };
 
                 if (node.level > chainLen - 1) {
                     params.system_id = this.curChain[chainLen - 1].system_id;
                     params.type = this.curChain[chainLen - 1].id;
-                    params.parent_type = this.curChain[chainLen - 1].id || '';
+                    // params.parent_type = this.curChain[chainLen - 1].id || '';
                 } else {
                     params.system_id = this.curChain[node.level].system_id;
                     params.type = this.curChain[node.level].id;
-                    params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : '';
+                    // params.parent_type = node.level > 0 ? this.curChain[node.level - 1].id : '';
+                }
+
+                if (node.parentChain.length) {
+                    const parentData = node.parentChain.reduce((p, e) => {
+                        p.push({
+                            system_id: e.system_id,
+                            id: e.id,
+                            type: e.type
+                        });
+                        return p;
+                    }, []);
+                    params.ancestors.push(...parentData);
                 }
 
                 const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
