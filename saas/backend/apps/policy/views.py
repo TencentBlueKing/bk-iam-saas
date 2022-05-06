@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from itertools import groupby
+from itertools import chain, groupby
 from typing import List
 
 from django.utils.translation import gettext as _
@@ -21,9 +21,18 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.apps.subject.audit import SubjectPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.action import ActionBiz
+from backend.biz.action_group import ActionGroupBiz
 from backend.biz.constants import PolicyTag
 from backend.biz.open import ApplicationPolicyListCache
-from backend.biz.policy import ConditionBean, PolicyBean, PolicyOperationBiz, PolicyQueryBiz, RelatedResourceBean
+from backend.biz.policy import (
+    ConditionBean,
+    PolicyBean,
+    PolicyBeanList,
+    PolicyOperationBiz,
+    PolicyQueryBiz,
+    RelatedResourceBean,
+)
 from backend.biz.policy_tag import PolicyTagBean, PolicyTagBeanList
 from backend.biz.related_policy import RelatedPolicyBiz
 from backend.common.error_codes import error_codes
@@ -41,6 +50,7 @@ from .serializers import (
     PolicyResourceCopySLZ,
     PolicySLZ,
     PolicySystemSLZ,
+    RecommendActionPolicy,
     RelatedPolicySLZ,
 )
 
@@ -362,3 +372,72 @@ class BatchPolicyResourceCopyViewSet(GenericViewSet):
                 )
 
         return Response(action_resource)
+
+
+class RecommendPolicyViewSet(GenericViewSet):
+    """
+    生成推荐操作
+    """
+
+    paginator = None  # 去掉swagger中的limit offset参数
+
+    action_biz = ActionBiz()
+    action_group_biz = ActionGroupBiz()
+    related_policy_biz = RelatedPolicyBiz()
+
+    application_policy_list_cache = ApplicationPolicyListCache()
+
+    @swagger_auto_schema(
+        operation_description="生成推荐操作",
+        query_serializer=ActionQuerySLZ,
+        auto_schema=ResponseSwaggerAutoSchema,
+        responses={status.HTTP_200_OK: RecommendActionPolicy(label="推荐操作策略")},
+        tags=["policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = ActionQuerySLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+
+        system_id = slz.validated_data["system_id"]
+        cache_id = slz.validated_data["cache_id"]
+
+        cached_policy_list = self.application_policy_list_cache.get(cache_id)
+        if cached_policy_list.system_id != system_id:
+            raise error_codes.INVALID_ARGS.format(_("请求的system与缓存策略数据的system不一致"))
+
+        # 查询推荐的操作
+        recommend_action_dict = self.action_group_biz.get_action_same_group_dict(
+            system_id, [one.action_id for one in cached_policy_list.policies]
+        )
+
+        action_list = self.action_biz.action_svc.new_action_list(system_id)
+
+        # 生成推荐的策略
+        policy_list = PolicyBeanList(system_id, [])
+        for policy in cached_policy_list.policies:
+            recommend_action_ids = recommend_action_dict.get(policy.action_id)
+            if not recommend_action_ids:
+                continue
+
+            recommend_policies = self.related_policy_biz.create_recommend_policies(
+                policy, action_list, recommend_action_ids
+            )
+
+            policy_list.add(PolicyBeanList(system_id, recommend_policies))  # 合并去重
+
+        policy_list.fill_empty_fields()
+
+        # 生成推荐的操作, 排除已生成推荐策略的操作
+        actions, action_id_set = [], set()
+        for action_id in chain(*list(recommend_action_dict.values())):
+            if action_id in action_id_set:  # 去重
+                continue
+            action_id_set.add(action_id)
+
+            action = action_list.get(action_id)
+            if not action:
+                continue
+
+            actions.append(action)
+
+        return Response({"actions": [a.dict() for a in actions], "policies": [p.dict() for p in policy_list.policies]})
