@@ -47,8 +47,6 @@ export default {
          * @return {Promise} promise 对象
          */
         permTemporaryApply ({ commit, state, dispatch }, params, config) {
-            console.log('11', params);
-            debugger;
             return http.post(`${AJAX_URL_PREFIX}/applications/temporary_policy/`, params, config);
         },
 

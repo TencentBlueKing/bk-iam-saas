@@ -263,6 +263,9 @@
             isRatingManager () {
                 return this.user.role.type === 'rating_manager';
             },
+            isSuperManager () {
+                return this.user.role.type === 'super_manager';
+            },
             curAuthorizationData () {
                 const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
                 return data;
@@ -684,6 +687,7 @@
                     tempList.push(...list);
                 });
                 this.tableList = _.cloneDeep(tempList);
+                console.log('this.tableList', this.tableList);
             },
 
             setInstancesDisplayData (data) {
