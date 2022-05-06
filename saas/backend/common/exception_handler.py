@@ -30,7 +30,7 @@ from rest_framework.views import set_rollback
 from sentry_sdk import capture_exception
 
 from backend.common.debug import log_api_error_trace
-from backend.common.error_codes import CodeException, error_codes
+from backend.common.error_codes import APIException, CodeException, error_codes
 
 logger = logging.getLogger("app")
 
@@ -140,15 +140,15 @@ def exception_handler(exc, context):
         capture_exception(exc)
 
     # NOTE: openapi 为了兼容调用方使用习惯, status code 默认返回 200
-    ignore_errors = (
-        error_codes.UNAUTHORIZED,
-        error_codes.FORBIDDEN,
-        error_codes.NOT_FOUND_ERROR,
-        error_codes.SYSTEM_ERROR,
-    )
+    ignore_error_codes = {
+        1902401,
+        1902403,
+        1902404,
+        1902500,
+    }
 
     status_code = error.status_code
-    if is_open_api_request(request) and not isinstance(error, ignore_errors):
+    if is_open_api_request(request) and isinstance(error, APIException) and error.code not in ignore_error_codes:
         status_code = status.HTTP_200_OK
 
     return Response(error.as_json(), status=status_code)
