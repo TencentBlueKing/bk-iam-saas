@@ -569,9 +569,8 @@ def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
     """
     删除指定过期时间前的临时权限策略
     """
-    url_path = "/api/v1/web/temporary-policies/before_expired_at"
-    params = {
-        "expired_at": expired_at,
-    }
-    permission_logger.info("iam delete temporary policies before expired_at url: %s, params: %s", url_path, params)
-    return _call_iam_api(http_delete, url_path, data=params)
+    url_path = f"/api/v1/web/temporary-policies/before_expired_at?expired_at={expired_at}"
+    permission_logger.info(
+        "iam delete temporary policies before expired_at url: %s, expired_at: %s", url_path, expired_at
+    )
+    return _call_iam_api(http_delete, url_path, data={})
