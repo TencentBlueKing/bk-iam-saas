@@ -225,8 +225,8 @@
                 this.logDetailLoading = true;
                 try {
                     const res = await this.$store.dispatch('organization/getRecordsLog', data.id);
-                    this.exceptionMsg = res.data.exception_msg.replaceAll('\n', '<br>');
-                    this.tracebackMsg = res.data.traceback_msg.replaceAll('\n', '<br>');
+                    this.exceptionMsg = res.data.exception_msg.replace(/\n/g, '<br>');
+                    this.tracebackMsg = res.data.traceback_msg.replace(/\n/g, '<br>');
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
