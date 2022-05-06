@@ -14,14 +14,22 @@ from pydantic import parse_obj_as
 
 from backend.component import iam
 
+from .constants import ModelChangeEventStatusEnum
 from .models import ModelEvent
 
 
 class ModelEventService:
-    def list(self, status: str) -> List[ModelEvent]:
-        events = iam.list_model_change_event(status)
+    def limit_list(self, status: str, limit: int = 1000) -> List[ModelEvent]:
+        events = iam.list_model_change_event(status, limit)
         return parse_obj_as(List[ModelEvent], events)
 
     def update_status(self, event_id: int, status: str):
         """更新事件状态"""
         iam.update_model_change_event(event_id, status)
+
+    def delete_finished_event(self, before_updated_at: int, limit: int = 1000):
+        """
+        删除已结束的事件
+        before_updated_at 表示删除多久之前的，时间戳字段，单位秒
+        """
+        iam.limit_delete_model_change_event(ModelChangeEventStatusEnum.Finished.value, limit, before_updated_at)

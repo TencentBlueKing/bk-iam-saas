@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+import time
 
 from celery import task
 
@@ -25,7 +26,8 @@ def execute_model_change_event():
     biz = ModelEventBiz()
 
     # 1. 查询未执行过的模型变更事件
-    events = biz.list(ModelChangeEventStatusEnum.Pending.value)
+    # Note: 由于定时任务处理时，若数量过多，单个周期内处理不完，会导致多个周期重叠处理相同事件，所以默认只处理1000条
+    events = biz.limit_list(ModelChangeEventStatusEnum.Pending.value)
     # 2. 逐一执行事件
     for event in events:
         executor = biz.get_executor(event)
@@ -34,6 +36,18 @@ def execute_model_change_event():
         except Exception:  # pylint: disable=broad-except
             # 对于失败的事件，不影响其他事件执行，暂时只能记录日志
             logger.exception(f"execute model change event fail! event={event}")
+
+
+@task(ignore_result=True)
+def cleanup_finished_model_change_event():
+    """
+    清理已经结束很长时间的模型变更事件
+    """
+    biz = ModelEventBiz()
+
+    # 默认删除一个月前的已结束的模型变更事件, 为避免对后台造成负载，一次只删除1000条数据（毕竟模型变更数据量一般并不大）
+    before_updated_at = int(time.time()) - 60 * 60 * 24 * 30
+    biz.delete_finished_event(before_updated_at, 1000)
 
 
 @task(ignore_result=True)

@@ -491,13 +491,14 @@ def list_exist_subjects_before_expired_at(subjects: List[Dict], expired_at: int)
     return _call_iam_api(http_post, url_path, data=data)
 
 
-def list_model_change_event(status: str = "pending"):
+def list_model_change_event(status: str = "pending", limit=1000):
     """查询模型变更事件
     status: pending/finished/空
+    limit: 为避免对后台查询造成影响，默认值只查询1000条
     return: [{"pk", "type", "status", "system_id", "model_type", "model_id", "model_pk"}]
     """
     url_path = "/api/v1/web/model-change-event"
-    data = {"status": status}
+    data = {"status": status, "limit": limit}
     return _call_iam_api(http_get, url_path, data=data)
 
 
@@ -508,6 +509,15 @@ def update_model_change_event(event_pk: int, status: str):
     url_path = f"/api/v1/web/model-change-event/{event_pk}"
     data = {"status": status}
     return _call_iam_api(http_put, url_path, data=data)
+
+
+def limit_delete_model_change_event(status: str, limit: int, before_updated_at: int):
+    """更新模型变更事件状态
+    status: pending/finished
+    """
+    url_path = "/api/v1/web/model-change-event"
+    data = {"status": status, "limit": limit, "before_updated_at": before_updated_at}
+    return _call_iam_api(http_delete, url_path, data=data)
 
 
 def delete_action_policies(system_id: str, action_id: str):

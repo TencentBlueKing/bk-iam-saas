@@ -88,8 +88,9 @@ class DeleteActionEventExecutor(BaseEventExecutor):
 class ModelEventBiz:
     svc = ModelEventService()
 
-    def list(self, status) -> List[ModelEventBean]:
-        events = self.svc.list(status)
+    def limit_list(self, status: str, limit: int = 1000) -> List[ModelEventBean]:
+        """有限制条数的查询"""
+        events = self.svc.limit_list(status, limit)
         return parse_obj_as(List[ModelEventBean], events)
 
     def get_executor(self, event: ModelEventBean) -> BaseEventExecutor:
@@ -104,3 +105,7 @@ class ModelEventBiz:
             return DeleteActionEventExecutor(event=event)
 
         raise NotImplementedError(f"{event.type} executor not implement")
+
+    def delete_finished_event(self, before_updated_at: int, limit: int = 1000):
+        """有限制条数和时间的删除事件"""
+        self.svc.delete_finished_event(before_updated_at, limit)
