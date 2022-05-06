@@ -128,7 +128,7 @@ class Cache:
 
         map_keys = {self._make_key(k): k for k in keys}
 
-        results = self.get_many(map_keys.keys(), version)
+        results = self.cache.get_many(map_keys.keys(), version)
 
         data = {}
         for key in map_keys:
