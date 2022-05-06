@@ -14,6 +14,7 @@ import pytz
 from django.conf import settings
 from rest_framework import serializers
 
+from backend.apps.action.serializers import ActionSLZ
 from backend.common.serializers import BaseAction
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PolicyEnvConditionTypeEnum, PolicyEnvTypeEnum
@@ -341,3 +342,8 @@ class RelatedPolicySLZ(serializers.Serializer):
 class PolicyResourceCopySLZ(serializers.Serializer):
     resource_type = ResourceTypeSLZ(label="资源")
     actions = serializers.ListField(label="目标操作", child=BaseAction(label="操作"), allow_empty=True)
+
+
+class RecommendActionPolicy(serializers.Serializer):
+    actions = serializers.ListField(label="推荐操作", child=ActionSLZ(label="操作"))
+    policies = serializers.ListField(label="推荐策略", child=PolicySLZ(label="策略"))
