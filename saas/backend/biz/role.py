@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import base64
-import json
 import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
@@ -401,7 +399,6 @@ class RoleCheckBiz:
             for one_system_limit in split_system_limits:
                 system_limit = one_system_limit.split(":")
                 system_limits[system_limit[0].strip()] = int(system_limit[1].strip())
-            system_limits = json.loads(base64.b64decode(value).decode("utf-8"))
         except Exception as error:
             logger.error(
                 f"parse grade_manager_of_specified_systems_limit from setting failed, value:{value}, error: {error}"
