@@ -66,9 +66,6 @@ urlpatterns = [
     url("", include("backend.healthz.urls")),
     # prometheus
     url("", include("django_prometheus.urls")),
-    # index
-    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-    url(r"^.*$", never_cache(VueTemplateView.as_view())),
 ]
 
 # add swagger api document
@@ -76,3 +73,9 @@ if settings.IS_LOCAL:
     urlpatterns += [
         url(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     ]
+
+# static file
+urlpatterns += [
+    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
+    url(r"^.*$", never_cache(VueTemplateView.as_view())),
+]

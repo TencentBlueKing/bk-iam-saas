@@ -8,14 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import environ
+from pydantic import BaseModel
 
-environ.Env.read_env()
 
-from config.dev import *
-
-# 设置单元测试的数据库
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": os.path.join(BASE_DIR, "tests", "iam.db")}}
-
-# 添加判断是否强制认证角色中间件
-MIDDLEWARE += ("tests.test_util.middlewares.ForceRoleAuthenticationMiddleware",)
+class ModelEvent(BaseModel):
+    id: int
+    type: str
+    status: str
+    system_id: str
+    # 变更影响的模型，可能是action、policy、resource_type
+    model_type: str
+    model_id: str

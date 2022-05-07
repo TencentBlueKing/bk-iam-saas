@@ -305,3 +305,16 @@ class WeekDayEnum(ChoicesEnum):
             (SAT, _("星期六")),
         )
     )
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Model Change Event
+# ---------------------------------------------------------------------------------------------- #
+class ModelChangeEventTypeEnum(ChoicesEnum, LowerStrEnum):
+    ActionPolicyDeleted = "action_policy_deleted"
+    ActionDeleted = "action_deleted"
+
+
+class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
+    Pending = auto()
+    Finished = auto()

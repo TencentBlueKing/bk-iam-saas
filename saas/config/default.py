@@ -238,6 +238,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.policy.tasks.execute_model_change_event",
         "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
     },
+    "periodic_cleanup_finished_model_change_event": {
+        "task": "backend.apps.policy.tasks.cleanup_finished_model_change_event",
+        "schedule": crontab(minute=0, hour=1),  # 每天凌晨1时执行
+    },
     "periodic_retry_long_task": {
         "task": "backend.long_task.tasks.retry_long_task",
         "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
@@ -380,3 +384,6 @@ BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/d
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
 REQUESTS_POOL_MAXSIZE = env.int("REQUESTS_POOL_MAXSIZE", default=20)
+
+# Share App，多个app_code则使用英文逗号分隔
+SHARE_APP_CODES = env.str("BKAPP_SHARE_APP_CODES", "bk-audit")
