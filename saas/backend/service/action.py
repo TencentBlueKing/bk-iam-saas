@@ -55,3 +55,7 @@ class ActionService:
         生成ActionList
         """
         return ActionList(self.list(system_id))
+
+    def delete(self, system_id: str, action_id: str):
+        """删除操作"""
+        iam.delete_action(system_id, action_id)

@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+from typing import List
 
 from django.db import models
 
@@ -51,6 +52,28 @@ class PermTemplate(BaseModel):
     def action_ids(self, data):
         self._action_ids = json_dumps(data)
 
+    @classmethod
+    def delete_action(cls, system_id: str, action_id: str) -> List[int]:
+        """模板里删除某个操作，并返回被变更的模板ID列表"""
+        templates = cls.objects.filter(system_id=system_id)
+        should_updated_templates = []
+        for template in templates:
+            action_ids = template.action_ids
+            # 要删除的Action不在权限模板里，则忽略
+            if action_id not in action_ids:
+                continue
+            # 移除要删除Action，然后更新
+            action_ids.remove(action_id)
+            template.action_ids = action_ids
+            # 添加到将更新的列表里
+            should_updated_templates.append(template)
+
+        # 批量更新权限模板
+        if len(should_updated_templates) > 0:
+            cls.objects.bulk_update(should_updated_templates, fields=["_action_ids"], batch_size=100)
+
+        return [t.id for t in should_updated_templates]
+
 
 class PermTemplatePolicyAuthorized(BaseModel):
     """
@@ -81,6 +104,21 @@ class PermTemplatePolicyAuthorized(BaseModel):
     @data.setter
     def data(self, data):
         self._data = json_dumps(data)
+
+    @classmethod
+    def delete_action(cls, system_id: str, action_id: str, perm_template_ids: List[int]):
+        """授权信息里剔除某个系统的某个操作"""
+        authorized_policies = cls.objects.filter(template_id__in=perm_template_ids, system_id=system_id)
+        should_updated_policies = []
+        for ap in authorized_policies:
+            data = ap.data
+            actions = [a for a in data["actions"] if a["id"] != action_id]
+            data["actions"] = actions
+            ap.data = data
+            should_updated_policies.append(ap)
+
+        if len(should_updated_policies) > 0:
+            cls.objects.bulk_update(should_updated_policies, fields=["_data"], batch_size=20)
 
 
 class PermTemplatePreUpdateLock(BaseModel):

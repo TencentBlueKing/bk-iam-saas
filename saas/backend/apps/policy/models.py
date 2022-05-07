@@ -49,3 +49,8 @@ class Policy(BaseModel):
     @resources.setter
     def resources(self, resources):
         self._resources = json_dumps(resources)
+
+    @classmethod
+    def delete_by_action(cls, system_id: str, action_id: str):
+        """通过操作删除策略"""
+        cls.objects.filter(system_id=system_id, action_id=action_id).delete()
