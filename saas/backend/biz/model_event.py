@@ -88,9 +88,9 @@ class DeleteActionEventExecutor(BaseEventExecutor):
 class ModelEventBiz:
     svc = ModelEventService()
 
-    def limit_list(self, status: str, limit: int = 1000) -> List[ModelEventBean]:
+    def list(self, status: str, limit: int = 1000) -> List[ModelEventBean]:
         """有限制条数的查询"""
-        events = self.svc.limit_list(status, limit)
+        events = self.svc.list(status, limit)
         return parse_obj_as(List[ModelEventBean], events)
 
     def get_executor(self, event: ModelEventBean) -> BaseEventExecutor:

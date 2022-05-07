@@ -19,7 +19,7 @@ from .models import ModelEvent
 
 
 class ModelEventService:
-    def limit_list(self, status: str, limit: int = 1000) -> List[ModelEvent]:
+    def list(self, status: str, limit: int = 1000) -> List[ModelEvent]:
         events = iam.list_model_change_event(status, limit)
         return parse_obj_as(List[ModelEvent], events)
 
@@ -32,4 +32,4 @@ class ModelEventService:
         删除已结束的事件
         before_updated_at 表示删除多久之前的，时间戳字段，单位秒
         """
-        iam.limit_delete_model_change_event(ModelChangeEventStatusEnum.Finished.value, limit, before_updated_at)
+        iam.delete_model_change_event(ModelChangeEventStatusEnum.Finished.value, before_updated_at, limit)

@@ -27,7 +27,7 @@ def execute_model_change_event():
 
     # 1. 查询未执行过的模型变更事件
     # Note: 由于定时任务处理时，若数量过多，单个周期内处理不完，会导致多个周期重叠处理相同事件，所以默认只处理1000条
-    events = biz.limit_list(ModelChangeEventStatusEnum.Pending.value)
+    events = biz.list(ModelChangeEventStatusEnum.Pending.value)
     # 2. 逐一执行事件
     for event in events:
         executor = biz.get_executor(event)

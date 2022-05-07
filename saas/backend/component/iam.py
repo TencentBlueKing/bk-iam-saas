@@ -511,12 +511,12 @@ def update_model_change_event(event_pk: int, status: str):
     return _call_iam_api(http_put, url_path, data=data)
 
 
-def limit_delete_model_change_event(status: str, limit: int, before_updated_at: int):
+def delete_model_change_event(status: str, before_updated_at: int, limit: int):
     """更新模型变更事件状态
     status: pending/finished
     """
     url_path = "/api/v1/web/model-change-event"
-    data = {"status": status, "limit": limit, "before_updated_at": before_updated_at}
+    data = {"status": status, "before_updated_at": before_updated_at, "limit": limit}
     return _call_iam_api(http_delete, url_path, data=data)
 
 
