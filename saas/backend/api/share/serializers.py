@@ -12,4 +12,4 @@ from rest_framework import serializers
 
 
 class ShareSystemSLZ(serializers.Serializer):
-    members = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)
+    managers = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)

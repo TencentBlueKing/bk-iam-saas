@@ -29,6 +29,7 @@ class ShareAPIPermission(permissions.IsAuthenticated):
 
         raise exceptions.PermissionDenied(detail=f"app_code({app_code}) do not be allowed to call share api")
 
+    @staticmethod
     def is_share_app_code(self, app_code):
         share_app_codes = set(settings.SHARE_APP_CODES.split(","))
         return app_code in share_app_codes
