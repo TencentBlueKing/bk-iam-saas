@@ -380,3 +380,6 @@ BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/d
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
 REQUESTS_POOL_MAXSIZE = env.int("REQUESTS_POOL_MAXSIZE", default=20)
+
+# Share App，多个app_code则使用英文逗号分隔
+SHARE_APP_CODES = env.str("BKAPP_SHARE_APP_CODES", "bk-audit")

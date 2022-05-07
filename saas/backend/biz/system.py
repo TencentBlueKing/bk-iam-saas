@@ -10,7 +10,16 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
+from pydantic import BaseModel
+
+from backend.apps.role.models import Role
+from backend.service.constants import RoleType
 from backend.service.system import SystemService
+
+
+class SystemShareInfo(BaseModel):
+    id: str
+    members: List[str] = []
 
 
 class SystemBiz:
@@ -23,3 +32,15 @@ class SystemBiz:
     def list_client(self, system_id: str) -> List[str]:
         """查询可访问系统的clients"""
         return self.svc.list_client(system_id)
+
+    def get_share_info(self, system_id: str) -> SystemShareInfo:
+        """获取系统共享信息"""
+        share_info = SystemShareInfo(id=system_id, members=[])
+        try:
+            role = Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=system_id)
+            share_info.members = role.members
+        except Role.DoesNotExist:
+            # 对于无系统管理员，可能是系统不存在或SaaS未同步到，直接忽略即可
+            pass
+
+        return share_info
