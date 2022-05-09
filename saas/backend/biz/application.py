@@ -215,19 +215,19 @@ class ApprovedPassApplicationBiz:
             sn=application.sn,
         )
 
-    def _gen_role_info_bean(self, application: Application) -> RoleInfoBean:
+    def _gen_role_info_bean(self, data: Dict[Any, Any]) -> RoleInfoBean:
         """处理分级管理员数据"""
         # 兼容新老数据
-        auth_scopes = application.data["authorization_scopes"]
+        auth_scopes = data["authorization_scopes"]
         for scope in auth_scopes:
             # 新数据是system，没有system_id
             if "system_id" not in scope:
                 scope["system_id"] = scope["system"]["id"]
-        return RoleInfoBean(**application.data)
+        return RoleInfoBean(**data)
 
     def _create_rating_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
-        info = self._gen_role_info_bean(application)
+        info = self._gen_role_info_bean(application.data)
         role = self.role_biz.create(info, subject.id)
 
         log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
@@ -235,7 +235,7 @@ class ApprovedPassApplicationBiz:
     def _update_rating_manager(self, subject: Subject, application: Application):
         """更新分级管理员"""
         role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=application.data["id"])
-        info = self._gen_role_info_bean(application)
+        info = self._gen_role_info_bean(application.data)
         self.role_biz.update(role, info, subject.id)
 
         log_role_event(
