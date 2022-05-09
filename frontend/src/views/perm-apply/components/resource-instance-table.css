@@ -79,6 +79,9 @@
                         justify-content: space-evenly;
                         padding-top: 20px;
                     }
+                    .action-name-cell{
+                        margin-top: 38px;
+                    }
                     .empty-text {
                         padding-top: 0px;
                     }

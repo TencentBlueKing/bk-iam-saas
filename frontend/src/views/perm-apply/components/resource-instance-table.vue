@@ -7,13 +7,16 @@
             border
             :row-class-name="handleRowClass"
             :cell-class-name="getCellClass"
+            @select="handlerChange"
+            @select-all="handlerAllChange"
             :empty-text="$t(`m.verify['请选择操作']`)">
+            <bk-table-column v-if="isRecommend" type="selection" width="60"></bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" min-width="160">
                 <template slot-scope="{ row }">
-                    <div v-if="!!row.isAggregate" style="padding: 10px 0;">
+                    <div v-if="!!row.isAggregate" style="padding: 10px 0;" class="action-name-cell">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                     </div>
-                    <div v-else>
+                    <div v-else class="action-name-cell">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                         <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
                         <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
@@ -314,6 +317,12 @@
             buttonLoading: {
                 type: Boolean,
                 default: false
+            },
+            isRecommend: {
+                type: Boolean,
+                default: () => {
+                    return false;
+                }
             }
         },
         data () {
@@ -360,7 +369,8 @@
                     html: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>'
                 },
                 selectedIndex: 0,
-                instanceKey: ''
+                instanceKey: '',
+                resourceSelectData: []
             };
         },
         computed: {
@@ -451,7 +461,6 @@
             list: {
                 handler (value) {
                     this.tableList = value;
-                    console.log('this.tableList', this.tableList);
                     this.originalList = _.cloneDeep(this.tableList);
                 },
                 immediate: true
@@ -1355,6 +1364,11 @@
             handleGetValue () {
                 // flag：提交时校验标识
                 let flag = false;
+
+                // 按需申请标志
+                if (this.isRecommend) {
+                    this.tableList = _.cloneDeep(this.resourceSelectData);
+                }
                 if (this.tableList.length < 1) {
                     flag = true;
                     return {
@@ -1574,7 +1588,20 @@
             selectResourceType (data, index) {
                 data.selectedIndex = index;
                 this.selectedIndex = index;
+            },
+
+            // 复选
+            handlerChange (selection, row) {
+                console.log('selection', selection, row);
+                this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
+                console.log('this.resourceSelectData', this.resourceSelectData);
+            },
+            
+            //
+            handlerAllChange (selection) {
+                // this.tableList = [...selection];
             }
+
         }
     };
 </script>

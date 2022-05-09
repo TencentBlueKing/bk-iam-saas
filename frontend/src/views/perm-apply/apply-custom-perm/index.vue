@@ -427,6 +427,19 @@
                         @on-select="handleResourceSelect"
                         @on-realted-change="handleRelatedChange" />
                 </div>
+
+                <div class="requestRecommendText">{{$t(`m.permApply['以下权限是关联权限，你可以按需申请']`)}}</div>
+                <div class="tableData">
+                    <resource-instance-table
+                        :is-recommend="isRecommend"
+                        :cache-id="routerQuery.cache_id"
+                        :list="newRecommendTableList"
+                        :original-list="tableRecommendDataBackup"
+                        :system-id="systemValue"
+                        ref="resInstanceRecommendTableRef"
+                        @on-select="handleResourceSelect"
+                        @on-realted-change="handleRelatedChange" />
+                </div>
                 <div class="reason">
                     <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
                         <section ref="resInstanceReasonRef">
@@ -557,8 +570,12 @@
                 // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
-                newTableList: []
-
+                newTableList: [],
+                newRecommendTableList: [],
+                tableRecommendData: [],
+                tableRecommendDataBackup: [],
+                aggregationsTableRecommendData: [],
+                isRecommend: true
             };
         },
         computed: {
@@ -803,6 +820,67 @@
                     await this.fetchUserGroupList();
                     // 获取个人用户的用户组列表
                     await this.fetchCurUserGroup();
+                    // 获取推荐操作
+                    await this.fetchRecommended();
+                }
+            },
+
+            // 获取推荐操作
+            async fetchRecommended () {
+                const params = {
+                    system_id: this.routerQuery.system_id,
+                    cache_id: this.routerQuery.cache_id
+                };
+                try {
+                    const res = await this.$store.dispatch('perm/getRecommended', params);
+                    const data = res.data.policies && res.data.policies.map(item => {
+                        const relatedActions = res.data.actions
+                            && res.data.actions.find(sub => sub.id === item.id).related_actions;
+                        // eslint-disable-next-line max-len
+                        item.related_environments = res.data.actions && res.data.actions.find(sub => sub.id === item.id).related_environments;
+                        // 此处处理related_resource_types中value的赋值
+                        return new Policy({
+                            ...item,
+                            related_actions: relatedActions,
+                            tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
+                        });
+                    });
+                    this.tableRecommendData = data;
+                    this.tableRecommendData.forEach(item => {
+                        // item.expired_at = 1627616000
+
+                        // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
+                        if (item.tag === 'add') {
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.expired_at = 15552000;
+                            }
+                        } else {
+                            // 新增的权限不判断是否过期
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.isShowRenewal = true;
+                                item.isExpired = true;
+                            }
+                        }
+                    });
+                    this.newRecommendTableList = _.cloneDeep(this.tableRecommendData.filter(item => {
+                        return !item.isExpiredAtDisabled;
+                    }));
+                    this.tableRecommendDataBackup = _.cloneDeep(this.tableRecommendData);
+                    this.aggregationsTableRecommendData = _.cloneDeep(this.tableRecommendData);
+                } catch (e) {
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    if (this.requestQueue.length > 0) {
+                        this.requestQueue.shift();
+                    }
                 }
             },
 
@@ -1392,8 +1470,6 @@
                 aggregationAction.forEach(item => {
                     actionIds.push(...item.actions.map(_ => _.id));
                 });
-                console.log('this.tableData', this.tableData);
-                console.log('this.aggregationsTableData', this.aggregationsTableData);
                 if (payload) {
                     // 缓存新增加的操作权限数据
                     aggregationAction.forEach(item => {
@@ -2032,7 +2108,11 @@
              */
             async handleApplySubmit () {
                 const tableData = this.$refs.resInstanceTableRef.handleGetValue();
-                const { actions, flag, aggregations } = tableData;
+                const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
+                const { flag, aggregations } = tableData;
+                let actions = tableData.actions;
+                const recommendActions = tableRecommendData.actions;
+                actions = [...actions, ...recommendActions];
                 if (flag || this.reason === '') {
                     this.isShowReasonError = this.reason === '';
                     if (actions.length < 1 && aggregations.length < 1) {

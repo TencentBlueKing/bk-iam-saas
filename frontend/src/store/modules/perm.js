@@ -597,6 +597,25 @@ export default {
                 {},
                 config
             );
+        },
+
+        /**
+         *  推荐列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getRecommended ({ commit, state, dispatch }, params = {}, config) {
+            console.log('params', params);
+            return http.get(
+                `${AJAX_URL_PREFIX}/policies/recommended/?${json2Query(params)}`,
+                {},
+                config
+            );
         }
     }
 };

@@ -229,7 +229,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRelatedPolicy ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/policies/related_policy/`, params, config);
+            return http.post(`${AJAX_URL_PREFIX}/policies/related/`, params, config);
         }
     }
 };
