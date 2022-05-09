@@ -37,7 +37,6 @@ from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.pagination import CustomPageNumberPagination
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
@@ -64,7 +63,6 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     @swagger_auto_schema(
         operation_description="创建分级管理员",
         request_body=ManagementGradeManagerCreateSLZ(label="创建分级管理员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_201_CREATED: RoleIdSLZ(label="分级管理员ID")},
         tags=["management.role"],
     )
@@ -107,7 +105,6 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     @swagger_auto_schema(
         operation_description="更新分级管理员",
         request_body=ManagementGradeManagerUpdateSLZ(label="更新分级管理员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role"],
     )
@@ -147,7 +144,6 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 
     @swagger_auto_schema(
         operation_description="分级管理员列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         query_serializer=ManagementSourceSystemSLZ(),
         responses={status.HTTP_200_OK: ManagementGradeManagerBasicInfoSZL(many=True)},
         tags=["management.role.member"],
@@ -168,7 +164,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 class ManagementGradeManagerMemberViewSet(GenericViewSet):
     """分级管理员成员"""
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
@@ -189,7 +185,6 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="分级管理员成员列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.CharField(label="成员"))},
         tags=["management.role.member"],
     )
@@ -201,7 +196,6 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量添加分级管理员成员",
         request_body=ManagementGradeManagerMembersSLZ(label="分级管理员成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.member"],
     )
@@ -227,7 +221,6 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量删除分级管理员成员",
         query_serializer=ManagementGradeManagerMembersDeleteSLZ(label="分级管理员成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.member"],
     )

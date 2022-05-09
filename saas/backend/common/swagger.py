@@ -12,54 +12,6 @@ from collections import OrderedDict
 
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
-from rest_framework import serializers as drf_serializers
-
-
-class CustomFieldsSerializer(drf_serializers.Serializer):
-    """
-    支持添加`自定义字段`的serializer
-    """
-
-    def __init__(self, *args, **kwargs):
-        # Don't pass the 'add_fields' arg up to the superclass
-        add_fields = kwargs.pop("add_fields", None)
-
-        # Instantiate the superclass normally
-        super().__init__(*args, **kwargs)
-
-        if add_fields is not None:
-            # Add 'add_fields' to fields
-            self.fields.update(add_fields)
-
-
-class ResponseSerializer(CustomFieldsSerializer):
-    code = drf_serializers.IntegerField()
-    result = drf_serializers.BooleanField()
-    message = drf_serializers.CharField()
-
-
-class PaginatedDataSerializer(CustomFieldsSerializer):
-    count = drf_serializers.IntegerField()
-    has_next = drf_serializers.BooleanField()
-    has_previous = drf_serializers.BooleanField()
-
-
-def get_response_serializer(data_field=None):
-    """
-    用于 drf-yasg swagger_auto_schema 获取标准的 response serializer
-    """
-    add_fields = {"data": data_field} if data_field else {}
-    return ResponseSerializer(add_fields=add_fields)
-
-
-def get_paginated_response_serializer(results_field=None):
-
-    """
-    用于 drf-yasg swagger_auto_schema 获取标准翻页的 response serializer
-    """
-    add_fields = {"results": results_field} if results_field else {}
-    paginated_data_slz = PaginatedDataSerializer(add_fields=add_fields)
-    return ResponseSerializer(add_fields={"data": paginated_data_slz})
 
 
 class ResponseSwaggerAutoSchema(SwaggerAutoSchema):
@@ -67,6 +19,18 @@ class ResponseSwaggerAutoSchema(SwaggerAutoSchema):
         responses = super().get_response_schemas(response_serializers)
         new_responses = OrderedDict()
         for sc, response in responses.items():
+            data = response.get("schema") or openapi.Schema(type=openapi.TYPE_OBJECT)
+            if self.should_page() or getattr(self.view, "is_manual_paginator", False):
+                data = openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties=OrderedDict(
+                        (
+                            ("count", openapi.Schema(type=openapi.TYPE_INTEGER)),
+                            ("results", response.get("schema")),
+                        )
+                    ),
+                    required=["count", "results"],
+                )
             new_responses[sc] = openapi.Response(
                 description=response.get("description", ""),
                 schema=openapi.Schema(
@@ -76,40 +40,7 @@ class ResponseSwaggerAutoSchema(SwaggerAutoSchema):
                             ("code", openapi.Schema(type=openapi.TYPE_INTEGER)),
                             ("result", openapi.Schema(type=openapi.TYPE_BOOLEAN)),
                             ("message", openapi.Schema(type=openapi.TYPE_STRING)),
-                            ("data", response.get("schema")),
-                        )
-                    ),
-                ),
-            )
-        return new_responses
-
-
-class PaginatedResponseSwaggerAutoSchema(SwaggerAutoSchema):
-    def get_response_schemas(self, response_serializers):
-        responses = super().get_response_schemas(response_serializers)
-        new_responses = OrderedDict()
-        for sc, response in responses.items():
-            new_responses[sc] = openapi.Response(
-                description="",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties=OrderedDict(
-                        (
-                            ("code", openapi.Schema(type=openapi.TYPE_INTEGER)),
-                            ("result", openapi.Schema(type=openapi.TYPE_BOOLEAN)),
-                            ("message", openapi.Schema(type=openapi.TYPE_STRING)),
-                            (
-                                "data",
-                                openapi.Schema(
-                                    type=openapi.TYPE_OBJECT,
-                                    properties=OrderedDict(
-                                        (
-                                            ("count", openapi.Schema(type=openapi.TYPE_INTEGER)),
-                                            ("results", response["schema"]),
-                                        )
-                                    ),
-                                ),
-                            ),
+                            ("data", data),
                         )
                     ),
                 ),

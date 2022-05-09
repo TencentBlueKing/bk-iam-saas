@@ -8,16 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from backend.account.permissions import RolePermission
 from backend.apps.mgmt.filters import LongTaskFilter
 from backend.apps.mgmt.serializers import LongTaskSLZ, SubTaskSLZ
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.long_task.constants import TaskStatus
 from backend.long_task.models import SubTaskState, TaskDetail
 from backend.long_task.tasks import TaskFactory
@@ -38,7 +36,6 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="长时任务列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: LongTaskSLZ(label="长时任务列表", many=True)},
         tags=["mgmt.api"],
     )
@@ -47,7 +44,6 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="长时任务详情",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: SubTaskSLZ(label="长时任务详情", many=True)},
         tags=["mgmt.api"],
     )
@@ -59,8 +55,7 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="长时任务失败重试",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.api"],
     )
     def retry(self, request, *args, **kwargs):

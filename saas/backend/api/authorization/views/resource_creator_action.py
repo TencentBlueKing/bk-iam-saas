@@ -15,7 +15,6 @@ from rest_framework.views import APIView
 from backend.api.authentication import ESBAuthentication
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.resource_creator_action import ResourceCreatorActionBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 from backend.trans.open_authorization import AuthorizationTrans
@@ -46,7 +45,6 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
 
     @swagger_auto_schema(
         operation_description="新建关联授权",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=ResourceCreatorActionSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],
@@ -98,7 +96,6 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
 
     @swagger_auto_schema(
         operation_description="新建关联授权",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=BatchResourceCreatorActionSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],
@@ -150,7 +147,6 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
 
     @swagger_auto_schema(
         operation_description="新建关联授权-属性授权",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=ResourceCreatorActionAttributeSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],

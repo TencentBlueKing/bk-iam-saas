@@ -8,16 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.account.permissions import RolePermission
 from backend.apps.role.serializers import AuthorizedSubjectsSLZ, QueryAuthorizedSubjectsSLZ
 from backend.biz.permission_audit import QueryAuthorizedSubjects
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum
 from backend.util.time import format_localtime
 
@@ -33,7 +31,6 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="查询-权限所属成员列表",
         request_body=QueryAuthorizedSubjectsSLZ(label="权限信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AuthorizedSubjectsSLZ(label="拥有权限的对象", many=True)},
         tags=["role"],
     )
@@ -47,8 +44,7 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="导出-权限所属成员列表",
         request_body=QueryAuthorizedSubjectsSLZ(label="权限信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     def export(self, request, *args, **kwargs):

@@ -14,20 +14,20 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.biz.resource import ResourceBiz
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema
 
 from .serializers import BaseInfoSLZ, ResourceAttributeQuerySLZ, ResourceAttributeValueQuerySLZ, ResourceQuerySLZ
 
 
 class ResourceViewSet(GenericViewSet):
 
-    paginator = None
+    # [Swagger生成文档需要] 这里不使用drf分页器，而是自定义在对应参数里
+    pagination_class = None
+    is_manual_paginator = True
 
     biz = ResourceBiz()
 
     @swagger_auto_schema(
         operation_description="资源实例列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         request_body=ResourceQuerySLZ(label="资源查询参数"),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
         tags=["resource"],
@@ -61,8 +61,7 @@ class ResourceViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="资源属性列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
-        query_serializer=ResourceAttributeQuerySLZ,
+        query_serializer=ResourceAttributeQuerySLZ(),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
         tags=["resource"],
     )
@@ -84,8 +83,7 @@ class ResourceViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="资源属性Value列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
-        query_serializer=ResourceAttributeValueQuerySLZ,
+        query_serializer=ResourceAttributeValueQuerySLZ(),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
         tags=["resource"],
     )

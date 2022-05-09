@@ -21,7 +21,6 @@ from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.open import ApplicationPolicyListCache
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.serializers import SystemQuerySLZ
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
@@ -30,7 +29,7 @@ permission_logger = logging.getLogger("permission")
 
 class TemporaryPolicyViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
@@ -39,8 +38,7 @@ class TemporaryPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户的所有临时权限列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=SystemQuerySLZ,
+        query_serializer=SystemQuerySLZ(),
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
         tags=["temporary_policy"],
     )
@@ -57,8 +55,7 @@ class TemporaryPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除权限",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=PolicyDeleteSLZ,
+        query_serializer=PolicyDeleteSLZ(),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["temporary_policy"],
     )
@@ -92,14 +89,12 @@ class TemporaryPolicyViewSet(GenericViewSet):
 
 class TemporaryPolicySystemViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()
 
     @swagger_auto_schema(
         operation_description="用户的有临时权限的所有系统列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=None,
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["temporary_policy"],
     )

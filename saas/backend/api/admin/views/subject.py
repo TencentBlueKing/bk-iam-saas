@@ -18,14 +18,13 @@ from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import AdminSubjectGroupSLZ
 from backend.api.authentication import ESBAuthentication
 from backend.biz.group import GroupBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.models import Subject
 
 
 class AdminSubjectGroupViewSet(GenericViewSet):
     """Subject的用户组"""
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
@@ -36,7 +35,6 @@ class AdminSubjectGroupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="Subject加入的用户组列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AdminSubjectGroupSLZ(label="用户组", many=True)},
         tags=["admin.subject.group"],
     )

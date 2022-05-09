@@ -9,16 +9,14 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.utils import timezone
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.common.authentication import BasicAppCodeAuthentication
 from backend.common.debug import RedisStorage
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 
 class DebugViewSet(GenericViewSet):
@@ -26,14 +24,13 @@ class DebugViewSet(GenericViewSet):
     authentication_classes = [BasicAppCodeAuthentication]
     permission_classes = [IsAuthenticated]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     lookup_field = "id"
 
     @swagger_auto_schema(
         operation_description="Celery任务调试信息列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response([])},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["debug"],
     )
     def list(self, request, *args, **kwargs):
@@ -43,8 +40,7 @@ class DebugViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="调试信息详情",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["debug"],
     )
     def retrieve(self, request, *args, **kwargs):

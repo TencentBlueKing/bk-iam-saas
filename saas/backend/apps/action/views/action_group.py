@@ -14,7 +14,6 @@ from rest_framework.response import Response
 
 from backend.biz.action import ActionBiz
 from backend.biz.action_group import ActionGroupBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 from ..serializers import ActionGroupQuerySLZ, SubActionGroupSLZ
 
@@ -29,8 +28,7 @@ class ActionGroupView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="获取操作分组",
-        query_serializer=ActionGroupQuerySLZ,
-        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=ActionGroupQuerySLZ(),
         responses={status.HTTP_200_OK: SubActionGroupSLZ(label="操作分组", many=True)},
         tags=["action"],
     )
