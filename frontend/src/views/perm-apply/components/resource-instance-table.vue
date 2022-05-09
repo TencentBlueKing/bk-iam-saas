@@ -10,7 +10,7 @@
             @select="handlerChange"
             @select-all="handlerAllChange"
             :empty-text="$t(`m.verify['请选择操作']`)">
-            <bk-table-column v-if="isRecommend" type="selection" width="60"></bk-table-column>
+            <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" min-width="160">
                 <template slot-scope="{ row }">
                     <div v-if="!!row.isAggregate" style="padding: 10px 0;" class="action-name-cell">
@@ -771,6 +771,7 @@
                     resource_type_system: resItem.system_id,
                     resource_type_id: resItem.type
                 };
+                console.log('this.params', this.params);
                 const index = this.tableList.findIndex(item => item.id === data.id);
                 console.log('index', index);
                 console.log('resIndex', resIndex);
@@ -1599,7 +1600,7 @@
             
             //
             handlerAllChange (selection) {
-                // this.tableList = [...selection];
+                this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
             }
 
         }

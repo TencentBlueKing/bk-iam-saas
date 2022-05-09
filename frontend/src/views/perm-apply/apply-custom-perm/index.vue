@@ -404,7 +404,7 @@
                     </bk-alert>
                 </div>
                 <div class="requestIndependent">
-                    <div class="requestIndependentText">{{$t(`m.permApply['你可以申请独立权限']`)}}</div>
+                    <div class="requestIndependentText">{{$t(`m.permApply['以下是你必须申请的权限']`)}}</div>
                     <div class="info">
                         {{ $t(`m.info['如果需要更多自定义权限']`) }}，
                         {{ $t(`m.info['可前往']`) }}
@@ -626,6 +626,8 @@
         watch: {
             '$route': {
                 handler (value) {
+                    // value.query.system_id = 'bk_job';
+                    // value.query.cache_id = 'f3419dba47964a6b8a3e7467ff685b5e';
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -833,21 +835,29 @@
                 };
                 try {
                     const res = await this.$store.dispatch('perm/getRecommended', params);
-                    const data = res.data.policies && res.data.policies.map(item => {
-                        const relatedActions = res.data.actions
-                            && res.data.actions.find(sub => sub.id === item.id).related_actions;
-                        // eslint-disable-next-line max-len
-                        item.related_environments = res.data.actions && res.data.actions.find(sub => sub.id === item.id).related_environments;
-                        // 此处处理related_resource_types中value的赋值
-                        return new Policy({
-                            ...item,
-                            related_actions: relatedActions,
-                            tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
-                        });
+                    const recommendActions = res.data.actions || [];
+                    const recommendPolicies = res.data.policies || [];
+
+                    const data = recommendActions.map(item => {
+                        const resourceGroups = recommendPolicies.find(sub => sub.id === item.id);
+                        if (resourceGroups) {
+                            resourceGroups.resource_groups.map(v => {
+                                v.related_resource_types.forEach(e => {
+                                    e.id = e.type;
+                                });
+                                return v;
+                            });
+                        }
+                        item.resource_groups = resourceGroups && resourceGroups.resource_groups
+                            ? resourceGroups.resource_groups : [];
+                        if (!item.resource_groups || !item.resource_groups.length) {
+                            item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                        }
+                        return new Policy({ ...item, tag: 'add' }, 'custom');
                     });
                     this.tableRecommendData = data;
                     this.tableRecommendData.forEach(item => {
-                        // item.expired_at = 1627616000
+                        item.expired_at = 1627616000;
 
                         // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
                         if (item.tag === 'add') {
