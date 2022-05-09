@@ -227,7 +227,7 @@ class ApprovedPassApplicationBiz:
 
     def _create_rating_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
-        info = self._gen_role_info_bean(application.data)
+        info = self._gen_role_info_bean(application)
         role = self.role_biz.create(info, subject.id)
 
         log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
@@ -235,7 +235,7 @@ class ApprovedPassApplicationBiz:
     def _update_rating_manager(self, subject: Subject, application: Application):
         """更新分级管理员"""
         role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=application.data["id"])
-        info = self._gen_role_info_bean(application.data)
+        info = self._gen_role_info_bean(application)
         self.role_biz.update(role, info, subject.id)
 
         log_role_event(
