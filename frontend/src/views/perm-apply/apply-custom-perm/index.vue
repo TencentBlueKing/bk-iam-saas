@@ -212,7 +212,6 @@
                 </bk-button>
             </div>
         </smart-action>
-        <!-- 用户组权限申请默认页面 -->
         <smart-action class="applpForPermission" v-if="isNoPermissionsSet && isShowHasUserGroup">
             <bk-radio-group v-model="checkRadio" @change="handlerChange">
                 <div class="groupPermissionQequest" :class="{ 'blueBorder': isShowUserGroup }">
@@ -320,7 +319,6 @@
                         </div>
                     </render-horizontal-block>
                 </div>
-                <!-- 独立申请权限 -->
                 <div class="IndependentApplication" :class="{ 'blueBorder': isShowIndependent }">
                     <render-horizontal-block>
                         <div class="independent">
@@ -2118,12 +2116,24 @@
              */
             async handleApplySubmit () {
                 const tableData = this.$refs.resInstanceTableRef.handleGetValue();
-                const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
                 const { flag, aggregations } = tableData;
                 let actions = tableData.actions;
-                const recommendActions = tableRecommendData.actions;
+                let recommendActions = [];
+                let recommendFlag = false;
+                
+                if (this.$refs.resInstanceRecommendTableRef) {
+                    const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
+                    recommendActions = tableRecommendData.actions;
+                    recommendFlag = recommendActions.some(e => {
+                        return e.resource_groups.some(v => {
+                            return v.related_resource_types.some(j => {
+                                return !j.condition.length;
+                            });
+                        });
+                    });
+                }
                 actions = [...actions, ...recommendActions];
-                if (flag || this.reason === '') {
+                if (recommendFlag || flag || this.reason === '') {
                     this.isShowReasonError = this.reason === '';
                     if (actions.length < 1 && aggregations.length < 1) {
                         this.isShowActionError = true;

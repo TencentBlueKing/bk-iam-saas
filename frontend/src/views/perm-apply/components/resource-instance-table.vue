@@ -1366,10 +1366,6 @@
                 // flag：提交时校验标识
                 let flag = false;
 
-                // 按需申请标志
-                if (this.isRecommend) {
-                    this.tableList = _.cloneDeep(this.resourceSelectData);
-                }
                 if (this.tableList.length < 1) {
                     flag = true;
                     return {
@@ -1380,7 +1376,6 @@
                 }
                 const actionList = [];
                 const aggregations = [];
-                console.log('this.tableList', this.tableList);
                 this.tableList.forEach(item => {
                     let tempExpiredAt = '';
                     if (item.expired_at === '' && item.expired_display) {
@@ -1398,7 +1393,13 @@
                                     groupItem.related_resource_types.forEach(resItem => {
                                         let newResourceCount = 0;
                                         if (resItem.empty) {
-                                            resItem.isError = true;
+                                            if (this.isRecommend) {
+                                                if (this.resourceSelectData.includes(item.name)) {
+                                                    resItem.isError = true;
+                                                }
+                                            } else {
+                                                resItem.isError = true;
+                                            }
                                             flag = true;
                                         }
                                         const conditionList = (resItem.condition.length > 0 && !resItem.empty)
@@ -1480,7 +1481,14 @@
                         if (params.policy_id === '') {
                             delete params.policy_id;
                         }
-                        actionList.push(_.cloneDeep(params));
+                        // 按需申请标志
+                        if (this.isRecommend) {
+                            if (this.resourceSelectData.includes(params.name)) {
+                                actionList.push(_.cloneDeep(params));
+                            }
+                        } else {
+                            actionList.push(_.cloneDeep(params));
+                        }
                     } else {
                         const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
                         if (instances.length < 1) {
@@ -1593,13 +1601,14 @@
 
             // 复选
             handlerChange (selection, row) {
-                console.log('selection', selection, row);
+                selection = selection.map(e => e.name);
                 this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
                 console.log('this.resourceSelectData', this.resourceSelectData);
             },
             
-            //
+            // 全选
             handlerAllChange (selection) {
+                selection = selection.map(e => e.name);
                 this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
             }
 
