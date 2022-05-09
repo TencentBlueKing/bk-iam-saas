@@ -216,6 +216,16 @@
         color: #63656e;
         padding-left:22px
     }
+
+    .requestRecommendText {
+        font-size: 14px;
+        font-family: MicrosoftYaHei, MicrosoftYaHei-Bold;
+        font-weight: 700;
+        text-align: left;
+        color: #63656e;
+        padding-left:22px;
+        padding-top:12px
+    }
     .userGroup,
     .independent,
     .requestIndependent{
