@@ -347,6 +347,19 @@
                                             @on-select="handleResourceSelect"
                                             @on-realted-change="handleRelatedChange" />
                                     </div>
+
+                                    <div class="requestRecommendText">{{$t(`m.permApply['以下权限是关联权限，你可以按需申请']`)}}</div>
+                                    <div class="tableData">
+                                        <resource-instance-table
+                                            :is-recommend="isRecommend"
+                                            :cache-id="routerQuery.cache_id"
+                                            :list="newRecommendTableList"
+                                            :original-list="tableRecommendDataBackup"
+                                            :system-id="systemValue"
+                                            ref="resInstanceRecommendTableRef"
+                                            @on-select="handleResourceSelect"
+                                            @on-realted-change="handleRelatedChange" />
+                                    </div>
                                     <div class="reason">
                                         <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
                                             <section ref="resInstanceReasonRef">
