@@ -37,7 +37,6 @@ from backend.biz.policy_tag import PolicyTagBean, PolicyTagBeanList
 from backend.biz.related_policy import RelatedPolicyBiz
 from backend.common.error_codes import error_codes
 from backend.common.serializers import ActionQuerySLZ
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.common.time import get_soon_expire_ts
 from backend.service.action import ActionService
 from backend.service.constants import SubjectType
@@ -59,7 +58,7 @@ permission_logger = logging.getLogger("permission")
 
 class PolicyViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
@@ -68,8 +67,7 @@ class PolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户的所有权限列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=ActionQuerySLZ,
+        query_serializer=ActionQuerySLZ(),
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
         tags=["policy"],
     )
@@ -102,8 +100,7 @@ class PolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除权限",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=PolicyDeleteSLZ,
+        query_serializer=PolicyDeleteSLZ(),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["policy"],
     )
@@ -136,7 +133,6 @@ class PolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限更新",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=PolicyPartDeleteSLZ(label="条件删除"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["policy"],
@@ -191,7 +187,6 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="Policy删除资源组",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["policy"],
     )
@@ -225,14 +220,12 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
 
 class PolicySystemViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()
 
     @swagger_auto_schema(
         operation_description="用户的有权限的所有系统列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=None,
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["policy"],
     )
@@ -246,14 +239,12 @@ class PolicySystemViewSet(GenericViewSet):
 
 class PolicyExpireSoonViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()
 
     @swagger_auto_schema(
         operation_description="用户即将过期的权限列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=None,
         responses={status.HTTP_200_OK: PolicyExpireSoonSLZ(label="系统", many=True)},
         tags=["policy"],
     )
@@ -275,7 +266,6 @@ class RelatedPolicyViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="生成依赖操作",
         request_body=RelatedPolicySLZ(label="策略"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
         tags=["policy"],
     )
@@ -330,8 +320,7 @@ class BatchPolicyResourceCopyViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量复制策略资源",
         request_body=PolicyResourceCopySLZ(label="策略"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: None},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["policy"],
     )
     def create(self, request, *args, **kwargs):
@@ -379,7 +368,7 @@ class RecommendPolicyViewSet(GenericViewSet):
     生成推荐操作
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     action_biz = ActionBiz()
     action_group_biz = ActionGroupBiz()
@@ -389,8 +378,7 @@ class RecommendPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="生成推荐操作",
-        query_serializer=ActionQuerySLZ,
-        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=ActionQuerySLZ(),
         responses={status.HTTP_200_OK: RecommendActionPolicy(label="推荐操作策略")},
         tags=["policy"],
     )

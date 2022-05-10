@@ -15,7 +15,6 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.biz.system import SystemBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 from .permissions import ShareAPIPermission
 from .serializers import ShareSystemSLZ
@@ -31,7 +30,6 @@ class SystemViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="系统详情",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ShareSystemSLZ(label="系统详情")},
         tags=["group"],
     )

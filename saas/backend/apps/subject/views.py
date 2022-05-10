@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -24,7 +23,6 @@ from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.common.serializers import SystemQuerySLZ
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum, SubjectRelationType
 from backend.service.models import Subject
 
@@ -42,13 +40,12 @@ class SubjectGroupViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="我的权限-用户组列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["subject"],
     )
@@ -59,9 +56,8 @@ class SubjectGroupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="我的权限-退出用户组",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=UserRelationSLZ,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        query_serializer=UserRelationSLZ(),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["subject"],
     )
     @view_audit_decorator(SubjectGroupDeleteAuditProvider)
@@ -90,14 +86,12 @@ class SubjectSystemViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()
 
     @swagger_auto_schema(
         operation_description="Subject有权限的所有系统列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=None,
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["subject"],
     )
@@ -113,15 +107,14 @@ class SubjectPolicyViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
 
     @swagger_auto_schema(
         operation_description="Subject权限列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=SystemQuerySLZ,
+        query_serializer=SystemQuerySLZ(),
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
         tags=["subject"],
     )
@@ -142,8 +135,7 @@ class SubjectPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除权限",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=PolicyDeleteSLZ,
+        query_serializer=PolicyDeleteSLZ(),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["subject"],
     )
@@ -174,7 +166,6 @@ class SubjectPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限更新",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=PolicyPartDeleteSLZ(label="条件删除"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["subject"],
@@ -224,7 +215,6 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="Policy删除资源组",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["subject"],
     )
@@ -257,14 +247,13 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
 
 class SubjectRoleViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="用户角色权限",
         query_serializer=QueryRoleSLZ(label="query_role"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
         tags=["subject"],
     )
@@ -281,15 +270,14 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
 
     @swagger_auto_schema(
         operation_description="用户的所有临时权限列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=SystemQuerySLZ,
+        query_serializer=SystemQuerySLZ(),
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
         tags=["subject"],
     )
@@ -306,8 +294,7 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除权限",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=PolicyDeleteSLZ,
+        query_serializer=PolicyDeleteSLZ(),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["subject"],
     )
@@ -343,14 +330,12 @@ class SubjectTemporaryPolicySystemViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = PolicyQueryBiz()
 
     @swagger_auto_schema(
         operation_description="Subject有临时权限的所有系统列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=None,
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["subject"],
     )

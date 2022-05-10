@@ -21,7 +21,6 @@ from backend.api.authentication import ESBAuthentication
 from backend.apps.group.models import Group
 from backend.biz.group import GroupBiz
 from backend.common.pagination import CompatiblePagination
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema
 
 
 class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -39,7 +38,6 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AdminGroupBasicSLZ(label="用户组信息", many=True)},
         tags=["admin.group"],
     )
@@ -63,7 +61,6 @@ class AdminGroupMemberViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AdminGroupMemberSLZ(label="用户组成员信息", many=True)},
         tags=["admin.group.member"],
     )

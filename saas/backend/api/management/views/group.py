@@ -47,7 +47,6 @@ from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTem
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.pagination import CompatiblePagination
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
@@ -74,7 +73,6 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量创建用户组",
         request_body=ManagementGradeManagerGroupCreateSLZ(label="用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组ID"))},
         tags=["management.role.group"],
     )
@@ -104,7 +102,6 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ManagementGroupBasicSLZ(label="用户组信息", many=True)},
         tags=["management.role.group"],
     )
@@ -156,7 +153,6 @@ class ManagementGroupViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="修改用户组",
         request_body=ManagementGroupBaseInfoUpdateSLZ(label="用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group"],
     )
@@ -188,7 +184,6 @@ class ManagementGroupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除用户组",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group"],
     )
@@ -226,7 +221,6 @@ class ManagementGroupMemberViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ManagementGroupMemberSLZ(label="用户组成员信息", many=True)},
         tags=["management.role.group.member"],
     )
@@ -243,7 +237,6 @@ class ManagementGroupMemberViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组添加成员",
         request_body=GroupAddMemberSLZ(label="用户组成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.member"],
     )
@@ -276,7 +269,6 @@ class ManagementGroupMemberViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组删除成员",
         query_serializer=ManagementGroupMemberDeleteSLZ(label="用户组成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.member"],
     )
@@ -319,7 +311,6 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组授权",
         request_body=ManagementGroupGrantSLZ(label="权限"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.policy"],
     )
@@ -361,7 +352,6 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组权限回收",
         request_body=ManagementGroupGrantSLZ(label="权限"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.policy"],
     )
@@ -410,7 +400,6 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组权限删除",
         request_body=ManagementGroupPolicyDeleteSLZ(label="权限"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.policy"],
     )

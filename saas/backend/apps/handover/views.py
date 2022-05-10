@@ -11,9 +11,8 @@ specific language governing permissions and limitations under the License.
 from typing import Dict, Type
 
 from django.db import transaction
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
@@ -22,7 +21,6 @@ from backend.apps.handover.constants import HandoverStatus
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_permission_handover_lock
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.util.json import json_dumps
 
 from .constants import HandoverObjectType
@@ -41,8 +39,7 @@ class HandoverViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="执行权限交接",
         request_body=HandoverSLZ(label="交接信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["handover"],
     )
     @admin_not_need_apply_check
@@ -122,7 +119,6 @@ class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="交接记录-查询",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: HandoverRecordSLZ(label="交接记录")},
         tags=["handover"],
     )
@@ -133,7 +129,6 @@ class HandoverRecordsViewSet(mixins.ListModelMixin, GenericViewSet):
 class HandoverTasksViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="交接任务-查询",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: HandoverTaskSLZ(label="交接任务")},
         tags=["handover"],
     )
