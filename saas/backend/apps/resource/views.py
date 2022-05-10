@@ -11,18 +11,14 @@ specific language governing permissions and limitations under the License.
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import ViewSet
 
 from backend.biz.resource import ResourceBiz
 
 from .serializers import BaseInfoSLZ, ResourceAttributeQuerySLZ, ResourceAttributeValueQuerySLZ, ResourceQuerySLZ
 
 
-class ResourceViewSet(GenericViewSet):
-
-    # [Swagger生成文档需要] 这里不使用drf分页器，而是自定义在对应参数里
-    pagination_class = None
-    is_manual_paginator = True
+class ResourceViewSet(ViewSet):
 
     biz = ResourceBiz()
 
@@ -30,6 +26,7 @@ class ResourceViewSet(GenericViewSet):
         operation_description="资源实例列表",
         request_body=ResourceQuerySLZ(label="资源查询参数"),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
+        force_page_response=True,
         tags=["resource"],
     )
     def list(self, request, *args, **kwargs):
@@ -63,6 +60,7 @@ class ResourceViewSet(GenericViewSet):
         operation_description="资源属性列表",
         query_serializer=ResourceAttributeQuerySLZ(),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
+        force_page_response=True,
         tags=["resource"],
     )
     def list_resource_attribute(self, request, *args, **kwargs):
@@ -85,6 +83,7 @@ class ResourceViewSet(GenericViewSet):
         operation_description="资源属性Value列表",
         query_serializer=ResourceAttributeValueQuerySLZ(),
         responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
+        force_page_response=True,
         tags=["resource"],
     )
     def list_resource_attribute_value(self, request, *args, **kwargs):

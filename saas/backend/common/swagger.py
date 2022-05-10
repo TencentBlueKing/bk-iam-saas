@@ -20,7 +20,7 @@ class ResponseSwaggerAutoSchema(SwaggerAutoSchema):
         new_responses = OrderedDict()
         for sc, response in responses.items():
             data = response.get("schema") or openapi.Schema(type=openapi.TYPE_OBJECT)
-            if self.should_page() or getattr(self.view, "is_manual_paginator", False):
+            if self.should_page() or self.overrides.get("force_page_response", False):
                 data = openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties=OrderedDict(
