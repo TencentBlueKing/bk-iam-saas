@@ -13,10 +13,11 @@
             <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" min-width="160">
                 <template slot-scope="{ row }">
-                    <div v-if="!!row.isAggregate" style="padding: 10px 0;" class="action-name-cell">
+                    <div v-if="!!row.isAggregate" style="padding: 10px 0;"
+                        :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                     </div>
-                    <div v-else class="action-name-cell">
+                    <div v-else :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                         <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
                         <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
