@@ -21,7 +21,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.apps.subject.audit import SubjectPolicyDeleteAuditProvider
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.action import ActionBiz
+from backend.biz.action import ActionBean, ActionBeanList, ActionBiz
 from backend.biz.action_group import ActionGroupBiz
 from backend.biz.constants import PolicyTag
 from backend.biz.open import ApplicationPolicyListCache
@@ -428,4 +428,11 @@ class RecommendPolicyViewSet(GenericViewSet):
 
             actions.append(action)
 
-        return Response({"actions": [a.dict() for a in actions], "policies": [p.dict() for p in policy_list.policies]})
+        action_bean_list = ActionBeanList(parse_obj_as(List[ActionBean], actions))
+        action_bean_list.fill_related_resource_type_name()
+        return Response(
+            {
+                "actions": [a.dict() for a in action_bean_list.actions],
+                "policies": [p.dict() for p in policy_list.policies],
+            }
+        )
