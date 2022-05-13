@@ -11,7 +11,7 @@
             @select-all="handlerAllChange"
             :empty-text="$t(`m.verify['请选择操作']`)">
             <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" min-width="160">
+            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :width="isRecommend ? '240' : '300'">
                 <template slot-scope="{ row }">
                     <div v-if="!!row.isAggregate" style="padding: 10px 0;"
                         :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
@@ -1605,12 +1605,36 @@
                 selection = selection.map(e => e.name);
                 this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
                 console.log('this.resourceSelectData', this.resourceSelectData);
+                this.handlerChangeError();
             },
             
             // 全选
             handlerAllChange (selection) {
                 selection = selection.map(e => e.name);
                 this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
+                this.handlerChangeError();
+            },
+
+            handlerChangeError () {
+                this.tableList.forEach(item => {
+                    if (item.resource_groups.length > 0) {
+                        item.resource_groups.forEach(groupItem => {
+                            if (groupItem.related_resource_types.length > 0) {
+                                groupItem.related_resource_types.forEach(resItem => {
+                                    if (resItem.empty) {
+                                        if (this.isRecommend) {
+                                            if (this.resourceSelectData.includes(item.name)) {
+                                                resItem.isError = true;
+                                            } else {
+                                                resItem.isError = false;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             }
 
         }

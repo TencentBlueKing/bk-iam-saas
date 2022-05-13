@@ -348,7 +348,7 @@
                                             @on-realted-change="handleRelatedChange" />
                                     </div>
 
-                                    <div class="requestRecommendText">{{$t(`m.permApply['以下权限是关联权限，你可以按需申请']`)}}</div>
+                                    <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
                                     <div class="tableData">
                                         <resource-instance-table
                                             :is-recommend="isRecommend"
@@ -439,7 +439,7 @@
                         @on-realted-change="handleRelatedChange" />
                 </div>
 
-                <div class="requestRecommendText">{{$t(`m.permApply['以下权限是关联权限，你可以按需申请']`)}}</div>
+                <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
                 <div class="tableData">
                     <resource-instance-table
                         :is-recommend="isRecommend"
