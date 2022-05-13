@@ -215,15 +215,15 @@ class ApprovedPassApplicationBiz:
             sn=application.sn,
         )
 
-    def _gen_role_info_bean(self, application: Application) -> RoleInfoBean:
+    def _gen_role_info_bean(self, data: Dict[Any, Any]) -> RoleInfoBean:
         """处理分级管理员数据"""
         # 兼容新老数据
-        auth_scopes = application.data["authorization_scopes"]
+        auth_scopes = data["authorization_scopes"]
         for scope in auth_scopes:
             # 新数据是system，没有system_id
             if "system_id" not in scope:
                 scope["system_id"] = scope["system"]["id"]
-        return RoleInfoBean(**application.data)
+        return RoleInfoBean(**data)
 
     def _create_rating_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""

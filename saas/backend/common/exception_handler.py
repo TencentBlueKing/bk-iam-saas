@@ -88,7 +88,7 @@ def _exception_to_error(request, exc) -> Optional[CodeException]:
         return error_codes.UNAUTHORIZED
 
     if isinstance(exc, PermissionDenied):
-        return error_codes.FORBIDDEN
+        return error_codes.FORBIDDEN.format(message=exc.detail)
 
     if isinstance(exc, MethodNotAllowed):
         return error_codes.METHOD_NOT_ALLOWED.format(message=exc.detail)

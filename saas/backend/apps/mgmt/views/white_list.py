@@ -10,9 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from copy import deepcopy
 
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
@@ -43,12 +42,11 @@ from backend.apps.mgmt.serializers import (
     QueryApiSLZ,
 )
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum
 
 
 class ApiViewSet(mixins.ListModelMixin, GenericViewSet):
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     permission_classes = [RolePermission]
     action_permission = {"list": PermissionCodeEnum.MANAGE_API_WHITE_LIST.value}
@@ -56,7 +54,6 @@ class ApiViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="API列表",
         query_serializer=QueryApiSLZ(label="api"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ApiSLZ(label="API信息", many=True)},
         tags=["mgmt.api"],
     )
@@ -81,7 +78,6 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="超级管理类API白名单列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AdminApiWhiteListSLZ(label="超级管理类API白名单", many=True)},
         tags=["mgmt.white_list"],
     )
@@ -91,8 +87,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="新增-超级管理类API白名单",
         request_body=AdminApiAddWhiteListSLZ(label="超级管理类API白名单信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
     @view_audit_decorator(AdminApiWhiteListCreateAuditProvider)
@@ -116,8 +111,7 @@ class AdminApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除-超级管理类API白名单",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
     @view_audit_decorator(AdminApiWhiteListDeleteAuditProvider)
@@ -148,7 +142,6 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="授权类API白名单列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AuthorizationApiWhiteListSchemaSLZ(label="授权类API白名单", many=True)},
         tags=["mgmt.white_list"],
     )
@@ -158,8 +151,7 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="新增-授权类API白名单",
         request_body=AuthorizationApiAddWhiteListSLZ(label="授权类API白名单信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
     @view_audit_decorator(AuthorizationApiWhiteListCreateAuditProvider)
@@ -184,8 +176,7 @@ class AuthorizationApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除-授权类API白名单",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
     @view_audit_decorator(AuthorizationApiWhiteListDeleteAuditProvider)
@@ -217,7 +208,6 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="管理类API白名单列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ManagementApiWhiteListSchemaSLZ(label="管理类API白名单", many=True)},
         tags=["mgmt.white_list"],
     )
@@ -227,8 +217,7 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="新增-管理类API白名单",
         request_body=ManagementApiAddWhiteListSLZ(label="管理类API白名单信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
     @view_audit_decorator(ManagementApiWhiteListCreateAuditProvider)
@@ -252,8 +241,7 @@ class ManagementApiWhiteListViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除-管理类API白名单",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["mgmt.white_list"],
     )
     @view_audit_decorator(ManagementApiWhiteListDeleteAuditProvider)

@@ -12,9 +12,8 @@ specific language governing permissions and limitations under the License.
 from typing import Dict, List, Tuple
 
 from django.utils.translation import gettext as _
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status
+from rest_framework import mixins, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -51,7 +50,6 @@ from backend.apps.model_builder.validators import (
 from backend.biz.instance_selection import InstanceSelectionBiz
 from backend.biz.system import SystemBiz
 from backend.common.error_codes import error_codes
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.instance_selection import InstanceSelectionService
 from backend.service.models.resource_type import ResourceTypeDict
 from backend.service.resource_type import ResourceTypeService
@@ -69,7 +67,6 @@ class UserMockSystemModelViewSet(GenericViewSet, mixins.ListModelMixin):
     @swagger_auto_schema(
         operation_description="创建一个模型系统",
         request_body=ModelSystemSLZ(label="模型系统"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ModelIdSLZ(label="模型ID")},
         tags=["model_builder"],
     )
@@ -95,7 +92,6 @@ class UserMockSystemModelViewSet(GenericViewSet, mixins.ListModelMixin):
 
     @swagger_auto_schema(
         operation_description="获取用户页面接入构建模型",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ModelSLZ(label="模型", many=True)},
         tags=["model_builder"],
     )
@@ -114,8 +110,7 @@ class MockSystemModelViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="获取用户页面接入构建模型",
         query_serializer=RetrievePartSLZ(label="查询类型, 不设置返回全部, 设置key返回对应数据"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response("", examples={})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["model_builder"],
     )
     # TODO 优化代码, 圈复杂度23, 超过规范20
@@ -208,8 +203,7 @@ class MockSystemModelViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="根据 ID 删除模型中的部分数据",
         request_body=DeletePartSLZ(),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response("", examples={})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["model_builder"],
     )
     def delete_part(self, request, *args, **kwargs):
@@ -234,8 +228,7 @@ class MockSystemModelViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="根据 ID 更新模型中的部分数据",
         request_body=ModelUpdateSLZ(label="更新模型"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response("", examples={})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["model_builder"],
     )
     def update_part(self, request, *args, **kwargs):
@@ -302,14 +295,13 @@ class SystemListView(GenericViewSet):
     [API] 拉取外部的系统列表 + 本系统列表  (my_system + list_systems)
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     permission_classes = [ModelOwnerPermission]
 
     @swagger_auto_schema(
         operation_description="构建模型时拉取所有系统列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response("", examples={"bk_test": "test_system"})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["model_builder"],
     )
     def list_system(self, request, *args, **kwargs):
@@ -341,7 +333,7 @@ class ResourceTypeListView(GenericViewSet):
     [API] 拉去某个系统的 资源类型列表 (my_system or external_system)
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     permission_classes = [ModelOwnerPermission]
 
@@ -350,8 +342,7 @@ class ResourceTypeListView(GenericViewSet):
     @swagger_auto_schema(
         operation_description="构建模型时拉取某个系统的资源列表",
         query_serializer=ResourceTypeListSLZ(),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response("")},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["model_builder"],
     )
     def list_resource_type(self, request, *args, **kwargs):
@@ -418,7 +409,7 @@ class InstanceSelectionListView(GenericViewSet):
     [API] 拉取外部的系统列表 + 本系统列表  (my_system + list_systems)
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     permission_classes = [ModelOwnerPermission]
 
@@ -427,8 +418,7 @@ class InstanceSelectionListView(GenericViewSet):
     @swagger_auto_schema(
         operation_description="构建模型时拉取某个系统的实例视图列表",
         query_serializer=InstanceSelectionListSLZ(),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response("")},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["model_builder"],
     )
     def list_instance_selection(self, request, *args, **kwargs):
@@ -455,8 +445,7 @@ class GenerateJsonView(GenericViewSet):
     @swagger_auto_schema(
         operation_description="生成json",
         request_body=GenerateJsonSLZ(label="类型"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response("", examples={})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["model_builder"],
     )
     def generate_json(self, request, *args, **kwargs):
@@ -479,12 +468,11 @@ class ModelDataIdExistsViewSet(GenericViewSet):
     [API] 检查模型中的某种资源的id是否已存在
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="检查模型中的某种资源的id是否已存在(当前只支持resource_type/instance_selection/action",
         query_serializer=ModelDataIDExistsSLZ(label="检查id是否占用"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ModelIDExistsResponseSLZ(label="是否存在")},
         tags=["model_builder"],
     )
@@ -512,12 +500,11 @@ class IdExistsViewSet(GenericViewSet):
     [API] 检查这个人的system_id是否已经存在(当前 system_id + owner唯一)
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="判断某个id是否已经存在(当前 system_id+owner唯一)",
         query_serializer=ModelSystemIDExistsSLZ(label="检查id是否占用"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ModelIDExistsResponseSLZ(label="是否存在")},
         tags=["model_builder"],
     )

@@ -14,7 +14,6 @@ from rest_framework.views import APIView
 
 from backend.api.authentication import ESBAuthentication
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.models import Subject
 from backend.trans.open_authorization import AuthorizationTrans
 
@@ -40,7 +39,6 @@ class AuthInstanceView(AuthViewMixin, APIView):
 
     @swagger_auto_schema(
         operation_description="单个资源授权回收",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=AuthInstanceSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],
@@ -85,7 +83,6 @@ class AuthPathView(AuthViewMixin, APIView):
 
     @swagger_auto_schema(
         operation_description="单个拓扑层级授权/回收",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=AuthPathSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],
@@ -130,7 +127,6 @@ class AuthBatchInstanceView(AuthViewMixin, APIView):
 
     @swagger_auto_schema(
         operation_description="批量操作批量资源授权回收",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=AuthBatchInstanceSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],
@@ -175,7 +171,6 @@ class AuthBatchPathView(AuthViewMixin, APIView):
 
     @swagger_auto_schema(
         operation_description="批量操作批量拓扑层级授权/回收",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=AuthBatchPathSLZ,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["open"],

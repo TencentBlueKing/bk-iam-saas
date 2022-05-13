@@ -13,10 +13,9 @@ from typing import Any, Dict, List, Set
 
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -37,7 +36,6 @@ from backend.biz.template import (
     TemplatePolicyCloneBiz,
 )
 from backend.common.error_codes import error_codes
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
@@ -121,7 +119,6 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="模板列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: TemplateListSchemaSLZ(label="模板", many=True)},
         tags=["template"],
     )
@@ -163,7 +160,6 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="创建模板",
         request_body=TemplateCreateSLZ(label="模板"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_201_CREATED: TemplateIdSLZ(label="模板ID")},
         tags=["template"],
     )
@@ -193,8 +189,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="模板详情",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=TemplateDetailQuerySLZ,
+        query_serializer=TemplateDetailQuerySLZ(),
         responses={status.HTTP_200_OK: TemplateRetrieveSchemaSLZ(label="模板详情")},
         tags=["template"],
     )
@@ -223,8 +218,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除模板",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     @view_audit_decorator(TemplateDeleteAuditProvider)
@@ -242,8 +236,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="权限模板基本信息更新",
         request_body=TemplatePartialUpdateSLZ(label="更新权限模板基本信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     @view_audit_decorator(TemplateUpdateAuditProvider)
@@ -282,7 +275,6 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="模板成员",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: TemplateMemberListSchemaSLZ(label="模板成员", many=True)},
         tags=["template"],
     )
@@ -312,9 +304,8 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除模板成员",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=TemplateDeleteMemberSLZ(label="成员"),
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     @view_audit_decorator(TemplateMemberDeleteAuditProvider)
@@ -343,7 +334,7 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
     lookup_field = "id"
     queryset = PermTemplate.objects.all()
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     template_biz = TemplateBiz()
     template_check_biz = TemplateCheckBiz()
@@ -351,9 +342,8 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="预更新",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=TemplatePreUpdateSLZ(label="新增操作"),
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     @view_audit_decorator(TemplatePreUpdateCreateProvider)
@@ -378,7 +368,6 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="获取已有的预提交信息",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: TemplatePreUpdateSchemaSLZ(label="预提交信息")},
         tags=["template"],
     )
@@ -394,8 +383,7 @@ class TemplatePreUpdateViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除已提交的预更新信息",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     @view_audit_decorator(TemplatePreUpdateDeleteProvider)
@@ -421,9 +409,8 @@ class TemplatePreGroupSyncViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组同步预提交",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=TemplateGroupAuthorationPreUpdateSLZ(label="用户组同步预提交"),
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     def create(self, request, *args, **kwargs):
@@ -462,9 +449,8 @@ class TemplateGenerateCloneGroupPolicyViewSet(TemplatePermissionMixin, GenericVi
 
     @swagger_auto_schema(
         operation_description="生成克隆的用户组策略",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupCopyActionInstanceSLZ(label="新增操作"),
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     def create(self, request, *args, **kwargs):
@@ -490,7 +476,6 @@ class TemplateGroupSyncPreviewViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限模板用户组更新预览",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: TemplateGroupPreViewSchemaSLZ(label="预览", many=True)},
         tags=["template"],
     )
@@ -535,8 +520,7 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限模板更新提交",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["template"],
     )
     @view_audit_decorator(TemplateUpdateCommitProvider)

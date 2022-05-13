@@ -13,8 +13,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.common.swagger import ResponseSwaggerAutoSchema
-
 from .serializers import VersionLogSLZ
 from .utils import get_version_list
 
@@ -22,11 +20,10 @@ from .utils import get_version_list
 class VersionLogViewSet(GenericViewSet):
     authentication_classes = []  # type: ignore
     permission_classes = []  # type: ignore
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="版本信息",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: VersionLogSLZ(label="版本信息", many=True)},
         tags=["version_log"],
     )

@@ -156,6 +156,10 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
+# Swagger 文档统一配置
+SWAGGER_SETTINGS = {
+    "DEFAULT_AUTO_SCHEMA_CLASS": "backend.common.swagger.ResponseSwaggerAutoSchema",
+}
 
 # CELERY 开关，使用时请改为 True，否则请保持为False。启动方式为以下两行命令：
 # worker: python manage.py celery worker -l info
