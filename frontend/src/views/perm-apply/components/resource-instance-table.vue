@@ -1605,12 +1605,36 @@
                 selection = selection.map(e => e.name);
                 this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
                 console.log('this.resourceSelectData', this.resourceSelectData);
+                this.handlerChangeError();
             },
             
             // 全选
             handlerAllChange (selection) {
                 selection = selection.map(e => e.name);
                 this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
+                this.handlerChangeError();
+            },
+
+            handlerChangeError () {
+                this.tableList.forEach(item => {
+                    if (item.resource_groups.length > 0) {
+                        item.resource_groups.forEach(groupItem => {
+                            if (groupItem.related_resource_types.length > 0) {
+                                groupItem.related_resource_types.forEach(resItem => {
+                                    if (resItem.empty) {
+                                        if (this.isRecommend) {
+                                            if (this.resourceSelectData.includes(item.name)) {
+                                                resItem.isError = true;
+                                            } else {
+                                                resItem.isError = false;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             }
 
         }
