@@ -178,7 +178,7 @@
                                             <bk-input
                                                 v-model="row.customValue"
                                                 size="small"
-                                                :placeholder="$t(`m.common['期限选择提示']`)"
+                                                :placeholder="$t(`m.common['临时期限选择提示']`)"
                                                 maxlength="3"
                                                 ext-cls="iam-perm-apply-expired-input-cls"
                                                 @blur="handleBlur(...arguments, row)"
@@ -1560,7 +1560,8 @@
                 }, _ => _);
             },
 
-            selectResourceType (index) {
+            selectResourceType (data, index) {
+                data.selectedIndex = index;
                 this.selectedIndex = index;
             }
         }

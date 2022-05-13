@@ -1643,53 +1643,9 @@
              * this.linearActionList 在handleActionLinearData获取并处理
              */
             async fetchPolicies (systemId) {
-                const params = {
-                    system_id: systemId
-                };
-                if (this.routerQuery.cache_id) {
-                    params.cache_id = this.routerQuery.cache_id;
-                }
                 try {
-                    const res = await this.$store.dispatch('permApply/getPolicies', params);
-                    const data = res.data.map(item => {
-                        const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
-                        // eslint-disable-next-line max-len
-                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
-                        // 此处处理related_resource_types中value的赋值
-                        return new Policy({
-                            ...item,
-                            related_actions: relatedActions,
-                            tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
-                        }, '', false, true);
-                    });
-                    this.tableData = data;
-                    this.tableData.forEach(item => {
-                        // item.expired_at = 1627616000
-
-                        // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
-                        if (item.tag === 'add') {
-                            if (item.expired_at <= this.user.timestamp) {
-                                item.expired_at = 15552000;
-                            }
-                        } else {
-                            // 新增的权限不判断是否过期
-                            if (item.expired_at <= this.user.timestamp) {
-                                item.isShowRenewal = true;
-                                item.isExpired = true;
-                            }
-                        }
-
-                        // // 新增的权限不判断是否过期
-                        // if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
-                        //     item.isShowRenewal = true
-                        //     item.isExpired = true
-                        //     // this.$set(item, 'isShowRenewal', true)
-                        //     // this.$set(item, 'isExpired', true)
-                        // }
-                    });
-                    this.newTableList = _.cloneDeep(this.tableData.filter(item => {
-                        return !item.isExpiredAtDisabled;
-                    }));
+                    this.tableData = [];
+                    this.newTableList = [];
                     this.tableDataBackup = _.cloneDeep(this.tableData);
                     this.aggregationsTableData = _.cloneDeep(this.tableData);
                 } catch (e) {
@@ -1785,7 +1741,7 @@
                 this.actionSearchValue = '';
                 this.requestQueue = ['action', 'aggregate', 'commonAction'];
                 await this.fetchActions(value);
-                // await this.fetchPolicies(value);
+                await this.fetchPolicies(value);
                 await this.fetchAggregationAction(value);
                 await this.fetchCommonActions(value);
             },

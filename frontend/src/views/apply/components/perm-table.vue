@@ -43,13 +43,13 @@
                             </div>
                         </template>
                         <template v-else>
-                            <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
+                            <div class="pl20 mt20">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
                     <template slot-scope="{ row, $index }">
-                        <div class="condition-table-cell">
+                        <div class="condition-table-cell" v-if="row.resource_groups.length">
                             <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
                                 class="related-condition-list"
                                 :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
@@ -67,7 +67,7 @@
                                     @click.stop="handleEnvironmentsViewResource(_, row)" />
                             </div>
                         </div>
-                        <!-- <div v-else class="pr20 pl20">{{ $t(`m.common['无需生效条件']`) }}</div> -->
+                        <div v-else class="ml20 mt20">{{ $t(`m.common['无生效条件']`) }}</div>
                     </template>
                 </bk-table-column>
                 <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['申请期限']`)"></bk-table-column>

@@ -150,6 +150,7 @@ export const m = {
         '加载中': 'Loading...',
         '返回': 'Back',
         '期限选择提示': '1-365，Press Enter to save',
+        '临时期限选择提示': '1-24 Enter to save',
         '精确搜索': 'Precise search',
         '模糊搜索': 'Fuzzy search',
         '组织架构': 'Organization',
