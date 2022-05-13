@@ -11,7 +11,7 @@
             @select-all="handlerAllChange"
             :empty-text="$t(`m.verify['请选择操作']`)">
             <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" min-width="160">
+            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :width="isRecommend ? '240' : '300'">
                 <template slot-scope="{ row }">
                     <div v-if="!!row.isAggregate" style="padding: 10px 0;"
                         :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
