@@ -443,6 +443,9 @@
         watch: {
             list: {
                 handler (value) {
+                    value.forEach(e => {
+                        e.expired_at = 3600;
+                    });
                     this.tableList = value;
                     this.originalList = _.cloneDeep(this.tableList);
                 },
