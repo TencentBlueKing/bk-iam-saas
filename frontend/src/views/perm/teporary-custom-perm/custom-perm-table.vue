@@ -39,7 +39,7 @@
                         </div>
                     </template>
                     <template v-else>
-                        <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
+                        <div class="pl20 mt20">{{ $t(`m.common['无需关联实例']`) }}</div>
                     </template>
                 </template>
             </bk-table-column>
