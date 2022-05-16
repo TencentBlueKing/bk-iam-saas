@@ -64,7 +64,7 @@ class Local(Singleton):
     def get_http_request_id(self):
         """从接入层获取request_id，或者生成一个新的request_id"""
         # 在从header中获取
-        request_id = self.request.META.get("X-Request-Id", "")
+        request_id = self.request.META.get("HTTP_X_REQUEST_ID") or self.request.META.get("HTTP_X_BKAPI_REQUEST_ID", "")
         if request_id:
             return request_id
 
