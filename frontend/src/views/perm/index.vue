@@ -132,12 +132,12 @@
                     const systemList = res2.data || [];
                     this.systemList.splice(0, this.systemList.length, ...systemList);
 
-                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1;
-                    this.soonGroupLength = res3.data.length;
-                    this.soonPermLength = res4.data.length;
                     const teporarySystemList = res5.data || [];
                     this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
-                    console.log('this.teporarySystemList', this.teporarySystemList);
+
+                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1 && teporarySystemList.length;
+                    this.soonGroupLength = res3.data.length;
+                    this.soonPermLength = res4.data.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
                     console.error(e);
