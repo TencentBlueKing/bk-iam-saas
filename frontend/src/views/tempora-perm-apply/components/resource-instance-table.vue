@@ -356,7 +356,8 @@
                     content: '提示信息',
                     html: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>'
                 },
-                selectedIndex: 0
+                selectedIndex: 0,
+                instanceKey: ''
             };
         },
         computed: {
@@ -534,8 +535,8 @@
             handlerAggregateOnCopy (payload, index) {
                 this.instanceKey = payload.aggregateResourceType[payload.selectedIndex].id;
                 this.curCopyKey = `${payload.aggregateResourceType.system_id}${payload.aggregateResourceType.id}`;
-                this.curAggregateResourceType = payload.aggregateResourceType;
-                this.curCopyData = _.cloneDeep(payload.instances);
+                this.curAggregateResourceType = payload.aggregateResourceType[payload.selectedIndex];
+                this.curCopyData = _.cloneDeep(payload.instancesDisplayData[this.instanceKey]);
                 this.curCopyMode = 'aggregate';
                 this.showMessage(this.$t(`m.info['实例复制']`));
                 this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(true);
@@ -683,6 +684,7 @@
                 this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[this.selectedIndex]);
                 this.aggregateIndex = index;
                 const instanceKey = data.aggregateResourceType[this.selectedIndex].id;
+                this.instanceKey = instanceKey;
                 if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
                 this.aggregateValue = _.cloneDeep(data.instancesDisplayData[instanceKey].map(item => {
                     return {
@@ -1476,11 +1478,13 @@
                             flag = true;
                         } else {
                             const aggregateResourceTypes = aggregateResourceType.reduce((p, e) => {
-                                const obj = {};
-                                obj.id = e.id;
-                                obj.system_id = e.system_id;
-                                obj.instances = instancesDisplayData[e.id];
-                                p.push(obj);
+                                if (instancesDisplayData[e.id] && instancesDisplayData[e.id].length) {
+                                    const obj = {};
+                                    obj.id = e.id;
+                                    obj.system_id = e.system_id;
+                                    obj.instances = instancesDisplayData[e.id];
+                                    p.push(obj);
+                                }
                                 return p;
                             }, []);
                             const params = {
