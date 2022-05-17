@@ -144,7 +144,7 @@ export default class Policy {
     }
 
     get isChanged () {
-        return this.tag === 'update';
+        return this.tag === 'update' || (this.expired_display && !this.policy_id);
     }
 
     get isEmpty () {
