@@ -144,7 +144,7 @@ export default class Policy {
     }
 
     get isChanged () {
-        return this.tag === 'update' || (this.expired_display && !this.policy_id);
+        return this.tag === 'update' || (this.tag !== 'add' && this.expired_display && !this.policy_id);
     }
 
     get isEmpty () {
