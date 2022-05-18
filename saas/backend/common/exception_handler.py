@@ -119,11 +119,8 @@ def exception_handler(exc, context):
 
     error = _exception_to_error(request, exc)
     if error is None:
-        # 预期之外的异常的堆栈信息
-        stack_message = traceback.format_exc()
-
         # 处理预期之外的异常
-        error = error_codes.SYSTEM_ERROR.format(stack_message)
+        error = error_codes.SYSTEM_ERROR
 
         # 用户未主动捕获的异常
         logger.error(
@@ -131,7 +128,7 @@ def exception_handler(exc, context):
                 """catch unhandled exception, stack->[%s], request url->[%s], """
                 """request method->[%s] request params->[%s]"""
             ),
-            stack_message,
+            traceback.format_exc(),
             request.path,
             request.method,
             json.dumps(getattr(request, request.method, None)),
