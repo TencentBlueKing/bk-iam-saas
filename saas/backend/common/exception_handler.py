@@ -13,6 +13,7 @@ import logging
 import traceback
 from typing import Optional
 
+from blue_krill.web.std_error import APIError
 from rest_framework import status
 from rest_framework.exceptions import (
     AuthenticationFailed,
@@ -30,7 +31,7 @@ from rest_framework.views import set_rollback
 from sentry_sdk import capture_exception
 
 from backend.common.debug import log_api_error_trace
-from backend.common.error_codes import APIException, CodeException, error_codes
+from backend.common.error_codes import error_codes
 
 logger = logging.getLogger("app")
 
@@ -82,7 +83,7 @@ def is_open_api_request(request) -> bool:
     return "/api/v1/open/" in request.path
 
 
-def _exception_to_error(request, exc) -> Optional[CodeException]:
+def _exception_to_error(request, exc) -> Optional[APIError]:
     """把预期中的异常转换成error"""
     if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
         return error_codes.UNAUTHORIZED
@@ -102,7 +103,7 @@ def _exception_to_error(request, exc) -> Optional[CodeException]:
 
         return error_codes.VALIDATE_ERROR.format(message=_one_line_error(exc))
 
-    if isinstance(exc, CodeException):
+    if isinstance(exc, APIError):
         # 回滚事务
         set_rollback()
         # 记录Debug信息
@@ -118,8 +119,11 @@ def exception_handler(exc, context):
 
     error = _exception_to_error(request, exc)
     if error is None:
+        # 预期之外的异常的堆栈信息
+        stack_message = traceback.format_exc()
+
         # 处理预期之外的异常
-        error = error_codes.SYSTEM_ERROR
+        error = error_codes.SYSTEM_ERROR.format(stack_message)
 
         # 用户未主动捕获的异常
         logger.error(
@@ -127,7 +131,7 @@ def exception_handler(exc, context):
                 """catch unhandled exception, stack->[%s], request url->[%s], """
                 """request method->[%s] request params->[%s]"""
             ),
-            traceback.format_exc(),
+            stack_message,
             request.path,
             request.method,
             json.dumps(getattr(request, request.method, None)),
@@ -139,16 +143,18 @@ def exception_handler(exc, context):
         # notify sentry
         capture_exception(exc)
 
-    # NOTE: openapi 为了兼容调用方使用习惯, status code 默认返回 200
+    # NOTE: openapi 为了兼容调用方使用习惯, 除以下error外，其他error的status code 默认返回 200
     ignore_error_codes = {
-        1902401,
-        1902403,
-        1902404,
-        1902500,
+        error_codes.UNAUTHORIZED.code_num,
+        error_codes.FORBIDDEN.code_num,
+        error_codes.NOT_FOUND_ERROR.code_num,
+        error_codes.SYSTEM_ERROR.code_num,
     }
 
     status_code = error.status_code
-    if is_open_api_request(request) and isinstance(error, APIException) and error.code not in ignore_error_codes:
+    if is_open_api_request(request) and isinstance(error, APIError) and error.code_num not in ignore_error_codes:
         status_code = status.HTTP_200_OK
 
-    return Response(error.as_json(), status=status_code)
+    return Response(
+        {"result": False, "code": error.code_num, "message": error.message, "data": error.data}, status=status_code
+    )

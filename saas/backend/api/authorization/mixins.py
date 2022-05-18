@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import List
 
+from blue_krill.web.std_error import APIError
 from rest_framework import exceptions
 from rest_framework.response import Response
 
@@ -19,7 +20,7 @@ from backend.biz.org_sync.syncer import Syncer
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleBiz
 from backend.common.cache import cachedmethod
-from backend.common.error_codes import APIException, error_codes
+from backend.common.error_codes import error_codes
 from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
 
@@ -155,7 +156,7 @@ class AuthViewMixin:
         system_id = policy_list.system_id
         try:
             scope_checker.check_policies(system_id, policy_list.policies)
-        except APIException:
+        except APIError:
             # Note: 这里是临时处理方案，最终方案是完全支持权限模型变更
             # 临时方案：校验不通过，则修改分级管理员的权限范围，使其通过
             need_added_policies = scope_checker.list_not_match_policy(system_id, policy_list.policies)
