@@ -12,6 +12,7 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
 
+from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.db.models import Q
 from django.utils.functional import cached_property
@@ -35,7 +36,7 @@ from backend.biz.policy import (
     ResourceGroupBean,
     ThinSystem,
 )
-from backend.common.error_codes import APIException, error_codes
+from backend.common.error_codes import error_codes
 from backend.service.constants import (
     ACTION_ALL,
     SUBJECT_ALL,
@@ -134,7 +135,7 @@ class RoleBiz:
         try:
             checker.check([Subject(type=SubjectType.USER.value, id=username)])
             return role
-        except APIException:
+        except APIError:
             return None
 
     def create(self, info: RoleInfoBean, creator: str) -> Role:
@@ -667,7 +668,7 @@ class RoleAuthorizationScopeChecker:
         """与check_policies的检测逻辑一样，只是不直接抛异常，而是返回不满足的策略"""
         try:
             self._check_system_in_scope(system_id)
-        except APIException:
+        except APIError:
             # 整个系统都不满足，则返回原有所有策略
             return policies
 
@@ -676,7 +677,7 @@ class RoleAuthorizationScopeChecker:
         for p in policies:
             try:
                 self._check_policy_in_scope(system_id, p)
-            except APIException:
+            except APIError:
                 not_match_policies.append(p)
 
         return not_match_policies

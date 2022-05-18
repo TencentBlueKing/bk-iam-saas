@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
+from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -26,7 +27,7 @@ from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
 from backend.biz.utils import fill_resources_attribute
-from backend.common.error_codes import APIException, CodeException, error_codes
+from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
@@ -388,7 +389,7 @@ class GroupBiz:
             results = self.engine_svc.query_subjects_by_policy_resources(
                 system_id, policy_resources, SubjectType.GROUP.value
             )
-        except APIException:
+        except APIError:
             return []
 
         # 取结果的交集
@@ -445,7 +446,7 @@ class GroupBiz:
                 # 检查策略是否在role的授权范围内
                 scope_checker = RoleAuthorizationScopeChecker(role)
                 scope_checker.check_policies(template.system_id, template.policies)
-            except CodeException as e:
+            except APIError as e:
                 raise error_codes.VALIDATE_ERROR.format(
                     _("系统: {} 模板: {} 校验错误: {}").format(template.system_id, template.template_id, e.message),
                     replace=True,

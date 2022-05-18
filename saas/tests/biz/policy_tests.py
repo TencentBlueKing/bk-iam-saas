@@ -11,6 +11,7 @@ from copy import deepcopy
 from typing import List
 
 import pytest
+from blue_krill.web.std_error import APIError
 
 from backend.biz.policy import (
     ConditionBean,
@@ -27,7 +28,6 @@ from backend.biz.policy import (
     ResourceGroupBeanList,
     group_paths,
 )
-from backend.common.error_codes import APIException
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import DEAULT_RESOURCE_GROUP_ID, SelectionMode
 from backend.service.models import PathResourceType, ResourceTypeDict
@@ -283,7 +283,7 @@ class TestInstanceBean:
         try:
             instance_bean.check_instance_selection("system_id", "type", [instance_selection])
             assert not raise_exception
-        except APIException:
+        except APIError:
             assert raise_exception
 
 
@@ -428,7 +428,7 @@ class TestRelatedResourceBean:
         try:
             related_resource_bean.check_selection([instance_selection])
             assert not raise_exception
-        except APIException:
+        except APIError:
             assert raise_exception
 
     def test_count_instance(self, related_resource_bean: RelatedResourceBean):
