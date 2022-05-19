@@ -153,5 +153,6 @@ def exception_handler(exc, context):
         status_code = status.HTTP_200_OK
 
     return Response(
-        {"result": False, "code": error.code_num, "message": error.message, "data": error.data}, status=status_code
+        {"result": False, "code": error.code_num, "message": f"{error.message} ({error.code})", "data": error.data},
+        status=status_code,
     )
