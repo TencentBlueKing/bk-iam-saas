@@ -450,6 +450,7 @@
         watch: {
             list: {
                 handler (value) {
+                    console.log('value', value);
                     this.tableList = value;
                     console.log('this.tableList', this.tableList);
                     this.originalList = _.cloneDeep(this.tableList);
