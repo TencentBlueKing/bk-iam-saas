@@ -67,11 +67,12 @@
                 </template>
             </bk-table-column>
             <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="140">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="180">
                 <template slot-scope="{ row }">
                     <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
-                    <bk-button v-if="row.expired_dis === '已过期'" text @click="handleToTemporaryCustomApply(row)">
-                        {{ $t(`m.nav['再次申请']`) }}
+                    <bk-button v-if="row.expired_dis === $t(`m.common['已过期']`)"
+                        text @click="handleToTemporaryCustomApply(row)">
+                        {{ $t(`m.myApply['再次申请']`) }}
                     </bk-button>
                 </template>
             </bk-table-column>

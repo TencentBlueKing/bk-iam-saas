@@ -5,11 +5,11 @@
             <div class="transfer-group-content" ref="transferGroupContent">
                 <div class="header" @click="handleGroupExpanded">
                     <Icon bk class="expanded-icon" :type="groupExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">用户组权限交接</label>
+                    <label class="title"> {{$t(`m.permTransfer['用户组权限交接']`)}} </label>
                     <div class="sub-title" v-if="groupNotTransferCount > 0">
                         <i class="iam-icon iamcenter-warning-fill not-transfer-icon"></i>
-                        无法交接用户组：{{groupNotTransferCount}}个
-                        <span class="reason">（通过组织加入、已过期的组无法交接）</span>
+                        {{$t(`m.permTransfer['无法交接用户组：']`)}}{{groupNotTransferCount}}{{$t(`m.common['个']`)}}
+                        <span class="reason">{{$t(`m.permTransfer['（通过组织加入、已过期的组无法交接）']`)}}</span>
                     </div>
                 </div>
                 <div class="content" v-if="groupExpanded">
@@ -53,6 +53,11 @@
                                         v-else :title="`${$t(`m.perm['通过组织加入']`)}：${row.department_name}`">
                                         {{ $t(`m.perm['通过组织加入']`) }}：{{ row.department_name }}
                                     </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t(`m.common['到期时间']`)" width="220">
+                                <template slot-scope="{ row }">
+                                    <span>{{row.expired_at_display}}</span>
                                 </template>
                             </bk-table-column>
                         </bk-table>
