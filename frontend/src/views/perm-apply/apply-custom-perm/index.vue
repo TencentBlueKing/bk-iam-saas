@@ -36,6 +36,7 @@
                             <render-action-tag
                                 ref="commonActionRef"
                                 :system-id="systemValue"
+                                :tag-action-list="tagActionList"
                                 v-if="commonActions.length > 0 && !customLoading"
                                 mode="detail"
                                 :data="commonActions"
@@ -586,7 +587,8 @@
                 tableRecommendData: [],
                 tableRecommendDataBackup: [],
                 aggregationsTableRecommendData: [],
-                isRecommend: true
+                isRecommend: true,
+                tagActionList: []
             };
         },
         computed: {
@@ -663,6 +665,7 @@
             },
             tableData: {
                 handler (value) {
+                    this.tagActionList = value.map(e => e.id);
                     if (value.filter(item => item.isAggregate).length < 1) {
                         this.isAllExpanded = false;
                     }
@@ -1415,7 +1418,6 @@
             },
 
             handleResourceSelect (payload) {
-                console.log('payload', payload);
                 const curAction = payload.actions.map(item => item.id);
                 const instances = (function () {
                     const arr = [];
