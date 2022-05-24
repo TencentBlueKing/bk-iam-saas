@@ -14,6 +14,7 @@
             </bk-select>
             <div class="effect-flex">
                 <bk-select
+                    v-bk-tooltips="tooltips"
                     v-model="environmentsItem.date"
                     :clearable="false"
                     show-select-all
@@ -80,7 +81,8 @@
                 effectWeekTimeZone: GLOBAL_TIME_ZONE,
                 date: [],
                 environmentsData: [],
-                timeRangeEmpty: false
+                timeRangeEmpty: false,
+                tooltips: '每天'
             };
         },
         watch: {
