@@ -317,7 +317,6 @@
 
                 let hasDeleteTemplateList = [];
                 let hasAddTemplateList = [];
-                console.log('this.tempalteDetailList', this.tempalteDetailList, templates);
                 if (this.tempalteDetailList.length > 0) {
                     const intersection = templates.filter(
                         item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
@@ -346,7 +345,6 @@
                 }
 
                 const tempList = [];
-                console.log('hasAddTemplateList', hasAddTemplateList);
                 hasAddTemplateList.forEach(item => {
                     const temp = _.cloneDeep(item);
                     delete temp.actions;
@@ -357,7 +355,6 @@
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
                     });
                 });
-                console.log('hasAddCustomList', this.hasAddCustomList);
                 this.hasAddCustomList.forEach(item => {
                     if (!item.resource_groups || !item.resource_groups.length) {
                         item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
@@ -376,7 +373,6 @@
                 } else {
                     this.tableList.push(..._.cloneDeep(tempList));
                 }
-                console.log('this.tableList', this.tableList);
                 this.tableListBackup = _.cloneDeep(this.tableList);
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
@@ -397,8 +393,6 @@
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
-                    console.log('actions', actions);
-                    console.log('item', item);
                     const len = actions.length;
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
@@ -691,11 +685,9 @@
                     tempList.push(...list);
                 });
                 this.tableList = _.cloneDeep(tempList);
-                console.log('this.tableList', this.tableList);
             },
 
             setInstancesDisplayData (data) {
-                console.log('data', data);
                 const instancesDisplayData = data.reduce((p, v) => {
                     if (!p[v['type']]) {
                         p[v['type']] = [];
