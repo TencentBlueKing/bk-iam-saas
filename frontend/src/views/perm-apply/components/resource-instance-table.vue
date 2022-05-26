@@ -14,11 +14,13 @@
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                     </div>
                     <div v-else>
-                        <span class="action-name" :title="row.name">{{ row.name }}</span>
-                        <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
-                        <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
-                        <iam-svg name="icon-changed" ext-cls="iam-new-action" v-if="row.isChanged && curLanguageIsCn" />
-                        <iam-svg name="icon-changed-en" ext-cls="iam-new-action" v-if="row.isChanged && !curLanguageIsCn" />
+                        <span class="action-name" style="padding: 10px 0;" :title="row.name">{{ row.name }}</span>
+                        <span v-if="!emptyResourceGroupsList.length">
+                            <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
+                            <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
+                            <iam-svg name="icon-changed" ext-cls="iam-new-action" v-if="row.isChanged && curLanguageIsCn" />
+                            <iam-svg name="icon-changed-en" ext-cls="iam-new-action" v-if="row.isChanged && !curLanguageIsCn" />
+                        </span>
                     </div>
                 </template>
             </bk-table-column>
@@ -91,7 +93,8 @@
                             </div>
                         </template>
                         <template v-else>
-                            <div style="margin-bottom: 15px;">{{ $t(`m.common['无需关联实例']`) }}</div>
+                            <!-- <div style="margin-bottom: 15px;">{{ $t(`m.common['无需关联实例']`) }}</div> -->
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </div>
                 </template>
@@ -314,6 +317,10 @@
             buttonLoading: {
                 type: Boolean,
                 default: false
+            },
+            isAllExpanded: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -360,7 +367,9 @@
                     html: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>'
                 },
                 selectedIndex: 0,
-                instanceKey: ''
+                instanceKey: '',
+                emptyResourceGroupsList: [],
+                emptyResourceGroupsName: []
             };
         },
         computed: {
@@ -450,8 +459,27 @@
         watch: {
             list: {
                 handler (value) {
-                    console.log('value', value);
-                    this.tableList = value;
+                    console.log('this.isAllExpanded', this.isAllExpanded, value);
+                    if (this.isAllExpanded) {
+                        this.tableList = value.filter(e =>
+                            (e.resource_groups && e.resource_groups.length)
+                            || e.isAggregate);
+                        this.emptyResourceGroupsList = value.filter(e =>
+                            e.resource_groups && !e.resource_groups.length);
+                        this.emptyResourceGroupsName = (this.emptyResourceGroupsList || []).reduce((p, e) => {
+                            p.push(e.name);
+                            return p;
+                        }, []);
+                        if (this.emptyResourceGroupsName.length) {
+                            this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join(',');
+                            this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
+                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
+                        }
+                        console.log(this.emptyResourceGroupsList);
+                        console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList, this.emptyResourceGroupsName);
+                    } else {
+                        this.tableList = value;
+                    }
                     console.log('this.tableList', this.tableList);
                     this.originalList = _.cloneDeep(this.tableList);
                 },
@@ -1366,7 +1394,19 @@
                 }
                 const actionList = [];
                 const aggregations = [];
-                console.log('this.tableList', this.tableList);
+
+                // 重新赋值
+                if (this.isAllExpanded) {
+                    this.tableList = this.tableList.filter(e =>
+                        (e.resource_groups && e.resource_groups.length)
+                        || e.isAggregate);
+                    if (this.emptyResourceGroupsList.length) {
+                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                    }
+                    console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList, this.tableList);
+                }
+                debugger;
                 this.tableList.forEach(item => {
                     let tempExpiredAt = '';
                     if (item.expired_at === '' && item.expired_display) {

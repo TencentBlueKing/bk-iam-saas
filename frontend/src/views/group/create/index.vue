@@ -317,6 +317,7 @@
 
                 let hasDeleteTemplateList = [];
                 let hasAddTemplateList = [];
+                console.log('this.tempalteDetailList', this.tempalteDetailList, templates);
                 if (this.tempalteDetailList.length > 0) {
                     const intersection = templates.filter(
                         item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
@@ -345,6 +346,7 @@
                 }
 
                 const tempList = [];
+                console.log('hasAddTemplateList', hasAddTemplateList);
                 hasAddTemplateList.forEach(item => {
                     const temp = _.cloneDeep(item);
                     delete temp.actions;
@@ -355,6 +357,7 @@
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
                     });
                 });
+                console.log('hasAddCustomList', this.hasAddCustomList);
                 this.hasAddCustomList.forEach(item => {
                     if (!item.resource_groups || !item.resource_groups.length) {
                         item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
@@ -373,6 +376,7 @@
                 } else {
                     this.tableList.push(..._.cloneDeep(tempList));
                 }
+                console.log('this.tableList', this.tableList);
                 this.tableListBackup = _.cloneDeep(this.tableList);
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
@@ -786,7 +790,9 @@
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,
                             theme: 'error',
-                            message: e.message || e.data.msg || e.statusText
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
                         });
                     } finally {
                         this.submitLoading = false;
