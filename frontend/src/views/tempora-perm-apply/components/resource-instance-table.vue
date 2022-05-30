@@ -1326,6 +1326,7 @@
             handleBlur (value, e, row) {
                 row.isShowCustom = false;
                 row.customValue = '';
+                this.handleEnter(value, e, row);
             },
 
             handleInput (value, e, row) {
