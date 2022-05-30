@@ -15,10 +15,6 @@
                     </div>
                     <div v-else>
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
-                        <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
-                        <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
-                        <iam-svg name="icon-changed" ext-cls="iam-new-action" v-if="row.isChanged && curLanguageIsCn" />
-                        <iam-svg name="icon-changed-en" ext-cls="iam-new-action" v-if="row.isChanged && !curLanguageIsCn" />
                     </div>
                 </template>
             </bk-table-column>
