@@ -87,7 +87,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         group_names = [g["name"] for g in groups_data]
         self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
         # 用户组数量在角色内是否超限
-        self.group_check_biz.check_role_group_limit(role.id, len(groups_data))
+        self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
         groups = self.group_biz.batch_create(
             role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username

@@ -154,7 +154,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"])
         # 用户组数量在角色内是否超限
         number_of_new_group = 1  # 接口只支持创建一个用户组，不支持批量，所以新增用户组数量为1
-        self.group_check_biz.check_role_group_limit(request.role.id, number_of_new_group)
+        self.group_check_biz.check_role_group_limit(request.role, number_of_new_group)
 
         # 检测成员是否满足管理的授权范围
         members = parse_obj_as(List[Subject], data["members"])
