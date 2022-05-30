@@ -33,7 +33,7 @@ from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
 from backend.service.action import ActionService
-from backend.service.constants import RoleRelatedObjectType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
@@ -573,16 +573,20 @@ class GroupCheckBiz:
         if Group.objects.filter(name=name, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
 
-    def check_role_group_limit(self, role_id: int, new_group_count: int):
+    def check_role_group_limit(self, role: Role, new_group_count: int):
         """
         检查角色下的用户组数量是否超限
         """
+        # 只针对普通分级管理，对于超级管理员和系统管理员则无限制
+        if role.type in [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value]:
+            return
+
         limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_group_limit"]
-        role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
+        role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role.id, RoleRelatedObjectType.GROUP.value)
         if len(role_group_ids) + new_group_count > limit:
             raise error_codes.VALIDATE_ERROR.format(
                 _("分级管理员({})已有{}个用户组，不可再添加{}个用户组，否则超出分级管理员最大用户组数量{}的限制").format(
-                    role_id, len(role_group_ids), new_group_count, limit
+                    role.id, len(role_group_ids), new_group_count, limit
                 ),
                 True,
             )
