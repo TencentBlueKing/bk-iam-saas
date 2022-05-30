@@ -385,6 +385,7 @@
                 }
                 const curResTypeData = this.originalList.find(item => item.id === curId)
                     .resource_groups[this.curGroupIndex];
+                if (!curResTypeData) return [];
                 if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
                     return [];
                 }
