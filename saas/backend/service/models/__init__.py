@@ -61,6 +61,8 @@ from .policy import (
     ResourceGroup,
     ResourceGroupList,
     SystemCounter,
+    UniversalPolicy,
+    UniversalPolicyChangedContent,
     Value,
 )
 from .resource import (
@@ -142,4 +144,6 @@ __all__ = [
     "ResourceGroup",
     "ResourceGroupList",
     "ModelEvent",
+    "UniversalPolicy",
+    "UniversalPolicyChangedContent",
 ]

@@ -9,13 +9,14 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import namedtuple
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.temporary_policy.models import TemporaryPolicy
-from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID
+from backend.common.time import PERMANENT_SECONDS
+from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, AbacPolicyChangeType, AuthTypeEnum
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
@@ -315,3 +316,57 @@ class SystemCounter(BaseModel):
 class PolicyIDExpiredAt(BaseModel):
     id: int
     expired_at: int
+
+
+class UniversalPolicy(Policy):
+    """
+    通用Policy，支持处理RBAC和ABAC策略，原Policy只支持处理ABAC
+    """
+
+    expression_resource_groups: ResourceGroupList
+    instances_resource_groups: List[PathNode]
+
+    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
+
+    def _is_universal(self):
+        """用于判断该Policy是否支持rabc类型"""
+        # TODO: related_resource_types 多种类型，则无法支持
+        # TODO: 与资源实例无关的操作
+        pass
+
+    def split_resource(self):
+        """
+        拆分出RBAC和ABAC权限
+        并填充到expression_resource_groups和instances_resource_groups字段里
+        同时计算出策略类型auth_type
+        """
+        # TODO: 用于拆分出RBAC和ABAC权限（匹配实例视图等逻辑，配置了环境属性则默认是ABAC）
+        # TODO: 同时计算出策略类型auth_type
+        pass
+
+    def diff(self):
+        """用于策略变更时对比得到需要变更rbac和abac策略的内容"""
+        pass
+
+
+class AbacPolicyChangeContent(BaseModel):
+    change_type: AbacPolicyChangeType = AbacPolicyChangeType.NONE.value
+    id: int = 0
+    resource_expression: str = ""
+    environment: str = "{}"
+    expired_at = PERMANENT_SECONDS
+
+
+class RbacPolicyChangeContent(BaseModel):
+    created: List[PathNode] = []
+    deleted: List[PathNode] = []
+
+
+class UniversalPolicyChangedContent(BaseModel):
+    action_id: str
+    # 策略变更后的策略类型
+    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
+    # ABAC策略变更
+    abac: Optional[AbacPolicyChangeContent]
+    # RBAC策略变更
+    rbac: Optional[RbacPolicyChangeContent]

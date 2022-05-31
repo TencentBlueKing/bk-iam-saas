@@ -318,3 +318,20 @@ class ModelChangeEventTypeEnum(ChoicesEnum, LowerStrEnum):
 class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
     Pending = auto()
     Finished = auto()
+
+
+# ---------------------------------------------------------------------------------------------- #
+# UniversalPolicy
+# ---------------------------------------------------------------------------------------------- #
+class AuthTypeEnum(ChoicesEnum, LowerStrEnum):
+    RBAC = auto()
+    ABAC = auto()
+    BOTH = auto()
+    NONE = auto()
+
+
+class AbacPolicyChangeType(ChoicesEnum, LowerStrEnum):
+    CREATED = auto()
+    UPDATED = auto()
+    DELETED = auto()
+    NONE = auto()

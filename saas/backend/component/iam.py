@@ -584,3 +584,60 @@ def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
         "iam delete temporary policies before expired_at url: %s, expired_at: %s", url_path, expired_at
     )
     return _call_iam_api(http_delete, url_path, data={})
+
+
+# --------------------------------- V2 API ---------------------------------
+def alter_policies_v2(
+    subject_type: str,
+    subject_id: str,
+    template_id: int,
+    system_id: str,
+    create_policies: List[Dict],
+    update_policies: List[Dict],
+    delete_policy_ids: List[int],
+    resource_actions: List[Dict],
+    group_auth_type: str,
+) -> Dict:
+    """
+    变更权限
+
+    create_policies: [{
+        "action_id": "view_host",
+        "resource_expression": "",
+        "environment": "",
+        "expired_at": 4102444800
+    }]
+
+    update_policies: [{
+        "id": 1,
+        "action_id": "edit_host",
+        "resource_expression": "",
+        "environment": "",
+        "expired_at": 4102444800
+    }]
+
+    delete_policy_ids: [2, 3, 4]
+
+    resource_actions: [{
+        "resource": {
+            "system_id": "bk_cmdb",
+            "type": "host",
+            "id": "host1"
+        },
+        "created_action_ids": ["view_host"],
+        "deleted_action_ids": ["edit_host"]
+    }]
+    """
+    url_path = f"/api/v2/web/systems/{system_id}/policies"
+    data = {
+        "subject": {"type": subject_type, "id": subject_id},
+        "template_id": template_id,
+        "create_policies": create_policies,
+        "update_policies": update_policies,
+        "delete_policy_ids": delete_policy_ids,
+        "resource_actions": resource_actions,
+        "group_auth_type": group_auth_type,
+    }
+    permission_logger.info("iam alter policies v2 url: %s, data: %s", url_path, data)
+    result = _call_iam_api(http_post, url_path, data=data)
+    return result
