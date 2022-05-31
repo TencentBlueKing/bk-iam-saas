@@ -29,3 +29,11 @@ class AuthAPIAllowListConfig(BaseModel):
         verbose_name_plural = "授权API白名单配置"
         ordering = ["-id"]
         unique_together = [["system_id", "object_id"]]
+
+    @classmethod
+    def delete_by_action(cls, system_id: str, action_id: str):
+        """删除某个系统某个操作的白名单（可能涉及多种类型）"""
+        # Note: 目前只有类型AUTHORIZATION_INSTANCE的白名单，对应的object_id才是操作ID
+        cls.objects.filter(
+            type=AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value, system_id=system_id, object_id=action_id
+        ).delete()

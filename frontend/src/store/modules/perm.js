@@ -402,8 +402,26 @@ export default {
          */
         getPersonalPolicy ({ commit, state, dispatch }, params = {}, config) {
             return http.get(
-                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/policies/?system_id=`
-                    + params.systemId,
+                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/policies/?system_id=${params.systemId}`,
+                {},
+                config
+            );
+        },
+
+        /**
+         * Subject 临时权限列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getTeporaryPersonalPolicy ({ commit, state, dispatch }, params = {}, config) {
+            return http.get(
+                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/temporary_policies/?system_id=${params.systemId}`,
                 {},
                 config
             );
@@ -576,6 +594,25 @@ export default {
             return http.get(
                 `${AJAX_URL_PREFIX}/handover/records/${id}/tasks/?${json2Query(params)}`,
                 // `/handover/records/?mock-file=index&invoke=getTransferHistoryDetail&id=${id}`,
+                {},
+                config
+            );
+        },
+
+        /**
+         *  推荐列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getRecommended ({ commit, state, dispatch }, params = {}, config) {
+            console.log('params', params);
+            return http.get(
+                `${AJAX_URL_PREFIX}/policies/recommended/?${json2Query(params)}`,
                 {},
                 config
             );

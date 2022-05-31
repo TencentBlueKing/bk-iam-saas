@@ -11,7 +11,8 @@ specific language governing permissions and limitations under the License.
 from typing import Any, Optional
 
 from aenum import LowerStrEnum, auto
-from django.core.cache import cache
+
+from .cache import Cache, CacheEnum, CacheKeyPrefixEnum
 
 
 class LockTypeEnum(LowerStrEnum):
@@ -31,18 +32,16 @@ class RedisLock:
         type: 锁类型, LockTypeEnum 中的值
         suffix: 实现__str__方法的对象
         """
-        key = self._get_key(type_, suffix)
+        key = self._make_key(type_, suffix)
+        cache = Cache(CacheEnum.REDIS.value, CacheKeyPrefixEnum.LOCK.value)
         self._lock = cache.lock(key, timeout=timeout)
         self._blocking = blocking
 
-    def _get_key(self, type_: str, suffix: Any) -> str:
+    def _make_key(self, type_: str, suffix: Any) -> str:
         """
-        生成redis key
+        生成key
         """
-        key = f"bk_iam:lock:{type_}"
-        if suffix is not None:
-            key += f":{suffix}"
-        return key
+        return f"{type_}:{suffix}" if suffix is not None else type_
 
     def __enter__(self):
         assert self._blocking

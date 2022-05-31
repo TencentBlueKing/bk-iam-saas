@@ -8,19 +8,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
-import logging
-import traceback
-
 from django.conf import settings
-from django.http import Http404, JsonResponse
+from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 from pyinstrument.middleware import ProfilerMiddleware
-from sentry_sdk import capture_exception
 
+from backend.common.constants import DjangoLanguageEnum
+from backend.common.exception_handler import is_open_api_request
 from backend.common.local import local
-
-logger = logging.getLogger("app")
 
 
 class CustomProfilerMiddleware(ProfilerMiddleware):
@@ -74,50 +69,10 @@ class RequestProvider(object):
         return response
 
 
-class AppExceptionMiddleware(MiddlewareMixin):
-    def process_exception(self, request, exception):
-        """
-        app后台错误统一处理
-        """
-
-        self.exception = exception
-        self.request = request
-
-        # 用户未主动捕获的异常
-        logger.error(
-            ("""捕获未处理异常,异常具体堆栈->[%s], 请求URL->[%s], """ """请求方法->[%s] 请求参数->[%s]""")
-            % (
-                traceback.format_exc(),
-                request.path,
-                request.method,
-                json.dumps(getattr(request, request.method, None)),
-            )
-        )
-
-        # 对于check开头函数进行遍历调用，如有满足条件的函数，则不屏蔽异常
-        check_funtions = self.get_check_functions()
-        for check_function in check_funtions:
-            if check_function():
-                return None
-
-        response = JsonResponse({"result": False, "code": "1902500", "message": "系统异常,请联系管理员处理", "data": None})
-        response.status_code = 500
-
-        # notify sentry
-        capture_exception(exception)
-
-        return response
-
-    def get_check_functions(self):
-        """获取需要判断的函数列表"""
-        return [
-            getattr(self, func) for func in dir(self) if func.startswith("check") and callable(getattr(self, func))
-        ]
-
-    def check_is_debug(self):
-        """判断是否是开发模式"""
-        return settings.DEBUG
-
-    def check_is_http404(self):
-        """判断是否基于Http404异常"""
-        return isinstance(self.exception, Http404)
+class LanguageMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        # 如果是 openapi 请求, 设置默认语言为 english
+        # openapi 的错误信息返回为英文
+        if is_open_api_request(request):
+            translation.activate(DjangoLanguageEnum.EN.value)
+            request.LANGUAGE_CODE = translation.get_language()

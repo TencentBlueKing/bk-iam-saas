@@ -25,7 +25,7 @@ urlpatterns = [
         "expire_soon/", views.PolicyExpireSoonViewSet.as_view({"get": "list"}), name="policy.list_policy_expire_soon"
     ),
     path(
-        "related_policy/",
+        "related/",
         views.RelatedPolicyViewSet.as_view({"post": "create"}),
         name="policy.generate_related_policy",
     ),
@@ -33,5 +33,10 @@ urlpatterns = [
         "resource_copy/",
         views.BatchPolicyResourceCopyViewSet.as_view({"post": "create"}),
         name="policy.resource_copy",
+    ),
+    path(
+        "recommended/",
+        views.RecommendPolicyViewSet.as_view({"get": "list"}),
+        name="policy.generate_recommend_policy",
     ),
 ]

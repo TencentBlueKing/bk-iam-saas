@@ -44,3 +44,7 @@ class GroupSLZ(SubjectGroupSLZ):
             return {}
 
         return role.dict()
+
+
+class QueryRoleSLZ(serializers.Serializer):
+    with_perm = serializers.BooleanField(label="角色是否带权限")

@@ -13,21 +13,19 @@ from rest_framework import status, views
 from rest_framework.response import Response
 
 from backend.biz.instance_selection import InstanceSelectionBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 from ..serializers import InstanceSelectionQuerySLZ, InstanceSelectionSLZ
 
 
 class InstanceSelectionView(views.APIView):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = InstanceSelectionBiz()
 
     @swagger_auto_schema(
         operation_description="资源实例选择视图",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=InstanceSelectionQuerySLZ,
+        query_serializer=InstanceSelectionQuerySLZ(),
         responses={status.HTTP_200_OK: InstanceSelectionSLZ(label="选择视图", many=True)},
         tags=["action"],
     )

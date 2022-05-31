@@ -1173,11 +1173,7 @@
                             if (curSystemData) {
                                 curSystemData.aggregations.push({
                                     actions,
-                                    aggregate_resource_type: {
-                                        id: aggregateResourceType.id,
-                                        system_id: aggregateResourceType.system_id,
-                                        instances
-                                    }
+                                    aggregate_resource_types: aggregateResourceTypes
                                 });
                             } else {
                                 actionList.push(aggregateParams);

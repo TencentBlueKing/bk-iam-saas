@@ -88,6 +88,8 @@
         [['apply'], 'applyNav'],
         // 权限申请 'permApply'
         [['applyCustomPerm', 'applyJoinUserGroup'], 'permApplyNav'],
+        // 临时权限申请 'provisionPermApply'
+        [['applyProvisionPerm'], 'provisionPermApplyNav'],
         // 我的权限
         [
             [

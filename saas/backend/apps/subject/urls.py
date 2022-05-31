@@ -23,6 +23,11 @@ urlpatterns = [
                     name="subject.group",
                 ),
                 path(
+                    "roles/",
+                    views.SubjectRoleViewSet.as_view({"get": "list"}),
+                    name="subject.roles_with_permission",
+                ),
+                path(
                     "systems/", views.SubjectSystemViewSet.as_view({"get": "list"}), name="subject.list_policy_system"
                 ),
                 path(
@@ -39,6 +44,16 @@ urlpatterns = [
                     "policies/<int:pk>/<str:resource_group_id>/",
                     views.SubjectPolicyResourceGroupDeleteViewSet.as_view({"delete": "destroy"}),
                     name="subject.resource_group_delete",
+                ),
+                path(
+                    "temporary_policies/",
+                    views.SubjectTemporaryPolicyViewSet.as_view({"get": "list", "delete": "destroy"}),
+                    name="subject.temporary_policies",
+                ),
+                path(
+                    "temporary_policies/systems/",
+                    views.SubjectTemporaryPolicySystemViewSet.as_view({"get": "list"}),
+                    name="subject.temporary_policies_systems",
                 ),
             ]
         ),

@@ -64,6 +64,20 @@ export default {
         },
 
         /**
+         * 获取系统下的临时权限列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 查询参数
+         *
+         * @return {Promise} promise 对象
+         */
+        getProvisionPolicies ({ commit, state, dispatch }, params, config) {
+            return http.get(`${AJAX_URL_PREFIX}/temporary_policies/?${json2Query(params)}`, config);
+        },
+
+        /**
          * 获取关联资源实例选择
          *
          * @param {Function} commit store commit mutation handler
@@ -138,6 +152,19 @@ export default {
         },
 
         /**
+         * 获取有临时权限的所有系统列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         *
+         * @return {Promise} promise 对象
+         */
+        getTeporHasPermSystem ({ commit, state, dispatch }, config) {
+            return http.get(`${AJAX_URL_PREFIX}/temporary_policies/systems/`, config);
+        },
+
+        /**
          * 提交权限申请
          *
          * @param {Function} commit store commit mutation handler
@@ -164,6 +191,21 @@ export default {
          */
         deletePerm ({ commit, state, dispatch }, { policyIds, systemId }, config) {
             return http.delete(`${AJAX_URL_PREFIX}/policies/?ids=${policyIds.join(',')}&system_id=${systemId}`, config);
+        },
+
+        /**
+         * 删除临时权限
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { policyIds, systemId } policyIds 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        deleteTemporaryPerm ({ commit, state, dispatch }, { policyIds, systemId }, config) {
+            return http.delete(`${AJAX_URL_PREFIX}/temporary_policies/?ids=${policyIds.join(',')}&system_id=${systemId}`, config);
         },
 
         /**
@@ -196,6 +238,26 @@ export default {
         deleteSubjectPerm ({ commit, state, dispatch }, { policyIds, systemId, subjectId, subjectType }, config) {
             return http.delete(
                 `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/policies/?`
+                    + `ids=${policyIds.join(',')}&system_id=${systemId}`,
+                config
+            );
+        },
+
+        /**
+         * 组织架构删除临时权限
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { policyIds, systemId } policyIds 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        deleteTemporarySubjectPerm ({ commit, state, dispatch },
+            { policyIds, systemId, subjectId, subjectType }, config) {
+            return http.delete(
+                `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/temporary_policies/?`
                     + `ids=${policyIds.join(',')}&system_id=${systemId}`,
                 config
             );
@@ -330,7 +392,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRelatedPolicy ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/policies/related_policy/`, params, config);
+            return http.post(`${AJAX_URL_PREFIX}/policies/related/`, params, config);
         }
     }
 };

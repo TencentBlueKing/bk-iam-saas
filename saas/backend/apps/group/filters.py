@@ -15,12 +15,12 @@ from backend.apps.policy.models import Policy
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.open import ApplicationPolicyListCache
+from backend.common.cache import cached
 from backend.component import iam
 from backend.service.constants import SubjectType
-from backend.util.cache import region
 
 
-@region.cache_on_arguments(expiration_time=30)
+@cached(timeout=30)
 def _list_pre_application_group_ids(cache_id: str):
     policy_list = ApplicationPolicyListCache().get(cache_id)
     return GroupBiz().list_pre_application_groups(policy_list)

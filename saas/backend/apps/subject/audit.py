@@ -88,6 +88,12 @@ class SubjectPolicyDeleteAuditProvider(BaseSubjectProvider):
         return audit_context_getter(self.request, "system_id")
 
 
+class SubjectTemporaryPolicyDeleteAuditProvider(SubjectPolicyDeleteAuditProvider):
+    @property
+    def type(self):
+        return AuditType.USER_TEMPORARY_POLICY_DELETE.value
+
+
 # TODO: [重构] log_user_cleanup_policy_audit_event 放到 apps.user.audit里
 def log_user_cleanup_policy_audit_event(task_id: str, user: User, system_id: str, policies: List):
     """

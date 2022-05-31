@@ -21,4 +21,6 @@ urlpatterns = [
     url(r"^management/", include("backend.api.management.urls")),
     # 超级管理类API
     url(r"^admin/", include("backend.api.admin.urls")),
+    # 与一些内部系统或平台共享数据，比如：审计系统
+    url(r"^share/", include("backend.api.share.urls")),
 ]
