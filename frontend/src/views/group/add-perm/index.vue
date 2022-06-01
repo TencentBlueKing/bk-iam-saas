@@ -24,6 +24,7 @@
                     is-edit
                     mode="create"
                     ref="resInstanceTableRef"
+                    :is-all-expanded="isAllExpanded"
                     :list="tableList"
                     :authorization="curAuthorizationData"
                     :original-list="tableListBackup"
@@ -299,6 +300,7 @@
             },
 
             handleAttrValueSelected (payload) {
+                console.log('payload', payload);
                 window.changeDialog = true;
                 const instances = (function () {
                     const arr = [];
@@ -514,6 +516,7 @@
                                         curInstances.push(...instance);
                                     });
                                     instancesDisplayData = this.setInstancesDisplayData(curInstances);
+                                    console.log('instancesDisplayData', instancesDisplayData);
                                 } else {
                                     curInstances = [];
                                 }
