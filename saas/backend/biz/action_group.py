@@ -8,7 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List, Optional
+from collections import defaultdict
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 from pydantic.tools import parse_obj_as
@@ -162,3 +163,40 @@ class ActionGroupBiz:
             if sub_group is not None:
                 return sub_group
         return None
+
+    def get_action_same_group_dict(self, system_id: str, action_ids: List[str]) -> Dict[str, List[str]]:
+        """
+        生成相同操作分组字典
+
+        result = {
+            action_id: [action_id, action_id, ...] # 同一个分组的action_id
+        }
+        """
+        action_groups = self.action_group_svc.list(system_id)
+        if not action_groups:
+            return {}
+
+        return self._find_action_same_group(action_groups, action_ids)
+
+    def _find_action_same_group(self, action_groups: List[ActionGroup], action_ids: List[str]) -> Dict[str, List[str]]:
+        """
+        查找action_id在同一个分组中的其他操作
+        """
+        result: Dict[str, List[str]] = defaultdict(list)
+        for action_group in action_groups:
+            for action in action_group.actions:
+                if action.id in action_ids:
+                    result[action.id].extend(
+                        [a.id for a in action_group.actions if a.id != action.id]
+                    )  # 兼容可能一个操作在多个分组中
+                    continue
+
+            if not action_group.sub_groups:
+                continue
+
+            sub_result = self._find_action_same_group(action_group.sub_groups, action_ids)
+
+            for k, v in sub_result.items():
+                result[k].extend(v)
+
+        return result

@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from aenum import LowerStrEnum, auto, skip
+from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
 
@@ -23,6 +24,8 @@ class TaskStatus(ChoicesEnum):
     _choices_labels = skip(((PENDING, "未开始"), (RUNNING, "运行中"), (SUCCESS, "成功"), (FAILURE, "失败"), (CANCEL, "取消")))
 
 
-class TaskType(LowerStrEnum):
+class TaskType(ChoicesEnum, LowerStrEnum):
     TEMPLATE_UPDATE = auto()
     GROUP_AUTHORIZATION = auto()
+
+    _choices_labels = skip(((TEMPLATE_UPDATE, _("模板更新")), (GROUP_AUTHORIZATION, _("用户组授权"))))

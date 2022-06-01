@@ -79,6 +79,9 @@
                     case 'grant_action':
                         str = this.$t(`m.myApply['自定义权限申请']`);
                         break;
+                    case 'grant_temporary_action':
+                        str = this.$t(`m.myApply['自定义临时权限申请']`);
+                        break;
                     case 'renew_action':
                         str = this.$t(`m.myApply['自定义权限申请']`);
                         break;

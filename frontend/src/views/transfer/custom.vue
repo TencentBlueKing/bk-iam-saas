@@ -5,11 +5,11 @@
             <div class="transfer-custom-content">
                 <div class="header" @click="handleCustomExpanded">
                     <Icon bk class="expanded-icon" :type="customExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">自定义权限交接</label>
+                    <label class="title">{{$t(`m.permTransfer['自定义权限交接']`)}}</label>
                     <div class="sub-title" v-if="customNotTransferCount > 0">
                         <i class="iam-icon iamcenter-warning-fill not-transfer-icon"></i>
-                        无法交接自定义权限：{{customNotTransferCount}}个
-                        <span class="reason">（已过期的自定义权限无法交接）</span>
+                        {{$t(`m.permTransfer['无法交接自定义权限：']`)}}{{customNotTransferCount}}个
+                        <span class="reason">{{$t(`m.permTransfer['（已过期的自定义权限无法交接）']`)}}</span>
                     </div>
                 </div>
                 <div class="content" v-show="customExpanded">

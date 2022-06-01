@@ -78,6 +78,9 @@
                     case 'grant_action':
                         str = this.curLanguageIsCn ? `${data.extra_info.system_name}权限申请` : `Apply for ${data.extra_info.system_name} permissions`;
                         break;
+                    case 'grant_temporary_action':
+                        str = this.curLanguageIsCn ? `${data.extra_info.system_name}临时权限申请` : `Temporary Apply for ${data.extra_info.system_name} permissions`;
+                        break;
                     case 'renew_action':
                         str = this.curLanguageIsCn ? `${data.extra_info.system_name}权限续期` : `Renewal for ${data.extra_info.system_name} permissions`;
                         break;

@@ -36,6 +36,7 @@
                             <render-action-tag
                                 ref="commonActionRef"
                                 :system-id="systemValue"
+                                :tag-action-list="tagActionList"
                                 v-if="commonActions.length > 0 && !customLoading"
                                 mode="detail"
                                 :data="commonActions"
@@ -213,7 +214,6 @@
                 </bk-button>
             </div>
         </smart-action>
-        <!-- 用户组权限申请默认页面 -->
         <smart-action class="applpForPermission" v-if="isNoPermissionsSet && isShowHasUserGroup">
             <bk-radio-group v-model="checkRadio" @change="handlerChange">
                 <div class="groupPermissionQequest" :class="{ 'blueBorder': isShowUserGroup }">
@@ -321,7 +321,6 @@
                         </div>
                     </render-horizontal-block>
                 </div>
-                <!-- 独立申请权限 -->
                 <div class="IndependentApplication" :class="{ 'blueBorder': isShowIndependent }">
                     <render-horizontal-block>
                         <div class="independent">
@@ -347,6 +346,19 @@
                                             :original-list="tableDataBackup"
                                             :system-id="systemValue"
                                             ref="resInstanceTableRef"
+                                            @on-select="handleResourceSelect"
+                                            @on-realted-change="handleRelatedChange" />
+                                    </div>
+
+                                    <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
+                                    <div class="tableData">
+                                        <resource-instance-table
+                                            :is-recommend="isRecommend"
+                                            :cache-id="routerQuery.cache_id"
+                                            :list="newRecommendTableList"
+                                            :original-list="tableRecommendDataBackup"
+                                            :system-id="systemValue"
+                                            ref="resInstanceRecommendTableRef"
                                             @on-select="handleResourceSelect"
                                             @on-realted-change="handleRelatedChange" />
                                     </div>
@@ -405,7 +417,7 @@
                     </bk-alert>
                 </div>
                 <div class="requestIndependent">
-                    <div class="requestIndependentText">{{$t(`m.permApply['你可以申请独立权限']`)}}</div>
+                    <div class="requestIndependentText">{{$t(`m.permApply['以下是你必须申请的权限']`)}}</div>
                     <div class="info">
                         {{ $t(`m.info['如果需要更多自定义权限']`) }}，
                         {{ $t(`m.info['可前往']`) }}
@@ -425,6 +437,19 @@
                         :original-list="tableDataBackup"
                         :system-id="systemValue"
                         ref="resInstanceTableRef"
+                        @on-select="handleResourceSelect"
+                        @on-realted-change="handleRelatedChange" />
+                </div>
+
+                <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
+                <div class="tableData">
+                    <resource-instance-table
+                        :is-recommend="isRecommend"
+                        :cache-id="routerQuery.cache_id"
+                        :list="newRecommendTableList"
+                        :original-list="tableRecommendDataBackup"
+                        :system-id="systemValue"
+                        ref="resInstanceRecommendTableRef"
                         @on-select="handleResourceSelect"
                         @on-realted-change="handleRelatedChange" />
                 </div>
@@ -558,8 +583,13 @@
                 // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
-                newTableList: []
-
+                newTableList: [],
+                newRecommendTableList: [],
+                tableRecommendData: [],
+                tableRecommendDataBackup: [],
+                aggregationsTableRecommendData: [],
+                isRecommend: true,
+                tagActionList: []
             };
         },
         computed: {
@@ -610,6 +640,8 @@
         watch: {
             '$route': {
                 handler (value) {
+                    // value.query.system_id = 'bk_job';
+                    // value.query.cache_id = 'f3419dba47964a6b8a3e7467ff685b5e';
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -634,6 +666,7 @@
             },
             tableData: {
                 handler (value) {
+                    this.tagActionList = value.map(e => e.id);
                     if (value.filter(item => item.isAggregate).length < 1) {
                         this.isAllExpanded = false;
                     }
@@ -804,6 +837,75 @@
                     await this.fetchUserGroupList();
                     // 获取个人用户的用户组列表
                     await this.fetchCurUserGroup();
+                    // 获取推荐操作
+                    await this.fetchRecommended();
+                }
+            },
+
+            // 获取推荐操作
+            async fetchRecommended () {
+                const params = {
+                    system_id: this.routerQuery.system_id,
+                    cache_id: this.routerQuery.cache_id
+                };
+                try {
+                    const res = await this.$store.dispatch('perm/getRecommended', params);
+                    const recommendActions = res.data.actions || [];
+                    const recommendPolicies = res.data.policies || [];
+
+                    const data = recommendActions.map(item => {
+                        const resourceGroups = recommendPolicies.find(sub => sub.id === item.id);
+                        if (resourceGroups) {
+                            resourceGroups.resource_groups.map(v => {
+                                v.related_resource_types.forEach(e => {
+                                    e.id = e.type;
+                                });
+                                return v;
+                            });
+                        }
+                        item.resource_groups = resourceGroups && resourceGroups.resource_groups
+                            ? resourceGroups.resource_groups : [];
+                        if (!item.resource_groups || !item.resource_groups.length) {
+                            item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                        }
+                        return new Policy({ ...item, tag: 'add' }, 'custom');
+                    });
+                    this.tableRecommendData = data;
+                    this.tableRecommendData.forEach(item => {
+                        item.expired_at = 1627616000;
+
+                        // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
+                        if (item.tag === 'add') {
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.expired_at = 15552000;
+                            }
+                        } else {
+                            // 新增的权限不判断是否过期
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.isShowRenewal = true;
+                                item.isExpired = true;
+                            }
+                        }
+                    });
+                    this.newRecommendTableList = _.cloneDeep(this.tableRecommendData.filter(item => {
+                        return !item.isExpiredAtDisabled;
+                    }));
+                    this.tableRecommendDataBackup = _.cloneDeep(this.tableRecommendData);
+                    this.aggregationsTableRecommendData = _.cloneDeep(this.tableRecommendData);
+                } catch (e) {
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    if (this.requestQueue.length > 0) {
+                        this.requestQueue.shift();
+                    }
                 }
             },
 
@@ -1317,7 +1419,6 @@
             },
 
             handleResourceSelect (payload) {
-                console.log('payload', payload);
                 const curAction = payload.actions.map(item => item.id);
                 const instances = (function () {
                     const arr = [];
@@ -1393,8 +1494,6 @@
                 aggregationAction.forEach(item => {
                     actionIds.push(...item.actions.map(_ => _.id));
                 });
-                console.log('this.tableData', this.tableData);
-                console.log('this.aggregationsTableData', this.aggregationsTableData);
                 if (payload) {
                     // 缓存新增加的操作权限数据
                     aggregationAction.forEach(item => {
@@ -2033,8 +2132,24 @@
              */
             async handleApplySubmit () {
                 const tableData = this.$refs.resInstanceTableRef.handleGetValue();
-                const { actions, flag, aggregations } = tableData;
-                if (flag || this.reason === '') {
+                const { flag, aggregations } = tableData;
+                let actions = tableData.actions;
+                let recommendActions = [];
+                let recommendFlag = false;
+                
+                if (this.$refs.resInstanceRecommendTableRef) {
+                    const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
+                    recommendActions = tableRecommendData.actions;
+                    recommendFlag = recommendActions.some(e => {
+                        return e.resource_groups.some(v => {
+                            return v.related_resource_types.some(j => {
+                                return !j.condition.length;
+                            });
+                        });
+                    });
+                }
+                actions = [...actions, ...recommendActions];
+                if (recommendFlag || flag || this.reason === '') {
                     this.isShowReasonError = this.reason === '';
                     if (actions.length < 1 && aggregations.length < 1) {
                         this.isShowActionError = true;

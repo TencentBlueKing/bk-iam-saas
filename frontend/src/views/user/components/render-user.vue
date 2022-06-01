@@ -27,11 +27,13 @@
     import _ from 'lodash';
     import CustomPerm from './custom-perm';
     import GroupPerm from './group-perm';
+    import TeporaryCustomPerm from './teporary-custom-perm';
     export default {
         name: '',
         components: {
             CustomPerm,
-            GroupPerm
+            GroupPerm,
+            TeporaryCustomPerm
         },
         props: {
             params: {
@@ -46,7 +48,8 @@
                 curData: {},
                 panels: [
                     { name: 'groupPerm', label: this.$t(`m.perm['用户组权限']`) },
-                    { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) }
+                    { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) },
+                    { name: 'teporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`) }
                 ],
                 active: 'groupPerm',
                 componentsKey: -1,
@@ -88,7 +91,8 @@
             active (value) {
                 const comMap = {
                     'customPerm': 'CustomPerm',
-                    'groupPerm': 'GroupPerm'
+                    'groupPerm': 'GroupPerm',
+                    'teporaryCustomPerm': 'TeporaryCustomPerm'
                 };
                 this.curCom = comMap[value];
                 this.componentsKey = +new Date();

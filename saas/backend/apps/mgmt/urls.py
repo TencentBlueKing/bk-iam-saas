@@ -55,4 +55,21 @@ urlpatterns = [
             ]
         ),
     ),
+    path(
+        "long_task/",
+        include(
+            [
+                path(
+                    "",
+                    views.LongTaskViewSet.as_view({"get": "list"}),
+                    name="mgmt.long_task",
+                ),
+                path(
+                    "<int:id>/",
+                    views.LongTaskViewSet.as_view({"get": "retrieve", "post": "retry"}),
+                    name="mgmt.long_task",
+                ),
+            ]
+        ),
+    ),
 ]
