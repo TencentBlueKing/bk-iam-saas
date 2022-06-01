@@ -1,6 +1,6 @@
 app_code: bk_iam
 app_name: 权限中心V3
-name_en: IAM
+app_name en: IAM
 author: 蓝鲸智云
 category: 开发工具
 date: '2020-04-16 12:00:00'
