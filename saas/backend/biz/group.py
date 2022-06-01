@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
+from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -26,13 +27,13 @@ from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
 from backend.biz.utils import fill_resources_attribute
-from backend.common.error_codes import APIException, CodeException, error_codes
+from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
 from backend.service.action import ActionService
-from backend.service.constants import RoleRelatedObjectType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
@@ -92,6 +93,13 @@ class GroupRoleDict(BaseModel):
 
     def get(self, group_id: int) -> Optional[UserRole]:
         return self.data.get(group_id)
+
+
+class GroupNameDict(BaseModel):
+    data: Dict[int, str]
+
+    def get(self, group_id: int, default=""):
+        return self.data.get(group_id, default)
 
 
 class GroupMemberExpiredAtBean(GroupMemberExpiredAt):
@@ -381,7 +389,7 @@ class GroupBiz:
             results = self.engine_svc.query_subjects_by_policy_resources(
                 system_id, policy_resources, SubjectType.GROUP.value
             )
-        except APIException:
+        except APIError:
             return []
 
         # 取结果的交集
@@ -438,7 +446,7 @@ class GroupBiz:
                 # 检查策略是否在role的授权范围内
                 scope_checker = RoleAuthorizationScopeChecker(role)
                 scope_checker.check_policies(template.system_id, template.policies)
-            except CodeException as e:
+            except APIError as e:
                 raise error_codes.VALIDATE_ERROR.format(
                     _("系统: {} 模板: {} 校验错误: {}").format(template.system_id, template.template_id, e.message),
                     replace=True,
@@ -509,6 +517,13 @@ class GroupBiz:
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
 
+    def get_group_name_dict_by_ids(self, group_ids: List[int]) -> GroupNameDict:
+        """
+        获取用户组id: name的字典
+        """
+        queryset = Group.objects.filter(id__in=group_ids).only("name")
+        return GroupNameDict(data={one.id: one.name for one in queryset})
+
     def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
         """根据关键词 获取指定用户组成员列表"""
         maximum_number_of_member = 1000
@@ -557,6 +572,24 @@ class GroupCheckBiz:
             role_group_ids.remove(group_id)
         if Group.objects.filter(name=name, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
+
+    def check_role_group_limit(self, role: Role, new_group_count: int):
+        """
+        检查角色下的用户组数量是否超限
+        """
+        # 只针对普通分级管理，对于超级管理员和系统管理员则无限制
+        if role.type in [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value]:
+            return
+
+        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_group_limit"]
+        role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role.id, RoleRelatedObjectType.GROUP.value)
+        if len(role_group_ids) + new_group_count > limit:
+            raise error_codes.VALIDATE_ERROR.format(
+                _("分级管理员({})已有{}个用户组，不可再添加{}个用户组，否则超出分级管理员最大用户组数量{}的限制").format(
+                    role.id, len(role_group_ids), new_group_count, limit
+                ),
+                True,
+            )
 
     def batch_check_role_group_names_unique(self, role_id: int, names: List[str]):
         """

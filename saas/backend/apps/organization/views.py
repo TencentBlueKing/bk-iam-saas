@@ -10,9 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, views
+from rest_framework import serializers, status, views
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
@@ -34,19 +33,17 @@ from backend.apps.organization.serializers import (
     UserQuerySLZ,
 )
 from backend.apps.organization.tasks import sync_organization
-from backend.common.swagger import ResponseSwaggerAutoSchema
+from backend.common.cache import cachedmethod
 from backend.component import usermgr
 from backend.service.constants import PermissionCodeEnum
-from backend.util.cache import region
 
 
 class CategoryViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="组织架构 - 多域目录列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: OrganizationCategorySLZ(label="目录", many=True)},
         tags=["organization"],
     )
@@ -75,12 +72,11 @@ class CategoryViewSet(GenericViewSet):
 
 class DepartmentViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="组织架构 - 部门信息(包含子部门列表)",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: DepartmentSLZ},
+        responses={status.HTTP_200_OK: DepartmentSLZ()},
         tags=["organization"],
     )
     def list(self, request, *args, **kwargs):
@@ -111,11 +107,10 @@ class DepartmentViewSet(GenericViewSet):
 
 class UserView(views.APIView):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="组织架构 - 根据批量Username查询用户信息",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=UserQuerySLZ(label="查询条件"),
         responses={status.HTTP_200_OK: UserInfoSLZ(label="用户信息列表", many=True)},
         tags=["organization"],
@@ -135,9 +130,9 @@ class UserView(views.APIView):
 
 class OrganizationViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
-    @region.cache_on_arguments(expiration_time=60 * 5)
+    @cachedmethod(timeout=60 * 5)
     def get_search_data(self, keyword, is_exact, limit):
         """
         获取search数据
@@ -155,9 +150,8 @@ class OrganizationViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="组织架构 - 搜索",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=OrganizationSearchSLZ,
-        responses={status.HTTP_200_OK: OrganizationSearchResultSLZ},
+        query_serializer=OrganizationSearchSLZ(),
+        responses={status.HTTP_200_OK: OrganizationSearchResultSLZ()},
         tags=["organization"],
     )
     def list(self, request, *args, **kwargs):
@@ -194,11 +188,10 @@ class OrganizationViewSet(GenericViewSet):
 class OrganizationSyncTaskView(views.APIView):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="组织架构 - 同步任务状态查询",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: OrganizationSyncTaskSLZ(label="最新同步任务记录")},
         tags=["organization"],
     )
@@ -218,8 +211,7 @@ class OrganizationSyncTaskView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="组织架构 - 执行同步任务",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["organization"],
     )
     def post(self, request, *args, **kwargs):
@@ -240,7 +232,6 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
 
     @swagger_auto_schema(
         operation_description="同步记录列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: OrganizationSyncRecordSLZ(label="同步记录")},
         tags=["organization"],
     )
@@ -249,7 +240,6 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
 
     @swagger_auto_schema(
         operation_description="同步异常日志详情",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: OrganizationSyncErrorLogSLZ(label="同步异常日志详情")},
         tags=["organization"],
     )
@@ -262,8 +252,7 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
 class UserDepartmentView(views.APIView):
     @swagger_auto_schema(
         operation_description="组织架构 - 查询用户的部门信息",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=UserDepartmentQuerySLZ,
+        query_serializer=UserDepartmentQuerySLZ(),
         responses={status.HTTP_200_OK: UserDepartmentInfoSLZ(label="用户部门信息列表", many=True)},
         tags=["organization"],
     )

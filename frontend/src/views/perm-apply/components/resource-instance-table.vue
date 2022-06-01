@@ -7,13 +7,17 @@
             border
             :row-class-name="handleRowClass"
             :cell-class-name="getCellClass"
+            @select="handlerChange"
+            @select-all="handlerAllChange"
             :empty-text="$t(`m.verify['请选择操作']`)">
-            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" min-width="160">
+            <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
+            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :width="isRecommend ? '240' : '300'">
                 <template slot-scope="{ row }">
-                    <div v-if="!!row.isAggregate" style="padding: 10px 0;">
+                    <div v-if="!!row.isAggregate" style="padding: 10px 0;"
+                        :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                     </div>
-                    <div v-else>
+                    <div v-else :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                         <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
                         <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
@@ -314,6 +318,12 @@
             buttonLoading: {
                 type: Boolean,
                 default: false
+            },
+            isRecommend: {
+                type: Boolean,
+                default: () => {
+                    return false;
+                }
             }
         },
         data () {
@@ -360,7 +370,8 @@
                     html: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>'
                 },
                 selectedIndex: 0,
-                instanceKey: ''
+                instanceKey: '',
+                resourceSelectData: []
             };
         },
         computed: {
@@ -392,6 +403,7 @@
                 }
                 const curResTypeData = this.originalList.find(item => item.id === curId)
                     .resource_groups[this.curGroupIndex];
+                if (!curResTypeData) return [];
                 if (!curResTypeData.related_resource_types.some(item => item.type === curType)) {
                     return [];
                 }
@@ -452,7 +464,6 @@
                 handler (value) {
                     console.log('value', value);
                     this.tableList = value;
-                    console.log('this.tableList', this.tableList);
                     this.originalList = _.cloneDeep(this.tableList);
                 },
                 immediate: true
@@ -763,6 +774,7 @@
                     resource_type_system: resItem.system_id,
                     resource_type_id: resItem.type
                 };
+                console.log('this.params', this.params);
                 const index = this.tableList.findIndex(item => item.id === data.id);
                 console.log('index', index);
                 console.log('resIndex', resIndex);
@@ -1096,7 +1108,7 @@
                     const instances = (() => {
                         const arr = [];
                         const { id, name, system_id } = this.curAggregateResourceType;
-                        this.curCopyData.forEach(v => {
+                        this.curCopyData && this.curCopyData.forEach(v => {
                             const curItem = arr.find(_ => _.type === id);
                             if (curItem) {
                                 curItem.path.push([{
@@ -1356,6 +1368,7 @@
             handleGetValue () {
                 // flag：提交时校验标识
                 let flag = false;
+
                 if (this.tableList.length < 1) {
                     flag = true;
                     return {
@@ -1366,7 +1379,6 @@
                 }
                 const actionList = [];
                 const aggregations = [];
-                console.log('this.tableList', this.tableList);
                 this.tableList.forEach(item => {
                     let tempExpiredAt = '';
                     if (item.expired_at === '' && item.expired_display) {
@@ -1384,7 +1396,13 @@
                                     groupItem.related_resource_types.forEach(resItem => {
                                         let newResourceCount = 0;
                                         if (resItem.empty) {
-                                            resItem.isError = true;
+                                            if (this.isRecommend) {
+                                                if (this.resourceSelectData.includes(item.name)) {
+                                                    resItem.isError = true;
+                                                }
+                                            } else {
+                                                resItem.isError = true;
+                                            }
                                             flag = true;
                                         }
                                         const conditionList = (resItem.condition.length > 0 && !resItem.empty)
@@ -1466,7 +1484,14 @@
                         if (params.policy_id === '') {
                             delete params.policy_id;
                         }
-                        actionList.push(_.cloneDeep(params));
+                        // 按需申请标志
+                        if (this.isRecommend) {
+                            if (this.resourceSelectData.includes(params.name)) {
+                                actionList.push(_.cloneDeep(params));
+                            }
+                        } else {
+                            actionList.push(_.cloneDeep(params));
+                        }
                     } else {
                         const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
                         if (instances.length < 1) {
@@ -1575,7 +1600,45 @@
             selectResourceType (data, index) {
                 data.selectedIndex = index;
                 this.selectedIndex = index;
+            },
+
+            // 复选
+            handlerChange (selection, row) {
+                selection = selection.map(e => e.name);
+                this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
+                console.log('this.resourceSelectData', this.resourceSelectData);
+                this.handlerChangeError();
+            },
+            
+            // 全选
+            handlerAllChange (selection) {
+                selection = selection.map(e => e.name);
+                this.resourceSelectData.splice(0, this.resourceSelectData.length, ...selection);
+                this.handlerChangeError();
+            },
+
+            handlerChangeError () {
+                this.tableList.forEach(item => {
+                    if (item.resource_groups.length > 0) {
+                        item.resource_groups.forEach(groupItem => {
+                            if (groupItem.related_resource_types.length > 0) {
+                                groupItem.related_resource_types.forEach(resItem => {
+                                    if (resItem.empty) {
+                                        if (this.isRecommend) {
+                                            if (this.resourceSelectData.includes(item.name)) {
+                                                resItem.isError = true;
+                                            } else {
+                                                resItem.isError = false;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             }
+
         }
     };
 </script>

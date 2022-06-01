@@ -8,17 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
-
-from django.utils import translation
 from rest_framework import exceptions
-from rest_framework.response import Response
-from rest_framework.settings import api_settings
-from rest_framework.views import set_rollback
 
 from backend.biz.system import SystemBiz
-from backend.common.constants import DjangoLanguageEnum
-from backend.common.error_codes import error_codes
 
 
 class SystemClientCheckMixin:
@@ -34,35 +26,3 @@ class SystemClientCheckMixin:
             raise exceptions.PermissionDenied(
                 detail="app_code {} can not access system {}".format(app_code, system_id)
             )
-
-
-class ExceptionHandlerMixin:
-    """
-    open api 直接返回serializer的error
-    """
-
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
-        translation.activate(DjangoLanguageEnum.EN.value)
-        request.LANGUAGE_CODE = translation.get_language()
-
-    def get_exception_handler(self):
-        return self._exception_handler
-
-    def _exception_handler(self, exc, context):
-        """
-        返回serializer的error detail 到调用方
-        """
-        if isinstance(exc, exceptions.ValidationError):
-            set_rollback()
-            data = {
-                "result": False,
-                "code": error_codes.VALIDATE_ERROR.code,
-                "message": json.dumps(exc.detail),
-                "data": None,
-            }
-            return Response(data, headers={})
-
-        default_handler = api_settings.EXCEPTION_HANDLER
-
-        return default_handler(exc, context)

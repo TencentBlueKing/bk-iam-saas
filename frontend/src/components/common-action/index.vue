@@ -4,7 +4,7 @@
         <section
             v-for="(item, index) in tagList"
             :key="item.$id"
-            :class="['tag-item', { 'is-active': active.includes(item.$id) }]"
+            :class="['tag-item', { 'is-active': active.includes(item.$id) && item.allCheck }]"
             :title="item.name"
             @click.stop="handleSelectTag(item)">
             <span class="text">{{ item.name }}</span>
@@ -65,6 +65,10 @@
             mode: {
                 type: String,
                 default: 'edit'
+            },
+            tagActionList: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -97,33 +101,32 @@
                     this.tagList = _.cloneDeep(value);
                 },
                 immediate: true
+            },
+            tagActionList: {
+                handler (value) {
+                    this.active = [];
+                    this.tagList.map(e => {
+                        const allCheck = e.action_ids.every(id => value.includes(id));
+                        this.$set(e, 'allCheck', allCheck);
+                        if (!e.allCheck) {
+                            this.$set(e, 'active', []);
+                        } else {
+                            this.$set(e, 'active', [e.$id]);
+                        }
+                        if (e.active.length) {
+                            const active = e.active;
+                            this.active.push(...active);
+                        }
+                        return e;
+                    });
+                },
+                immediate: true
             }
-            // curSelectActions: {
-            //     handler (value) {
-            //         const length = value.length
-            //         if (length < 1) {
-            //             this.active = []
-            //         } else {
-            //             this.tagList.forEach(item => {
-            //                 if (item.action_ids) {
-            //                     const filterArr = item.action_ids.filter(v => value.includes(v))
-            //                     const flag = filterArr.length === item.action_ids.length
-            //                     if (flag) {
-            //                         !this.active.includes(item.$id) && this.active.push(item.$id)
-            //                     } else {
-            //                         const index = this.active.findIndex(v => v === item.$id)
-            //                         index > -1 && this.active.splice(index, 1)
-            //                     }
-            //                 }
-            //             })
-            //         }
-            //     },
-            //     immediate: true
-            // }
         },
         methods: {
-            handleSelectTag ({ $id }) {
-                let flag = false;
+            handleSelectTag ({ $id, allCheck, active }) { // allCheck
+                let flag = !allCheck;
+                this.active.push(...active);
                 if (this.active.includes($id)) {
                     this.active = [...this.active.filter(_ => _ !== $id)];
                 } else {

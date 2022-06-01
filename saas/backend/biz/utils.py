@@ -12,8 +12,9 @@ import logging
 from itertools import groupby
 from typing import Any, Dict, List
 
+from blue_krill.web.std_error import APIError
+
 from backend.biz.resource import ResourceInfoBean, ResourceInfoDictBean
-from backend.common.error_codes import APIException
 from backend.service.resource import ResourceProvider
 
 
@@ -36,7 +37,7 @@ def fetch_auth_attributes(
     try:
         resource_attrs = rp.list_attr()
         attrs.extend([i.id for i in resource_attrs])
-    except APIException as error:
+    except APIError as error:
         logging.info(f"fetch_resource_all_auth_attributes({system_id}, {resource_type_id}) list_attr error: {error}")
         # 判断是否忽略接口异常
         if raise_api_exception:
@@ -45,7 +46,7 @@ def fetch_auth_attributes(
     # 查询资源实例的属性
     try:
         resource_infos = rp.fetch_instance_info(ids, attrs)
-    except APIException as error:
+    except APIError as error:
         logging.info(
             f"fetch_resource_all_auth_attributes({system_id}, {resource_type_id}) "
             f"fetch_instance_info error: {error}"

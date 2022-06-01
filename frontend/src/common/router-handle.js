@@ -54,6 +54,7 @@ export const getRouterDiff = (payload) => {
     if (payload === 'super_manager') {
         return [
             'applyCustomPerm',
+            'applyProvisionPerm',
             'applyJoinUserGroup',
             'apply',
             'myPerm',
@@ -73,6 +74,7 @@ export const getRouterDiff = (payload) => {
     if (payload === 'system_manager') {
         return [
             'applyCustomPerm',
+            'applyProvisionPerm',
             'applyJoinUserGroup',
             'apply',
             'myPerm',
@@ -98,6 +100,7 @@ export const getRouterDiff = (payload) => {
     if (payload === 'rating_manager') {
         return [
             'applyCustomPerm',
+            'applyProvisionPerm',
             'applyJoinUserGroup',
             'apply',
             'myPerm',
@@ -142,6 +145,7 @@ export const getRouterDiff = (payload) => {
         'permTemplateDetail',
         'permTemplateCreate',
         'applyCustomPerm',
+        'applyProvisionPerm',
         'applyJoinUserGroup',
         'apply',
         'user',

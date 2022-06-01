@@ -45,10 +45,11 @@
                 :key="index">
                 <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
                     <component
-                        v-if="!componentLoading"
+                        v-if="!componentLoading && active === panel.name"
                         :is="active"
                         :personal-group-list="personalGroupList"
                         :system-list="systemList"
+                        :tep-system-list="teporarySystemList"
                         @refresh="fetchData"
                     ></component>
                 </div>
@@ -59,12 +60,14 @@
 <script>
     import { buildURLParams } from '@/common/url';
     import CustomPerm from './custom-perm/index.vue';
+    import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
     import GroupPerm from './group-perm/index.vue';
 
     export default {
         name: 'MyPerm',
         components: {
             CustomPerm,
+            TeporaryCustomPerm,
             GroupPerm
         },
         data () {
@@ -76,6 +79,9 @@
                     },
                     {
                         name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
+                    },
+                    {
+                        name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
                     }
                 ],
                 active: 'GroupPerm',
@@ -85,6 +91,7 @@
                 soonPermLength: 0,
                 personalGroupList: [],
                 systemList: [],
+                teporarySystemList: [],
                 enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
             };
         },
@@ -108,11 +115,12 @@
             async fetchData () {
                 this.componentLoading = true;
                 try {
-                    const [res1, res2, res3, res4] = await Promise.all([
+                    const [res1, res2, res3, res4, res5] = await Promise.all([
                         this.$store.dispatch('perm/getPersonalGroups'),
                         this.$store.dispatch('permApply/getHasPermSystem'),
                         this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
-                        this.$store.dispatch('renewal/getExpireSoonPerm')
+                        this.$store.dispatch('renewal/getExpireSoonPerm'),
+                        this.$store.dispatch('permApply/getTeporHasPermSystem')
                         // this.fetchPermGroups(),
                         // this.fetchSystems(),
                         // this.fetchSoonGroupWithUser(),
@@ -124,7 +132,11 @@
                     const systemList = res2.data || [];
                     this.systemList.splice(0, this.systemList.length, ...systemList);
 
-                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1;
+                    const teporarySystemList = res5.data || [];
+                    this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
+
+                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
+                        && teporarySystemList.length < 1;
                     this.soonGroupLength = res3.data.length;
                     this.soonPermLength = res4.data.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;

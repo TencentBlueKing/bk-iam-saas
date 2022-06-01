@@ -973,7 +973,7 @@ class PolicyBean(Policy):
         return is_changed
 
 
-class PolicyBeanList:
+class PolicyBeanListMixin:
     action_svc = ActionService()
     resource_type_svc = ResourceTypeService()
     resource_biz = ResourceBiz()
@@ -982,25 +982,15 @@ class PolicyBeanList:
         self,
         system_id: str,
         policies: List[PolicyBean],
-        need_fill_empty_fields: bool = False,
-        need_check_instance_selection: bool = False,
     ) -> None:
-        """
-        system_id: policies的系统id
-        policies: 策略列表
-        need_fill_empty_fields: 是否需要填充空白字段, 默认否
-        need_check_instance_selection: 是否需要检查实例视图, 默认否
-        """
         self.system_id = system_id
         self.policies = policies
 
-        self._policy_dict = {policy.action_id: policy for policy in policies}
-
-        if need_fill_empty_fields:
-            self.fill_empty_fields()
-
-        if need_check_instance_selection:
-            self.check_instance_selection()
+    def get_system_id_set(self) -> Set[str]:
+        """
+        获取所有node相关的system_id集合
+        """
+        return set.union(*[one.get_system_id_set() for one in self.policies]) if self.policies else set()
 
     def fill_empty_fields(self):
         """
@@ -1015,122 +1005,6 @@ class PolicyBeanList:
             if not action:
                 continue
             policy.fill_empty_fields(action, resource_type_dict)
-
-    def get_system_id_set(self) -> Set[str]:
-        """
-        获取所有node相关的system_id集合
-        """
-        return set.union(*[one.get_system_id_set() for one in self.policies]) if self.policies else set()
-
-    def get(self, action_id: str) -> Optional[PolicyBean]:
-        return self._policy_dict.get(action_id, None)
-
-    @staticmethod
-    def _generate_expired_at(expired_at: int) -> int:
-        """生成一个新策略的默认过期时间"""
-        # 如果传入设置的过期时间, 大于当前时间，且小于或等于永久，则使用它
-        if time.time() < expired_at <= PERMANENT_SECONDS:
-            return expired_at
-
-        return generate_default_expired_at()
-
-    # For Operation
-    def split_to_creation_and_update_for_grant(
-        self, new_policy_list: "PolicyBeanList"
-    ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
-        """
-        授权时, 分离需要新增与更新的策略
-
-        self: 原来已有的policy list
-        new_policy_list: 新增授权的policy list
-        """
-        create_policies, update_policies = [], []
-        for p in new_policy_list.policies:
-            # 已有的权限不存在, 则创建
-            old_policy = self.get(p.action_id)
-            if not old_policy:
-                # 对于新策略，需要校验策略的过期时间是否合理，不合理则生成一个默认的过期时间
-                p.set_expired_at(self._generate_expired_at(p.expired_at))
-                create_policies.append(p)
-                continue
-
-            # 已有的权限包含新的权限
-            if old_policy.has_resource_group_list(p.resource_groups):
-                # 只有过期时间变更, 也需要更新
-                if p.expired_at > old_policy.expired_at:
-                    old_policy.set_expired_at(p.expired_at)
-                    update_policies.append(old_policy)
-                continue
-
-            # 已有的权限合并新的权限并更新
-            old_policy.add_resource_group_list(p.resource_groups)
-            if p.expired_at > old_policy.expired_at:
-                old_policy.set_expired_at(p.expired_at)
-            update_policies.append(old_policy)
-
-        return PolicyBeanList(self.system_id, create_policies), PolicyBeanList(self.system_id, update_policies)
-
-    def split_to_update_and_delete_for_revoke(
-        self, delete_policy_list: "PolicyBeanList"
-    ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
-        """
-        回收权限时, 分离出需要更新的策略与删除的策略
-
-        self: 原来已有的policy list
-        delete_policy_list: 需要回收的policy list
-        """
-        update_policies, delete_policies = [], []
-        for p in self.policies:
-            delete_policy = delete_policy_list.get(p.action_id)
-            if not delete_policy:
-                continue
-
-            if p.resource_groups.is_unrelated():
-                delete_policies.append(p)
-                continue
-
-            try:
-                update_policies.append(p.remove_resource_group_list(delete_policy.resource_groups))
-            except PolicyEmptyException:
-                delete_policies.append(p)
-
-        return PolicyBeanList(self.system_id, update_policies), PolicyBeanList(self.system_id, delete_policies)
-
-    def add(self, policy_list: "PolicyBeanList") -> "PolicyBeanList":
-        """
-        合并权限
-        """
-        for p in policy_list.policies:
-            old_policy = self.get(p.action_id)
-            if not old_policy:
-                self.policies.append(p)
-                self._policy_dict[p.action_id] = p
-                continue
-
-            old_policy.add_resource_group_list(p.resource_groups)
-
-        return self
-
-    def sub(self, policy_list: "PolicyBeanList") -> "PolicyBeanList":
-        """
-        裁剪
-        筛选出差集
-        """
-        subtraction = []
-        for p in self.policies:
-            old_policy = policy_list.get(p.action_id)
-            if not old_policy:
-                subtraction.append(p)
-                continue
-
-            try:
-                subtraction.append(deepcopy(p).remove_resource_group_list(old_policy.resource_groups))
-            except PolicyEmptyException:
-                pass
-        return PolicyBeanList(self.system_id, subtraction)
-
-    def to_svc_policies(self):
-        return parse_obj_as(List[Policy], self.policies)
 
     def check_instance_selection(self):
         """
@@ -1249,6 +1123,156 @@ class PolicyBeanList:
         return changed_policies
 
 
+class PolicyBeanList(PolicyBeanListMixin):
+    def __init__(
+        self,
+        system_id: str,
+        policies: List[PolicyBean],
+        need_fill_empty_fields: bool = False,
+        need_check_instance_selection: bool = False,
+    ) -> None:
+        """
+        system_id: policies的系统id
+        policies: 策略列表
+        need_fill_empty_fields: 是否需要填充空白字段, 默认否
+        need_check_instance_selection: 是否需要检查实例视图, 默认否
+        """
+        self.system_id = system_id
+        self.policies = policies
+
+        self._policy_dict = {policy.action_id: policy for policy in policies}
+
+        if need_fill_empty_fields:
+            self.fill_empty_fields()
+
+        if need_check_instance_selection:
+            self.check_instance_selection()
+
+    def get(self, action_id: str) -> Optional[PolicyBean]:
+        return self._policy_dict.get(action_id, None)
+
+    @staticmethod
+    def _generate_expired_at(expired_at: int) -> int:
+        """生成一个新策略的默认过期时间"""
+        # 如果传入设置的过期时间, 大于当前时间，且小于或等于永久，则使用它
+        if time.time() < expired_at <= PERMANENT_SECONDS:
+            return expired_at
+
+        return generate_default_expired_at()
+
+    # For Operation
+    def split_to_creation_and_update_for_grant(
+        self, new_policy_list: "PolicyBeanList"
+    ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
+        """
+        授权时, 分离需要新增与更新的策略
+
+        self: 原来已有的policy list
+        new_policy_list: 新增授权的policy list
+        """
+        create_policies, update_policies = [], []
+        for p in new_policy_list.policies:
+            # 已有的权限不存在, 则创建
+            old_policy = self.get(p.action_id)
+            if not old_policy:
+                # 对于新策略，需要校验策略的过期时间是否合理，不合理则生成一个默认的过期时间
+                p.set_expired_at(self._generate_expired_at(p.expired_at))
+                create_policies.append(p)
+                continue
+
+            # 已有的权限包含新的权限
+            if old_policy.has_resource_group_list(p.resource_groups):
+                # 只有过期时间变更, 也需要更新
+                if p.expired_at > old_policy.expired_at:
+                    old_policy.set_expired_at(p.expired_at)
+                    update_policies.append(old_policy)
+                continue
+
+            # 已有的权限合并新的权限并更新
+            old_policy.add_resource_group_list(p.resource_groups)
+            if p.expired_at > old_policy.expired_at:
+                old_policy.set_expired_at(p.expired_at)
+            update_policies.append(old_policy)
+
+        return PolicyBeanList(self.system_id, create_policies), PolicyBeanList(self.system_id, update_policies)
+
+    def split_to_update_and_delete_for_revoke(
+        self, delete_policy_list: "PolicyBeanList"
+    ) -> Tuple["PolicyBeanList", "PolicyBeanList"]:
+        """
+        回收权限时, 分离出需要更新的策略与删除的策略
+
+        self: 原来已有的policy list
+        delete_policy_list: 需要回收的policy list
+        """
+        update_policies, delete_policies = [], []
+        for p in self.policies:
+            delete_policy = delete_policy_list.get(p.action_id)
+            if not delete_policy:
+                continue
+
+            if p.resource_groups.is_unrelated():
+                delete_policies.append(p)
+                continue
+
+            try:
+                update_policies.append(p.remove_resource_group_list(delete_policy.resource_groups))
+            except PolicyEmptyException:
+                delete_policies.append(p)
+
+        return PolicyBeanList(self.system_id, update_policies), PolicyBeanList(self.system_id, delete_policies)
+
+    def add(self, policy_list: "PolicyBeanList") -> "PolicyBeanList":
+        """
+        合并权限
+        """
+        for p in policy_list.policies:
+            old_policy = self.get(p.action_id)
+            if not old_policy:
+                self.policies.append(p)
+                self._policy_dict[p.action_id] = p
+                continue
+
+            old_policy.add_resource_group_list(p.resource_groups)
+
+        return self
+
+    def sub(self, policy_list: "PolicyBeanList") -> "PolicyBeanList":
+        """
+        裁剪
+        筛选出差集
+        """
+        subtraction = []
+        for p in self.policies:
+            old_policy = policy_list.get(p.action_id)
+            if not old_policy:
+                subtraction.append(p)
+                continue
+
+            try:
+                subtraction.append(deepcopy(p).remove_resource_group_list(old_policy.resource_groups))
+            except PolicyEmptyException:
+                pass
+        return PolicyBeanList(self.system_id, subtraction)
+
+    def to_svc_policies(self):
+        return parse_obj_as(List[Policy], self.policies)
+
+
+class TemporaryPolicyBeanList(PolicyBeanListMixin):
+    def __init__(
+        self,
+        system_id: str,
+        policies: List[PolicyBean],
+        need_fill_empty_fields: bool = False,
+    ) -> None:
+        self.system_id = system_id
+        self.policies = policies
+
+        if need_fill_empty_fields:
+            self.fill_empty_fields()
+
+
 class SystemCounterBean(SystemCounter):
     name: str = ""
     name_en: str = ""
@@ -1294,6 +1318,12 @@ class PolicyQueryBiz:
         policy_list = self.new_policy_list(system_id, subject, action_ids)
         return policy_list.policies
 
+    def list_temporary_by_subject(self, system_id: str, subject: Subject) -> List[PolicyBean]:
+        """查询subject指定系统的临时权限策略"""
+        policies = self.svc.list_temporary_by_subject(system_id, subject)
+        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return pl.policies
+
     def new_policy_list(
         self, system_id: str, subject: Subject, action_ids: Optional[List[str]] = None
     ) -> PolicyBeanList:
@@ -1311,12 +1341,25 @@ class PolicyQueryBiz:
         policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
         return policy_list
 
+    def list_temporary_by_policy_ids(
+        self, system_id: str, subject: Subject, policy_ids: List[int]
+    ) -> List[PolicyBean]:
+        """
+        通过policy_ids查询临时权限
+        """
+        policies = self.svc.list_temporary_by_policy_ids(system_id, subject, policy_ids)
+        pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
+        return pl.policies
+
     def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
         """
         查询subject有权限的系统-policy数量信息
         """
-        system_list = self.system_svc.new_system_list()
         system_counts = self.svc.list_system_counter_by_subject(subject)
+        return self._system_counter_to_system_counter_bean(system_counts)
+
+    def _system_counter_to_system_counter_bean(self, system_counts: List[SystemCounter]) -> List[SystemCounterBean]:
+        system_list = self.system_svc.new_system_list()
         system_count_beans = parse_obj_as(List[SystemCounterBean], system_counts)
 
         for scb in system_count_beans:
@@ -1326,6 +1369,13 @@ class PolicyQueryBiz:
             scb.fill_empty_fields(system)
 
         return system_count_beans
+
+    def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
+        """
+        查询subject有权限的系统-临时policy数量信息
+        """
+        system_counts = self.svc.list_temporary_system_counter_by_subject(subject)
+        return self._system_counter_to_system_counter_bean(system_counts)
 
     def get_policy_resource_type_conditions(
         self, subject: Subject, policy_id: int, resource_group_id: str, resource_system: str, resource_type: str
@@ -1405,6 +1455,12 @@ class PolicyOperationBiz:
         删除policies
         """
         self.svc.delete_by_ids(system_id, subject, policy_ids)
+
+    def delete_temporary_policies_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
+        """
+        删除临时权限
+        """
+        self.svc.delete_temporary_policies_by_ids(system_id, subject, policy_ids)
 
     @method_decorator(policy_change_lock)
     def delete_by_resource_group_id(
@@ -1567,6 +1623,17 @@ class PolicyOperationBiz:
 
         # 返回的是所有策略，包括未被更新的
         return policy_list.policies
+
+    def create_temporary_policies(self, system_id: str, subject: Subject, policies: List[PolicyBean]):
+        """
+        创建临时权限
+        """
+        self.svc.create_temporary_policies(
+            system_id,
+            subject,
+            policies=parse_obj_as(List[Policy], policies),
+            action_list=self.action_svc.new_action_list(system_id),
+        )
 
 
 def group_paths(paths: List[List[Dict]]) -> List[InstanceBean]:

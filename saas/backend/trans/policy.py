@@ -24,9 +24,9 @@ from backend.biz.policy import (
     PolicyBeanList,
     RelatedResourceBean,
 )
+from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.service.models.policy import ResourceGroup
-from backend.util.cache import region
 from backend.util.uuid import gen_uuid
 
 
@@ -84,7 +84,7 @@ class PolicyTrans:
             expired_at=expired_at,
         )
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def _get_action_list(self, system_id: str) -> ActionBeanList:
         """获取某个系统的操作列表"""
         return self.action_biz.list(system_id)

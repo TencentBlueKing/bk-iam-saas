@@ -9,12 +9,12 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from functools import wraps
-from typing import List
+from typing import Any, Dict, List
 
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
-from rest_framework import exceptions, status
+from rest_framework import exceptions, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
@@ -32,7 +32,6 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.error_codes import error_codes
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType, SubjectType
 from backend.service.models import Subject
 from backend.trans.application import ApplicationDataTrans
@@ -80,8 +79,7 @@ class ApplicationViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="提交权限申请",
         request_body=ApplicationSLZ(label="申请"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_201_CREATED: {}},
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
         tags=["application"],
     )
     @admin_not_need_apply_check
@@ -101,7 +99,6 @@ class ApplicationViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限申请列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ApplicationListSLZ(label="申请列表", many=True)},
         tags=["application"],
     )
@@ -118,10 +115,7 @@ class ApplicationViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限申请详情",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ApplicationDetailSchemaSLZ(label="申请详情")},
-        filter_inspectors=[],
-        paginator_inspectors=[],
         tags=["application"],
     )
     def retrieve(self, request, *args, **kwargs):
@@ -133,10 +127,7 @@ class ApplicationViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="撤销申请单",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: {}},
-        filter_inspectors=[],
-        paginator_inspectors=[],
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["application"],
     )
     def cancel(self, request, *args, **kwargs):
@@ -177,7 +168,6 @@ class ConditionView(views.APIView):
     @swagger_auto_schema(
         operation_description="条件差异对比",
         request_body=ConditionCompareSLZ(label="资源条件"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ConditionTagSLZ(label="条件差异", many=True)},
         tags=["application"],
     )
@@ -188,7 +178,7 @@ class ConditionView(views.APIView):
         data = serializer.validated_data
 
         # 1. 查询用户已有的policy的condition
-        related_resource_type = data["related_resource_type"]
+        related_resource_type: Dict[str, Any] = data["related_resource_type"]
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
             Subject(type=SubjectType.USER.value, id=request.user.username),
             data["policy_id"],
@@ -217,8 +207,7 @@ class ApplicationByGroupView(views.APIView):
     @swagger_auto_schema(
         operation_description="加入用户组申请",
         request_body=GroupApplicationSLZ(label="加入用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_201_CREATED: {}},
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
         tags=["application"],
     )
     @admin_not_need_apply_check
@@ -257,8 +246,7 @@ class ApplicationByGradeManagerView(views.APIView):
     @swagger_auto_schema(
         operation_description="申请创建分级管理员",
         request_body=GradeManagerCreatedApplicationSLZ(label="申请创建分级管理员"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_201_CREATED: {}},
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
         tags=["application"],
     )
     def post(self, request, *args, **kwargs):
@@ -294,8 +282,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
     @swagger_auto_schema(
         operation_description="申请修改分级管理员",
         request_body=GradeManagerUpdateApplicationSLZ(label="申请修改分级管理员"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_201_CREATED: {}},
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
         tags=["application"],
     )
     def post(self, request, *args, **kwargs):
@@ -340,8 +327,7 @@ class ApplicationByRenewGroupView(views.APIView):
     @swagger_auto_schema(
         operation_description="续期用户组申请",
         request_body=RenewGroupApplicationSLZ(label="续期用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_201_CREATED: {}},
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
         tags=["application"],
     )
     def post(self, request):
@@ -373,8 +359,7 @@ class ApplicationByRenewPolicyView(views.APIView):
     @swagger_auto_schema(
         operation_description="申请续期权限",
         request_body=RenewPolicyApplicationSLZ(label="续期用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_201_CREATED: {}},
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
         tags=["application"],
     )
     def post(self, request):
@@ -386,5 +371,35 @@ class ApplicationByRenewPolicyView(views.APIView):
         self.biz.create_for_renew_policy(
             parse_obj_as(List[ApplicationRenewPolicyInfoBean], data["policies"]), request.user.username, data["reason"]
         )
+
+        return Response({}, status=status.HTTP_201_CREATED)
+
+
+class ApplicationByTemporaryPolicyView(views.APIView):
+    """
+    申请临时权限
+    """
+
+    trans = ApplicationDataTrans()
+    biz = ApplicationBiz()
+
+    @swagger_auto_schema(
+        operation_description="提交临时权限申请",
+        request_body=ApplicationSLZ(label="申请"),
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
+        tags=["application"],
+    )
+    @admin_not_need_apply_check
+    def post(self, request, *args, **kwargs):
+        serializer = ApplicationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        user_id = request.user.username
+
+        # 将Dict数据转换为创建单据所需的数据结构
+        application_data = self.trans.from_grant_temporary_policy_application(user_id, data)
+        # 创建单据
+        self.biz.create_for_policy(ApplicationTypeEnum.GRANT_TEMPORARY_ACTION.value, application_data)
 
         return Response({}, status=status.HTTP_201_CREATED)

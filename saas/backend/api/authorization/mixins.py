@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import List
 
+from blue_krill.web.std_error import APIError
 from rest_framework import exceptions
 from rest_framework.response import Response
 
@@ -18,10 +19,10 @@ from backend.api.constants import ALLOW_ANY
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleBiz
-from backend.common.error_codes import APIException, error_codes
+from backend.common.cache import cachedmethod
+from backend.common.error_codes import error_codes
 from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
-from backend.util.cache import region
 
 from .constants import AllowListMatchOperationEnum, AllowListObjectOperationSep, AuthorizationAPIEnum, OperateEnum
 from .models import AuthAPIAllowListConfig
@@ -64,7 +65,7 @@ class AllowItem:
 class AuthorizationAPIAllowListCheckMixin:
     """授权API相关白名单控制"""
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存一分钟
+    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def _list_system_allow_list(self, api: str, system_id: str) -> List[AllowItem]:
         """查询系统某类API的白名单"""
         allow_list = AuthAPIAllowListConfig.objects.filter(type=api, system_id=system_id)
@@ -155,7 +156,7 @@ class AuthViewMixin:
         system_id = policy_list.system_id
         try:
             scope_checker.check_policies(system_id, policy_list.policies)
-        except APIException:
+        except APIError:
             # Note: 这里是临时处理方案，最终方案是完全支持权限模型变更
             # 临时方案：校验不通过，则修改分级管理员的权限范围，使其通过
             need_added_policies = scope_checker.list_not_match_policy(system_id, policy_list.policies)

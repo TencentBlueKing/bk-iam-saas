@@ -15,6 +15,8 @@ from typing import List
 from backend.apps.handover.constants import HandoverTaskStatus
 from backend.apps.handover.models import HandoverTask
 from backend.apps.role.models import Role
+from backend.audit.audit import log_group_event, log_role_event, log_user_event
+from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
@@ -64,6 +66,15 @@ class GroupHandoverhandler(BaseHandoverHandler):
         # GroupCheckBiz().check_subject_group_limit()   # 检查subject授权的group数量是否超限
         self.biz.add_members(group_id=int(self.group_id), members=[self.grant_subject], expired_at=self.expired_at)
 
+        # 审计
+        log_group_event(
+            AuditType.GROUP_MEMBER_CREATE.value,
+            self.grant_subject,
+            [int(self.group_id)],
+            username=self.remove_subject.id,
+            source_type=AuditSourceType.HANDOVER.value,
+        )
+
     def revoke_permission(self):
         self.biz.remove_members(group_id=str(self.group_id), subjects=[self.remove_subject])
 
@@ -86,8 +97,17 @@ class CustomHandoverHandler(BaseHandoverHandler):
         return [p for p in policies if p.policy_id in self.policy_ids]
 
     def grant_permission(self):
-        self.operation_biz.alter(
-            system_id=self.system_id, subject=self.grant_subject, policies=self._get_subject_policies()
+        policies = self._get_subject_policies()
+        self.operation_biz.alter(system_id=self.system_id, subject=self.grant_subject, policies=policies)
+
+        # 审计
+        log_user_event(
+            AuditType.USER_POLICY_CREATE.value,
+            self.grant_subject,
+            self.system_id,
+            [one.dict() for one in policies],
+            username=self.remove_subject.id,
+            source_type=AuditSourceType.HANDOVER.value,
         )
 
     def revoke_permission(self):
@@ -120,6 +140,18 @@ class RoleHandoverHandler(BaseHandoverHandler):
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
         elif self.role_type == RoleType.RATING_MANAGER.value:
             self.biz.add_grade_manager_members(self.role_id, [self.handover_to])
+
+        if self.role_type != RoleType.SUPER_MANAGER.value:
+            role = Role.objects.get(id=self.role_id)
+
+        # 审计
+        log_role_event(
+            AuditType.ROLE_MEMBER_CREATE.value,
+            Subject(type=SubjectType.USER.value, id=self.handover_from),
+            role,
+            extra={"members": [self.handover_to]},
+            source_type=AuditSourceType.HANDOVER.value,
+        )
 
     def revoke_permission(self):
         if self.role_type == RoleType.SUPER_MANAGER.value:

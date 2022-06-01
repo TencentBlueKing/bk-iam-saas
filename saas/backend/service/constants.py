@@ -155,6 +155,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_COMMON_ACTION = auto()
     VIEW_AUTHORIZED_SUBJECTS = auto()
     MANAGE_API_WHITE_LIST = auto()
+    MANAGE_LONG_TASK = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -179,6 +180,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
     JOIN_RATING_MANAGER = auto()
     CREATE_RATING_MANAGER = auto()
     UPDATE_RATING_MANAGER = auto()
+    GRANT_TEMPORARY_ACTION = auto()
 
     _choices_labels = skip(
         (
@@ -189,6 +191,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
             (JOIN_RATING_MANAGER, "加入分级管理员"),
             (CREATE_RATING_MANAGER, "创建分级管理员"),
             (UPDATE_RATING_MANAGER, "修改分级管理员"),
+            (GRANT_TEMPORARY_ACTION, "临时权限申请"),
         )
     )
 
@@ -302,3 +305,16 @@ class WeekDayEnum(ChoicesEnum):
             (SAT, _("星期六")),
         )
     )
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Model Change Event
+# ---------------------------------------------------------------------------------------------- #
+class ModelChangeEventTypeEnum(ChoicesEnum, LowerStrEnum):
+    ActionPolicyDeleted = "action_policy_deleted"
+    ActionDeleted = "action_deleted"
+
+
+class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
+    Pending = auto()
+    Finished = auto()
