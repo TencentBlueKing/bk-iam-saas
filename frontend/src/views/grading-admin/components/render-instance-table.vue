@@ -1101,7 +1101,6 @@
                         this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
                         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
                     }
-                    console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList, this.tableList);
                 }
                 debugger;
                 this.tableList.forEach(item => {
@@ -1411,6 +1410,6 @@
     }
 
     .tab-button{
-        margin-bottom: 10px;
+        margin: 10px 0;
     }
 </style>

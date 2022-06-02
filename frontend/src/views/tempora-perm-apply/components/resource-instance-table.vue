@@ -464,8 +464,6 @@
                             this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
                             this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
                         }
-                        console.log(this.emptyResourceGroupsList);
-                        console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList, this.emptyResourceGroupsName);
                     } else {
                         value.forEach(e => {
                             e.name = e.name.split('，')[0];
@@ -1408,7 +1406,6 @@
                         this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
                         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
                     }
-                    console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList, this.tableList);
                 }
                 debugger;
                 
