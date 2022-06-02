@@ -96,16 +96,19 @@
         .relation-content-wrapper,
         .conditions-wrapper {
             height: 100%;
-            padding-top: 17px;
             color: #63656e;
             .resource-type-name {
                 display: block;
                 margin-bottom: 9px;
+                margin-top: 9px;
             }
         }
 
         .relation-content-wrapper{
             position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             .group-line {
                 height: 1px;
                 background: #dfe0e5;
@@ -117,6 +120,10 @@
             .group-line-more{
                 top: 95%;
             }
+        }
+
+        .wrapper-empty{
+            padding-top: 0px;
         }
 
         .renewal-action {
@@ -145,6 +152,7 @@
             }
             .content-name {
                 margin-bottom: 9px;
+                margin-top: 9px;
             }
             .is-limit-error {
                 position: relative;
@@ -269,7 +277,7 @@
 .help-icon {
     position: absolute;
     right: -45px;
-    top: -10px;
+    top: 8px;
     font-size: 16px;
 }
 

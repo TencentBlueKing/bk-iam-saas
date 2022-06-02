@@ -170,6 +170,7 @@
                         :original-list="tableDataBackup"
                         :system-id="systemValue"
                         :button-loading="buttonLoading"
+                        :is-all-expanded="isAllExpanded"
                         ref="resInstanceTableRef"
                         @on-select="handleResourceSelect"
                         @on-realted-change="handleRelatedChange" />

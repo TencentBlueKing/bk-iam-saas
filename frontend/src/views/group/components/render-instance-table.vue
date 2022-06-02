@@ -414,7 +414,28 @@
         watch: {
             list: {
                 handler (value) {
-                    this.tableList.splice(0, this.tableList.length, ...value);
+                    if (this.isAllExpanded) {
+                        this.tableList = value.filter(e =>
+                            (e.resource_groups && e.resource_groups.length)
+                            || e.isAggregate);
+                        this.emptyResourceGroupsList = value.filter(e =>
+                            e.resource_groups && !e.resource_groups.length);
+                        this.emptyResourceGroupsName = (this.emptyResourceGroupsList || []).reduce((p, e) => {
+                            p.push(e.name);
+                            return p;
+                        }, []);
+                        if (this.emptyResourceGroupsName.length) {
+                            this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
+                            this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
+                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
+                        }
+                    } else {
+                        value.forEach(e => {
+                            e.name = e.name.split('，')[0];
+                        });
+                        this.emptyResourceGroupsList = []; // 重置变量
+                        this.tableList.splice(0, this.tableList.length, ...value);
+                    }
                 },
                 immediate: true
             },
@@ -1325,6 +1346,20 @@
                         templates
                     };
                 }
+
+                // 重新赋值
+                if (this.isAllExpanded) {
+                    this.tableList = this.tableList.filter(e =>
+                        (e.resource_groups && e.resource_groups.length)
+                        || e.isAggregate);
+                    if (this.emptyResourceGroupsList.length) {
+                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                    }
+                    console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList, this.tableList);
+                }
+                debugger;
+
                 this.tableList.forEach(item => {
                     let actionParam = {};
                     let aggregationParam = {};

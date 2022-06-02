@@ -18,11 +18,13 @@
                         <span class="action-name" :title="row.name">{{ row.name }}</span>
                     </div>
                     <div v-else :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
-                        <span class="action-name" :title="row.name">{{ row.name }}</span>
-                        <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
-                        <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
-                        <iam-svg name="icon-changed" ext-cls="iam-new-action" v-if="row.isChanged && curLanguageIsCn" />
-                        <iam-svg name="icon-changed-en" ext-cls="iam-new-action" v-if="row.isChanged && !curLanguageIsCn" />
+                        <span class="action-name" style="padding: 10px 0;" :title="row.name">{{ row.name }}</span>
+                        <span v-if="!emptyResourceGroupsList.length">
+                            <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
+                            <iam-svg name="icon-new-en" ext-cls="iam-new-action" v-if="row.isNew && !curLanguageIsCn" />
+                            <iam-svg name="icon-changed" ext-cls="iam-new-action" v-if="row.isChanged && curLanguageIsCn" />
+                            <iam-svg name="icon-changed-en" ext-cls="iam-new-action" v-if="row.isChanged && !curLanguageIsCn" />
+                        </span>
                     </div>
                 </template>
             </bk-table-column>
@@ -95,7 +97,8 @@
                             </div>
                         </template>
                         <template v-else>
-                            <div style="margin-bottom: 15px;">{{ $t(`m.common['无需关联实例']`) }}</div>
+                            <!-- <div style="margin-bottom: 15px;">{{ $t(`m.common['无需关联实例']`) }}</div> -->
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </div>
                 </template>
@@ -324,6 +327,10 @@
                 default: () => {
                     return false;
                 }
+            },
+            isAllExpanded: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -371,7 +378,9 @@
                 },
                 selectedIndex: 0,
                 instanceKey: '',
-                resourceSelectData: []
+                resourceSelectData: [],
+                emptyResourceGroupsList: [],
+                emptyResourceGroupsName: []
             };
         },
         computed: {
@@ -462,8 +471,28 @@
         watch: {
             list: {
                 handler (value) {
-                    console.log('value', value);
-                    this.tableList = value;
+                    if (this.isAllExpanded) {
+                        this.tableList = value.filter(e =>
+                            (e.resource_groups && e.resource_groups.length)
+                            || e.isAggregate);
+                        this.emptyResourceGroupsList = value.filter(e =>
+                            e.resource_groups && !e.resource_groups.length);
+                        this.emptyResourceGroupsName = (this.emptyResourceGroupsList || []).reduce((p, e) => {
+                            p.push(e.name);
+                            return p;
+                        }, []);
+                        if (this.emptyResourceGroupsName.length) {
+                            this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
+                            this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
+                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
+                        }
+                    } else {
+                        value.forEach(e => {
+                            e.name = e.name.split('，')[0];
+                        });
+                        this.emptyResourceGroupsList = []; // 重置变量
+                        this.tableList = value;
+                    }
                     this.originalList = _.cloneDeep(this.tableList);
                 },
                 immediate: true
@@ -1379,6 +1408,20 @@
                 }
                 const actionList = [];
                 const aggregations = [];
+
+                // 重新赋值
+                if (this.isAllExpanded) {
+                    this.tableList = this.tableList.filter(e =>
+                        (e.resource_groups && e.resource_groups.length)
+                        || e.isAggregate);
+                    if (this.emptyResourceGroupsList.length) {
+                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                    }
+                    console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList, this.tableList);
+                }
+                debugger;
+
                 this.tableList.forEach(item => {
                     let tempExpiredAt = '';
                     if (item.expired_at === '' && item.expired_display) {

@@ -72,6 +72,7 @@
                         ref="commonActionRef"
                         style="margin-top: 0;"
                         :system-id="systemValue"
+                        :tag-action-list="tagActionList"
                         :data="commonActions"
                         :cur-select-actions="curSelectActions"
                         v-if="!customLoading"
@@ -180,7 +181,8 @@
                 isDescription: true,
                 initialValue: [],
                 initialTempName: '',
-                initialDescription: ''
+                initialDescription: '',
+                tagActionList: []
             };
         },
         computed: {
@@ -366,6 +368,7 @@
                 if (payload.length < 1) {
                     return;
                 }
+                this.tagActionList = payload;
                 this.handleActionMatchChecked(flag, payload);
             },
 
@@ -617,6 +620,7 @@
 
             handleSelect (payload) {
                 this.curSelectActions = [...payload];
+                this.tagActionList = this.curSelectActions;
             },
 
             getActionsData (payload) {
