@@ -326,8 +326,17 @@ class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
 class AuthTypeEnum(ChoicesEnum, LowerStrEnum):
     RBAC = auto()
     ABAC = auto()
-    BOTH = auto()
+    ALL = auto()
     NONE = auto()
+
+    _choices_labels = skip(
+        (
+            (RBAC, "RBAC"),
+            (ABAC, "ABAC"),
+            (ALL, "ALL"),
+            (NONE, "NONE"),
+        )
+    )
 
 
 class AbacPolicyChangeType(ChoicesEnum, LowerStrEnum):

@@ -20,10 +20,17 @@ from backend.service.action import ActionList
 from backend.util.json import json_dumps
 
 from ..models import Policy, PolicyIDExpiredAt, Subject
+from .backend import BackendPolicyOperationService
 from .query import PolicyList, new_backend_policy_list_by_subject
 
 
-class PolicyOperationService:
+class UniversalPolicyOperationServiceMixin(BackendPolicyOperationService):
+    """专门用于处理RBAC策略的"""
+
+    pass
+
+
+class PolicyOperationService(UniversalPolicyOperationServiceMixin):
     def delete_backend_policy_by_action(self, system_id: str, action_id: str):
         """删除指定操作的后台策略"""
         iam.delete_action_policies(system_id, action_id)

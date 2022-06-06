@@ -22,7 +22,14 @@ from backend.component import iam
 
 from .action import ActionList
 from .models import Policy, Subject, SystemCounter
+from .policy.backend import BackendPolicyOperationService
 from .policy.query import PolicyList, new_backend_policy_list_by_subject
+
+
+class UniversalTemplateServiceMixin(BackendPolicyOperationService):
+    """专门用于处理用户组模板权限的RBAC策略"""
+
+    pass
 
 
 class TemplateGroupPreCommit(BaseModel):
@@ -33,7 +40,7 @@ class TemplateGroupPreCommit(BaseModel):
         return [one.dict() for one in self.policies]
 
 
-class TemplateService:
+class TemplateService(UniversalTemplateServiceMixin):
     # Template Auth
     def revoke_subject(self, system_id: str, template_id: int, subject: Subject):
         """

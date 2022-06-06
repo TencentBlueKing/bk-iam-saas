@@ -8,11 +8,45 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
+from collections import Counter
 from typing import Dict, List
 
+from pydantic import BaseModel
+
+from backend.apps.policy.models import Policy as PolicyModel
+from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.component import iam
 from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum, SubjectType
 from backend.service.models import PathNode, Subject, UniversalPolicyChangedContent
+
+
+class AuthTypeStatistics(BaseModel):
+    """统计分析AuthType"""
+
+    abac_count: int = 0
+    rbac_count: int = 0
+    all_count: int = 0
+
+    def accumulate(self, auth_types: List[str]):
+        """累加"""
+        statistical_result = Counter(auth_types)
+        self.abac_count += statistical_result.get(AuthTypeEnum.ABAC.value, 0)
+        self.rbac_count += statistical_result.get(AuthTypeEnum.RBAC.value, 0)
+        self.all_count += statistical_result.get(AuthTypeEnum.ALL.value, 0)
+
+    def is_all_auth_type(self):
+        return self.all_count > 0 or (self.abac_count > 0 and self.rbac_count > 0)
+
+    def final_auth_type(self):
+        """根据统计结果，分析出最终auth_type"""
+        if self.is_all_auth_type():
+            return AuthTypeEnum.ALL.value
+
+        if self.rbac_count > 0:
+            return AuthTypeEnum.RBAC.value
+
+        return AuthTypeEnum.ABAC.value
 
 
 class BackendPolicyOperationService:
@@ -66,7 +100,7 @@ class BackendPolicyOperationService:
 
         # 查询并计算用户组类型
         changed_policy_auth_types = {p.action_id: p.auth_type for p in changed_policies}
-        auth_type = self._calculate_group_auth_type(int(subject.id), template_id, system_id, changed_policy_auth_types)
+        auth_type = self._calculate_auth_type(subject, template_id, system_id, changed_policy_auth_types)
 
         iam.alter_policies_v2(
             subject.type,
@@ -80,24 +114,54 @@ class BackendPolicyOperationService:
             auth_type,
         )
 
-    def _calculate_group_auth_type(
-        self, group_id: int, template_id: int, system_id: str, changed_policy_auth_types: Dict[str, str]
+    def _calculate_auth_type(
+        self, subject: Subject, template_id: int, system_id: str, changed_policy_auth_types: Dict[str, str]
     ) -> str:
         """查询并计算用户组的类型"""
         # 除了本次变更的其他策略的auth_type(需要再查询自定义和模板权限策略)
-        abac_count, rbac_count, both_count = 0, 0, 0
-        # 1. 先计算即将变更的策略的类型
-        for auth_type in changed_policy_auth_types.values():
-            abac_count += int(auth_type == AuthTypeEnum.ABAC.value)
-            rbac_count += int(auth_type == AuthTypeEnum.RBAC.value)
-            both_count += int(auth_type == AuthTypeEnum.BOTH.value)
+        auth_type_statistics = AuthTypeStatistics()
 
-        # 如果是both，可以提前判断
-        if both_count > 0 or (abac_count > 0 and rbac_count > 0):
-            return AuthTypeEnum.BOTH.value
+        # 1. 先统计即将变更的策略的类型
+        auth_type_statistics.accumulate(list(changed_policy_auth_types.values()))
 
-        # TODO: 查询group每个模板或自定义权限的策略类型，对于已存在的操作则不需要查询
-        #  比较麻烦的点：对于模板的变更，可能只改变一个操作的内容，但是整体得重新计算，但策略的计算是在service层做的，无法同层调用
-        #  是否模板授权时可以存储 action_auth_types {action_id: auth_type, ...}的JSON？
-        # changed_action_ids = list(changed_policy_auth_types.keys())
-        return AuthTypeEnum.BOTH.value
+        # 如果是all，可以提前判断
+        if auth_type_statistics.is_all_auth_type():
+            return AuthTypeEnum.ALL.value
+
+        # 2. 查询用户组自定义权限里每条策略类型
+        custom_perm_auth_types = PolicyModel.objects.filter(
+            subject_type=subject.type, subject_id=subject.id, system_id=system_id
+        ).valuess("action_id", "auth_type")
+        # 剔除本次变更的策略
+        auth_types = [
+            i["auth_type"]
+            for i in custom_perm_auth_types
+            # 变更的非自定义权限或非变更Action
+            if template_id != 0 or i["action_id"] not in changed_policy_auth_types
+        ]
+        # 统计累加
+        auth_type_statistics.accumulate(auth_types)
+
+        # 如果是all，可以提前判断
+        if auth_type_statistics.is_all_auth_type():
+            return AuthTypeEnum.ALL.value
+
+        # 3. 查询用户组每个权限模板的策略类型
+        template_auth_types = PermTemplatePolicyAuthorized.objects.filter(
+            subject_type=subject.type, subject_id=subject.id, system_id=system_id
+        ).values("template_id", "_auth_types")
+        # 统计累加
+        for i in template_auth_types:
+            auth_template_id = i["template_id"]
+            # _auth_types 存储为 {action_id: auth_type, ...}的JSON
+            _auth_types = json.loads(i["_auth_types"])
+            # 剔除本次变更的策略
+            auth_types = [
+                auth_type
+                for action_id, auth_type in _auth_types.items()
+                # 非本次变更的模板 或 非变更的Action
+                if auth_template_id != template_id or action_id not in changed_policy_auth_types
+            ]
+            auth_type_statistics.accumulate(auth_types)
+
+        return auth_type_statistics.final_auth_type()

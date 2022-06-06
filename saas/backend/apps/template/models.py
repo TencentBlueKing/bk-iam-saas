@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import List
+from typing import Dict, List
 
 from django.db import models
 
@@ -85,6 +85,9 @@ class PermTemplatePolicyAuthorized(BaseModel):
     subject_id = models.CharField("授权对象ID", max_length=64)
     system_id = models.CharField("系统ID", max_length=32)
     _data = models.TextField("授权数据", db_column="data")  # 调研压缩的json字段
+    _auth_types = models.TextField(
+        "模板授权策略的鉴权类型", db_column="auth_types", help_text="JSON存储 {'action_id': auth_type, ...}", default="{}"
+    )
 
     objects = PermTemplatePolicyAuthorizedManager()
 
@@ -104,6 +107,14 @@ class PermTemplatePolicyAuthorized(BaseModel):
     @data.setter
     def data(self, data):
         self._data = json_dumps(data)
+
+    @property
+    def auth_types(self) -> Dict:
+        return json.loads(self._auth_types)
+
+    @auth_types.setter
+    def auth_types(self, auth_types: Dict):
+        self._auth_types = json_dumps(auth_types)
 
     @classmethod
     def delete_action(cls, system_id: str, action_id: str, perm_template_ids: List[int]):
