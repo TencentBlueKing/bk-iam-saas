@@ -50,6 +50,7 @@ from .group import GroupAttributes
 from .instance_selection import ChainNode, InstanceSelection, PathResourceType, RawInstanceSelection
 from .model_event import ModelEvent
 from .policy import (
+    AbacPolicyChangeContent,
     Attribute,
     BackendThinPolicy,
     Condition,
@@ -57,6 +58,7 @@ from .policy import (
     PathNode,
     Policy,
     PolicyIDExpiredAt,
+    RbacPolicyChangeContent,
     RelatedResource,
     ResourceGroup,
     ResourceGroupList,
@@ -146,4 +148,6 @@ __all__ = [
     "ModelEvent",
     "UniversalPolicy",
     "UniversalPolicyChangedContent",
+    "RbacPolicyChangeContent",
+    "AbacPolicyChangeContent",
 ]

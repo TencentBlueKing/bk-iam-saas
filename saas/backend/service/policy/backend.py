@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 from collections import Counter
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 from pydantic import BaseModel
 
@@ -28,7 +28,7 @@ class AuthTypeStatistics(BaseModel):
     rbac_count: int = 0
     all_count: int = 0
 
-    def accumulate(self, auth_types: List[str]):
+    def accumulate(self, auth_types: Iterable[str]):
         """累加"""
         statistical_result = Counter(auth_types)
         self.abac_count += statistical_result.get(AuthTypeEnum.ABAC.value, 0)
@@ -46,11 +46,14 @@ class AuthTypeStatistics(BaseModel):
         if self.rbac_count > 0:
             return AuthTypeEnum.RBAC.value
 
-        return AuthTypeEnum.ABAC.value
+        if self.abac_count > 0:
+            return AuthTypeEnum.ABAC.value
+
+        return AuthTypeEnum.NONE.value
 
 
 class BackendPolicyOperationService:
-    def alter_policies(
+    def alter_backend_policies(
         self, subject: Subject, template_id: int, system_id: str, changed_policies: List[UniversalPolicyChangedContent]
     ):
         """
@@ -122,7 +125,7 @@ class BackendPolicyOperationService:
         auth_type_statistics = AuthTypeStatistics()
 
         # 1. 先统计即将变更的策略的类型
-        auth_type_statistics.accumulate(list(changed_policy_auth_types.values()))
+        auth_type_statistics.accumulate(changed_policy_auth_types.values())
 
         # 如果是all，可以提前判断
         if auth_type_statistics.is_all_auth_type():

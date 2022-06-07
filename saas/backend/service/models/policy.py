@@ -77,6 +77,20 @@ class PathNodeList(ListModel):
 
         return self
 
+    def get_last_node_without_any(self):
+        """获取路径里最后一个非任意的节点"""
+        if self.__root__[-1].id == ANY_ID:
+            return self.__root__[-2]
+
+        return self.__root__[-1]
+
+    def is_all_ignore_path_of_matched_selection(self) -> bool:
+        """所有匹配到的实例视图是否都为忽略路径"""
+        # TODO: 对每条路径都进行实例视图匹配，只有所有匹配到的实例视图都是忽略路径的，则可转换为ABAC策略
+        # NOTE: 第一期由于限制了当Action的AuthType为rbac时，其所有实例视图只能是ignore_path=True，
+        # 所以这里可以直接认为只能是RBAC策略，暂时不进行实例视图匹配的分析
+        return True
+
 
 class Instance(BaseModel):
     type: str
@@ -323,26 +337,101 @@ class UniversalPolicy(Policy):
     通用Policy，支持处理RBAC和ABAC策略，原Policy只支持处理ABAC
     """
 
-    expression_resource_groups: ResourceGroupList
-    instances_resource_groups: List[PathNode]
+    expression_resource_groups: ResourceGroupList = ResourceGroupList(__root__=[])
+    instances: List[PathNode] = []
 
     auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
 
-    def _is_universal(self):
-        """用于判断该Policy是否支持rabc类型"""
-        # TODO: related_resource_types 多种类型，则无法支持
-        # TODO: 与资源实例无关的操作
-        pass
+    @classmethod
+    def from_policy(cls, policy: Policy) -> "UniversalPolicy":
+        p = cls(
+            action_id=policy.action_id,
+            policy_id=policy.policy_id,
+            expired_at=policy.expired_at,
+            resource_groups=policy.resource_groups,
+        )
+        p._split_resource()
+        return p
 
-    def split_resource(self):
+    def _split_resource(self):
         """
         拆分出RBAC和ABAC权限
         并填充到expression_resource_groups和instances_resource_groups字段里
         同时计算出策略类型auth_type
         """
-        # TODO: 用于拆分出RBAC和ABAC权限（匹配实例视图等逻辑，配置了环境属性则默认是ABAC）
-        # TODO: 同时计算出策略类型auth_type
-        pass
+        # 1. 无需进行分析拆分，必须是ABAC策略的情况
+        # （1）无关联资源实例
+        # （2）关联多种资源实例
+        if (
+            len(self.resource_groups) == 0
+            or len(self.resource_groups) > 1
+            or (len(self.resource_groups) == 1 and len(self.resource_groups[0].related_resource_types) != 1)
+        ):
+            self.expression_resource_groups = self.resource_groups
+            return
+
+        # 2. 分析拆分出RBAC和ABAC策略
+        resource_group = self.resource_groups[0]
+
+        # 2.1 包含环境属性，则只能是ABAC策略
+        if resource_group.environments:
+            self.expression_resource_groups = self.resource_groups
+            return
+
+        rrt = resource_group.related_resource_types[0]
+        # 2.2 Any的情况处理，则只能是ABAC策略
+        if len(rrt.condition) == 0:
+            self.expression_resource_groups = self.resource_groups
+            return
+
+        # 2.3 遍历每个Condition
+        conditions = []
+        rbac_instances = []
+        for c in rrt.condition:
+            # 包含属性，则只能是ABAC策略
+            if not c.has_no_attributes():
+                conditions.append(c)
+                continue
+
+            abac_instances: List[Instance] = []
+            for inst in c.instances:
+                # 无法命中RBAC策略规则的路径
+                abac_paths = []
+                for path in inst.path:
+                    if not path.is_all_ignore_path_of_matched_selection():
+                        abac_paths.append(path)
+                        continue
+                    # 只添加最后一个节点，其他忽略
+                    rbac_instances.append(path.get_last_node_without_any())
+
+                # 存在abac路径，则需要对应实例
+                if len(abac_instances) > 0:
+                    abac_instances.append(Instance(type=inst.type, path=abac_paths))
+
+            # 存在abac实例，则构造对应Condition
+            conditions.append(Condition(instances=abac_instances, attributes=[]))
+
+        if len(conditions) > 0:
+            self.expression_resource_groups = ResourceGroupList(
+                __root__=[
+                    ResourceGroup(
+                        related_resource_types=[
+                            RelatedResource(system_id=rrt.system_id, type=rrt.type, condition=conditions)
+                        ]
+                    )
+                ]
+            )
+
+        if len(rbac_instances) > 0:
+            self.instances = rbac_instances
+
+        # 计算出策略类型auth_type并修改
+        if len(self.expression_resource_groups) > 0 and len(self.instances) > 0:
+            self.auth_type = AuthTypeEnum.ALL.value
+        elif len(self.expression_resource_groups) == 0 and len(self.instances) > 0:
+            self.auth_type = AuthTypeEnum.RBAC.value
+        elif len(self.expression_resource_groups) > 0 and len(self.instances) == 0:
+            self.auth_type = AuthTypeEnum.ABAC.value
 
     def diff(self):
         """用于策略变更时对比得到需要变更rbac和abac策略的内容"""
