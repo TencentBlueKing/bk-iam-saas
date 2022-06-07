@@ -27,7 +27,6 @@ class SubjectGroup(BaseModel):
     后端返回的Subject的Group
     """
 
-    pk: int
     type: str
     id: str
     policy_expired_at: int
