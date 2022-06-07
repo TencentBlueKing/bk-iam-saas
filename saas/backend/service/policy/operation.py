@@ -104,29 +104,10 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         """
         删除指定policy_id的策略
         """
-        # 1. 查询策略
-        qs = PolicyModel.objects.filter(
-            system_id=system_id, subject_type=subject.type, subject_id=subject.id, policy_id__in=policy_ids
-        )
-        policies = [Policy.from_db_model(p, PERMANENT_SECONDS) for p in qs]
+        # 1. 计算变更的后台策略内容
+        changed_policies = self._cal_policy_change_contents_by_deleted(system_id, subject, policy_ids)
 
-        # 2. 转换为UniversalPolicy结构，然后拆分出rbac和abac权限
-        changed_policies = []
-        for p in policies:
-            up = UniversalPolicy.from_policy(p)
-            policy_changed_content = UniversalPolicyChangedContent(
-                action_id=p.action_id, auth_type=AuthTypeEnum.NONE.value
-            )
-            if len(up.expression_resource_groups) > 0:
-                policy_changed_content.abac = AbacPolicyChangeContent(
-                    change_type=AbacPolicyChangeType.DELETED.value, id=p.policy_id
-                )
-            if len(up.instances) > 0:
-                policy_changed_content.rbac = RbacPolicyChangeContent(deleted=up.instances)
-
-            changed_policies.append(policy_changed_content)
-
-        # 3. 变更DB,并进行后台变更
+        # 2. 变更DB,并进行后台变更
         with transaction.atomic():
             self._delete_db_policies(system_id, subject, policy_ids)
             self.alter_backend_policies(subject, 0, system_id, changed_policies)
@@ -138,9 +119,121 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         create_policies: List[Policy],
         update_policies: List[Policy],
         delete_policy_ids: List[int],
-        action_list: Optional[ActionList] = None,
     ):
-        pass
+        changed_policies = []
+        # 1. 新增策略
+        changed_policies.extend(self._cal_policy_change_contents_by_created(system_id, create_policies))
+
+        # 2. 删除策略
+        changed_policies.extend(self._cal_policy_change_contents_by_deleted(system_id, subject, delete_policy_ids))
+
+        # 3. 更新
+        changed_policies.extend(self._cal_policy_change_contents_by_updated(system_id, subject, update_policies))
+
+        # 4. 变更DB，并变更后台
+        with transaction.atomic():
+            if create_policies:
+                self._create_db_policies(system_id, subject, create_policies)
+
+            if update_policies:
+                self.update_db_policies(system_id, subject, update_policies)
+
+            if delete_policy_ids:
+                self._delete_db_policies(system_id, subject, delete_policy_ids)
+
+            if changed_policies:
+                self.alter_backend_policies(subject, 0, system_id, changed_policies)
+
+        # 5. 将后台PolicyID会写到SaaS Policy表里
+        # Note：由于RBAC策略的存在，所以update_policies也可能导致PolicyID的变化
+        if create_policies or update_policies:
+            self._sync_db_policy_id(
+                system_id, subject, [p.action_id for p in create_policies] + [p.action_id for p in update_policies]
+            )
+
+    def _cal_policy_change_contents_by_deleted(
+        self, system_id: str, subject: Subject, delete_policy_ids: List[int]
+    ) -> List[UniversalPolicyChangedContent]:
+        """根据要删除的策略ID，组装计算出要变更的策略内容"""
+        if len(delete_policy_ids) == 0:
+            return []
+
+        # 1. 查询策略
+        qs = PolicyModel.objects.filter(
+            system_id=system_id, subject_type=subject.type, subject_id=subject.id, policy_id__in=delete_policy_ids
+        )
+        policies = [Policy.from_db_model(p, PERMANENT_SECONDS) for p in qs]
+
+        # 2. 转换为UniversalPolicy结构，然后拆分出rbac和abac权限
+        changed_policies = []
+        for p in policies:
+            up = UniversalPolicy.from_policy(p)
+            # Note: 删除策略，默认auth_type为None
+            policy_changed_content = UniversalPolicyChangedContent(
+                action_id=p.action_id, auth_type=AuthTypeEnum.NONE.value
+            )
+            # 有ABAC策略需要删除，只需要PolicyID即可
+            if len(up.expression_resource_groups) > 0:
+                policy_changed_content.abac = AbacPolicyChangeContent(
+                    change_type=AbacPolicyChangeType.DELETED.value, id=p.policy_id
+                )
+            # RBAC策略删除，则提供被删除的资源实例
+            if len(up.instances) > 0:
+                policy_changed_content.rbac = RbacPolicyChangeContent(deleted=up.instances)
+
+            changed_policies.append(policy_changed_content)
+
+        return changed_policies
+
+    def _cal_policy_change_contents_by_created(
+        self, system_id: str, create_policies: List[Policy]
+    ) -> List[UniversalPolicyChangedContent]:
+        """根据新增的策略，组装计算出要变更的策略内容"""
+        if len(create_policies) == 0:
+            return []
+
+        changed_policies = []
+        for p in create_policies:
+            up = UniversalPolicy.from_policy(p)
+            policy_changed_content = UniversalPolicyChangedContent(action_id=p.action_id, auth_type=up.auth_type)
+            # 有ABAC策略需要删除，只需要PolicyID即可
+            if len(up.expression_resource_groups) > 0:
+                policy_changed_content.abac = AbacPolicyChangeContent(
+                    change_type=AbacPolicyChangeType.CREATED.value,
+                    resource_expression=up.to_resource_expression(system_id),
+                )
+            # RBAC策略删除，则提供被删除的资源实例
+            if len(up.instances) > 0:
+                policy_changed_content.rbac = RbacPolicyChangeContent(created=up.instances)
+
+            changed_policies.append(policy_changed_content)
+
+        return changed_policies
+
+    def _cal_policy_change_contents_by_updated(
+        self, system_id: str, subject: Subject, update_policies: List[Policy]
+    ) -> List[UniversalPolicyChangedContent]:
+        """根据更新的策略，组装计算出要变更的策略内容"""
+        if len(update_policies) == 0:
+            return []
+
+        changed_policies = []
+        # 1 根据ActionID查询旧策略内容
+        qs = PolicyModel.objects.filter(
+            system_id=system_id,
+            subject_type=subject.type,
+            subject_id=subject.id,
+            action_id__in=[p.action_id for p in update_policies],
+        )
+        old_policies = {p.action_id: Policy.from_db_model(p, PERMANENT_SECONDS) for p in qs}
+        # 2 遍历每条要新旧对比，进行新旧策略对比，得到需要变更的内容，组装PolicyChangedContent数据
+        for p in update_policies:
+            up = UniversalPolicy.from_policy(p)
+            old_up = UniversalPolicy.from_policy(old_policies[p.action_id])
+            policy_changed_content = up.sub(old_up)
+            changed_policies.append(policy_changed_content)
+
+        return changed_policies
 
 
 class ABACPolicyOperationService(PolicyCommonDBOperationService):

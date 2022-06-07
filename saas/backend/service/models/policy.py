@@ -332,6 +332,29 @@ class PolicyIDExpiredAt(BaseModel):
     expired_at: int
 
 
+class AbacPolicyChangeContent(BaseModel):
+    change_type: AbacPolicyChangeType = AbacPolicyChangeType.NONE.value
+    id: int = 0
+    resource_expression: str = ""
+    environment: str = "{}"
+    expired_at = PERMANENT_SECONDS
+
+
+class RbacPolicyChangeContent(BaseModel):
+    created: List[PathNode] = []
+    deleted: List[PathNode] = []
+
+
+class UniversalPolicyChangedContent(BaseModel):
+    action_id: str
+    # 策略变更后的策略类型
+    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
+    # ABAC策略变更
+    abac: Optional[AbacPolicyChangeContent]
+    # RBAC策略变更
+    rbac: Optional[RbacPolicyChangeContent]
+
+
 class UniversalPolicy(Policy):
     """
     通用Policy，支持处理RBAC和ABAC策略，原Policy只支持处理ABAC
@@ -423,7 +446,7 @@ class UniversalPolicy(Policy):
             )
 
         if len(rbac_instances) > 0:
-            self.instances = rbac_instances
+            self.instances = list(set(rbac_instances))
 
         # 计算出策略类型auth_type并修改
         if len(self.expression_resource_groups) > 0 and len(self.instances) > 0:
@@ -433,29 +456,38 @@ class UniversalPolicy(Policy):
         elif len(self.expression_resource_groups) > 0 and len(self.instances) == 0:
             self.auth_type = AuthTypeEnum.ABAC.value
 
-    def diff(self):
+    def sub(self, system_id: str, other: "UniversalPolicy") -> UniversalPolicyChangedContent:
         """用于策略变更时对比得到需要变更rbac和abac策略的内容"""
-        pass
+        policy_changed_content = UniversalPolicyChangedContent(action_id=self.action_id, auth_type=other.auth_type)
 
+        # ABAC
+        if len(self.expression_resource_groups) > 0 and len(other.expression_resource_groups) > 0:
+            policy_changed_content.abac = AbacPolicyChangeContent(
+                change_type=AbacPolicyChangeType.UPDATED.value,
+                id=other.policy_id,
+                resource_expression=self.to_resource_expression(system_id),
+            )
+        elif len(self.expression_resource_groups) == 0 and len(other.expression_resource_groups) > 0:
+            policy_changed_content.abac = AbacPolicyChangeContent(
+                change_type=AbacPolicyChangeType.DELETED.value,
+                id=other.policy_id,
+            )
+        elif len(self.expression_resource_groups) > 0 and len(other.expression_resource_groups) == 0:
+            policy_changed_content.abac = AbacPolicyChangeContent(
+                change_type=AbacPolicyChangeType.CREATED.value,
+                resource_expression=self.to_resource_expression(system_id),
+            )
 
-class AbacPolicyChangeContent(BaseModel):
-    change_type: AbacPolicyChangeType = AbacPolicyChangeType.NONE.value
-    id: int = 0
-    resource_expression: str = ""
-    environment: str = "{}"
-    expired_at = PERMANENT_SECONDS
+        # RBAC
+        created_instances = list(set(self.instances) - set(other.instances))
+        deleted_instances = list(set(other.instances) - set(self.instances))
+        if created_instances or deleted_instances:
+            policy_changed_content.rbac = RbacPolicyChangeContent(created=created_instances, deleted=deleted_instances)
 
+        return policy_changed_content
 
-class RbacPolicyChangeContent(BaseModel):
-    created: List[PathNode] = []
-    deleted: List[PathNode] = []
-
-
-class UniversalPolicyChangedContent(BaseModel):
-    action_id: str
-    # 策略变更后的策略类型
-    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
-    # ABAC策略变更
-    abac: Optional[AbacPolicyChangeContent]
-    # RBAC策略变更
-    rbac: Optional[RbacPolicyChangeContent]
+    def to_resource_expression(self, system_id: str) -> str:
+        """将ABAC权限翻译为后台所需表达式"""
+        assert len(self.expression_resource_groups) > 0
+        translator = ResourceExpressionTranslator()
+        return translator.translate(system_id, self.expression_resource_groups.dict())
