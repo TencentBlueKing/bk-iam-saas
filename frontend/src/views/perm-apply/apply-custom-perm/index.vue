@@ -231,7 +231,7 @@
             <div class="groupPermissionQequest" v-if="isShowUserGroup">
                 <render-horizontal-block>
                     <div class="userGroup">
-                        <div class="info pl20">
+                        <div class="requestRecommendText pl20">
                             {{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组（包含更多可申请权限）']`)}}
                         </div>
                         <div class="info">
@@ -336,7 +336,7 @@
             <div class="IndependentApplication" v-if="isShowIndependent">
                 <render-horizontal-block>
                     <div class="independent">
-                        <div class="info pl20">
+                        <div class="requestRecommendText pl20">
                             {{$t(`m.permApply['你也可以继续申请独立权限']`)}}
                         </div>
                         <div class="info">
@@ -604,8 +604,8 @@
                 isRecommend: true,
                 tagActionList: [],
                 tabData: [
-                    { title: '用户组推荐', desc: '推荐某类角色需要的权限集', key: 'userGroup' },
-                    { title: '细粒度权限', desc: '只包含当前操作需要的最小范围权限', key: 'independent' }
+                    { title: '用户组推荐', desc: '包含更大范围的权限（运维\开发\测试等角色类权限）', key: 'userGroup' },
+                    { title: '细粒度权限', desc: '只包含当前需要的最小范围权限', key: 'independent' }
                 ],
                 tabIndex: 0
             };
