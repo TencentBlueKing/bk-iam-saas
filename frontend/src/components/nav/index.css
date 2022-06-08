@@ -13,7 +13,7 @@ $duration: 0.3s;
         position: relative;
         width: 100%;
         height: 100%;
-        background: #182132;
+        background: #293852;
         transition: width $duration $cubic-bezier;
         overflow: hidden;
         &.unfold {
@@ -54,7 +54,7 @@ $duration: 0.3s;
             left: 0;
             width: 60px;
             height: 60px;
-            background: rgb(24, 33, 50);
+            background: #293852;
             cursor: pointer;
             &:hover {
                 .nav-stick {
@@ -94,6 +94,45 @@ $duration: 0.3s;
             background: #ff0000;
             float: right;
         }
+
+        .iam-nav-select-cls{
+            background: #374357;
+            width: 240px;
+            margin: 10px auto;
+            color: #fff;
+            border: 0;
+            .bk-select-angle{
+                color: #fff;
+            }
+        }
+
+        .bk-select.is-default-trigger.is-unselected:before {
+            color: #fff;
+        }
+    }
+}
+.iam-nav-select-dropdown-content{
+    background: #3E4C63 !important;
+    border: 0 !important;
+    width: 274px !important;    
+    .bk-select-search-wrapper{
+        input {
+            background: #3E4C63 !important;
+        }
+    }
+    .bk-option{
+        &:hover {
+            background-color: #2e384a !important;
+            .bk-option-name {
+                color: #fff !important;
+            }
+        }
+    }
+    .is-selected{
+        background-color: #2e384a !important;
+    }
+    .bk-option-content-default{
+        color: #C4C6CC !important;
     }
 }
 .logo {

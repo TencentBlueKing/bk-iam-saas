@@ -1,6 +1,6 @@
 <template>
     <!-- eslint-disable max-len -->
-    <header :class="['header-layout', { 'nav-sticked': navStick }]">
+    <header class="header-nav-layout">
         <iam-guide
             v-if="showGuide"
             type="switch_role"
@@ -8,17 +8,24 @@
             :flag="showGuide"
             :style="{ top: '5px', right: '125px' }"
             :content="$t(`m.guide['切换分级管理员']`)" />
+        <div :class="['logo', 'fl']">
+            <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
+            <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
+        </div>
         <div class="breadcrumbs fl"
             :class="backRouter ? 'has-cursor' : ''"
-            v-show="!mainContentLoading"
             @click="back">
-            <div v-if="!isHide">
-                <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-                <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">{{ $t(`m.common['用户组']`) }}【{{userGroupName}}】{{ $t(`m.common['添加权限']`) }}</h2>
-                <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
+            <div>
+                <span v-for="item in navData" :key="item.id">
+                    <h2 v-if="item.show" class="heaer-nav-title"
+                        @click="handleSelect(item)"
+                        :class="item.id === curRoleId ? 'active' : ''">
+                        {{item.text}}
+                    </h2>
+                </span>
             </div>
         </div>
-        <!-- <div class="user fr">
+        <div class="user fr">
             <div class="help-flag">
                 <Icon type="help-fill-2" />
                 <div class="dropdown-panel">
@@ -41,27 +48,12 @@
                         <p :class="userName">{{ user.username }}</p>
                         <Icon :type="identityIconMap[curRole] || ''" />
                     </div>
-                    <div class="search-input">
-                        <bk-input
-                            :clearable="true"
-                            size="small"
-                            v-model="searchValue"
-                            ext-cls="iam-role-list-seatch-input-cls"
-                            :placeholder="placeholderValue"
-                            @input="handleInput">
-                        </bk-input>
-                        <div v-if="isShowSearch" class="search-nextfix">
-                            <slot name="nextfix">
-                                <i class="bk-icon icon-search search-nextfix-icon" />
-                            </slot>
-                        </div>
-                    </div>
                     <ul>
                         <template v-if="curRoleList.length < 1">
                             <iam-svg ext-cls="rating-empty" />
                         </template>
                         <template v-else>
-                            <li class="grading-item"
+                            <!-- <li class="grading-item"
                                 data-test-id="header_btn_switchRole"
                                 v-for="item in curRoleList"
                                 :key="item.id"
@@ -73,7 +65,7 @@
                                 <i v-if="isShowRatingManager(item)" class="ratingManagerIcon"></i>
                                 <span class="name">{{ item.name }}</span>
                                 <Icon v-if="item.id === curRoleId" type="check-small" class="checked" />
-                            </li>
+                            </li> -->
                             <div :class="['operation', { 'right': curRole === 'staff' }]">
                                 <div :class="['user-dropdown-item', { 'marginleft': curRole !== 'staff' }]"
                                     v-if="curIdentity !== '' && curRole !== 'staff'"
@@ -94,7 +86,7 @@
                     </ul>
                 </section>
             </transition>
-        </div> -->
+        </div>
         <div class="page-tab-wrapper" v-if="hasPageTab">
             <bk-tab
                 :active.sync="active"
@@ -247,7 +239,13 @@
                 showGuide: false,
                 isShowHeader: false,
                 placeholderValue: '',
-                userGroupName: ''
+                userGroupName: '',
+                navData: [
+                    { text: '个人工作台', id: 0, show: true, type: 'staff', name: this.$store.state.user.username },
+                    { text: '权限管理', id: 1, show: false, type: 'rating_manager' },
+                    // { text: '统计分析', id: 2, type: 'super_manager' },
+                    { text: '平台管理', id: 3, show: false, type: 'super_manager' }
+                ]
             };
         },
         computed: {
@@ -302,6 +300,7 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
+                    this.setTabRoleData();
                     if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
                         this.showGuide = true;
                     }
@@ -335,6 +334,7 @@
             });
         },
         mounted () {
+            console.log('roleList', this.roleList);
             bus.$on('refresh-role', data => {
                 this.handleSwitchRole(data);
             });
@@ -478,9 +478,9 @@
                     this.curRole = type;
                     this.curRoleId = id;
                     this.$store.commit('updateIdentity', { id, type, name });
+                    bus.$emit('nav-change', { id, type });
                     this.updateRouter(type);
                     this.resetLocalStorage();
-                    bus.$emit('theme-change', this.curRole);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -551,6 +551,30 @@
                         tab: tab
                     }))}`);
                 }
+            },
+            
+            // 根据角色设置
+            setTabRoleData () {
+                const superManager = this.curRoleList.find(e => e.type === 'super_manager');
+                let ratingManager = this.curRoleList.find(e => e.type === 'rating_manager' && e.id === this.curRoleId);
+                if (!ratingManager) {
+                    ratingManager = this.curRoleList.find(e => e.type === 'rating_manager');
+                }
+                this.navData.forEach(element => {
+                    if (element.type === 'staff') {
+                        this.curIdentity = this.user.role.name;
+                    } else if (element.type === 'super_manager' && superManager) {
+                        element.id = superManager.id;
+                        element.name = superManager.name;
+                        element.show = true;
+                    } else if (element.type === 'rating_manager' && ratingManager) {
+                        element.id = ratingManager.id;
+                        element.name = ratingManager.name;
+                        element.show = true;
+                    }
+                });
+                this.$store.commit('updataNavData', this.navData);
+                console.log('this.navData', this.navData);
             }
         }
     };

@@ -3,12 +3,24 @@
     <nav :class="['nav-layout', { 'sticked': navStick }]"
         @mouseenter="handleMouseEnter"
         @mouseleave="handleMouseLeave">
-        <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick, 'dark-theme': isDarklyTheme }]">
-            <div :class="['logo', { 'dark-theme': isDarklyTheme }]">
-                <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" v-if="curRole === '' || curRole === 'staff'" />
-                <iam-svg name="logo-primary" :alt="$t(`m.nav['蓝鲸权限中心']`)" v-else />
-                <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
-            </div>
+        <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick }]">
+            <bk-select
+                v-if="curRole === 'rating_manager' && unfold"
+                :value="curRoleId"
+                :clearable="false"
+                placeholder="选择分级管理员"
+                search-placeholder="搜索身份进行切换"
+                searchable
+                ext-cls="iam-nav-select-cls"
+                ext-popover-cls="iam-nav-select-dropdown-content"
+                @change="handleSwitchRole">
+                <bk-option
+                    v-for="item in curRoleList"
+                    :key="item.id"
+                    :id="item.id"
+                    :name="item.name">
+                </bk-option>
+            </bk-select>
             <div class="nav-slider-list">
                 <div class="iam-menu"
                     v-for="item in [...currentNav]"
@@ -26,7 +38,7 @@
                             <div v-for="child in item.children"
                                 v-show="!routerDiff.includes(child.rkey)"
                                 :key="child.id"
-                                :class="['iam-menu-item', { active: openedItem === child.id }, { 'has-darkly-theme': isDarklyTheme }]"
+                                :class="['iam-menu-item', { active: openedItem === child.id }]"
                                 @click.stop="handleSwitchNav(child.id, child)" :data-test-id="`nav_menu_switchNav_${child.id}`">
                                 <Icon :type="child.icon" class="iam-menu-icon" />
                                 <span class="iam-menu-text">{{ child.name }}</span>
@@ -36,7 +48,7 @@
                     <template v-else>
                         <div
                             v-show="!routerDiff.includes(item.rkey)"
-                            :class="['iam-menu-item', { active: openedItem === item.id }, { 'has-darkly-theme': isDarklyTheme }]"
+                            :class="['iam-menu-item', { active: openedItem === item.id }]"
                             @click.stop="handleSwitchNav(item.id, item)" :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
                             <span class="iam-menu-text" v-if="item.name === '分级管理员' && curRole === 'staff'">我的{{ item.name }}</span>
@@ -46,10 +58,10 @@
                 </div>
             </div>
             <div
-                :class="['nav-stick-wrapper', { 'dark-theme': isDarklyTheme }]"
+                :class="['nav-stick-wrapper']"
                 :title="navStick ? $t(`m.nav['收起导航']`) : $t(`m.nav['固定导航']`)"
                 @click="toggleNavStick">
-                <Icon type="shrink-line" :class="['nav-stick', { 'sticked': navStick }, { 'primary': curRole !== 'staff' }]" />
+                <Icon type="shrink-line" :class="['nav-stick', { 'sticked': navStick }]" />
             </div>
         </div>
     </nav>
@@ -121,16 +133,15 @@
                 timer: null,
                 curRole: 'staff',
                 isUnfold: true,
-                routerMap: routerMap
+                routerMap: routerMap,
+                curRoleList: [],
+                curRoleId: 0
             };
         },
         computed: {
-            ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff']),
+            ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff', 'roleList', 'navData']),
             unfold () {
                 return this.navStick || !this.navFold;
-            },
-            isDarklyTheme () {
-                return ['super_manager', 'system_manager', 'rating_manager'].includes(this.curRole);
             },
             isShowRouterGroup () {
                 return payload => {
@@ -153,6 +164,19 @@
                     }
                 },
                 deep: true
+            },
+            roleList: {
+                handler (newValue, oldValue) {
+                    this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
+                    this.curRoleList = this.curRoleList.filter(e => e.type !== 'super_manager');
+                },
+                immediate: true
+            },
+            navData: {
+                handler (newValue, oldValue) {
+                    this.curRoleId = newValue.find(e => e.type === 'rating_manager').id;
+                },
+                immediate: true
             }
         },
         created () {
@@ -160,11 +184,17 @@
             this.isUnfold = this.navStick || !this.navFold;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('theme-change');
+                bus.$off('nav-change');
             });
         },
         mounted () {
             bus.$on('theme-change', payload => {
                 this.curRole = payload;
+            });
+
+            bus.$on('nav-change', ({ id, type }) => {
+                this.curRole = type;
+                this.curRoleId = id;
             });
         },
         methods: {
@@ -231,11 +261,93 @@
                     }
                     this.openedItem = item.id === this.openedItem ? '' : item.id;
                 });
+            },
+
+            // 切换身份
+            async handleSwitchRole (id) {
+                const { type, name } = this.curRoleList.find(e => e.id === id);
+                try {
+                    await this.$store.dispatch('role/updateCurrentRole', { id });
+                    this.messageSuccess(this.$t(`m.info['切换身份成功']`), 2000);
+                    this.curRoleId = id;
+                    this.curRole = type;
+                    this.$store.commit('updateIdentity', { id, type, name });
+                    this.updateRouter(type);
+                    this.resetLocalStorage();
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            // 更新路由
+            updateRouter (roleType) {
+                this.$store.commit('updataRouterDiff', roleType);
+                const difference = getRouterDiff(roleType);
+                const curRouterName = this.$route.name;
+                if (difference.length) {
+                    if (difference.includes(curRouterName)) {
+                        this.$store.commit('setHeaderTitle', '');
+                        window.localStorage.removeItem('iam-header-title-cache');
+                        window.localStorage.removeItem('iam-header-name-cache');
+                        if (roleType === 'staff' || roleType === '') {
+                            this.$router.push({
+                                name: 'myPerm'
+                            });
+                            return;
+                        }
+                        this.$router.push({
+                            // name: 'permTemplate'
+                            // 切换角色默认跳转到用户组
+                            name: 'userGroup'
+                        });
+                        return;
+                    }
+
+                    const permTemplateRoutes = [
+                        'permTemplateCreate', 'permTemplateDetail',
+                        'permTemplateEdit', 'permTemplateDiff'
+                    ];
+                    if (permTemplateRoutes.includes(curRouterName)) {
+                        this.$router.push({ name: 'permTemplate' });
+                        return;
+                    }
+                    if (['createUserGroup', 'userGroupDetail'].includes(curRouterName)) {
+                        this.$router.push({ name: 'userGroup' });
+                        return;
+                    }
+                    if (['gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate'].includes(curRouterName)) {
+                        this.$router.push({ name: 'ratingManager' });
+                        return;
+                    }
+                    this.$emit('reload-page', this.$route);
+                    return;
+                }
+                this.$emit('reload-page', this.$route);
+            },
+
+            // 清除页面localstorage
+            resetLocalStorage () {
+                window.localStorage.removeItem('customPermProcessList');
+                window.localStorage.removeItem('gradeManagerList');
+                window.localStorage.removeItem('auditList');
+                window.localStorage.removeItem('joinGroupProcessList');
+                window.localStorage.removeItem('groupList');
+                window.localStorage.removeItem('templateList');
+                window.localStorage.removeItem('applyGroupList');
+                window.localStorage.removeItem('iam-header-title-cache');
+                window.localStorage.removeItem('iam-header-name-cache');
             }
         }
     };
 </script>
 
-<style scoped>
+<style>
     @import './index.css';
 </style>

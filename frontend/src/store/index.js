@@ -301,7 +301,10 @@ const store = new Vuex.Store({
         // 系统回调地址
         host: '',
         // 前置路由
-        fromRouteName: ''
+        fromRouteName: '',
+
+        // nav导航
+        navData: []
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -321,7 +324,8 @@ const store = new Vuex.Store({
         noviceGuide: state => state.noviceGuide,
         loadingConf: state => state.loadingConf,
         host: state => state.host,
-        fromRouteName: state => state.fromRouteName
+        fromRouteName: state => state.fromRouteName,
+        navData: state => state.navData
     },
     mutations: {
         updateHost (state, params) {
@@ -459,6 +463,10 @@ const store = new Vuex.Store({
 
         updateRoleList (state, payload) {
             state.roleList.splice(0, state.roleList.length, ...payload);
+        },
+
+        updataNavData (state, payload) {
+            state.navData.splice(0, state.navData.length, ...payload);
         }
     },
     actions: {
