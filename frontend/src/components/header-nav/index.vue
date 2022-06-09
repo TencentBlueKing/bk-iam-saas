@@ -16,10 +16,10 @@
             :class="backRouter ? 'has-cursor' : ''"
             @click="back">
             <div>
-                <span v-for="item in navData" :key="item.id">
+                <span v-for="(item, index) in navData" :key="item.id">
                     <h2 v-if="item.show" class="heaer-nav-title"
-                        @click="handleSelect(item)"
-                        :class="item.id === curRoleId ? 'active' : ''">
+                        @click="handleSelect(item, index)"
+                        :class="(item.id === curRoleId && item.active) ? 'active' : ''">
                         {{item.text}}
                     </h2>
                 </span>
@@ -243,8 +243,8 @@
                 navData: [
                     { text: '个人工作台', id: 0, show: true, type: 'staff', name: this.$store.state.user.username },
                     { text: '权限管理', id: 1, show: false, type: 'rating_manager' },
-                    // { text: '统计分析', id: 2, type: 'super_manager' },
-                    { text: '平台管理', id: 3, show: false, type: 'super_manager' }
+                    { text: '统计分析', id: 2, show: false, type: 'super_manager', superCate: 'audit' },
+                    { text: '平台管理', id: 3, show: false, type: 'super_manager', superCate: 'normal' }
                 ]
             };
         },
@@ -314,7 +314,6 @@
             },
             routeName: {
                 handler (value) {
-                    console.log('value', value);
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup();
                     }
@@ -334,7 +333,6 @@
             });
         },
         mounted () {
-            console.log('roleList', this.roleList);
             bus.$on('refresh-role', data => {
                 this.handleSwitchRole(data);
             });
@@ -429,6 +427,7 @@
                 this.$store.commit('updataRouterDiff', roleType);
                 const difference = getRouterDiff(roleType);
                 const curRouterName = this.$route.name;
+                let isAudit = false;
                 if (difference.length) {
                     if (difference.includes(curRouterName)) {
                         this.$store.commit('setHeaderTitle', '');
@@ -440,10 +439,14 @@
                             });
                             return;
                         }
+
+                        // 切换角色统计分析默认跳转到审计 其他的跳转到用户组
+                        if (roleType === 'super_manager') {
+                            const isAuditData = (this.navData || []).find(e => e.superCate === 'audit');
+                            isAudit = isAuditData && isAuditData.active;
+                        }
                         this.$router.push({
-                            // name: 'permTemplate'
-                            // 切换角色默认跳转到用户组
-                            name: 'userGroup'
+                            name: isAudit ? 'audit' : 'userGroup'
                         });
                         return;
                     }
@@ -493,8 +496,8 @@
                 }
             },
 
-            handleSelect (roleData) {
-                if (this.curRoleId === roleData.id) {
+            handleSelect (roleData, index) {
+                if (this.curRoleId === roleData.id && roleData.type !== 'super_manager') {
                     return;
                 }
                 if (this.routeName === 'addGroupPerm') {
@@ -502,6 +505,11 @@
                         name: 'userGroup'
                     });
                 }
+                this.navData.forEach(e => {
+                    e.active = false;
+                });
+                roleData.active = true;
+                window.localStorage.setItem('index', index);
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
                 this.handleSwitchRole(roleData);
@@ -560,7 +568,9 @@
                 if (!ratingManager) {
                     ratingManager = this.curRoleList.find(e => e.type === 'rating_manager');
                 }
-                this.navData.forEach(element => {
+                const index = window.localStorage.getItem('index') || 0;
+                this.navData.forEach((element, i) => {
+                    element.active = i === Number(index);
                     if (element.type === 'staff') {
                         this.curIdentity = this.user.role.name;
                     } else if (element.type === 'super_manager' && superManager) {
@@ -574,7 +584,6 @@
                     }
                 });
                 this.$store.commit('updataNavData', this.navData);
-                console.log('this.navData', this.navData);
             }
         }
     };

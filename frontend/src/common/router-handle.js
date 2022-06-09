@@ -31,6 +31,7 @@
  *
  * @return {Array}
  */
+import store from '@/store';
 export const getRouterDiff = (payload) => {
     if (payload === 'staff' || payload === '') {
         return [
@@ -52,24 +53,68 @@ export const getRouterDiff = (payload) => {
         ];
     }
     if (payload === 'super_manager') {
-        return [
-            'applyCustomPerm',
-            'applyProvisionPerm',
-            'applyJoinUserGroup',
-            'apply',
-            'myPerm',
-            'templatePermDetail',
-            'groupPermDetail',
-            'orgPermDetail',
-            'approval',
-            'permRenewal',
-            'systemAccess',
-            'systemAccessCreate',
-            'systemAccessAccess',
-            'systemAccessRegistry',
-            'systemAccessOptimize',
-            'systemAccessComplete'
-        ];
+        const isAuditData = (store.getters.navData || []).find(e => e.superCate === 'audit');
+        const isAudit = isAuditData && isAuditData.active;
+        if (isAudit) {
+            return [
+                'systemAccess',
+                'systemAccessCreate',
+                'systemAccessAccess',
+                'systemAccessRegistry',
+                'systemAccessOptimize',
+                'systemAccessComplete',
+                'myPerm',
+                'templatePermDetail',
+                'groupPermDetail',
+                'orgPermDetail',
+                'userGroup',
+                'createUserGroup',
+                'userGroupDetail',
+                'userGroupPermDetail',
+                'permTemplate',
+                'permTemplateDetail',
+                'permTemplateCreate',
+                'applyCustomPerm',
+                'applyProvisionPerm',
+                'applyJoinUserGroup',
+                'apply',
+                'user',
+                'ratingManager',
+                'gradingAdminCreate',
+                'gradingAdminDetail',
+                'gradingAdminEdit',
+                'gradingAdminUpdateTemplate',
+                'administrator',
+                'approvalProcess',
+                'approval',
+                'permRenewal',
+                'groupPermRenewal',
+                'permTemplateEdit',
+                'permTemplateDiff',
+                'addGroupPerm',
+                'resourcePermiss'
+            ];
+        } else {
+            return [
+                'applyCustomPerm',
+                'applyProvisionPerm',
+                'applyJoinUserGroup',
+                'apply',
+                'myPerm',
+                'templatePermDetail',
+                'groupPermDetail',
+                'orgPermDetail',
+                'approval',
+                'permRenewal',
+                'systemAccess',
+                'systemAccessCreate',
+                'systemAccessAccess',
+                'systemAccessRegistry',
+                'systemAccessOptimize',
+                'systemAccessComplete',
+                'audit'
+            ];
+        }
     }
     if (payload === 'system_manager') {
         return [
