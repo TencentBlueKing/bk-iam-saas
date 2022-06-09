@@ -35,7 +35,7 @@
                 </div>
             </div>
             <p class="user-name" @click.stop="handleSwitchIdentity" data-test-id="header_btn_triggerSwitchRole">
-                {{ curIdentity !== 'STAFF' ? curIdentity : user.username }}
+                {{ user.username }}
                 <Icon type="down-angle" :class="['user-name-angle', { dropped: isShowUserDropdown }]" />
             </p>
             <transition name="toggle-slide">
@@ -476,7 +476,6 @@
             async handleSwitchRole ({ id, type, name }) {
                 try {
                     await this.$store.dispatch('role/updateCurrentRole', { id });
-                    this.messageSuccess(this.$t(`m.info['切换身份成功']`), 2000);
                     this.curIdentity = id === 0 ? 'STAFF' : name;
                     this.curRole = type;
                     this.curRoleId = id;

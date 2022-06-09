@@ -5,11 +5,11 @@
         @mouseleave="handleMouseLeave">
         <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick }]">
             <bk-select
-                v-if="curRole === 'rating_manager' && unfold"
+                v-if="(curRole === 'rating_manager' || curRole === 'system_manager') && unfold"
                 :value="curRoleId"
                 :clearable="false"
                 placeholder="选择分级管理员"
-                search-placeholder="搜索身份进行切换"
+                :search-placeholder="$t(`m.common['切换身份']`)"
                 searchable
                 ext-cls="iam-nav-select-cls"
                 ext-popover-cls="iam-nav-select-dropdown-content"
