@@ -41,6 +41,9 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         &.has-cursor {
             cursor: pointer;
         }
+        .nav-container{
+            position: relative;
+        }
         .breadcrumbs-back {
             position: relative;
             left: -5px;

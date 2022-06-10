@@ -1,13 +1,6 @@
 <template>
     <!-- eslint-disable max-len -->
     <header class="header-nav-layout">
-        <iam-guide
-            v-if="showGuide"
-            type="switch_role"
-            direction="right"
-            :flag="showGuide"
-            :style="{ top: '5px', right: '125px' }"
-            :content="$t(`m.guide['切换分级管理员']`)" />
         <div :class="['logo', 'fl']">
             <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
             <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
@@ -15,7 +8,7 @@
         <div class="breadcrumbs fl"
             :class="backRouter ? 'has-cursor' : ''"
             @click="back">
-            <div>
+            <div class="nav-container">
                 <span v-for="(item, index) in navData" :key="item.id">
                     <h2 v-if="item.show" class="heaer-nav-title"
                         @click="handleSelect(item, index)"
@@ -23,6 +16,13 @@
                         {{item.text}}
                     </h2>
                 </span>
+                <iam-guide
+                    v-if="showGuide"
+                    type="switch_role"
+                    direction="top"
+                    :flag="showGuide"
+                    :style="{ top: '60px', right: '310px' }"
+                    :content="$t(`m.guide['分级管理员导航']`)" />
             </div>
         </div>
         <div class="user fr">
@@ -301,9 +301,6 @@
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
                     this.setTabRoleData();
-                    if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
-                        this.showGuide = true;
-                    }
                 },
                 immediate: true
             },
@@ -316,6 +313,14 @@
                 handler (value) {
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup();
+                    }
+                },
+                immediate: true
+            },
+            navData: {
+                handler (newValue, oldValue) {
+                    if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
+                        this.showGuide = true;
                     }
                 },
                 immediate: true

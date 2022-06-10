@@ -302,9 +302,6 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
-                    if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
-                        this.showGuide = true;
-                    }
                 },
                 immediate: true
             },
