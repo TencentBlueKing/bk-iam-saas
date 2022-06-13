@@ -46,34 +46,10 @@
                     v-bk-clickoutside="handleClickOutSide">
                     <div :class="['userInfo',{ 'lineHeight': curRole === 'staff' }]">
                         <p :class="userName">{{ user.username }}</p>
-                        <Icon :type="identityIconMap[curRole] || ''" />
                     </div>
                     <ul>
                         <template v-if="curRoleList.length < 1">
                             <iam-svg ext-cls="rating-empty" />
-                        </template>
-                        <template v-else>
-                            <!-- <li class="grading-item"
-                                data-test-id="header_btn_switchRole"
-                                v-for="item in curRoleList"
-                                :key="item.id"
-                                :title="item.name"
-                                :class="item.id === curRoleId ? 'active' : ''"
-                                @click="handleSelect(item)">
-                                <i v-if="isShowSuperManager(item)" class="superManagerIcon"></i>
-                                <i v-if="isShowSystemManager(item)" class="systemManagerIcon"></i>
-                                <i v-if="isShowRatingManager(item)" class="ratingManagerIcon"></i>
-                                <span class="name">{{ item.name }}</span>
-                                <Icon v-if="item.id === curRoleId" type="check-small" class="checked" />
-                            </li> -->
-                            <div :class="['operation', { 'right': curRole === 'staff' }]">
-                                <div :class="['user-dropdown-item', { 'marginleft': curRole !== 'staff' }]"
-                                    v-if="curIdentity !== '' && curRole !== 'staff'"
-                                    @click="handleBack">
-                                    <img src="@/images/back.svg" alt="" class="back-staff">
-                                    <span>{{ $t(`m.nav['普通成员']`) }}</span>
-                                </div>
-                            </div>
                         </template>
                         <template>
                             <div class="operation right">
