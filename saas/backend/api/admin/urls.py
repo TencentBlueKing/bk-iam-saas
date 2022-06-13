@@ -30,7 +30,7 @@ urlpatterns = [
     # system manager
     path(
         "systems/<slug:system_id>/",
-        views.SystemViewSet.as_view({"get": "retrieve"}),
+        views.SystemManagerViewSet.as_view({"get": "retrieve"}),
         name="open.share.system",
     ),
 ]
