@@ -16,7 +16,6 @@ from rest_framework.viewsets import GenericViewSet, mixins
 from backend.account.permissions import role_perm_class
 from backend.audit.models import get_event_model
 from backend.common.filters import NoCheckModelFilterBackend
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.constants import PermissionCodeEnum, RoleType
 
 from .filters import EventFilter
@@ -47,7 +46,6 @@ class EventViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="审计事件列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: EventListSchemaSLZ(label="事件", many=True)},
         tags=["audit"],
     )
@@ -59,7 +57,6 @@ class EventViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="审计事件详情",
-        auto_schema=ResponseSwaggerAutoSchema,
         query_serializer=EventQuerySLZ(),
         responses={status.HTTP_200_OK: EventDetailSchemaSLZ(label="事件")},
         tags=["audit"],

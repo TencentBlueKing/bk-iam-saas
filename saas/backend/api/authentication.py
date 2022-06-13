@@ -16,8 +16,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.authentication import BaseAuthentication
 
+from backend.common.cache import cachedmethod
 from backend.component import esb
-from backend.util.cache import region
 
 from .constants import BKNonEntityUser
 
@@ -70,7 +70,7 @@ class ESBAuthentication(BaseAuthentication):
 
     def _decode_jwt(self, content, public_key):
         try:
-            return jwt.decode(content, public_key, issuer="APIGW")
+            return jwt.decode(content, public_key, options={"verify_iss": False})
         except Exception:  # pylint: disable=broad-except
             logger.exception("decode jwt fail, jwt: %s", content)
             return None
@@ -128,7 +128,7 @@ class ESBAuthentication(BaseAuthentication):
 
         return public_key
 
-    @region.cache_on_arguments()
+    @cachedmethod(timeout=None)  # 缓存不过期，除非重新部署SaaS
     def _get_jwt_public_key(self, request_from):
         if request_from == "apigw":
             return self._get_apigw_public_key()

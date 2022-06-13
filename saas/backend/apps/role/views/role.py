@@ -15,7 +15,6 @@ from typing import List
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
@@ -78,7 +77,6 @@ from backend.biz.role import (
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
 from backend.common.serializers import SystemQuerySLZ
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.common.time import get_soon_expire_ts
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
@@ -113,7 +111,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="创建分级管理员",
         request_body=RatingMangerCreateSLZ(label="创建分级管理员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_201_CREATED: RoleIdSLZ(label="分级管理员ID")},
         tags=["role"],
     )
@@ -141,7 +138,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="分级管理员列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: RatingMangerListSchemaSLZ(label="分级管理员列表", many=True)},
         tags=["role"],
     )
@@ -150,7 +146,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="分级管理员详情",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: RatingMangerDetailSchemaSLZ(label="分级管理员详情")},
         filter_inspectors=[],
         paginator_inspectors=[],
@@ -165,7 +160,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="分级管理员更新",
         request_body=RatingMangerCreateSLZ(label="更新分级管理员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -180,6 +174,8 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 名称唯一性检查
         self.role_check_biz.check_unique_name(data["name"], role.name)
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 查询已有的策略范围
         old_scopes = self.biz.list_auth_scope(role.id)
@@ -199,7 +195,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="分级管理员基本信息更新",
         request_body=RatingMangerBaseInfoSZL(label="更新分级管理员基本信息"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -215,6 +210,8 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 名称唯一性检查
         self.role_check_biz.check_unique_name(data["name"], role.name)
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 非超级管理员 且 并非分级管理员成员，则无法更新基本信息
         if (
@@ -223,7 +220,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         ):
             raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True)
 
-        self.biz.update(role, RoleInfoBean.parse_obj(data), user_id, partial=True)
+        self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
         audit_context_setter(role=role)
 
@@ -239,8 +236,7 @@ class RoleMemberView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="退出角色",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(UserRoleDeleteAuditProvider)
@@ -253,8 +249,7 @@ class RoleMemberView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="角色的成员列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     def get(self, request, *args, **kwargs):
@@ -271,8 +266,7 @@ class RoleAuthorizationScopeView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="角色的授权范围",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=SystemQuerySLZ,
+        query_serializer=SystemQuerySLZ(),
         responses={status.HTTP_200_OK: GradeManagerActionSLZ(label="操作策略", many=True)},
         tags=["role"],
     )
@@ -298,7 +292,6 @@ class RoleSubjectScopeView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="角色的subject授权范围",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: RoleScopeSubjectSLZ(label="操作策略", many=True)},
         tags=["role"],
     )
@@ -311,11 +304,10 @@ class RoleSubjectScopeView(views.APIView):
 
 class SystemManagerViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="系统管理员列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: SystemManagerSLZ(label="系统管理员", many=True)},
         tags=["role"],
     )
@@ -336,8 +328,7 @@ class MemberSystemPermissionView(views.APIView):
     @swagger_auto_schema(
         operation_description="修改系统管理员成员拥有的权限",
         request_body=MemberSystemPermissionUpdateSLZ(label="修改系统管理员成员拥有的权限"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RolePolicyAuditProvider)
@@ -368,8 +359,7 @@ class SystemManagerMemberView(views.APIView):
     @swagger_auto_schema(
         operation_description="修改系统管理员成员",
         request_body=SystemManagerMemberUpdateSLZ(label="修改系统管理员成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RoleMemberUpdateAuditProvider)
@@ -394,13 +384,12 @@ class SystemManagerMemberView(views.APIView):
 class SuperManagerMemberViewSet(GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SUPER_MANAGER_MEMBER.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="超级管理员成员列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: SuperManagerMemberSLZ(label="超级管理员成员", many=True)},
         tags=["role"],
     )
@@ -413,8 +402,7 @@ class SuperManagerMemberViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="添加超级管理员成员",
         request_body=SuperManagerMemberSLZ(label="超级管理员成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RoleMemberCreateAuditProvider)
@@ -433,8 +421,7 @@ class SuperManagerMemberViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="删除超级管理员成员",
         request_body=SuperManagerMemberDeleteSLZ(label="超级管理员成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RoleMemberDeleteAuditProvider)
@@ -452,8 +439,7 @@ class SuperManagerMemberViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="修改超级管理员成员拥有的权限",
         request_body=SuperManagerMemberSLZ(label="超级管理员成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RolePolicyAuditProvider)
@@ -477,7 +463,7 @@ class RoleCommonActionViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_COMMON_ACTION.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     queryset = RoleCommonAction.objects.all()
     serializer_class = RoleCommonActionSLZ
@@ -492,7 +478,6 @@ class RoleCommonActionViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="常用操作列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: RoleCommonActionSLZ(label="常用操作", many=True)},
         tags=["role"],
     )
@@ -512,7 +497,6 @@ class RoleCommonActionViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="创建常用操作",
         request_body=RoleCommonCreateSLZ(label="常用操作"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -539,7 +523,6 @@ class RoleCommonActionViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="删除常用操作",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -556,11 +539,10 @@ class RoleCommonActionViewSet(GenericViewSet):
 
 class UserView(views.APIView):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="角色 - 根据批量Username查询用户信息",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=UserQuerySLZ(label="查询条件"),
         responses={status.HTTP_200_OK: UserInfoSLZ(label="用户信息列表", many=True)},
         tags=["role"],
@@ -609,7 +591,6 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="查询角色即将过期的用户组",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GroupSLZ(label="成员", many=True)},
         tags=["role"],
     )
@@ -619,7 +600,6 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="角色用户组成员续期",
         request_body=RoleGroupMembersRenewSLZ(label="角色用户组成员"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -661,7 +641,6 @@ class RoleGroupMembersRenewViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组即将过期成员列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: MemberSLZ(label="成员")},
         tags=["role"],
     )
@@ -686,7 +665,6 @@ class AuthScopeIncludeUserRoleView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="授权范围包含用户的角色列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
         tags=["role"],
     )

@@ -22,20 +22,18 @@ from backend.api.management.serializers import (
     ManagementUserGradeManagerQuerySLZ,
     ManagementUserQuerySLZ,
 )
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
 
 
-class ManagementUserGradeManagerViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementUserGradeManagerViewSet(GenericViewSet):
     """用户加入的分级管理员"""
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
@@ -47,7 +45,6 @@ class ManagementUserGradeManagerViewSet(ExceptionHandlerMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户加入的分级管理员列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         query_serializer=ManagementUserGradeManagerQuerySLZ(),
         responses={status.HTTP_200_OK: ManagementGradeManagerBasicSLZ(label="分级管理员", many=True)},
         tags=["management.user.role"],
@@ -63,10 +60,10 @@ class ManagementUserGradeManagerViewSet(ExceptionHandlerMixin, GenericViewSet):
         return Response(resp_slz.data)
 
 
-class ManagementUserGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewSet):
+class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
     """用户在某个分级管理员下的用户组"""
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
@@ -81,7 +78,6 @@ class ManagementUserGradeManagerGroupViewSet(ExceptionHandlerMixin, GenericViewS
 
     @swagger_auto_schema(
         operation_description="用户在某个分级管理员下加入的用户组列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         query_serializer=ManagementUserQuerySLZ(),
         responses={status.HTTP_200_OK: ManagementGroupBasicSLZ(label="用户组", many=True)},
         tags=["management.user.role.group"],

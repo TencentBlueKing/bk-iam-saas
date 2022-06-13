@@ -48,23 +48,28 @@ export default class RelateResourceTypes {
 
     initCondition (payload, flag, instanceNotDisabled, isNew) {
         // conditionBackup: 做还原操作时的数据备份
-        const isEmpty = !payload.condition
-            || (
-                payload.condition.length > 0
-                    && payload.condition.every(item => item.attributes.length < 1 && item.instances.length < 1)
-            );
-        if (isEmpty) {
-            this.condition = ['none'];
-            this.conditionBackup = ['none'];
-            return;
+        if (payload.isTempora) { // 临时权限标识
+            this.condition = payload.condition;
+            this.conditionBackup = payload.condition;
+        } else {
+            const isEmpty = !payload.condition
+                || (
+                    payload.condition.length > 0
+                        && payload.condition.every(item => item.attributes.length < 1 && item.instances.length < 1)
+                );
+            if (isEmpty) {
+                this.condition = ['none'];
+                this.conditionBackup = ['none'];
+                return;
+            }
+            this.condition = payload.condition.map(
+                item => new Condition(item, '', flag, true, true, instanceNotDisabled)
+            ) || [];
+    
+            this.conditionBackup = payload.condition.map(
+                item => new Condition(item, '', flag, true, true, instanceNotDisabled)
+            ) || [];
         }
-        this.condition = payload.condition.map(
-            item => new Condition(item, '', flag, true, true, instanceNotDisabled)
-        ) || [];
-
-        this.conditionBackup = payload.condition.map(
-            item => new Condition(item, '', flag, true, true, instanceNotDisabled)
-        ) || [];
     }
 
     get isDefaultLimit () {

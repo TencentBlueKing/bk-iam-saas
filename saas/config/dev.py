@@ -7,60 +7,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from .ce import *  # noqa
 from .default import *  # noqa
-from .v3 import *  # noqa
 
 DEBUG = True
-
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
-# 本地开发数据库设置
-# USE FOLLOWING SQL TO CREATE THE DATABASE NAMED APP_CODE
-# SQL: CREATE DATABASE `framework_py` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci; # noqa: E501
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": APP_CODE,
-        "USER": "root",
-        "PASSWORD": "",
-        "HOST": "localhost",
-        "PORT": "3306",
-    },
-    "audit": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": APP_CODE,
-        "USER": "root",
-        "PASSWORD": "",
-        "HOST": "localhost",
-        "PORT": "3306",
-    },
-}
-
-
-# cache
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_PASSWORD = ""
-REDIS_DB = 0
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",  # 根据redis是单机还是集群模式, 修改Client class
-            "PASSWORD": REDIS_PASSWORD,
-            "SOCKET_CONNECT_TIMEOUT": 5,  # in seconds
-            "SOCKET_TIMEOUT": 5,  # in seconds
-        },
-    }
-}
-
-
-# celery
-BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
-
 
 # cors
 CORS_ORIGIN_WHITELIST = []

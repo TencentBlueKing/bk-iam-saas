@@ -24,6 +24,7 @@ class Group(BaseModel):
     description = models.CharField("描述", max_length=512)
     user_count = models.IntegerField("用户数", default=0)
     department_count = models.IntegerField("部门数", default=0)
+    readonly = models.BooleanField("用户组只读标识", default=False)  # 增加可读标识
 
     class Meta:
         verbose_name = "用户组"

@@ -156,6 +156,36 @@ class RoleScope(models.Model):
         verbose_name_plural = "角色的限制范围"
         index_together = ["role_id"]
 
+    @classmethod
+    def delete_action_from_scope(cls, system_id: str, action_id: str):
+        """
+        从可授权范围里删除某个操作，由于json存储了所有授权信息，所以无法直接索引，只能遍历所有
+        """
+        role_scopes = cls.objects.filter(type=RoleScopeType.AUTHORIZATION.value)
+        should_updated_role_scopes = []
+        for role_scope in role_scopes:
+            content = json.loads(role_scope.content)
+            should_updated = False
+            # 遍历授权范围里每个系统
+            for scope in content:
+                if scope["system_id"] != system_id:
+                    continue
+                # 判断Action是否存在，不存在则忽略
+                action_ids = {action["id"] for action in scope["actions"]}
+                if action_id not in action_ids:
+                    continue
+                # 如果包含要删除的Action，则进行更新数据
+                scope["actions"] = [action for action in scope["actions"] if action["id"] != action_id]
+                should_updated = True
+                break
+            if should_updated:
+                role_scope.content = json_dumps(content)
+                should_updated_role_scopes.append(role_scope)
+
+        # 批量更新分级管理员授权范围
+        if len(should_updated_role_scopes) > 0:
+            cls.objects.bulk_update(should_updated_role_scopes, fields=["content"], batch_size=20)
+
 
 class ScopeSubject(models.Model):
     """
@@ -187,6 +217,9 @@ class RoleRelatedObject(BaseModel):
         verbose_name = "角色关联资源"
         verbose_name_plural = "角色关联资源"
         unique_together = ["role_id", "object_type", "object_id"]
+        indexes = [
+            models.Index(fields=["object_id", "object_type"]),
+        ]
 
 
 class RoleCommonAction(BaseModel):

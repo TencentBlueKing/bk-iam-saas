@@ -60,6 +60,12 @@ class CustomPageNumberPagination(PageNumberPagination):
         page_number = request.query_params.get(self.page_query_param, 1)
         return self._positive_int(page_number, strict=True)
 
+    def get_limit_offset_pair(self, request):
+        """将page_size/page转换为limit/offset，虽然对外OpenAPI是page_size/page，但内部处理时直接获取分页时需要用到limit/offset"""
+        limit = self.get_page_size(request)
+        offset = (self.get_page_number(request) - 1) * limit
+        return limit, offset
+
     def get_paginated_response(self, data):
         return Response(OrderedDict([("count", self.page.paginator.count), ("results", data)]))
 

@@ -28,7 +28,7 @@
     import RenderRatingManager from './components/apply-create-rate-manager-detail';
 
     const COM_MAP = new Map([
-        [['grant_action', 'renew_action'], 'RenderDetail'],
+        [['grant_action', 'renew_action', 'grant_temporary_action'], 'RenderDetail'],
         [['join_group', 'renew_group'], 'RenderGroupDetail'],
         [['create_rating_manager'], 'RenderRatingManager'],
         [['update_rating_manager'], 'RenderRatingManager']

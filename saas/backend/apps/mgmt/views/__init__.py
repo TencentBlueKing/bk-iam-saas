@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from backend.apps.mgmt.views.long_task import LongTaskViewSet
 from backend.apps.mgmt.views.white_list import (
     AdminApiWhiteListViewSet,
     ApiViewSet,
@@ -21,4 +22,5 @@ __all__ = [
     "AdminApiWhiteListViewSet",
     "AuthorizationApiWhiteListViewSet",
     "ManagementApiWhiteListViewSet",
+    "LongTaskViewSet",
 ]
