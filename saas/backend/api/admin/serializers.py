@@ -32,5 +32,6 @@ class AdminSubjectGroupSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
 
+
 class SystemManageSLZ(serializers.Serializer):
     managers = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)

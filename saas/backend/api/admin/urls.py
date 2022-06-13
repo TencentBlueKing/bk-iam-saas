@@ -27,7 +27,6 @@ urlpatterns = [
         views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
         name="open.admin.subject_group",
     ),
-
     # system manager
     path(
         "systems/<slug:system_id>/",
