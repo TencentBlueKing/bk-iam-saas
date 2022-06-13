@@ -50,7 +50,7 @@ urlpatterns = [
     # 用户的角色列表, list分页 (可以filter=super/system/grade来过滤是否分级管理员)
     path(
         "subjects/<str:subject_type>/<str:subject_id>/roles/",
-        views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
+        views.SubjectRoleViewSet.as_view({"get": "list"}),
         name="open.admin.subject.roles",
     ),
     # TODO: 冻结, 解冻接口

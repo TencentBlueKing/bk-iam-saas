@@ -20,8 +20,10 @@ class AdminAPIEnum(BaseAPIEnum):
     GROUP_LIST = auto()
     # 用户组成员
     GROUP_MEMBER_LIST = auto()
+
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
+    SUBJECT_ROLE_LIST = auto()
 
     # System
     SYSTEM_LIST = auto()
@@ -36,6 +38,7 @@ class AdminAPIEnum(BaseAPIEnum):
             (GROUP_LIST, "获取用户组列表"),
             (GROUP_MEMBER_LIST, "获取用户组成员列表"),
             (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
+            (SUBJECT_ROLE_LIST, "获取Subject角色列表"),
             (ROLE_SUPER_MANAGER_MEMBER_LIST, "获取超级管理员成员列表"),
             (ROLE_SYSTEM_MANAGER_MEMBER_LIST, "获取系统管理员及成员列表"),
         )

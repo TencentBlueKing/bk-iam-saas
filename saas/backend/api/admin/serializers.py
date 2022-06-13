@@ -13,7 +13,7 @@ from rest_framework import serializers
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role
 from backend.apps.role.serializers import RatingMangerListSLZ
-from backend.service.constants import GroupMemberType
+from backend.service.constants import GroupMemberType, RoleType
 
 
 class AdminGroupBasicSLZ(serializers.ModelSerializer):
@@ -53,3 +53,9 @@ class SystemManagerWithMembersSLZ(RatingMangerListSLZ):
 
     def get_has_system_permission(self, obj):
         return obj.system_permission_enabled_content.global_enabled
+
+
+class SubjectRoleSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="角色唯一标识")
+    type = serializers.CharField(label="角色类型", help_text=f"{RoleType.get_choices()}")
+    name = serializers.CharField()

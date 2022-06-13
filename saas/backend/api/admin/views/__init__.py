@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from .group import AdminGroupMemberViewSet, AdminGroupViewSet
 from .role import SuperManagerMemberViewSet, SystemManagerMemberViewSet
-from .subject import AdminSubjectGroupViewSet
+from .subject import AdminSubjectGroupViewSet, SubjectRoleViewSet
 
 __all__ = [
     "AdminGroupViewSet",
@@ -18,4 +18,5 @@ __all__ = [
     "AdminSubjectGroupViewSet",
     "SuperManagerMemberViewSet",
     "SystemManagerMemberViewSet",
+    "SubjectRoleViewSet",
 ]
