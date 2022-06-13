@@ -44,23 +44,23 @@
                     :style="style"
                     v-show="isShowGradingWrapper"
                     v-bk-clickoutside="handleClickOutSide">
-                    <div :class="['userInfo',{ 'lineHeight': curRole === 'staff' }]">
-                        <p :class="userName">{{ user.username }}</p>
-                    </div>
-                    <ul>
-                        <template v-if="curRoleList.length < 1">
-                            <iam-svg ext-cls="rating-empty" />
-                        </template>
-                        <template>
-                            <div class="operation right">
-                                <div class="user-dropdown-item " @click="handleLogout">
-                                    <Icon type="logout" />
-                                    {{ $t(`m.nav['注销']`) }}
-                                </div>
+                    <template>
+                        <div class="operation right">
+                            <div class="user-dropdown-item " @click="handleLogout">
+                                <Icon type="logout" />
+                                {{ $t(`m.nav['注销']`) }}
                             </div>
-                        </template>
-                    </ul>
+                        </div>
+                    </template>
                 </section>
+                <!-- <template>
+                    <div class="operation right">
+                        <div class="user-dropdown-item " @click="handleLogout">
+                            <Icon type="logout" />
+                            {{ $t(`m.nav['注销']`) }}
+                        </div>
+                    </div>
+                </template> -->
             </transition>
         </div>
         <system-log v-model="showSystemLog" />

@@ -171,9 +171,8 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             position: absolute;
             top: 55px;
             right: 20px;
-            width: 240px;
-            padding-bottom:120px;
-            height: 120px;
+            width: 135px;
+            height: 50px;
             border-radius: 0 2px 2px 0;
             background-color: #f5f6fa;
             box-shadow: 5px 1px 7px 0 rgba(12, 34, 59, .1);
@@ -301,8 +300,9 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             .operation {
                 display:flex;
                 position: absolute;
-                bottom:0px;
+                bottom:7px;
                 margin-top:10px;
+                left: 30px;
                 color: #63656e;
                 &.right{
                     right:0px;
@@ -313,13 +313,6 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     line-height: 32px;
                     cursor: pointer;
                     &.active {
-                        background-color: #f5f6fa;
-                        color: #313238;
-                        i {
-                            color: #313238;
-                        }
-                    }
-                    &:hover {
                         background-color: #f5f6fa;
                         color: #313238;
                         i {
@@ -356,6 +349,13 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 font-size: 16px;
                 color: #ff9c01;
             }
+            }
+            &:hover {
+                background-color: #f5f6fa;
+                color: #313238;
+                i {
+                    color: #313238;
+                }
             }
         }
         .user-dropdown {
