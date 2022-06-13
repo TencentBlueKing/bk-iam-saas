@@ -87,19 +87,6 @@
                 </section>
             </transition>
         </div>
-        <div class="page-tab-wrapper" v-if="hasPageTab">
-            <bk-tab
-                :active.sync="active"
-                type="unborder-card"
-                ext-cls="iam-page-tab-ext-cls"
-                @tab-change="handlePageTabChange">
-                <bk-tab-panel
-                    v-for="(panel, index) in panels"
-                    v-bind="panel"
-                    :key="index">
-                </bk-tab-panel>
-            </bk-tab>
-        </div>
         <system-log v-model="showSystemLog" />
     </header>
 </template>

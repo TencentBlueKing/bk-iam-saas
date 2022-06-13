@@ -118,6 +118,7 @@ $duration: 0.3s;
     .bk-select-search-wrapper{
         input {
             background: #3E4C63 !important;
+            color: #fff !important;
         }
     }
     .bk-option{
