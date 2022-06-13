@@ -13,28 +13,27 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.api.admin.permissions import AdminAPIPermission
+from backend.api.admin.serializers import SystemManageSLZ
 from backend.api.authentication import ESBAuthentication
 from backend.biz.system import SystemBiz
 
-from .permissions import ShareAPIPermission
-from .serializers import ShareSystemSLZ
 
-
-class SystemViewSet(GenericViewSet):
+class SystemManagerViewSet(GenericViewSet):
     """系统相关信息"""
 
     authentication_classes = [ESBAuthentication]
-    permission_classes = [ShareAPIPermission]
+    permission_classes = [AdminAPIPermission]
 
     biz = SystemBiz()
 
     @swagger_auto_schema(
-        operation_description="系统详情",
-        responses={status.HTTP_200_OK: ShareSystemSLZ(label="系统详情")},
+        operation_description="系统管理员",
+        responses={status.HTTP_200_OK: SystemManageSLZ(label="系统管理员")},
         tags=["group"],
     )
     def retrieve(self, request, *args, **kwargs):
         share_info = self.biz.get_share_info(kwargs["system_id"])
 
-        data = ShareSystemSLZ(share_info).data
+        data = SystemManageSLZ(share_info).data
         return Response(data)
