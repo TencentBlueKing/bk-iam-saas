@@ -10,6 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from django.urls import path
 
+from backend.apps.system import SystemViewSet
+
 from . import views
 
 urlpatterns = [
@@ -27,10 +29,29 @@ urlpatterns = [
         views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
         name="open.admin.subject_group",
     ),
-    # system manager
+    # 系统列表 list(不分页, 或者分页, page_size不传默认100?)
     path(
-        "systems/<slug:system_id>/",
-        views.SystemManagerViewSet.as_view({"get": "retrieve"}),
-        name="open.share.system",
+        "systems/",
+        SystemViewSet.as_view({"get": "list"}),
+        name="open.admin.system",
     ),
+    # 超级管理员成员列表  get
+    path(
+        "roles/super_managers/members/",
+        views.SuperManagerMemberViewSet.as_view({"get": "retrieve"}),
+        name="open.admin.super_manager.members",
+    ),
+    # 系统管理员成员列表 get
+    path(
+        "roles/system_managers/systems/<slug:system_id>/members/",
+        views.SystemManagerMemberViewSet.as_view({"get": "retrieve"}),
+        name="open.admin.system_manager.members",
+    ),
+    # 用户的角色列表, list分页 (可以filter=super/system/grade来过滤是否分级管理员)
+    path(
+        "subjects/<str:subject_type>/<str:subject_id>/roles/",
+        views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
+        name="open.admin.subject.roles",
+    ),
+    # TODO: 冻结, 解冻接口
 ]

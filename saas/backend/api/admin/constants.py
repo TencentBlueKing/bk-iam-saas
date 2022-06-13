@@ -22,10 +22,21 @@ class AdminAPIEnum(BaseAPIEnum):
     GROUP_MEMBER_LIST = auto()
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
+
+    # System
+    SYSTEM_LIST = auto()
+
+    # 角色
+    ROLE_SUPER_MANAGER_MEMBER_LIST = auto()
+    ROLE_SYSTEM_MANAGER_MEMBER_LIST = auto()
+
     _choices_labels = skip(
         (
+            (SYSTEM_LIST, "获取系统列表"),
             (GROUP_LIST, "获取用户组列表"),
             (GROUP_MEMBER_LIST, "获取用户组成员列表"),
             (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
+            (ROLE_SUPER_MANAGER_MEMBER_LIST, "获取超级管理员成员列表"),
+            (ROLE_SYSTEM_MANAGER_MEMBER_LIST, "获取系统管理员及成员列表"),
         )
     )

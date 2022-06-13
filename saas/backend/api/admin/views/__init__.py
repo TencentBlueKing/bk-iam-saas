@@ -9,12 +9,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from .group import AdminGroupMemberViewSet, AdminGroupViewSet
-from .role import SystemManagerViewSet
+from .role import SuperManagerMemberViewSet, SystemManagerMemberViewSet
 from .subject import AdminSubjectGroupViewSet
 
 __all__ = [
     "AdminGroupViewSet",
     "AdminGroupMemberViewSet",
     "AdminSubjectGroupViewSet",
-    "SystemManagerViewSet",
+    "SuperManagerMemberViewSet",
+    "SystemManagerMemberViewSet",
 ]

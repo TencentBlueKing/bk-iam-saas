@@ -13,27 +13,55 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import SystemManageSLZ
+from backend.api.admin.serializers import SuperManagerMemberSLZ, SystemManagerWithMembersSLZ
 from backend.api.authentication import ESBAuthentication
-from backend.biz.system import SystemBiz
+from backend.apps.role.models import Role
+from backend.biz.role import RoleBiz
+from backend.service.constants import RoleType
 
 
-class SystemManagerViewSet(GenericViewSet):
-    """系统相关信息"""
-
+class SuperManagerMemberViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
+    admin_api_permission = {"retrieve": AdminAPIEnum.ROLE_SUPER_MANAGER_MEMBER_LIST.value}
 
-    biz = SystemBiz()
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    biz = RoleBiz()
 
     @swagger_auto_schema(
-        operation_description="系统管理员",
-        responses={status.HTTP_200_OK: SystemManageSLZ(label="系统管理员")},
-        tags=["group"],
+        operation_description="超级管理员成员列表",
+        responses={status.HTTP_200_OK: SuperManagerMemberSLZ(label="超级管理员成员", many=True)},
+        tags=["admin.role"],
     )
     def retrieve(self, request, *args, **kwargs):
-        share_info = self.biz.get_share_info(kwargs["system_id"])
+        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        enabled_users = set(role.system_permission_enabled_content.enabled_users)
+        data = [{"username": i, "has_system_permission": i in enabled_users} for i in role.members]
+        return Response(data)
 
-        data = SystemManageSLZ(share_info).data
+
+class SystemManagerMemberViewSet(GenericViewSet):
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {"retrieve": AdminAPIEnum.ROLE_SYSTEM_MANAGER_MEMBER_LIST.value}
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    @swagger_auto_schema(
+        operation_description="系统管理员成员列表",
+        responses={status.HTTP_200_OK: SystemManagerWithMembersSLZ(label="系统管理员成员")},
+        tags=["admin.role"],
+    )
+    def retrieve(self, request, *args, **kwargs):
+        system_id = int(kwargs["system_id"])
+
+        # TODO: check system_id exists
+
+        role = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value, code=system_id).first()
+
+        serializer = SystemManagerWithMembersSLZ(instance=role)
+        data = serializer.data
         return Response(data)
