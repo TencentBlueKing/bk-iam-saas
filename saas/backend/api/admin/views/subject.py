@@ -74,5 +74,6 @@ class SubjectRoleViewSet(GenericViewSet):
 
         subject_id = kwargs["subject_id"]
 
-        data = self.role_biz.list_paging_user_role(subject_id, limit, offset)
-        return Response([one.dict() for one in data])
+        count, data = self.role_biz.list_paging_user_role(subject_id, limit, offset)
+        results = [one.dict() for one in data]
+        return Response({"count": count, "results": results})
