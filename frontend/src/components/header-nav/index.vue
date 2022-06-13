@@ -17,11 +17,11 @@
                     </h2>
                 </span>
                 <iam-guide
-                    v-if="showGuide"
+                    v-if="showGuide && navData.length > 1"
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
-                    :style="{ top: '60px', right: '310px' }"
+                    :style="{ top: '60px', left: '120px' }"
                     :content="$t(`m.guide['分级管理员导航']`)" />
             </div>
         </div>
