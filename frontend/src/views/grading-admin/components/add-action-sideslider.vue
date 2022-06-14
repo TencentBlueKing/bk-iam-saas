@@ -52,6 +52,7 @@
                             style="margin: 0;"
                             :system-id="curSystem"
                             :data="commonActions"
+                            :tag-action-list="tagActionList"
                             mode="detail"
                             v-if="!isRightLoading && commonActions.length > 0"
                             @on-change="handleActionTagChange" />
@@ -179,7 +180,8 @@
                 curSelectValue: [],
                 commonActions: [],
                 linearAction: [],
-                quickClose: false
+                quickClose: false,
+                tagActionList: []
             };
         },
         computed: {
@@ -326,6 +328,14 @@
                     const allChecked = checked && subChecked;
                     payload.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
                 });
+
+                if (this.curSelectValue.length) {
+                    this.tagActionList = this.curSelectValue.map(e => {
+                        return e.split('&')[1];
+                    });
+                } else {
+                    this.tagActionList = [];
+                }
             },
 
             getRelatedActionTips (payload) {
@@ -754,6 +764,7 @@
                 this.linearAction = [];
                 this.fetchActions(this.curSystem);
                 this.fetchCommonActions(this.curSystem);
+                this.tagActionList = [];
             },
 
             handleInput () {
