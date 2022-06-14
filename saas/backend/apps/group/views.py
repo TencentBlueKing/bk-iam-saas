@@ -104,6 +104,7 @@ def check_readonly_group(operation):
 
     return decorate
 
+
 def _calculate_record_status(success_operations_count, total_operations_count):
     """
     获取交接任务执行状态
