@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from aenum import LowerStrEnum, auto, skip
+from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
 
@@ -34,4 +35,35 @@ class OperateEnum(ChoicesEnum, LowerStrEnum):
             (GROUP_POLICY_UPDATE, "用户组更新权限"),
             (GROUP_MEMBER_RENEW, "用户组成员续期"),
         )
+    )
+
+
+class GroupsAddMemberStatus(ChoicesEnum, LowerStrEnum):
+    """ 批量用户组 添加成员 执行状态"""
+
+    SUCCEED = auto()
+    FAILED = auto()
+    PARTIAL_FAILED = auto()
+
+    _choices_labels = skip(
+        (
+            (SUCCEED, _("添加成员成功")),
+            (FAILED, _("添加成员失败")),
+            (PARTIAL_FAILED, _("部分失败")),
+        ),
+    )
+
+
+class GroupAddMemberStatus(ChoicesEnum, LowerStrEnum):
+    """ 批量用户组 添加成员 具体用户组操作执行状态"""
+
+    SUCCEED = auto()
+    FAILED = auto()
+
+    _choices_labels = skip(
+        (
+            (SUCCEED, _("添加成员成功")),
+            (FAILED, _("添加成员失败")),
+
+        ),
     )

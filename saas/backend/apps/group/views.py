@@ -53,8 +53,9 @@ from .audit import (
     GroupTransferAuditProvider,
     GroupUpdateAuditProvider,
 )
-from .constants import OperateEnum
+from .constants import GroupAddMemberStatus, GroupsAddMemberStatus, OperateEnum
 from .filters import GroupFilter, GroupTemplateSystemFilter
+from .models import GroupsAddMemberDetail, GroupsAddMemberRecord
 from .serializers import (
     GroupAddMemberSLZ,
     GroupAuthoriedConditionSLZ,
@@ -64,6 +65,9 @@ from .serializers import (
     GroupIdSLZ,
     GroupMemberUpdateExpiredAtSLZ,
     GroupPolicyUpdateSLZ,
+    GroupsAddMemberDetailSLZ,
+    GroupsAddMemberRecordSLZ,
+    GroupsAddMemberSLZ,
     GroupSLZ,
     GroupTemplateDetailSchemaSLZ,
     GroupTemplateDetailSLZ,
@@ -99,6 +103,17 @@ def check_readonly_group(operation):
         return wrapper
 
     return decorate
+
+def _calculate_record_status(success_operations_count, total_operations_count):
+    """
+    获取交接任务执行状态
+    """
+    if success_operations_count == 0:
+        return GroupsAddMemberStatus.FAILED.value
+    elif success_operations_count == total_operations_count:
+        return GroupsAddMemberStatus.SUCCEED.value
+    else:
+        return GroupsAddMemberStatus.PARTIAL_FAILED.value
 
 
 class GroupQueryMixin:
@@ -356,6 +371,114 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         audit_context_setter(group=group, members=data["members"])
 
         return Response({})
+
+
+class GroupsMemberViewSet(GroupPermissionMixin, GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupsAddMemberSLZ
+
+    biz = GroupBiz()
+    group_check_biz = GroupCheckBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量用户组添加成员",
+        request_body=GroupsAddMemberSLZ(label="成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    @view_audit_decorator(GroupMemberCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = GroupsAddMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        members_data = data["members"]
+        expired_at = data["expired_at"]
+        group_ids = data["group_ids"]
+
+        # 成员Dict结构转换为Subject结构，并去重
+        members = list(set(parse_obj_as(List[Subject], members_data)))
+
+        # 检测成员是否满足管理的授权范围
+        GroupCheckBiz().check_role_subject_scope(request.role, members)
+
+        # 用于整个操作的最终状态判断
+        total_operations_count = len(group_ids)
+        success_operations_count = 0
+
+        record = GroupsAddMemberRecord.objects.create(operator=request.user.username)
+        for group_id in group_ids:
+            group = self.queryset.get(id=group_id)
+            try:
+                GroupCheckBiz().check_member_count(group_id, len(members))
+                # 只读用户组检测
+                readonly = group.readonly
+                if readonly:
+                    raise error_codes.FORBIDDEN.format(
+                        message=_("只读用户组({})无法进行({})操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        replace=True
+                    )
+                # 添加成员
+                GroupBiz().add_members(group_id, members, expired_at)
+
+            except Exception as e:
+                permission_logger.info(e)
+                GroupsAddMemberDetail.objects.create(
+                    record_id=record.id,
+                    group_id=group_id,
+                    members=members,
+                    error_info=e
+                )
+            else:
+                GroupsAddMemberDetail.objects.create(
+                    record_id=record.id,
+                    group_id=group_id,
+                    members=members,
+                    status=GroupAddMemberStatus.SUCCEED.value
+                )
+                success_operations_count += 1
+                # 写入审计上下文
+                audit_context_setter(group=group, members=[m.dict() for m in members])
+
+        record.status = _calculate_record_status(success_operations_count, total_operations_count)
+        record.save()
+
+        return Response({"record_id": record.id})
+
+
+class GroupsMemberRecordViewSet(GroupPermissionMixin, mixins.ListModelMixin, GenericViewSet):
+
+    serializer_class = GroupsAddMemberRecordSLZ
+    queryset = GroupsAddMemberRecord.objects.all()
+
+    @swagger_auto_schema(
+        operation_description="批量用户组添加成员 操作记录列表",
+        responses={status.HTTP_200_OK: GroupsAddMemberRecordSLZ(label="批量用户组添加成员 操作记录")},
+        tags=["group"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(self, *args, **kwargs)
+
+
+class GroupsMemberRecordDetailViewSet(GroupPermissionMixin, mixins.ListModelMixin, GenericViewSet):
+
+    serializer_class = GroupsAddMemberDetailSLZ
+    queryset = GroupsAddMemberDetail.objects.all()
+    lookup_field = "id"
+
+    @swagger_auto_schema(
+        operation_description="批量用户组添加成员 操作详情",
+        responses={status.HTTP_200_OK: GroupsAddMemberDetailSLZ(label="批量用户组添加成员 操作详情")},
+        tags=["group"],
+    )
+    def list(self, request, *args, **kwargs):
+        record_id = kwargs["record_id"]
+        details = self.queryset.filter(record_id=record_id)
+        response_slz = GroupsAddMemberDetailSLZ(details, many=True)
+        return Response(response_slz.data)
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
