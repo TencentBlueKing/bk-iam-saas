@@ -32,6 +32,9 @@ class AdminAPIEnum(BaseAPIEnum):
     ROLE_SUPER_MANAGER_MEMBER_LIST = auto()
     ROLE_SYSTEM_MANAGER_MEMBER_LIST = auto()
 
+    # 审计
+    AUDIT_EVENT_LIST = auto()
+
     _choices_labels = skip(
         (
             (SYSTEM_LIST, "获取系统列表"),
@@ -41,5 +44,6 @@ class AdminAPIEnum(BaseAPIEnum):
             (SUBJECT_ROLE_LIST, "获取Subject角色列表"),
             (ROLE_SUPER_MANAGER_MEMBER_LIST, "获取超级管理员成员列表"),
             (ROLE_SYSTEM_MANAGER_MEMBER_LIST, "获取系统管理员及成员列表"),
+            (AUDIT_EVENT_LIST, "获取审计事件列表"),
         )
     )

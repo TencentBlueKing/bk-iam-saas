@@ -22,7 +22,7 @@ from backend.biz.role import RoleBiz
 from backend.service.constants import RoleType
 
 
-class SuperManagerMemberViewSet(GenericViewSet):
+class AdminSuperManagerMemberViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {"retrieve": AdminAPIEnum.ROLE_SUPER_MANAGER_MEMBER_LIST.value}
@@ -43,7 +43,7 @@ class SuperManagerMemberViewSet(GenericViewSet):
         return Response(data)
 
 
-class SystemManagerMemberViewSet(GenericViewSet):
+class AdminSystemManagerMemberViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {"retrieve": AdminAPIEnum.ROLE_SYSTEM_MANAGER_MEMBER_LIST.value}

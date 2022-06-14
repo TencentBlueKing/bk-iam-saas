@@ -8,19 +8,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from .audit import AdminAuditEventViewSet
-from .group import AdminGroupMemberViewSet, AdminGroupViewSet
-from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
-from .subject import AdminSubjectGroupViewSet, AdminSubjectRoleViewSet
-from .system import AdminSystemViewSet
 
-__all__ = [
-    "AdminGroupViewSet",
-    "AdminGroupMemberViewSet",
-    "AdminSubjectGroupViewSet",
-    "AdminSuperManagerMemberViewSet",
-    "AdminSystemManagerMemberViewSet",
-    "AdminSubjectRoleViewSet",
-    "AdminSystemViewSet",
-    "AdminAuditEventViewSet",
-]
+from backend.api.admin.constants import AdminAPIEnum
+from backend.api.admin.permissions import AdminAPIPermission
+from backend.api.authentication import ESBAuthentication
+from backend.apps.system.views import SystemViewSet
+
+
+class AdminSystemViewSet(SystemViewSet):
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {"list": AdminAPIEnum.SYSTEM_LIST.value}
+
+    pagination_class = None  # 去掉swagger中的limit offset参数

@@ -49,7 +49,7 @@ class AdminSubjectGroupViewSet(GenericViewSet):
         return Response([one.dict(include={"id", "name", "expired_at"}) for one in relations])
 
 
-class SubjectRoleViewSet(GenericViewSet):
+class AdminSubjectRoleViewSet(GenericViewSet):
     """Subject的角色列表"""
 
     authentication_classes = [ESBAuthentication]
