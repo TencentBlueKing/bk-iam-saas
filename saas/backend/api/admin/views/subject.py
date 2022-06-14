@@ -69,9 +69,6 @@ class AdminSubjectRoleViewSet(GenericViewSet):
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
 
         # subject_type should be 'user'
-        if kwargs["subject_type"] != SubjectType.USER.value:
-            raise error_codes.INVALID_ARGS.format(_("只有subject_type=user才有角色"))
-
         subject_id = kwargs["subject_id"]
 
         count, data = self.role_biz.list_paging_user_role(subject_id, limit, offset)
