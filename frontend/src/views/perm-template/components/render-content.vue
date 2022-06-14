@@ -372,7 +372,6 @@
             },
 
             handleActionMatchChecked (flag, payload) {
-                console.log('payload', payload);
                 this.originalCustomTmplList.forEach(item => {
                     let allCheckedLen = 0;
                     let count = 0;
@@ -623,7 +622,6 @@
             handleSelect (payload) {
                 this.curSelectActions = [...payload];
                 this.tagActionList = [...payload];
-                console.log('this.curSelectActions', this.curSelectActions);
             },
 
             getActionsData (payload) {
