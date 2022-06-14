@@ -21,7 +21,7 @@ from backend.api.authentication import ESBAuthentication
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
 from backend.common.error_codes import error_codes
-from backend.common.pagination import CompatiblePagination
+from backend.common.pagination import CustomPageNumberPagination
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
@@ -66,7 +66,7 @@ class AdminSubjectRoleViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         # 分页参数
-        limit, offset = CompatiblePagination().get_limit_offset_pair(request)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
 
         # subject_type should be 'user'
         if kwargs["subject_type"] != SubjectType.USER.value:

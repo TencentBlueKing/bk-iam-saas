@@ -47,7 +47,7 @@ urlpatterns = [
     ),
     # 用户的角色列表, list分页 (可以filter=super/system/grade来过滤是否分级管理员)
     path(
-        "subjects/<str:subject_type>/<str:subject_id>/roles/",
+        "subjects/user/<str:subject_id>/roles/",
         views.AdminSubjectRoleViewSet.as_view({"get": "list"}),
         name="open.admin.subject.roles",
     ),
