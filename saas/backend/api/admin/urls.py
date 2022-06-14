@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from django.urls import path
 
-from backend.apps.system import SystemViewSet
+from backend.apps.system.views import SystemViewSet
 
 from . import views
 
