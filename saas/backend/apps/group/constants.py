@@ -54,7 +54,7 @@ class GroupsAddMemberStatus(ChoicesEnum, LowerStrEnum):
     )
 
 
-class GroupAddMemberStatus(ChoicesEnum, LowerStrEnum):
+class GroupsAddMemberDetailStatus(ChoicesEnum, LowerStrEnum):
     """ 批量用户组 添加成员 具体用户组操作执行状态"""
 
     SUCCEED = auto()

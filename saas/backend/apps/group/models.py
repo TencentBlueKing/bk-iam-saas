@@ -12,7 +12,7 @@ from django.db import models
 
 from backend.common.models import BaseModel, CompressedJSONField, TimestampedModel
 
-from .constants import GroupAddMemberStatus, GroupsAddMemberStatus
+from .constants import GroupsAddMemberDetailStatus, GroupsAddMemberStatus
 from .managers import GroupAuthorizeLockManager
 
 
@@ -88,6 +88,6 @@ class GroupsAddMemberDetail(TimestampedModel):
     group_id = models.IntegerField("用户组ID")
     members = models.TextField("成员")
     status = models.CharField(
-        "状态", choices=GroupAddMemberStatus.get_choices(), default=GroupAddMemberStatus.FAILED.value, max_length=16
+        "状态", choices=GroupsAddMemberDetailStatus.get_choices(), default=GroupsAddMemberDetailStatus.FAILED.value, max_length=16
     )
     error_info = models.TextField("异常信息", default="")

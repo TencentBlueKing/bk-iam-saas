@@ -19,7 +19,7 @@ from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, validate_action_repeat
 from backend.apps.application.serializers import ExpiredAtSLZ, SystemInfoSLZ
-from backend.apps.group.constants import GroupAddMemberStatus, GroupsAddMemberStatus
+from backend.apps.group.constants import GroupsAddMemberDetailStatus, GroupsAddMemberStatus
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleRelatedObject
@@ -141,6 +141,7 @@ class GroupsAddMemberSLZ(GroupAddMemberSLZ):
 
 class GroupsAddMemberRecordSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="记录ID", read_only=True)
+    created_time = serializers.DateTimeField(label="操作时间", read_only=True)
     operator = serializers.CharField(label="操作者")
     status = serializers.ChoiceField(label="状态", choices=GroupsAddMemberStatus.get_choices())
 
@@ -149,7 +150,7 @@ class GroupsAddMemberDetailSLZ(serializers.Serializer):
     group_id = serializers.CharField(label="用户组ID")
     group_name = serializers.SerializerMethodField(label="用户组名称")
     members = serializers.CharField(label="成员列表")
-    status = serializers.ChoiceField(label="状态", choices=GroupAddMemberStatus.get_choices())
+    status = serializers.ChoiceField(label="状态", choices=GroupsAddMemberDetailStatus.get_choices())
     error_info = serializers.CharField(label="异常信息")
 
     def get_group_name(self, obj):

@@ -53,7 +53,7 @@ from .audit import (
     GroupTransferAuditProvider,
     GroupUpdateAuditProvider,
 )
-from .constants import GroupAddMemberStatus, GroupsAddMemberStatus, OperateEnum
+from .constants import GroupsAddMemberDetailStatus, GroupsAddMemberStatus, OperateEnum
 from .filters import GroupFilter, GroupTemplateSystemFilter
 from .models import GroupsAddMemberDetail, GroupsAddMemberRecord
 from .serializers import (
@@ -438,7 +438,7 @@ class GroupsMemberViewSet(GroupPermissionMixin, GenericViewSet):
                     record_id=record.id,
                     group_id=group_id,
                     members=members,
-                    status=GroupAddMemberStatus.SUCCEED.value
+                    status=GroupsAddMemberDetailStatus.SUCCEED.value
                 )
                 success_operations_count += 1
                 # 写入审计上下文
