@@ -73,6 +73,7 @@
                         style="margin-top: 0;"
                         :system-id="systemValue"
                         :data="commonActions"
+                        :tag-action-list="tagActionList"
                         :cur-select-actions="curSelectActions"
                         v-if="!customLoading"
                         @on-delete="handleCommonActionDelete"
@@ -180,7 +181,8 @@
                 isDescription: true,
                 initialValue: [],
                 initialTempName: '',
-                initialDescription: ''
+                initialDescription: '',
+                tagActionList: []
             };
         },
         computed: {
@@ -436,6 +438,7 @@
                     }
                     this.$set(item, 'deleteCount', deleteCount);
                 });
+                this.tagActionList = [...payload];
             },
 
             async fetchSystems () {
@@ -610,6 +613,7 @@
                 this.commonActions = [];
                 this.linearAction = [];
                 this.curSelectActions = [];
+                this.tagActionList = [];
                 this.requestQueue = ['actions', 'commonActions'];
                 await this.fetchActions(value);
                 await this.fetchCommonActions(value);
@@ -617,6 +621,7 @@
 
             handleSelect (payload) {
                 this.curSelectActions = [...payload];
+                this.tagActionList = [...payload];
             },
 
             getActionsData (payload) {
