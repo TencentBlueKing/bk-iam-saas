@@ -181,7 +181,8 @@
                 commonActions: [],
                 linearAction: [],
                 quickClose: false,
-                tagActionList: []
+                tagActionList: [],
+                tagActionListBackUp: []
             };
         },
         computed: {
@@ -528,6 +529,7 @@
             },
 
             handleDefaultData (payload, data) {
+                this.tagActionListBackUp = [];
                 this.systemData[payload].list = _.cloneDeep(data);
                 this.systemData[payload].list.forEach(item => {
                     if (!item.actions) {
@@ -546,6 +548,9 @@
                         if (!act.checked) {
                             allChecked = false;
                         }
+                        if (act.checked) {
+                            this.tagActionListBackUp.push(act.id);
+                        }
                         this.linearAction.push(act);
                     });
                     item.sub_groups.forEach(act => {
@@ -557,6 +562,10 @@
                             this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id));
                             if (!v.checked) {
                                 allChecked = false;
+                            }
+
+                            if (v.checked) {
+                                this.tagActionListBackUp.push(v.id);
                             }
                             this.linearAction.push(v);
                         });
@@ -578,7 +587,7 @@
                         });
                     });
                     const intersection = curAllActionIds.filter(item => this.defaultValue.includes(item));
-                    this.systemData[payload].count = intersection.length;
+                    this.systemData[payload].count = this.tagActionListBackUp.length || intersection.length;
                 }
             },
 
@@ -755,16 +764,18 @@
                 this.resetData();
             },
 
-            handleSysChange (payload) {
+            async handleSysChange (payload) {
                 window.changeAlert = true;
                 if (this.curSystem === payload.id) {
                     return;
                 }
                 this.curSystem = payload.id;
                 this.linearAction = [];
-                this.fetchActions(this.curSystem);
-                this.fetchCommonActions(this.curSystem);
-                this.tagActionList = [];
+                await Promise.all([
+                    this.fetchActions(this.curSystem),
+                    this.fetchCommonActions(this.curSystem)
+                ]);
+                this.tagActionList = [...this.tagActionListBackUp];
             },
 
             handleInput () {
