@@ -56,7 +56,7 @@ class AdminSystemManagerMemberViewSet(GenericViewSet):
         tags=["admin.role"],
     )
     def retrieve(self, request, *args, **kwargs):
-        system_id = int(kwargs["system_id"])
+        system_id = kwargs["system_id"]
 
         # TODO: check system_id exists
 

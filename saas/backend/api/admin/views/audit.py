@@ -14,12 +14,15 @@ from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.authentication import ESBAuthentication
 from backend.audit.models import get_event_model
 from backend.audit.views import EventViewSet
+from backend.common.pagination import CompatiblePagination
 
 
 class AdminAuditEventViewSet(EventViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {"list": AdminAPIEnum.AUDIT_EVENT_LIST.value}
+
+    pagination_class = CompatiblePagination
 
     def get_queryset(self):
         month = self.request.query_params.get("month", "")
