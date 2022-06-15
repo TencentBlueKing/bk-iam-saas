@@ -151,6 +151,13 @@ class RoleService:
                 roles_with_permission.append(UserRole.convert_from_role(role))
         return roles_with_permission
 
+    def list_paging_user_role(self, user_id: str, limit: int, offset: int) -> Tuple[int, List[UserRole]]:
+        queryset = RoleUser.objects.filter(username=user_id)
+        count = queryset.count()
+
+        role_ids = list(queryset.values_list("role_id", flat=True)[offset : offset + limit])
+        return count, self.list_by_ids(role_ids)
+
     def list_members_by_role_id(self, role_id: int):
         """查询指定角色的成员列表"""
         members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
@@ -500,7 +507,7 @@ class RoleService:
 
         # 分页
         count = system_role_queryset.count()
-        system_role_ids = list(system_role_queryset.values_list("role_id", flat=True)[offset, offset + limit])
+        system_role_ids = list(system_role_queryset.values_list("role_id", flat=True)[offset : offset + limit])
 
         # 无数据则提前返回
         if len(system_role_ids) == 0:

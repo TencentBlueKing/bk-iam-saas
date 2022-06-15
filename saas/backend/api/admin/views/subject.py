@@ -15,9 +15,11 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import AdminSubjectGroupSLZ
+from backend.api.admin.serializers import AdminSubjectGroupSLZ, SubjectRoleSLZ
 from backend.api.authentication import ESBAuthentication
 from backend.biz.group import GroupBiz
+from backend.biz.role import RoleBiz
+from backend.common.pagination import CustomPageNumberPagination
 from backend.service.models import Subject
 
 
@@ -42,3 +44,30 @@ class AdminSubjectGroupViewSet(GenericViewSet):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
         relations = self.group_biz.list_subject_group(subject, is_recursive=True)
         return Response([one.dict(include={"id", "name", "expired_at"}) for one in relations])
+
+
+class AdminSubjectRoleViewSet(GenericViewSet):
+    """Subject的角色列表"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_ROLE_LIST.value}
+
+    role_biz = RoleBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject的角色列表",
+        responses={status.HTTP_200_OK: SubjectRoleSLZ(label="角色信息", many=True)},
+        tags=["admin.subject.group"],
+    )
+    def list(self, request, *args, **kwargs):
+        # 分页参数
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+
+        # subject_type should be 'user'
+        subject_id = kwargs["subject_id"]
+
+        count, data = self.role_biz.list_paging_user_role(subject_id, limit, offset)
+        results = [one.dict() for one in data]
+        return Response({"count": count, "results": results})

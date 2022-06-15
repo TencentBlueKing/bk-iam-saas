@@ -11,7 +11,9 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.apps.group.models import Group
-from backend.service.constants import GroupMemberType
+from backend.apps.role.models import Role
+from backend.apps.role.serializers import RatingMangerListSLZ
+from backend.service.constants import GroupMemberType, RoleType
 
 
 class AdminGroupBasicSLZ(serializers.ModelSerializer):
@@ -31,3 +33,29 @@ class AdminSubjectGroupSLZ(serializers.Serializer):
     id = serializers.CharField(label="用户组id")
     name = serializers.CharField(label="用户组名称")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+
+
+class SystemManageSLZ(serializers.Serializer):
+    managers = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)
+
+
+class SuperManagerMemberSLZ(serializers.Serializer):
+    username = serializers.CharField(label="用户名")
+    has_system_permission = serializers.BooleanField(label="是否拥有系统所有权限")
+
+
+class SystemManagerWithMembersSLZ(RatingMangerListSLZ):
+    has_system_permission = serializers.SerializerMethodField(label="是否拥有系统所有权限")
+
+    class Meta:
+        model = Role
+        fields = ("id", "name", "name_en", "description", "members", "has_system_permission")
+
+    def get_has_system_permission(self, obj):
+        return obj.system_permission_enabled_content.global_enabled
+
+
+class SubjectRoleSLZ(serializers.Serializer):
+    id = serializers.IntegerField(label="角色唯一标识")
+    type = serializers.CharField(label="角色类型", help_text=f"{RoleType.get_choices()}")
+    name = serializers.CharField()
