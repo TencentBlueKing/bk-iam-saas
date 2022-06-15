@@ -439,6 +439,7 @@
                     }
                     this.$set(item, 'deleteCount', deleteCount);
                 });
+                this.tagActionList = [...payload];
             },
 
             async fetchSystems () {
@@ -613,6 +614,7 @@
                 this.commonActions = [];
                 this.linearAction = [];
                 this.curSelectActions = [];
+                this.tagActionList = [];
                 this.requestQueue = ['actions', 'commonActions'];
                 await this.fetchActions(value);
                 await this.fetchCommonActions(value);
@@ -620,7 +622,7 @@
 
             handleSelect (payload) {
                 this.curSelectActions = [...payload];
-                this.tagActionList = this.curSelectActions;
+                this.tagActionList = [...payload];
             },
 
             getActionsData (payload) {
