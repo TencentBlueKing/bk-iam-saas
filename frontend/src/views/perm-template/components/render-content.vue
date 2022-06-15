@@ -74,7 +74,6 @@
                         :system-id="systemValue"
                         :tag-action-list="tagActionList"
                         :data="commonActions"
-                        :tag-action-list="tagActionList"
                         :cur-select-actions="curSelectActions"
                         v-if="!customLoading"
                         @on-delete="handleCommonActionDelete"
