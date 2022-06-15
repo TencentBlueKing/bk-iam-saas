@@ -19,16 +19,6 @@ urlpatterns = [
         views.GroupsMemberViewSet.as_view({"post": "create"}),
         name="group.members",
     ),
-    path(
-        "members/records/",
-        views.GroupsMemberRecordViewSet.as_view({"get": "list"}),
-        name="group.members",
-    ),
-    path(
-        "members/records/<int:record_id>/details/",
-        views.GroupsMemberRecordDetailViewSet.as_view({"get": "list"}),
-        name="group.members",
-    ),
     path("transfer/", views.GroupTransferView.as_view(), name="group.transfer"),
     # 用户组详情
     path(

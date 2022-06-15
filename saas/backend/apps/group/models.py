@@ -12,7 +12,6 @@ from django.db import models
 
 from backend.common.models import BaseModel, CompressedJSONField, TimestampedModel
 
-from .constants import GroupsAddMemberDetailStatus, GroupsAddMemberStatus
 from .managers import GroupAuthorizeLockManager
 
 
@@ -64,33 +63,3 @@ class GroupSaaSAttribute(TimestampedModel):
         verbose_name_plural = "用户组SaaS属性"
         # Note: 只允许用户组的某个属性的值最多只有一个，后续需要支持一个用户组的一个属性多个值，则去除唯一约束即可
         unique_together = ["group_id", "key"]
-
-
-class GroupsAddMemberRecord(TimestampedModel):
-    """
-    批量用户组 添加成员 操作记录
-    """
-    operator = models.CharField("操作者", max_length=16)
-    status = models.CharField(
-        "状态",
-        choices=GroupsAddMemberStatus.get_choices(),
-        default=GroupsAddMemberStatus.FAILED.value,
-        max_length=16
-    )
-
-
-class GroupsAddMemberDetail(TimestampedModel):
-    """
-    批量用户组 添加成员 操作详情
-    """
-
-    record_id = models.IntegerField("批量添加成员操作记录ID")
-    group_id = models.IntegerField("用户组ID")
-    members = models.TextField("成员")
-    status = models.CharField(
-        "状态",
-        choices=GroupsAddMemberDetailStatus.get_choices(),
-        default=GroupsAddMemberDetailStatus.FAILED.value,
-        max_length=16
-    )
-    error_info = models.TextField("异常信息", default="")
