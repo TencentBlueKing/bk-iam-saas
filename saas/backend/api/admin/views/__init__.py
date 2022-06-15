@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from .audit import AdminAuditEventViewSet
 from .group import AdminGroupMemberViewSet, AdminGroupViewSet
 from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
-from .subject import AdminSubjectGroupViewSet, AdminSubjectRoleViewSet
+from .subject import AdminSubjectFreezeViewSet, AdminSubjectGroupViewSet, AdminSubjectRoleViewSet
 from .system import AdminSystemViewSet
 
 __all__ = [
@@ -23,4 +23,5 @@ __all__ = [
     "AdminSubjectRoleViewSet",
     "AdminSystemViewSet",
     "AdminAuditEventViewSet",
+    "AdminSubjectFreezeViewSet",
 ]
