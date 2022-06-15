@@ -55,6 +55,8 @@ export const getRouterDiff = (payload) => {
     if (payload === 'super_manager') {
         const isAuditData = (store.getters.navData || []).find(e => e.superCate === 'audit');
         const isAudit = isAuditData && isAuditData.active;
+        const isPlatformData = (store.getters.navData || []).find(e => e.superCate === 'platform');
+        const isPlatform = isPlatformData && isPlatformData.active;
         if (isAudit) {
             return [
                 'systemAccess',
@@ -94,7 +96,7 @@ export const getRouterDiff = (payload) => {
                 'addGroupPerm',
                 'resourcePermiss'
             ];
-        } else {
+        } else if (isPlatform) {
             return [
                 'applyCustomPerm',
                 'applyProvisionPerm',
@@ -112,7 +114,42 @@ export const getRouterDiff = (payload) => {
                 'systemAccessRegistry',
                 'systemAccessOptimize',
                 'systemAccessComplete',
-                'audit'
+                'audit',
+                'userGroup',
+                'createUserGroup',
+                'userGroupDetail',
+                'userGroupPermDetail',
+                'permTemplate',
+                'permTemplateDetail',
+                'permTemplateCreate',
+                'approvalProcess'
+            ];
+        } else {
+            return [
+                'applyCustomPerm',
+                'applyProvisionPerm',
+                'applyJoinUserGroup',
+                'apply',
+                'myPerm',
+                'templatePermDetail',
+                'groupPermDetail',
+                'orgPermDetail',
+                'ratingManager',
+                'gradingAdminCreate',
+                'gradingAdminDetail',
+                'user',
+                'gradingAdminUpdateTemplate',
+                'administrator',
+                'approval',
+                'permRenewal',
+                'audit',
+                'systemAccess',
+                'systemAccessCreate',
+                'systemAccessAccess',
+                'systemAccessRegistry',
+                'systemAccessOptimize',
+                'systemAccessComplete',
+                'resourcePermiss'
             ];
         }
     }

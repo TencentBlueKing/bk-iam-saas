@@ -5,7 +5,7 @@
         @mouseleave="handleMouseLeave">
         <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick }]">
             <bk-select
-                v-if="(curRole === 'rating_manager' || curRole === 'system_manager') && unfold"
+                v-if="unfold && index === 1"
                 :value="curRoleId"
                 :clearable="false"
                 placeholder="选择分级管理员"
@@ -135,7 +135,8 @@
                 isUnfold: true,
                 routerMap: routerMap,
                 curRoleList: [],
-                curRoleId: 0
+                curRoleId: 0,
+                index: 0
             };
         },
         computed: {
@@ -168,13 +169,13 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
-                    this.curRoleList = this.curRoleList.filter(e => e.type !== 'super_manager');
+                    // this.curRoleList = this.curRoleList.filter(e => e.type !== 'super_manager');
                 },
                 immediate: true
             },
             navData: {
                 handler (newValue, oldValue) {
-                    this.curRoleId = newValue.find(e => e.type === 'rating_manager').id;
+                    this.curRoleId = newValue.find(e => e.type !== 'staff').id;
                 },
                 immediate: true
             }
@@ -188,13 +189,16 @@
             });
         },
         mounted () {
+            this.index = Number(window.localStorage.getItem('index') || 0);
+            console.log('index', this.index, this.unfold);
             bus.$on('theme-change', payload => {
                 this.curRole = payload;
             });
 
-            bus.$on('nav-change', ({ id, type }) => {
+            bus.$on('nav-change', ({ id, type }, index) => {
                 this.curRole = type;
                 this.curRoleId = id;
+                this.index = index;
             });
         },
         methods: {
@@ -268,7 +272,6 @@
                 const { type, name } = this.curRoleList.find(e => e.id === id);
                 try {
                     await this.$store.dispatch('role/updateCurrentRole', { id });
-                    this.messageSuccess(this.$t(`m.info['切换身份成功']`), 2000);
                     this.curRoleId = id;
                     this.curRole = type;
                     this.$store.commit('updateIdentity', { id, type, name });

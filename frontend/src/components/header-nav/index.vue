@@ -12,7 +12,7 @@
                 <span v-for="(item, index) in navData" :key="item.id">
                     <h2 v-if="item.show" class="heaer-nav-title"
                         @click="handleSelect(item, index)"
-                        :class="(item.id === curRoleId && item.active) ? 'active' : ''">
+                        :class="item.active ? 'active' : ''">
                         {{item.text}}
                     </h2>
                 </span>
@@ -207,7 +207,7 @@
                     { text: '个人工作台', id: 0, show: true, type: 'staff', name: this.$store.state.user.username },
                     { text: '权限管理', id: 1, show: false, type: 'rating_manager' },
                     { text: '统计分析', id: 2, show: false, type: 'super_manager', superCate: 'audit' },
-                    { text: '平台管理', id: 3, show: false, type: 'super_manager', superCate: 'normal' }
+                    { text: '平台管理', id: 3, show: false, type: 'super_manager', superCate: 'platform' }
                 ]
             };
         },
@@ -396,6 +396,7 @@
                 const difference = getRouterDiff(roleType);
                 const curRouterName = this.$route.name;
                 let isAudit = false;
+                let isPlatform = false;
                 if (difference.length) {
                     if (difference.includes(curRouterName)) {
                         this.$store.commit('setHeaderTitle', '');
@@ -411,11 +412,27 @@
                         // 切换角色统计分析默认跳转到审计 其他的跳转到用户组
                         if (roleType === 'super_manager') {
                             const isAuditData = (this.navData || []).find(e => e.superCate === 'audit');
+                            const isPlatformData = (this.navData || []).find(e => e.superCate === 'platform');
                             isAudit = isAuditData && isAuditData.active;
+                            isPlatform = isPlatformData && isPlatformData.active;
+                            let name = 'userGroup';
+                            if (isAudit) {
+                                name = 'audit';
+                            } else if (isPlatform) {
+                                name = 'user';
+                            } else {
+                                name = 'userGroup';
+                            }
+                            this.$router.push({
+                                name
+                            });
                         }
-                        this.$router.push({
-                            name: isAudit ? 'audit' : 'userGroup'
-                        });
+
+                        if (roleType === 'rating_manager') {
+                            this.$router.push({
+                                name: 'userGroup'
+                            });
+                        }
                         return;
                     }
 
@@ -441,14 +458,14 @@
                 this.$emit('reload-page', this.$route);
             },
 
-            async handleSwitchRole ({ id, type, name }) {
+            async handleSwitchRole ({ id, type, name }, index) {
                 try {
+                    bus.$emit('nav-change', { id, type }, index);
                     await this.$store.dispatch('role/updateCurrentRole', { id });
                     this.curIdentity = id === 0 ? 'STAFF' : name;
                     this.curRole = type;
                     this.curRoleId = id;
                     this.$store.commit('updateIdentity', { id, type, name });
-                    bus.$emit('nav-change', { id, type });
                     this.updateRouter(type);
                     this.resetLocalStorage();
                 } catch (e) {
@@ -464,22 +481,19 @@
             },
 
             handleSelect (roleData, index) {
-                if (this.curRoleId === roleData.id && roleData.type !== 'super_manager') {
-                    return;
-                }
-                if (this.routeName === 'addGroupPerm') {
-                    this.$router.push({
-                        name: 'userGroup'
-                    });
-                }
                 this.navData.forEach(e => {
                     e.active = false;
                 });
                 roleData.active = true;
                 window.localStorage.setItem('index', index);
+                if (this.routeName === 'addGroupPerm') {
+                    this.$router.push({
+                        name: 'userGroup'
+                    });
+                }
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
-                this.handleSwitchRole(roleData);
+                this.handleSwitchRole(roleData, index);
             },
 
             handleSwitchIdentity () {
@@ -531,22 +545,20 @@
             // 根据角色设置
             setTabRoleData () {
                 const superManager = this.curRoleList.find(e => e.type === 'super_manager');
-                let ratingManager = this.curRoleList.find(e => e.type === 'rating_manager' && e.id === this.curRoleId);
-                if (!ratingManager) {
-                    ratingManager = this.curRoleList.find(e => e.type === 'rating_manager');
-                }
+                const allManager = this.curRoleList.find(e => e.type !== 'staff');
                 const index = window.localStorage.getItem('index') || 0;
+                this.index = Number(index);
                 this.navData.forEach((element, i) => {
-                    element.active = i === Number(index);
+                    element.active = i === this.index;
                     if (element.type === 'staff') {
                         this.curIdentity = this.user.role.name;
                     } else if (element.type === 'super_manager' && superManager) {
                         element.id = superManager.id;
                         element.name = superManager.name;
                         element.show = true;
-                    } else if (element.type === 'rating_manager' && ratingManager) {
-                        element.id = ratingManager.id;
-                        element.name = ratingManager.name;
+                    } else if (element.type === 'rating_manager' && allManager) {
+                        element.id = allManager.id;
+                        element.name = allManager.name;
                         element.show = true;
                     }
                 });
