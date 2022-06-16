@@ -70,4 +70,3 @@ class FreezeSubjectSLZ(serializers.Serializer):
 class FreezeSubjectResponseSLZ(serializers.Serializer):
     type = serializers.CharField(label="SubjectType")
     id = serializers.CharField(label="SubjectID")
-    name = serializers.CharField(label="Name")

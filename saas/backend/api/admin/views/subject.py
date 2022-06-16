@@ -103,7 +103,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         data = self.biz.list_freezed_subjects()
-        return Response(data)
+        return Response(FreezeSubjectResponseSLZ(data, many=True).data)
 
     @swagger_auto_schema(
         operation_description="批量冻结用户",

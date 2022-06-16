@@ -11,17 +11,23 @@ specific language governing permissions and limitations under the License.
 
 from typing import Dict, List
 
+from pydantic import parse_obj_as
+
 from backend.component import iam
+
+from .models import Subject
 
 # from .constants import SubjectType
 
 
 class SubjectService:
-    def list_freezed_subjects(self):
+    def list_freezed_subjects(self) -> List[Subject]:
         """
         冻结用户列表
         """
-        return iam.list_freezed_subjects()
+        data = iam.list_freezed_subjects()
+        subjects = parse_obj_as(List[Subject], data)
+        return subjects
 
     def freeze_users(self, subjects: List[Dict]):
         # def freeze_users(self, usernames: List[str]):
