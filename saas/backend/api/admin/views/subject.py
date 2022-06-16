@@ -117,6 +117,11 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
         if not serializer.validated_data:
             raise error_codes.INVALID_ARGS.format(_("至少传递一个用户"))
 
+        # 特殊逻辑, admin不能被接口冻结, 防止生产事故; 如果确定要冻结admin, 通过后台数据库特殊处理
+        for d in serializer.data:
+            if d["id"] == "admin":
+                raise error_codes.INVALID_ARGS.format(_("admin用户不允许被冻结"))
+
         self.biz.freeze_users(serializer.data)
         return Response({}, status=status.HTTP_201_CREATED)
 
