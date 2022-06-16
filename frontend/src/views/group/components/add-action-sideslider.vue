@@ -51,6 +51,7 @@
                             style="margin: 0;"
                             :system-id="curSystem"
                             :data="commonActions"
+                            :tag-action-list="tagActionList"
                             mode="detail"
                             v-if="!isRightLoading && commonActions.length > 0"
                             @on-change="handleActionTagChange" />
@@ -196,7 +197,8 @@
                 commonActions: [],
                 aggregationData: {},
                 authorizationData: {},
-                linearAction: []
+                linearAction: [],
+                tagActionList: []
             };
         },
         computed: {
@@ -325,6 +327,13 @@
                     const allChecked = checked && subChecked;
                     payload.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
                 });
+                if (this.curSelectValue.length) {
+                    this.tagActionList = this.curSelectValue.map(e => {
+                        return e.split('&')[1];
+                    });
+                } else {
+                    this.tagActionList = [];
+                }
                 if (flag) {
                     Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
                 }
@@ -856,6 +865,7 @@
                     this.fetchActions(this.curSystem)
                 ]);
                 this.handleCommonAction();
+                this.tagActionList = [];
                 this.isRightLoading = false;
             },
 

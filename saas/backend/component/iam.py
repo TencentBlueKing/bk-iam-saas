@@ -584,3 +584,27 @@ def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
         "iam delete temporary policies before expired_at url: %s, expired_at: %s", url_path, expired_at
     )
     return _call_iam_api(http_delete, url_path, data={})
+
+
+def list_freezed_subjects() -> List:
+    """
+    查询冻结的subject列表
+    """
+    url_path = "/api/v1/web/freeze/subjects"
+    return _call_iam_api(http_get, url_path, data=None)
+
+
+def freeze_subjects(subjects: List[Dict]) -> None:
+    """
+    批量冻结subject
+    """
+    url_path = "/api/v1/web/freeze/subjects"
+    return _call_iam_api(http_post, url_path, data=subjects)
+
+
+def unfreeze_subjects(subjects: List[Dict]) -> None:
+    """
+    批量解冻subject
+    """
+    url_path = "/api/v1/web/freeze/subjects"
+    return _call_iam_api(http_delete, url_path, data=subjects)
