@@ -20,6 +20,9 @@
                     :id="item.id"
                     :name="item.name">
                 </bk-option>
+                <div slot="extension" v-if="hasSuperAdminAuth.length" @click="handleToGradingAdmin" style="cursor: pointer;">
+                    <i class="bk-icon icon-plus-circle"></i>管理我的分级管理员
+                </div>
             </bk-select>
             <div class="nav-slider-list">
                 <div class="iam-menu"
@@ -136,7 +139,8 @@
                 routerMap: routerMap,
                 curRoleList: [],
                 curRoleId: 0,
-                index: 0
+                index: 0,
+                hasSuperAdminAuth: []
             };
         },
         computed: {
@@ -169,19 +173,14 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
-                    // this.curRoleList = this.curRoleList.filter(e => e.type !== 'super_manager');
-                },
-                immediate: true
-            },
-            navData: {
-                handler (newValue, oldValue) {
-                    this.curRoleId = newValue.find(e => e.type !== 'staff').id;
+                    this.hasSuperAdminAuth = this.curRoleList.filter(e => e.type === 'super_manager');
                 },
                 immediate: true
             }
         },
         created () {
             this.curRole = this.user.role.type;
+            this.curRoleId = this.user.role.id;
             this.isUnfold = this.navStick || !this.navFold;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('theme-change');
@@ -346,6 +345,10 @@
                 window.localStorage.removeItem('applyGroupList');
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
+            },
+
+            handleToGradingAdmin () {
+                bus.$emit('rating-admin-change');
             }
         }
     };

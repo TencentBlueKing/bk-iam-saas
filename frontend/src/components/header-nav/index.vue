@@ -9,10 +9,10 @@
             :class="backRouter ? 'has-cursor' : ''"
             @click="back">
             <div class="nav-container">
-                <span v-for="(item, index) in navData" :key="item.id">
+                <span v-for="(item, i) in navData" :key="item.id">
                     <h2 v-if="item.show" class="heaer-nav-title"
-                        @click="handleSelect(item, index)"
-                        :class="item.active ? 'active' : ''">
+                        @click="handleSelect(item, i)"
+                        :class="index === i ? 'active' : ''">
                         {{item.text}}
                     </h2>
                 </span>
@@ -208,7 +208,9 @@
                     { text: '权限管理', id: 1, show: false, type: 'rating_manager' },
                     { text: '统计分析', id: 2, show: false, type: 'super_manager', superCate: 'audit' },
                     { text: '平台管理', id: 3, show: false, type: 'super_manager', superCate: 'platform' }
-                ]
+                ],
+                index: 0,
+                isRatingChange: false
             };
         },
         computed: {
@@ -298,6 +300,7 @@
                 bus.$off('reload-page');
                 bus.$off('refresh-role');
                 bus.$off('on-set-tab');
+                bus.$off('rating-admin-change');
             });
         },
         mounted () {
@@ -306,6 +309,13 @@
             });
             bus.$on('on-set-tab', data => {
                 this.active = data;
+            });
+
+            bus.$on('rating-admin-change', () => {
+                const data = this.navData.find(e => e.superCate === 'platform');
+                const index = this.navData.findIndex(e => e.superCate === 'platform');
+                this.isRatingChange = true;
+                this.handleSelect(data, index);
             });
         },
         methods: {
@@ -419,21 +429,26 @@
                             if (isAudit) {
                                 name = 'audit';
                             } else if (isPlatform) {
-                                name = 'user';
+                                if (this.isRatingChange) {
+                                    name = 'ratingManager';
+                                } else {
+                                    name = 'user';
+                                }
                             } else {
                                 name = 'userGroup';
                             }
                             this.$router.push({
                                 name
                             });
+                            return;
                         }
 
                         if (roleType === 'rating_manager') {
                             this.$router.push({
                                 name: 'userGroup'
                             });
+                            return;
                         }
-                        return;
                     }
 
                     const permTemplateRoutes = [
@@ -480,11 +495,12 @@
                 }
             },
 
-            handleSelect (roleData, index) {
+            async handleSelect (roleData, index) {
                 this.navData.forEach(e => {
                     e.active = false;
                 });
                 roleData.active = true;
+                this.index = index;
                 window.localStorage.setItem('index', index);
                 if (this.routeName === 'addGroupPerm') {
                     this.$router.push({
@@ -554,11 +570,9 @@
                         this.curIdentity = this.user.role.name;
                     } else if (element.type === 'super_manager' && superManager) {
                         element.id = superManager.id;
-                        element.name = superManager.name;
                         element.show = true;
                     } else if (element.type === 'rating_manager' && allManager) {
                         element.id = allManager.id;
-                        element.name = allManager.name;
                         element.show = true;
                     }
                 });

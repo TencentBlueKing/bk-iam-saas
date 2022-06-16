@@ -135,6 +135,11 @@ $duration: 0.3s;
     .bk-option-content-default{
         color: #C4C6CC !important;
     }
+
+    .bk-select-extension{
+        background: #3E4C63 !important;
+        color: #C4C6CC !important;
+    }
 }
 .logo {
     position: relative;
