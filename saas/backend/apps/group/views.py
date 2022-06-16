@@ -395,7 +395,10 @@ class GroupsMemberViewSet(mixins.ListModelMixin, GenericViewSet):
             group = self.queryset.get(id=group_id)
             try:
                 if not RoleObjectRelationChecker(request.role).check_group(group):
-                    self.permission_denied(request, message=f"{request.role.type} role can not access group {group_id}")
+                    self.permission_denied(
+                        request,
+                        message=f"{request.role.type} role can not access group {group_id}"
+                    )
                 # 校验用户组数量是否超限
                 GroupCheckBiz().check_member_count(group_id, len(members))
                 # 只读用户组检测
