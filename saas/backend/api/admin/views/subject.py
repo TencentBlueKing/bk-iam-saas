@@ -8,17 +8,25 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import AdminSubjectGroupSLZ, SubjectRoleSLZ
+from backend.api.admin.serializers import (
+    AdminSubjectGroupSLZ,
+    FreezeSubjectResponseSLZ,
+    FreezeSubjectSLZ,
+    SubjectRoleSLZ,
+)
 from backend.api.authentication import ESBAuthentication
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
+from backend.biz.subject import SubjectBiz
+from backend.common.error_codes import error_codes
 from backend.common.pagination import CustomPageNumberPagination
 from backend.service.models import Subject
 
@@ -71,3 +79,58 @@ class AdminSubjectRoleViewSet(GenericViewSet):
         count, data = self.role_biz.list_paging_user_role(subject_id, limit, offset)
         results = [one.dict() for one in data]
         return Response({"count": count, "results": results})
+
+
+class AdminSubjectFreezeViewSet(GenericViewSet):
+    """用户冻结/解冻接口"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {
+        "list": AdminAPIEnum.SUBJECT_FREEZE_UNFREEZE.value,
+        "freeze": AdminAPIEnum.SUBJECT_FREEZE_UNFREEZE.value,
+        "unfreeze": AdminAPIEnum.SUBJECT_FREEZE_UNFREEZE.value,
+    }
+
+    pagination_class = None
+
+    biz = SubjectBiz()
+
+    @swagger_auto_schema(
+        operation_description="冻结用户列表",
+        responses={status.HTTP_200_OK: FreezeSubjectResponseSLZ(label="冻结用户", many=True)},
+        tags=["admin.subject.freeze"],
+    )
+    def list(self, request, *args, **kwargs):
+        data = self.biz.list_freezed_subjects()
+        return Response(FreezeSubjectResponseSLZ(data, many=True).data)
+
+    @swagger_auto_schema(
+        operation_description="批量冻结用户",
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
+        tags=["admin.subject.freeze"],
+    )
+    def freeze(self, request, *args, **kwargs):
+        serializer = FreezeSubjectSLZ(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        if not serializer.validated_data:
+            raise error_codes.INVALID_ARGS.format(_("至少传递一个用户"))
+
+        self.biz.freeze_users(serializer.data)
+        return Response({}, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        operation_description="冻结用户列表",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["admin.subject.freeze"],
+    )
+    def unfreeze(self, request, *args, **kwargs):
+        serializer = FreezeSubjectSLZ(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        if not serializer.validated_data:
+            raise error_codes.INVALID_ARGS.format(_("至少传递一个用户"))
+
+        self.biz.unfreeze_users(serializer.data)
+        return Response({}, status=status.HTTP_200_OK)
