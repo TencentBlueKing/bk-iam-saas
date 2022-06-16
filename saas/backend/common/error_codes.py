@@ -55,6 +55,7 @@ class ErrorCodes:
     ACTION_VALIDATE_ERROR = ErrorCode(_("操作检查错误"), code_num=1902417, status_code=status.HTTP_400_BAD_REQUEST)
     GROUP_TRANSFER_ERROR = ErrorCode(_("用户组转出错误"), code_num=1902418, status_code=status.HTTP_400_BAD_REQUEST)
     VALUE_ERROR = ErrorCode(_("数值错误"), code_num=1902419, status_code=status.HTTP_400_BAD_REQUEST)
+    ACTIONS_PARTIAL_FAILED = ErrorCode(_("批量操作部分失败"), code_num=1902402, status_code=status.HTTP_200_OK)
     # 任务重复错误
     TASK_EXIST = ErrorCode(_("存在重复任务"), code_num=1902420, status_code=status.HTTP_409_CONFLICT)
     # [ESB错误/component的公共错误(网络错误等等): 19020xx]

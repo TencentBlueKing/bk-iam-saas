@@ -359,7 +359,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         return Response({})
 
 
-class GroupsMemberViewSet(GroupPermissionMixin, GenericViewSet):
+class GroupsMemberViewSet(mixins.ListModelMixin, GenericViewSet):
 
     queryset = Group.objects.all()
     serializer_class = GroupsAddMemberSLZ
@@ -393,8 +393,10 @@ class GroupsMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
         for group_id in group_ids:
             group = self.queryset.get(id=group_id)
-            group_name = Group.objects.filter(id=group_id).only("name").first().name
             try:
+                if not RoleObjectRelationChecker(request.role).check_group(group):
+                    self.permission_denied(request, message=f"{request.role.type} role can not access group {group_id}")
+                # 校验用户组数量是否超限
                 GroupCheckBiz().check_member_count(group_id, len(members))
                 # 只读用户组检测
                 readonly = group.readonly
@@ -409,13 +411,16 @@ class GroupsMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
             except Exception as e:
                 permission_logger.info(e)
-                failed_info.update({group_name: '{}'.format(e)})
+                failed_info.update({group.name: '{}'.format(e)})
 
             else:
                 # 写入审计上下文
                 audit_context_setter(group=group, members=[m.dict() for m in members])
 
-        return Response(failed_info)
+        if not failed_info:
+            return Response({}, status=status.HTTP_201_CREATED)
+
+        raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
