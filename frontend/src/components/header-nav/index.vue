@@ -15,7 +15,7 @@
                     </h2>
                 </span>
                 <iam-guide
-                    v-if="showGuide && navData.length > 1"
+                    v-if="showGuide && showNavData.length > 1"
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
@@ -208,7 +208,8 @@
                     { text: '平台管理', id: 3, show: false, type: 'super_manager', superCate: 'platform' }
                 ],
                 index: 0,
-                isRatingChange: false
+                isRatingChange: false,
+                showNavData: 0
             };
         },
         computed: {
@@ -282,9 +283,11 @@
             },
             navData: {
                 handler (newValue, oldValue) {
+                    console.log('newValue', newValue);
                     if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
                         this.showGuide = true;
                     }
+                    this.showNavData = newValue.filter(e => e.show).length;
                 },
                 immediate: true
             }
@@ -310,10 +313,9 @@
             });
 
             bus.$on('rating-admin-change', () => {
-                const data = this.navData.find(e => e.superCate === 'platform');
-                const index = this.navData.findIndex(e => e.superCate === 'platform');
+                const data = this.navData.find(e => e.type === 'staff');
                 this.isRatingChange = true;
-                this.handleSelect(data, index);
+                this.handleSelect(data, 0);
             });
         },
         methods: {
@@ -411,8 +413,12 @@
                         window.localStorage.removeItem('iam-header-title-cache');
                         window.localStorage.removeItem('iam-header-name-cache');
                         if (roleType === 'staff' || roleType === '') {
+                            let name = 'myPerm';
+                            if (this.isRatingChange) {
+                                name = 'ratingManager';
+                            }
                             this.$router.push({
-                                name: 'myPerm'
+                                name
                             });
                             return;
                         }
@@ -427,11 +433,7 @@
                             if (isAudit) {
                                 name = 'audit';
                             } else if (isPlatform) {
-                                if (this.isRatingChange) {
-                                    name = 'ratingManager';
-                                } else {
-                                    name = 'user';
-                                }
+                                name = 'user';
                             } else {
                                 name = 'userGroup';
                             }
@@ -525,6 +527,7 @@
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
                 window.localStorage.removeItem('applyGroupList');
+                window.localStorage.removeItem('index');
                 window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
             },
 

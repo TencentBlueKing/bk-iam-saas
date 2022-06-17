@@ -168,7 +168,6 @@ export const getRouterDiff = (payload) => {
             'gradingAdminDetail',
             'user',
             'gradingAdminUpdateTemplate',
-            'administrator',
             'approval',
             'permRenewal',
             'audit',
