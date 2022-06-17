@@ -31,7 +31,7 @@ import { bus } from '@/common/bus';
 import store from '@/store';
 import http from '@/api';
 import preload from '@/common/preload';
-import { getRouterDiff } from '@/common/router-handle';
+import { getNavRouterDiff } from '@/common/router-handle'; // getRouterDiff
 
 const SITE_URL = window.SITE_URL;
 
@@ -72,6 +72,7 @@ export const beforeEach = async (to, from, next) => {
     canceling = false;
 
     let curRole = store.state.user.role.type;
+    const navIndex = store.state.index;
     const currentRoleId = String(to.query.current_role_id || '').trim();
 
     if (to.name === 'userGroupDetail') {
@@ -138,19 +139,23 @@ export const beforeEach = async (to, from, next) => {
             curRole = 'staff';
         }
 
-        const difference = getRouterDiff(curRole);
+        console.log('navIndex', navIndex);
+        // debugger;
+        const difference = getNavRouterDiff(navIndex);
 
         if (difference.length) {
             store.dispatch('versionLogInfo');
+            console.log('to.name111', difference, to.name, curRole);
             if (difference.includes(to.name)) {
                 store.commit('setHeaderTitle', '');
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
-                if (curRole === 'staff' || curRole === '') {
-                    next({ path: `${SITE_URL}my-perm` });
-                } else {
-                    next({ path: `${SITE_URL}user-group` });
-                }
+                // if (curRole === 'staff' || curRole === '') {
+                //     next({ path: `${SITE_URL}my-perm` });
+                // } else {
+                //     next({ path: `${SITE_URL}user-group` });
+                // }
+                next();
             } else {
                 const noFrom = !from.name;
                 // permTemplateCreate

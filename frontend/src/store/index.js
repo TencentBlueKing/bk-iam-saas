@@ -28,7 +28,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
 import { unifyObjectStyle, json2Query } from '@/common/util';
-import { getRouterDiff } from '@/common/router-handle';
+import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
 // 系统模块
@@ -462,6 +462,11 @@ const store = new Vuex.Store({
 
         updataRouterDiff (state, role) {
             state.routerDiff = [...getRouterDiff(role)];
+            console.log('state.routerDiff', state.routerDiff);
+        },
+
+        updataNavRouterDiff (state, index) {
+            state.routerDiff = [...getNavRouterDiff(index)];
         },
 
         updateRoleList (state, payload) {

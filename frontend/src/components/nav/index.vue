@@ -138,12 +138,11 @@
                 isUnfold: true,
                 routerMap: routerMap,
                 curRoleList: [],
-                curRoleId: 0,
-                index: 0
+                curRoleId: 0
             };
         },
         computed: {
-            ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff', 'roleList', 'navData']),
+            ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff', 'roleList', 'navData', 'index']),
             unfold () {
                 return this.navStick || !this.navFold;
             },
@@ -186,16 +185,13 @@
             });
         },
         mounted () {
-            this.index = Number(window.localStorage.getItem('index') || 0);
-            console.log('index', this.index, this.unfold);
+            this.index = this.index || Number(window.localStorage.getItem('index') || 0);
             bus.$on('theme-change', payload => {
                 this.curRole = payload;
             });
 
-            bus.$on('nav-change', ({ id, type }, index) => {
-                this.curRole = type;
+            bus.$on('nav-change', ({ id }, index) => {
                 this.curRoleId = id;
-                this.index = index;
             });
         },
         methods: {
@@ -288,6 +284,7 @@
 
             // 更新路由
             updateRouter (roleType) {
+                console.log(111, roleType);
                 this.$store.commit('updataRouterDiff', roleType);
                 const difference = getRouterDiff(roleType);
                 const curRouterName = this.$route.name;
