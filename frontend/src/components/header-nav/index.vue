@@ -280,7 +280,7 @@
                         this.fetchUserGroup();
                     }
 
-                    if (value === 'my-perm') {
+                    if (value === 'myPerm') {
                         this.$store.commit('updataIndex', 0);
                     } else if (value === 'userGroup') {
                         this.$store.commit('updataIndex', 1);
@@ -513,7 +513,7 @@
                     e.active = false;
                 });
                 roleData.active = true;
-                this.index = index;
+                this.$store.commit('updataIndex', index);
                 window.localStorage.setItem('index', index);
                 if (this.routeName === 'addGroupPerm') {
                     this.$router.push({
