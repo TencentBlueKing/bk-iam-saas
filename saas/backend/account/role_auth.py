@@ -8,9 +8,22 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from functools import lru_cache
+
 from backend.apps.role.models import AnonymousRole, Role, RoleUser
+from backend.biz.subject import SubjectBiz
+from backend.service.constants import SubjectType
 
 ROLE_SESSION_KEY = "_auth_role_id"
+
+
+@lru_cache(maxsize=1000)
+def is_in_blacklist(username: str) -> bool:
+    blacklist = SubjectBiz().list_freezed_subjects()
+    for subject in blacklist:
+        if subject.type == SubjectType.USER.value and subject.id == username:
+            return True
+    return False
 
 
 def authenticate(request=None, role_id=0):
@@ -20,6 +33,10 @@ def authenticate(request=None, role_id=0):
         user = None
     # 1. 无用户或匿名用户，则直接返回
     if not user:
+        return AnonymousRole()
+
+    # NOTE: block the user in blacklist
+    if is_in_blacklist(request.user.username):
         return AnonymousRole()
 
     # 2. 用户的角色不存在, 返回staff
