@@ -8,16 +8,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from functools import lru_cache
 
 from backend.apps.role.models import AnonymousRole, Role, RoleUser
 from backend.biz.subject import SubjectBiz
+from backend.common.cache import cached
 from backend.service.constants import SubjectType
 
 ROLE_SESSION_KEY = "_auth_role_id"
 
 
-@lru_cache(maxsize=1000)
+@cached(timeout=60)
 def is_in_blacklist(username: str) -> bool:
     blacklist = SubjectBiz().list_freezed_subjects()
     for subject in blacklist:
