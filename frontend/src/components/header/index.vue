@@ -312,7 +312,6 @@
             },
             routeName: {
                 handler (value) {
-                    console.log('value', value);
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup();
                     }

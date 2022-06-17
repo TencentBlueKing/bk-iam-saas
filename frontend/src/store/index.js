@@ -304,7 +304,9 @@ const store = new Vuex.Store({
         fromRouteName: '',
 
         // nav导航
-        navData: []
+        navData: [],
+
+        index: 0
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -325,7 +327,8 @@ const store = new Vuex.Store({
         loadingConf: state => state.loadingConf,
         host: state => state.host,
         fromRouteName: state => state.fromRouteName,
-        navData: state => state.navData
+        navData: state => state.navData,
+        index: state => state.index
     },
     mutations: {
         updateHost (state, params) {
@@ -467,6 +470,10 @@ const store = new Vuex.Store({
 
         updataNavData (state, payload) {
             state.navData.splice(0, state.navData.length, ...payload);
+        },
+
+        updataIndex (state, payload) {
+            state.index = payload;
         }
     },
     actions: {

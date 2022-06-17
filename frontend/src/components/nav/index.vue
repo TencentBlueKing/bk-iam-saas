@@ -20,7 +20,7 @@
                     :id="item.id"
                     :name="item.name">
                 </bk-option>
-                <div slot="extension" v-if="hasSuperAdminAuth.length" @click="handleToGradingAdmin" style="cursor: pointer;">
+                <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer;">
                     <i class="bk-icon icon-plus-circle"></i>管理我的分级管理员
                 </div>
             </bk-select>
@@ -139,8 +139,7 @@
                 routerMap: routerMap,
                 curRoleList: [],
                 curRoleId: 0,
-                index: 0,
-                hasSuperAdminAuth: []
+                index: 0
             };
         },
         computed: {
@@ -173,7 +172,6 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
-                    this.hasSuperAdminAuth = this.curRoleList.filter(e => e.type === 'super_manager');
                 },
                 immediate: true
             }

@@ -15,7 +15,7 @@
                     </h2>
                 </span>
                 <iam-guide
-                    v-if="showGuide && showNavData.length > 1"
+                    v-if="showGuide && showNavDataLength > 1"
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
@@ -207,9 +207,8 @@
                     { text: '统计分析', id: 2, show: false, type: 'super_manager', superCate: 'audit' },
                     { text: '平台管理', id: 3, show: false, type: 'super_manager', superCate: 'platform' }
                 ],
-                index: 0,
                 isRatingChange: false,
-                showNavData: 0
+                showNavDataLength: 0
             };
         },
         computed: {
@@ -219,7 +218,8 @@
                 'backRouter',
                 'user',
                 'mainContentLoading',
-                'roleList'
+                'roleList',
+                'index'
             ]),
             style () {
                 return {
@@ -275,8 +275,19 @@
             },
             routeName: {
                 handler (value) {
+                    console.log('value', value);
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup();
+                    }
+
+                    if (value === 'my-perm') {
+                        this.$store.commit('updataIndex', 0);
+                    } else if (value === 'userGroup') {
+                        this.$store.commit('updataIndex', 1);
+                    } else if (value === 'audit') {
+                        this.$store.commit('updataIndex', 2);
+                    } else if (value === 'user') {
+                        this.$store.commit('updataIndex', 3);
                     }
                 },
                 immediate: true
@@ -287,9 +298,11 @@
                     if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
                         this.showGuide = true;
                     }
-                    this.showNavData = newValue.filter(e => e.show).length;
+                    this.showNavDataLength = newValue.filter(e => e.show).length;
+                    console.log('this.showNavDataLength', this.showNavDataLength);
                 },
-                immediate: true
+                immediate: true,
+                deep: true
             }
         },
         created () {
