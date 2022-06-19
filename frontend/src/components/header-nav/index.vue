@@ -8,7 +8,7 @@
         <div class="breadcrumbs fl">
             <div class="nav-container">
                 <span v-for="(item, i) in navData" :key="item.id">
-                    <h2 class="heaer-nav-title"
+                    <h2 v-if="item.show" class="heaer-nav-title"
                         @click="handleSelect(item, i)"
                         :class="index === i ? 'active' : ''">
                         {{item.text}}
@@ -203,7 +203,7 @@
                 userGroupName: '',
                 navData: [
                     { text: '个人工作台', id: 0, show: true, type: 'staff' },
-                    { text: '权限管理', id: 1, show: false, type: 'all_manager' },
+                    { text: '权限管理', id: 1, show: true, type: 'all_manager' },
                     { text: '统计分析', id: 2, show: false, type: 'super_manager' },
                     { text: '平台管理', id: 3, show: false, type: 'super_manager' }
                 ],
@@ -219,7 +219,8 @@
                 'user',
                 'mainContentLoading',
                 'roleList',
-                'index'
+                'index',
+                'navCurRoleId'
             ]),
             style () {
                 return {
@@ -257,7 +258,7 @@
             user: {
                 handler (value) {
                     this.curRoleId = value.role.id || 0;
-                    console.log('this.curRoleId', this.curRoleId);
+                    this.curRole = value.role.type || 'staff';
                     this.placeholderValue = this.$t(`m.common['切换身份']`);
                 },
                 deep: true
@@ -265,7 +266,9 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
-                    this.setTabRoleData();
+                    if (this.curRoleList.length) {
+                        this.setTabRoleData();
+                    }
                 },
                 immediate: true
             },
@@ -282,14 +285,14 @@
                     }
 
                     if (value === 'myPerm') {
-                        this.$store.commit('updataIndex', 0);
+                        this.$store.commit('updateIndex', 0);
                     } else if (value === 'userGroup') {
-                        this.$store.commit('updataIndex', 1);
+                        this.$store.commit('updateIndex', 1);
                         // this.updateRouter(this.user.role.type);
                     } else if (value === 'audit') {
-                        this.$store.commit('updataIndex', 2);
+                        this.$store.commit('updateIndex', 2);
                     } else if (value === 'user') {
-                        this.$store.commit('updataIndex', 3);
+                        this.$store.commit('updateIndex', 3);
                     }
                 },
                 immediate: true
@@ -301,7 +304,6 @@
                         this.showGuide = true;
                     }
                     this.showNavDataLength = newValue.filter(e => e.show).length;
-                    console.log('this.showNavDataLength', this.showNavDataLength);
                 },
                 immediate: true,
                 deep: true
@@ -310,7 +312,6 @@
         created () {
             this.curRole = this.user.role.type;
             this.curIdentity = this.user.role.name;
-            bus.$emit('theme-change', this.curRole);
             this.curRoleId = this.user.role.id;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('reload-page');
@@ -320,17 +321,14 @@
             });
         },
         mounted () {
-            bus.$on('refresh-role', data => {
-                // this.handleSwitchRole(data);
-            });
             bus.$on('on-set-tab', data => {
                 this.active = data;
             });
 
             bus.$on('rating-admin-change', () => {
-                // const data = this.navData.find(e => e.type === 'staff');
-                // this.isRatingChange = true;
-                // this.handleSelect(data, 0);
+                const data = this.navData.find(e => e.type === 'staff');
+                this.isRatingChange = true;
+                this.handleSelect(data, 0);
             });
         },
         methods: {
@@ -416,80 +414,13 @@
                 }, _ => _);
             },
 
-            updateRouter (navIndex = 0) {
-                // this.$store.commit('updataRouterDiff', roleType);
-                // const difference = getRouterDiff(roleType);
-                // const curRouterName = this.$route.name;
-                // let isAudit = false;
-                // let isPlatform = false;
-                // if (difference.length) {
-                //     if (difference.includes(curRouterName)) {
-                //         this.$store.commit('setHeaderTitle', '');
-                //         window.localStorage.removeItem('iam-header-title-cache');
-                //         window.localStorage.removeItem('iam-header-name-cache');
-                //         if (roleType === 'staff' || roleType === '') {
-                //             let name = 'myPerm';
-                //             if (this.isRatingChange) {
-                //                 name = 'ratingManager';
-                //             }
-                //             this.$router.push({
-                //                 name
-                //             });
-                //             return;
-                //         }
-
-                //         // 切换角色统计分析默认跳转到审计 其他的跳转到用户组
-                //         if (roleType === 'super_manager') {
-                //             const isAuditData = (this.navData || []).find(e => e.superCate === 'audit');
-                //             const isPlatformData = (this.navData || []).find(e => e.superCate === 'platform');
-                //             isAudit = isAuditData && isAuditData.active;
-                //             isPlatform = isPlatformData && isPlatformData.active;
-                //             let name = 'userGroup';
-                //             if (isAudit) {
-                //                 name = 'audit';
-                //             } else if (isPlatform) {
-                //                 name = 'user';
-                //             } else {
-                //                 name = 'userGroup';
-                //             }
-                //             this.$router.push({
-                //                 name
-                //             });
-                //             return;
-                //         }
-
-                //         if (roleType === 'rating_manager') {
-                //             this.$router.push({
-                //                 name: 'userGroup'
-                //             });
-                //             return;
-                //         }
-                //     }
-
-                //     const permTemplateRoutes = [
-                //         'permTemplateCreate', 'permTemplateDetail',
-                //         'permTemplateEdit', 'permTemplateDiff'
-                //     ];
-                //     if (permTemplateRoutes.includes(curRouterName)) {
-                //         this.$router.push({ name: 'permTemplate' });
-                //         return;
-                //     }
-                //     if (['createUserGroup', 'userGroupDetail'].includes(curRouterName)) {
-                //         this.$router.push({ name: 'userGroup' });
-                //         return;
-                //     }
-                //     if (['gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate'].includes(curRouterName)) {
-                //         this.$router.push({ name: 'ratingManager' });
-                //         return;
-                //     }
-                //     this.$emit('reload-page', this.$route);
-                //     return;
-                // }
-                // this.$emit('reload-page', this.$route);
+            async updateRouter (navIndex = 0) {
                 let difference = [];
                 if (navIndex === 1) {
-                    difference = getRouterDiff('super_manager');
-                    this.$store.commit('updataRouterDiff', 'super_manager');
+                    await this.$store.dispatch('userInfo');
+                    const type = this.curRole;
+                    difference = getRouterDiff(type);
+                    this.$store.commit('updataRouterDiff', type);
                 } else {
                     difference = getNavRouterDiff(navIndex);
                     this.$store.commit('updataNavRouterDiff', navIndex);
@@ -501,6 +432,9 @@
                         window.localStorage.removeItem('iam-header-title-cache');
                         window.localStorage.removeItem('iam-header-name-cache');
                         let name = 'myPerm';
+                        if (this.isRatingChange) {
+                            name = 'ratingManager';
+                        }
                         if (navIndex === 1) {
                             name = 'userGroup';
                         } else if (navIndex === 2) {
@@ -511,84 +445,7 @@
                         this.$router.push({
                             name
                         });
-                        // if (roleType === 'staff' || roleType === '') {
-                        //     let name = 'myPerm';
-                        //     if (this.isRatingChange) {
-                        //         name = 'ratingManager';
-                        //     }
-                        //     this.$router.push({
-                        //         name
-                        //     });
-                        //     return;
-                        // }
-
-                        // // 切换角色统计分析默认跳转到审计 其他的跳转到用户组
-                        // if (roleType === 'super_manager') {
-                        //     const isAuditData = (this.navData || []).find(e => e.superCate === 'audit');
-                        //     const isPlatformData = (this.navData || []).find(e => e.superCate === 'platform');
-                        //     isAudit = isAuditData && isAuditData.active;
-                        //     isPlatform = isPlatformData && isPlatformData.active;
-                        //     let name = 'userGroup';
-                        //     if (isAudit) {
-                        //         name = 'audit';
-                        //     } else if (isPlatform) {
-                        //         name = 'user';
-                        //     } else {
-                        //         name = 'userGroup';
-                        //     }
-                        //     this.$router.push({
-                        //         name
-                        //     });
-                        //     return;
-                        // }
-
-                        // if (roleType === 'rating_manager') {
-                        //     this.$router.push({
-                        //         name: 'userGroup'
-                        //     });
-                        //     return;
-                        // }
                     }
-
-                    // const permTemplateRoutes = [
-                    //     'permTemplateCreate', 'permTemplateDetail',
-                    //     'permTemplateEdit', 'permTemplateDiff'
-                    // ];
-                    // if (permTemplateRoutes.includes(curRouterName)) {
-                    //     this.$router.push({ name: 'permTemplate' });
-                    //     return;
-                    // }
-                    // if (['createUserGroup', 'userGroupDetail'].includes(curRouterName)) {
-                    //     this.$router.push({ name: 'userGroup' });
-                    //     return;
-                    // }
-                    // if (['gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate'].includes(curRouterName)) {
-                    //     this.$router.push({ name: 'ratingManager' });
-                    //     return;
-                    // }
-                    // this.$emit('reload-page', this.$route);
-                }
-            },
-
-            async handleSwitchRole ({ id, type, name }, index) {
-                try {
-                    bus.$emit('nav-change', { id, type }, index);
-                    await this.$store.dispatch('role/updateCurrentRole', { id });
-                    this.curIdentity = id === 0 ? 'STAFF' : name;
-                    this.curRole = type;
-                    this.curRoleId = id;
-                    this.$store.commit('updateIdentity', { id, type, name });
-                    this.updateRouter(type);
-                    this.resetLocalStorage();
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
                 }
             },
 
@@ -597,7 +454,7 @@
                     e.active = false;
                 });
                 roleData.active = true;
-                this.$store.commit('updataIndex', index);
+                this.$store.commit('updateIndex', index);
                 window.localStorage.setItem('index', index);
                 if (this.routeName === 'addGroupPerm') {
                     this.$router.push({
@@ -606,18 +463,9 @@
                 }
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
-                let id = 0;
-                if (index === 2 || index === 3) {
-                    id = 10;
-                }
-                if (index === 1) {
-                    id = this.curRoleId;
-                    console.log(1111, id);
-                }
                 await this.$store.dispatch('role/updateCurrentRole', { id: roleData.id });
                 bus.$emit('nav-change', { id: roleData.id }, index);
                 this.updateRouter(index);
-                // this.handleSwitchRole(roleData, index);
             },
 
             handleSwitchIdentity () {
@@ -649,6 +497,7 @@
                 window.localStorage.removeItem('applyGroupList');
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
+                window.localStorage.removeItem('index');
             },
 
             handlePageTabChange (name) {
@@ -669,34 +518,19 @@
             
             // 根据角色设置
             setTabRoleData () {
-                // const superManager = this.curRoleList.find(e => e.type === 'super_manager');
-                // const allManager = this.curRoleList.find(e => e.type !== 'staff');
-                // const index = window.localStorage.getItem('index') || 0;
-                // this.index = Number(index);
-                // this.navData.forEach((element, i) => {
-                //     element.active = i === this.index;
-                //     if (element.type === 'staff') {
-                //         this.curIdentity = this.user.role.name;
-                //     } else if (element.type === 'super_manager' && superManager) {
-                //         element.id = superManager.id;
-                //         element.show = true;
-                //     } else if (element.type === 'rating_manager' && allManager) {
-                //         element.id = allManager.id;
-                //         element.show = true;
-                //     }
-                // });
-                // this.$store.commit('updataNavData', this.navData);
                 const superManager = this.curRoleList.find(e => e.type === 'super_manager');
                 const allManager = this.curRoleList.find(e => e.type !== 'staff');
                 this.navData.forEach((element, i) => {
                     element.active = i === this.index;
                     if (element.type === 'super_manager' && superManager) {
                         element.id = superManager.id;
+                        element.show = true;
                     } else if (element.type === 'all_manager' && allManager) {
-                        element.id = allManager.id;
+                        element.id = this.navCurRoleId || allManager.id;
+                        // element.id = allManager.id;
                     }
                 });
-                this.$store.commit('updataNavData', this.navData);
+                this.$store.commit('updateNavData', this.navData);
             }
         }
     };

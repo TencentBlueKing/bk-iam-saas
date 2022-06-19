@@ -31,7 +31,7 @@ import { bus } from '@/common/bus';
 import store from '@/store';
 import http from '@/api';
 import preload from '@/common/preload';
-import { getNavRouterDiff } from '@/common/router-handle'; // getRouterDiff
+import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 
 const SITE_URL = window.SITE_URL;
 
@@ -72,7 +72,7 @@ export const beforeEach = async (to, from, next) => {
     canceling = false;
 
     let curRole = store.state.user.role.type;
-    const navIndex = store.state.index;
+    const navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
     const currentRoleId = String(to.query.current_role_id || '').trim();
 
     if (to.name === 'userGroupDetail') {
@@ -117,7 +117,11 @@ export const beforeEach = async (to, from, next) => {
                 next({ path: `${SITE_URL}user-group` });
             }
         } else {
-            next();
+            if (curRole === 'staff') {
+                next({ path: `${SITE_URL}my-perm` });
+            } else {
+                next();
+            }
         }
     } else {
         // 邮件点击续期跳转过来的链接需要做身份的前置判断
@@ -139,23 +143,25 @@ export const beforeEach = async (to, from, next) => {
             curRole = 'staff';
         }
 
-        console.log('navIndex', navIndex);
-        // debugger;
-        const difference = getNavRouterDiff(navIndex);
-
+        let difference = [];
+        if (navIndex === 1) {
+            difference = getRouterDiff(curRole);
+        } else {
+            difference = getNavRouterDiff(navIndex);
+        }
+        
         if (difference.length) {
             store.dispatch('versionLogInfo');
-            console.log('to.name111', difference, to.name, curRole);
             if (difference.includes(to.name)) {
                 store.commit('setHeaderTitle', '');
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
-                // if (curRole === 'staff' || curRole === '') {
-                //     next({ path: `${SITE_URL}my-perm` });
-                // } else {
-                //     next({ path: `${SITE_URL}user-group` });
-                // }
-                next();
+                if (curRole === 'staff' || curRole === '') {
+                    next({ path: `${SITE_URL}my-perm` });
+                } else {
+                    next({ path: `${SITE_URL}user-group` });
+                }
+                // next();
             } else {
                 const noFrom = !from.name;
                 // permTemplateCreate

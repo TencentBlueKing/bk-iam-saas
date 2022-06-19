@@ -306,7 +306,9 @@ const store = new Vuex.Store({
         // nav导航
         navData: [],
 
-        index: 0
+        index: 0,
+
+        navCurRoleId: 0
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -328,7 +330,8 @@ const store = new Vuex.Store({
         host: state => state.host,
         fromRouteName: state => state.fromRouteName,
         navData: state => state.navData,
-        index: state => state.index
+        index: state => state.index,
+        navCurRoleId: state => state.navCurRoleId
     },
     mutations: {
         updateHost (state, params) {
@@ -436,6 +439,16 @@ const store = new Vuex.Store({
         },
 
         /**
+         * 记录当前下拉框身份
+         *
+         * @param {Object} state store state
+         * @param {Object} data
+         */
+        updateNavId (state, id) {
+            state.navCurRoleId = id;
+        },
+
+        /**
          * 更新版本日志
          *
          * @param {Object} state store state
@@ -462,7 +475,6 @@ const store = new Vuex.Store({
 
         updataRouterDiff (state, role) {
             state.routerDiff = [...getRouterDiff(role)];
-            console.log('state.routerDiff', state.routerDiff);
         },
 
         updataNavRouterDiff (state, index) {
@@ -473,11 +485,11 @@ const store = new Vuex.Store({
             state.roleList.splice(0, state.roleList.length, ...payload);
         },
 
-        updataNavData (state, payload) {
+        updateNavData (state, payload) {
             state.navData.splice(0, state.navData.length, ...payload);
         },
 
-        updataIndex (state, payload) {
+        updateIndex (state, payload) {
             state.index = payload;
         }
     },
@@ -522,7 +534,15 @@ const store = new Vuex.Store({
 
                 if (Object.keys(data).length > 0) {
                     const role = data.role.type;
-                    commit('updataRouterDiff', role);
+                    if (role === 'staff') {
+                        commit('updateIndex', 0);
+                    }
+                    state.index = state.index || Number(window.localStorage.getItem('index'));
+                    if (state.index && state.index > 1) {
+                        commit('updataNavRouterDiff', state.index);
+                    } else {
+                        commit('updataRouterDiff', role);
+                    }
                 }
                 return data;
             });

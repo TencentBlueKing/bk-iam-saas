@@ -6,7 +6,7 @@
         <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick }]">
             <bk-select
                 v-if="unfold && index === 1"
-                :value="curRoleId"
+                :value="navCurRoleId || curRoleId"
                 :clearable="false"
                 placeholder="选择分级管理员"
                 :search-placeholder="$t(`m.common['切换身份']`)"
@@ -44,7 +44,8 @@
                                 :class="['iam-menu-item', { active: openedItem === child.id }]"
                                 @click.stop="handleSwitchNav(child.id, child)" :data-test-id="`nav_menu_switchNav_${child.id}`">
                                 <Icon :type="child.icon" class="iam-menu-icon" />
-                                <span class="iam-menu-text">{{ child.name }}</span>
+                                <span class="iam-menu-text" v-if="child.name === '管理员' && curRole === 'system_manager'">系统{{ child.name }}</span>
+                                <span class="iam-menu-text" v-else>{{ child.name }}</span>
                             </div>
                         </template>
                     </template>
@@ -142,7 +143,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff', 'roleList', 'navData', 'index']),
+            ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff', 'roleList', 'navData', 'index', 'navCurRoleId']),
             unfold () {
                 return this.navStick || !this.navFold;
             },
@@ -177,7 +178,7 @@
         },
         created () {
             this.curRole = this.user.role.type;
-            this.curRoleId = this.user.role.id;
+            this.curRoleId = this.navCurRoleId || this.user.role.id;
             this.isUnfold = this.navStick || !this.navFold;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('theme-change');
@@ -268,6 +269,7 @@
                     this.curRoleId = id;
                     this.curRole = type;
                     this.$store.commit('updateIdentity', { id, type, name });
+                    this.$store.commit('updateNavId', id);
                     this.updateRouter(type);
                     this.resetLocalStorage();
                 } catch (e) {
