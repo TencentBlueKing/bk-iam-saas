@@ -223,7 +223,8 @@ export const m = {
         '新增模板': 'Add a template',
         '导出': 'export',
         '查询': 'Search',
-        '生效条件': 'Effective condition'
+        '生效条件': 'Effective condition',
+        '批量添加成员': 'Add members in bulk'
     },
     // 校验
     verify: {

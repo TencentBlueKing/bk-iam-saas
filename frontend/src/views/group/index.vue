@@ -10,6 +10,10 @@
                 style="margin-left: 6px;"
                 data-test-id="group_btn_transferOut"
                 @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
+            <bk-button :disabled="currentSelectList.length < 1"
+                theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
+                {{ $t(`m.common['批量添加成员']`) }}
+            </bk-button>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -111,6 +115,7 @@
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
+            :is-batch="isBatch"
             :loading="loading"
             :name="curName"
             :id="curId"
@@ -175,7 +180,9 @@
 
                 curRole: 'staff',
 
-                isShowRolloutGroupDialog: false
+                isShowRolloutGroupDialog: false,
+
+                isBatch: false
             };
         },
         computed: {
@@ -485,8 +492,16 @@
                     expired_at: expired,
                     id: this.curId
                 };
+                let fetchUrl = 'userGroup/addUserGroupMember';
+                if (this.isBatch) {
+                    params.group_ids = this.curSelectIds;
+                    delete params.id;
+                    fetchUrl = 'userGroup/batchAddUserGroupMember';
+                }
+                console.log('params', params);
+                debugger;
                 try {
-                    await this.$store.dispatch('userGroup/addUserGroupMember', params);
+                    await this.$store.dispatch(fetchUrl, params);
                     this.isShowAddMemberDialog = false;
                     this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
                     this.fetchUserGroupList(true);
@@ -588,7 +603,12 @@
                 this.currentUserGroup = {};
             },
 
-            handleAfterEditLeave () {}
+            handleAfterEditLeave () {},
+
+            handleBatchAddMember () {
+                this.isBatch = true;
+                this.isShowAddMemberDialog = true;
+            }
         }
     };
 </script>
