@@ -9,6 +9,8 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+import logging
+
 import pytz
 from django import forms
 from django.contrib import auth
@@ -22,6 +24,8 @@ from backend.service.constants import SubjectType
 
 from . import role_auth
 
+logger = logging.getLogger("app")
+
 
 class AuthenticationForm(forms.Form):
     # bk_token format: KH7P4-VSFi_nOEoV3kj0ytcs0uZnGOegIBLV-eM3rw8
@@ -30,7 +34,12 @@ class AuthenticationForm(forms.Form):
 
 @cached(timeout=60)
 def is_in_blacklist(username: str) -> bool:
-    blacklist = SubjectBiz().list_freezed_subjects()
+    blacklist = []
+    try:
+        blacklist = SubjectBiz().list_freezed_subjects()
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("failed to get blacklist, so the blacklist check will not working")
+
     for subject in blacklist:
         if subject.id == username and subject.type == SubjectType.USER.value:
             return True
