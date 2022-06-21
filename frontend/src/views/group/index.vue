@@ -10,10 +10,10 @@
                 style="margin-left: 6px;"
                 data-test-id="group_btn_transferOut"
                 @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
-            <bk-button :disabled="currentSelectList.length < 1"
+            <!-- <bk-button :disabled="currentSelectList.length < 1"
                 theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
                 {{ $t(`m.common['批量添加成员']`) }}
-            </bk-button>
+            </bk-button> -->
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -499,7 +499,6 @@
                     fetchUrl = 'userGroup/batchAddUserGroupMember';
                 }
                 console.log('params', params);
-                debugger;
                 try {
                     await this.$store.dispatch(fetchUrl, params);
                     this.isShowAddMemberDialog = false;
