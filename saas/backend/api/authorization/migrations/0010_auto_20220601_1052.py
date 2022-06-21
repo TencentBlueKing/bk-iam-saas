@@ -2,35 +2,6 @@
 
 from django.db import migrations
 
-from backend.api.authorization.constants import AuthorizationAPIEnum
-
-
-def init_allow_list(apps, schema_editor):
-    """初始化授权API白名单"""
-    AuthAPIAllowListConfig = apps.get_model("authorization", "AuthAPIAllowListConfig")
-    # 查询已存在白名单，避免重复
-    all_allow_list = AuthAPIAllowListConfig.objects.all()
-    allow_set = set([(a.type, a.system_id, a.object_id) for a in all_allow_list])
-    # 新建关联实例授权API 白名单
-    system_resource_types = {
-        "bk_monitorv3": ["apm_application"],
-    }
-    auth_api_allow_list_config = []
-    for system_id, resource_types in system_resource_types.items():
-        for resource_type_id in resource_types:
-            # 已存在，则直接忽略
-            if (AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value, system_id, resource_type_id) in allow_set:
-                continue
-            auth_api_allow_list_config.append(
-                AuthAPIAllowListConfig(
-                    type=AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
-                    system_id=system_id,
-                    object_id=resource_type_id
-                )
-            )
-    if len(auth_api_allow_list_config) != 0:
-        AuthAPIAllowListConfig.objects.bulk_create(auth_api_allow_list_config)
-
 
 class Migration(migrations.Migration):
 
