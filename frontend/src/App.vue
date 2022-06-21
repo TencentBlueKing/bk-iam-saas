@@ -264,7 +264,7 @@
     }
 
     .main-scroller {
-        height: calc(100% + 80px);
+        height: 100%;
         overflow: auto;
     }
 
