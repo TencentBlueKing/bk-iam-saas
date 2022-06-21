@@ -31,7 +31,7 @@ import { bus } from '@/common/bus';
 import store from '@/store';
 import http from '@/api';
 import preload from '@/common/preload';
-import { getRouterDiff } from '@/common/router-handle';
+import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 
 const SITE_URL = window.SITE_URL;
 
@@ -72,6 +72,7 @@ export const beforeEach = async (to, from, next) => {
     canceling = false;
 
     let curRole = store.state.user.role.type;
+    const navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
     const currentRoleId = String(to.query.current_role_id || '').trim();
 
     if (to.name === 'userGroupDetail') {
@@ -116,7 +117,11 @@ export const beforeEach = async (to, from, next) => {
                 next({ path: `${SITE_URL}user-group` });
             }
         } else {
-            next();
+            if (curRole === 'staff') {
+                next({ path: `${SITE_URL}my-perm` });
+            } else {
+                next();
+            }
         }
     } else {
         // 邮件点击续期跳转过来的链接需要做身份的前置判断
@@ -138,8 +143,13 @@ export const beforeEach = async (to, from, next) => {
             curRole = 'staff';
         }
 
-        const difference = getRouterDiff(curRole);
-
+        let difference = [];
+        if (navIndex === 1) {
+            difference = getRouterDiff(curRole);
+        } else {
+            difference = getNavRouterDiff(navIndex);
+        }
+        
         if (difference.length) {
             store.dispatch('versionLogInfo');
             if (difference.includes(to.name)) {
@@ -151,6 +161,7 @@ export const beforeEach = async (to, from, next) => {
                 } else {
                     next({ path: `${SITE_URL}user-group` });
                 }
+                // next();
             } else {
                 const noFrom = !from.name;
                 // permTemplateCreate

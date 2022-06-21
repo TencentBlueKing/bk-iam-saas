@@ -223,7 +223,8 @@ export const m = {
         '新增模板': 'Add a template',
         '导出': 'export',
         '查询': 'Search',
-        '生效条件': 'Effective condition'
+        '生效条件': 'Effective condition',
+        '批量添加成员': 'Add members in bulk'
     },
     // 校验
     verify: {
@@ -687,6 +688,7 @@ export const m = {
         '授权人员范围': 'This range indicates who you can assign permissions to, and only they can apply for the user group you created',
         '聚合操作': 'You can select instances in batches by combining selections',
         '切换分级管理员': 'Congratulations on becoming a hierarchical administrator! You can switch identities here',
+        '分级管理员导航': 'The original [Classification Manager] function has been adjusted here!',
         '创建模板': `Let's create a permission template first`,
         '创建用户组': `Let's create a group first`,
         '创建审批流程': 'You can also bind the required approval process to the user group',
