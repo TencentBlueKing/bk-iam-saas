@@ -359,7 +359,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         return Response({})
 
 
-class GroupsMemberViewSet(mixins.ListModelMixin, GenericViewSet):
+class GroupsMemberViewSet(GenericViewSet):
 
     queryset = Group.objects.all()
     serializer_class = GroupsAddMemberSLZ
@@ -391,16 +391,16 @@ class GroupsMemberViewSet(mixins.ListModelMixin, GenericViewSet):
         # 检测成员是否满足管理的授权范围
         GroupCheckBiz().check_role_subject_scope(request.role, members)
 
-        for group_id in group_ids:
-            group = self.queryset.get(id=group_id)
+        groups = self.queryset.filter(id__in=group_ids)
+        for group in groups:
             try:
                 if not RoleObjectRelationChecker(request.role).check_group(group):
                     self.permission_denied(
                         request,
-                        message=f"{request.role.type} role can not access group {group_id}"
+                        message=f"{request.role.type} role can not access group {group.id}"
                     )
                 # 校验用户组数量是否超限
-                GroupCheckBiz().check_member_count(group_id, len(members))
+                GroupCheckBiz().check_member_count(group.id, len(members))
                 # 只读用户组检测
                 readonly = group.readonly
                 if readonly:
@@ -410,7 +410,7 @@ class GroupsMemberViewSet(mixins.ListModelMixin, GenericViewSet):
                         replace=True
                     )
                 # 添加成员
-                GroupBiz().add_members(group_id, members, expired_at)
+                GroupBiz().add_members(group.id, members, expired_at)
 
             except Exception as e:
                 permission_logger.info(e)
