@@ -143,6 +143,11 @@ export const beforeEach = async (to, from, next) => {
             curRole = 'staff';
         }
 
+        if (curRole === 'staff') {
+            store.commit('updateIndex', 0);
+            window.localStorage.setItem('index', 0);
+        }
+
         let difference = [];
         if (navIndex === 1) {
             difference = getRouterDiff(curRole);
