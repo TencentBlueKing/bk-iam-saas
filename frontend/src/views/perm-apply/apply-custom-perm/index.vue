@@ -232,7 +232,7 @@
                 <render-horizontal-block>
                     <div class="userGroup">
                         <div class="requestRecommendText pl20">
-                            {{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组（包含更多可申请权限）']`)}}
+                            {{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组']`)}}
                         </div>
                         <div class="info">
                             {{ $t(`m.info['如果需要更多用户组权限']`) }},
@@ -337,7 +337,7 @@
                 <render-horizontal-block>
                     <div class="independent">
                         <div class="requestRecommendText pl20">
-                            {{$t(`m.permApply['你也可以继续申请独立权限']`)}}
+                            {{$t(`m.permApply['以下是你必须申请的权限']`)}}
                         </div>
                         <div class="info">
                             {{ $t(`m.info['如果需要更多自定义权限']`) }}，
@@ -660,6 +660,7 @@
                 handler (value) {
                     // value.query.system_id = 'bk_job';
                     // value.query.cache_id = 'f3419dba47964a6b8a3e7467ff685b5e';
+                    console.log('value.query.system_id', value.query.system_id, this.sysAndtid);
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -667,11 +668,13 @@
                             cache_id
                         });
                         this.sysAndtid = true;
+                        console.log('this.sysAndtid', this.sysAndtid);
                     } else {
                         this.routerQuery = Object.assign({}, {
                             system_id: '',
                             cache_id: ''
                         });
+                        this.sysAndtid = false;
                     }
                 },
                 immediate: true
