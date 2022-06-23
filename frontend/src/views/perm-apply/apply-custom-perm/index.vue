@@ -660,7 +660,6 @@
                 handler (value) {
                     // value.query.system_id = 'bk_job';
                     // value.query.cache_id = 'f3419dba47964a6b8a3e7467ff685b5e';
-                    console.log('value.query.system_id', value.query.system_id, this.sysAndtid);
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -668,7 +667,6 @@
                             cache_id
                         });
                         this.sysAndtid = true;
-                        console.log('this.sysAndtid', this.sysAndtid);
                     } else {
                         this.routerQuery = Object.assign({}, {
                             system_id: '',
