@@ -279,7 +279,6 @@
             },
             routeName: {
                 handler (value) {
-                    console.log('value', value);
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup();
                     }
@@ -299,7 +298,6 @@
             },
             navData: {
                 handler (newValue, oldValue) {
-                    console.log('newValue', newValue);
                     if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
                         this.showGuide = true;
                     }

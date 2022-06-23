@@ -286,7 +286,6 @@
 
             // 更新路由
             updateRouter (roleType) {
-                console.log(111, roleType);
                 this.$store.commit('updataRouterDiff', roleType);
                 const difference = getRouterDiff(roleType);
                 const curRouterName = this.$route.name;
