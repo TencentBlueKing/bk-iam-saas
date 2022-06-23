@@ -134,6 +134,10 @@ class GroupAddMemberSLZ(serializers.Serializer):
         return data
 
 
+class GroupsAddMemberSLZ(GroupAddMemberSLZ):
+    group_ids = serializers.ListField(label="用户组ID列表")
+
+
 class GroupUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=5, max_length=128)
     description = serializers.CharField(label="描述", min_length=10)

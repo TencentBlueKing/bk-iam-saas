@@ -64,6 +64,7 @@ from .serializers import (
     GroupIdSLZ,
     GroupMemberUpdateExpiredAtSLZ,
     GroupPolicyUpdateSLZ,
+    GroupsAddMemberSLZ,
     GroupSLZ,
     GroupTemplateDetailSchemaSLZ,
     GroupTemplateDetailSLZ,
@@ -356,6 +357,73 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         audit_context_setter(group=group, members=data["members"])
 
         return Response({})
+
+
+class GroupsMemberViewSet(GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupsAddMemberSLZ
+
+    biz = GroupBiz()
+    group_check_biz = GroupCheckBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量用户组添加成员",
+        request_body=GroupsAddMemberSLZ(label="成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    @view_audit_decorator(GroupMemberCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = GroupsAddMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        members_data = data["members"]
+        expired_at = data["expired_at"]
+        group_ids = data["group_ids"]
+
+        # 添加成员 异常信息记录
+        failed_info = {}
+        # 成员Dict结构转换为Subject结构，并去重
+        members = list(set(parse_obj_as(List[Subject], members_data)))
+        # 检测成员是否满足管理的授权范围
+        GroupCheckBiz().check_role_subject_scope(request.role, members)
+
+        groups = self.queryset.filter(id__in=group_ids)
+        for group in groups:
+            try:
+                if not RoleObjectRelationChecker(request.role).check_group(group):
+                    self.permission_denied(
+                        request,
+                        message=f"{request.role.type} role can not access group {group.id}"
+                    )
+                # 校验用户组数量是否超限
+                GroupCheckBiz().check_member_count(group.id, len(members))
+                # 只读用户组检测
+                readonly = group.readonly
+                if readonly:
+                    raise error_codes.FORBIDDEN.format(
+                        message=_("只读用户组({})无法进行({})操作！").format(
+                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        replace=True
+                    )
+                # 添加成员
+                GroupBiz().add_members(group.id, members, expired_at)
+
+            except Exception as e:
+                permission_logger.info(e)
+                failed_info.update({group.name: '{}'.format(e)})
+
+            else:
+                # 写入审计上下文
+                audit_context_setter(group=group, members=[m.dict() for m in members])
+
+        if not failed_info:
+            return Response({}, status=status.HTTP_201_CREATED)
+
+        raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
