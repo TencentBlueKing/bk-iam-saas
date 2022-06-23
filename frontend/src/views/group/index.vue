@@ -10,10 +10,10 @@
                 style="margin-left: 6px;"
                 data-test-id="group_btn_transferOut"
                 @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
-            <!-- <bk-button :disabled="currentSelectList.length < 1"
+            <bk-button :disabled="currentSelectList.length < 1"
                 theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
                 {{ $t(`m.common['批量添加成员']`) }}
-            </bk-button> -->
+            </bk-button>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -84,6 +84,9 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="300">
                 <template slot-scope="{ row }">
                     <div>
+                        <bk-button theme="primary" text @click="handleClone(row)">
+                            {{ $t(`m.grading['克隆']`) }}
+                        </bk-button>
                         <bk-button theme="primary" text @click="handleAddMember(row)">
                             {{ $t(`m.common['添加成员']`) }}
                         </bk-button>
@@ -399,6 +402,12 @@
             },
 
             handleCreate () {
+                this.$router.push({
+                    name: 'createUserGroup'
+                });
+            },
+
+            handleClone () {
                 this.$router.push({
                     name: 'createUserGroup'
                 });
