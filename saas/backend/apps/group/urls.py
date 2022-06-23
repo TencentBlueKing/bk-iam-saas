@@ -14,6 +14,11 @@ from . import views
 
 urlpatterns = [
     path("", views.GroupViewSet.as_view({"get": "list", "post": "create"}), name="group.group"),
+    path(
+        "members/",
+        views.GroupsMemberViewSet.as_view({"post": "create"}),
+        name="group.members",
+    ),
     path("transfer/", views.GroupTransferView.as_view(), name="group.transfer"),
     # 用户组详情
     path(
