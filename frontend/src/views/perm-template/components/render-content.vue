@@ -72,8 +72,8 @@
                         ref="commonActionRef"
                         style="margin-top: 0;"
                         :system-id="systemValue"
-                        :data="commonActions"
                         :tag-action-list="tagActionList"
+                        :data="commonActions"
                         :cur-select-actions="curSelectActions"
                         v-if="!customLoading"
                         @on-delete="handleCommonActionDelete"
@@ -368,6 +368,7 @@
                 if (payload.length < 1) {
                     return;
                 }
+                this.tagActionList = payload;
                 this.handleActionMatchChecked(flag, payload);
             },
 

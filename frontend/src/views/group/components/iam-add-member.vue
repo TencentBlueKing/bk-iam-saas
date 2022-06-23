@@ -11,11 +11,14 @@
         <!-- eslint-disable max-len -->
         <div slot="header" class="title">
             <template v-if="showExpiredAt">
-                <div v-if="isPrev">
-                    {{ $t(`m.common['添加成员至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
-                </div>
-                <div v-else :title="`${$t(`m.common['设置新用户加入']`)}【${name}】${$t(`m.common['用户组的有效期']`)}`">
-                    {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">【{{ name }}</span>】{{ $t(`m.common['用户组的有效期']`) }}
+                <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
+                <div v-else>
+                    <div v-if="isPrev">
+                        {{ $t(`m.common['添加成员至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
+                    </div>
+                    <div v-else :title="`${$t(`m.common['设置新用户加入']`)}【${name}】${$t(`m.common['用户组的有效期']`)}`">
+                        {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">【{{ name }}</span>】{{ $t(`m.common['用户组的有效期']`) }}
+                    </div>
                 </div>
             </template>
             <template v-else>
@@ -299,6 +302,10 @@
             allChecked: {
                 type: Boolean,
                 default: false
+            },
+            isBatch: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -434,7 +441,11 @@
                         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
                         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
                         if (this.showExpiredAt) {
-                            this.fetchMemberList();
+                            if (this.isBatch) {
+                                this.fetchCategoriesList();
+                            } else {
+                                this.fetchMemberList();
+                            }
                         } else {
                             this.requestQueue = ['categories'];
                             if (this.isRatingManager) {
@@ -594,6 +605,27 @@
 
                     this.defaultDepartments = res.data.results.filter(item => item.type === 'department');
                     this.defaultUsers = res.data.results.filter(item => item.type === 'user');
+                    if (this.isRatingManager) {
+                        this.fetchRoleSubjectScope(false, true);
+                    } else {
+                        this.fetchCategories(false, true);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.requestQueue.shift();
+                }
+            },
+
+            fetchCategoriesList () {
+                try {
                     if (this.isRatingManager) {
                         this.fetchRoleSubjectScope(false, true);
                     } else {

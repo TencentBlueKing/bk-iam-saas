@@ -14,6 +14,10 @@
             :style="processGuideStyle"
             :flag="processGuideShow"
             :content="$t(`m.guide['创建审批流程']`)" />
+        <header-nav @reload-page="handleRefreshPage"
+            :route-name="routeName"
+            :user-group-id="userGroupId">
+        </header-nav>
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
@@ -30,6 +34,7 @@
     </div>
 </template>
 <script>
+    import HeaderNav from '@/components/header-nav/index.vue';
     import theHeader from '@/components/header/index.vue';
     import theNav from '@/components/nav/index.vue';
     import IamGuide from '@/components/iam-guide/index.vue';
@@ -47,7 +52,8 @@
         components: {
             IamGuide,
             theHeader,
-            theNav
+            theNav,
+            HeaderNav
         },
         data () {
             return {

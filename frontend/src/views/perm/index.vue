@@ -214,7 +214,7 @@
         }
         .content-wrapper {
             /* 20 + 20 + 42 + 24 + 24 + 61 + 48 */
-            min-height: calc(100vh - 239px);
+            min-height: calc(100vh - 325px);
         }
         .empty-wrapper {
             position: absolute;
