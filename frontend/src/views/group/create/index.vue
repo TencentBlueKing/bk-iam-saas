@@ -306,6 +306,7 @@
              * handleSubmitPerm
              */
             handleSubmitPerm (templates, aggregation, authorization) {
+                console.log('templates', templates, aggregation, authorization);
                 // debugger
                 if (this.isAllExpanded) {
                     this.isAllExpanded = false;
@@ -373,6 +374,7 @@
                 } else {
                     this.tableList.push(..._.cloneDeep(tempList));
                 }
+                console.log('this.tableList', this.tableList);
                 this.tableListBackup = _.cloneDeep(this.tableList);
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
@@ -713,6 +715,7 @@
              * handleSelectSubmit
              */
             handleSelectSubmit (payload, aggregation, authorization) {
+                console.log('1111', payload, aggregation, authorization);
                 // debugger
                 if (this.originalList.length > 0) {
                     const intersection = payload.filter(

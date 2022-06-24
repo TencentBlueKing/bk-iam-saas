@@ -84,14 +84,14 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="300">
                 <template slot-scope="{ row }">
                     <div>
-                        <bk-button theme="primary" text @click="handleClone(row)">
-                            {{ $t(`m.grading['克隆']`) }}
-                        </bk-button>
                         <bk-button theme="primary" text @click="handleAddMember(row)">
                             {{ $t(`m.common['添加成员']`) }}
                         </bk-button>
                         <bk-button theme="primary" text style="margin-left: 10px;" @click="handleAddPerm(row)">
                             {{ $t(`m.common['添加权限']`) }}
+                        </bk-button>
+                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleClone(row)">
+                            {{ $t(`m.grading['克隆']`) }}
                         </bk-button>
                         <bk-button theme="primary" text style="margin-left: 10px;" @click="handleDelete(row)">
                             {{ $t(`m.common['删除']`) }}
@@ -407,9 +407,13 @@
                 });
             },
 
-            handleClone () {
+            handleClone (data) {
                 this.$router.push({
-                    name: 'createUserGroup'
+                    name: 'cloneUserGroup',
+                    query: {
+                        name: data.name,
+                        description: data.description
+                    }
                 });
             },
 

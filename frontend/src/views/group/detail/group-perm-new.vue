@@ -561,7 +561,7 @@
 <style lang="postcss">
     .iam-user-group-perm-wrapper {
         position: relative;
-        min-height: calc(100vh - 145px);
+        min-height: calc(100vh - 211px);
         .iam-perm-ext-cls {
             margin-top: 10px;
         }

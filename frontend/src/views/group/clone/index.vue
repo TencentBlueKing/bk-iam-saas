@@ -271,6 +271,10 @@
                 return data;
             }
         },
+        mounted () {
+            this.formData.name = `${this.$route.query.name}_克隆`;
+            this.formData.description = this.$route.query.description;
+        },
         methods: {
             /**
              * handleBasicInfoChange
@@ -373,6 +377,7 @@
                 } else {
                     this.tableList.push(..._.cloneDeep(tempList));
                 }
+                console.log('this.tableList', this.tableList);
                 this.tableListBackup = _.cloneDeep(this.tableList);
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
@@ -851,6 +856,7 @@
              * handleAddPerm
              */
             handleAddPerm () {
+                console.log(1111);
                 this.isShowAddSideslider = true;
             },
 
