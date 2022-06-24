@@ -458,7 +458,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
         .text {
             position: absolute;
-            top: 15px;
+            top: 14px;
             left: 60px;
             width: 180px;
             font-family: Microsoft Yahei;

@@ -252,19 +252,19 @@
     .nav-layout {
         position: relative;
         float: left;
-        height: 100%;
-        margin: -61px 0 0 0;
+        height: calc(100% + 10px);
+        margin: -51px 0 0 0;
     }
 
     .main-layout {
         position: relative;
-        height: calc(100% - 61px);
+        height: calc(100% - 41px);
         background-color: #f5f6fa;
         overflow: hidden;
     }
 
     .main-scroller {
-        height: 100%;
+        height: calc(100% + 41px);
         overflow: auto;
     }
 
