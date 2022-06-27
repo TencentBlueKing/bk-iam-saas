@@ -23,11 +23,14 @@ from backend.api.admin.serializers import (
     SubjectRoleSLZ,
 )
 from backend.api.authentication import ESBAuthentication
+from backend.audit.audit import log_user_blacklist_event
+from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectBiz
 from backend.common.error_codes import error_codes
 from backend.common.pagination import CustomPageNumberPagination
+from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
 
@@ -123,6 +126,14 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
                 raise error_codes.INVALID_ARGS.format(_("admin用户不允许被冻结"))
 
         self.biz.freeze_users(serializer.data)
+
+        log_user_blacklist_event(
+            AuditType.USER_BLACKLIST_MEMBER_CREATE.value,
+            Subject(type=SubjectType.USER.value, id="admin"),
+            serializer.data,
+            extra={},
+            source_type=AuditSourceType.OPENAPI.value,
+        )
         return Response({}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
@@ -138,4 +149,12 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
             raise error_codes.INVALID_ARGS.format(_("至少传递一个用户"))
 
         self.biz.unfreeze_users(serializer.data)
+
+        log_user_blacklist_event(
+            AuditType.USER_BLACKLIST_MEMBER_DELETE.value,
+            Subject(type=SubjectType.USER.value, id="admin"),
+            serializer.data,
+            extra={},
+            source_type=AuditSourceType.OPENAPI.value,
+        )
         return Response({}, status=status.HTTP_200_OK)
