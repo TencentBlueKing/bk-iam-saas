@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
+
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -32,6 +34,8 @@ from backend.common.error_codes import error_codes
 from backend.common.pagination import CustomPageNumberPagination
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
+
+logger = logging.getLogger("app")
 
 
 class AdminSubjectGroupViewSet(GenericViewSet):
@@ -134,6 +138,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
             extra={},
             source_type=AuditSourceType.OPENAPI.value,
         )
+        logger.info("freeze users: %s, these users will have no permission in all platforms", serializer.data)
         return Response({}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
@@ -157,4 +162,5 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
             extra={},
             source_type=AuditSourceType.OPENAPI.value,
         )
+        logger.info("unfreeze users: %s", serializer.data)
         return Response({}, status=status.HTTP_200_OK)
