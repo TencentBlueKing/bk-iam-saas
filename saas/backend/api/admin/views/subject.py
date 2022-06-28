@@ -133,7 +133,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
 
         log_user_blacklist_event(
             AuditType.USER_BLACKLIST_MEMBER_CREATE.value,
-            Subject(type=SubjectType.USER.value, id="admin"),
+            Subject(type=SubjectType.USER.value, id=request.user.username),
             serializer.data,
             extra={},
             source_type=AuditSourceType.OPENAPI.value,
@@ -157,7 +157,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
 
         log_user_blacklist_event(
             AuditType.USER_BLACKLIST_MEMBER_DELETE.value,
-            Subject(type=SubjectType.USER.value, id="admin"),
+            Subject(type=SubjectType.USER.value, id=request.user.username),
             serializer.data,
             extra={},
             source_type=AuditSourceType.OPENAPI.value,
