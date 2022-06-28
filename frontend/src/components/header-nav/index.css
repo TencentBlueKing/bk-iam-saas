@@ -1,7 +1,7 @@
 $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
 .header-nav-layout {
     position: relative;
-    height: 61px;
+    height: 51px;
     background-color: #182132;
     transition: padding .3s $cubic-bezier;
     z-index: 1002;
@@ -34,9 +34,8 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .breadcrumbs {
-        line-height: 60px;
+        line-height: 51px;
         position: relative;
-        margin: 0 0 0 20px;
         font-size: 0;
         &.has-cursor {
             cursor: pointer;
@@ -58,8 +57,8 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .heaer-nav-title {
-            margin: 0 60px 0 0;
-            padding: 0 24px;
+            margin: 0;
+            padding: 0 20px;
             display: inline-block;
             vertical-align: middle;
             font-size: 14px;
@@ -71,7 +70,6 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             }
 
             &.active {
-                background-color: #000000;
                 color: #FFFFFF;
             }
         }
@@ -79,7 +77,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
     .user {
         position: relative;
         font-size: 0;
-        line-height: 60px;
+        line-height: 51px;
         color: #FFFFFF;
         .help-flag {
             display: inline-flex;
@@ -95,7 +93,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
         .help-flag {
             position: absolute;
-            top: 14px;
+            top: 11px;
             left: -30px;
             width: 32px;
             height: 32px;
@@ -446,8 +444,8 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         width: 260px;
         display: inline-block;
         position: relative;
-        height: 60px;
-        padding: 12px 0 12px 15px;
+        height: 51px;
+        padding: 9px 0 12px 15px;
         background: #182132;
         color: #fff;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -460,7 +458,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
         .text {
             position: absolute;
-            top: 17px;
+            top: 14px;
             left: 60px;
             width: 180px;
             font-family: Microsoft Yahei;
