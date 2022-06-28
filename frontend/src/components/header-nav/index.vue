@@ -197,7 +197,7 @@
                 searchValue: '',
                 docuLinkMap: docuLinkMap,
                 curDocuLink: `${window.PRODUCT_DOC_URL_PREFIX}${NORMAL_DOCU_LINK}`,
-                showGuide: true,
+                showGuide: false,
                 isShowHeader: false,
                 placeholderValue: '',
                 userGroupName: '',
