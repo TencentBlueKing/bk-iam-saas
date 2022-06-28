@@ -412,7 +412,8 @@
                     name: 'cloneUserGroup',
                     query: {
                         name: data.name,
-                        description: data.description
+                        description: data.description,
+                        id: data.id
                     }
                 });
             },

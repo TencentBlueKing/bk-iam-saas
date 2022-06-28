@@ -187,7 +187,10 @@
                     isShow: false,
                     id: ''
                 },
-                curMap: null
+                curMap: null,
+                groupSystemList: [],
+                groupSystemListLength: 0,
+                groupId: ''
             };
         },
         computed: {
@@ -200,6 +203,7 @@
                     return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
                 }, []);
                 const temps = [];
+                console.log('aggregationIds', this.tableList, aggregationIds);
                 aggregationIds.forEach(item => {
                     if (!temps.some(sub => sub.includes(item))) {
                         temps.push([item]);
@@ -274,8 +278,193 @@
         mounted () {
             this.formData.name = `${this.$route.query.name}_克隆`;
             this.formData.description = this.$route.query.description;
+            this.groupId = this.$route.query.id;
+            console.log(this.groupId, this.groupId);
+            this.handleInit();
         },
         methods: {
+            // 先请求最外层数据（系统）
+            async handleInit () {
+                this.tableList = [];
+                try {
+                    const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    this.groupSystemList = res.data || []; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
+                    this.groupSystemListLength = res.data.length;
+                    console.log('this.groupSystemList', this.groupSystemList);
+                    this.groupSystemList.forEach(async e => {
+                        e.count = e.custom_policy_count;
+                        this.fetchAggregationAction(e.id);
+                        if (e.count > 0) {
+                            await this.getGroupCustomPolicy(e);
+                        } else {
+                            await this.getGroupTemplateList(e);
+                        }
+                    });
+                    this.handleAggregateData();
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            // 自定义权限
+            async getGroupCustomPolicy (item) {
+                item.loading = true;
+                try {
+                    const res = await this.$store.dispatch('userGroup/getGroupPolicy', {
+                        id: this.groupId,
+                        systemId: item.id
+                    });
+                    const tableData = res.data.map(row => {
+                        console.log('row', row);
+                        row.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(resourceTypeItem => {
+                                resourceTypeItem.id = resourceTypeItem.type;
+                                resourceTypeItem.condition = '';
+                            });
+                        });
+                        // eslint-disable-next-line max-len
+                        // row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        return new GroupPolicy(
+                            row,
+                            'add', // 此属性为flag，会在related-resource-types赋值为add
+                            'custom',
+                            {
+                                system: {
+                                    id: item.id,
+                                    name: item.name
+                                },
+                                id: CUSTOM_PERM_TEMPLATE_ID
+                            }
+                        );
+                    });
+                    // const tableDataBackup = res.data.map(row => {
+                    //     // eslint-disable-next-line max-len
+                    //     row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                    //     return new GroupPolicy(
+                    //         row,
+                    //         'detail',
+                    //         'custom',
+                    //         { system: item.system }
+                    //     );
+                    // });
+                    this.tableList.push(..._.cloneDeep(tableData));
+                    this.tableListBackup = _.cloneDeep(this.tableList);
+                    // this.$set(item, 'tableDataBackup', tableDataBackup);
+
+                    console.log('res', res);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            // 模版列表
+            async getGroupTemplateList (groupSystem) {
+                let res;
+                try {
+                    res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', {
+                        id: this.groupId,
+                        systemId: groupSystem.id
+                    });
+
+                    res.data.forEach(async item => {
+                        await this.getGroupTemplateDetail(item);
+                    });
+                    groupSystem.templates = res.data; // 赋值给展开项
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            // 模版详情
+            async getGroupTemplateDetail (item) {
+                item.loading = true;
+                try {
+                    const res = await this.$store.dispatch('userGroup/getGroupTemplateDetail', {
+                        id: this.groupId,
+                        templateId: item.id
+                    });
+                    const tableData = res.data.actions.map(row => {
+                        row.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(resourceTypeItem => {
+                                resourceTypeItem.id = resourceTypeItem.type;
+                                resourceTypeItem.condition = '';
+                            });
+                        });
+                        // const temp = _.cloneDeep(row)
+                        // eslint-disable-next-line max-len
+                        // row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        return new GroupPolicy(
+                            { ...row, policy_id: 1 },
+                            'add',
+                            'template',
+                            { ...item }
+                        );
+                    });
+                    // const tableDataBackup = res.data.actions.map(row => {
+                    //     // eslint-disable-next-line max-len
+                    //     // row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                    //     return new GroupPolicy(
+                    //         { ...row, policy_id: 1 },
+                    //         'detail',
+                    //         'template',
+                    //         { system: res.data.system }
+                    //     );
+                    // });
+                    // this.$set(item, 'tableData', tableData);
+                    this.tableList.push(..._.cloneDeep(tableData));
+                    this.tableListBackup = _.cloneDeep(this.tableList);
+                    console.log(111111);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    item.loading = false;
+                }
+            },
+
+            async fetchAggregationAction (id) {
+                try {
+                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: id });
+                    this.aggregationData[id] = res.data.aggregations;
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
             /**
              * handleBasicInfoChange
              */
@@ -479,7 +668,9 @@
                     }
                 });
                 this.allAggregationData = data;
+                console.log('this.tableList', this.tableList);
                 this.tableList.forEach(item => {
+                    console.log('aggregationIds111', item);
                     const aggregationData = this.allAggregationData[item.detail.system.id];
                     if (aggregationData && aggregationData.length) {
                         aggregationData.forEach(aggItem => {
@@ -856,7 +1047,6 @@
              * handleAddPerm
              */
             handleAddPerm () {
-                console.log(1111);
                 this.isShowAddSideslider = true;
             },
 
@@ -883,6 +1073,7 @@
 </script>
 <style lang="postcss" scoped>
     .iam-create-user-group-wrapper {
+        padding-bottom: 50px;
         .add-perm-action {
             margin: 16px 0 20px 0;
         }

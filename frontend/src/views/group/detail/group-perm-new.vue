@@ -198,6 +198,7 @@
                         item.editLoading = false;
                         item.deleteLoading = false;
                     });
+                    console.log('groupSystem', groupSystem);
                     groupSystem.templates = res.data; // 赋值给展开项
                     if (groupSystem.custom_policy_count) {
                         groupSystem.templates.push({
@@ -269,7 +270,7 @@
              * @return {*}
              */
             async handleTemplateExpanded (flag, item) {
-                console.log('flag', flag);
+                console.log('flag', flag, item);
                 if (!flag) {
                     this.$set(item, 'isEdit', false);
                     return;
@@ -324,6 +325,7 @@
                 });
 
                 this.linearActionList = _.cloneDeep(linearActions);
+                console.log('this.linearActionList', this.linearActionList);
             },
 
             async getGroupTemplateDetail (item) {

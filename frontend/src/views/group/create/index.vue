@@ -306,7 +306,7 @@
              * handleSubmitPerm
              */
             handleSubmitPerm (templates, aggregation, authorization) {
-                console.log('templates', templates, aggregation, authorization);
+                console.log('templates', templates, aggregation, authorization, this.isAllExpanded);
                 // debugger
                 if (this.isAllExpanded) {
                     this.isAllExpanded = false;
@@ -353,6 +353,7 @@
                         if (!sub.resource_groups || !sub.resource_groups.length) {
                             sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : [];
                         }
+                        console.log('temp', temp);
                         tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
                     });
                 });
@@ -880,6 +881,7 @@
 </script>
 <style lang="postcss" scoped>
     .iam-create-user-group-wrapper {
+        padding-bottom: 50px;
         .add-perm-action {
             margin: 16px 0 20px 0;
         }
