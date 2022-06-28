@@ -249,7 +249,7 @@ def list_subject_member(_type: str, id: str, limit: int = 10, offset: int = 0) -
     """
     获取subject的成员列表
     """
-    url_path = "/api/v1/web/subject-members"
+    url_path = "/api/v1/web/group-members"
     params = {"type": _type, "id": id, "limit": limit, "offset": offset}
     return _call_iam_api(http_get, url_path, data=params)
 
@@ -258,7 +258,7 @@ def get_subject_relation(_type: str, id: str, expired_at: int = 0) -> List[Dict]
     """
     获取subject的关系列表
     """
-    url_path = "/api/v1/web/subject-relations"
+    url_path = "/api/v1/web/subject-groups"
     params = {"type": _type, "id": id, "before_expired_at": expired_at}
     return _call_iam_api(http_get, url_path, data=params)
 
@@ -267,7 +267,7 @@ def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str
     """
     批量删除subject的成员
     """
-    url_path = "/api/v1/web/subject-members"
+    url_path = "/api/v1/web/group-members"
     params = {"type": _type, "id": id, "members": members}
     permission_logger.info("iam subject delete member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_delete, url_path, data=params)
@@ -277,7 +277,7 @@ def add_subject_members(_type: str, id: str, policy_expired_at: int, members: Li
     """
     批量添加subject的成员
     """
-    url_path = "/api/v1/web/subject-members"
+    url_path = "/api/v1/web/group-members"
     params = {
         "type": _type,
         "id": id,
@@ -416,7 +416,7 @@ def create_subject_role(subjects: List[Dict[str, str]], role_type: str, system_i
     """
     创建后台的subject角色信息
     """
-    url_path = "/api/v1/web/subject-roles"
+    url_path = "/api/v1/web/role-subjects"
     data = {"role_type": role_type, "system_id": system_id, "subjects": subjects}
     permission_logger.info("iam create subject role url: %s, data: %s", url_path, data)
     return _call_iam_api(http_post, url_path, data=data)
@@ -426,7 +426,7 @@ def delete_subject_role(subjects: List[Dict[str, str]], role_type: str, system_i
     """
     删除后台的subject角色信息
     """
-    url_path = "/api/v1/web/subject-roles"
+    url_path = "/api/v1/web/role-subjects"
     data = {"role_type": role_type, "system_id": system_id, "subjects": subjects}
     permission_logger.info("iam delete subject role url: %s, data: %s", url_path, data)
     return _call_iam_api(http_delete, url_path, data=data)
@@ -462,7 +462,7 @@ def update_subject_members_expired_at(_type: str, id: str, members: List[dict]) 
     """
     subject成员更新过期时间
     """
-    url_path = "/api/v1/web/subject-members/expired_at"
+    url_path = "/api/v1/web/group-members/expired_at"
     data = {
         "type": _type,
         "id": id,
@@ -477,7 +477,7 @@ def list_subject_member_before_expired_at(
     """
     获取subject的成员列表
     """
-    url_path = "/api/v1/web/subject-members/query"
+    url_path = "/api/v1/web/group-members/query"
     data = {"type": subject_type, "id": subject_id, "before_expired_at": expired_at, "limit": limit, "offset": offset}
     return _call_iam_api(http_get, url_path, data=data)
 
