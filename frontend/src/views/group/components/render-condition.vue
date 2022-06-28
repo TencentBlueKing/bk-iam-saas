@@ -28,22 +28,15 @@
             <Icon v-else type="paste" />
         </div>
 
-        <div class="iam-condition-batch-paste"
+        <!-- 批量粘贴 -->
+        <div class="operate-icon"
+            :title="$t(`m.common['批量粘贴']`)"
+            @mouseenter="iconEnter = true"
+            @mouseleave="iconEnter = false"
+            @click.stop="handleBatchPaste"
             v-if="(canOperate && canPaste) || immediatelyShow">
-            <section class="batch-paste-wrapper">
-                <section class="batch-paste-action">
-                    <spin-loading v-if="isLoading" />
-                    <bk-button
-                        v-else
-                        text
-                        theme="primary"
-                        @click.native.stop
-                        @click="handleBatchPaste">
-                        {{ $t(`m.common['批量粘贴']`) }}
-                    </bk-button>
-                </section>
-                <div class="triangle"></div>
-            </section>
+            <iam-svg v-if="!iconEnter" name="brush-fill" />
+            <iam-svg v-else name="brush-fill-active" />
         </div>
     </div>
 </template>
@@ -92,7 +85,8 @@
                 isActive: false,
                 immediatelyShow: false,
                 isLoading: false,
-                pasteLoading: false
+                pasteLoading: false,
+                iconEnter: false
             };
         },
         computed: {

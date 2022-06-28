@@ -249,7 +249,7 @@
             box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, .05);
             &.set-style {
                 margin-top: 20px;
-                min-height: calc(100vh - 185px);
+                min-height: calc(100vh - 250px);
             }
             .iam-approval-process-set-tab-cls {
                 .bk-tab-header {

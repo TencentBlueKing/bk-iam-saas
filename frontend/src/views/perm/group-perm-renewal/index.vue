@@ -176,7 +176,7 @@
                     });
                     this.pagination.count = Math.ceil(res.data.count / this.pagination.limit);
                     this.tableList = res.data.results || [];
-                    this.tableList.forEach(item => {
+                    this.tableList.forEach(async (item, index) => {
                         this.$set(item, 'children', []);
                         this.$set(item, 'loading', false);
                         this.$set(item, 'expanded', false);
@@ -186,6 +186,10 @@
                             count: 0
                         });
                         item.currentBackup = 1;
+                        if (index === 0) {
+                            this.$set(item, 'expanded', true);
+                            await this.fetchMembers(item);
+                        }
                     });
                 } catch (e) {
                     console.error(e);

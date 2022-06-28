@@ -1,24 +1,29 @@
 <template>
     <!-- eslint-disable max-len -->
-    <header :class="['header-layout', { 'nav-sticked': navStick }]">
-        <iam-guide
-            v-if="showGuide"
-            type="switch_role"
-            direction="right"
-            :flag="showGuide"
-            :style="{ top: '5px', right: '125px' }"
-            :content="$t(`m.guide['切换分级管理员']`)" />
-        <div class="breadcrumbs fl"
-            :class="backRouter ? 'has-cursor' : ''"
-            v-show="!mainContentLoading"
-            @click="back">
-            <div v-if="!isHide">
-                <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-                <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">{{ $t(`m.common['用户组']`) }}【{{userGroupName}}】{{ $t(`m.common['添加权限']`) }}</h2>
-                <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
+    <header class="header-nav-layout">
+        <div :class="['logo', 'fl']">
+            <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
+            <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
+        </div>
+        <div class="breadcrumbs fl">
+            <div class="nav-container">
+                <span v-for="(item, i) in navData" :key="item.id">
+                    <h2 v-if="item.show" class="heaer-nav-title"
+                        @click="handleSelect(item, i)"
+                        :class="index === i ? 'active' : ''">
+                        {{item.text}}
+                    </h2>
+                </span>
+                <iam-guide
+                    v-if="showGuide && showNavDataLength > 1"
+                    type="switch_role"
+                    direction="top"
+                    :flag="showGuide"
+                    :style="{ top: '60px', left: '120px' }"
+                    :content="$t(`m.guide['分级管理员导航']`)" />
             </div>
         </div>
-        <!-- <div class="user fr">
+        <div class="user fr">
             <div class="help-flag">
                 <Icon type="help-fill-2" />
                 <div class="dropdown-panel">
@@ -28,7 +33,7 @@
                 </div>
             </div>
             <p class="user-name" @click.stop="handleSwitchIdentity" data-test-id="header_btn_triggerSwitchRole">
-                {{ curIdentity !== 'STAFF' ? curIdentity : user.username }}
+                {{ user.username }}
                 <Icon type="down-angle" :class="['user-name-angle', { dropped: isShowUserDropdown }]" />
             </p>
             <transition name="toggle-slide">
@@ -37,76 +42,24 @@
                     :style="style"
                     v-show="isShowGradingWrapper"
                     v-bk-clickoutside="handleClickOutSide">
-                    <div :class="['userInfo',{ 'lineHeight': curRole === 'staff' }]">
-                        <p :class="userName">{{ user.username }}</p>
-                        <Icon :type="identityIconMap[curRole] || ''" />
-                    </div>
-                    <div class="search-input">
-                        <bk-input
-                            :clearable="true"
-                            size="small"
-                            v-model="searchValue"
-                            ext-cls="iam-role-list-seatch-input-cls"
-                            :placeholder="placeholderValue"
-                            @input="handleInput">
-                        </bk-input>
-                        <div v-if="isShowSearch" class="search-nextfix">
-                            <slot name="nextfix">
-                                <i class="bk-icon icon-search search-nextfix-icon" />
-                            </slot>
+                    <template>
+                        <div class="operation right">
+                            <div class="user-dropdown-item " @click="handleLogout">
+                                <Icon type="logout" />
+                                {{ $t(`m.nav['注销']`) }}
+                            </div>
+                        </div>
+                    </template>
+                </section>
+                <!-- <template>
+                    <div class="operation right">
+                        <div class="user-dropdown-item " @click="handleLogout">
+                            <Icon type="logout" />
+                            {{ $t(`m.nav['注销']`) }}
                         </div>
                     </div>
-                    <ul>
-                        <template v-if="curRoleList.length < 1">
-                            <iam-svg ext-cls="rating-empty" />
-                        </template>
-                        <template v-else>
-                            <li class="grading-item"
-                                data-test-id="header_btn_switchRole"
-                                v-for="item in curRoleList"
-                                :key="item.id"
-                                :title="item.name"
-                                :class="item.id === curRoleId ? 'active' : ''"
-                                @click="handleSelect(item)">
-                                <i v-if="isShowSuperManager(item)" class="superManagerIcon"></i>
-                                <i v-if="isShowSystemManager(item)" class="systemManagerIcon"></i>
-                                <i v-if="isShowRatingManager(item)" class="ratingManagerIcon"></i>
-                                <span class="name">{{ item.name }}</span>
-                                <Icon v-if="item.id === curRoleId" type="check-small" class="checked" />
-                            </li>
-                            <div :class="['operation', { 'right': curRole === 'staff' }]">
-                                <div :class="['user-dropdown-item', { 'marginleft': curRole !== 'staff' }]"
-                                    v-if="curIdentity !== '' && curRole !== 'staff'"
-                                    @click="handleBack">
-                                    <img src="@/images/back.svg" alt="" class="back-staff">
-                                    <span>{{ $t(`m.nav['普通成员']`) }}</span>
-                                </div>
-                            </div>
-                        </template>
-                        <template>
-                            <div class="operation right">
-                                <div class="user-dropdown-item " @click="handleLogout">
-                                    <Icon type="logout" />
-                                    {{ $t(`m.nav['注销']`) }}
-                                </div>
-                            </div>
-                        </template>
-                    </ul>
-                </section>
+                </template> -->
             </transition>
-        </div> -->
-        <div class="page-tab-wrapper" v-if="hasPageTab">
-            <bk-tab
-                :active.sync="active"
-                type="unborder-card"
-                ext-cls="iam-page-tab-ext-cls"
-                @tab-change="handlePageTabChange">
-                <bk-tab-panel
-                    v-for="(panel, index) in panels"
-                    v-bind="panel"
-                    :key="index">
-                </bk-tab-panel>
-            </bk-tab>
         </div>
         <system-log v-model="showSystemLog" />
     </header>
@@ -120,7 +73,7 @@
     import { bus } from '@/common/bus';
     import { buildURLParams } from '@/common/url';
     import SystemLog from '../system-log';
-    import { getRouterDiff } from '@/common/router-handle';
+    import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 
     // 有选项卡的页面，user-group-detail 以及 perm-template-detail
     const getTabData = (routerName) => {
@@ -247,7 +200,15 @@
                 showGuide: false,
                 isShowHeader: false,
                 placeholderValue: '',
-                userGroupName: ''
+                userGroupName: '',
+                navData: [
+                    { text: '个人工作台', id: 0, show: true, type: 'staff' },
+                    { text: '权限管理', id: 1, show: true, type: 'all_manager' },
+                    { text: '统计分析', id: 2, show: false, type: 'super_manager' },
+                    { text: '平台管理', id: 3, show: false, type: 'super_manager' }
+                ],
+                isRatingChange: false,
+                showNavDataLength: 0
             };
         },
         computed: {
@@ -257,7 +218,9 @@
                 'backRouter',
                 'user',
                 'mainContentLoading',
-                'roleList'
+                'roleList',
+                'index',
+                'navCurRoleId'
             ]),
             style () {
                 return {
@@ -295,6 +258,7 @@
             user: {
                 handler (value) {
                     this.curRoleId = value.role.id || 0;
+                    this.curRole = value.role.type || 'staff';
                     this.placeholderValue = this.$t(`m.common['切换身份']`);
                 },
                 deep: true
@@ -302,6 +266,9 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
+                    if (this.curRoleList.length) {
+                        this.setTabRoleData();
+                    }
                 },
                 immediate: true
             },
@@ -315,27 +282,51 @@
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup();
                     }
+
+                    if (value === 'myPerm') {
+                        this.$store.commit('updateIndex', 0);
+                    } else if (value === 'userGroup') {
+                        this.$store.commit('updateIndex', 1);
+                        // this.updateRouter(this.user.role.type);
+                    } else if (value === 'audit') {
+                        this.$store.commit('updateIndex', 2);
+                    } else if (value === 'user') {
+                        this.$store.commit('updateIndex', 3);
+                    }
                 },
                 immediate: true
+            },
+            navData: {
+                handler (newValue, oldValue) {
+                    if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
+                        this.showGuide = true;
+                    }
+                    this.showNavDataLength = newValue.filter(e => e.show).length;
+                },
+                immediate: true,
+                deep: true
             }
         },
         created () {
             this.curRole = this.user.role.type;
             this.curIdentity = this.user.role.name;
-            bus.$emit('theme-change', this.curRole);
             this.curRoleId = this.user.role.id;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('reload-page');
                 bus.$off('refresh-role');
                 bus.$off('on-set-tab');
+                bus.$off('rating-admin-change');
             });
         },
         mounted () {
-            bus.$on('refresh-role', data => {
-                this.handleSwitchRole(data);
-            });
             bus.$on('on-set-tab', data => {
                 this.active = data;
+            });
+
+            bus.$on('rating-admin-change', () => {
+                const data = this.navData.find(e => e.type === 'staff');
+                this.isRatingChange = true;
+                this.handleSelect(data, 0);
             });
         },
         methods: {
@@ -421,78 +412,48 @@
                 }, _ => _);
             },
 
-            updateRouter (roleType) {
-                this.$store.commit('updataRouterDiff', roleType);
-                const difference = getRouterDiff(roleType);
+            async updateRouter (navIndex = 0) {
+                let difference = [];
+                if (navIndex === 1) {
+                    await this.$store.dispatch('userInfo');
+                    const type = this.curRole;
+                    difference = getRouterDiff(type);
+                    this.$store.commit('updataRouterDiff', type);
+                } else {
+                    difference = getNavRouterDiff(navIndex);
+                    this.$store.commit('updataNavRouterDiff', navIndex);
+                }
                 const curRouterName = this.$route.name;
                 if (difference.length) {
                     if (difference.includes(curRouterName)) {
                         this.$store.commit('setHeaderTitle', '');
                         window.localStorage.removeItem('iam-header-title-cache');
                         window.localStorage.removeItem('iam-header-name-cache');
-                        if (roleType === 'staff' || roleType === '') {
-                            this.$router.push({
-                                name: 'myPerm'
-                            });
-                            return;
+                        let name = 'myPerm';
+                        if (this.isRatingChange) {
+                            name = 'ratingManager';
+                        }
+                        if (navIndex === 1) {
+                            name = 'userGroup';
+                        } else if (navIndex === 2) {
+                            name = 'audit';
+                        } else if (navIndex === 3) {
+                            name = 'user';
                         }
                         this.$router.push({
-                            // name: 'permTemplate'
-                            // 切换角色默认跳转到用户组
-                            name: 'userGroup'
+                            name
                         });
-                        return;
                     }
-
-                    const permTemplateRoutes = [
-                        'permTemplateCreate', 'permTemplateDetail',
-                        'permTemplateEdit', 'permTemplateDiff'
-                    ];
-                    if (permTemplateRoutes.includes(curRouterName)) {
-                        this.$router.push({ name: 'permTemplate' });
-                        return;
-                    }
-                    if (['createUserGroup', 'userGroupDetail'].includes(curRouterName)) {
-                        this.$router.push({ name: 'userGroup' });
-                        return;
-                    }
-                    if (['gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate'].includes(curRouterName)) {
-                        this.$router.push({ name: 'ratingManager' });
-                        return;
-                    }
-                    this.$emit('reload-page', this.$route);
-                    return;
-                }
-                this.$emit('reload-page', this.$route);
-            },
-
-            async handleSwitchRole ({ id, type, name }) {
-                try {
-                    await this.$store.dispatch('role/updateCurrentRole', { id });
-                    this.messageSuccess(this.$t(`m.info['切换身份成功']`), 2000);
-                    this.curIdentity = id === 0 ? 'STAFF' : name;
-                    this.curRole = type;
-                    this.curRoleId = id;
-                    this.$store.commit('updateIdentity', { id, type, name });
-                    this.updateRouter(type);
-                    this.resetLocalStorage();
-                    bus.$emit('theme-change', this.curRole);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
                 }
             },
 
-            handleSelect (roleData) {
-                if (this.curRoleId === roleData.id) {
-                    return;
-                }
+            async handleSelect (roleData, index) {
+                this.navData.forEach(e => {
+                    e.active = false;
+                });
+                roleData.active = true;
+                this.$store.commit('updateIndex', index);
+                window.localStorage.setItem('index', index);
                 if (this.routeName === 'addGroupPerm') {
                     this.$router.push({
                         name: 'userGroup'
@@ -500,7 +461,9 @@
                 }
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
-                this.handleSwitchRole(roleData);
+                await this.$store.dispatch('role/updateCurrentRole', { id: roleData.id });
+                bus.$emit('nav-change', { id: roleData.id }, index);
+                this.updateRouter(index);
             },
 
             handleSwitchIdentity () {
@@ -518,6 +481,7 @@
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
                 window.localStorage.removeItem('applyGroupList');
+                window.localStorage.removeItem('index');
                 window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
             },
 
@@ -531,6 +495,7 @@
                 window.localStorage.removeItem('applyGroupList');
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
+                window.localStorage.removeItem('index');
             },
 
             handlePageTabChange (name) {
@@ -547,6 +512,23 @@
                         tab: tab
                     }))}`);
                 }
+            },
+            
+            // 根据角色设置
+            setTabRoleData () {
+                const superManager = this.curRoleList.find(e => e.type === 'super_manager');
+                const allManager = this.curRoleList.find(e => e.type !== 'staff');
+                this.navData.forEach((element, i) => {
+                    element.active = i === this.index;
+                    if (element.type === 'super_manager' && superManager) {
+                        element.id = superManager.id;
+                        element.show = true;
+                    } else if (element.type === 'all_manager' && allManager) {
+                        element.id = this.navCurRoleId || allManager.id;
+                        // element.id = allManager.id;
+                    }
+                });
+                this.$store.commit('updateNavData', this.navData);
             }
         }
     };
