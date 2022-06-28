@@ -291,15 +291,25 @@
                     this.groupSystemList = res.data || []; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
                     this.groupSystemListLength = res.data.length;
                     console.log('this.groupSystemList', this.groupSystemList);
-                    this.groupSystemList.forEach(async e => {
-                        e.count = e.custom_policy_count;
-                        this.fetchAggregationAction(e.id);
-                        if (e.count > 0) {
-                            await this.getGroupCustomPolicy(e);
+                    for (let i = 0; i < this.groupSystemList.length; i++) {
+                        this.groupSystemList[i].count = this.groupSystemList[i].custom_policy_count;
+                        this.fetchAggregationAction(this.groupSystemList[i].id);
+                        if (this.groupSystemList[i].count > 0) {
+                            await this.getGroupCustomPolicy(this.groupSystemList[i]);
                         } else {
-                            await this.getGroupTemplateList(e);
+                            await this.getGroupTemplateList(this.groupSystemList[i]);
                         }
-                    });
+                    }
+                    // this.groupSystemList.forEach(async e => {
+                    //     e.count = e.custom_policy_count;
+                    //     this.fetchAggregationAction(e.id);
+                    //     if (e.count > 0) {
+                    //         await this.getGroupCustomPolicy(e);
+                    //     } else {
+                    //         await this.getGroupTemplateList(e);
+                    //     }
+                    // });
+                    console.log(222222222);
                     this.handleAggregateData();
                 } catch (e) {
                     console.error(e);
@@ -379,10 +389,13 @@
                         id: this.groupId,
                         systemId: groupSystem.id
                     });
+                    for (let i = 0; i < res.data.length; i++) {
+                        await this.getGroupTemplateDetail(res.data[i]);
+                    }
 
-                    res.data.forEach(async item => {
-                        await this.getGroupTemplateDetail(item);
-                    });
+                    // res.data.forEach(async item => {
+                    //     await this.getGroupTemplateDetail(item);
+                    // });
                     groupSystem.templates = res.data; // 赋值给展开项
                 } catch (e) {
                     console.error(e);
@@ -434,7 +447,6 @@
                     // this.$set(item, 'tableData', tableData);
                     this.tableList.push(..._.cloneDeep(tableData));
                     this.tableListBackup = _.cloneDeep(this.tableList);
-                    console.log(111111);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
