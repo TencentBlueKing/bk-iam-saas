@@ -79,8 +79,11 @@ class PathNodeList(ListModel):
 
     def get_last_node_without_any(self):
         """获取路径里最后一个非任意的节点"""
-        if self.__root__[-1].id == ANY_ID:
+        if len(self.__root__) >= 2 and self.__root__[-1].id == ANY_ID:
             return self.__root__[-2]
+
+        assert len(self.__root__) >= 1
+        assert self.__root__[-1].id != ANY_ID
 
         return self.__root__[-1]
 
@@ -376,46 +379,55 @@ class UniversalPolicy(Policy):
         p._split_resource()
         return p
 
-    def _split_resource(self):
+    def _is_absolute_abac(self) -> bool:
         """
-        拆分出RBAC和ABAC权限
-        并填充到expression_resource_groups和instances_resource_groups字段里
-        同时计算出策略类型auth_type
+        对于策略，某些情况下可以立马判断为ABAC策略
         """
-        # 1. 无需进行分析拆分，必须是ABAC策略的情况
-        # （1）无关联资源实例
-        # （2）关联多种资源实例
-        if (
-            len(self.resource_groups) == 0
-            or len(self.resource_groups) > 1
-            or (len(self.resource_groups) == 1 and len(self.resource_groups[0].related_resource_types) != 1)
-        ):
-            self.expression_resource_groups = self.resource_groups
-            return
+        resource_group_count = len(self.resource_groups)
+        # 1. 与资源实例无关
+        # Note: 对于有关联资源实例的权限，resource_groups有数据，即使是任意，其也是有一个resource_group，且resource_group里Condition为空列表
+        if resource_group_count == 0:
+            return True
 
-        # 2. 分析拆分出RBAC和ABAC策略
+        # 2. 关联多种资源类型
+        # Note: 对于只关联一种资源类型的情况，多个resource_group一定会被合并为一个resource_group
+        #  所以这里多个resource_group，则一定是关联了多种资源类型
+        if resource_group_count > 1:
+            return True
+
+        # 3. 只有一组的情况，进一步判断
         resource_group = self.resource_groups[0]
+        # 3.1 关联多个资源类型
+        related_resource_type_count = len(resource_group.related_resource_types)
+        if related_resource_type_count != 1:
+            return True
 
-        # 2.1 包含环境属性，则只能是ABAC策略
+        # 只有一组，且只关联一种资源类型，进一步判断
+        # 3.2 包含环境属性
         if resource_group.environments:
-            self.expression_resource_groups = self.resource_groups
-            return
+            return True
 
+        # 3.3 Any策略
         rrt = resource_group.related_resource_types[0]
-        # 2.2 Any的情况处理，则只能是ABAC策略
         if len(rrt.condition) == 0:
-            self.expression_resource_groups = self.resource_groups
-            return
+            return True
 
-        # 2.3 遍历每个Condition
-        conditions = []
-        rbac_instances = []
+        return False
+
+    def _set_abac_and_rbac(self, rrt: RelatedResource):
+        """将关联的资源类型的权限进行拆分，并设置在对应rbac和abac数据里"""
+
+        abac_conditions = []  # 存储ABAC策略数据
+        rbac_instances = []  # 存储RBAC策略数据
+
+        # 遍历原始策略的每个Condition，将ABAC策略和RBAC策略数据拆分出来
         for c in rrt.condition:
             # 包含属性，则只能是ABAC策略
             if not c.has_no_attributes():
-                conditions.append(c)
+                abac_conditions.append(c)
                 continue
 
+            # 接下来分析只包含资源实例范围的情况
             abac_instances: List[Instance] = []
             for inst in c.instances:
                 # 无法命中RBAC策略规则的路径
@@ -432,55 +444,91 @@ class UniversalPolicy(Policy):
                     abac_instances.append(Instance(type=inst.type, path=abac_paths))
 
             # 存在abac实例，则构造对应Condition
-            conditions.append(Condition(instances=abac_instances, attributes=[]))
+            abac_conditions.append(Condition(instances=abac_instances, attributes=[]))
 
-        if len(conditions) > 0:
+        # 如果拆分后，存储ABAC策略的Condition有数据，则设置ABAC策略
+        if len(abac_conditions) > 0:
             self.expression_resource_groups = ResourceGroupList(
                 __root__=[
                     ResourceGroup(
                         related_resource_types=[
-                            RelatedResource(system_id=rrt.system_id, type=rrt.type, condition=conditions)
+                            RelatedResource(system_id=rrt.system_id, type=rrt.type, condition=abac_conditions)
                         ]
                     )
                 ]
             )
 
+        # 如果拆分后，存储RBAC策略的instances有数据，则设置RBAC策略
         if len(rbac_instances) > 0:
             self.instances = list(set(rbac_instances))
 
-        # 计算出策略类型auth_type并修改
-        if len(self.expression_resource_groups) > 0 and len(self.instances) > 0:
-            self.auth_type = AuthTypeEnum.ALL.value
-        elif len(self.expression_resource_groups) == 0 and len(self.instances) > 0:
-            self.auth_type = AuthTypeEnum.RBAC.value
-        elif len(self.expression_resource_groups) > 0 and len(self.instances) == 0:
-            self.auth_type = AuthTypeEnum.ABAC.value
+    def _cal_and_set_auth_type(self):
+        """根据拆分rabc和abac数据后进行计算auth_type"""
+        has_abac = len(self.expression_resource_groups) > 0
+        has_rbac = len(self.instances) > 0
 
-    def sub(self, system_id: str, other: "UniversalPolicy") -> UniversalPolicyChangedContent:
-        """用于策略变更时对比得到需要变更rbac和abac策略的内容"""
-        policy_changed_content = UniversalPolicyChangedContent(action_id=self.action_id, auth_type=other.auth_type)
+        # 3.1 abac和rbac都有
+        if has_abac and has_rbac:
+            self.auth_type = AuthTypeEnum.ALL.value
+        # 3.2 有abac，无rbac
+        elif has_abac and not has_rbac:
+            self.auth_type = AuthTypeEnum.ABAC.value
+        # 3.3 无abac，有rbac
+        elif not has_abac and has_rbac:
+            self.auth_type = AuthTypeEnum.RBAC.value
+
+    def _split_resource(self):
+        """
+        拆分出RBAC和ABAC权限
+        并填充到expression_resource_groups和instances_resource_groups字段里
+        同时计算出策略类型auth_type
+        """
+        # 1. 绝对是ABAC策略的情况，则无需进行策略的分析拆分
+        if self._is_absolute_abac():
+            self.expression_resource_groups = self.resource_groups
+            return
+
+        # 2. 分析拆分出RBAC和ABAC策略
+        # Note: 由于_is_absolute_abac方法里已经判断了多组和空组的情况为abac策略，提前返回了，所以下面只分析一组且只关联一种资源类型的情况
+        rrt = self.resource_groups[0].related_resource_types[0]
+        self._set_abac_and_rbac(rrt)
+
+        # 3. 计算出策略类型auth_type并修改
+        self._cal_and_set_auth_type()
+
+    def cal_pre_changed_content(self, system_id: str, old: "UniversalPolicy") -> UniversalPolicyChangedContent:
+        """
+        用于策略变化时，预先计算出策略要变化的abac和rbac内容
+        """
+        policy_changed_content = UniversalPolicyChangedContent(action_id=self.action_id, auth_type=self.auth_type)
 
         # ABAC
-        if len(self.expression_resource_groups) > 0 and len(other.expression_resource_groups) > 0:
+        self_has_abac = len(self.expression_resource_groups) > 0
+        old_has_abac = len(old.expression_resource_groups) > 0
+        # 新老策略都有ABAC策略，则最终是使用新策略直接覆盖
+        if self_has_abac and old_has_abac:
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.UPDATED.value,
-                id=other.policy_id,
+                id=old.policy_id,
                 resource_expression=self.to_resource_expression(system_id),
             )
-        elif len(self.expression_resource_groups) == 0 and len(other.expression_resource_groups) > 0:
+        # 新策略无ABAC策略，但老策略有ABAC策略，则需要将老的ABAC策略删除
+        elif not self_has_abac and old_has_abac:
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.DELETED.value,
-                id=other.policy_id,
+                id=old.policy_id,
             )
-        elif len(self.expression_resource_groups) > 0 and len(other.expression_resource_groups) == 0:
+        # 新策略由ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
+        elif self_has_abac and old_has_abac:
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.CREATED.value,
                 resource_expression=self.to_resource_expression(system_id),
             )
 
         # RBAC
-        created_instances = list(set(self.instances) - set(other.instances))
-        deleted_instances = list(set(other.instances) - set(self.instances))
+        # TODO：需要策略1万个实例的情况下的性能
+        created_instances = list(set(self.instances) - set(old.instances))
+        deleted_instances = list(set(old.instances) - set(self.instances))
         if created_instances or deleted_instances:
             policy_changed_content.rbac = RbacPolicyChangeContent(created=created_instances, deleted=deleted_instances)
 

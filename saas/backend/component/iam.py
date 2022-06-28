@@ -587,7 +587,7 @@ def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
 
 
 # --------------------------------- V2 API ---------------------------------
-def alter_policies_v2(
+def alter_group_policies_v2(
     subject_type: str,
     subject_id: str,
     template_id: int,

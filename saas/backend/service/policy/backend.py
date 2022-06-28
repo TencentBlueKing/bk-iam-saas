@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 from collections import Counter
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Tuple
 
 from pydantic import BaseModel
 
@@ -63,33 +63,46 @@ class BackendPolicyOperationService:
         # 只允许用户组支持RBAC权限
         assert subject.type == SubjectType.GROUP.value
 
-        # 遍历每条变更的策略，根据rabc和abac拆分
-        created_policies, updated_policies, deleted_policy_ids = [], [], []
+        # 生成要变更的ABAC数据
+        created_policies, updated_policies, deleted_policy_ids = self.generate_abac_data(changed_policies)
+
+        # 生成要变更的RBAC数据
+        resource_action_data = self.generate_rbac_data(changed_policies)
+
+        # 查询并计算用户组类型
+        changed_policy_auth_types = {p.action_id: p.auth_type for p in changed_policies}
+        auth_type = self._calculate_auth_type(subject, template_id, system_id, changed_policy_auth_types)
+
+        iam.alter_group_policies_v2(
+            subject.type,
+            subject.id,
+            template_id,
+            system_id,
+            created_policies,
+            updated_policies,
+            deleted_policy_ids,
+            resource_action_data,
+            auth_type,
+        )
+
+    def generate_rbac_data(self, changed_policies: List[UniversalPolicyChangedContent]) -> List[Dict[str, Any]]:
+        """从批量变更策略的内容里提取生成要变更的RBAC策略数据"""
         resource_actions: Dict[PathNode, Dict[str, List[str]]] = {}
         for p in changed_policies:
-            # 对于abac权限，按变更类型分类
-            if p.abac is not None:
-                if p.abac.change_type == AbacPolicyChangeType.CREATED.value:
-                    created_policies.append(
-                        p.abac.dict(include={"action_id", "resource_expression", "environment", "expired_at"})
-                    )
-                elif p.abac.change_type == AbacPolicyChangeType.UPDATED.value:
-                    updated_policies.append(
-                        p.abac.dict(include={"id", "action_id", "resource_expression", "environment", "expired_at"})
-                    )
-                elif p.abac.change_type == AbacPolicyChangeType.DELETED.value:
-                    deleted_policy_ids.append(p.abac.id)
+            # 无需RBAC变更，则忽略
+            if p.rbac is None:
+                continue
 
-            # 对于rbac还需要按照resources进行分组聚合
-            if p.rbac is not None:
-                for r in p.rbac.created:
-                    if r not in resource_actions:
-                        resource_actions[r] = {"created_action_ids": [], "deleted_action_ids": []}
-                    resource_actions[r]["created_action_ids"].append(p.action_id)
-                for r in p.rbac.deleted:
-                    if r not in resource_actions:
-                        resource_actions[r] = {"created_action_ids": [], "deleted_action_ids": []}
-                    resource_actions[r]["deleted_action_ids"].append(p.action_id)
+            # 对于rbac 需要按照resources进行分组聚合
+            for r in p.rbac.created:
+                if r not in resource_actions:
+                    resource_actions[r] = {"created_action_ids": [], "deleted_action_ids": []}
+                resource_actions[r]["created_action_ids"].append(p.action_id)
+
+            for r in p.rbac.deleted:
+                if r not in resource_actions:
+                    resource_actions[r] = {"created_action_ids": [], "deleted_action_ids": []}
+                resource_actions[r]["deleted_action_ids"].append(p.action_id)
 
         # 将resource_actions转化为调用后台接口所需数据格式
         resource_action_data = [
@@ -101,21 +114,31 @@ class BackendPolicyOperationService:
             for r, a in resource_actions.items()
         ]
 
-        # 查询并计算用户组类型
-        changed_policy_auth_types = {p.action_id: p.auth_type for p in changed_policies}
-        auth_type = self._calculate_auth_type(subject, template_id, system_id, changed_policy_auth_types)
+        return resource_action_data
 
-        iam.alter_policies_v2(
-            subject.type,
-            subject.id,
-            template_id,
-            system_id,
-            created_policies,
-            updated_policies,
-            deleted_policy_ids,
-            resource_action_data,
-            auth_type,
-        )
+    def generate_abac_data(
+        self, changed_policies: List[UniversalPolicyChangedContent]
+    ) -> Tuple[List[Dict], List[Dict], List[int]]:
+        """从批量变更策略的内容里提取生成要变更的ABAC策略数据"""
+        created_policies, updated_policies, deleted_policy_ids = [], [], []
+        for p in changed_policies:
+            # 无需RBAC变更，则忽略
+            if p.abac is None:
+                continue
+
+            # 对于abac权限，按变更类型分类
+            if p.abac.change_type == AbacPolicyChangeType.CREATED.value:
+                created_policies.append(
+                    p.abac.dict(include={"action_id", "resource_expression", "environment", "expired_at"})
+                )
+            elif p.abac.change_type == AbacPolicyChangeType.UPDATED.value:
+                updated_policies.append(
+                    p.abac.dict(include={"id", "action_id", "resource_expression", "environment", "expired_at"})
+                )
+            elif p.abac.change_type == AbacPolicyChangeType.DELETED.value:
+                deleted_policy_ids.append(p.abac.id)
+
+        return created_policies, updated_policies, deleted_policy_ids
 
     def _calculate_auth_type(
         self, subject: Subject, template_id: int, system_id: str, changed_policy_auth_types: Dict[str, str]
@@ -166,5 +189,9 @@ class BackendPolicyOperationService:
                 if auth_template_id != template_id or action_id not in changed_policy_auth_types
             ]
             auth_type_statistics.accumulate(auth_types)
+
+            # 如果是all，可以提前判断
+            if auth_type_statistics.is_all_auth_type():
+                return AuthTypeEnum.ALL.value
 
         return auth_type_statistics.final_auth_type()

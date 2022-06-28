@@ -230,7 +230,7 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         for p in update_policies:
             up = UniversalPolicy.from_policy(p)
             old_up = UniversalPolicy.from_policy(old_policies[p.action_id])
-            policy_changed_content = up.sub(old_up)
+            policy_changed_content = up.cal_pre_changed_content(old_up)
             changed_policies.append(policy_changed_content)
 
         return changed_policies

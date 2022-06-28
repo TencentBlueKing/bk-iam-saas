@@ -109,7 +109,7 @@ class PermTemplatePolicyAuthorized(BaseModel):
         self._data = json_dumps(data)
 
     @property
-    def auth_types(self) -> Dict:
+    def auth_types(self) -> Dict[str, str]:
         return json.loads(self._auth_types)
 
     @auth_types.setter
