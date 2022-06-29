@@ -376,15 +376,17 @@ class UniversalPolicy(Policy):
             expired_at=policy.expired_at,
             resource_groups=policy.resource_groups,
         )
-        p._split_resource()
+        # 主要是初始化expression_resource_groups、instances、auth_type 这3个与RBAC和ABAC相关的数据
+        p._init_abac_and_rbac_data(policy.resource_groups)
         return p
 
-    def _is_absolute_abac(self) -> bool:
+    @staticmethod
+    def _is_absolute_abac(resource_groups: ResourceGroupList) -> bool:
         """
         对于策略，某些情况下可以立马判断为ABAC策略
         """
         # TODO: 写单元测试时，顺便添加一些debug日志, 排查问题时能精确知道在哪个分支被return, 降低成本
-        resource_group_count = len(self.resource_groups)
+        resource_group_count = len(resource_groups)
         # 1. 与资源实例无关
         # Note: 对于有关联资源实例的权限，resource_groups有数据，即使是任意，其也是有一个resource_group，且resource_group里Condition为空列表
         if resource_group_count == 0:
@@ -397,7 +399,7 @@ class UniversalPolicy(Policy):
             return True
 
         # 3. 只有一组的情况，进一步判断
-        resource_group = self.resource_groups[0]
+        resource_group = resource_groups[0]
         # 3.1 关联多个资源类型
         related_resource_type_count = len(resource_group.related_resource_types)
         if related_resource_type_count != 1:
@@ -415,7 +417,8 @@ class UniversalPolicy(Policy):
 
         return False
 
-    def _set_abac_and_rbac(self, rrt: RelatedResource):
+    @staticmethod
+    def _parse_abac_and_rbac(rrt: RelatedResource) -> Tuple[ResourceGroupList, List[PathNode]]:
         """将关联的资源类型的权限进行拆分，并设置在对应rbac和abac数据里"""
 
         abac_conditions = []  # 存储ABAC策略数据
@@ -448,9 +451,10 @@ class UniversalPolicy(Policy):
             if len(abac_instances) > 0:
                 abac_conditions.append(Condition(instances=abac_instances, attributes=[]))
 
-        # 如果拆分后，存储ABAC策略的Condition有数据，则设置ABAC策略
+        # 如果拆分后，存储ABAC策略的Condition有数据，则构造ABAC策略数据结构
+        expression_resource_groups = ResourceGroupList(__root__=[])
         if len(abac_conditions) > 0:
-            self.expression_resource_groups = ResourceGroupList(
+            expression_resource_groups = ResourceGroupList(
                 __root__=[
                     ResourceGroup(
                         related_resource_types=[
@@ -460,45 +464,51 @@ class UniversalPolicy(Policy):
                 ]
             )
 
-        # 如果拆分后，存储RBAC策略的instances有数据，则设置RBAC策略
-        if len(rbac_instances) > 0:
-            self.instances = list(set(rbac_instances))
+        return expression_resource_groups, list(set(rbac_instances))
 
-    def _cal_and_set_auth_type(self):
-        """根据拆分rabc和abac数据后进行计算auth_type"""
-        has_abac = len(self.expression_resource_groups) > 0
-        has_rbac = len(self.instances) > 0
-
-        # 3.1 abac和rbac都有
+    @staticmethod
+    def _calculate_auth_type(has_abac: bool, has_rbac: bool) -> AuthTypeEnum:
+        """计算auth_type"""
+        # 1 abac和rbac都有
         if has_abac and has_rbac:
-            self.auth_type = AuthTypeEnum.ALL.value
-        # 3.2 有abac，无rbac
-        elif has_abac and not has_rbac:
-            self.auth_type = AuthTypeEnum.ABAC.value
-        # 3.3 无abac，有rbac
-        elif not has_abac and has_rbac:
-            self.auth_type = AuthTypeEnum.RBAC.value
+            return AuthTypeEnum.ALL.value
 
-    def _split_resource(self):
+        # 2 有abac，无rbac
+        if has_abac and not has_rbac:
+            return AuthTypeEnum.ABAC.value
+
+        # 3 无abac，有rbac
+        if not has_abac and has_rbac:
+            return AuthTypeEnum.RBAC.value
+
+        return AuthTypeEnum.NONE.value
+
+    def _init_abac_and_rbac_data(self, resource_groups: ResourceGroupList):
         """
         拆分出RBAC和ABAC权限
         并填充到expression_resource_groups和instances_resource_groups字段里
         同时计算出策略类型auth_type
         """
         # 1. 绝对是ABAC策略的情况，则无需进行策略的分析拆分
-        if self._is_absolute_abac():
-            self.expression_resource_groups = self.resource_groups
+        if self._is_absolute_abac(resource_groups):
+            self.expression_resource_groups = resource_groups
             return
 
-        # 2. 分析拆分出RBAC和ABAC策略
+        # 2. 分析拆分出RBAC和ABAC策略并设置
         # Note: 由于_is_absolute_abac方法里已经判断了多组和空组的情况为abac策略，提前返回了，所以下面只分析一组且只关联一种资源类型的情况
-        rrt = self.resource_groups[0].related_resource_types[0]
-        self._set_abac_and_rbac(rrt)
+        rrt = resource_groups[0].related_resource_types[0]
+        expression_resource_groups, instances = self._parse_abac_and_rbac(rrt)
+        # 根据解析出的rabc和abac策略数据进行设置
+        self.expression_resource_groups = expression_resource_groups
+        self.instances = instances
 
-        # 3. 计算出策略类型auth_type并修改
-        self._cal_and_set_auth_type()
+        # 3. 计算出策略类型auth_type并设置
+        has_abac = len(expression_resource_groups) > 0
+        has_rbac = len(instances) > 0
+        auth_type = self._calculate_auth_type(has_abac, has_rbac)
+        self.auth_type = auth_type
 
-    def cal_pre_changed_content(self, system_id: str, old: "UniversalPolicy") -> UniversalPolicyChangedContent:
+    def calculate_pre_changed_content(self, system_id: str, old: "UniversalPolicy") -> UniversalPolicyChangedContent:
         """
         用于策略变化时，预先计算出策略要变化的abac和rbac内容
         """

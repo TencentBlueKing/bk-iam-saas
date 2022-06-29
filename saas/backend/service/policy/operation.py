@@ -230,7 +230,7 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         for p in update_policies:
             up = UniversalPolicy.from_policy(p)
             old_up = UniversalPolicy.from_policy(old_policies[p.action_id])
-            policy_changed_content = up.cal_pre_changed_content(old_up)
+            policy_changed_content = up.calculate_pre_changed_content(old_up)
             changed_policies.append(policy_changed_content)
 
         return changed_policies
@@ -480,10 +480,12 @@ class PolicyOperationService:
         update_policies = update_policies or []
         delete_policy_ids = delete_policy_ids or []
 
+        # Note: type只有user和group，user默认走ABAC权限
         if subject.type == SubjectType.USER.value:
             self.abac_svc.alter(system_id, subject, create_policies, update_policies, delete_policy_ids, action_list)
             return
 
+        # Note: 下面是对type=group的处理
         # 1. 将创建、更新、删除的策略按照Action的AuthType进行拆分
         create_abac_policies, create_universal_policies = self._split_policies_by_auth_type(system_id, create_policies)
         update_abac_policies, update_universal_policies = self._split_policies_by_auth_type(system_id, update_policies)
@@ -491,11 +493,11 @@ class PolicyOperationService:
             system_id, subject, delete_policy_ids
         )
 
-        # ABAC 处理
+        # 2. ABAC 处理
         if create_abac_policies or update_abac_policies or delete_abac_policy_ids:
             self.abac_svc.alter(system_id, subject, create_abac_policies, update_abac_policies, delete_abac_policy_ids)
 
-        # RBAC处理
+        # 3. RBAC处理
         if create_universal_policies or update_universal_policies or delete_universal_policy_ids:
             self.universal_svc.alter(
                 system_id, subject, create_universal_policies, update_universal_policies, delete_universal_policy_ids
