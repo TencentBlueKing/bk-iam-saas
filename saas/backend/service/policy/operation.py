@@ -406,6 +406,7 @@ class PolicyOperationService:
             if auth_type == AuthTypeEnum.ABAC.value:
                 abac_policy_ids.append(policy_id)
             else:
+                # Note: 若Action类型为RBAC，其产生的策略既有可能是RBAC也有可能是ABAC，也可能是ALL，比如存在任意资源实例化就是ABAC
                 universal_policy_ids.append(policy_id)
 
         return abac_policy_ids, universal_policy_ids

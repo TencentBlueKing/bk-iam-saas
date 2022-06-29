@@ -89,7 +89,7 @@ class PathNodeList(ListModel):
 
     def is_all_ignore_path_of_matched_selection(self) -> bool:
         """所有匹配到的实例视图是否都为忽略路径"""
-        # TODO: 对每条路径都进行实例视图匹配，只有所有匹配到的实例视图都是忽略路径的，则可转换为ABAC策略
+        # FIXME: 对每条路径都进行实例视图匹配，只有所有匹配到的实例视图都是忽略路径的，则可转换为ABAC策略
         # NOTE: 第一期由于限制了当Action的AuthType为rbac时，其所有实例视图只能是ignore_path=True，
         # 所以这里可以直接认为只能是RBAC策略，暂时不进行实例视图匹配的分析
         return True
@@ -383,6 +383,7 @@ class UniversalPolicy(Policy):
         """
         对于策略，某些情况下可以立马判断为ABAC策略
         """
+        # TODO: 写单元测试时，顺便添加一些debug日志, 排查问题时能精确知道在哪个分支被return, 降低成本
         resource_group_count = len(self.resource_groups)
         # 1. 与资源实例无关
         # Note: 对于有关联资源实例的权限，resource_groups有数据，即使是任意，其也是有一个resource_group，且resource_group里Condition为空列表
@@ -440,11 +441,12 @@ class UniversalPolicy(Policy):
                     rbac_instances.append(path.get_last_node_without_any())
 
                 # 存在abac路径，则需要对应实例
-                if len(abac_instances) > 0:
+                if len(abac_paths) > 0:
                     abac_instances.append(Instance(type=inst.type, path=abac_paths))
 
             # 存在abac实例，则构造对应Condition
-            abac_conditions.append(Condition(instances=abac_instances, attributes=[]))
+            if len(abac_instances) > 0:
+                abac_conditions.append(Condition(instances=abac_instances, attributes=[]))
 
         # 如果拆分后，存储ABAC策略的Condition有数据，则设置ABAC策略
         if len(abac_conditions) > 0:

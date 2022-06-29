@@ -30,15 +30,15 @@ class AuthTypeStatistics(BaseModel):
 
     def accumulate(self, auth_types: Iterable[str]):
         """累加"""
-        statistical_result = Counter(auth_types)
-        self.abac_count += statistical_result.get(AuthTypeEnum.ABAC.value, 0)
-        self.rbac_count += statistical_result.get(AuthTypeEnum.RBAC.value, 0)
-        self.all_count += statistical_result.get(AuthTypeEnum.ALL.value, 0)
+        counter = Counter(auth_types)
+        self.abac_count += counter.get(AuthTypeEnum.ABAC.value, 0)
+        self.rbac_count += counter.get(AuthTypeEnum.RBAC.value, 0)
+        self.all_count += counter.get(AuthTypeEnum.ALL.value, 0)
 
     def is_all_auth_type(self):
         return self.all_count > 0 or (self.abac_count > 0 and self.rbac_count > 0)
 
-    def final_auth_type(self):
+    def auth_type(self):
         """根据统计结果，分析出最终auth_type"""
         if self.is_all_auth_type():
             return AuthTypeEnum.ALL.value
@@ -194,4 +194,4 @@ class BackendPolicyOperationService:
             if auth_type_statistics.is_all_auth_type():
                 return AuthTypeEnum.ALL.value
 
-        return auth_type_statistics.final_auth_type()
+        return auth_type_statistics.auth_type()
