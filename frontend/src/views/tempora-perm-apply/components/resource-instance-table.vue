@@ -471,7 +471,6 @@
                         this.emptyResourceGroupsList = []; // 重置变量
                         this.tableList = value;
                     }
-                    console.log('this.tableList', this.tableList);
                     this.originalList = _.cloneDeep(this.tableList);
                 },
                 immediate: true
