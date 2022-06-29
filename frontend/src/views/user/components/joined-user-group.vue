@@ -1,5 +1,10 @@
 <template>
     <div class="iam-joined-user-group-wrapper" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
+        <!-- <bk-button
+            class="mb20"
+            theme="primary" @click="handleBatchAddUserGroup" data-test-id="group_btn_create">
+            {{ $t(`m.permTemplate['添加用户组']`) }}
+        </bk-button> -->
         <div>
             <bk-table
                 :data="curPageData"
@@ -261,6 +266,10 @@
                 this.deleteDialogConf.msg = '';
                 this.deleteDialogConf.loading = false;
             }
+
+            // handleBatchAddUserGroup() {
+
+            // }
         }
     };
 </script>

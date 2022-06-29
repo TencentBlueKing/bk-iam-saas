@@ -22,7 +22,7 @@
         </render-action>
         <render-horizontal-block
             :label="$t(`m.grading['操作和资源范围']`)"
-            v-if="isHasPermTemplate">
+            v-show="isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm">
@@ -41,7 +41,7 @@
                         <span class="text">{{ expandedText }}</span>
                     </section>
                 </div>
-                <section ref="instanceTableContentRef">
+                <section ref="instanceTableContentRef" v-bkloading="{ isLoading: cloneLoading, opacity: 1 }">
                     <resource-instance-table
                         is-edit
                         mode="create"
@@ -192,7 +192,8 @@
                 curMap: null,
                 groupSystemList: [],
                 groupSystemListLength: 0,
-                groupId: ''
+                groupId: '',
+                cloneLoading: true
             };
         },
         computed: {
@@ -307,6 +308,7 @@
                         }
                     }
                     this.handleAggregateData();
+                    this.cloneLoading = false;
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -699,9 +701,7 @@
                     }
                 });
                 this.allAggregationData = data;
-                console.log('this.tableList', this.tableList);
                 this.tableList.forEach(item => {
-                    console.log('aggregationIds111', item);
                     const aggregationData = this.allAggregationData[item.detail.system.id];
                     if (aggregationData && aggregationData.length) {
                         aggregationData.forEach(aggItem => {
