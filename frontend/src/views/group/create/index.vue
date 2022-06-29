@@ -393,8 +393,6 @@
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
-                    console.log('actions', actions);
-                    console.log('item', item);
                     const len = actions.length;
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
@@ -417,7 +415,7 @@
              * handleAttrValueSelected
              */
             handleAttrValueSelected (payload) {
-                // debugger
+                console.log('payload', payload);
                 window.changeDialog = true;
                 const instances = (function () {
                     const arr = [];
@@ -687,11 +685,9 @@
                     tempList.push(...list);
                 });
                 this.tableList = _.cloneDeep(tempList);
-                console.log('this.tableList', this.tableList);
             },
 
             setInstancesDisplayData (data) {
-                console.log('data', data);
                 const instancesDisplayData = data.reduce((p, v) => {
                     if (!p[v['type']]) {
                         p[v['type']] = [];

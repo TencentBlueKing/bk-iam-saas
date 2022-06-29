@@ -284,21 +284,17 @@
                     if (actions.length) {
                         isAllCheckedData = actions.every(v => v.checked);
                     }
-                    console.log('isAllChecked', isAllChecked);
                     item.allChecked = isAllChecked;
                     item.allCheckedData = isAllCheckedData;
                     if (item.sub_groups && item.sub_groups.length > 0) {
-                        console.log('isAllChecked && item.sub_groups.every(v => v.allCheckedData)', item.sub_groups.every(v => v.allCheckedData));
                         this.$nextTick(() => {
                             item.actionsAllChecked = isAllCheckedData && item.sub_groups.every(v => v.allCheckedData);
-                            console.log('item.actionsAllChecked', item.actionsAllChecked);
                         });
                     } else {
                         this.$nextTick(() => {
                             item.actionsAllChecked = isAllCheckedData;
                         });
                     }
-                    console.log('this.originalCustomTmplList', this.originalCustomTmplList);
                 });
             },
             handleExpanded (payload) {

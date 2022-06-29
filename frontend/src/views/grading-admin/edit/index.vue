@@ -48,6 +48,7 @@
                         ref="instanceTableContentRef"
                         v-bkloading="{ isLoading, opacity: 1, extCls: 'loading-resource-instance-cls' }">
                         <render-instance-table
+                            :is-all-expanded="isAllExpanded"
                             ref="resourceInstanceRef"
                             :data="policyList"
                             :list="policyList"

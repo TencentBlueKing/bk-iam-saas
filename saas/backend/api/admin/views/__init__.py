@@ -8,11 +8,20 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from .audit import AdminAuditEventViewSet
 from .group import AdminGroupMemberViewSet, AdminGroupViewSet
-from .subject import AdminSubjectGroupViewSet
+from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
+from .subject import AdminSubjectFreezeViewSet, AdminSubjectGroupViewSet, AdminSubjectRoleViewSet
+from .system import AdminSystemViewSet
 
 __all__ = [
     "AdminGroupViewSet",
     "AdminGroupMemberViewSet",
     "AdminSubjectGroupViewSet",
+    "AdminSuperManagerMemberViewSet",
+    "AdminSystemManagerMemberViewSet",
+    "AdminSubjectRoleViewSet",
+    "AdminSystemViewSet",
+    "AdminAuditEventViewSet",
+    "AdminSubjectFreezeViewSet",
 ]

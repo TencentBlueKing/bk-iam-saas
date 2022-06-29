@@ -87,7 +87,7 @@
                             </div>
                         </template>
                         <template v-else>
-                            <div style="margin-bottom: 15px;">{{ $t(`m.common['无需关联实例']`) }}</div>
+                            <div class="condition-table-cell empty-text">{{ $t(`m.common['无需关联实例']`) }}</div>
                         </template>
                     </div>
                 </template>
@@ -306,6 +306,10 @@
             cacheId: {
                 type: String,
                 default: ''
+            },
+            isAllExpanded: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -444,7 +448,30 @@
                     value.forEach(e => {
                         e.expired_at = 3600;
                     });
-                    this.tableList = value;
+                    console.log('this.isAllExpanded', this.isAllExpanded, value);
+                    if (this.isAllExpanded) {
+                        this.tableList = value.filter(e =>
+                            (e.resource_groups && e.resource_groups.length)
+                            || e.isAggregate);
+                        this.emptyResourceGroupsList = value.filter(e =>
+                            e.resource_groups && !e.resource_groups.length);
+                        this.emptyResourceGroupsName = (this.emptyResourceGroupsList || []).reduce((p, e) => {
+                            p.push(e.name);
+                            return p;
+                        }, []);
+                        if (this.emptyResourceGroupsName.length) {
+                            this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
+                            this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
+                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
+                        }
+                    } else {
+                        value.forEach(e => {
+                            e.name = e.name.split('，')[0];
+                        });
+                        this.emptyResourceGroupsList = []; // 重置变量
+                        this.tableList = value;
+                    }
+                    console.log('this.tableList', this.tableList);
                     this.originalList = _.cloneDeep(this.tableList);
                 },
                 immediate: true
@@ -1369,6 +1396,19 @@
                 }
                 const actionList = [];
                 const aggregations = [];
+
+                // 重新赋值
+                if (this.isAllExpanded) {
+                    this.tableList = this.tableList.filter(e =>
+                        (e.resource_groups && e.resource_groups.length)
+                        || e.isAggregate);
+                    if (this.emptyResourceGroupsList.length) {
+                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                    }
+                }
+                debugger;
+                
                 this.tableList.forEach(item => {
                     let tempExpiredAt = '';
                     if (item.expired_at === '' && item.expired_display) {

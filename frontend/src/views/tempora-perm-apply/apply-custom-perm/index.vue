@@ -36,6 +36,7 @@
                             <render-action-tag
                                 ref="commonActionRef"
                                 :system-id="systemValue"
+                                :tag-action-list="tagActionList"
                                 v-if="commonActions.length > 0 && !customLoading"
                                 mode="detail"
                                 :data="commonActions"
@@ -168,6 +169,7 @@
                         :list="tableData"
                         :original-list="tableDataBackup"
                         :system-id="systemValue"
+                        :is-all-expanded="isAllExpanded"
                         ref="resInstanceTableRef"
                         @on-select="handleResourceSelect"
                         @on-realted-change="handleRelatedChange" />
@@ -308,7 +310,8 @@
                 // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
-                newTableList: []
+                newTableList: [],
+                tagActionList: []
 
             };
         },
@@ -399,6 +402,7 @@
             },
             tableData: {
                 handler (value) {
+                    this.tagActionList = value.map(e => e.id);
                     if (value.filter(item => item.isAggregate).length < 1) {
                         this.isAllExpanded = false;
                     }
