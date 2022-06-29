@@ -71,20 +71,22 @@
                                     <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
                                 </bk-button>
                             </div>
-                            <render-condition
-                                :ref="`condition_${$index}_aggregateRef`"
-                                :value="row.value"
-                                :is-empty="row.empty"
-                                :can-view="false"
-                                :can-paste="row.canPaste"
-                                :is-error="row.isError"
-                                @on-mouseover="handlerAggregateConditionMouseover(row)"
-                                @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                                @on-copy="handlerAggregateOnCopy(row, $index)"
-                                @on-paste="handlerAggregateOnPaste(row)"
-                                @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                                @on-click="showAggregateResourceInstance(row, $index)" />
-                            <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                            <div class="content">
+                                <render-condition
+                                    :ref="`condition_${$index}_aggregateRef`"
+                                    :value="row.value"
+                                    :is-empty="row.empty"
+                                    :can-view="false"
+                                    :can-paste="row.canPaste"
+                                    :is-error="row.isError"
+                                    @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                    @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                    @on-copy="handlerAggregateOnCopy(row, $index)"
+                                    @on-paste="handlerAggregateOnPaste(row)"
+                                    @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                    @on-click="showAggregateResourceInstance(row, $index)" />
+                                <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                            </div>
                         </div>
                         <div class="relation-content-wrapper" v-else>
                             <template v-if="!row.isEmpty">
@@ -427,7 +429,7 @@
                         if (this.emptyResourceGroupsName.length) {
                             this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
                             this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
-                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
+                            this.tableList.unshift(this.emptyResourceGroupsTableList);
                         }
                     } else {
                         value.forEach(e => {
