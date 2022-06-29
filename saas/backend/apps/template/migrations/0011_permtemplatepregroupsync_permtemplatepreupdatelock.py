@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('created_time', models.DateTimeField(auto_now_add=True)),
                 ('updated_time', models.DateTimeField(auto_now=True)),
                 ('template_id', models.IntegerField(verbose_name='模板ID')),
-                ('status', models.CharField(choices=[('running', '运行中'), ('wating', '等待中')], default='wating', max_length=32, verbose_name='类型')),
+                ('status', models.CharField(choices=[('running', '运行中'), ('waiting', '等待中')], default='waiting', max_length=32, verbose_name='类型')),
                 ('_action_ids', models.TextField(db_column='action_ids', verbose_name='操作列表')),
             ],
             options={
@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                 ('updated_time', models.DateTimeField(auto_now=True)),
                 ('template_id', models.IntegerField(verbose_name='模板ID')),
                 ('group_id', models.IntegerField(verbose_name='模板ID')),
-                ('status', models.CharField(choices=[('running', '运行中'), ('wating', '等待中')], default='wating', max_length=32, verbose_name='类型')),
+                ('status', models.CharField(choices=[('running', '运行中'), ('waiting', '等待中')], default='waiting', max_length=32, verbose_name='类型')),
                 ('_data', models.TextField(db_column='data', verbose_name='授权数据')),
             ],
             options={
