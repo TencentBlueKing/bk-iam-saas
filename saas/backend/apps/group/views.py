@@ -396,8 +396,7 @@ class GroupsMemberViewSet(GenericViewSet):
             try:
                 if not RoleObjectRelationChecker(request.role).check_group(group):
                     self.permission_denied(
-                        request,
-                        message=f"{request.role.type} role can not access group {group.id}"
+                        request, message=f"{request.role.type} role can not access group {group.id}"
                     )
                 # 校验用户组数量是否超限
                 GroupCheckBiz().check_member_count(group.id, len(members))
@@ -405,16 +404,15 @@ class GroupsMemberViewSet(GenericViewSet):
                 readonly = group.readonly
                 if readonly:
                     raise error_codes.FORBIDDEN.format(
-                        message=_("只读用户组({})无法进行({})操作！").format(
-                            group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
-                        replace=True
+                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        replace=True,
                     )
                 # 添加成员
                 GroupBiz().add_members(group.id, members, expired_at)
 
             except Exception as e:
                 permission_logger.info(e)
-                failed_info.update({group.name: '{}'.format(e)})
+                failed_info.update({group.name: "{}".format(e)})
 
             else:
                 # 写入审计上下文

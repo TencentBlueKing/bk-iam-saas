@@ -2149,10 +2149,11 @@
                 if (this.$refs.resInstanceRecommendTableRef) {
                     const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
                     recommendActions = tableRecommendData.actions;
-                    recommendFlag = recommendActions.some(e => {
-                        return e.resource_groups.some(v => {
+                    recommendFlag = recommendActions.some((e, i) => {
+                        const newRecommendTableListe = this.newRecommendTableList.find(item => item.id === e.id);
+                        return newRecommendTableListe.resource_groups.some(v => {
                             return v.related_resource_types.some(j => {
-                                return !j.condition.length;
+                                return j.empty;
                             });
                         });
                     });

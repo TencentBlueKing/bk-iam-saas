@@ -5,7 +5,7 @@
             <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
             <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
         </div>
-        <div class="breadcrumbs fl">
+        <div class="header-breadcrumbs fl">
             <div class="nav-container">
                 <span v-for="(item, i) in navData" :key="item.id">
                     <h2 v-if="item.show" class="heaer-nav-title"
@@ -19,7 +19,7 @@
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
-                    :style="{ top: '60px', left: '120px' }"
+                    :style="{ top: '60px', left: '45px' }"
                     :content="$t(`m.guide['分级管理员导航']`)" />
             </div>
         </div>
