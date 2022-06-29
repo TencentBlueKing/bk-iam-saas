@@ -462,7 +462,7 @@
                         if (this.emptyResourceGroupsName.length) {
                             this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
                             this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
-                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
+                            this.tableList.unshift(this.emptyResourceGroupsTableList);
                         }
                     } else {
                         value.forEach(e => {
@@ -471,7 +471,6 @@
                         this.emptyResourceGroupsList = []; // 重置变量
                         this.tableList = value;
                     }
-                    console.log('this.tableList', this.tableList);
                     this.originalList = _.cloneDeep(this.tableList);
                 },
                 immediate: true

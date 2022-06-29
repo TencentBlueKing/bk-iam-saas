@@ -5,7 +5,7 @@
             <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
             <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
         </div>
-        <div class="breadcrumbs fl">
+        <div class="header-breadcrumbs fl">
             <div class="nav-container">
                 <span v-for="(item, i) in navData" :key="item.id">
                     <h2 v-if="item.show" class="heaer-nav-title"
