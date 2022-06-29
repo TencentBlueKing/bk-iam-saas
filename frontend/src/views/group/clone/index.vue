@@ -175,6 +175,8 @@
                 tableListBackup: [],
                 tempalteDetailList: [],
                 aggregationData: {},
+                aggregationDataClone: {},
+                authorizationDataClone: {},
                 authorizationData: {},
                 aggregationDataByCustom: {},
                 authorizationDataByCustom: {},
@@ -271,7 +273,10 @@
                 return this.user.role.type === 'super_manager';
             },
             curAuthorizationData () {
-                const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
+                const data = Object.assign(
+                 this.authorizationData,
+                 this.authorizationDataByCustom,
+                 this.authorizationDataClone);
                 return data;
             }
         },
@@ -294,22 +299,13 @@
                     for (let i = 0; i < this.groupSystemList.length; i++) {
                         this.groupSystemList[i].count = this.groupSystemList[i].custom_policy_count;
                         this.fetchAggregationAction(this.groupSystemList[i].id);
+                        this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
                         if (this.groupSystemList[i].count > 0) {
                             await this.getGroupCustomPolicy(this.groupSystemList[i]);
                         } else {
                             await this.getGroupTemplateList(this.groupSystemList[i]);
                         }
                     }
-                    // this.groupSystemList.forEach(async e => {
-                    //     e.count = e.custom_policy_count;
-                    //     this.fetchAggregationAction(e.id);
-                    //     if (e.count > 0) {
-                    //         await this.getGroupCustomPolicy(e);
-                    //     } else {
-                    //         await this.getGroupTemplateList(e);
-                    //     }
-                    // });
-                    console.log(222222222);
                     this.handleAggregateData();
                 } catch (e) {
                     console.error(e);
@@ -461,10 +457,30 @@
                 }
             },
 
+            // 合并操作需要的信息
             async fetchAggregationAction (id) {
                 try {
                     const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: id });
-                    this.aggregationData[id] = res.data.aggregations;
+                    this.aggregationDataClone[id] = res.data.aggregations;
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            async fetchAuthorizationScopeActions (id) {
+                try {
+                    const res = await this.$store.dispatch(
+                        'permTemplate/getAuthorizationScopeActions',
+                        { systemId: id }
+                    );
+                    this.authorizationDataClone[id] = res.data.filter(item => item.id !== '*');
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -671,7 +687,10 @@
              */
             handleAggregateData () {
                 // debugger
-                this.allAggregationData = Object.assign(this.aggregationData, this.aggregationDataByCustom);
+                this.allAggregationData = Object.assign(
+                    this.aggregationData,
+                    this.aggregationDataByCustom,
+                    this.aggregationDataClone);
                 const keys = Object.keys(this.allAggregationData);
                 const data = {};
                 keys.forEach(item => {
