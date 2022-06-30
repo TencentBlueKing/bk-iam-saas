@@ -1,10 +1,10 @@
 <template>
     <div class="iam-joined-user-group-wrapper" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
-        <!-- <bk-button
+        <bk-button
             class="mb20"
             theme="primary" @click="handleBatchAddUserGroup" data-test-id="group_btn_create">
             {{ $t(`m.permTemplate['添加用户组']`) }}
-        </bk-button> -->
+        </bk-button>
         <div>
             <bk-table
                 :data="curPageData"
@@ -54,6 +54,77 @@
             </bk-table>
         </div>
 
+        <bk-dialog
+            v-model="isShowUserGroupDialog"
+            width="1220"
+            :show-footer="false"
+            header-position="left"
+            ext-cls="iam-attach-action-preview-dialog"
+            @after-leave="handleAfterEditLeave">
+            <div class="attach-action-preview-content-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+                <template v-if="!isLoading">
+                    <div class="user-group-table">
+                        <div class="serch-wrapper">
+                            <iam-search-select
+                                @on-change="handleSearch"
+                                :data="searchData"
+                                :value="searchValue"
+                                :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
+                                :quick-search-method="quickSearchMethod" />
+                        </div>
+                        <bk-table
+                            ref="groupTableRef"
+                            :data="tableList"
+                            size="small"
+                            :class="{ 'set-border': tableLoading }"
+                            ext-cls="user-group-table"
+                            :pagination="pagination"
+                            :cell-attributes="handleCellAttributes"
+                            @page-change="pageChange"
+                            @page-limit-change="limitChange"
+                            @select="handlerChange"
+                            @select-all="handlerAllChange"
+                            v-bkloading="{ isLoading: tableDialogLoading, opacity: 1 }">
+                            <bk-table-column type="selection" align="center"
+                                :selectable="setDefaultSelect"></bk-table-column>
+                            <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+                                <template slot-scope="{ row }">
+                                    <span class="user-group-name" :title="row.name" @click="handleView(row)">
+                                        {{ row.name }}
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t(`m.common['描述']`)">
+                                <template slot-scope="{ row }">
+                                    <span :title="row.description !== '' ? row.description : ''">
+                                        {{ row.description || '--' }}
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                        </bk-table>
+                    </div>
+                    <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
+                </template>
+                <section ref="expiredAtRef" class="mt20">
+                    <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
+                    <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.permApply['请选择申请期限']`) }}</p>
+                </section>
+
+                <section class="button-warp">
+                    <bk-button
+                        class="mb20"
+                        theme="primary" @click="handleBatchAddUserGroup" data-test-id="group_btn_create">
+                        {{ $t(`m.common['提交']`) }}
+                    </bk-button>
+                    <bk-button
+                        class="mb20"
+                        theme="default" @click="handleBatchAddUserGroup" data-test-id="group_btn_create">
+                        {{ $t(`m.common['取消']`) }}
+                    </bk-button>
+                </section>
+            </div>
+        </bk-dialog>
+
         <delete-dialog
             :show.sync="deleteDialogConf.visiable"
             :loading="deleteDialogConf.loading"
@@ -74,10 +145,13 @@
     import { mapGetters } from 'vuex';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import IamDeadline from '@/components/iam-deadline/horizontal';
 
     export default {
         name: '',
         components: {
+            IamDeadline,
             DeleteDialog,
             RenderPermSideslider
         },
@@ -97,6 +171,11 @@
                     count: 0,
                     limit: 10
                 },
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
                 curPageData: [],
                 deleteDialogConf: {
                     visiable: false,
@@ -110,7 +189,14 @@
                 curGroupName: '',
                 curGroupId: '',
 
-                pageLoading: false
+                pageLoading: false,
+                isShowUserGroupDialog: false,
+                isLoading: false,
+                searchValue: [],
+                tableList: [],
+                tableDialogLoading: false,
+                expiredAt: 15552000,
+                isShowExpiredError: false
             };
         },
         computed: {
@@ -265,11 +351,89 @@
                 this.deleteDialogConf.row = Object.assign({}, {});
                 this.deleteDialogConf.msg = '';
                 this.deleteDialogConf.loading = false;
+            },
+
+            async handleBatchAddUserGroup () {
+                this.isShowUserGroupDialog = true;
+                await this.fetchCurUserGroup();
+                await this.fetchUserGroupList();
+            },
+
+            handleAfterEditLeave () {
+                
+            },
+
+            handleSearch () {},
+
+            handleDeadlineChange (payload) {
+                if (payload) {
+                    this.isShowExpiredError = false;
+                }
+                if (payload !== PERMANENT_TIMESTAMP && payload) {
+                    const nowTimestamp = +new Date() / 1000;
+                    const tempArr = String(nowTimestamp).split('');
+                    const dotIndex = tempArr.findIndex(item => item === '.');
+                    const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
+                    this.expiredAtUse = payload + nowSecond;
+                    return;
+                }
+                this.expiredAtUse = payload;
+            },
+
+            quickSearchMethod (value) {
+                return {
+                    name: this.$t(`m.common['关键字']`),
+                    id: 'keyword',
+                    values: [value]
+                };
+            },
+
+            // 获取列表数据
+            async fetchUserGroupList () {
+                this.tableLoading = true;
+                const params = {
+                    ...this.searchParams,
+                    limit: this.pagination.limit,
+                    offset: this.pagination.limit * (this.pagination.current - 1)
+                };
+                try {
+                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    this.pagination.count = res.data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.$nextTick(() => {
+                        this.tableList.forEach(item => {
+                            if (this.curUserGroup.includes(item.id.toString())) {
+                                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'primary',
+                        message: e.message || e.data.msg || e.statusText
+                    });
+                } finally {
+                    this.tableLoading = false;
+                }
+            },
+            async fetchCurUserGroup () {
+                try {
+                    const res = await this.$store.dispatch('perm/getPersonalGroups');
+                    this.curUserGroup = res.data.filter(item => item.department_id === 0).map(item => item.id);
+                } catch (e) {
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
             }
-
-            // handleBatchAddUserGroup() {
-
-            // }
         }
     };
 </script>
@@ -290,5 +454,9 @@
                 }
             }
         }
+    }
+    .button-warp{
+        margin-top: 30px;
+        text-align: center;
     }
 </style>
