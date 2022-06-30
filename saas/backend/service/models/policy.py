@@ -515,23 +515,21 @@ class UniversalPolicy(Policy):
         policy_changed_content = UniversalPolicyChangedContent(action_id=self.action_id, auth_type=self.auth_type)
 
         # ABAC
-        self_has_abac = len(self.expression_resource_groups) > 0
-        old_has_abac = len(old.expression_resource_groups) > 0
         # 新老策略都有ABAC策略，则最终是使用新策略直接覆盖
-        if self_has_abac and old_has_abac:
+        if self.has_abac() and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.UPDATED.value,
                 id=old.policy_id,
                 resource_expression=self.to_resource_expression(system_id),
             )
         # 新策略无ABAC策略，但老策略有ABAC策略，则需要将老的ABAC策略删除
-        elif not self_has_abac and old_has_abac:
+        elif self.has_abac and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.DELETED.value,
                 id=old.policy_id,
             )
         # 新策略由ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
-        elif self_has_abac and old_has_abac:
+        elif self.has_abac() and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.CREATED.value,
                 resource_expression=self.to_resource_expression(system_id),
@@ -551,3 +549,9 @@ class UniversalPolicy(Policy):
         assert len(self.expression_resource_groups) > 0
         translator = ResourceExpressionTranslator()
         return translator.translate(system_id, self.expression_resource_groups.dict())
+
+    def has_abac(self) -> bool:
+        return len(self.expression_resource_groups) > 0
+
+    def has_rbac(self) -> bool:
+        return len(self.instances) > 0

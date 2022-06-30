@@ -33,20 +33,29 @@ class PolicyList:
     def ids(self) -> List[int]:
         return [policy.policy_id for policy in self.policies]
 
-    def remove_by_action_ids(self, action_ids: List[str]):
+    def pop_by_action_ids(self, action_ids: List[str]) -> List[Policy]:
         self.policies = [p for p in self.policies if p.action_id not in set(action_ids)]
+        poped_policies = []
         for action_id in action_ids:
-            self._policy_dict.pop(action_id)
+            policy = self._policy_dict.pop(action_id)
+            poped_policies.append(policy)
 
-    def extend_without_repeated(self, policies: List[Policy]):
+        return poped_policies
+
+    def extend_without_repeated(self, policies: List[Policy]) -> List[Policy]:
         """
         只新增不在已有列表中的策略
         """
+        affected_policies = []
         for p in policies:
             if p.action_id in self._policy_dict:
                 continue
             self._policy_dict[p.action_id] = p
             self.policies.append(p)
+            # 顺便记录实际添加的策略
+            affected_policies.append(p)
+
+        return affected_policies
 
     def update(self, policy: Policy):
         """
