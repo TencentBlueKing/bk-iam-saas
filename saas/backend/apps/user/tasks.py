@@ -66,7 +66,8 @@ def user_group_policy_expire_remind():
             url = base_url + "?" + urlencode(params)
 
             mail_content = render_to_string(
-                "user_expired_mail.html", {"groups": groups, "policies": policies, "url": url, "user": user}
+                "user_expired_mail.html",
+                {"groups": groups, "policies": policies, "url": url, "user": user, "index_url": settings.APP_URL},
             )
             try:
                 esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)

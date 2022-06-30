@@ -484,7 +484,7 @@
                         if (this.emptyResourceGroupsName.length) {
                             this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
                             this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
-                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
+                            this.tableList.unshift(this.emptyResourceGroupsTableList);
                         }
                     } else {
                         value.forEach(e => {
@@ -1419,7 +1419,6 @@
                         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
                     }
                 }
-                debugger;
 
                 this.tableList.forEach(item => {
                     let tempExpiredAt = '';
