@@ -1,12 +1,10 @@
 $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
-.header-layout {
+.header-nav-layout {
     position: relative;
     height: 51px;
-    padding: 0 0 0 60px;
-    border-bottom: 1px solid #dde4eb;
-    background-color: #fff;
+    background-color: #182132;
     transition: padding .3s $cubic-bezier;
-    z-index: 1000;
+    z-index: 1002;
     &::after {
         content: '';
         display: block;
@@ -35,13 +33,15 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
     }
 
-    .breadcrumbs {
-        line-height: 48px;
-        position: absolute;
-        margin: 0 0 0 20px;
+    .header-breadcrumbs {
+        line-height: 51px;
+        position: relative;
         font-size: 0;
         &.has-cursor {
             cursor: pointer;
+        }
+        .nav-container{
+            position: relative;
         }
         .breadcrumbs-back {
             position: relative;
@@ -56,19 +56,29 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             color: #3c96ff;
         }
 
-        .breadcrumbs-current {
+        .heaer-nav-title {
             margin: 0;
-            padding: 0;
+            padding: 0 20px;
             display: inline-block;
             vertical-align: middle;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: normal;
+            color: #979BA5;
+            cursor: pointer;
+            &:hover{
+                color: #fff;
+            }
+
+            &.active {
+                color: #FFFFFF;
+            }
         }
     }
     .user {
         position: relative;
         font-size: 0;
-        line-height: 60px;
+        line-height: 51px;
+        color: #FFFFFF;
         .help-flag {
             display: inline-flex;
             align-items: center;
@@ -83,19 +93,15 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         }
         .help-flag {
             position: absolute;
-            top: 14px;
+            top: 11px;
             left: -30px;
             width: 32px;
             height: 32px;
             padding: 0 10px;
             font-size: 16px;
-            color: #63656E;
+            color: #FFFFFF;
             border-radius: 50%;
             cursor: pointer;
-            &:hover {
-                color: #3a84ff;
-                background: #f0f1f5;
-            }
             .dropdown-panel{
                 left: -37px;
                 text-align: center;
@@ -152,7 +158,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 display: inline-block;
                 font-size: 16px;
                 margin: 0 2px;
-                color: #737987;
+                color: #FFFFFF;
                 transition: transform .2s linear;
                 &.dropped {
                     transform: rotate(-180deg);
@@ -163,9 +169,8 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             position: absolute;
             top: 55px;
             right: 20px;
-            width: 240px;
-            padding-bottom:120px;
-            height: 362px;
+            width: 135px;
+            height: 50px;
             border-radius: 0 2px 2px 0;
             background-color: #f5f6fa;
             box-shadow: 5px 1px 7px 0 rgba(12, 34, 59, .1);
@@ -230,6 +235,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 line-height: 32px;
                 font-size: 12px;
                 cursor: pointer;
+                color: #63656e;
                 &:hover {
                     background-color: #eaf3ff;
                     color: #313238;
@@ -292,8 +298,10 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             .operation {
                 display:flex;
                 position: absolute;
-                bottom:0px;
+                bottom:7px;
                 margin-top:10px;
+                left: 30px;
+                color: #63656e;
                 &.right{
                     right:0px;
                 }
@@ -303,13 +311,6 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     line-height: 32px;
                     cursor: pointer;
                     &.active {
-                        background-color: #f5f6fa;
-                        color: #313238;
-                        i {
-                            color: #313238;
-                        }
-                    }
-                    &:hover {
                         background-color: #f5f6fa;
                         color: #313238;
                         i {
@@ -346,6 +347,13 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 font-size: 16px;
                 color: #ff9c01;
             }
+            }
+            &:hover {
+                background-color: #f5f6fa;
+                color: #313238;
+                i {
+                    color: #313238;
+                }
             }
         }
         .user-dropdown {
@@ -430,6 +438,33 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     }
                 }
             }
+        }
+    }
+    .logo {
+        width: 260px;
+        display: inline-block;
+        position: relative;
+        height: 51px;
+        padding: 9px 0 12px 15px;
+        background: #182132;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+        &.dark-theme {
+            background: #1b1b1b;
+        }
+        img {
+            height: 32px;
+        }
+        .text {
+            position: absolute;
+            top: 14px;
+            left: 60px;
+            width: 180px;
+            font-family: Microsoft Yahei;
+            font-size: 16px;
+            font-weight: 700;
+            color: #96a2b9;
         }
     }
 }

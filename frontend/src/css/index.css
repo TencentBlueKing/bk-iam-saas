@@ -161,7 +161,7 @@
     }
 
     #app {
-        height: 100%;
+        height: calc(100% - 61px);
         min-width: 1280px;
     }
 
