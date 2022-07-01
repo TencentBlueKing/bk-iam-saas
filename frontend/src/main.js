@@ -63,7 +63,7 @@ Vue.component('RenderSearch', RenderSearch);
 Vue.component('Icon', Icon);
 
 Vue.prototype.scrollToLocation = function ($ref) {
-    const distance = $ref.getBoundingClientRect().top || 0;
+    const distance = ($ref && $ref.getBoundingClientRect().top) || 0;
     const $dom = document.getElementsByClassName('main-scroller')[0];
     $dom.scrollTo(0, distance);
 };

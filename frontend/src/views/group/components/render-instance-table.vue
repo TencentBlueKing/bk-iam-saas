@@ -71,20 +71,22 @@
                                     <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
                                 </bk-button>
                             </div>
-                            <render-condition
-                                :ref="`condition_${$index}_aggregateRef`"
-                                :value="row.value"
-                                :is-empty="row.empty"
-                                :can-view="false"
-                                :can-paste="row.canPaste"
-                                :is-error="row.isError"
-                                @on-mouseover="handlerAggregateConditionMouseover(row)"
-                                @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                                @on-copy="handlerAggregateOnCopy(row, $index)"
-                                @on-paste="handlerAggregateOnPaste(row)"
-                                @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                                @on-click="showAggregateResourceInstance(row, $index)" />
-                            <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                            <div class="content">
+                                <render-condition
+                                    :ref="`condition_${$index}_aggregateRef`"
+                                    :value="row.value"
+                                    :is-empty="row.empty"
+                                    :can-view="false"
+                                    :can-paste="row.canPaste"
+                                    :is-error="row.isError"
+                                    @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                    @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                    @on-copy="handlerAggregateOnCopy(row, $index)"
+                                    @on-paste="handlerAggregateOnPaste(row)"
+                                    @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                    @on-click="showAggregateResourceInstance(row, $index)" />
+                                <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                            </div>
                         </div>
                         <div class="relation-content-wrapper" v-else>
                             <template v-if="!row.isEmpty">
@@ -414,7 +416,28 @@
         watch: {
             list: {
                 handler (value) {
-                    this.tableList.splice(0, this.tableList.length, ...value);
+                    if (this.isAllExpanded) {
+                        this.tableList = value.filter(e =>
+                            (e.resource_groups && e.resource_groups.length)
+                            || e.isAggregate);
+                        this.emptyResourceGroupsList = value.filter(e =>
+                            e.resource_groups && !e.resource_groups.length);
+                        this.emptyResourceGroupsName = (this.emptyResourceGroupsList || []).reduce((p, e) => {
+                            p.push(e.name);
+                            return p;
+                        }, []);
+                        if (this.emptyResourceGroupsName.length) {
+                            this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
+                            this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
+                            this.tableList.unshift(this.emptyResourceGroupsTableList);
+                        }
+                    } else {
+                        value.forEach(e => {
+                            e.name = e.name.split('，')[0];
+                        });
+                        this.emptyResourceGroupsList = []; // 重置变量
+                        this.tableList.splice(0, this.tableList.length, ...value);
+                    }
                 },
                 immediate: true
             },
@@ -1325,6 +1348,19 @@
                         templates
                     };
                 }
+
+                // 重新赋值
+                if (this.isAllExpanded) {
+                    this.tableList = this.tableList.filter(e =>
+                        (e.resource_groups && e.resource_groups.length)
+                        || e.isAggregate);
+                    if (this.emptyResourceGroupsList.length) {
+                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                    }
+                }
+                debugger;
+
                 this.tableList.forEach(item => {
                     let actionParam = {};
                     let aggregationParam = {};
@@ -1698,6 +1734,6 @@
     }
 
     .tab-button{
-        margin-bottom: 10px;
+        margin: 10px 0;
     }
 </style>

@@ -62,6 +62,7 @@
                         v-bkloading="{ isLoading, opacity: 1, zIndex: 1000, extCls: 'loading-resource-instance-cls' }">
                         <render-instance-table
                             ref="resourceInstanceRef"
+                            :is-all-expanded="isAllExpanded"
                             :data="policyList"
                             :list="policyList"
                             :backup-list="aggregationsTableData"
