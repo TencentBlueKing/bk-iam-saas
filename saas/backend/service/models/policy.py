@@ -289,6 +289,9 @@ class Policy(BaseModel):
         )
         p.resources = self.resource_groups.dict()
 
+        if isinstance(p, PolicyModel):
+            p.auth_type = AuthTypeEnum.ABAC.value
+
         if isinstance(p, TemporaryPolicy):
             p.expired_at = self.expired_at
 
