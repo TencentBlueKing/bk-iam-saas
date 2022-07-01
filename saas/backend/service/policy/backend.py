@@ -157,7 +157,7 @@ class BackendPolicyOperationService:
         # 2. 查询用户组自定义权限里每条策略类型
         custom_perm_auth_types = PolicyModel.objects.filter(
             subject_type=subject.type, subject_id=subject.id, system_id=system_id
-        ).valuess("action_id", "auth_type")
+        ).values("action_id", "auth_type")
         # 剔除本次变更的策略
         auth_types = [
             i["auth_type"]
