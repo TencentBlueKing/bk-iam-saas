@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
     <div>
         <!-- 申请自定义权限正常跳转 -->
@@ -31,11 +32,11 @@
                 </render-search>
                 <form class="bk-form bk-form-vertical inner-content">
                     <div class="bk-form-item">
-                        <!-- eslint-disable max-len -->
                         <div :class="['custom-tmpl-list-content-wrapper', { 'is-loading': customLoading }]" v-bkloading="{ isLoading: customLoading, opacity: 1 }">
                             <render-action-tag
                                 ref="commonActionRef"
                                 :system-id="systemValue"
+                                :tag-action-list="tagActionList"
                                 v-if="commonActions.length > 0 && !customLoading"
                                 mode="detail"
                                 :data="commonActions"
@@ -169,6 +170,7 @@
                         :original-list="tableDataBackup"
                         :system-id="systemValue"
                         :button-loading="buttonLoading"
+                        :is-all-expanded="isAllExpanded"
                         ref="resInstanceTableRef"
                         @on-select="handleResourceSelect"
                         @on-realted-change="handleRelatedChange" />
@@ -190,6 +192,7 @@
                         type="textarea"
                         v-model="reason"
                         :maxlength="255"
+                        :placeholder="$t(`m.verify['请输入']`)"
                         :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
                         @input="handleReasonInput"
                         @blur="handleReasonBlur">
@@ -211,176 +214,202 @@
                 </bk-button>
             </div>
         </smart-action>
-        <!-- 用户组权限申请默认页面 -->
+        <!-- 用户组权限申请默认页面  -->
         <smart-action class="applpForPermission" v-if="isNoPermissionsSet && isShowHasUserGroup">
-            <bk-radio-group v-model="checkRadio" @change="handlerChange">
-                <div class="groupPermissionQequest" :class="{ 'blueBorder': isShowUserGroup }">
-                    <render-horizontal-block>
-                        <div class="userGroup">
-                            <div class="userGroupRadio">
-                                <bk-radio :value="'userGroup'">{{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组（包含更多可申请权限）']`)}}</bk-radio>
-                            </div>
-                            <div class="info">
-                                {{ $t(`m.info['如果需要更多用户组权限']`) }},
-                                {{ $t(`m.info['可前往']`) }}
-                                <bk-button
-                                    text
-                                    theme="primary"
-                                    style="font-size: 12px;"
-                                    @click="handleToUserGroup">
-                                    {{ $t(`m.info['申请用户组权限']`) }}
-                                </bk-button>
-                            </div>
-                        </div>
-                        <div v-if="isShowUserGroup">
-                            <bk-transition name="collapse">
-                                <div>
-                                    <div class="user-group-table">
-                                        <bk-table
-                                            ref="groupTableRef"
-                                            ext-cls="user-group-table"
-                                            :class="{ 'set-border': tableLoading }"
-                                            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-                                            :data="tableList"
-                                            @select="handlerOneChange"
-                                            @select-all="handlerAllChange"
-                                            :cell-attributes="handleCellAttributes">
-                                            <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
-                                            <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
-                                                <template slot-scope="{ row }">
-                                                    <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
-                                                    <template v-if="!setDefaultSelect(row)">
-                                                        <Icon type="error-fill" class="error-icon" />
-                                                        <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
-                                                        <bk-button
-                                                            text
-                                                            theme="primary"
-                                                            style="font-size: 12px;"
-                                                            @click="handleBatchRenewal">
-                                                            {{ $t(`m.permApply['去续期']`) }}
-                                                        </bk-button>
-                                                    </template>
-                                                </template>
-                                            </bk-table-column>
-                                            <bk-table-column :label="$t(`m.userGroup['描述']`)">
-                                                <template slot-scope="{ row }">
-                                                    <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
-                                                </template>
-                                            </bk-table-column>
-                                            <bk-table-column :label="$t(`m.userGroup['所属分级管理员']`)">
-                                                <template slot-scope="{ row }">
-                                                    <span :class="row.role && row.role.name ? 'can-view' : ''"
-                                                        :title="row.role && row.role.name ? row.role.name : ''"
-                                                        @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
-                                                </template>
-                                            </bk-table-column>
-                                        </bk-table>
-                                        <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
-                                    </div>
-                                    <div class="applicationPeriod">
-                                        <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
-                                            <section ref="expiredAtRef">
-                                                <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
-                                                <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.permApply['请选择申请期限']`) }}</p>
-                                            </section>
-                                        </render-horizontal-block>
-                                    </div>
-                                    <div class="reason">
-                                        <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
-                                            <section ref="resInstanceReasonRef">
-                                                <bk-input
-                                                    type="textarea"
-                                                    v-model="reason"
-                                                    :maxlength="255"
-                                                    :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
-                                                    @input="handleReasonInput"
-                                                    @blur="handleReasonBlur">
-                                                </bk-input>
-                                                <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
-                                            </section>
-                                        </render-horizontal-block>
-                                    </div>
-                                    <div class="buttonBox">
-                                        <bk-button
-                                            theme="primary"
-                                            :loading="buttonLoading"
-                                            @click="handleSubmit">
-                                            {{ $t(`m.common['提交']`) }}
-                                        </bk-button>
-                                        <bk-button
-                                            style="margin-left: 10px;"
-                                            @click="handleCancel">
-                                            {{ $t(`m.common['取消']`) }}
-                                        </bk-button>
-                                    </div>
-                                </div>
-                            </bk-transition>
-                        </div>
-                    </render-horizontal-block>
+            <div class="form-tab">
+                <div class="tab-item"
+                    :class="tabIndex === index ? 'active' : ''"
+                    v-for="(item, index) in tabData" :key="item.key"
+                    @click="clickTab(index, item.key)">
+                    <div class="tab-title">
+                        {{item.title}}
+                        <span class="recommend" v-if="index === 0">推荐</span>
+                    </div>
+                    <div class="tab-desc">{{item.desc}}</div>
                 </div>
-                <!-- 独立申请权限 -->
-                <div class="IndependentApplication" :class="{ 'blueBorder': isShowIndependent }">
-                    <render-horizontal-block>
-                        <div class="independent">
-                            <bk-radio :value="'independent'">{{$t(`m.permApply['你也可以继续申请独立权限']`)}}</bk-radio>
-                            <div class="info">
-                                {{ $t(`m.info['如果需要更多自定义权限']`) }}，
-                                {{ $t(`m.info['可前往']`) }}
-                                <bk-button
-                                    text
-                                    theme="primary"
-                                    style="font-size: 12px;"
-                                    @click="handleToCustompermissions">
-                                    {{ $t(`m.info['申请自定义权限']`) }}
-                                </bk-button>
-                            </div>
+            </div>
+            <div class="groupPermissionQequest" v-if="isShowUserGroup">
+                <render-horizontal-block>
+                    <div class="userGroup">
+                        <div class="requestRecommendText pl20">
+                            {{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组']`)}}
                         </div>
-                        <div v-if="isShowIndependent">
-                            <bk-transition name="bk-fade-in-ease">
-                                <div>
-                                    <div class="tableData">
-                                        <resource-instance-table
-                                            :list="newTableList"
-                                            :original-list="tableDataBackup"
-                                            :system-id="systemValue"
-                                            ref="resInstanceTableRef"
-                                            @on-select="handleResourceSelect"
-                                            @on-realted-change="handleRelatedChange" />
-                                    </div>
-                                    <div class="reason">
-                                        <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
-                                            <section ref="resInstanceReasonRef">
-                                                <bk-input
-                                                    type="textarea"
-                                                    v-model="reason"
-                                                    :maxlength="255"
-                                                    :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
-                                                    @input="handleReasonInput"
-                                                    @blur="handleReasonBlur">
-                                                </bk-input>
-                                                <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
-                                            </section>
-                                        </render-horizontal-block>
-                                    </div>
-                                    <div class="buttonBox">
-                                        <bk-button
-                                            theme="primary"
-                                            :loading="buttonLoading"
-                                            @click="handleApplySubmit">
-                                            {{ $t(`m.common['提交']`) }}
-                                        </bk-button>
-                                        <bk-button
-                                            style="margin-left: 10px;"
-                                            @click="handleCancel">
-                                            {{ $t(`m.common['取消']`) }}
-                                        </bk-button>
-                                    </div>
+                        <div class="info">
+                            {{ $t(`m.info['如果需要更多用户组权限']`) }},
+                            {{ $t(`m.info['可前往']`) }}
+                            <bk-button
+                                text
+                                theme="primary"
+                                style="font-size: 12px;"
+                                @click="handleToUserGroup">
+                                {{ $t(`m.info['申请用户组权限']`) }}
+                            </bk-button>
+                        </div>
+                    </div>
+                    <div>
+                        <bk-transition name="bk-fade-in-ease">
+                            <div>
+                                <div class="user-group-table">
+                                    <bk-table
+                                        ref="groupTableRef"
+                                        ext-cls="user-group-table"
+                                        :class="{ 'set-border': tableLoading }"
+                                        v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+                                        :data="tableList"
+                                        @select="handlerOneChange"
+                                        @select-all="handlerAllChange"
+                                        :cell-attributes="handleCellAttributes">
+                                        <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
+                                        <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+                                            <template slot-scope="{ row }">
+                                                <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                                                <template v-if="!setDefaultSelect(row)">
+                                                    <Icon type="error-fill" class="error-icon" />
+                                                    <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                                                    <bk-button
+                                                        text
+                                                        theme="primary"
+                                                        style="font-size: 12px;"
+                                                        @click="handleBatchRenewal">
+                                                        {{ $t(`m.permApply['去续期']`) }}
+                                                    </bk-button>
+                                                </template>
+                                            </template>
+                                        </bk-table-column>
+                                        <bk-table-column :label="$t(`m.userGroup['描述']`)">
+                                            <template slot-scope="{ row }">
+                                                <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
+                                            </template>
+                                        </bk-table-column>
+                                        <bk-table-column :label="$t(`m.userGroup['所属分级管理员']`)">
+                                            <template slot-scope="{ row }">
+                                                <span :class="row.role && row.role.name ? 'can-view' : ''"
+                                                    :title="row.role && row.role.name ? row.role.name : ''"
+                                                    @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
+                                            </template>
+                                        </bk-table-column>
+                                    </bk-table>
+                                    <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
                                 </div>
-                            </bk-transition>
+                                <div class="applicationPeriod">
+                                    <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
+                                        <section ref="expiredAtRef">
+                                            <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
+                                            <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.permApply['请选择申请期限']`) }}</p>
+                                        </section>
+                                    </render-horizontal-block>
+                                </div>
+                                <div class="reason">
+                                    <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
+                                        <section ref="resInstanceReasonRef">
+                                            <bk-input
+                                                type="textarea"
+                                                v-model="reason"
+                                                :maxlength="255"
+                                                :placeholder="$t(`m.verify['请输入']`)"
+                                                :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
+                                                @input="handleReasonInput"
+                                                @blur="handleReasonBlur">
+                                            </bk-input>
+                                            <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
+                                        </section>
+                                    </render-horizontal-block>
+                                </div>
+                                <div class="buttonBox">
+                                    <bk-button
+                                        theme="primary"
+                                        :loading="buttonLoading"
+                                        @click="handleSubmit">
+                                        {{ $t(`m.common['提交']`) }}
+                                    </bk-button>
+                                    <bk-button
+                                        style="margin-left: 10px;"
+                                        @click="handleCancel">
+                                        {{ $t(`m.common['取消']`) }}
+                                    </bk-button>
+                                </div>
+                            </div>
+                        </bk-transition>
+                    </div>
+                </render-horizontal-block>
+            </div>
+            <div class="IndependentApplication" v-if="isShowIndependent">
+                <render-horizontal-block>
+                    <div class="independent">
+                        <div class="requestRecommendText pl20">
+                            {{$t(`m.permApply['以下是你必须申请的权限']`)}}
                         </div>
-                    </render-horizontal-block>
-                </div>
-            </bk-radio-group>
+                        <div class="info">
+                            {{ $t(`m.info['如果需要更多自定义权限']`) }}，
+                            {{ $t(`m.info['可前往']`) }}
+                            <bk-button
+                                text
+                                theme="primary"
+                                style="font-size: 12px;"
+                                @click="handleToCustompermissions">
+                                {{ $t(`m.info['申请自定义权限']`) }}
+                            </bk-button>
+                        </div>
+                    </div>
+                    <div>
+                        <bk-transition name="bk-fade-in-ease">
+                            <div>
+                                <div class="tableData">
+                                    <resource-instance-table
+                                        :list="newTableList"
+                                        :original-list="tableDataBackup"
+                                        :system-id="systemValue"
+                                        ref="resInstanceTableRef"
+                                        @on-select="handleResourceSelect"
+                                        @on-realted-change="handleRelatedChange" />
+                                </div>
+
+                                <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
+                                <div class="tableData">
+                                    <resource-instance-table
+                                        :is-recommend="isRecommend"
+                                        :cache-id="routerQuery.cache_id"
+                                        :list="newRecommendTableList"
+                                        :original-list="tableRecommendDataBackup"
+                                        :system-id="systemValue"
+                                        ref="resInstanceRecommendTableRef"
+                                        @on-select="handleResourceSelect"
+                                        @on-realted-change="handleRelatedChange" />
+                                </div>
+                                <div class="reason">
+                                    <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
+                                        <section ref="resInstanceReasonRef">
+                                            <bk-input
+                                                type="textarea"
+                                                v-model="reason"
+                                                :maxlength="255"
+                                                :placeholder="$t(`m.verify['请输入']`)"
+                                                :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
+                                                @input="handleReasonInput"
+                                                @blur="handleReasonBlur">
+                                            </bk-input>
+                                            <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
+                                        </section>
+                                    </render-horizontal-block>
+                                </div>
+                                <div class="buttonBox">
+                                    <bk-button
+                                        theme="primary"
+                                        :loading="buttonLoading"
+                                        @click="handleApplySubmit">
+                                        {{ $t(`m.common['提交']`) }}
+                                    </bk-button>
+                                    <bk-button
+                                        style="margin-left: 10px;"
+                                        @click="handleCancel">
+                                        {{ $t(`m.common['取消']`) }}
+                                    </bk-button>
+                                </div>
+                            </div>
+                        </bk-transition>
+                    </div>
+                </render-horizontal-block>
+            </div>
         </smart-action>
         <!-- 无权限组时页面 -->
         <smart-action class="noPermissionPage blueBorder" v-if="isNoPermissionsSet && !isShowHasUserGroup ">
@@ -401,7 +430,7 @@
                     </bk-alert>
                 </div>
                 <div class="requestIndependent">
-                    <div class="requestIndependentText">{{$t(`m.permApply['你可以申请独立权限']`)}}</div>
+                    <div class="requestIndependentText">{{$t(`m.permApply['以下是你必须申请的权限']`)}}</div>
                     <div class="info">
                         {{ $t(`m.info['如果需要更多自定义权限']`) }}，
                         {{ $t(`m.info['可前往']`) }}
@@ -424,6 +453,19 @@
                         @on-select="handleResourceSelect"
                         @on-realted-change="handleRelatedChange" />
                 </div>
+
+                <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
+                <div class="tableData">
+                    <resource-instance-table
+                        :is-recommend="isRecommend"
+                        :cache-id="routerQuery.cache_id"
+                        :list="newRecommendTableList"
+                        :original-list="tableRecommendDataBackup"
+                        :system-id="systemValue"
+                        ref="resInstanceRecommendTableRef"
+                        @on-select="handleResourceSelect"
+                        @on-realted-change="handleRelatedChange" />
+                </div>
                 <div class="reason">
                     <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
                         <section ref="resInstanceReasonRef">
@@ -431,6 +473,7 @@
                                 type="textarea"
                                 v-model="reason"
                                 :maxlength="255"
+                                :placeholder="$t(`m.verify['请输入']`)"
                                 :ext-cls="isShowReasonError ? 'perm-apply-reason-error' : ''"
                                 @input="handleReasonInput"
                                 @blur="handleReasonBlur">
@@ -553,8 +596,18 @@
                 // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
-                newTableList: []
-
+                newTableList: [],
+                newRecommendTableList: [],
+                tableRecommendData: [],
+                tableRecommendDataBackup: [],
+                aggregationsTableRecommendData: [],
+                isRecommend: true,
+                tagActionList: [],
+                tabData: [
+                    { title: '用户组推荐', desc: '包含更大范围的权限（运维\开发\测试等角色类权限）', key: 'userGroup' },
+                    { title: '细粒度权限', desc: '只包含当前需要的最小范围权限', key: 'independent' }
+                ],
+                tabIndex: 0
             };
         },
         computed: {
@@ -605,6 +658,8 @@
         watch: {
             '$route': {
                 handler (value) {
+                    // value.query.system_id = 'bk_job';
+                    // value.query.cache_id = 'f3419dba47964a6b8a3e7467ff685b5e';
                     if (value.query.system_id && value.query.cache_id) {
                         const { system_id, cache_id } = value.query;
                         this.routerQuery = Object.assign({}, {
@@ -617,6 +672,7 @@
                             system_id: '',
                             cache_id: ''
                         });
+                        this.sysAndtid = false;
                     }
                 },
                 immediate: true
@@ -629,6 +685,7 @@
             },
             tableData: {
                 handler (value) {
+                    this.tagActionList = value.map(e => e.id);
                     if (value.filter(item => item.isAggregate).length < 1) {
                         this.isAllExpanded = false;
                     }
@@ -710,16 +767,6 @@
                     this.fetchRoles(payload.role.id);
                 }
             },
-            // 无权限跳转推荐用户组逻辑
-            handlerChange () {
-                if (this.checkRadio === 'userGroup') {
-                    this.isShowUserGroup = true;
-                    this.isShowIndependent = false;
-                } else {
-                    this.isShowIndependent = true;
-                    this.isShowUserGroup = false;
-                }
-            },
             handleToUserGroup () {
                 this.$router.push({
                     name: 'applyJoinUserGroup'
@@ -799,6 +846,75 @@
                     await this.fetchUserGroupList();
                     // 获取个人用户的用户组列表
                     await this.fetchCurUserGroup();
+                    // 获取推荐操作
+                    await this.fetchRecommended();
+                }
+            },
+
+            // 获取推荐操作
+            async fetchRecommended () {
+                const params = {
+                    system_id: this.routerQuery.system_id,
+                    cache_id: this.routerQuery.cache_id
+                };
+                try {
+                    const res = await this.$store.dispatch('perm/getRecommended', params);
+                    const recommendActions = res.data.actions || [];
+                    const recommendPolicies = res.data.policies || [];
+
+                    const data = recommendActions.map(item => {
+                        const resourceGroups = recommendPolicies.find(sub => sub.id === item.id);
+                        if (resourceGroups) {
+                            resourceGroups.resource_groups.map(v => {
+                                v.related_resource_types.forEach(e => {
+                                    e.id = e.type;
+                                });
+                                return v;
+                            });
+                        }
+                        item.resource_groups = resourceGroups && resourceGroups.resource_groups
+                            ? resourceGroups.resource_groups : [];
+                        if (!item.resource_groups || !item.resource_groups.length) {
+                            item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                        }
+                        return new Policy({ ...item, tag: 'add' }, 'custom');
+                    });
+                    this.tableRecommendData = data;
+                    this.tableRecommendData.forEach(item => {
+                        item.expired_at = 1627616000;
+
+                        // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
+                        if (item.tag === 'add') {
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.expired_at = 15552000;
+                            }
+                        } else {
+                            // 新增的权限不判断是否过期
+                            if (item.expired_at <= this.user.timestamp) {
+                                item.isShowRenewal = true;
+                                item.isExpired = true;
+                            }
+                        }
+                    });
+                    this.newRecommendTableList = _.cloneDeep(this.tableRecommendData.filter(item => {
+                        return !item.isExpiredAtDisabled;
+                    }));
+                    this.tableRecommendDataBackup = _.cloneDeep(this.tableRecommendData);
+                    this.aggregationsTableRecommendData = _.cloneDeep(this.tableRecommendData);
+                } catch (e) {
+                    this.$emit('toggle-loading', false);
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    if (this.requestQueue.length > 0) {
+                        this.requestQueue.shift();
+                    }
                 }
             },
 
@@ -1058,19 +1174,17 @@
                     });
                     const aggregations = []
                     ;(res.data.aggregations || []).forEach(item => {
-                        const { actions, aggregate_resource_type } = item;
+                        const { actions, aggregate_resource_types } = item;
                         const curActions = actions.filter(_ => actionIds.includes(_.id));
                         if (curActions.length > 0) {
                             aggregations.push({
                                 actions: curActions,
-                                aggregate_resource_type
+                                aggregate_resource_types
                             });
                         }
                     });
                     this.aggregationsBackup = _.cloneDeep(aggregations);
                     this.aggregations = aggregations;
-
-                    console.log('this.originalCustomTmplList', this.originalCustomTmplList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -1291,7 +1405,6 @@
                     });
                     return tempAction;
                 })();
-                console.log('this.aggregationsBackup', this.aggregationsBackup);
                 this.aggregationsBackup.forEach((item, index) => {
                     const tempObj = _.cloneDeep(item);
                     const tempAction = tempObj.actions.map(_ => _.id);
@@ -1303,7 +1416,6 @@
                 });
                 aggregationAction = aggregationAction.filter(item => item.actions.length > 1);
                 this.aggregations = _.cloneDeep(aggregationAction);
-                console.log('this.aggregations', this.aggregations);
             },
 
             handleAggregateActionChange (payload) {
@@ -1318,31 +1430,33 @@
             handleResourceSelect (payload) {
                 const curAction = payload.actions.map(item => item.id);
                 const instances = (function () {
-                    const { id, name, system_id } = payload.aggregateResourceType;
                     const arr = [];
-                    payload.instances.forEach(v => {
-                        const curItem = arr.find(_ => _.type === id);
-                        if (curItem) {
-                            curItem.path.push([{
-                                id: v.id,
-                                name: v.name,
-                                system_id,
-                                type: id,
-                                type_name: name
-                            }]);
-                        } else {
-                            arr.push({
-                                name,
-                                type: id,
-                                path: [[{
+                    payload.aggregateResourceType.forEach(resourceItem => {
+                        const { id, name, system_id } = resourceItem;
+                        payload.instancesDisplayData[id] && payload.instancesDisplayData[id].forEach(v => {
+                            const curItem = arr.find(_ => _.type === id);
+                            if (curItem) {
+                                curItem.path.push([{
                                     id: v.id,
                                     name: v.name,
                                     system_id,
                                     type: id,
                                     type_name: name
-                                }]]
-                            });
-                        }
+                                }]);
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                });
+                            }
+                        });
                     });
                     return arr;
                 })();
@@ -1351,25 +1465,31 @@
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(item.id)) {
                             if (item.tag === 'unchanged') {
-                                item.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition.forEach(conditionItem => {
-                                        conditionItem.instance.forEach(instanceItem => {
-                                            if (instanceItem.type === instances[0].type) {
-                                                selectPath = selectPath.filter(v => {
-                                                    const target = v.map(_ => `${_.type}${_.id}`).sort();
-                                                    return instanceItem.path.map(pathItem => pathItem.map(v => `${v.type}${v.id}`).sort()).filter(pathSub => _.isEqual(target, pathSub)).length < 1;
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition.forEach(conditionItem => {
+                                                conditionItem.instance.forEach(instanceItem => {
+                                                    if (instanceItem.type === instances[0].type) {
+                                                        selectPath = selectPath.filter(v => {
+                                                            const target = v.map(_ => `${_.type}${_.id}`).sort();
+                                                            return instanceItem.path.map(pathItem => pathItem.map(v => `${v.type}${v.id}`).sort()).filter(pathSub => _.isEqual(target, pathSub)).length < 1;
+                                                        });
+                                                        if (selectPath.length > 0) {
+                                                            instanceItem.path.push(...selectPath);
+                                                            instanceItem.paths.push(...selectPath);
+                                                        }
+                                                    }
                                                 });
-                                                if (selectPath.length > 0) {
-                                                    instanceItem.path.push(...selectPath);
-                                                    instanceItem.paths.push(...selectPath);
-                                                }
-                                            }
+                                            });
                                         });
-                                    });
                                 });
                             } else {
-                                item.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                item.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                        });
                                 });
                             }
                         }
@@ -1383,8 +1503,6 @@
                 aggregationAction.forEach(item => {
                     actionIds.push(...item.actions.map(_ => _.id));
                 });
-                console.log('this.tableData', this.tableData);
-                console.log('this.aggregationsTableData', this.aggregationsTableData);
                 if (payload) {
                     // 缓存新增加的操作权限数据
                     aggregationAction.forEach(item => {
@@ -1392,7 +1510,6 @@
                             subItem => item.actions.map(_ => _.id).includes(subItem.id)
                         );
 
-                        console.log('filterArray', filterArray);
                         const addArray = _.cloneDeep(filterArray.filter(
                             subItem => !this.aggregationsTableData.map(_ => _.id).includes(subItem.id)
                         ));
@@ -1411,11 +1528,9 @@
                             subItem => item.actions.map(act => act.id).includes(subItem.id)
                         );
 
-                        console.log('existTableData', existTableData);
                         if (existTableData.length > 0) {
                             item.tag = existTableData.every(subItem => subItem.tag === 'unchanged') ? 'unchanged' : 'add';
                             const tempObj = existTableData.find(subItem => subItem.tag === 'add');
-                            console.log('tempObj', tempObj);
                             if (tempObj) {
                                 item.expired_at = tempObj.expired_at || 15552000;
                                 item.expired_display = tempObj.expired_display || this.$t(`m.common['6个月']`);
@@ -1429,7 +1544,6 @@
                                 );
                                 // 是否都选择了实例
                                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none'); // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
-                                console.log('isAllHasInstance', isAllHasInstance);
                                 if (isAllHasInstance) {
                                     const instances = conditions.map(subItem => subItem.map(v => v.instance || []));
                                     let isAllEqual = true;
@@ -1439,21 +1553,30 @@
                                             break;
                                         }
                                     }
-                                    // console.log('instances: ')
-                                    // console.log(instances)
-                                    console.log('isAllEqual: ', isAllEqual);
                                     if (isAllEqual) {
-                                        const instanceData = instances[0][0][0];
-                                        if (instanceData && instanceData.path) {
-                                            item.instances = instanceData.path.map(pathItem => {
+                                        // const instanceData = instances[0][0][0];
+                                        // if (instanceData && instanceData.path) {
+                                        //     item.instances = instanceData.path.map(pathItem => {
+                                        //         return {
+                                        //             id: pathItem[0].id,
+                                        //             name: pathItem[0].name
+                                        //         };
+                                        //     });
+                                        // }
+                                        const instanceData = instances[0][0];
+                                        item.instances = [];
+                                        instanceData.map(pathItem => {
+                                            const instance = pathItem.path.map(e => {
                                                 return {
-                                                    id: pathItem[0].id,
-                                                    name: pathItem[0].name
+                                                    id: e[0].id,
+                                                    name: e[0].name,
+                                                    type: e[0].type
                                                 };
                                             });
-                                        }
+                                            item.instances.push(...instance);
+                                        });
+                                        this.setInstancesDisplayData(item);
                                     } else {
-                                        console.log('instances', instances);
                                         item.instances = [];
                                     }
                                 } else {
@@ -1493,41 +1616,60 @@
                             const instances = (function () {
                                 const arr = [];
                                 const aggregateResourceType = curAggregation.aggregateResourceType;
-                                const { id, name, system_id } = aggregateResourceType;
-                                curAggregation.instances.forEach(v => {
-                                    const curItem = arr.find(_ => _.type === id);
-                                    if (curItem) {
-                                        curItem.path.push([{
-                                            id: v.id,
-                                            name: v.name,
-                                            system_id,
-                                            type: id,
-                                            type_name: name
-                                        }]);
-                                    } else {
-                                        arr.push({
-                                            name,
-                                            type: id,
-                                            path: [[{
+                                aggregateResourceType.forEach(aggregateResourceItem => {
+                                    const { id, name, system_id } = aggregateResourceItem;
+                                    curAggregation.instances.forEach(v => {
+                                        const curItem = arr.find(_ => _.type === id);
+                                        if (curItem) {
+                                            curItem.path.push([{
                                                 id: v.id,
                                                 name: v.name,
                                                 system_id,
                                                 type: id,
                                                 type_name: name
-                                            }]]
-                                        });
-                                    }
+                                            }]);
+                                        } else {
+                                            arr.push({
+                                                name,
+                                                type: id,
+                                                path: [[{
+                                                    id: v.id,
+                                                    name: v.name,
+                                                    system_id,
+                                                    type: id,
+                                                    type_name: name
+                                                }]]
+                                            });
+                                        }
+                                    });
                                 });
                                 return arr;
                             })();
                             if (instances.length > 0) {
-                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
-                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                curData.resource_groups.forEach(groupItem => {
+                                    groupItem.related_resource_types
+                                        && groupItem.related_resource_types.forEach(subItem => {
+                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                        });
                                 });
                             }
                         }
                     }
                 });
+            },
+
+            // 设置InstancesDisplayData
+            setInstancesDisplayData (data) {
+                data.instancesDisplayData = data.instances.reduce((p, v) => {
+                    if (!p[v['type']]) {
+                        p[v['type']] = [];
+                    }
+                    p[v['type']].push({
+                        id: v.id,
+                        name: v.name
+                    });
+                    return p;
+                }, {});
             },
             
             handleActionChecked (newVal, oldVal, val, actData, payload) {
@@ -1586,8 +1728,11 @@
                                             curData.expired_at = item.expired_at;
                                             curData.expired_display = item.expired_display;
                                             if (instances.length > 0) {
-                                                curData.related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')]; // 选择的时候flag为add 代表为新增数据  侧边栏数据disabled为false可选择
+                                                curData.resource_groups.forEach(groupItem => {
+                                                    groupItem.related_resource_types
+                                                        && groupItem.related_resource_types.forEach(subItem => {
+                                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                        });
                                                 });
                                             }
                                             this.tableData.splice(i, 1, curData);
@@ -1600,7 +1745,6 @@
                         }
                     }
 
-                    console.log('actData', actData);
                     this.handleRelatedActions(actData, false);
                     payload.count--;
                     return;
@@ -1679,8 +1823,11 @@
                                             curData.expired_at = item.expired_at;
                                             curData.expired_display = item.expired_display;
                                             if (instances.length > 0) {
-                                                curData.resource_groups[0].related_resource_types.forEach(subItem => {
-                                                    subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                curData.resource_groups.forEach(groupItem => {
+                                                    groupItem.related_resource_types
+                                                        && groupItem.related_resource_types.forEach(subItem => {
+                                                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                                                        });
                                                 });
                                             }
                                             this.tableData.splice(i, 1, curData);
@@ -1850,7 +1997,6 @@
                 }
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params);
-                    console.log(res.data, params);
                     const data = res.data.map(item => {
                         const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
                         // eslint-disable-next-line max-len
@@ -1890,9 +2036,7 @@
                     this.newTableList = _.cloneDeep(this.tableData.filter(item => {
                         return !item.isExpiredAtDisabled;
                     }));
-                    console.log('this.tableData', this.tableData);
                     this.tableDataBackup = _.cloneDeep(this.tableData);
-                    console.log('this.tableDataBackup', this.tableDataBackup);
                     this.aggregationsTableData = _.cloneDeep(this.tableData);
                 } catch (e) {
                     console.error(e);
@@ -1997,8 +2141,25 @@
              */
             async handleApplySubmit () {
                 const tableData = this.$refs.resInstanceTableRef.handleGetValue();
-                const { actions, flag, aggregations } = tableData;
-                if (flag || this.reason === '') {
+                const { flag, aggregations } = tableData;
+                let actions = tableData.actions;
+                let recommendActions = [];
+                let recommendFlag = false;
+                
+                if (this.$refs.resInstanceRecommendTableRef) {
+                    const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
+                    recommendActions = tableRecommendData.actions;
+                    recommendFlag = recommendActions.some((e, i) => {
+                        const newRecommendTableListe = this.newRecommendTableList.find(item => item.id === e.id);
+                        return newRecommendTableListe.resource_groups.some(v => {
+                            return v.related_resource_types.some(j => {
+                                return j.empty;
+                            });
+                        });
+                    });
+                }
+                actions = [...actions, ...recommendActions];
+                if (recommendFlag || flag || this.reason === '') {
                     this.isShowReasonError = this.reason === '';
                     if (actions.length < 1 && aggregations.length < 1) {
                         this.isShowActionError = true;
@@ -2134,6 +2295,20 @@
                         tab: 'custom'
                     }
                 });
+            },
+
+            /**
+             * 点击tab
+             */
+            clickTab (i, key) {
+                this.tabIndex = i;
+                if (key === 'userGroup') {
+                    this.isShowUserGroup = true;
+                    this.isShowIndependent = false;
+                } else {
+                    this.isShowIndependent = true;
+                    this.isShowUserGroup = false;
+                }
             }
         }
     };

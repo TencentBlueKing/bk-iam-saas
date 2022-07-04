@@ -10,9 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
@@ -23,7 +22,6 @@ from backend.biz.action import ActionBiz, ActionSearchCondition
 from backend.biz.approval import ApprovalProcessBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
 from backend.common.error_codes import error_codes
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.service.action import ActionService
 from backend.service.constants import PermissionCodeEnum
 
@@ -49,14 +47,13 @@ from .serializers import (
 class ApprovalProcessViewSet(GenericViewSet):
     permission_classes = [role_perm_class(PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = ApprovalProcessBiz()
 
     @swagger_auto_schema(
         operation_description="审批流程列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=ApporvalProcessQuerySLZ,
+        query_serializer=ApporvalProcessQuerySLZ(),
         responses={status.HTTP_200_OK: ApprovalProcessSLZ(label="审批流程列表")},
         tags=["approval"],
     )
@@ -73,13 +70,12 @@ class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GLOBAL_SETTING.value)]
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = ApprovalProcessBiz()
 
     @swagger_auto_schema(
         operation_description="默认审批流程",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ApprovalProcessGlobalConfigSLZ(label="审批流程列表", many=True)},
         tags=["approval"],
     )
@@ -91,8 +87,7 @@ class ApprovalProcessGlobalConfigViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量设置操作的审批流程",
         request_body=ApprovalProcessGlobalConfigModifySLZ(),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["approval"],
     )
     @view_audit_decorator(ApprovalProcessGlobalConfigAuditProvider)
@@ -121,8 +116,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="操作-审批流程列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
-        query_serializer=ActionApprovalProcessQuerySLZ,
+        query_serializer=ActionApprovalProcessQuerySLZ(),
         responses={status.HTTP_200_OK: ActionApprovalProcessSLZ(label="操作-审批流程列表", many=True)},
         tags=["approval"],
     )
@@ -162,6 +156,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
                     "system_id": system_id,
                     "action_id": action.id,
                     "action_name": action.name,
+                    "action_name_en": action.name_en,
                     "process_id": process.id,
                     "process_name": process.name,
                 }
@@ -172,8 +167,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量设置操作的审批流程",
         request_body=ActionApprovalProcessModifySLZ(),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["approval"],
     )
     @view_audit_decorator(ApprovalProcessActionAuditProvider)
@@ -207,8 +201,7 @@ class GroupApprovalProcessViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组-审批流程列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
-        query_serializer=GroupApprovalProcessQuerySLZ,
+        query_serializer=GroupApprovalProcessQuerySLZ(),
         responses={status.HTTP_200_OK: GroupApprovalProcessSLZ(label="用户组-审批流程列表", many=True)},
         tags=["approval"],
     )
@@ -252,8 +245,7 @@ class GroupApprovalProcessViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="批量设置用户组的审批流程",
         request_body=GroupApprovalProcessModifySLZ(),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["approval"],
     )
     @view_audit_decorator(ApprovalProcessGroupAuditProvider)

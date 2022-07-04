@@ -5,7 +5,7 @@
             <div class="transfer-manager-content" ref="transferManagerContent">
                 <div class="header" @click="handleRateExpanded">
                     <Icon bk class="expanded-icon" :type="rateExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">管理员交接</label>
+                    <label class="title">{{$t(`m.permTransfer['管理员交接']`)}}</label>
                 </div>
                 <div class="content" v-if="rateExpanded">
                     <div class="slot-content">

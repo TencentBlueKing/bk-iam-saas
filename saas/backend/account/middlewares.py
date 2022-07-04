@@ -9,17 +9,41 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+import logging
+
 import pytz
 from django import forms
 from django.contrib import auth
+from django.http import HttpResponseForbidden
 from django.utils import timezone
+from django.utils.translation import gettext as _
+
+from backend.biz.subject import SubjectBiz
+from backend.common.cache import cached
+from backend.service.constants import SubjectType
 
 from . import role_auth
+
+logger = logging.getLogger("app")
 
 
 class AuthenticationForm(forms.Form):
     # bk_token format: KH7P4-VSFi_nOEoV3kj0ytcs0uZnGOegIBLV-eM3rw8
     bk_token = forms.CharField()
+
+
+@cached(timeout=60)
+def is_in_blacklist(username: str) -> bool:
+    blacklist = []
+    try:
+        blacklist = SubjectBiz().list_freezed_subjects()
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("failed to get blacklist, so the blacklist check will not working")
+
+    for subject in blacklist:
+        if subject.id == username and subject.type == SubjectType.USER.value:
+            return True
+    return False
 
 
 class LoginMiddleware(object):
@@ -31,10 +55,15 @@ class LoginMiddleware(object):
         Login paas when User has logged in calling auth.login
         """
         form = AuthenticationForm(request.COOKIES)
+
         if form.is_valid():
             bk_token = form.cleaned_data["bk_token"]
             user = auth.authenticate(request=request, bk_token=bk_token)
             if user:
+                # NOTE: block the user in blacklist
+                if is_in_blacklist(request.user.username):
+                    return HttpResponseForbidden(_("用户账号已被冻结, 禁止使用权限中心相关功能"))
+
                 # Succeed to login, recall self to exit process
                 if user.username != request.user.username:
                     auth.login(request, user)

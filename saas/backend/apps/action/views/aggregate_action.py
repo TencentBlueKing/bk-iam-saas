@@ -13,7 +13,6 @@ from rest_framework import status, views
 from rest_framework.response import Response
 
 from backend.biz.aggregate_action import AggregateActionsBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 from ..serializers import AggregateActionsSLZ, SystemsSLZ
 
@@ -27,8 +26,7 @@ class AggregateActionView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="获取操作聚合信息",
-        query_serializer=SystemsSLZ,
-        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=SystemsSLZ(),
         responses={status.HTTP_200_OK: AggregateActionsSLZ(label="聚合操作")},
         tags=["action"],
     )

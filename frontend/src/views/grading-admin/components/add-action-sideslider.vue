@@ -17,6 +17,7 @@
                         right-icon="bk-icon icon-search"
                         style="width: 210px;"
                         v-model="keyword"
+                        :placeholder="$t(`m.verify['请输入']`)"
                         @input="handleInput"
                         @enter="handleSearch">
                     </bk-input>
@@ -51,6 +52,7 @@
                             style="margin: 0;"
                             :system-id="curSystem"
                             :data="commonActions"
+                            :tag-action-list="tagActionList"
                             mode="detail"
                             v-if="!isRightLoading && commonActions.length > 0"
                             @on-change="handleActionTagChange" />
@@ -178,7 +180,9 @@
                 curSelectValue: [],
                 commonActions: [],
                 linearAction: [],
-                quickClose: false
+                quickClose: false,
+                tagActionList: [],
+                tagActionListBackUp: []
             };
         },
         computed: {
@@ -325,6 +329,14 @@
                     const allChecked = checked && subChecked;
                     payload.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
                 });
+
+                if (this.curSelectValue.length) {
+                    this.tagActionList = this.curSelectValue.map(e => {
+                        return e.split('&')[1];
+                    });
+                } else {
+                    this.tagActionList = [];
+                }
             },
 
             getRelatedActionTips (payload) {
@@ -517,6 +529,7 @@
             },
 
             handleDefaultData (payload, data) {
+                this.tagActionListBackUp = [];
                 this.systemData[payload].list = _.cloneDeep(data);
                 this.systemData[payload].list.forEach(item => {
                     if (!item.actions) {
@@ -535,6 +548,9 @@
                         if (!act.checked) {
                             allChecked = false;
                         }
+                        if (act.checked) {
+                            this.tagActionListBackUp.push(act.id);
+                        }
                         this.linearAction.push(act);
                     });
                     item.sub_groups.forEach(act => {
@@ -546,6 +562,10 @@
                             this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id));
                             if (!v.checked) {
                                 allChecked = false;
+                            }
+
+                            if (v.checked) {
+                                this.tagActionListBackUp.push(v.id);
                             }
                             this.linearAction.push(v);
                         });
@@ -567,7 +587,7 @@
                         });
                     });
                     const intersection = curAllActionIds.filter(item => this.defaultValue.includes(item));
-                    this.systemData[payload].count = intersection.length;
+                    this.systemData[payload].count = this.tagActionListBackUp.length || intersection.length;
                 }
             },
 
@@ -744,15 +764,18 @@
                 this.resetData();
             },
 
-            handleSysChange (payload) {
+            async handleSysChange (payload) {
                 window.changeAlert = true;
                 if (this.curSystem === payload.id) {
                     return;
                 }
                 this.curSystem = payload.id;
                 this.linearAction = [];
-                this.fetchActions(this.curSystem);
-                this.fetchCommonActions(this.curSystem);
+                await Promise.all([
+                    this.fetchActions(this.curSystem),
+                    this.fetchCommonActions(this.curSystem)
+                ]);
+                this.tagActionList = [...this.tagActionListBackUp];
             },
 
             handleInput () {

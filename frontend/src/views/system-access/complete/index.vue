@@ -20,11 +20,11 @@
                         </div>
                         <div class="block-wrapper">
                             <div class="block-item">
-                                <div class="block-title">SDK鉴权 (Python/Go )</div>
+                                <div class="block-title">{{ $t(`m.access['SDK鉴权 (Python/Go )']`) }}</div>
                                 <div class="block-content">
                                     <div class="language">Python SDK</div>
                                     <!-- <div class="time">2021-03-23发布</div> -->
-                                    <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-python-sdk" target="_blank">访问</bk-link>
+                                    <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-python-sdk" target="_blank">{{ $t(`m.access['访问']`) }}</bk-link>
                                 </div>
                             </div>
                             <div class="block-item">
@@ -32,15 +32,15 @@
                                 <div class="block-content">
                                     <div class="language">GO SDK</div>
                                     <!-- <div class="time">2021-03-23发布</div> -->
-                                    <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-go-sdk" target="_blank">访问</bk-link>
+                                    <bk-link class="link" theme="primary" href="https://github.com/TencentBlueKing/iam-go-sdk" target="_blank">{{ $t(`m.access['访问']`) }}</bk-link>
                                 </div>
                             </div>
                             <div class="block-item special">
-                                <div class="block-title">使用API鉴权(其他)</div>
+                                <div class="block-title">{{ $t(`m.access['使用API鉴权(其他)']`) }}</div>
                                 <div class="block-content">
                                     <div class="language"></div>
                                     <div class="time"></div>
-                                    <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8456" target="_blank">查看API鉴权接口</bk-link>
+                                    <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8456" target="_blank">{{ $t(`m.access['查看API鉴权接口']`) }}</bk-link>
                                 </div>
                             </div>
                         </div>
@@ -73,10 +73,10 @@
                 controllableSteps: {
                     controllable: true,
                     steps: [
-                        { title: '注册系统', icon: 1 },
-                        { title: '注册操作', icon: 2 },
-                        { title: '体验优化', icon: 3 },
-                        { title: '完成', icon: 4 }
+                        { title: this.$t(`m.access['注册系统']`), icon: 1 },
+                        { title: this.$t(`m.access['注册操作']`), icon: 2 },
+                        { title: this.$t(`m.access['体验优化']`), icon: 3 },
+                        { title: this.$t(`m.access['完成']`), icon: 4 }
                     ],
                     curStep: 4
                 }

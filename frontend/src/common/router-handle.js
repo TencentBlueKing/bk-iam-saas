@@ -54,25 +54,35 @@ export const getRouterDiff = (payload) => {
     if (payload === 'super_manager') {
         return [
             'applyCustomPerm',
+            'applyProvisionPerm',
             'applyJoinUserGroup',
             'apply',
             'myPerm',
             'templatePermDetail',
             'groupPermDetail',
             'orgPermDetail',
+            'ratingManager',
+            'gradingAdminCreate',
+            'gradingAdminDetail',
+            'user',
+            'gradingAdminUpdateTemplate',
+            'administrator',
             'approval',
             'permRenewal',
+            'audit',
             'systemAccess',
             'systemAccessCreate',
             'systemAccessAccess',
             'systemAccessRegistry',
             'systemAccessOptimize',
-            'systemAccessComplete'
+            'systemAccessComplete',
+            'resourcePermiss'
         ];
     }
     if (payload === 'system_manager') {
         return [
             'applyCustomPerm',
+            'applyProvisionPerm',
             'applyJoinUserGroup',
             'apply',
             'myPerm',
@@ -86,6 +96,7 @@ export const getRouterDiff = (payload) => {
             'gradingAdminUpdateTemplate',
             'approval',
             'permRenewal',
+            'audit',
             'systemAccess',
             'systemAccessCreate',
             'systemAccessAccess',
@@ -98,6 +109,7 @@ export const getRouterDiff = (payload) => {
     if (payload === 'rating_manager') {
         return [
             'applyCustomPerm',
+            'applyProvisionPerm',
             'applyJoinUserGroup',
             'apply',
             'myPerm',
@@ -142,6 +154,7 @@ export const getRouterDiff = (payload) => {
         'permTemplateDetail',
         'permTemplateCreate',
         'applyCustomPerm',
+        'applyProvisionPerm',
         'applyJoinUserGroup',
         'apply',
         'user',
@@ -160,4 +173,98 @@ export const getRouterDiff = (payload) => {
         'permTemplateDiff',
         'addGroupPerm'
     ];
+};
+
+// 导航路由
+export const getNavRouterDiff = (navIndex) => {
+    if (navIndex === 0 || navIndex === '') {
+        return [
+            'userGroup',
+            'createUserGroup',
+            'userGroupDetail',
+            'permTemplate',
+            'permTemplateCreate',
+            'user',
+            'permTemplateDetail',
+            'administrator',
+            'approvalProcess',
+            'groupPermRenewal',
+            'audit',
+            'permTemplateEdit',
+            'permTemplateDiff',
+            'addGroupPerm',
+            'resourcePermiss'
+        ];
+    }
+
+    if (navIndex === 2) {
+        return [
+            'systemAccess',
+            'systemAccessCreate',
+            'systemAccessAccess',
+            'systemAccessRegistry',
+            'systemAccessOptimize',
+            'systemAccessComplete',
+            'myPerm',
+            'templatePermDetail',
+            'groupPermDetail',
+            'orgPermDetail',
+            'userGroup',
+            'createUserGroup',
+            'userGroupDetail',
+            'userGroupPermDetail',
+            'permTemplate',
+            'permTemplateDetail',
+            'permTemplateCreate',
+            'applyCustomPerm',
+            'applyProvisionPerm',
+            'applyJoinUserGroup',
+            'apply',
+            'user',
+            'ratingManager',
+            'gradingAdminCreate',
+            'gradingAdminDetail',
+            'gradingAdminEdit',
+            'gradingAdminUpdateTemplate',
+            'administrator',
+            'approvalProcess',
+            'approval',
+            'permRenewal',
+            'groupPermRenewal',
+            'permTemplateEdit',
+            'permTemplateDiff',
+            'addGroupPerm',
+            'resourcePermiss'
+        ];
+    }
+
+    if (navIndex === 3) {
+        return [
+            'applyCustomPerm',
+            'applyProvisionPerm',
+            'applyJoinUserGroup',
+            'apply',
+            'myPerm',
+            'templatePermDetail',
+            'groupPermDetail',
+            'orgPermDetail',
+            'approval',
+            'permRenewal',
+            'systemAccess',
+            'systemAccessCreate',
+            'systemAccessAccess',
+            'systemAccessRegistry',
+            'systemAccessOptimize',
+            'systemAccessComplete',
+            'audit',
+            'userGroup',
+            'createUserGroup',
+            'userGroupDetail',
+            'userGroupPermDetail',
+            'permTemplate',
+            'permTemplateDetail',
+            'permTemplateCreate',
+            'approvalProcess'
+        ];
+    }
 };

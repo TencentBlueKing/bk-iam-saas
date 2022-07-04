@@ -21,12 +21,12 @@ from django.utils import translation
 from django.utils.functional import SimpleLazyObject
 from requests import auth
 
+from backend.common.cache import cachedmethod
 from backend.common.debug import http_trace
 from backend.common.error_codes import error_codes
 from backend.common.i18n import get_bk_language
 from backend.common.local import local
 from backend.metrics import callback_request_duration
-from backend.util.cache import region
 
 request_pool = requests.Session()
 logger = logging.getLogger("component")
@@ -334,7 +334,7 @@ class ResourceProviderClient:
         """根据过滤条件且必须保证keyword不为空查询实例"""
         return self._search_instance(self.system_id, self.resource_type_id, filter_condition, page)
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def _search_instance(
         self, system_id: str, resource_type_id: str, filter_condition: Dict, page: Dict[str, int]
     ) -> Tuple[int, List[Dict[str, str]]]:

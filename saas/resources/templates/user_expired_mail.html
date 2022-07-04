@@ -159,10 +159,16 @@
             color: #c4c6cc; 
         }
 
-        .renewal-action {
+        .renewal-action-flex{
+            display: flex;
+            justify-content: center;
+            align-items: center;
             position: relative;
             top: 75px;
-            margin: 0 auto;
+        }
+
+        .renewal-action {
+            margin-right: 40px;
             width: 144px;
             height: 32px;
             line-height: 32px;
@@ -317,7 +323,10 @@
                         <p class="current-info">你收到此邮件，是因为你是这些权限的拥有者。</p>
                         <div class="current-date">{% now "Y-m-d H:i:s" %}</div>
                     </section>
-                    <div class="renewal-action" id="renewal-button"><a style="color: #fff;" href="{{ url }}">马上续期</a></div>
+                    <div class="renewal-action-flex">
+                        <div class="renewal-action" id="renewal-button"><a style="color: #fff;" href="{{ url }}">马上续期</a></div>
+                        <div>如不再需要，请在<a style="color: #3a84ff;" href="{{ index_url }}">「我的权限」</a>页面回收</div>
+                    </div>
                 </td>
             </tr>
         </table>

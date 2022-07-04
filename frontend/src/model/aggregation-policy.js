@@ -31,7 +31,8 @@ export default class AggregationPolicy {
     constructor (payload) {
         this.isError = false;
         this.actions = payload.actions || [];
-        this.aggregateResourceType = payload.aggregate_resource_type || {};
+        this.instancesDisplayData = payload.instancesDisplayData || {};
+        this.aggregateResourceType = payload.aggregate_resource_types || [];
         this.instances = payload.instances || [];
         this.isAggregate = true;
         this.expired_display = payload.expired_display || '';
@@ -40,6 +41,7 @@ export default class AggregationPolicy {
         this.tag = payload.tag || 'add';
         this.canPaste = false;
         this.instancesBackup = _.cloneDeep(this.instances);
+        this.selectedIndex = payload.selectedIndex || 0;
         this.initExpiredAt(payload);
     }
 
@@ -59,7 +61,19 @@ export default class AggregationPolicy {
         if (this.empty) {
             return il8n('verify', '请选择');
         }
-        return this.instances.map(item => item.name).join('；');
+        let str = '';
+        this.aggregateResourceType.forEach(item => {
+            if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
+                str = `${str}，${item.name}: ${this.instancesDisplayData[item.id][0].name}`;
+            } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
+                for (const key in this.instancesDisplayData) {
+                    if (item.id === key) {
+                        str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
+                    }
+                }
+            }
+        });
+        return str.substring(1, str.length);
     }
 
     get name () {

@@ -18,16 +18,14 @@ from rest_framework.response import Response
 from rest_framework.viewsets import views
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.mixins import ExceptionHandlerMixin
 from backend.biz.open import ApplicationPolicyListCache
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.trans.open_application import AccessSystemApplicationTrans
 from backend.util.url import url_join
 
 from .serializers import AccessSystemApplicationSLZ, AccessSystemApplicationUrlSLZ
 
 
-class ApplicationView(ExceptionHandlerMixin, views.APIView):
+class ApplicationView(views.APIView):
     """
     接入系统申请
     """
@@ -41,7 +39,6 @@ class ApplicationView(ExceptionHandlerMixin, views.APIView):
     @swagger_auto_schema(
         operation_description="接入系统权限申请",
         request_body=AccessSystemApplicationSLZ(label="接入系统申请数据"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AccessSystemApplicationUrlSLZ(label="重定向URL")},
         tags=["open"],
     )

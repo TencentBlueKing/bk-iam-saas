@@ -18,7 +18,7 @@
                 <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
             </div>
         </div>
-        <div class="user fr">
+        <!-- <div class="user fr">
             <div class="help-flag">
                 <Icon type="help-fill-2" />
                 <div class="dropdown-panel">
@@ -94,7 +94,7 @@
                     </ul>
                 </section>
             </transition>
-        </div>
+        </div> -->
         <div class="page-tab-wrapper" v-if="hasPageTab">
             <bk-tab
                 :active.sync="active"
@@ -302,9 +302,6 @@
             roleList: {
                 handler (newValue, oldValue) {
                     this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
-                    if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
-                        this.showGuide = true;
-                    }
                 },
                 immediate: true
             },
@@ -315,7 +312,6 @@
             },
             routeName: {
                 handler (value) {
-                    console.log('value', value);
                     if (value === 'addGroupPerm') {
                         this.fetchUserGroup();
                     }

@@ -15,6 +15,7 @@ from rest_framework import exceptions
 from backend.api.constants import ALLOW_ANY
 from backend.api.mixins import SystemClientCheckMixin
 from backend.apps.role.models import RoleRelatedObject, RoleSource
+from backend.common.cache import cachedmethod
 from backend.service.constants import RoleRelatedObjectType, RoleSourceTypeEnum
 
 from .constants import ManagementAPIEnum, VerifyAPIObjectTypeEnum
@@ -28,6 +29,7 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
     3. API数据鉴权：查询系统可管控的授权系统表
     """
 
+    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def verify_api_allow_list(self, system_id: str, api: ManagementAPIEnum):
         """
         API鉴权: 查询管理类API白名单表，判断是否允许访问API

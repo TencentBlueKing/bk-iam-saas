@@ -123,6 +123,21 @@ export default {
         },
 
         /**
+         * 获取subject有临时权限的所有系统列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @return {Promise} promise 对象
+         */
+        getSubjectTemporaryHasPermSystem ({ commit, state, dispatch }, params, config) {
+            const subjectType = params.subjectType;
+            const subjectId = params.subjectId;
+            return http.get(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/temporary_policies/systems/`, config);
+        },
+
+        /**
          * 组织架构执行同步任务
          *
          * @param {Function} commit store commit mutation handler

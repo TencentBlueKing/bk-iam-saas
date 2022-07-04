@@ -19,9 +19,11 @@ from backend.apps.mgmt.views.group import (
     GroupTransferView,
     GroupViewSet,
 )
+from backend.apps.mgmt.views.long_task import LongTaskViewSet
 from backend.apps.mgmt.views.role import RoleAuthorizationScopeView, RoleSubjectScopeView
 from backend.apps.mgmt.views.system import SystemViewSet
 from backend.apps.mgmt.views.template import TemplateViewSet
+
 from backend.apps.mgmt.views.white_list import (
     AdminApiWhiteListViewSet,
     ApiViewSet,
@@ -34,6 +36,7 @@ __all__ = [
     "AdminApiWhiteListViewSet",
     "AuthorizationApiWhiteListViewSet",
     "ManagementApiWhiteListViewSet",
+    "LongTaskViewSet",
     "GroupViewSet",
     "GroupMemberViewSet",
     "GroupMemberUpdateExpiredAtViewSet",
@@ -46,5 +49,4 @@ __all__ = [
     "TemplateViewSet",
     "SystemViewSet",
     "ActionViewSet",
-
-]
+    ]

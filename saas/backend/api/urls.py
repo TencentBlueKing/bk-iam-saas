@@ -19,6 +19,6 @@ urlpatterns = [
     url(r"^initialization/", include("backend.api.initialization.urls")),
     # 管理类API
     url(r"^management/", include("backend.api.management.urls")),
-    # 超级管理类API
+    # 超级管理类API, 审计/安全等系统也统一走超级管理类接口
     url(r"^admin/", include("backend.api.admin.urls")),
 ]

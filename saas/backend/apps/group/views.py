@@ -9,11 +9,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from functools import wraps
 from typing import List
 
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status, views
@@ -36,7 +36,6 @@ from backend.biz.template import TemplateBiz
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.serializers import SystemQuerySLZ
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum, RoleType, SubjectType
 from backend.service.models import Subject
@@ -54,6 +53,7 @@ from .audit import (
     GroupTransferAuditProvider,
     GroupUpdateAuditProvider,
 )
+from .constants import OperateEnum
 from .filters import GroupFilter, GroupTemplateSystemFilter
 from .serializers import (
     GroupAddMemberSLZ,
@@ -64,6 +64,7 @@ from .serializers import (
     GroupIdSLZ,
     GroupMemberUpdateExpiredAtSLZ,
     GroupPolicyUpdateSLZ,
+    GroupsAddMemberSLZ,
     GroupSLZ,
     GroupTemplateDetailSchemaSLZ,
     GroupTemplateDetailSLZ,
@@ -76,6 +77,29 @@ from .serializers import (
 )
 
 permission_logger = logging.getLogger("permission")
+
+
+def check_readonly_group(operation):
+    """用户组可读检测"""
+
+    def decorate(func):
+        @wraps(func)
+        def wrapper(view, request, *args, **kwargs):
+            group = view.get_object()
+            readonly = group.readonly
+
+            if readonly:
+                raise error_codes.FORBIDDEN.format(
+                    message=_("只读用户组({})无法进行({})操作！").format(group.id, operation), replace=True
+                )
+
+            response = func(view, request, *args, **kwargs)
+
+            return response
+
+        return wrapper
+
+    return decorate
 
 
 class GroupQueryMixin:
@@ -113,7 +137,6 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
     @swagger_auto_schema(
         operation_description="创建用户组",
         request_body=GroupCreateSLZ(label="用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_201_CREATED: GroupIdSLZ(label="用户组ID")},
         tags=["group"],
     )
@@ -130,6 +153,9 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
 
         # 用户组名称在角色内唯一
         self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"])
+        # 用户组数量在角色内是否超限
+        number_of_new_group = 1  # 接口只支持创建一个用户组，不支持批量，所以新增用户组数量为1
+        self.group_check_biz.check_role_group_limit(request.role, number_of_new_group)
 
         # 检测成员是否满足管理的授权范围
         members = parse_obj_as(List[Subject], data["members"])
@@ -169,7 +195,6 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
 
     @swagger_auto_schema(
         operation_description="用户组列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GroupSLZ(label="用户组", many=True)},
         tags=["group"],
     )
@@ -178,7 +203,6 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
 
     @swagger_auto_schema(
         operation_description="用户组详情",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GroupSLZ(label="用户组")},
         tags=["group"],
     )
@@ -188,11 +212,11 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
     @swagger_auto_schema(
         operation_description="修改用户组",
         request_body=GroupUpdateSLZ(label="用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GroupUpdateSLZ(label="用户组")},
         tags=["group"],
     )
     @view_audit_decorator(GroupUpdateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_UPDATE.label)
     def update(self, request, *args, **kwargs):
         group = self.get_object()
         serializer = GroupUpdateSLZ(group, data=request.data)
@@ -213,11 +237,11 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
 
     @swagger_auto_schema(
         operation_description="删除用户组",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupDeleteAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()
 
@@ -247,7 +271,6 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户组成员列表",
         query_serializer=SearchMemberSLZ(label="keyword"),
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: MemberSLZ(label="成员")},
         tags=["group"],
     )
@@ -277,12 +300,12 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组添加成员",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupAddMemberSLZ(label="成员"),
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberCreateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_CREATE.label)
     def create(self, request, *args, **kwargs):
         serializer = GroupAddMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -311,12 +334,12 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组删除成员",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupDeleteMemberSLZ(label="成员"),
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberDeleteAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         serializer = GroupDeleteMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -336,6 +359,71 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         return Response({})
 
 
+class GroupsMemberViewSet(GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupsAddMemberSLZ
+
+    biz = GroupBiz()
+    group_check_biz = GroupCheckBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量用户组添加成员",
+        request_body=GroupsAddMemberSLZ(label="成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    @view_audit_decorator(GroupMemberCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = GroupsAddMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        members_data = data["members"]
+        expired_at = data["expired_at"]
+        group_ids = data["group_ids"]
+
+        # 添加成员 异常信息记录
+        failed_info = {}
+        # 成员Dict结构转换为Subject结构，并去重
+        members = list(set(parse_obj_as(List[Subject], members_data)))
+        # 检测成员是否满足管理的授权范围
+        GroupCheckBiz().check_role_subject_scope(request.role, members)
+
+        groups = self.queryset.filter(id__in=group_ids)
+        for group in groups:
+            try:
+                if not RoleObjectRelationChecker(request.role).check_group(group):
+                    self.permission_denied(
+                        request, message=f"{request.role.type} role can not access group {group.id}"
+                    )
+                # 校验用户组数量是否超限
+                GroupCheckBiz().check_member_count(group.id, len(members))
+                # 只读用户组检测
+                readonly = group.readonly
+                if readonly:
+                    raise error_codes.FORBIDDEN.format(
+                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        replace=True,
+                    )
+                # 添加成员
+                GroupBiz().add_members(group.id, members, expired_at)
+
+            except Exception as e:
+                permission_logger.info(e)
+                failed_info.update({group.name: "{}".format(e)})
+
+            else:
+                # 写入审计上下文
+                audit_context_setter(group=group, members=[m.dict() for m in members])
+
+        if not failed_info:
+            return Response({}, status=status.HTTP_201_CREATED)
+
+        raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
+
+
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_GROUP.value)]
@@ -348,12 +436,12 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组成员续期",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupMemberUpdateExpiredAtSLZ(label="成员"),
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupMemberRenewAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_MEMBER_RENEW.label)
     def create(self, request, *args, **kwargs):
         serializer = GroupMemberUpdateExpiredAtSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -383,7 +471,7 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
     permission_classes = [RolePermission]
     action_permission = {"create": PermissionCodeEnum.MANAGE_GROUP.value}
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
     queryset = Group.objects.all()
     filterset_class = GroupTemplateSystemFilter
     filter_backends = [NoCheckModelFilterBackend]
@@ -393,7 +481,6 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组拥有的权限模板列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GroupTemplateSchemaSLZ(label="权限模板", many=True)},
         tags=["group"],
     )
@@ -407,7 +494,6 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组权限模板授权信息",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GroupTemplateDetailSchemaSLZ(label="授权信息")},
         tags=["group"],
     )
@@ -429,7 +515,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         "update": PermissionCodeEnum.MANAGE_GROUP.value,
     }
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
     queryset = Group.objects.all()
     lookup_field = "id"
 
@@ -441,12 +527,12 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组添加权限",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupAuthorizationSLZ(label="授权信息"),
-        responses={status.HTTP_201_CREATED: yasg_response({})},
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupTemplateCreateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_CREATE.label)
     def create(self, request, *args, **kwargs):
         serializer = GroupAuthorizationSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -467,7 +553,6 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组自定义权限列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         query_serializer=SystemQuerySLZ,
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
         tags=["group"],
@@ -490,12 +575,12 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组删除自定义权限",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=PolicyDeleteSLZ(label="ids"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupPolicyDeleteAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_DELETE.label)
     def destroy(self, request, *args, **kwargs):
         slz = PolicyDeleteSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
@@ -521,12 +606,12 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组权限修改",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupPolicyUpdateSLZ(label="修改策略"),
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupPolicyUpdateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_UPDATE.label)
     def update(self, request, *args, **kwargs):
         group = self.get_object()
 
@@ -548,7 +633,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
 class GroupSystemViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
     queryset = Group.objects.all()
     lookup_field = "id"
 
@@ -556,8 +641,6 @@ class GroupSystemViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组有权限的所有系统列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=None,
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["group"],
     )
@@ -578,9 +661,8 @@ class GroupTransferView(views.APIView):
 
     @swagger_auto_schema(
         operation_description="用户组批量转出",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupTransferSLZ(label="用户转移"),
-        responses={status.HTTP_200_OK: {}},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
     @view_audit_decorator(GroupTransferAuditProvider)
@@ -607,7 +689,6 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限模板操作条件对比",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupAuthoriedConditionSLZ(label="操作条件"),
         responses={status.HTTP_200_OK: ConditionTagSLZ(label="条件差异", many=True)},
         tags=["group"],
@@ -659,7 +740,6 @@ class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet
     @swagger_auto_schema(
         operation_description="条件差异对比",
         request_body=ConditionCompareSLZ(label="资源条件"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: ConditionTagSLZ(label="条件差异", many=True)},
         tags=["group"],
     )

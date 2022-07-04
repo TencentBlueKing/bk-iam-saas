@@ -17,6 +17,8 @@ class AuditSourceType(ChoicesEnum, LowerStrEnum):
     WEB = auto()
     OPENAPI = auto()
     TASK = auto()
+    APPROVAL = auto()
+    HANDOVER = auto()
 
 
 class AuditObjectType(ChoicesEnum, LowerStrEnum):
@@ -30,6 +32,9 @@ class AuditObjectType(ChoicesEnum, LowerStrEnum):
     COMMONACTION = auto()
     ACTION = auto()
     WHITE_LIST = auto()
+
+    # 用户黑名单, 用于冻结/解冻用户使用
+    USER_BLACK_LIST = auto()
 
 
 class AuditStatus(ChoicesEnum):
@@ -61,6 +66,8 @@ class AuditType(ChoicesEnum, StrEnum):
     USER_POLICY_DELETE = auto()
     USER_GROUP_DELETE = auto()
     USER_ROLE_DELETE = auto()
+    USER_TEMPORARY_POLICY_CREATE = auto()
+    USER_TEMPORARY_POLICY_DELETE = auto()
     DEPARTMENT_GROUP_DELETE = auto()
     DEPARTMENT_UPDATE = auto()
 
@@ -101,3 +108,6 @@ class AuditType(ChoicesEnum, StrEnum):
 
     MANAGEMENT_API_ALLOW_LIST_CONFIG_CREATE = auto()
     MANAGEMENT_API_ALLOW_LIST_CONFIG_DELETE = auto()
+
+    USER_BLACKLIST_MEMBER_CREATE = auto()
+    USER_BLACKLIST_MEMBER_DELETE = auto()

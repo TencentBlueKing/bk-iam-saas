@@ -84,7 +84,7 @@ class ThinAggActionSLZ(serializers.Serializer):
 
 class AggregateActionSLZ(serializers.Serializer):
     actions = serializers.ListField(label="操作列表", child=ThinAggActionSLZ(label="操作"))
-    aggregate_resource_type = AggregateResourceTypeSLZ(label="聚合资源类型")
+    aggregate_resource_types = serializers.ListField(child=AggregateResourceTypeSLZ(label="聚合资源类型"))
 
 
 class AggregateActionsSLZ(serializers.Serializer):

@@ -28,7 +28,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
 import { unifyObjectStyle, json2Query } from '@/common/util';
-import { getRouterDiff } from '@/common/router-handle';
+import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
 // 系统模块
@@ -76,41 +76,68 @@ import access from './modules/access';
 // 资源权限模块
 import resourcePermiss from './modules/resource-permiss';
 
+// 临时权限模块
+import applyProvisionPerm from './modules/apply-provision-perm';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
 
 const currentNav = [
     {
-        icon: 'perm-apply',
-        name: il8n('nav', '权限申请'),
-        id: 'permApplyNav',
-        rkey: 'applyJoinUserGroup',
-        path: `${SITE_URL}apply-join-user-group`,
-        disabled: false
+        icon: 'perm-manage',
+        name: il8n('nav', '发起需求'),
+        rkey: 'initiateDemand',
+        children: [
+            {
+                icon: 'perm-apply',
+                name: il8n('nav', '权限申请'),
+                id: 'permApplyNav',
+                rkey: 'applyJoinUserGroup',
+                path: `${SITE_URL}apply-join-user-group`,
+                disabled: false
+            },
+            {
+                icon: 'perm-apply',
+                name: il8n('nav', '临时权限申请'),
+                id: 'provisionPermApplyNav',
+                rkey: 'applyProvisionPerm',
+                path: `${SITE_URL}apply-provision-perm`,
+                disabled: false
+            }
+        ]
     },
+
     {
-        icon: 'my-apply',
-        id: 'applyNav',
-        rkey: 'apply',
-        name: il8n('nav', '我的申请'),
-        path: `${SITE_URL}apply`,
-        disabled: false
+        icon: 'perm-manage',
+        name: il8n('nav', '工作台'),
+        rkey: 'initiateDemand',
+        children: [
+            {
+                icon: 'my-apply',
+                id: 'applyNav',
+                rkey: 'apply',
+                name: il8n('nav', '我的申请'),
+                path: `${SITE_URL}apply`,
+                disabled: false
+            },
+            {
+                icon: 'my-approval',
+                id: 'approvalNav',
+                rkey: 'approval',
+                name: il8n('nav', '我的审批')
+            },
+            {
+                icon: 'my-perm',
+                id: 'myPermNav',
+                rkey: 'myPerm',
+                name: il8n('nav', '我的权限'),
+                path: `${SITE_URL}my-perm`,
+                disabled: false
+            }
+        ]
     },
-    {
-        icon: 'my-approval',
-        id: 'approvalNav',
-        rkey: 'approval',
-        name: il8n('nav', '我的审批')
-    },
-    {
-        icon: 'my-perm',
-        id: 'myPermNav',
-        rkey: 'myPerm',
-        name: il8n('nav', '我的权限'),
-        path: `${SITE_URL}my-perm`,
-        disabled: false
-    },
+    
     {
         icon: 'perm-manage',
         name: il8n('nav', '权限管理'),
@@ -193,12 +220,19 @@ const currentNav = [
 
 if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
     currentNav.push({
-        icon: 'system-access',
-        id: 'systemAccessNav',
-        rkey: 'systemAccess',
-        name: il8n('nav', '系统接入'),
-        path: `${SITE_URL}system-access`,
-        disabled: true
+        icon: 'perm-manage',
+        name: il8n('nav', '开发者'),
+        rkey: 'Developers',
+        children: [
+            {
+                icon: 'system-access',
+                id: 'systemAccessNav',
+                rkey: 'systemAccess',
+                name: il8n('nav', '系统接入'),
+                path: `${SITE_URL}system-access`,
+                disabled: true
+            }
+        ]
     });
 }
 
@@ -218,7 +252,8 @@ const store = new Vuex.Store({
         renewal,
         audit,
         access,
-        resourcePermiss
+        resourcePermiss,
+        applyProvisionPerm
     },
     state: {
         mainContentLoading: false,
@@ -266,7 +301,14 @@ const store = new Vuex.Store({
         // 系统回调地址
         host: '',
         // 前置路由
-        fromRouteName: ''
+        fromRouteName: '',
+
+        // nav导航
+        navData: [],
+
+        index: 0,
+
+        navCurRoleId: 0
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -286,7 +328,10 @@ const store = new Vuex.Store({
         noviceGuide: state => state.noviceGuide,
         loadingConf: state => state.loadingConf,
         host: state => state.host,
-        fromRouteName: state => state.fromRouteName
+        fromRouteName: state => state.fromRouteName,
+        navData: state => state.navData,
+        index: state => state.index,
+        navCurRoleId: state => state.navCurRoleId
     },
     mutations: {
         updateHost (state, params) {
@@ -394,6 +439,16 @@ const store = new Vuex.Store({
         },
 
         /**
+         * 记录当前下拉框身份
+         *
+         * @param {Object} state store state
+         * @param {Object} data
+         */
+        updateNavId (state, id) {
+            state.navCurRoleId = id;
+        },
+
+        /**
          * 更新版本日志
          *
          * @param {Object} state store state
@@ -422,8 +477,20 @@ const store = new Vuex.Store({
             state.routerDiff = [...getRouterDiff(role)];
         },
 
+        updataNavRouterDiff (state, index) {
+            state.routerDiff = [...getNavRouterDiff(index)];
+        },
+
         updateRoleList (state, payload) {
             state.roleList.splice(0, state.roleList.length, ...payload);
+        },
+
+        updateNavData (state, payload) {
+            state.navData.splice(0, state.navData.length, ...payload);
+        },
+
+        updateIndex (state, payload) {
+            state.index = payload;
         }
     },
     actions: {
@@ -467,7 +534,15 @@ const store = new Vuex.Store({
 
                 if (Object.keys(data).length > 0) {
                     const role = data.role.type;
-                    commit('updataRouterDiff', role);
+                    if (role === 'staff') {
+                        commit('updateIndex', 0);
+                    }
+                    state.index = state.index || Number(window.localStorage.getItem('index'));
+                    if (state.index && state.index > 1) {
+                        commit('updataNavRouterDiff', state.index);
+                    } else {
+                        commit('updataRouterDiff', role);
+                    }
                 }
                 return data;
             });

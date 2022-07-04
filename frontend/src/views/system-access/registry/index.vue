@@ -262,10 +262,10 @@
                 controllableSteps: {
                     controllable: true,
                     steps: [
-                        { title: '注册系统', icon: 1 },
-                        { title: '注册操作', icon: 2 },
-                        { title: '体验优化', icon: 3 },
-                        { title: '完成', icon: 4 }
+                        { title: this.$t(`m.access['注册系统']`), icon: 1 },
+                        { title: this.$t(`m.access['注册操作']`), icon: 2 },
+                        { title: this.$t(`m.access['体验优化']`), icon: 3 },
+                        { title: this.$t(`m.access['完成']`), icon: 4 }
                     ],
                     curStep: 2
                 },

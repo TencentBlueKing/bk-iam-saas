@@ -138,7 +138,11 @@ class ApplicationListSLZ(serializers.ModelSerializer):
         """额外信息：每种申请都可以需要给前端不同信息，便于提示"""
         extra_info = {}
         # 自定义需要返回system_name、system_name_en
-        if obj.type in [ApplicationTypeEnum.GRANT_ACTION.value, ApplicationTypeEnum.RENEW_ACTION.value]:
+        if obj.type in [
+            ApplicationTypeEnum.GRANT_ACTION.value,
+            ApplicationTypeEnum.RENEW_ACTION.value,
+            ApplicationTypeEnum.GRANT_TEMPORARY_ACTION.value,
+        ]:
             system = obj.data["system"]
             extra_info["system_name"] = system.get("name")
             extra_info["system_name_en"] = system.get("name_en")

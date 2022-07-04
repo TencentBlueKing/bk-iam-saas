@@ -8,17 +8,22 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 import logging
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import Dict, Type
+from typing import Any, Dict, List, Optional, Type
 
 from rest_framework.request import Request
 
+from backend.apps.group.models import Group
+from backend.apps.organization.models import User
+from backend.apps.role.models import Role
 from backend.audit.models import get_event_model
 from backend.common.local import local
+from backend.service.models import Subject
 
-from .constants import AuditSourceType
+from .constants import AuditObjectType, AuditSourceType
 
 logger = logging.getLogger("app")
 
@@ -167,3 +172,128 @@ def add_audit(provider_cls: Type[DataProvider], request: Request, **kwargs):
         pass
     except Exception:  # pylint: disable=broad-except
         logger.exception("save audit event fail")
+
+
+def log_user_event(
+    _type: str,
+    subject: Subject,
+    system_id: str,
+    policies: List[Any],
+    username: Optional[str] = None,
+    source_type: str = AuditSourceType.APPROVAL.value,
+    sn: Optional[str] = None,
+):
+    """
+    记录用户相关的审批事件
+    """
+    user = User.objects.filter(username=subject.id).only("display_name").first()
+    username = username or subject.id
+
+    Event = get_event_model()
+
+    event = Event(
+        type=_type,
+        username=subject.id,
+        system_id=system_id,
+        object_type=AuditObjectType.USER.value,
+        object_id=subject.id,
+        object_name=user.display_name if user else "",
+        source_type=source_type,
+    )
+
+    extra = {"system_id": system_id, "policies": policies}
+    if sn:
+        extra["sn"] = sn
+    event.extra = extra
+    event.save(force_insert=True)
+
+
+def log_group_event(
+    _type: str,
+    subject: Subject,
+    group_ids: List[int],
+    username: Optional[str] = None,
+    source_type: str = AuditSourceType.APPROVAL.value,
+    sn: Optional[str] = None,
+):
+    """
+    记录用户组相关的审批事件
+    """
+    groups = Group.objects.filter(id__in=group_ids)
+    username = username or subject.id
+
+    Event = get_event_model()
+
+    events = []
+    for group in groups:
+        event = Event(
+            type=_type,
+            username=username,
+            object_type=AuditObjectType.GROUP.value,
+            object_id=group.id,
+            object_name=group.name,
+            source_type=source_type,
+        )
+        extra: Dict[str, Any] = {"members": [subject.dict()]}
+        if sn:
+            extra["sn"] = sn
+        event.extra = extra
+
+        events.append(event)
+
+    Event.objects.bulk_create(events)
+
+
+def log_role_event(
+    _type: str,
+    subject: Subject,
+    role: Role,
+    extra: Optional[Dict[str, Any]] = None,
+    source_type: str = AuditSourceType.APPROVAL.value,
+    sn: Optional[str] = None,
+):
+    """
+    记录角色相关的审批事件
+    """
+    Event = get_event_model()
+    event = Event(
+        type=_type,
+        username=subject.id,
+        object_type=AuditObjectType.ROLE.value,
+        object_id=role.id,
+        object_name=role.name,
+        source_type=source_type,
+    )
+    extra = extra if extra else {}
+    if sn:
+        extra["sn"] = sn
+    event.extra = extra
+
+    event.save(force_insert=True)
+
+
+def log_user_blacklist_event(
+    _type: str,
+    subject: Subject,
+    data: List[str],
+    extra: Optional[Dict[str, Any]] = None,
+    source_type: str = AuditSourceType.OPENAPI.value,
+):
+    """
+    记录角色相关的审批事件
+    """
+    Event = get_event_model()
+    event = Event(
+        type=_type,
+        username=subject.id,
+        object_type=AuditObjectType.USER_BLACK_LIST.value,
+        object_id="0",
+        object_name="global_user_black_list",
+        source_type=source_type,
+    )
+    extra = extra if extra else {}
+    if data:
+        extra["members"] = data
+    event.extra = extra
+
+    event.save(force_insert=True)

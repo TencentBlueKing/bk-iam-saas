@@ -66,6 +66,7 @@ class GroupSLZ(serializers.ModelSerializer):
             "created_time",
             "role",
             "attributes",
+            "readonly",
         )
 
     def __init__(self, *args, **kwargs):
@@ -131,6 +132,10 @@ class GroupAddMemberSLZ(serializers.Serializer):
             # subject加入的用户组数量不能超过最大值
             group_check_biz.check_subject_group_limit(Subject.parse_obj(member))
         return data
+
+
+class GroupsAddMemberSLZ(GroupAddMemberSLZ):
+    group_ids = serializers.ListField(label="用户组ID列表")
 
 
 class GroupUpdateSLZ(serializers.Serializer):

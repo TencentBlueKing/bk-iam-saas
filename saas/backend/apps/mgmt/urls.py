@@ -56,7 +56,24 @@ urlpatterns = [
         ),
     ),
     path(
-        "group/",
+        "long_task/",
+        include(
+            [
+                path(
+                    "",
+                    views.LongTaskViewSet.as_view({"get": "list"}),
+                    name="mgmt.long_task",
+                ),
+                path(
+                    "<int:id>/",
+                    views.LongTaskViewSet.as_view({"get": "retrieve", "post": "retry"}),
+                    name="mgmt.long_task",
+                ),
+            ]
+        ),
+    ),
+    path(
+     "group/",
         include(
             [
                 path("", views.GroupViewSet.as_view({"get": "list"}), name="mgmt.group"),

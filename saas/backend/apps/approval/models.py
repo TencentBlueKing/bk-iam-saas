@@ -38,6 +38,11 @@ class ActionProcessRelation(BaseModel):
         verbose_name_plural = "操作与审批流程关联"
         unique_together = ["system_id", "action_id"]  # 任何一个系统的操作只能配置一个审批流程
 
+    @classmethod
+    def delete_by_action(cls, system_id: str, action_id: str):
+        """删除某个系统某个操作的审批流程"""
+        cls.objects.filter(system_id=system_id, action_id=action_id).delete()
+
 
 class GroupProcessRelation(BaseModel):
     """用户组与审批流程的关系"""

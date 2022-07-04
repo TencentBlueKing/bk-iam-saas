@@ -2,11 +2,11 @@
     <div class="iam-record-list-wrapper">
         <render-search>
             <Icon type="arrows-left" class="breadcrumbs-back" @click="handleBackClick" />
-            <span class="display-name">同步记录</span>
+            <span class="display-name">{{$t(`m.user['同步记录']`)}}</span>
             <div slot="right">
                 <bk-date-picker
                     v-model="initDateTimeRange"
-                    :placeholder="'选择日期范围'"
+                    :placeholder="$t(`m.user['选择日期范围']`)"
                     :type="'daterange'"
                     placement="bottom-end"
                     :shortcuts="shortcuts"
@@ -38,7 +38,7 @@
             <bk-table-column :label="$t(`m.user['操作人']`)">
                 <template slot-scope="{ row }">
                     <span :title="row.executor">
-                        {{ row.trigger_type === 'periodic_task' ? '定时同步' : row.executor }}
+                        {{ row.trigger_type === 'periodic_task' ? $t(`m.user['定时同步']`) : row.executor }}
                     </span>
                 </template>
             </bk-table-column>
@@ -73,7 +73,7 @@
             <div slot="content" v-bkloading="{ isLoading: logDetailLoading, opacity: 1 }">
                 <section v-show="!logDetailLoading">
                     <div class="link-btn">
-                        <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">同步失败排查指引</bk-link>
+                        <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
                     </div>
                     <div class="msg-content">
                         <div v-if="exceptionMsg || tracebackMsg">
@@ -128,7 +128,7 @@
                 tracebackMsg: '',
                 timestampToTime: timestampToTime,
                 initDateTimeRange: [],
-                triggerType: { 'periodic_task': '定时同步', 'manual_sync': '手动同步' },
+                triggerType: { 'periodic_task': this.$t(`m.user['定时同步']`), 'manual_sync': this.$t(`m.user['手动同步']`) },
                 shortcuts: [
                     {
                         text: '今天',
@@ -225,8 +225,8 @@
                 this.logDetailLoading = true;
                 try {
                     const res = await this.$store.dispatch('organization/getRecordsLog', data.id);
-                    this.exceptionMsg = res.data.exception_msg.replaceAll('\n', '<br>');
-                    this.tracebackMsg = res.data.traceback_msg.replaceAll('\n', '<br>');
+                    this.exceptionMsg = res.data.exception_msg.replace(/\n/g, '<br>');
+                    this.tracebackMsg = res.data.traceback_msg.replace(/\n/g, '<br>');
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({

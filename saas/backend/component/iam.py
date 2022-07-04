@@ -13,9 +13,9 @@ from typing import Dict, List, Tuple
 
 from django.conf import settings
 
+from backend.common.cache import cached
 from backend.common.local import local
 from backend.publisher import shortcut as publisher_shortcut
-from backend.util.cache import region
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
@@ -64,7 +64,7 @@ def get_system(system_id: str, fields: str = DEFAULT_SYSTEM_FIELDS) -> Dict:
     return _call_iam_api(http_get, url_path, data={"fields": fields})
 
 
-@region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+@cached(timeout=60)  # 缓存1分钟
 def list_resource_type(systems: List[str], fields: str = DEFAULT_RESOURCE_TYPE_FIELDS) -> Dict[str, List[Dict]]:
     """
     查询系统的资源类型
@@ -74,7 +74,7 @@ def list_resource_type(systems: List[str], fields: str = DEFAULT_RESOURCE_TYPE_F
     return _call_iam_api(http_get, url_path, data=params)
 
 
-@region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+@cached(timeout=60)  # 缓存1分钟
 def list_action(system_id: str, fields: str = DEFAULT_ACTION_FIELDS) -> List[Dict]:
     """
     获取系统的所有action列表
@@ -91,7 +91,7 @@ def get_action(system_id: str, action_id: str) -> Dict:
     return _call_iam_api(http_get, url_path, data={})
 
 
-@region.cache_on_arguments(expiration_time=60)
+@cached(timeout=60)
 def list_instance_selection(system_id: str) -> List[Dict]:
     """
     获取系统的实例视图列表
@@ -491,13 +491,14 @@ def list_exist_subjects_before_expired_at(subjects: List[Dict], expired_at: int)
     return _call_iam_api(http_post, url_path, data=data)
 
 
-def list_model_change_event(status: str = "pending"):
+def list_model_change_event(status: str = "pending", limit=1000):
     """查询模型变更事件
     status: pending/finished/空
+    limit: 为避免对后台查询造成影响，默认值只查询1000条
     return: [{"pk", "type", "status", "system_id", "model_type", "model_id", "model_pk"}]
     """
     url_path = "/api/v1/web/model-change-event"
-    data = {"status": status}
+    data = {"status": status, "limit": limit}
     return _call_iam_api(http_get, url_path, data=data)
 
 
@@ -508,6 +509,15 @@ def update_model_change_event(event_pk: int, status: str):
     url_path = f"/api/v1/web/model-change-event/{event_pk}"
     data = {"status": status}
     return _call_iam_api(http_put, url_path, data=data)
+
+
+def delete_model_change_event(status: str, before_updated_at: int, limit: int):
+    """更新模型变更事件状态
+    status: pending/finished
+    """
+    url_path = "/api/v1/web/model-change-event"
+    data = {"status": status, "before_updated_at": before_updated_at, "limit": limit}
+    return _call_iam_api(http_delete, url_path, data=data)
 
 
 def delete_action_policies(system_id: str, action_id: str):
@@ -526,3 +536,75 @@ def delete_unreferenced_expressions():
     """删除未被引用的expression"""
     url_path = "/api/v1/web/unreferenced-expressions"
     return _call_iam_api(http_delete, url_path, data={})
+
+
+def create_temporary_policies(
+    system_id: str,
+    subject_type: str,
+    subject_id: str,
+    policies: List[Dict],
+) -> Dict:
+    """
+    创建临时权限
+
+    policies: [{
+        "action_id": "view_host",
+        "resource_expression": "",
+        "environment": "",
+        "expired_at": 4102444800
+    }]
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/temporary-policies"
+    data = {
+        "subject": {"type": subject_type, "id": subject_id},
+        "policies": policies,
+    }
+    permission_logger.info("iam create temporary policies url: %s, data: %s", url_path, data)
+    result = _call_iam_api(http_post, url_path, data=data)
+    return result
+
+
+def delete_temporary_policies(system_id: str, subject_type: str, subject_id: str, policy_ids: List[int]) -> None:
+    """
+    删除临时权限
+    """
+    url_path = "/api/v1/web/temporary-policies"
+    data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
+    permission_logger.info("iam delete temporary policies url: %s, data: %s", url_path, data)
+    result = _call_iam_api(http_delete, url_path, data=data)
+    return result
+
+
+def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
+    """
+    删除指定过期时间前的临时权限策略
+    """
+    url_path = f"/api/v1/web/temporary-policies/before_expired_at?expired_at={expired_at}"
+    permission_logger.info(
+        "iam delete temporary policies before expired_at url: %s, expired_at: %s", url_path, expired_at
+    )
+    return _call_iam_api(http_delete, url_path, data={})
+
+
+def list_freezed_subjects() -> List:
+    """
+    查询冻结的subject列表
+    """
+    url_path = "/api/v1/web/freeze/subjects"
+    return _call_iam_api(http_get, url_path, data=None)
+
+
+def freeze_subjects(subjects: List[Dict]) -> None:
+    """
+    批量冻结subject
+    """
+    url_path = "/api/v1/web/freeze/subjects"
+    return _call_iam_api(http_post, url_path, data=subjects)
+
+
+def unfreeze_subjects(subjects: List[Dict]) -> None:
+    """
+    批量解冻subject
+    """
+    url_path = "/api/v1/web/freeze/subjects"
+    return _call_iam_api(http_delete, url_path, data=subjects)

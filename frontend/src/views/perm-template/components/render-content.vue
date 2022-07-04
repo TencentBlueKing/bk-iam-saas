@@ -72,6 +72,7 @@
                         ref="commonActionRef"
                         style="margin-top: 0;"
                         :system-id="systemValue"
+                        :tag-action-list="tagActionList"
                         :data="commonActions"
                         :cur-select-actions="curSelectActions"
                         v-if="!customLoading"
@@ -180,7 +181,8 @@
                 isDescription: true,
                 initialValue: [],
                 initialTempName: '',
-                initialDescription: ''
+                initialDescription: '',
+                tagActionList: []
             };
         },
         computed: {
@@ -366,6 +368,7 @@
                 if (payload.length < 1) {
                     return;
                 }
+                this.tagActionList = payload;
                 this.handleActionMatchChecked(flag, payload);
             },
 
@@ -436,6 +439,7 @@
                     }
                     this.$set(item, 'deleteCount', deleteCount);
                 });
+                this.tagActionList = [...payload];
             },
 
             async fetchSystems () {
@@ -610,6 +614,7 @@
                 this.commonActions = [];
                 this.linearAction = [];
                 this.curSelectActions = [];
+                this.tagActionList = [];
                 this.requestQueue = ['actions', 'commonActions'];
                 await this.fetchActions(value);
                 await this.fetchCommonActions(value);
@@ -617,6 +622,7 @@
 
             handleSelect (payload) {
                 this.curSelectActions = [...payload];
+                this.tagActionList = [...payload];
             },
 
             getActionsData (payload) {

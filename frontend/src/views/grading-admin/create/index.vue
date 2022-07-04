@@ -62,6 +62,7 @@
                         v-bkloading="{ isLoading, opacity: 1, zIndex: 1000, extCls: 'loading-resource-instance-cls' }">
                         <render-instance-table
                             ref="resourceInstanceRef"
+                            :is-all-expanded="isAllExpanded"
                             :data="policyList"
                             :list="policyList"
                             :backup-list="aggregationsTableData"
@@ -406,31 +407,33 @@
             handleAttrValueSelected (payload) {
                 window.changeDialog = true;
                 const instances = (function () {
-                    const { id, name, system_id } = payload.aggregateResourceType;
                     const arr = [];
-                    payload.instances.forEach(v => {
-                        const curItem = arr.find(_ => _.type === id);
-                        if (curItem) {
-                            curItem.path.push([{
-                                id: v.id,
-                                name: v.name,
-                                system_id,
-                                type: id,
-                                type_name: name
-                            }]);
-                        } else {
-                            arr.push({
-                                name,
-                                type: id,
-                                path: [[{
+                    payload.aggregateResourceType.forEach(resourceItem => {
+                        const { id, name, system_id } = resourceItem;
+                        payload.instancesDisplayData[id] && payload.instancesDisplayData[id].forEach(v => {
+                            const curItem = arr.find(_ => _.type === id);
+                            if (curItem) {
+                                curItem.path.push([{
                                     id: v.id,
                                     name: v.name,
                                     system_id,
                                     type: id,
                                     type_name: name
-                                }]]
-                            });
-                        }
+                                }]);
+                            } else {
+                                arr.push({
+                                    name,
+                                    type: id,
+                                    path: [[{
+                                        id: v.id,
+                                        name: v.name,
+                                        system_id,
+                                        type: id,
+                                        type_name: name
+                                    }]]
+                                });
+                            }
+                        });
                     });
                     return arr;
                 })();
@@ -438,8 +441,11 @@
                 if (instances.length > 0) {
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(`${item.system_id}&${item.id}`)) {
-                            item.related_resource_types.forEach(subItem => {
-                                subItem.condition = [new Condition({ instances }, '', 'add')];
+                            item.resource_groups.forEach(groupItem => {
+                                groupItem.related_resource_types
+                                    && groupItem.related_resource_types.forEach(subItem => {
+                                        subItem.condition = [new Condition({ instances }, '', 'add')];
+                                    });
                             });
                         }
                     });
@@ -481,17 +487,16 @@
                 });
                 let aggregations = []
                 ;(payload || []).forEach(item => {
-                    const { actions, aggregate_resource_type, $id } = item;
+                    const { actions, aggregate_resource_types, $id } = item;
                     const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
                     if (curActions.length > 0) {
                         aggregations.push({
                             actions: curActions,
-                            aggregate_resource_type: Object.assign(aggregate_resource_type, {
-                                system_name: this.policyList.find(
-                                    _ => _.system_id === curActions[0].system_id
-                                ).system_name
-                            }),
-                            $id
+                            aggregate_resource_types,
+                            $id,
+                            system_name: this.policyList.find(
+                                _ => _.system_id === curActions[0].system_id
+                            ).system_name
                         });
                     }
                 });
@@ -547,17 +552,28 @@
                                     break;
                                 }
                             }
-                            console.log('instances: ');
-                            console.log(instances);
-                            console.log('isAllEqual: ' + isAllEqual);
                             if (isAllEqual) {
-                                const instanceData = instances[0][0][0];
-                                item.instances = instanceData.path.map(pathItem => {
-                                    return {
-                                        id: pathItem[0].id,
-                                        name: pathItem[0].name
-                                    };
+                                // const instanceData = instances[0][0][0];
+                                // item.instances = instanceData.path.map(pathItem => {
+                                //     return {
+                                //         id: pathItem[0].id,
+                                //         name: pathItem[0].name
+                                //     };
+                                // });
+
+                                const instanceData = instances[0][0];
+                                item.instances = [];
+                                instanceData.map(pathItem => {
+                                    const instance = pathItem.path.map(e => {
+                                        return {
+                                            id: e[0].id,
+                                            name: e[0].name,
+                                            type: e[0].type
+                                        };
+                                    });
+                                    item.instances.push(...instance);
                                 });
+                                this.setInstancesDisplayData(item);
                             } else {
                                 item.instances = [];
                             }
@@ -595,30 +611,32 @@
                             const instances = (function () {
                                 const arr = [];
                                 const aggregateResourceType = curAggregation.aggregateResourceType;
-                                const { id, name, system_id } = aggregateResourceType;
-                                curAggregation.instances.forEach(v => {
-                                    const curItem = arr.find(_ => _.type === id);
-                                    if (curItem) {
-                                        curItem.path.push([{
-                                            id: v.id,
-                                            name: v.name,
-                                            system_id,
-                                            type: id,
-                                            type_name: name
-                                        }]);
-                                    } else {
-                                        arr.push({
-                                            name,
-                                            type: id,
-                                            path: [[{
+                                aggregateResourceType.forEach(aggregateResourceItem => {
+                                    const { id, name, system_id } = aggregateResourceItem;
+                                    curAggregation.instances.forEach(v => {
+                                        const curItem = arr.find(_ => _.type === id);
+                                        if (curItem) {
+                                            curItem.path.push([{
                                                 id: v.id,
                                                 name: v.name,
                                                 system_id,
                                                 type: id,
                                                 type_name: name
-                                            }]]
-                                        });
-                                    }
+                                            }]);
+                                        } else {
+                                            arr.push({
+                                                name,
+                                                type: id,
+                                                path: [[{
+                                                    id: v.id,
+                                                    name: v.name,
+                                                    system_id,
+                                                    type: id,
+                                                    type_name: name
+                                                }]]
+                                            });
+                                        }
+                                    });
                                 });
                                 return arr;
                             })();
@@ -630,6 +648,20 @@
                         }
                     }
                 });
+            },
+
+            // 设置InstancesDisplayData
+            setInstancesDisplayData (data) {
+                data.instancesDisplayData = data.instances.reduce((p, v) => {
+                    if (!p[v['type']]) {
+                        p[v['type']] = [];
+                    }
+                    p[v['type']].push({
+                        id: v.id,
+                        name: v.name
+                    });
+                    return p;
+                }, {});
             },
 
             handleGetValue () {

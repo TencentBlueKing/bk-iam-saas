@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from rest_framework import serializers
 
 
@@ -16,7 +17,7 @@ class SystemInfoSLZ(serializers.Serializer):
 
 
 class AggResourceInstance(serializers.Serializer):
-    id = serializers.CharField(label="实例ID")
+    id = serializers.CharField(label="实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(label="实例名称", trim_whitespace=False)
 
 
@@ -33,7 +34,9 @@ class AggActionSLZ(serializers.Serializer):
 
 class BaseAggActionListSLZ(serializers.Serializer):
     actions = serializers.ListField(label="操作策略", child=AggActionSLZ(label="策略"), allow_empty=False)
-    aggregate_resource_type = AggResourceTypeSLZ(label="聚合资源类型")
+    aggregate_resource_types = serializers.ListField(
+        label="聚合资源类型列表", child=AggResourceTypeSLZ(label="聚合资源类型"), allow_empty=False
+    )
 
 
 def validate_action_repeat(data):
