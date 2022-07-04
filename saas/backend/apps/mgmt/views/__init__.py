@@ -9,6 +9,19 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from backend.apps.group.views import GroupSystemViewSet
+from backend.apps.mgmt.views.action import ActionViewSet
+from backend.apps.mgmt.views.group import (
+    GroupMemberUpdateExpiredAtViewSet,
+    GroupMemberViewSet,
+    GroupPolicyViewSet,
+    GroupTemplateViewSet,
+    GroupTransferView,
+    GroupViewSet,
+)
+from backend.apps.mgmt.views.role import RoleAuthorizationScopeView, RoleSubjectScopeView
+from backend.apps.mgmt.views.system import SystemViewSet
+from backend.apps.mgmt.views.template import TemplateViewSet
 from backend.apps.mgmt.views.white_list import (
     AdminApiWhiteListViewSet,
     ApiViewSet,
@@ -21,4 +34,17 @@ __all__ = [
     "AdminApiWhiteListViewSet",
     "AuthorizationApiWhiteListViewSet",
     "ManagementApiWhiteListViewSet",
+    "GroupViewSet",
+    "GroupMemberViewSet",
+    "GroupMemberUpdateExpiredAtViewSet",
+    "GroupTemplateViewSet",
+    "GroupPolicyViewSet",
+    "GroupSystemViewSet",
+    "GroupTransferView",
+    "RoleSubjectScopeView",
+    "RoleAuthorizationScopeView",
+    "TemplateViewSet",
+    "SystemViewSet",
+    "ActionViewSet",
+
 ]

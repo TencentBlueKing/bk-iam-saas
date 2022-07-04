@@ -72,7 +72,6 @@ class AuthorizationApiWhiteListSLZ(serializers.Serializer):
             "name_en": system.name_en if system else "",
         }
 
-
 class AuthorizationApiWhiteListSchemaSLZ(AuthorizationApiWhiteListSLZ):
     def __init__(self, *args, **kwargs):
         serializers.ModelSerializer.__init__(self, *args, **kwargs)
@@ -122,3 +121,16 @@ class ManagementApiAddWhiteListSLZ(serializers.Serializer):
         if value == "*" or value in dict(ManagementAPIEnum.get_choices()):
             return value
         raise serializers.ValidationError(f"api: {value} 非法")
+
+
+class QueryRoleSubjectScopeSLZ(serializers.Serializer):
+    group_id = serializers.IntegerField(label="用户组ID")
+
+
+class QueryRoleAuthorizationScopeSLZ(serializers.Serializer):
+    system_id = serializers.CharField(required=True)
+    group_id = serializers.IntegerField(label="用户组ID")
+
+
+class QuerySystemSLZ(serializers.Serializer):
+    group_id = serializers.IntegerField(label="用户组ID")
