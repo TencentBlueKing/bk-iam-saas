@@ -16,8 +16,10 @@ from django.shortcuts import get_object_or_404
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.error_codes import error_codes
+from backend.common.time import PERMANENT_SECONDS
 from backend.component import iam
 
+from ..constants import SubjectType
 from ..models import BackendThinPolicy, Policy, Subject, SystemCounter
 
 
@@ -111,14 +113,17 @@ class PolicyQueryService:
         """
         db policy queryset 转换为List[Policy]
         """
-        backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
+        # 用户权限才有有效期，用户组与权限没有有效期的
+        if subject.type == SubjectType.USER.value:
+            backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
+            policies = [
+                Policy.from_db_model(one, backend_policy_list.get(one.action_id).expired_at)  # type: ignore
+                for one in queryset
+                if backend_policy_list.get(one.action_id)
+            ]
+            return policies
 
-        policies = [
-            Policy.from_db_model(one, backend_policy_list.get(one.action_id).expired_at)  # type: ignore
-            for one in queryset
-            if backend_policy_list.get(one.action_id)
-        ]
-        return policies
+        return [Policy.from_db_model(one, PERMANENT_SECONDS) for one in queryset]
 
     def list_by_policy_ids(self, system_id: str, subject: Subject, policy_ids: List[int]) -> List[Policy]:
         """
