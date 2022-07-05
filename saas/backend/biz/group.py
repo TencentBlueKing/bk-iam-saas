@@ -296,18 +296,41 @@ class GroupBiz:
 
         return relation_beans
 
-    def list_subject_group(self, subject: Subject, is_recursive: bool = False) -> List[SubjectGroupBean]:
+    def list_paging_subject_group(
+        self, subject: Subject, is_recursive: bool = False, limit: int = 10, offset: int = 0
+    ) -> Tuple[int, List[SubjectGroupBean]]:
         """
         查询subject所属的用户组
         """
-        relations = self.group_svc.list_subject_group(subject, is_recursive)
+        # TODO 2
+        count, relations = self.group_svc.list_subject_group(
+            subject, is_recursive=is_recursive, limit=limit, offset=offset
+        )
+        return count, self._convert_to_subject_group_beans(relations)
+
+    def list_paging_subject_group_before_expired_at(
+        self, subject: Subject, expired_at: int, limit: int, offset: int
+    ) -> Tuple[int, List[SubjectGroupBean]]:
+        """
+        分页查询指定过期时间之前的用户组
+        """
+        count, relations = self.group_svc.list_subject_group_before_expired_at(subject, expired_at, limit, offset)
+        return count, self._convert_to_subject_group_beans(relations)
+
+    def list_all_subject_group(self, subject: Subject) -> List[SubjectGroupBean]:
+        """
+        查询指定过期时间之前的所有用户组
+        注意: 分页查询, 可能会有性能问题
+        """
+        relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at=0)
         return self._convert_to_subject_group_beans(relations)
 
-    def list_subject_group_before_expired_at(self, subject: Subject, expired_at: int) -> List[SubjectGroupBean]:
+    def list_all_subject_group_before_expired_at(self, subject: Subject, expired_at: int) -> List[SubjectGroupBean]:
         """
-        查询指定过期时间之前的用户组
+        查询指定过期时间之前的所有用户组
+        注意: 分页查询, 可能会有性能问题
         """
-        relations = self.group_svc.list_subject_group_before_expired_at(subject, expired_at)
+        relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at)
         return self._convert_to_subject_group_beans(relations)
 
     def update_members_expired_at(self, group_id: int, members: List[GroupMemberExpiredAtBean]):
@@ -557,8 +580,8 @@ class GroupCheckBiz:
         检查subject授权的group数量是否超限
         """
         limit = settings.SUBJECT_AUTHORIZATION_LIMIT["default_subject_group_limit"]
-        relations = self.svc.list_subject_group(subject)
-        if len(relations) >= limit:
+        count, _ = self.svc.list_subject_group(subject, limit=1, offset=0)
+        if count >= limit:
             raise serializers.ValidationError(
                 _("被授权对象: {} {} 加入的用户组数量已超过最大值 {}").format(subject.type, subject.id, limit)
             )

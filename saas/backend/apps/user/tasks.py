@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from itertools import groupby
+from typing import List
 from urllib.parse import urlencode
 
 from celery import task
@@ -20,10 +21,10 @@ from django.template.loader import render_to_string
 from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
-from backend.biz.group import GroupBiz
+from backend.biz.group import GroupBiz, SubjectGroupBean
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.time import db_time, get_soon_expire_ts
-from backend.component import esb
+from backend.component import esb, iam
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 from backend.util.url import url_join
@@ -39,6 +40,8 @@ def user_group_policy_expire_remind():
     policy_biz = PolicyQueryBiz()
     group_biz = GroupBiz()
 
+    # FIXME: 重要, 不应该遍历所有用户, 应该先获取有配置策略的用户列表
+
     # 分页遍历所有的用户
     qs = User.objects.filter(staff_status=StaffStatus.IN.value)
     paginator = Paginator(qs, 100)
@@ -53,7 +56,8 @@ def user_group_policy_expire_remind():
         for user in paginator.page(i):
             subject = Subject(type=SubjectType.USER.value, id=user.username)
 
-            groups = group_biz.list_subject_group_before_expired_at(subject, expired_at)
+            # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
+            groups = group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
 
             policies = policy_biz.list_expired(subject, expired_at)
 
