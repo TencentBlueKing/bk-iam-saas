@@ -16,10 +16,9 @@ from rest_framework.viewsets import GenericViewSet
 from backend.apps.mgmt.serializers import QuerySystemSLZ
 from backend.apps.system import serializers
 from backend.biz.role import RoleBiz, RoleListQuery
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 
-class SystemViewSet(GenericViewSet):
+class MgmtSystemViewSet(GenericViewSet):
 
     paginator = None  # 去掉swagger中的limit offset参数
 
@@ -28,7 +27,6 @@ class SystemViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="系统列表",
         query_serializer=QuerySystemSLZ,
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: serializers.SystemSLZ(label="系统", many=True)},
         tags=["system"],
     )

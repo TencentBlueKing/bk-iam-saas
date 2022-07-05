@@ -18,7 +18,6 @@ from backend.apps.template import tasks  # noqa
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
 from backend.apps.template.views import TemplateViewSet
 from backend.biz.role import RoleBiz, RoleListQuery
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema
 
 permission_logger = logging.getLogger("permission")
 
@@ -28,13 +27,12 @@ class TemplateQueryMixin:
         pass
 
 
-class TemplateViewSet(TemplateQueryMixin, TemplateViewSet):
+class MgmtTemplateViewSet(TemplateQueryMixin, TemplateViewSet):
 
     role_biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="模板列表",
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: TemplateListSchemaSLZ(label="模板", many=True)},
         tags=["template"],
     )

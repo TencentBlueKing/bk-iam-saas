@@ -10,20 +10,19 @@ specific language governing permissions and limitations under the License.
 """
 
 from backend.apps.group.views import GroupSystemViewSet
-from backend.apps.mgmt.views.action import ActionViewSet
+from backend.apps.mgmt.views.action import MgmtActionViewSet
 from backend.apps.mgmt.views.group import (
-    GroupMemberUpdateExpiredAtViewSet,
-    GroupMemberViewSet,
-    GroupPolicyViewSet,
-    GroupTemplateViewSet,
-    GroupTransferView,
-    GroupViewSet,
+    MgmtGroupMemberUpdateExpiredAtViewSet,
+    MgmtGroupMemberViewSet,
+    MgmtGroupPolicyViewSet,
+    MgmtGroupTemplateViewSet,
+    MgmtGroupTransferView,
+    MgmtGroupViewSet,
 )
 from backend.apps.mgmt.views.long_task import LongTaskViewSet
-from backend.apps.mgmt.views.role import RoleAuthorizationScopeView, RoleSubjectScopeView
-from backend.apps.mgmt.views.system import SystemViewSet
-from backend.apps.mgmt.views.template import TemplateViewSet
-
+from backend.apps.mgmt.views.role import MgmtRoleAuthorizationScopeView, MgmtRoleSubjectScopeView
+from backend.apps.mgmt.views.system import MgmtSystemViewSet
+from backend.apps.mgmt.views.template import MgmtTemplateViewSet
 from backend.apps.mgmt.views.white_list import (
     AdminApiWhiteListViewSet,
     ApiViewSet,
@@ -37,16 +36,17 @@ __all__ = [
     "AuthorizationApiWhiteListViewSet",
     "ManagementApiWhiteListViewSet",
     "LongTaskViewSet",
-    "GroupViewSet",
-    "GroupMemberViewSet",
-    "GroupMemberUpdateExpiredAtViewSet",
-    "GroupTemplateViewSet",
-    "GroupPolicyViewSet",
+    "MgmtGroupViewSet",
+    "MgmtGroupMemberViewSet",
+    "MgmtGroupMemberUpdateExpiredAtViewSet",
+    "MgmtGroupMemberUpdateExpiredAtViewSet",
+    "MgmtGroupPolicyViewSet",
     "GroupSystemViewSet",
-    "GroupTransferView",
-    "RoleSubjectScopeView",
-    "RoleAuthorizationScopeView",
-    "TemplateViewSet",
-    "SystemViewSet",
-    "ActionViewSet",
-    ]
+    "MgmtGroupTransferView",
+    "MgmtGroupTemplateViewSet",
+    "MgmtRoleSubjectScopeView",
+    "MgmtRoleAuthorizationScopeView",
+    "MgmtTemplateViewSet",
+    "MgmtSystemViewSet",
+    "MgmtActionViewSet",
+]

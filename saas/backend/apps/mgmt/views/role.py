@@ -18,10 +18,9 @@ from backend.apps.mgmt.serializers import QueryRoleAuthorizationScopeSLZ, QueryR
 from backend.apps.role.serializers import GradeManagerActionSLZ, RoleScopeSubjectSLZ
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 
-class RoleAuthorizationScopeView(views.APIView):
+class MgmtRoleAuthorizationScopeView(views.APIView):
     """
     角色的授权范围查询
     """
@@ -31,7 +30,6 @@ class RoleAuthorizationScopeView(views.APIView):
     @swagger_auto_schema(
         operation_description="角色的授权范围",
         query_serializer=QueryRoleAuthorizationScopeSLZ,
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GradeManagerActionSLZ(label="操作策略", many=True)},
         tags=["role"],
     )
@@ -51,7 +49,7 @@ class RoleAuthorizationScopeView(views.APIView):
         return Response(data)
 
 
-class RoleSubjectScopeView(views.APIView):
+class MgmtRoleSubjectScopeView(views.APIView):
     """
     角色的subject授权范围
     """
@@ -61,7 +59,6 @@ class RoleSubjectScopeView(views.APIView):
     @swagger_auto_schema(
         operation_description="角色的subject授权范围",
         query_serializer=QueryRoleSubjectScopeSLZ,
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: RoleScopeSubjectSLZ(label="操作策略", many=True)},
         tags=["mgmt.role"],
     )

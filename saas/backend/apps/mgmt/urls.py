@@ -70,35 +70,35 @@ urlpatterns = [
                     name="mgmt.long_task",
                 ),
             ]
-        ),
+        )
     ),
     path(
-     "group/",
+        "group/",
         include(
             [
-                path("", views.GroupViewSet.as_view({"get": "list"}), name="mgmt.group"),
-                path("transfer/", views.GroupTransferView.as_view(), name="mgmt.group.transfer"),
+                path("", views.MgmtGroupViewSet.as_view({"get": "list"}), name="mgmt.group"),
+                path("transfer/", views.MgmtGroupTransferView.as_view(), name="mgmt.group.transfer"),
                 # 用户组详情
                 path(
                     "<str:id>/",
-                    views.GroupViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),
+                    views.MgmtGroupViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),
                     name="mgmt.group.detail",
                 ),
                 path(
                     "<str:id>/members/",
-                    views.GroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
+                    views.MgmtGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
                     name="mgmt.group.members",
                 ),
                 path(
                     "<str:id>/members_renew/",
-                    views.GroupMemberUpdateExpiredAtViewSet.as_view({"post": "create"}),
+                    views.MgmtGroupMemberUpdateExpiredAtViewSet.as_view({"post": "create"}),
                     name="mgmt.group.members.renew",
                 ),
-                path("<str:id>/templates/", views.GroupTemplateViewSet.as_view({"get": "list"}),
+                path("<str:id>/templates/", views.MgmtGroupTemplateViewSet.as_view({"get": "list"}),
                      name="mgmt.group.templates"),
                 path(
                     "<str:id>/templates/<int:template_id>/",
-                    views.GroupTemplateViewSet.as_view({"get": "retrieve"}),
+                    views.MgmtGroupTemplateViewSet.as_view({"get": "retrieve"}),
                     name="mgmt.group.template_detail",
                 ),
                 # 用户组有权限的系统
@@ -108,7 +108,7 @@ urlpatterns = [
                 # 权限模板和自定义权限
                 path(
                     "<str:id>/policies/",
-                    views.GroupPolicyViewSet.as_view(
+                    views.MgmtGroupPolicyViewSet.as_view(
                         {"get": "list", "post": "create", "delete": "destroy", "put": "update"}),
                     name="mgmt.group.list_policy",
                 ),
@@ -122,11 +122,11 @@ urlpatterns = [
             [
                 path(
                     "subject_scope/",
-                    views.RoleSubjectScopeView.as_view(),
+                    views.MgmtRoleSubjectScopeView.as_view(),
                     name="mgmt.role.subject_scope"),
                 path(
                     "authorization_scope_actions/",
-                    views.RoleAuthorizationScopeView.as_view(),
+                    views.MgmtRoleAuthorizationScopeView.as_view(),
                     name="mgmt.role.authorization_scope_actions",
                 ),
             ]
@@ -138,7 +138,7 @@ urlpatterns = [
             [
                 path(
                     "",
-                    views.SystemViewSet.as_view({"get": "list"}),
+                    views.MgmtSystemViewSet.as_view({"get": "list"}),
                     name="mgmt.role.subject_scope"),
             ]
         )
@@ -147,7 +147,7 @@ urlpatterns = [
         "action/",
         include(
             [
-                path("", views.ActionViewSet.as_view({"get": "list"}), name="mgmt.action.list_action"),
+                path("", views.MgmtActionViewSet.as_view({"get": "list"}), name="mgmt.action.list_action"),
 
             ]
         )
@@ -156,7 +156,7 @@ urlpatterns = [
         "template/",
         include(
             [
-                path("", views.TemplateViewSet.as_view({"get": "list"}), name="mgmt.action.list_action"),
+                path("", views.MgmtTemplateViewSet.as_view({"get": "list"}), name="mgmt.action.list_action"),
 
             ]
         )
