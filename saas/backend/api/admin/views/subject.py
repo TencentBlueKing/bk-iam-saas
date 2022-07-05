@@ -41,7 +41,7 @@ logger = logging.getLogger("app")
 class AdminSubjectGroupViewSet(GenericViewSet):
     """Subject的用户组"""
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = CustomPageNumberPagination
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
@@ -57,8 +57,13 @@ class AdminSubjectGroupViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        relations = self.group_biz.list_subject_group(subject, is_recursive=True)
-        return Response([one.dict(include={"id", "name", "expired_at"}) for one in relations])
+        # 分页参数
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        count, relations = self.group_biz.list_paging_subject_group(
+            subject, is_recursive=True, limit=limit, offset=offset
+        )
+        results = [one.dict(include={"id", "name", "expired_at"}) for one in relations]
+        return Response({"count": count, "results": results})
 
 
 class AdminSubjectRoleViewSet(GenericViewSet):
