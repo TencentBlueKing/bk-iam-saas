@@ -70,10 +70,10 @@ urlpatterns = [
                     name="mgmt.long_task",
                 ),
             ]
-        ),
+        )
     ),
     path(
-     "group/",
+        "group/",
         include(
             [
                 path("", views.GroupViewSet.as_view({"get": "list"}), name="mgmt.group"),

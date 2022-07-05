@@ -18,7 +18,6 @@ from backend.biz.action import ActionBiz
 from backend.biz.action_group import ActionGroupBiz
 from backend.biz.open import ApplicationPolicyListCache
 from backend.biz.role import RoleBiz
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
@@ -36,7 +35,6 @@ class ActionViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户的操作列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         query_serializer=GroupActionQuerySLZ,
         responses={status.HTTP_200_OK: ActionSLZ(label="操作", many=True)},
         tags=["action"],

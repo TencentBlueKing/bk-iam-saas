@@ -47,7 +47,6 @@ from backend.apps.group.views import (
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.policy import PolicyBean
 from backend.biz.role import RoleBiz
-from backend.common.swagger import PaginatedResponseSwaggerAutoSchema, ResponseSwaggerAutoSchema
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum
 from backend.service.models import Subject
@@ -73,7 +72,6 @@ class GroupViewSet(GroupViewSet):
     @swagger_auto_schema(
         operation_description="修改用户组",
         request_body=GroupUpdateSLZ(label="用户组"),
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: GroupUpdateSLZ(label="用户组")},
         tags=["mgmt.group"],
     )
@@ -113,7 +111,6 @@ class GroupMemberViewSet(GroupPermissionMixin, GroupMemberViewSet):
     @swagger_auto_schema(
         operation_description="用户组成员列表",
         query_serializer=SearchMemberSLZ(label="keyword"),
-        auto_schema=PaginatedResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: MemberSLZ(label="成员")},
         tags=["mgmt.group"],
     )
@@ -137,7 +134,6 @@ class GroupMemberViewSet(GroupPermissionMixin, GroupMemberViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组添加成员",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupAddMemberSLZ(label="成员"),
         responses={status.HTTP_200_OK: yasg_response({})},
         tags=["mgmt.group"],
@@ -198,7 +194,6 @@ class GroupPolicyViewSet(GroupPermissionMixin, GroupPolicyViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组添加权限",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupAuthorizationSLZ(label="授权信息"),
         responses={status.HTTP_201_CREATED: yasg_response({})},
         tags=["mgmt.group"],
@@ -227,7 +222,6 @@ class GroupPolicyViewSet(GroupPermissionMixin, GroupPolicyViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组权限修改",
-        auto_schema=ResponseSwaggerAutoSchema,
         request_body=GroupPolicyUpdateSLZ(label="修改策略"),
         responses={status.HTTP_200_OK: yasg_response({})},
         tags=["mgmt.group"],
