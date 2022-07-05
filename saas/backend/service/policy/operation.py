@@ -20,10 +20,10 @@ from backend.component import iam
 from backend.service.action import ActionList
 from backend.util.json import json_dumps
 
-from ..constants import AuthTypeEnum, SubjectType
+from ..constants import SubjectType
 from ..models import Policy, PolicyIDExpiredAt, Subject, UniversalPolicyChangedContent
 from .backend import BackendPolicyOperationService
-from .common import PolicyTypeAnalyzer, UniversalPolicyChangedContentCalculator
+from .common import UniversalPolicyChangedContentAnalyzer
 from .query import PolicyList, new_backend_policy_list_by_subject
 
 
@@ -88,7 +88,7 @@ class PolicyCommonDBOperationService:
 class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPolicyOperationService):
     """专门用于处理包含RBAC策略的"""
 
-    calculator = UniversalPolicyChangedContentCalculator()
+    analyzer = UniversalPolicyChangedContentAnalyzer()
 
     def delete_backend_policy_by_action(self, system_id: str, action_id: str):
         """删除指定操作的后台策略"""
@@ -118,7 +118,7 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         # Note: 必须先计算出策略的变更内容，否则先变更DB后，则查询不到老策略，无法进行新老策略对比
         changed_policies = []
         # 1. 新增策略
-        changed_policies.extend(self.calculator.cal_for_created(system_id, create_policies))
+        changed_policies.extend(self.analyzer.cal_for_created(system_id, create_policies))
 
         # 2. 删除策略
         changed_policies.extend(self._cal_policy_change_contents_by_deleted(system_id, subject, delete_policy_ids))
@@ -160,7 +160,7 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         )
         policies = [Policy.from_db_model(p, PERMANENT_SECONDS) for p in qs]
 
-        return self.calculator.cal_for_deleted(policies)
+        return self.analyzer.cal_for_deleted(system_id, policies)
 
     def _cal_policy_change_contents_by_updated(
         self, system_id: str, subject: Subject, update_policies: List[Policy]
@@ -181,7 +181,7 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         # 2 遍历组装每个新旧策略对
         update_pair_policies = [(p, old_policies[p.action_id]) for p in update_policies]
 
-        return self.calculator.cal_for_updated(system_id, update_pair_policies)
+        return self.analyzer.cal_for_updated(system_id, update_pair_policies)
 
 
 class ABACPolicyOperationService(PolicyCommonDBOperationService):
@@ -292,8 +292,8 @@ class ABACPolicyOperationService(PolicyCommonDBOperationService):
         )
 
         # 写入后端policy_ids
-        for p, id in zip(db_policies, data["ids"]):
-            p.policy_id = id
+        for p, _id in zip(db_policies, data["ids"]):
+            p.policy_id = _id
 
         # 创建db权限
         TemporaryPolicy.objects.bulk_create(db_policies, batch_size=100)
@@ -309,21 +309,16 @@ class ABACPolicyOperationService(PolicyCommonDBOperationService):
             iam.delete_temporary_policies(system_id, subject.type, subject.id, policy_ids)
 
 
+# Note: 用户组权限相关的操作使用支持RBAC的接口，用户权限相关的操作使用ABAC接口
 class PolicyOperationService:
-    analyzer = PolicyTypeAnalyzer()
     abac_svc = ABACPolicyOperationService()
     universal_svc = UniversalPolicyOperationService()
-    common_svc = PolicyCommonDBOperationService()
+    direct_db_svc = PolicyCommonDBOperationService()
 
     def delete_backend_policy_by_action(self, system_id: str, action_id: str):
         """删除指定操作的后台策略"""
-        # 查询Action的AuthType
-        auth_type = self.analyzer.query_action_auth_types(system_id, [action_id])[action_id]
-
         # ABAC处理
-        if auth_type == AuthTypeEnum.ABAC.value:
-            self.abac_svc.delete_backend_policy_by_action(system_id, action_id)
-            return
+        self.abac_svc.delete_backend_policy_by_action(system_id, action_id)
 
         # RBAC处理
         # TODO: 对于RBAC，需要后台单独提供接口，但是后台RBAC策略action_pks是一个字段，不好删除
@@ -336,18 +331,7 @@ class PolicyOperationService:
             self.abac_svc.delete_by_ids(system_id, subject, policy_ids)
             return
 
-        # 将PolicyIDs拆分出RBAC和ABAC处理
-        abac_policy_ids, universal_policy_ids = self.analyzer.split_policy_ids_by_auth_type(
-            system_id, subject, policy_ids
-        )
-
-        # ABAC处理
-        if len(abac_policy_ids) > 0:
-            self.abac_svc.delete_by_ids(system_id, subject, abac_policy_ids)
-
-        # RBAC处理
-        if len(universal_policy_ids) > 0:
-            self.universal_svc.delete_by_ids(system_id, subject, universal_policy_ids)
+        self.universal_svc.delete_by_ids(system_id, subject, policy_ids)
 
     def alter(
         self,
@@ -371,32 +355,13 @@ class PolicyOperationService:
             return
 
         # Note: 下面是对type=group的处理
-        # 1. 将创建、更新、删除的策略按照Action的AuthType进行拆分
-        create_abac_policies, create_universal_policies = self.analyzer.split_policies_by_auth_type(
-            system_id, create_policies
-        )
-        update_abac_policies, update_universal_policies = self.analyzer.split_policies_by_auth_type(
-            system_id, update_policies
-        )
-        delete_abac_policy_ids, delete_universal_policy_ids = self.analyzer.split_policy_ids_by_auth_type(
-            system_id, subject, delete_policy_ids
-        )
-
-        # 2. ABAC 处理
-        if create_abac_policies or update_abac_policies or delete_abac_policy_ids:
-            self.abac_svc.alter(system_id, subject, create_abac_policies, update_abac_policies, delete_abac_policy_ids)
-
-        # 3. RBAC处理
-        if create_universal_policies or update_universal_policies or delete_universal_policy_ids:
-            self.universal_svc.alter(
-                system_id, subject, create_universal_policies, update_universal_policies, delete_universal_policy_ids
-            )
+        self.universal_svc.alter(system_id, subject, create_policies, update_policies, delete_policy_ids)
 
     def update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
         """
         更新已有的SaaS DB里策略
         """
-        self.common_svc.update_db_policies(system_id, subject, policies)
+        self.direct_db_svc.update_db_policies(system_id, subject, policies)
 
     def renew(self, subject: Subject, thin_policies: List[PolicyIDExpiredAt]):
         """

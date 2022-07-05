@@ -372,7 +372,7 @@ class UniversalPolicy(Policy):
     auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
 
     @classmethod
-    def from_policy(cls, policy: Policy) -> "UniversalPolicy":
+    def from_policy(cls, policy: Policy, action_auth_type: str) -> "UniversalPolicy":
         p = cls(
             action_id=policy.action_id,
             policy_id=policy.policy_id,
@@ -380,14 +380,18 @@ class UniversalPolicy(Policy):
             resource_groups=policy.resource_groups,
         )
         # 主要是初始化expression_resource_groups、instances、auth_type 这3个与RBAC和ABAC相关的数据
-        p._init_abac_and_rbac_data(policy.resource_groups)
+        p._init_abac_and_rbac_data(policy.resource_groups, action_auth_type)
         return p
 
     @staticmethod
-    def _is_absolute_abac(resource_groups: ResourceGroupList) -> bool:
+    def _is_absolute_abac(resource_groups: ResourceGroupList, action_auth_type: str) -> bool:
         """
         对于策略，某些情况下可以立马判断为ABAC策略
         """
+        # 0. Action在模型注册时是否表示支持RBAC，如果不支持则保持原有ABAC
+        if action_auth_type == AuthTypeEnum.ABAC.value:
+            return True
+
         # TODO: 写单元测试时，顺便添加一些debug日志, 排查问题时能精确知道在哪个分支被return, 降低成本
         resource_group_count = len(resource_groups)
         # 1. 与资源实例无关
@@ -486,14 +490,14 @@ class UniversalPolicy(Policy):
 
         return AuthTypeEnum.NONE.value
 
-    def _init_abac_and_rbac_data(self, resource_groups: ResourceGroupList):
+    def _init_abac_and_rbac_data(self, resource_groups: ResourceGroupList, action_auth_type: str):
         """
         拆分出RBAC和ABAC权限
         并填充到expression_resource_groups和instances_resource_groups字段里
         同时计算出策略类型auth_type
         """
         # 1. 绝对是ABAC策略的情况，则无需进行策略的分析拆分
-        if self._is_absolute_abac(resource_groups):
+        if self._is_absolute_abac(resource_groups, action_auth_type):
             self.expression_resource_groups = resource_groups
             return
 

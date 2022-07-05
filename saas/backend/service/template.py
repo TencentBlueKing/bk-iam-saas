@@ -12,18 +12,15 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from django.db import transaction
 from django.db.models import Count, F
-from django.utils.translation import gettext as _
 from pydantic import BaseModel
 
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreGroupSync
-from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS
-from backend.component import iam
 
 from .action import ActionList
 from .models import Policy, Subject, SystemCounter
 from .policy.backend import BackendPolicyOperationService
-from .policy.common import PolicyTypeAnalyzer, UniversalPolicyChangedContentCalculator
+from .policy.common import UniversalPolicyChangedContentAnalyzer
 from .policy.query import PolicyList, new_backend_policy_list_by_subject
 
 
@@ -35,12 +32,11 @@ class TemplateGroupPreCommit(BaseModel):
         return [one.dict() for one in self.policies]
 
 
-class UniversalTemplateService(BackendPolicyOperationService):
-    """专门用于处理用户组模板权限的RBAC策略"""
+class TemplateService:
+    backend_svc = BackendPolicyOperationService()
+    analyzer = UniversalPolicyChangedContentAnalyzer()
 
-    calculator = UniversalPolicyChangedContentCalculator()
-
-    def alter(
+    def _alter(
         self,
         system_id: str,
         template_id: int,
@@ -52,19 +48,14 @@ class UniversalTemplateService(BackendPolicyOperationService):
         # Note: 必须先计算出策略的变更内容，否则先变更DB后，则查询不到老策略，无法进行新老策略对比
         changed_policies = []
         # 1. 新增策略
-        changed_policies.extend(self.calculator.cal_for_created(system_id, create_policies))
+        changed_policies.extend(self.analyzer.cal_for_created(system_id, create_policies))
         # 2. 删除策略
-        changed_policies.extend(self.calculator.cal_for_deleted(delete_policies))
+        changed_policies.extend(self.analyzer.cal_for_deleted(system_id, delete_policies))
         # 3. 更新
-        changed_policies.extend(self.calculator.cal_for_updated(system_id, update_pair_policies))
+        changed_policies.extend(self.analyzer.cal_for_updated(system_id, update_pair_policies))
 
         # 4. 变更
-        self.alter_backend_policies(subject, template_id, system_id, changed_policies)
-
-
-class TemplateService:
-    analyzer = PolicyTypeAnalyzer()
-    universal_svc = UniversalTemplateService()
+        self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
 
     # Template Auth
     def revoke_subject(self, system_id: str, template_id: int, subject: Subject):
@@ -76,23 +67,16 @@ class TemplateService:
         assert system_id == authorized_template.system_id
         policy_list = self._convert_template_actions_to_policy_list(authorized_template.data["actions"])
 
-        # 根据Action分析出删除的RBAC/ABAC策略
-        # Note: 这里由于后台直接提供了按模板删除所有ABAC策略接口，所以这里忽略ABAC策略，不需要一条条策略删除
-        _, delete_universal_policies = self.analyzer.split_policies_by_auth_type(
-            system_id,
-            policy_list.policies,
-        )
-
         # Note: 由于后台删除时需要用到后台PolicyID，这里先进行填充
-        if len(delete_universal_policies) > 0:
-            # 查询subject的后端权限信息
-            backend_policy_list = new_backend_policy_list_by_subject(system_id, subject, template_id)
-            # 填充Backend Policy ID
-            for p in delete_universal_policies:
-                if not backend_policy_list.get(p.action_id):
-                    continue
-                p.policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
+        # 查询subject的后端权限信息
+        backend_policy_list = new_backend_policy_list_by_subject(system_id, subject, template_id)
+        # 填充Backend Policy ID
+        for p in policy_list.policies:
+            if not backend_policy_list.get(p.action_id):
+                continue
+            p.policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
 
+        # 变更
         with transaction.atomic():
             count, _ = PermTemplatePolicyAuthorized.objects.filter(
                 template_id=template_id, subject_type=subject.type, subject_id=subject.id
@@ -102,12 +86,8 @@ class TemplateService:
                 # 更新冗余count
                 PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") - count)
 
-                # 调用后端删除权限
-                iam.delete_template_policies(system_id, subject.type, subject.id, template_id)
-
-                # RBAC处理
-                if delete_universal_policies:
-                    self.universal_svc.alter(system_id, template_id, subject, [], delete_universal_policies, [])
+                # 后端处理
+                self._alter(system_id, template_id, subject, [], policy_list.policies, [])
 
     def grant_subject(
         self,
@@ -128,28 +108,13 @@ class TemplateService:
         # 处理忽略路径
         self._ignore_path(policies, action_list)
 
-        # 根据Action分析出新增的RBAC/ABAC策略
-        abac_policies, universal_policies = self.analyzer.split_policies_by_auth_type(system_id, policies)
-
         # 模板授权
         with transaction.atomic():
             authorized_template.save(force_insert=True)
             PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") + 1)
 
-            # ABAC处理
-            if abac_policies:
-                iam.create_and_delete_template_policies(
-                    system_id,
-                    subject.type,
-                    subject.id,
-                    template_id,
-                    [p.to_backend_dict(system_id) for p in abac_policies],
-                    [],
-                )
-
-            # RBAC处理
-            if universal_policies:
-                self.universal_svc.alter(system_id, template_id, subject, universal_policies, [], [])
+            # 后端处理
+            self._alter(system_id, template_id, subject, policies, [], [])
 
     def alter_template_auth(
         self, subject: Subject, template_id: int, create_policies: List[Policy], delete_action_ids: List[str]
@@ -178,16 +143,6 @@ class TemplateService:
         # 1.2 添加需要新增的策略
         create_policies = policy_list.extend_without_repeated(create_policies)
 
-        # 2. 根据Action分析出新增、删除的RBAC/ABAC策略
-        create_abac_policies, create_universal_policies = self.analyzer.split_policies_by_auth_type(
-            system_id,
-            create_policies,
-        )
-        delete_abac_policies, delete_universal_policies = self.analyzer.split_policies_by_auth_type(
-            system_id,
-            delete_policies,
-        )
-
         # 3. 变更模板授权
         with transaction.atomic():
             # 修改模板授权信息
@@ -197,22 +152,8 @@ class TemplateService:
             authorized_template.data = {"actions": [p.dict() for p in policy_list.policies]}
             authorized_template.save(update_fields=["_data"])
 
-            # ABAC处理
-            if create_abac_policies or delete_abac_policies:
-                iam.create_and_delete_template_policies(
-                    system_id,
-                    subject.type,
-                    subject.id,
-                    template_id,
-                    [p.to_backend_dict(system_id) for p in create_abac_policies],
-                    [p.policy_id for p in delete_abac_policies],
-                )
-
             # RBAC处理
-            if create_universal_policies or delete_universal_policies:
-                self.universal_svc.alter(
-                    system_id, template_id, subject, create_universal_policies, delete_universal_policies, []
-                )
+            self._alter(system_id, template_id, subject, create_policies, delete_policies, [])
 
     def update_template_auth(
         self, subject: Subject, template_id: int, policies: List[Policy], action_list: Optional[ActionList] = None
@@ -226,25 +167,10 @@ class TemplateService:
         # 查询subject的后端权限信息
         backend_policy_list = new_backend_policy_list_by_subject(system_id, subject, template_id)
 
-        # 1. 根据Action分析出更新的RBAC/ABAC策略
-        update_abac_policies, update_universal_policies = self.analyzer.split_policies_by_auth_type(
-            system_id, policies
-        )
-
-        # 2. ABAC策略，填充backend policy id ，同时将[SaaS]policy_list进行更新
-        for p in update_abac_policies:
-            # Note: 对于ABAC策略，后台都有一一对应的策略，如果查询不到，说明此次更新有问题
-            if not backend_policy_list.get(p.action_id):
-                raise error_codes.VALIDATE_ERROR.format(_("模板{}没有{}操作的权限").format(template_id, p.action_id))
-
-            p.policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
-            # 更新SaaS存储的策略内容
-            policy_list.update(p)
-
-        # 3. RBAC策略，填充backend policy id，获取老策略，[SaaS]policy_list进行更新
-        old_universal_policies = []
-        for p in update_universal_policies:
-            # 后台策略ID, 对于universal类型的策略，不一定有
+        # 填充backend policy id，获取老策略，[SaaS]policy_list进行更新
+        old_policies = []
+        for p in policies:
+            # 后台策略ID, 对于存RBAC策略，不一定有
             policy_id = 0
             if backend_policy_list.get(p.action_id):
                 policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
@@ -255,12 +181,12 @@ class TemplateService:
             # 填充backend policy id
             old_policy.policy_id = policy_id
             p.policy_id = policy_id
-            old_universal_policies.append(old_policy)
+            old_policies.append(old_policy)
 
             # 更新[SaaS]policy_list
             policy_list.update(p)
 
-        # 4. 变更
+        # 变更
         with transaction.atomic():
             authorized_template = PermTemplatePolicyAuthorized.objects.select_for_update().get(
                 id=authorized_template.id
@@ -270,23 +196,11 @@ class TemplateService:
 
             # Note: 必须SaaS DB修改后才可执行忽略路径，否则SaaS DB里保存的数据就缺失了路径（因为Policy都是引用的，不是deepcopy处理的）
             # 处理忽略路径
-            self._ignore_path(update_abac_policies, action_list)
-            self._ignore_path(update_universal_policies, action_list)
+            self._ignore_path(policies, action_list)
 
-            # ABAC策略
-            if update_abac_policies:
-                iam.update_template_policies(
-                    system_id,
-                    subject.type,
-                    subject.id,
-                    template_id,
-                    [p.to_backend_dict(system_id) for p in update_abac_policies],
-                )
-
-            # RBAC策略
-            if update_universal_policies:
-                update_pair_policies = list(zip(update_universal_policies, old_universal_policies))
-                self.universal_svc.alter(system_id, template_id, subject, [], [], update_pair_policies)
+            # 后端策略
+            update_pair_policies = list(zip(policies, old_policies))
+            self._alter(system_id, template_id, subject, [], [], update_pair_policies)
 
     def _ignore_path(self, policies: List[Policy], action_list: Optional[ActionList]):
         """policies忽略路径"""
