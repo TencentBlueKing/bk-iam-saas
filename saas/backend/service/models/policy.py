@@ -535,7 +535,7 @@ class UniversalPolicy(Policy):
                 change_type=AbacPolicyChangeType.DELETED.value,
                 id=old.policy_id,
             )
-        # 新策略由ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
+        # 新策略有ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
         elif self.has_abac() and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.CREATED.value,

@@ -18,7 +18,8 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.common.time import PERMANENT_SECONDS
 
 from .action import ActionList
-from .models import Policy, Subject, SystemCounter
+from .constants import AuthTypeEnum
+from .models import Policy, Subject, SystemCounter, UniversalPolicyChangedContent
 from .policy.backend import BackendPolicyOperationService
 from .policy.common import UniversalPolicyChangedContentAnalyzer
 from .policy.query import PolicyList, new_backend_policy_list_by_subject
@@ -36,15 +37,14 @@ class TemplateService:
     backend_svc = BackendPolicyOperationService()
     analyzer = UniversalPolicyChangedContentAnalyzer()
 
-    def _alter(
+    def _cal_changed_policies(
         self,
         system_id: str,
-        template_id: int,
-        subject: Subject,
         create_policies: List[Policy],
         delete_policies: List[Policy],
         update_pair_policies: List[Tuple[Policy, Policy]],  # List[(new, old)]
-    ):
+    ) -> List[UniversalPolicyChangedContent]:
+        """计算出要变更的策略 和 策略对应的ActionAuthType"""
         # Note: 必须先计算出策略的变更内容，否则先变更DB后，则查询不到老策略，无法进行新老策略对比
         changed_policies = []
         # 1. 新增策略
@@ -54,8 +54,7 @@ class TemplateService:
         # 3. 更新
         changed_policies.extend(self.analyzer.cal_for_updated(system_id, update_pair_policies))
 
-        # 4. 变更
-        self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
+        return changed_policies
 
     # Template Auth
     def revoke_subject(self, system_id: str, template_id: int, subject: Subject):
@@ -76,6 +75,9 @@ class TemplateService:
                 continue
             p.policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
 
+        # 计算变更策略内容
+        changed_policies = self._cal_changed_policies(system_id, [], policy_list.policies, [])
+
         # 变更
         with transaction.atomic():
             count, _ = PermTemplatePolicyAuthorized.objects.filter(
@@ -85,9 +87,8 @@ class TemplateService:
             if count != 0:
                 # 更新冗余count
                 PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") - count)
-
                 # 后端处理
-                self._alter(system_id, template_id, subject, [], policy_list.policies, [])
+                self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
 
     def grant_subject(
         self,
@@ -108,13 +109,18 @@ class TemplateService:
         # 处理忽略路径
         self._ignore_path(policies, action_list)
 
+        # 计算变更策略内容
+        changed_policies = self._cal_changed_policies(system_id, policies, [], [])
+        # 设置的ActionAuthType
+        authorized_template.auth_types = {cp.action_id: cp.auth_type for cp in changed_policies}
+
         # 模板授权
         with transaction.atomic():
             authorized_template.save(force_insert=True)
             PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") + 1)
 
             # 后端处理
-            self._alter(system_id, template_id, subject, policies, [], [])
+            self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
 
     def alter_template_auth(
         self, subject: Subject, template_id: int, create_policies: List[Policy], delete_action_ids: List[str]
@@ -139,21 +145,37 @@ class TemplateService:
                 if not backend_policy_list.get(p.action_id):
                     continue
                 p.policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
-
         # 1.2 添加需要新增的策略
         create_policies = policy_list.extend_without_repeated(create_policies)
 
-        # 3. 变更模板授权
-        with transaction.atomic():
-            # 修改模板授权信息
-            authorized_template = PermTemplatePolicyAuthorized.objects.select_for_update().get(
-                id=authorized_template.id
-            )
-            authorized_template.data = {"actions": [p.dict() for p in policy_list.policies]}
-            authorized_template.save(update_fields=["_data"])
+        # 2. 计算要变更的策略内容
+        changed_policies = self._cal_changed_policies(system_id, create_policies, delete_policies, [])
 
-            # RBAC处理
-            self._alter(system_id, template_id, subject, create_policies, delete_policies, [])
+        # 3. 重新计算action_auth_types
+        action_auth_types = authorized_template.auth_types
+        # 3.1 移除被删除的策略的AuthType
+        for action_id in delete_action_ids:
+            action_auth_types.pop(action_id)
+        # 3.2 添加新增的策略的AuthType
+        action_auth_types.update(
+            {
+                cp.action_id: cp.auth_type
+                for cp in changed_policies
+                # Note: 变更后策略的AuthType为None，说明是策略变删除，不需要记录了，只取未被删除的
+                if cp.auth_type != AuthTypeEnum.NONE.value
+            }
+        )
+
+        # 执行变更
+        self._execute_changed_template_auth(
+            authorized_template.id,
+            subject,
+            template_id,
+            system_id,
+            policy_list.policies,
+            changed_policies,
+            action_auth_types,
+        )
 
     def update_template_auth(
         self, subject: Subject, template_id: int, policies: List[Policy], action_list: Optional[ActionList] = None
@@ -167,40 +189,71 @@ class TemplateService:
         # 查询subject的后端权限信息
         backend_policy_list = new_backend_policy_list_by_subject(system_id, subject, template_id)
 
-        # 填充backend policy id，获取老策略，[SaaS]policy_list进行更新
-        old_policies = []
-        for p in policies:
-            # 后台策略ID, 对于存RBAC策略，不一定有
+        # Note: 这里并非直接在policy_list上更新，而是先删后增，原因是SaaS Policy和后台Policy有差别，避免多次deepcopy的性能问题
+        # 1. 先将老的原始SaaS Policy 移除
+        old_policies = policy_list.pop_by_action_ids([p.action_id for p in policies])
+
+        # 2. 将新策略添加到SaaS Policy
+        affected_policies = policy_list.extend_without_repeated(policies)
+        # Note: 后面将会进行忽略路径处理，所以这里必须用deepcopy，否则会导致直接修改到了SaaS Policy - policy_list的内容
+        new_policies = [p.copy(deep=True) for p in affected_policies]
+
+        # 3. 后台策略变更前，需要给旧策略添加上PolicyID
+        for p in old_policies:
+            # 后台策略ID, 对于只有RBAC策略，则没有PolicID
             policy_id = 0
             if backend_policy_list.get(p.action_id):
                 policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
 
-            # Note: 获取老策略必须在policy_list.update之前，且必须是deepcopy一个新对象，否则会被policy_list.update更新掉的
-            old_policy = policy_list.get(p.action_id).copy(deep=True)  # type: ignore
-
             # 填充backend policy id
-            old_policy.policy_id = policy_id
             p.policy_id = policy_id
-            old_policies.append(old_policy)
 
-            # 更新[SaaS]policy_list
-            policy_list.update(p)
+        # 4. 计算要变更的策略内容
+        # 后台策略需要处理忽略路径
+        self._ignore_path(old_policies, action_list)
+        self._ignore_path(new_policies, action_list)
+        # 计算变更内容
+        assert len(old_policies) == len(new_policies)
+        update_pair_policies = list(zip(new_policies, old_policies))
+        changed_policies = self._cal_changed_policies(system_id, [], [], update_pair_policies)
 
-        # 变更
+        # 5. 重新计算action_auth_types
+        action_auth_types = authorized_template.auth_types
+        for cp in changed_policies:
+            action_auth_types[cp.action_id] = cp.auth_type
+
+        # 执行变更
+        self._execute_changed_template_auth(
+            authorized_template.id,
+            subject,
+            template_id,
+            system_id,
+            policy_list.policies,
+            changed_policies,
+            action_auth_types,
+        )
+
+    def _execute_changed_template_auth(
+        self,
+        authorized_template_id: int,
+        subject: Subject,
+        template_id: int,
+        system_id: str,
+        saas_policies: List[Policy],
+        changed_policies: List[UniversalPolicyChangedContent],
+        action_auth_types: Dict[str, str],
+    ):
+        """执行模板授权的更新"""
         with transaction.atomic():
             authorized_template = PermTemplatePolicyAuthorized.objects.select_for_update().get(
-                id=authorized_template.id
+                id=authorized_template_id,
             )
-            authorized_template.data = {"actions": [p.dict() for p in policy_list.policies]}
+            authorized_template.data = {"actions": [p.dict() for p in saas_policies]}
+            authorized_template.auth_types = action_auth_types
             authorized_template.save(update_fields=["_data"])
 
-            # Note: 必须SaaS DB修改后才可执行忽略路径，否则SaaS DB里保存的数据就缺失了路径（因为Policy都是引用的，不是deepcopy处理的）
-            # 处理忽略路径
-            self._ignore_path(policies, action_list)
-
-            # 后端策略
-            update_pair_policies = list(zip(policies, old_policies))
-            self._alter(system_id, template_id, subject, [], [], update_pair_policies)
+            # 后端策略变更
+            self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
 
     def _ignore_path(self, policies: List[Policy], action_list: Optional[ActionList]):
         """policies忽略路径"""

@@ -87,7 +87,7 @@ class UniversalPolicyChangedContentAnalyzer:
         return changed_policies
 
     def cal_for_updated(
-        self, system_id: str, update_policies: List[Tuple[Policy, Policy]]
+        self, system_id: str, update_policies: List[Tuple[Policy, Policy]]  # List[(new, old)]
     ) -> List[UniversalPolicyChangedContent]:
         """根据更新的策略，组装计算出要变更的策略内容"""
         if len(update_policies) == 0:
