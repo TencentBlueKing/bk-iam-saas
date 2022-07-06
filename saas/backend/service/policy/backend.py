@@ -128,13 +128,13 @@ class BackendPolicyOperationService:
 
             # 对于abac权限，按变更类型分类
             if p.abac.change_type == AbacPolicyChangeType.CREATED.value:
-                created_policies.append(
-                    p.abac.dict(include={"action_id", "resource_expression", "environment", "expired_at"})
-                )
+                created_policy = p.abac.dict(include={"resource_expression", "environment", "expired_at"})
+                created_policy["action_id"] = p.action_id
+                created_policies.append(created_policy)
             elif p.abac.change_type == AbacPolicyChangeType.UPDATED.value:
-                updated_policies.append(
-                    p.abac.dict(include={"id", "action_id", "resource_expression", "environment", "expired_at"})
-                )
+                updated_policy = p.abac.dict(include={"id", "resource_expression", "environment", "expired_at"})
+                updated_policy["action_id"] = p.action_id
+                updated_policies.append(updated_policy)
             elif p.abac.change_type == AbacPolicyChangeType.DELETED.value:
                 deleted_policy_ids.append(p.abac.id)
 
