@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import itertools
+import logging
 from typing import List, Optional
 
 from django.db import transaction
@@ -26,6 +27,8 @@ from .backend import BackendPolicyOperationService
 from .common import UniversalPolicyChangedContentAnalyzer
 from .query import PolicyList, new_backend_policy_list_by_subject
 
+logger = logging.getLogger("app")
+
 
 class PolicyCommonDBOperationService:
     """rbac和abac都需要使用到的"""
@@ -35,9 +38,9 @@ class PolicyCommonDBOperationService:
         创建新的策略
         """
         db_policies = [p.to_db_model(system_id, subject) for p in policies]
-        print("db_policies: ", db_policies)
+        logger.error("db_policies: %s", db_policies)
         for p in db_policies:
-            print(p.auth_type)
+            logger.error(p.auth_type)
         PolicyModel.objects.bulk_create(db_policies, batch_size=100)
 
     def update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
