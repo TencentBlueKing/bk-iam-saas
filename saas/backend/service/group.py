@@ -151,7 +151,7 @@ class GroupService:
                     continue
                 department_set.add(ancestor.id)
                 # NOTE: 获取部门加入的所有组列表, 注意可能会有性能问题(分页查询)
-                all_subject_groups = iam.list_all_subject_groups("department", str(ancestor.id))
+                all_subject_groups = iam.list_all_subject_groups(SubjectType.DEPARTMENT.value, str(ancestor.id))
                 dep_relations = [
                     SubjectGroup(department_id=ancestor.id, department_name=ancestor.name, **one)
                     for one in all_subject_groups
