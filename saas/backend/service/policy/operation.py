@@ -38,10 +38,6 @@ class PolicyCommonDBOperationService:
         创建新的策略
         """
         db_policies = [p.to_db_model(system_id, subject) for p in policies]
-        logger.error("db_policies: %s", db_policies)
-        for p in db_policies:
-            logger.error(p.auth_type)
-            logger.error(type(p.auth_type))
         PolicyModel.objects.bulk_create(db_policies, batch_size=100)
 
     def update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
