@@ -118,8 +118,8 @@
                 pageConf: {
                     current: 1,
                     count: 0,
-                    limit: 10
-                    // limitList: [5, 10, 20, 50]
+                    limit: 10,
+                    limitList: [5, 10, 20, 50]
                 },
                 curPageData: [],
                 deleteDialogConf: {
@@ -207,19 +207,36 @@
              *
              * @return {Array} 当前页数据
              */
-            getDataByPage (page) {
-                if (!page) {
-                    this.pageConf.current = page = 1;
+            getDataByPage () {
+                try {
+                    const res = this.$store.dispatch('perm/getPersonalGroups', {
+                        limit: this.pageConf.limit,
+                        offset: (this.pageConf.current - 1) * this.pageConf.limit
+                    });
+                    this.pagination.count = res.data.count;
+                    this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
                 }
-                let startIndex = (page - 1) * this.pageConf.limit;
-                let endIndex = page * this.pageConf.limit;
-                if (startIndex < 0) {
-                    startIndex = 0;
-                }
-                if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length;
-                }
-                return this.dataList.slice(startIndex, endIndex);
+                // if (!page) {
+                //     this.pageConf.current = page = 1;
+                // }
+                // let startIndex = (page - 1) * this.pageConf.limit;
+                // let endIndex = page * this.pageConf.limit;
+                // if (startIndex < 0) {
+                //     startIndex = 0;
+                // }
+                // if (endIndex > this.dataList.length) {
+                //     endIndex = this.dataList.length;
+                // }
+                // return this.dataList.slice(startIndex, endIndex);
             },
 
             /**

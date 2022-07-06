@@ -531,9 +531,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getPersonalGroups ({ commit, state, dispatch }, config) {
+        getPersonalGroups ({ commit, state, dispatch }, params, config) {
             return http.get(
-                `${AJAX_URL_PREFIX}/users/groups/`,
+                `${AJAX_URL_PREFIX}/users/groups/?${json2Query(params)}`,
                 {},
                 config
             );

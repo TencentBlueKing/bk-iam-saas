@@ -50,6 +50,7 @@
                         :personal-group-list="personalGroupList"
                         :system-list="systemList"
                         :tep-system-list="teporarySystemList"
+                        :ref="panel.name"
                         @refresh="fetchData"
                     ></component>
                 </div>
@@ -116,7 +117,10 @@
                 this.componentLoading = true;
                 try {
                     const [res1, res2, res3, res4, res5] = await Promise.all([
-                        this.$store.dispatch('perm/getPersonalGroups'),
+                        this.$store.dispatch('perm/getPersonalGroups', {
+                            limit: 5,
+                            offset: 0
+                        }),
                         this.$store.dispatch('permApply/getHasPermSystem'),
                         this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
                         this.$store.dispatch('renewal/getExpireSoonPerm'),
