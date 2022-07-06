@@ -151,10 +151,10 @@ class GroupService:
                     continue
                 department_set.add(ancestor.id)
                 # NOTE: 获取部门加入的所有组列表, 注意可能会有性能问题(分页查询)
-                iam_data = iam.list_all_subject_groups("department", str(ancestor.id))
+                all_subject_groups = iam.list_all_subject_groups("department", str(ancestor.id))
                 dep_relations = [
                     SubjectGroup(department_id=ancestor.id, department_name=ancestor.name, **one)
-                    for one in iam_data["results"]
+                    for one in all_subject_groups
                 ]
                 relations.extend(dep_relations)
         return relations
@@ -175,8 +175,8 @@ class GroupService:
         """
         查询所有subject在指定过期时间之前的相关Group
         """
-        iam_data = iam.list_all_subject_groups(subject.type, subject.id, expired_at=expired_at)
-        relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
+        all_subject_groups = iam.list_all_subject_groups(subject.type, subject.id, expired_at=expired_at)
+        relations = parse_obj_as(List[SubjectGroup], all_subject_groups)
         return relations
 
     def get_member_count_before_expired_at(self, group_id: int, expired_at: int) -> int:
