@@ -233,7 +233,7 @@ class Policy(BaseModel):
     expired_at: int
     resource_groups: ResourceGroupList
 
-    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
+    auth_type: str = AuthTypeEnum.ABAC.value
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
@@ -478,7 +478,7 @@ class UniversalPolicy(Policy):
         return expression_resource_groups, list(set(rbac_instances))
 
     @staticmethod
-    def _calculate_auth_type(has_abac: bool, has_rbac: bool) -> AuthTypeEnum:
+    def _calculate_auth_type(has_abac: bool, has_rbac: bool) -> str:
         """计算auth_type"""
         # 1 abac和rbac都有
         if has_abac and has_rbac:
