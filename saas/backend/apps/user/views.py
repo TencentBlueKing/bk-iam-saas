@@ -23,6 +23,7 @@ from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
+from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.service.constants import SubjectRelationType, SubjectType
@@ -35,7 +36,7 @@ permission_logger = logging.getLogger("permission")
 
 class UserGroupViewSet(GenericViewSet):
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = CustomPageNumberPagination
 
     biz = GroupBiz()
 
@@ -46,9 +47,10 @@ class UserGroupViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         subject = Subject(type=SubjectType.USER.value, id=request.user.username)
-        relations = self.biz.list_subject_group(subject, is_recursive=True)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        count, relations = self.biz.list_paging_subject_group(subject, is_recursive=True, limit=limit, offset=offset)
         slz = GroupSLZ(instance=relations, many=True)
-        return Response(slz.data)
+        return Response({"count": count, "results": slz.data})
 
     @swagger_auto_schema(
         operation_description="我的权限-退出用户组",
@@ -84,7 +86,7 @@ class UserGroupViewSet(GenericViewSet):
 
 class UserGroupRenewViewSet(GenericViewSet):
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = CustomPageNumberPagination
 
     # service
     group_biz = GroupBiz()
@@ -96,9 +98,12 @@ class UserGroupRenewViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         expired_at = get_soon_expire_ts()
-        relations = self.group_biz.list_subject_group_before_expired_at(subject, expired_at)
-        return Response([one.dict() for one in relations])
+        count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
+            subject, expired_at=expired_at, limit=limit, offset=offset
+        )
+        return Response({"count": count, "results": [one.dict() for one in relations]})
 
 
 class UserProfileNewbieViewSet(GenericViewSet):
