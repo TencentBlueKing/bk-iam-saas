@@ -22,6 +22,7 @@ from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
+from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.service.constants import PermissionCodeEnum, SubjectRelationType
 from backend.service.models import Subject
@@ -40,7 +41,7 @@ class SubjectGroupViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = CustomPageNumberPagination
 
     biz = GroupBiz()
 
@@ -51,8 +52,10 @@ class SubjectGroupViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        relations = self.biz.list_subject_group(subject, is_recursive=True)
-        return Response([one.dict() for one in relations])
+        # 分页参数
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        count, relations = self.biz.list_paging_subject_group(subject, is_recursive=True, limit=limit, offset=offset)
+        return Response({"count": count, "results": [one.dict() for one in relations]})
 
     @swagger_auto_schema(
         operation_description="我的权限-退出用户组",
