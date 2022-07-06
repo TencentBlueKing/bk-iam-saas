@@ -52,7 +52,10 @@ class PolicyCommonDBOperationService:
             update_policy = policy_list.get(p.action_id)
             if not update_policy:
                 continue
-            PolicyModel.objects.filter(id=p.id).update(_resources=json_dumps(update_policy.resource_groups.dict()))
+            PolicyModel.objects.filter(id=p.id).update(
+                _resources=json_dumps(update_policy.resource_groups.dict()),
+                auth_type=update_policy.auth_type,
+            )
 
     def _delete_db_policies(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """
@@ -126,7 +129,15 @@ class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPol
         # 3. 更新
         changed_policies.extend(self._cal_policy_change_contents_by_updated(system_id, subject, update_policies))
 
-        # 4. 变更DB，并变更后台
+        # 4. 设置Policy的AuthType
+        action_auth_types = {cp.action_id: cp.auth_type for cp in changed_policies}
+        # 只需要新建和更新的策略设置对应的AuthType，删除的策略不需要
+        for p in create_policies:
+            p.auth_type = action_auth_types[p.action_id]
+        for p in update_policies:
+            p.auth_type = action_auth_types[p.action_id]
+
+        # 5. 变更DB，并变更后台
         with transaction.atomic():
             if create_policies:
                 self._create_db_policies(system_id, subject, create_policies)

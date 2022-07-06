@@ -233,6 +233,8 @@ class Policy(BaseModel):
     expired_at: int
     resource_groups: ResourceGroupList
 
+    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
+
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
@@ -270,12 +272,16 @@ class Policy(BaseModel):
             # NOTE: 固定resource_group_id, 方便删除逻辑
             resource_groups = [ResourceGroup(id=DEAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
 
-        return cls(
+        obj = cls(
             action_id=policy.action_id,
             policy_id=policy.policy_id,
             expired_at=expired_at,
             resource_groups=ResourceGroupList.parse_obj(resource_groups),
         )
+        if isinstance(policy, PolicyModel):
+            obj.auth_type = policy.auth_type
+
+        return obj
 
     def to_db_model(
         self, system_id: str, subject: Subject, model: Union[Type[PolicyModel], Type[TemporaryPolicy]] = PolicyModel
@@ -290,7 +296,7 @@ class Policy(BaseModel):
         p.resources = self.resource_groups.dict()
 
         if isinstance(p, PolicyModel):
-            p.auth_type = AuthTypeEnum.ABAC.value
+            p.auth_type = self.auth_type
 
         if isinstance(p, TemporaryPolicy):
             p.expired_at = self.expired_at
@@ -368,8 +374,6 @@ class UniversalPolicy(Policy):
 
     expression_resource_groups: ResourceGroupList = ResourceGroupList(__root__=[])
     instances: List[PathNode] = []
-
-    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
 
     @classmethod
     def from_policy(cls, policy: Policy, action_auth_type: str) -> "UniversalPolicy":
