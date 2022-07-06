@@ -579,7 +579,7 @@ class GroupCheckBiz:
         检查subject授权的group数量是否超限
         """
         limit = settings.SUBJECT_AUTHORIZATION_LIMIT["default_subject_group_limit"]
-        count, _ = self.svc.list_subject_group(subject, limit=1, offset=0)
+        count, __ = self.svc.list_subject_group(subject, limit=1, offset=0)
         if count >= limit:
             raise serializers.ValidationError(
                 _("被授权对象: {} {} 加入的用户组数量已超过最大值 {}").format(subject.type, subject.id, limit)
