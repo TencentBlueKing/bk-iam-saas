@@ -302,7 +302,6 @@ class GroupBiz:
         """
         查询subject所属的用户组
         """
-        # TODO 2
         count, relations = self.group_svc.list_subject_group(
             subject, is_recursive=is_recursive, limit=limit, offset=offset
         )
