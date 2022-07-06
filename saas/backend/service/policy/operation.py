@@ -35,6 +35,9 @@ class PolicyCommonDBOperationService:
         创建新的策略
         """
         db_policies = [p.to_db_model(system_id, subject) for p in policies]
+        print("db_policies: ", db_policies)
+        for p in db_policies:
+            print(p.auth_type)
         PolicyModel.objects.bulk_create(db_policies, batch_size=100)
 
     def update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
