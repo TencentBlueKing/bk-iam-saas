@@ -35,10 +35,10 @@ class AuthTypeStatistics(BaseModel):
         self.rbac_count += counter.get(AuthTypeEnum.RBAC.value, 0)
         self.all_count += counter.get(AuthTypeEnum.ALL.value, 0)
 
-    def is_all_auth_type(self):
+    def is_all_auth_type(self) -> bool:
         return self.all_count > 0 or (self.abac_count > 0 and self.rbac_count > 0)
 
-    def auth_type(self):
+    def auth_type(self) -> str:
         """根据统计结果，分析出最终auth_type"""
         if self.is_all_auth_type():
             return AuthTypeEnum.ALL.value

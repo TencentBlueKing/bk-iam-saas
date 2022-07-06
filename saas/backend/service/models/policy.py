@@ -360,7 +360,7 @@ class RbacPolicyChangeContent(BaseModel):
 class UniversalPolicyChangedContent(BaseModel):
     action_id: str
     # 策略变更后的策略类型
-    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
+    auth_type: str = AuthTypeEnum.ABAC.value
     # ABAC策略变更
     abac: Optional[AbacPolicyChangeContent]
     # RBAC策略变更
