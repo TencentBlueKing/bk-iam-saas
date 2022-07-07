@@ -1383,7 +1383,7 @@ class PolicyQueryBiz:
         """
         查询指定Policy的资源类型的condition
         """
-        _, policy = self.get_system_policy(subject, policy_id)
+        policy = self.get_policy_by_id(subject, policy_id)
         related_resource_type = policy.get_related_resource_type(resource_group_id, resource_system, resource_type)
         if not related_resource_type:
             return []
@@ -1414,13 +1414,19 @@ class PolicyQueryBiz:
 
         return expired_policies
 
-    def get_system_policy(self, subject: Subject, policy_id: int) -> Tuple[str, PolicyBean]:
+    def get_policy_by_id(self, subject: Subject, policy_id: int) -> PolicyBean:
         """
         获取指定的Policy
         """
-        system_id, policy = self.svc.get_system_policy(policy_id, subject)
+        system_id, policy = self.svc.get_policy_by_id(policy_id, subject)
         policy_list = PolicyBeanList(system_id, [PolicyBean.parse_obj(policy)], need_fill_empty_fields=True)
-        return system_id, policy_list.policies[0]
+        return policy_list.policies[0]
+
+    def get_policy_system_by_id(self, subject: Subject, policy_id: int) -> str:
+        """
+        获取指定策略的system
+        """
+        return self.svc.get_policy_system_by_id(policy_id, subject)
 
 
 def policy_change_lock(func):
@@ -1469,8 +1475,7 @@ class PolicyOperationBiz:
         """
         删除policy中指定resource_group_id的部分
         """
-        # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
-        __, policy = self.query_biz.get_system_policy(subject, policy_id)
+        policy = self.query_biz.get_policy_by_id(subject, policy_id)
         # 任意的policy不能删除
         if len(policy.resource_groups) == 0:
             raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
@@ -1504,8 +1509,7 @@ class PolicyOperationBiz:
         Policy条件部分删除
         返回更新后的Policy
         """
-        # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
-        __, policy = self.query_biz.get_system_policy(subject, policy_id)
+        policy = self.query_biz.get_policy_by_id(subject, policy_id)
         resource_type = policy.get_related_resource_type(resource_group_id, resource_system_id, resource_type_id)
         if not resource_type:
             raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
@@ -1619,7 +1623,7 @@ class PolicyOperationBiz:
         updated_policies = policy_list.auto_update_resource_name()
         if len(updated_policies) > 0:
             # 只需要修改DB，且只修改有更新的策略
-            self.svc.update_db_policies(system_id, subject, updated_policies)
+            self.svc.only_update_db_policies(system_id, subject, updated_policies)
 
         # 返回的是所有策略，包括未被更新的
         return policy_list.policies

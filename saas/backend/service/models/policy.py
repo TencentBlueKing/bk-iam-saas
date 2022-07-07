@@ -229,7 +229,11 @@ class ResourceGroupList(ListModel):
 
 class Policy(BaseModel):
     action_id: str = Field(alias="id")
+    # Note: 这里的PolicyID指的是SaaS的PolicyID，并非Backend PolicyID
     policy_id: int
+    # Backend Policy只会在调用后台时使用到，Service层以上不应该使用
+    # 对于纯RBAC策略，不存在Backend PolicyID，则默认为0
+    backend_policy_id: int = 0
     expired_at: int
     resource_groups: ResourceGroupList
 
@@ -274,12 +278,17 @@ class Policy(BaseModel):
 
         obj = cls(
             action_id=policy.action_id,
-            policy_id=policy.policy_id,
+            policy_id=policy.id,
             expired_at=expired_at,
             resource_groups=ResourceGroupList.parse_obj(resource_groups),
         )
+
         if isinstance(policy, PolicyModel):
             obj.auth_type = policy.auth_type
+
+        if isinstance(policy, TemporaryPolicy):
+            # 对于临时权限，其与后台策略是一一对应的，可直接使用SaaS上保存的后台PolicyID
+            obj.backend_policy_id = policy.policy_id
 
         return obj
 
@@ -310,7 +319,7 @@ class Policy(BaseModel):
             "resource_expression": translator.translate(system_id, self.resource_groups.dict()),
             "environment": "{}",
             "expired_at": self.expired_at,
-            "id": self.policy_id,
+            "id": self.backend_policy_id,
         }
 
     def list_thin_resource_type(self) -> List[ThinResourceType]:
@@ -337,11 +346,6 @@ class BackendThinPolicy(BaseModel):
 class SystemCounter(BaseModel):
     id: str
     count: int
-
-
-class PolicyIDExpiredAt(BaseModel):
-    id: int
-    expired_at: int
 
 
 class AbacPolicyChangeContent(BaseModel):
@@ -380,6 +384,7 @@ class UniversalPolicy(Policy):
         p = cls(
             action_id=policy.action_id,
             policy_id=policy.policy_id,
+            backend_policy_id=policy.backend_policy_id,
             expired_at=policy.expired_at,
             resource_groups=policy.resource_groups,
         )
@@ -530,14 +535,14 @@ class UniversalPolicy(Policy):
         if self.has_abac() and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.UPDATED.value,
-                id=old.policy_id,
+                id=old.backend_policy_id,
                 resource_expression=self.to_resource_expression(system_id),
             )
         # 新策略无ABAC策略，但老策略有ABAC策略，则需要将老的ABAC策略删除
         elif self.has_abac and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.DELETED.value,
-                id=old.policy_id,
+                id=old.backend_policy_id,
             )
         # 新策略有ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
         elif self.has_abac() and old.has_abac():

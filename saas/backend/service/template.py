@@ -73,7 +73,7 @@ class TemplateService:
         for p in policy_list.policies:
             if not backend_policy_list.get(p.action_id):
                 continue
-            p.policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
+            p.backend_policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
 
         # 计算变更策略内容
         changed_policies = self._cal_changed_policies(system_id, [], policy_list.policies, [])
@@ -144,7 +144,7 @@ class TemplateService:
             for p in delete_policies:
                 if not backend_policy_list.get(p.action_id):
                     continue
-                p.policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
+                p.backend_policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
         # 1.2 添加需要新增的策略
         create_policies = policy_list.extend_without_repeated(create_policies)
 
@@ -200,13 +200,13 @@ class TemplateService:
 
         # 3. 后台策略变更前，需要给旧策略添加上PolicyID
         for p in old_policies:
-            # 后台策略ID, 对于只有RBAC策略，则没有PolicID
-            policy_id = 0
+            # 后台策略ID, 对于只有RBAC策略，则没有PolicyID
+            backend_policy_id = 0
             if backend_policy_list.get(p.action_id):
-                policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
+                backend_policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
 
             # 填充backend policy id
-            p.policy_id = policy_id
+            p.backend_policy_id = backend_policy_id
 
         # 4. 计算要变更的策略内容
         # 后台策略需要处理忽略路径

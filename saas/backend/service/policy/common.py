@@ -76,7 +76,7 @@ class UniversalPolicyChangedContentAnalyzer:
             # 有ABAC策略需要删除，只需要PolicyID即可
             if up.has_abac():
                 policy_changed_content.abac = AbacPolicyChangeContent(
-                    change_type=AbacPolicyChangeType.DELETED.value, id=p.policy_id
+                    change_type=AbacPolicyChangeType.DELETED.value, id=p.backend_policy_id
                 )
             # RBAC策略删除，则提供被删除的资源实例
             if up.has_rbac():
@@ -98,8 +98,9 @@ class UniversalPolicyChangedContentAnalyzer:
         changed_policies = []
         # 遍历每条要新旧对比，进行新旧策略对比，得到需要变更的内容，组装PolicyChangedContent数据
         for p, old_p in update_policies:
-            up = UniversalPolicy.from_policy(p, action_auth_types[p.action_id])
-            old_up = UniversalPolicy.from_policy(old_p)
+            auth_type = action_auth_types[p.action_id]
+            up = UniversalPolicy.from_policy(p, auth_type)
+            old_up = UniversalPolicy.from_policy(old_p, auth_type)
             policy_changed_content = up.calculate_pre_changed_content(system_id, old_up)
             changed_policies.append(policy_changed_content)
 
