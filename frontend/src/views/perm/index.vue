@@ -118,7 +118,7 @@
                 try {
                     const [res1, res2, res3, res4, res5] = await Promise.all([
                         this.$store.dispatch('perm/getPersonalGroups', {
-                            limit: 5,
+                            limit: 10,
                             offset: 0
                         }),
                         this.$store.dispatch('permApply/getHasPermSystem'),
@@ -130,7 +130,7 @@
                         // this.fetchSoonGroupWithUser(),
                         // this.fetchSoonPerm()
                     ]);
-                    const personalGroupList = res1.data || [];
+                    const personalGroupList = res1.data.results || [];
                     this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
 
                     const systemList = res2.data || [];
