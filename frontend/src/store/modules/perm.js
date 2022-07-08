@@ -318,10 +318,13 @@ export default {
          * @return {Promise} promise 对象
          */
         getPermGroups ({ commit, state, dispatch }, params = {}, config) {
+            const pageParas = {
+                limit: params.limit,
+                offset: params.offset
+            };
             return http.get(
                 // `/app/index?${json2Query(params)}&invoke=getPermGroups`,
-                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/groups/`,
-                {},
+                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/groups/?${json2Query(pageParas)}`,
                 config
             );
         },

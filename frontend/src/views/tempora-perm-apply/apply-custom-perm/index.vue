@@ -529,7 +529,7 @@
             async fetchCurUserGroup () {
                 try {
                     const res = await this.$store.dispatch('perm/getPersonalGroups', {
-                        limit: 10,
+                        limit: 100,
                         offset: 0
                     });
                     this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);

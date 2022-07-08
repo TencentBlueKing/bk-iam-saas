@@ -122,7 +122,10 @@
                             offset: 0
                         }),
                         this.$store.dispatch('permApply/getHasPermSystem'),
-                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
+                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                            limit: 10,
+                            offset: 0
+                        }),
                         this.$store.dispatch('renewal/getExpireSoonPerm'),
                         this.$store.dispatch('permApply/getTeporHasPermSystem')
                         // this.fetchPermGroups(),
@@ -141,7 +144,7 @@
 
                     this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
                         && teporarySystemList.length < 1;
-                    this.soonGroupLength = res3.data.length;
+                    this.soonGroupLength = res3.data.results.length;
                     this.soonPermLength = res4.data.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
