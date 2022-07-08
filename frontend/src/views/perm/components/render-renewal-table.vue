@@ -77,12 +77,16 @@
                 default: 15552000
             },
             data: {
-                type: Number,
+                type: Array,
                 default: () => []
             },
             loading: {
                 type: Boolean,
                 default: false
+            },
+            count: {
+                type: Number,
+                default: () => 0
             }
         },
         data () {
@@ -156,7 +160,6 @@
             data: {
                 handler (value) {
                     this.allData = value;
-                    this.pagination.count = this.allData.length;
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
                     const getDays = payload => {
@@ -185,6 +188,11 @@
                         });
                     });
                 }
+            },
+            count: {
+                handler (value) {
+                    this.pagination.count = value;
+                }
             }
         },
         methods: {
@@ -211,13 +219,12 @@
                 return row[property].id === value;
             },
 
-            pageChange (page) {
+            pageChange (page = 1) {
                 if (this.currentBackup === page) {
                     return;
                 }
                 this.pagination.current = page;
-                const data = this.getCurPageData(page);
-                this.tableList.splice(0, this.tableList.length, ...data);
+                this.fetchTableData();
             },
 
             limitChange (currentLimit, prevLimit) {
@@ -244,7 +251,20 @@
                     endIndex = this.allData.length;
                 }
                 return this.allData.slice(startIndex, endIndex);
+            },
+
+            async fetchTableData () {
+                try {
+                    const res = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                        limit: this.pagination.limit,
+                        offset: (this.pagination.current - 1) * this.pagination.limit
+                    });
+                    this.tableList = res.data.results || [];
+                } catch (error) {
+                    
+                }
             }
+
         }
     };
 </script>

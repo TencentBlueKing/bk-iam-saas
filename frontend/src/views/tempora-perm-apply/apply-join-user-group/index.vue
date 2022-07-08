@@ -459,8 +459,11 @@
 
             async fetchCurUserGroup () {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups');
-                    this.curUserGroup = res.data.filter(item => item.department_id === 0).map(item => item.id);
+                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                        limit: 100,
+                        offset: 0
+                    });
+                    this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);
                 } catch (e) {
                     this.$emit('toggle-loading', false);
                     console.error(e);

@@ -109,8 +109,11 @@
             async fetchData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups');
-                    const groupList = res.data || [];
+                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                        limit: 10,
+                        offset: 0
+                    });
+                    const groupList = res.data.results || [];
                     groupList.forEach(item => {
                         if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
                             this.groupNotTransferCount += 1;
