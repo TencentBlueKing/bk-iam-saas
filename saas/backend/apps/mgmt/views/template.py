@@ -37,7 +37,7 @@ class MgmtTemplateViewSet(TemplateQueryMixin, TemplateViewSet):
         tags=["template"],
     )
     def list(self, request, *args, **kwargs):
-        group_id = request.query_params.get("group_id", "")
+        group_id = request.query_params.get("group_id")
         role = self.role_biz.get_role_by_group_id(group_id=group_id)
         queryset = self.filter_queryset(RoleListQuery(role, request.user).query_template())
 
@@ -51,7 +51,6 @@ class MgmtTemplateViewSet(TemplateQueryMixin, TemplateViewSet):
             serializer = TemplateListSLZ(
                 page, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
             )
-            print(serializer.data)
 
             return self.get_paginated_response(serializer.data)
 

@@ -54,7 +54,7 @@ from backend.service.models import Subject
 permission_logger = logging.getLogger("permission")
 
 
-class GroupPermissionMixin:
+class GroupPermissionNoneCheckMixin:
     def check_object_permissions(self, request, obj):
         pass
 
@@ -97,7 +97,7 @@ class MgmtGroupViewSet(GroupViewSet):
         return Response(serializer.data)
 
 
-class MgmtGroupMemberViewSet(GroupPermissionMixin, GroupMemberViewSet):
+class MgmtGroupMemberViewSet(GroupPermissionNoneCheckMixin, GroupMemberViewSet):
 
     permission_classes = [RolePermission]
     action_permission = {
@@ -170,18 +170,18 @@ class MgmtGroupMemberViewSet(GroupPermissionMixin, GroupMemberViewSet):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class MgmtGroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GroupMemberUpdateExpiredAtViewSet):
+class MgmtGroupMemberUpdateExpiredAtViewSet(GroupPermissionNoneCheckMixin, GroupMemberUpdateExpiredAtViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MGMT_GROUP.value)]
 
 
-class MgmtGroupTemplateViewSet(GroupPermissionMixin, GroupTemplateViewSet):
+class MgmtGroupTemplateViewSet(GroupPermissionNoneCheckMixin, GroupTemplateViewSet):
 
     permission_classes = [RolePermission]
     action_permission = {"create": PermissionCodeEnum.MGMT_GROUP.value}
 
 
-class MgmtGroupPolicyViewSet(GroupPermissionMixin, GroupPolicyViewSet):
+class MgmtGroupPolicyViewSet(GroupPermissionNoneCheckMixin, GroupPolicyViewSet):
 
     permission_classes = [RolePermission]
     action_permission = {
