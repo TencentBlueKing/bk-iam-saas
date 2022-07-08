@@ -139,11 +139,13 @@
                 try {
                     const res = await this.$store.dispatch('perm/getPermGroups', {
                         subjectType: type === 'user' ? type : 'department',
-                        subjectId: type === 'user' ? this.data.username : this.data.id
+                        subjectId: type === 'user' ? this.data.username : this.data.id,
+                        limit: this.pageConf.limit,
+                        offset: (this.pageConf.current - 1) * this.pageConf.limit
                     });
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []));
-                    this.initPageConf();
-                    this.curPageData = this.getDataByPage(this.pageConf.current);
+                    this.pageConf.count = res.data.count || 0;
+                    this.dataList.splice(0, this.dataList.length, ...(res.data.results || []));
+                    this.curPageData = [...this.dataList];
                 } catch (e) {
                     this.$emit('toggle-loading', false);
                     console.error(e);
@@ -174,30 +176,7 @@
              */
             handlePageChange (page = 1) {
                 this.pageConf.current = page;
-                const data = this.getDataByPage(page);
-                this.curPageData.splice(0, this.curPageData.length, ...data);
-            },
-
-            /**
-             * 获取当前这一页的数据
-             *
-             * @param {number} page 当前页
-             *
-             * @return {Array} 当前页数据
-             */
-            getDataByPage (page) {
-                if (!page) {
-                    this.pageConf.current = page = 1;
-                }
-                let startIndex = (page - 1) * this.pageConf.limit;
-                let endIndex = page * this.pageConf.limit;
-                if (startIndex < 0) {
-                    startIndex = 0;
-                }
-                if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length;
-                }
-                return this.dataList.slice(startIndex, endIndex);
+                this.fetchPermGroups();
             },
 
             /**

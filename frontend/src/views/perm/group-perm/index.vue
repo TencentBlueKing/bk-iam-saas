@@ -118,7 +118,7 @@
                 pageConf: {
                     current: 1,
                     count: 0,
-                    limit: 10
+                    limit: 1
                     // limitList: [5, 10, 20, 50]
                 },
                 curPageData: [],
@@ -145,9 +145,10 @@
             personalGroupList: {
                 handler (v) {
                     if (v.length) {
-                        this.dataList.splice(0, this.dataList.length, ...v);
-                        this.initPageConf();
-                        this.curPageData = this.getDataByPage(this.pageConf.current);
+                        // this.dataList.splice(0, this.dataList.length, ...v);
+                        // this.initPageConf();
+                        // this.curPageData = this.getDataByPage(this.pageConf.current);
+                        this.getDataByPage();
                     }
                 },
                 immediate: true
@@ -196,8 +197,7 @@
              */
             handlePageChange (page = 1) {
                 this.pageConf.current = page;
-                const data = this.getDataByPage(page);
-                this.curPageData.splice(0, this.curPageData.length, ...data);
+                this.getDataByPage(page);
             },
 
             /**
@@ -207,19 +207,36 @@
              *
              * @return {Array} 当前页数据
              */
-            getDataByPage (page) {
-                if (!page) {
-                    this.pageConf.current = page = 1;
+            async getDataByPage () {
+                try {
+                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                        limit: this.pageConf.limit,
+                        offset: (this.pageConf.current - 1) * this.pageConf.limit
+                    });
+                    this.pageConf.count = res.data.count;
+                    this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
                 }
-                let startIndex = (page - 1) * this.pageConf.limit;
-                let endIndex = page * this.pageConf.limit;
-                if (startIndex < 0) {
-                    startIndex = 0;
-                }
-                if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length;
-                }
-                return this.dataList.slice(startIndex, endIndex);
+                // if (!page) {
+                //     this.pageConf.current = page = 1;
+                // }
+                // let startIndex = (page - 1) * this.pageConf.limit;
+                // let endIndex = page * this.pageConf.limit;
+                // if (startIndex < 0) {
+                //     startIndex = 0;
+                // }
+                // if (endIndex > this.dataList.length) {
+                //     endIndex = this.dataList.length;
+                // }
+                // return this.dataList.slice(startIndex, endIndex);
             },
 
             /**

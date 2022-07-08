@@ -50,6 +50,7 @@
                         :personal-group-list="personalGroupList"
                         :system-list="systemList"
                         :tep-system-list="teporarySystemList"
+                        :ref="panel.name"
                         @refresh="fetchData"
                     ></component>
                 </div>
@@ -116,9 +117,15 @@
                 this.componentLoading = true;
                 try {
                     const [res1, res2, res3, res4, res5] = await Promise.all([
-                        this.$store.dispatch('perm/getPersonalGroups'),
+                        this.$store.dispatch('perm/getPersonalGroups', {
+                            limit: 10,
+                            offset: 0
+                        }),
                         this.$store.dispatch('permApply/getHasPermSystem'),
-                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
+                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                            limit: 10,
+                            offset: 0
+                        }),
                         this.$store.dispatch('renewal/getExpireSoonPerm'),
                         this.$store.dispatch('permApply/getTeporHasPermSystem')
                         // this.fetchPermGroups(),
@@ -126,7 +133,7 @@
                         // this.fetchSoonGroupWithUser(),
                         // this.fetchSoonPerm()
                     ]);
-                    const personalGroupList = res1.data || [];
+                    const personalGroupList = res1.data.results || [];
                     this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
 
                     const systemList = res2.data || [];
@@ -137,7 +144,7 @@
 
                     this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
                         && teporarySystemList.length < 1;
-                    this.soonGroupLength = res3.data.length;
+                    this.soonGroupLength = res3.data.results.length;
                     this.soonPermLength = res4.data.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
