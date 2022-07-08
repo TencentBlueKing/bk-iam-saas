@@ -426,8 +426,9 @@ class ApplicationBiz:
 
         # 查询策略所属系统
         db_policies = (
+            # TODO: 已存在的申请单数据如何处理？policy_id的含义已经变化了
             Policy.objects.filter(
-                subject_type=subject.type, subject_id=subject.id, policy_id__in=[p.id for p in policy_infos]
+                subject_type=subject.type, subject_id=subject.id, id__in=[p.id for p in policy_infos]
             )
             .defer("_resources")
             .order_by("system_id")

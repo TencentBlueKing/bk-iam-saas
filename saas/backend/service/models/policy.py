@@ -229,9 +229,15 @@ class ResourceGroupList(ListModel):
 
 class Policy(BaseModel):
     action_id: str = Field(alias="id")
+    # Note: 这里的PolicyID指的是SaaS的PolicyID，并非Backend PolicyID
     policy_id: int
+    # Backend Policy只会在调用后台时使用到，Service层以上不应该使用
+    # 对于纯RBAC策略，不存在Backend PolicyID，则默认为0
+    backend_policy_id: int = 0
     expired_at: int
     resource_groups: ResourceGroupList
+
+    auth_type: str = AuthTypeEnum.ABAC.value
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
@@ -270,12 +276,21 @@ class Policy(BaseModel):
             # NOTE: 固定resource_group_id, 方便删除逻辑
             resource_groups = [ResourceGroup(id=DEAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
 
-        return cls(
+        obj = cls(
             action_id=policy.action_id,
-            policy_id=policy.policy_id,
+            policy_id=policy.id,
             expired_at=expired_at,
             resource_groups=ResourceGroupList.parse_obj(resource_groups),
         )
+
+        if isinstance(policy, PolicyModel):
+            obj.auth_type = policy.auth_type
+
+        if isinstance(policy, TemporaryPolicy):
+            # 对于临时权限，其与后台策略是一一对应的，可直接使用SaaS上保存的后台PolicyID
+            obj.backend_policy_id = policy.policy_id
+
+        return obj
 
     def to_db_model(
         self, system_id: str, subject: Subject, model: Union[Type[PolicyModel], Type[TemporaryPolicy]] = PolicyModel
@@ -289,6 +304,9 @@ class Policy(BaseModel):
         )
         p.resources = self.resource_groups.dict()
 
+        if isinstance(p, PolicyModel):
+            p.auth_type = self.auth_type
+
         if isinstance(p, TemporaryPolicy):
             p.expired_at = self.expired_at
 
@@ -301,7 +319,7 @@ class Policy(BaseModel):
             "resource_expression": translator.translate(system_id, self.resource_groups.dict()),
             "environment": "{}",
             "expired_at": self.expired_at,
-            "id": self.policy_id,
+            "id": self.backend_policy_id,
         }
 
     def list_thin_resource_type(self) -> List[ThinResourceType]:
@@ -330,11 +348,6 @@ class SystemCounter(BaseModel):
     count: int
 
 
-class PolicyIDExpiredAt(BaseModel):
-    id: int
-    expired_at: int
-
-
 class AbacPolicyChangeContent(BaseModel):
     change_type: AbacPolicyChangeType = AbacPolicyChangeType.NONE.value
     id: int = 0
@@ -351,7 +364,7 @@ class RbacPolicyChangeContent(BaseModel):
 class UniversalPolicyChangedContent(BaseModel):
     action_id: str
     # 策略变更后的策略类型
-    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
+    auth_type: str = AuthTypeEnum.ABAC.value
     # ABAC策略变更
     abac: Optional[AbacPolicyChangeContent]
     # RBAC策略变更
@@ -366,25 +379,28 @@ class UniversalPolicy(Policy):
     expression_resource_groups: ResourceGroupList = ResourceGroupList(__root__=[])
     instances: List[PathNode] = []
 
-    auth_type: AuthTypeEnum = AuthTypeEnum.ABAC.value
-
     @classmethod
-    def from_policy(cls, policy: Policy) -> "UniversalPolicy":
+    def from_policy(cls, policy: Policy, action_auth_type: str) -> "UniversalPolicy":
         p = cls(
             action_id=policy.action_id,
             policy_id=policy.policy_id,
+            backend_policy_id=policy.backend_policy_id,
             expired_at=policy.expired_at,
             resource_groups=policy.resource_groups,
         )
         # 主要是初始化expression_resource_groups、instances、auth_type 这3个与RBAC和ABAC相关的数据
-        p._init_abac_and_rbac_data(policy.resource_groups)
+        p._init_abac_and_rbac_data(policy.resource_groups, action_auth_type)
         return p
 
     @staticmethod
-    def _is_absolute_abac(resource_groups: ResourceGroupList) -> bool:
+    def _is_absolute_abac(resource_groups: ResourceGroupList, action_auth_type: str) -> bool:
         """
         对于策略，某些情况下可以立马判断为ABAC策略
         """
+        # 0. Action在模型注册时是否表示支持RBAC，如果不支持则保持原有ABAC
+        if action_auth_type == AuthTypeEnum.ABAC.value:
+            return True
+
         # TODO: 写单元测试时，顺便添加一些debug日志, 排查问题时能精确知道在哪个分支被return, 降低成本
         resource_group_count = len(resource_groups)
         # 1. 与资源实例无关
@@ -467,7 +483,7 @@ class UniversalPolicy(Policy):
         return expression_resource_groups, list(set(rbac_instances))
 
     @staticmethod
-    def _calculate_auth_type(has_abac: bool, has_rbac: bool) -> AuthTypeEnum:
+    def _calculate_auth_type(has_abac: bool, has_rbac: bool) -> str:
         """计算auth_type"""
         # 1 abac和rbac都有
         if has_abac and has_rbac:
@@ -483,14 +499,14 @@ class UniversalPolicy(Policy):
 
         return AuthTypeEnum.NONE.value
 
-    def _init_abac_and_rbac_data(self, resource_groups: ResourceGroupList):
+    def _init_abac_and_rbac_data(self, resource_groups: ResourceGroupList, action_auth_type: str):
         """
         拆分出RBAC和ABAC权限
         并填充到expression_resource_groups和instances_resource_groups字段里
         同时计算出策略类型auth_type
         """
         # 1. 绝对是ABAC策略的情况，则无需进行策略的分析拆分
-        if self._is_absolute_abac(resource_groups):
+        if self._is_absolute_abac(resource_groups, action_auth_type):
             self.expression_resource_groups = resource_groups
             return
 
@@ -515,23 +531,21 @@ class UniversalPolicy(Policy):
         policy_changed_content = UniversalPolicyChangedContent(action_id=self.action_id, auth_type=self.auth_type)
 
         # ABAC
-        self_has_abac = len(self.expression_resource_groups) > 0
-        old_has_abac = len(old.expression_resource_groups) > 0
         # 新老策略都有ABAC策略，则最终是使用新策略直接覆盖
-        if self_has_abac and old_has_abac:
+        if self.has_abac() and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.UPDATED.value,
-                id=old.policy_id,
+                id=old.backend_policy_id,
                 resource_expression=self.to_resource_expression(system_id),
             )
         # 新策略无ABAC策略，但老策略有ABAC策略，则需要将老的ABAC策略删除
-        elif not self_has_abac and old_has_abac:
+        elif self.has_abac and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.DELETED.value,
-                id=old.policy_id,
+                id=old.backend_policy_id,
             )
-        # 新策略由ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
-        elif self_has_abac and old_has_abac:
+        # 新策略有ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
+        elif self.has_abac() and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.CREATED.value,
                 resource_expression=self.to_resource_expression(system_id),
@@ -551,3 +565,9 @@ class UniversalPolicy(Policy):
         assert len(self.expression_resource_groups) > 0
         translator = ResourceExpressionTranslator()
         return translator.translate(system_id, self.expression_resource_groups.dict())
+
+    def has_abac(self) -> bool:
+        return len(self.expression_resource_groups) > 0
+
+    def has_rbac(self) -> bool:
+        return len(self.instances) > 0

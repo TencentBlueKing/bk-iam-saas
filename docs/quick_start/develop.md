@@ -83,7 +83,7 @@ BK_IAM_V3_INNER_HOST="http://127.0.0.1:9000"  # 权限中心后台地址
 
 ## 创建并初始化数据库  
 
-1) 在 mysql 中创建名为 bk_sops 的数据库
+1) 在 mysql 中创建名为 bk_iam 的数据库
 ```sql
 CREATE DATABASE `bk_iam` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 ```
