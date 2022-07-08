@@ -19,10 +19,10 @@ from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.time import PERMANENT_SECONDS
 from backend.component import iam
 from backend.service.action import ActionList
+from backend.service.constants import SubjectType
+from backend.service.models import Policy, Subject, UniversalPolicyChangedContent
 from backend.util.json import json_dumps
 
-from ..constants import SubjectType
-from ..models import Policy, Subject, UniversalPolicyChangedContent
 from .backend import BackendPolicyOperationService
 from .common import UniversalPolicyChangedContentAnalyzer
 from .query import new_backend_policy_list_by_subject

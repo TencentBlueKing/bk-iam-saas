@@ -18,9 +18,8 @@ from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS
 from backend.component import iam
-
-from ..constants import SubjectType
-from ..models import BackendThinPolicy, Policy, Subject, SystemCounter
+from backend.service.constants import SubjectType
+from backend.service.models import BackendThinPolicy, Policy, Subject, SystemCounter
 
 logger = logging.getLogger("app")
 

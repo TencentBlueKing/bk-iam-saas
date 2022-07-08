@@ -11,9 +11,8 @@ specific language governing permissions and limitations under the License.
 from typing import Dict, Iterable, List, Tuple
 
 from backend.component import iam
-
-from ..constants import AbacPolicyChangeType, AuthTypeEnum
-from ..models import (
+from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum
+from backend.service.models import (
     AbacPolicyChangeContent,
     Policy,
     RbacPolicyChangeContent,
