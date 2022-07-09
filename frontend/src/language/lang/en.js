@@ -392,7 +392,9 @@ export const m = {
         '资源权限管理': 'Resource rights management',
         '发起需求': 'Initiate demand',
         '工作台': 'Workbench',
-        '开发者': 'Developers'
+        '开发者': 'Developers',
+        '切换分级管理员': 'switch rating manager',
+        '【分级管理员】 功能，全面升级为【权限管理空间】啦！': 'The function of [Grading Administrator] has been fully upgraded to [Permission Management Space]!'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',

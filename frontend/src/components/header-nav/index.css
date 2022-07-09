@@ -170,7 +170,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             top: 55px;
             right: 20px;
             width: 135px;
-            height: 50px;
+            height: 78px;
             border-radius: 0 2px 2px 0;
             background-color: #f5f6fa;
             box-shadow: 5px 1px 7px 0 rgba(12, 34, 59, .1);
@@ -300,8 +300,12 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 position: absolute;
                 bottom:7px;
                 margin-top:10px;
-                left: 30px;
                 color: #63656e;
+                width: 135px;
+                &:hover {
+                    background: #E1ECFF;
+                    color: #3A84FF;
+                }
                 &.right{
                     right:0px;
                 }
@@ -310,6 +314,9 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     padding: 0 10px;
                     line-height: 32px;
                     cursor: pointer;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                     &.active {
                         background-color: #f5f6fa;
                         color: #313238;
@@ -327,7 +334,13 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     .back-staff {
                         vertical-align:middle;
                     }
+                    .iam-manager-icon{
+                        font-size: 16px
+                    }
                 }
+            }
+            .auth-manager {
+                bottom:40px;
             }
             .userInfo {
                 background-color:#f4f6fa;

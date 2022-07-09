@@ -308,7 +308,9 @@ const store = new Vuex.Store({
 
         index: 0,
 
-        navCurRoleId: 0
+        navCurRoleId: 0,
+
+        showNoviceGuide: false
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -331,7 +333,8 @@ const store = new Vuex.Store({
         fromRouteName: state => state.fromRouteName,
         navData: state => state.navData,
         index: state => state.index,
-        navCurRoleId: state => state.navCurRoleId
+        navCurRoleId: state => state.navCurRoleId,
+        showNoviceGuide: state => state.showNoviceGuide
     },
     mutations: {
         updateHost (state, params) {
@@ -491,6 +494,10 @@ const store = new Vuex.Store({
 
         updateIndex (state, payload) {
             state.index = payload;
+        },
+
+        updateSelectManager (state, payload) {
+            state.showNoviceGuide = payload;
         }
     },
     actions: {
