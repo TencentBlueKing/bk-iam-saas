@@ -43,7 +43,13 @@
                     v-show="isShowGradingWrapper"
                     v-bk-clickoutside="handleClickOutSide">
                     <template>
-                        <div class="operation right">
+                        <div class="operation auth-manager">
+                            <div class="user-dropdown-item " @click="handleManager">
+                                <Icon type="grade-admin" class="iam-manager-icon" />
+                                {{ $t(`m.nav['切换分级管理员']`) }}
+                            </div>
+                        </div>
+                        <div class="operation">
                             <div class="user-dropdown-item " @click="handleLogout">
                                 <Icon type="logout" />
                                 {{ $t(`m.nav['注销']`) }}
@@ -483,6 +489,13 @@
                 window.localStorage.removeItem('applyGroupList');
                 window.localStorage.removeItem('index');
                 window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
+            },
+
+            handleManager () {
+                if (this.index === 1) return;
+                const data = this.navData.find(e => e.type !== 'staff');
+                this.handleSelect(data, 1);
+                this.$store.commit('updateSelectManager', true);
             },
 
             resetLocalStorage () {
