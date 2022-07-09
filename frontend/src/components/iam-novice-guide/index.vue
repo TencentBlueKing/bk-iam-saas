@@ -186,7 +186,7 @@
                     border-top: none;
                     border-right: none;
                 }
-            },
+            }
 
             .mamagerTriangle {
                 &.left {
