@@ -330,6 +330,13 @@ class GroupBiz:
         relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at)
         return self._convert_to_subject_group_beans(relations)
 
+    def list_all_user_department_group(self, subject: Subject) -> List[SubjectGroupBean]:
+        """
+        查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)
+        """
+        relations = self.group_svc.list_user_department_group(subject)
+        return self._convert_to_subject_group_beans(relations)
+
     def update_members_expired_at(self, group_id: int, members: List[GroupMemberExpiredAtBean]):
         """
         更新用户组成员的过期时间

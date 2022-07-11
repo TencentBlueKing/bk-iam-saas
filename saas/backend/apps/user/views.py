@@ -84,6 +84,25 @@ class UserGroupViewSet(GenericViewSet):
         return Response({})
 
 
+class UserDepartmentGroupViewSet(GenericViewSet):
+
+    pagination_class = None
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-继承的用户组列表",
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
+        relations = self.biz.list_all_user_department_group(subject)
+        slz = GroupSLZ(instance=relations, many=True)
+        return Response(slz.data)
+
+
 class UserGroupRenewViewSet(GenericViewSet):
 
     pagination_class = CustomPageNumberPagination
