@@ -15,6 +15,7 @@ from django.db.models import Count, F
 from pydantic import BaseModel
 
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreGroupSync
+from backend.common.lock import gen_policy_alter_lock
 from backend.common.time import PERMANENT_SECONDS
 
 from .action import ActionList
@@ -78,17 +79,18 @@ class TemplateService:
         # 计算变更策略内容
         changed_policies = self._cal_changed_policies(system_id, [], policy_list.policies, [])
 
-        # 变更
-        with transaction.atomic():
-            count, _ = PermTemplatePolicyAuthorized.objects.filter(
-                template_id=template_id, subject_type=subject.type, subject_id=subject.id
-            ).delete()
+        with gen_policy_alter_lock(template_id, system_id, subject.type, subject.id):
+            # 变更
+            with transaction.atomic():
+                count, _ = PermTemplatePolicyAuthorized.objects.filter(
+                    template_id=template_id, subject_type=subject.type, subject_id=subject.id
+                ).delete()
 
-            if count != 0:
-                # 更新冗余count
-                PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") - count)
-                # 后端处理
-                self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
+                if count != 0:
+                    # 更新冗余count
+                    PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") - count)
+                    # 后端处理
+                    self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
 
     def grant_subject(
         self,
@@ -114,13 +116,14 @@ class TemplateService:
         # 设置的ActionAuthType
         authorized_template.auth_types = {cp.action_id: cp.auth_type for cp in changed_policies}
 
-        # 模板授权
-        with transaction.atomic():
-            authorized_template.save(force_insert=True)
-            PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") + 1)
+        with gen_policy_alter_lock(template_id, system_id, subject.type, subject.id):
+            # 模板授权
+            with transaction.atomic():
+                authorized_template.save(force_insert=True)
+                PermTemplate.objects.filter(id=template_id).update(subject_count=F("subject_count") + 1)
 
-            # 后端处理
-            self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
+                # 后端处理
+                self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
 
     def alter_template_auth(
         self, subject: Subject, template_id: int, create_policies: List[Policy], delete_action_ids: List[str]
@@ -244,16 +247,17 @@ class TemplateService:
         action_auth_types: Dict[str, str],
     ):
         """执行模板授权的更新"""
-        with transaction.atomic():
-            authorized_template = PermTemplatePolicyAuthorized.objects.select_for_update().get(
-                id=authorized_template_id,
-            )
-            authorized_template.data = {"actions": [p.dict() for p in saas_policies]}
-            authorized_template.auth_types = action_auth_types
-            authorized_template.save(update_fields=["_data"])
+        with gen_policy_alter_lock(template_id, system_id, subject.type, subject.id):
+            with transaction.atomic():
+                authorized_template = PermTemplatePolicyAuthorized.objects.select_for_update().get(
+                    id=authorized_template_id,
+                )
+                authorized_template.data = {"actions": [p.dict() for p in saas_policies]}
+                authorized_template.auth_types = action_auth_types
+                authorized_template.save(update_fields=["_data"])
 
-            # 后端策略变更
-            self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
+                # 后端策略变更
+                self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
 
     def _ignore_path(self, policies: List[Policy], action_list: Optional[ActionList]):
         """policies忽略路径"""

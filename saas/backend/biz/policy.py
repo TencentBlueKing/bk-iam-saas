@@ -22,7 +22,7 @@ from pydantic.main import BaseModel
 from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
-from backend.common.lock import gen_policy_alert_lock
+from backend.common.lock import gen_policy_alter_lock
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
 from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
@@ -1442,8 +1442,9 @@ def policy_change_lock(func):
         system_id = kwargs["system_id"] if "system_id" in kwargs else args[0]
         subject = kwargs["subject"] if "subject" in kwargs else args[1]
 
-        # 加 system + subject 锁
-        with gen_policy_alert_lock(f"{system_id}:{subject.type}:{subject.id}"):
+        # 加 template_id + system + subject 锁
+        template_id = 0  # 自定义权限，TemplateID默认为0
+        with gen_policy_alter_lock(template_id, system_id, subject.type, subject.id):
             return func(*args, **kwargs)
 
     return wrapper
