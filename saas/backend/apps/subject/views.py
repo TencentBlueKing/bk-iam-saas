@@ -94,7 +94,7 @@ class SubjectDepartmentGroupViewSet(GenericViewSet):
     biz = GroupBiz()
 
     @swagger_auto_schema(
-        operation_description="我的权限-继承的用户组列表",
+        operation_description="我的权限-继承自部门的用户组列表",
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["subject"],
     )
