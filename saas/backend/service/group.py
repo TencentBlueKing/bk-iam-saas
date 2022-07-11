@@ -132,26 +132,29 @@ class GroupService:
         """
         if subject.type != SubjectType.USER.value:
             return []
-        user_id = subject.id
 
         relations = []
-        user = User.objects.get(username=user_id)
+        user = User.objects.get(username=subject.id)
         # 查询用户直接加入的部门
         department_ids = DepartmentMember.objects.filter(user_id=user.id).values_list("department_id", flat=True)
         department_set = set()
+        group_id_set = set()
         for department in Department.objects.filter(id__in=department_ids):
             # 查询部门继承的所有部门
             for ancestor in department.get_ancestors(include_self=True):
                 if ancestor.id in department_set:
                     continue
                 department_set.add(ancestor.id)
+
                 # NOTE: 获取部门加入的所有组列表, 注意可能会有性能问题(分页查询)
                 all_subject_groups = iam.list_all_subject_groups(SubjectType.DEPARTMENT.value, str(ancestor.id))
-                dep_relations = [
-                    SubjectGroup(department_id=ancestor.id, department_name=ancestor.name, **one)
-                    for one in all_subject_groups
-                ]
-                relations.extend(dep_relations)
+                for sg in all_subject_groups:
+                    if sg["id"] in group_id_set:
+                        continue
+                    group_id_set.add(sg["id"])
+
+                    relations.append(SubjectGroup(department_id=ancestor.id, department_name=ancestor.name, **sg))
+
         return relations
 
     def list_subject_group_before_expired_at(

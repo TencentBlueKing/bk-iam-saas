@@ -85,6 +85,26 @@ class SubjectGroupViewSet(GenericViewSet):
         return Response({})
 
 
+class SubjectDepartmentGroupViewSet(GenericViewSet):
+
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
+
+    pagination_class = None
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-继承的用户组列表",
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["subject"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
+        relations = self.biz.list_all_user_department_group(subject)
+        return Response([one.dict() for one in relations])
+
+
 class SubjectSystemViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
