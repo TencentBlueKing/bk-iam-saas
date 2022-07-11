@@ -48,7 +48,7 @@ class UserGroupViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         subject = Subject(type=SubjectType.USER.value, id=request.user.username)
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
-        count, relations = self.biz.list_paging_subject_group(subject, is_recursive=True, limit=limit, offset=offset)
+        count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
         slz = GroupSLZ(instance=relations, many=True)
         return Response({"count": count, "results": slz.data})
 
