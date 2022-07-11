@@ -52,9 +52,7 @@ class AdminSubjectGroupViewSet(GenericViewSet):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
         # 分页参数
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
-        count, relations = self.group_biz.list_paging_subject_group(
-            subject, is_recursive=True, limit=limit, offset=offset
-        )
+        count, relations = self.group_biz.list_paging_subject_group(subject, limit=limit, offset=offset)
         results = [one.dict(include={"id", "name", "expired_at"}) for one in relations]
         return Response({"count": count, "results": results})
 

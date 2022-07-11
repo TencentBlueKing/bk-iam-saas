@@ -115,30 +115,25 @@ class GroupService:
             department_count=F("department_count") - type_count[SubjectType.DEPARTMENT.value],
         )
 
-    def list_subject_group(
-        self, subject: Subject, is_recursive: bool = False, limit: int = 10, offset: int = 0
-    ) -> Tuple[int, List[SubjectGroup]]:
+    def list_subject_group(self, subject: Subject, limit: int = 10, offset: int = 0) -> Tuple[int, List[SubjectGroup]]:
         """
         查询Subject的Group关系列表
-
-        is_recursive: 是否递归查找user的部门所属的Group
         """
         iam_data = iam.get_subject_groups(subject.type, subject.id, limit=limit, offset=offset)
         count = iam_data["count"]
 
         relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
 
-        if subject.type == SubjectType.USER.value and is_recursive:
-            # 查询用户有的部门
-            dep_relations = self._list_user_department_group(subject.id)
-            relations.extend(dep_relations)
-
         return count, relations
 
-    def _list_user_department_group(self, user_id: str) -> List[SubjectGroup]:
+    def list_user_department_group(self, subject: Subject) -> List[SubjectGroup]:
         """
         查询user的部门递归的Group
         """
+        if subject.type != SubjectType.USER.value:
+            return []
+        user_id = subject.id
+
         relations = []
         user = User.objects.get(username=user_id)
         # 查询用户直接加入的部门

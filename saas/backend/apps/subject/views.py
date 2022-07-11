@@ -54,7 +54,7 @@ class SubjectGroupViewSet(GenericViewSet):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
         # 分页参数
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
-        count, relations = self.biz.list_paging_subject_group(subject, is_recursive=True, limit=limit, offset=offset)
+        count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
         return Response({"count": count, "results": [one.dict() for one in relations]})
 
     @swagger_auto_schema(

@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from itertools import groupby
-from typing import List
 from urllib.parse import urlencode
 
 from celery import task
@@ -21,10 +20,10 @@ from django.template.loader import render_to_string
 from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
-from backend.biz.group import GroupBiz, SubjectGroupBean
+from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.time import db_time, get_soon_expire_ts
-from backend.component import esb, iam
+from backend.component import esb
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
 from backend.util.url import url_join
