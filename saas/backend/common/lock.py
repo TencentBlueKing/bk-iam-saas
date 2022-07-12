@@ -67,7 +67,7 @@ def gen_organization_sync_lock() -> RedisLock:
 
 
 def gen_policy_alter_lock(template_id: int, system_id: str, subject_type: str, subject_id: str) -> RedisLock:
-    key = f"{template_id}{system_id}:{subject_type}:{subject_id}"
+    key = f"{template_id}:{system_id}:{subject_type}:{subject_id}"
     return RedisLock(LockTypeEnum.POLICY_ALTER.value, suffix=key, timeout=10)
 
 

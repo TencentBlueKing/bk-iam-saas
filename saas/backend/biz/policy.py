@@ -1429,7 +1429,7 @@ class PolicyQueryBiz:
         return self.svc.get_policy_system_by_id(policy_id, subject)
 
 
-def policy_change_lock(func):
+def custom_policy_change_lock(func):
     """装饰器：策略变更的分布式全局锁，避免并发导致数据错误
     Note: 若被添加于类的方法上，需要使用method_decorator，主要是为了不关注类的self/cls参数
     from django.utils.decorators import method_decorator
@@ -1456,7 +1456,7 @@ class PolicyOperationBiz:
     svc = PolicyOperationService()
     action_svc = ActionService()
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """
         删除policies
@@ -1469,7 +1469,7 @@ class PolicyOperationBiz:
         """
         self.svc.delete_temporary_policies_by_ids(system_id, subject, policy_ids)
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def delete_by_resource_group_id(
         self, system_id: str, subject: Subject, policy_id: int, resource_group_id: str
     ) -> PolicyBean:
@@ -1494,7 +1494,7 @@ class PolicyOperationBiz:
 
         return policy
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def delete_partial(
         self,
         system_id: str,
@@ -1536,7 +1536,7 @@ class PolicyOperationBiz:
 
         return policy
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def update(self, system_id: str, subject: Subject, policies: List[PolicyBean]) -> List[PolicyBean]:
         """
         更新subject的权限策略
@@ -1564,7 +1564,7 @@ class PolicyOperationBiz:
 
         return update_policy_list.policies
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def alter(self, system_id: str, subject: Subject, policies: List[PolicyBean]):
         """
         变更subject权限策略
@@ -1588,7 +1588,7 @@ class PolicyOperationBiz:
             action_list=self.action_svc.new_action_list(system_id),
         )
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def revoke(self, system_id: str, subject: Subject, delete_policies: List[PolicyBean]) -> List[PolicyBean]:
         """
         删除策略，这里diff可能进行部分删除，若完全一样，则整条策略删除
@@ -1612,7 +1612,7 @@ class PolicyOperationBiz:
 
         return update_policy_list.policies + whole_delete_policy_list.policies
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def update_due_to_renamed_resource(
         self, system_id: str, subject: Subject, policies: List[PolicyBean]
     ) -> List[PolicyBean]:
