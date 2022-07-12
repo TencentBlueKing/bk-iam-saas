@@ -492,7 +492,6 @@
             },
 
             handleManager () {
-                if (this.index === 1) return;
                 const data = this.navData.find(e => e.type !== 'staff');
                 this.handleSelect(data, 1);
                 this.$store.commit('updateSelectManager', true);
