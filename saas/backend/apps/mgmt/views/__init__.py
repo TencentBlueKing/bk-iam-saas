@@ -9,7 +9,20 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from backend.apps.group.views import GroupSystemViewSet
+from backend.apps.mgmt.views.action import MgmtActionViewSet
+from backend.apps.mgmt.views.group import (
+    MgmtGroupMemberUpdateExpiredAtViewSet,
+    MgmtGroupMemberViewSet,
+    MgmtGroupPolicyViewSet,
+    MgmtGroupTemplateViewSet,
+    MgmtGroupTransferView,
+    MgmtGroupViewSet,
+)
 from backend.apps.mgmt.views.long_task import LongTaskViewSet
+from backend.apps.mgmt.views.role import MgmtRoleAuthorizationScopeView, MgmtRoleSubjectScopeView
+from backend.apps.mgmt.views.system import MgmtSystemViewSet
+from backend.apps.mgmt.views.template import MgmtTemplateViewSet
 from backend.apps.mgmt.views.white_list import (
     AdminApiWhiteListViewSet,
     ApiViewSet,
@@ -23,4 +36,17 @@ __all__ = [
     "AuthorizationApiWhiteListViewSet",
     "ManagementApiWhiteListViewSet",
     "LongTaskViewSet",
+    "MgmtGroupViewSet",
+    "MgmtGroupMemberViewSet",
+    "MgmtGroupMemberUpdateExpiredAtViewSet",
+    "MgmtGroupMemberUpdateExpiredAtViewSet",
+    "MgmtGroupPolicyViewSet",
+    "GroupSystemViewSet",
+    "MgmtGroupTransferView",
+    "MgmtGroupTemplateViewSet",
+    "MgmtRoleSubjectScopeView",
+    "MgmtRoleAuthorizationScopeView",
+    "MgmtTemplateViewSet",
+    "MgmtSystemViewSet",
+    "MgmtActionViewSet",
 ]
