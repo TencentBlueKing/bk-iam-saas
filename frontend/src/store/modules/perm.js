@@ -543,6 +543,24 @@ export default {
         },
 
         /**
+         *  所属部门的的用户组列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getDepartMentsPersonalGroups ({ commit, state, dispatch }, config) {
+            return http.get(
+                `${AJAX_URL_PREFIX}/users/departments/-/groups/`,
+                {},
+                config
+            );
+        },
+
+        /**
          * 权限交接
          *
          * @param {Function} commit store commit mutation handler

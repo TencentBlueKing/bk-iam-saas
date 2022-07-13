@@ -497,7 +497,8 @@ export const m = {
         '通过组织加入的组无法退出': 'Groups joined through the organization cannot drop out',
         '直接加入': 'Joined Directly',
         '通过组织加入': 'Joined By Organization',
-        '组权限': 'Permissions'
+        '组权限': 'Permissions',
+        '所属部门用户组权限': 'Department User Group Permissions'
     },
     permTemplate: {
         '模板名': 'Template Name',
