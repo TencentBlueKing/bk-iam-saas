@@ -330,7 +330,7 @@ export default {
         },
 
         /**
-         * 加入用户组的权限 用户组列表
+         * 加入部门用户组的权限 用户组列表
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
