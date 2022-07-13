@@ -1,5 +1,5 @@
 <template>
-    <div class="my-perm-group-perm" v-bkloading="{ isLoading, opacity: 1 }">
+    <div class="my-perm-group-perm" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
         <bk-table
             data-test-id="myPerm_table_group"
             :data="curPageData"
@@ -68,7 +68,7 @@
             @on-cancel="cancelDelete"
             @on-sumbit="confirmDelete" />
 
-        <render-group-perm-sideslider
+        <render-perm-sideslider
             :show="isShowPermSidesilder"
             :name="curGroupName"
             :group-id="curGroupId"
@@ -98,18 +98,20 @@
 <script>
     import { mapGetters } from 'vuex';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
-    import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
+    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
 
     export default {
         name: '',
         components: {
             DeleteDialog,
-            RenderGroupPermSideslider
+            RenderPermSideslider
         },
         props: {
-            personalGroupList: {
-                type: Array,
-                default: () => []
+            data: {
+                type: Object,
+                default: () => {
+                    return {};
+                }
             }
         },
         data () {
@@ -119,7 +121,6 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                    // limitList: [5, 10, 20, 50]
                 },
                 curPageData: [],
                 deleteDialogConf: {
@@ -135,35 +136,27 @@
                 // 控制侧边弹出层显示
                 isShowGradeSlider: false,
                 sliderLoading: false,
-                gradeSliderTitle: '',
-                isLoading: false
+                gradeSliderTitle: ''
             };
         },
         computed: {
             ...mapGetters(['user'])
         },
-        watch: {
-            personalGroupList: {
-                handler (v) {
-                    if (v.length) {
-                        // this.dataList.splice(0, this.dataList.length, ...v);
-                        // this.initPageConf();
-                        // this.curPageData = this.getDataByPage(this.pageConf.current);
-                        this.getDataByPage();
-                    }
-                },
-                immediate: true
-            }
-        },
         async created () {
+            await this.fetchSystems();
         },
         methods: {
-            /**
-             * 获取 user 信息
-             */
-            async fetchUser () {
+            async fetchSystems () {
+                this.pageLoading = true;
+                const { type } = this.data;
                 try {
-                    await this.$store.dispatch('userInfo');
+                    const res = await this.$store.dispatch('perm/getDepartPermGroups', {
+                        subjectType: type === 'user' ? type : 'department',
+                        subjectId: type === 'user' ? this.data.username : this.data.id
+                    });
+                    this.dataList = res.data || [];
+                    this.pageConf.count = this.dataList.length;
+                    this.curPageData = this.getDataByPage(this.pageConf.current);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -173,6 +166,8 @@
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
+                } finally {
+                    this.pageLoading = false;
                 }
             },
 
@@ -198,7 +193,8 @@
              */
             handlePageChange (page = 1) {
                 this.pageConf.current = page;
-                this.getDataByPage(page);
+                const data = this.getDataByPage(page);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             },
 
             /**
@@ -208,39 +204,19 @@
              *
              * @return {Array} 当前页数据
              */
-            async getDataByPage () {
-                this.isLoading = true;
-                try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
-                        page_size: this.pageConf.limit,
-                        page: this.pageConf.current
-                    });
-                    this.pageConf.count = res.data.count;
-                    this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.isLoading = false;
+            getDataByPage (page) {
+                if (!page) {
+                    this.pageConf.current = page = 1;
                 }
-                // if (!page) {
-                //     this.pageConf.current = page = 1;
-                // }
-                // let startIndex = (page - 1) * this.pageConf.limit;
-                // let endIndex = page * this.pageConf.limit;
-                // if (startIndex < 0) {
-                //     startIndex = 0;
-                // }
-                // if (endIndex > this.dataList.length) {
-                //     endIndex = this.dataList.length;
-                // }
-                // return this.dataList.slice(startIndex, endIndex);
+                let startIndex = (page - 1) * this.pageConf.limit;
+                let endIndex = page * this.pageConf.limit;
+                if (startIndex < 0) {
+                    startIndex = 0;
+                }
+                if (endIndex > this.dataList.length) {
+                    endIndex = this.dataList.length;
+                }
+                return this.dataList.slice(startIndex, endIndex);
             },
 
             /**
@@ -359,5 +335,24 @@
     };
 </script>
 <style lang="postcss">
-    @import './index.css';
+    .iam-group-perm-wrapper {
+        height: calc(100vh - 204px);
+        .iam-perm-ext-cls {
+            margin-top: 10px;
+        }
+        .bk-table {
+            border-right: none;
+            border-bottom: none;
+            &.is-be-loading {
+                border-bottom: 1px solid #dfe0e5;
+            }
+            .user-group-name {
+                color: #3a84ff;
+                cursor: pointer;
+                &:hover {
+                    color: #699df4;
+                }
+            }
+        }
+    }
 </style>

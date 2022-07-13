@@ -1,5 +1,5 @@
 <template>
-    <div class="iam-perm-renewal-table-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
+    <div class="iam-perm-renewal-table-wrapper" v-bkloading="{ isLoading: loading || isLoading, opacity: 1 }">
         <bk-table
             v-show="!loading"
             :data="tableList"
@@ -101,7 +101,8 @@
                 },
                 currentBackup: 1,
                 tableProps: [],
-                systemFilter: []
+                systemFilter: [],
+                isLoading: false
             };
         },
         computed: {
@@ -220,9 +221,6 @@
             },
 
             pageChange (page = 1) {
-                if (this.currentBackup === page) {
-                    return;
-                }
                 this.pagination.current = page;
                 this.fetchTableData();
             },
@@ -254,14 +252,24 @@
             },
 
             async fetchTableData () {
+                this.isLoading = true;
                 try {
                     const res = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                        limit: this.pagination.limit,
-                        offset: (this.pagination.current - 1) * this.pagination.limit
+                        page_size: this.pagination.limit,
+                        page: this.pagination.current
                     });
                     this.tableList = res.data.results || [];
-                } catch (error) {
-                    
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.isLoading = false;
                 }
             }
 
