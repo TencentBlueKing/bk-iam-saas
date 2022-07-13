@@ -35,7 +35,7 @@ class Policy(BaseModel):
 
     # policy
     _resources = models.TextField("资源策略", db_column="resources")  # json
-    policy_id = models.BigIntegerField("后端policy_id", default=0)
+    # policy_id = models.BigIntegerField("后端policy_id", default=0)
 
     # 策略的鉴权类型
     auth_type = models.CharField(

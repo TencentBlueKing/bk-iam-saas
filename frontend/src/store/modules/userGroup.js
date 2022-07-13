@@ -151,6 +151,22 @@ export default {
         },
 
         /**
+         * 用户组批量添加成员
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        batchAddUserGroupMember ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            return http.post(`${AJAX_URL_PREFIX}/groups/members/`, requestParams, config);
+        },
+
+        /**
          * 用户组删除成员
          *
          * @param {Function} commit store commit mutation handler

@@ -35,10 +35,10 @@ class AuthTypeStatistics(BaseModel):
         self.rbac_count += counter.get(AuthTypeEnum.RBAC.value, 0)
         self.all_count += counter.get(AuthTypeEnum.ALL.value, 0)
 
-    def is_all_auth_type(self):
+    def is_all_auth_type(self) -> bool:
         return self.all_count > 0 or (self.abac_count > 0 and self.rbac_count > 0)
 
-    def auth_type(self):
+    def auth_type(self) -> str:
         """根据统计结果，分析出最终auth_type"""
         if self.is_all_auth_type():
             return AuthTypeEnum.ALL.value
@@ -128,13 +128,13 @@ class BackendPolicyOperationService:
 
             # 对于abac权限，按变更类型分类
             if p.abac.change_type == AbacPolicyChangeType.CREATED.value:
-                created_policies.append(
-                    p.abac.dict(include={"action_id", "resource_expression", "environment", "expired_at"})
-                )
+                created_policy = p.abac.dict(include={"resource_expression", "environment", "expired_at"})
+                created_policy["action_id"] = p.action_id
+                created_policies.append(created_policy)
             elif p.abac.change_type == AbacPolicyChangeType.UPDATED.value:
-                updated_policies.append(
-                    p.abac.dict(include={"id", "action_id", "resource_expression", "environment", "expired_at"})
-                )
+                updated_policy = p.abac.dict(include={"id", "resource_expression", "environment", "expired_at"})
+                updated_policy["action_id"] = p.action_id
+                updated_policies.append(updated_policy)
             elif p.abac.change_type == AbacPolicyChangeType.DELETED.value:
                 deleted_policy_ids.append(p.abac.id)
 
@@ -157,7 +157,7 @@ class BackendPolicyOperationService:
         # 2. 查询用户组自定义权限里每条策略类型
         custom_perm_auth_types = PolicyModel.objects.filter(
             subject_type=subject.type, subject_id=subject.id, system_id=system_id
-        ).valuess("action_id", "auth_type")
+        ).values("action_id", "auth_type")
         # 剔除本次变更的策略
         auth_types = [
             i["auth_type"]

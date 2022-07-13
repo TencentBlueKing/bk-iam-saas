@@ -43,6 +43,9 @@ class SuperManagerMemberSLZ(serializers.Serializer):
     username = serializers.CharField(label="用户名")
     has_system_permission = serializers.BooleanField(label="是否拥有系统所有权限")
 
+    class Meta:
+        ref_name = "AdminSuperManagerMemberSLZ"
+
 
 class SystemManagerWithMembersSLZ(RatingMangerListSLZ):
     has_system_permission = serializers.SerializerMethodField(label="是否拥有系统所有权限")

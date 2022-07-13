@@ -187,7 +187,7 @@ class ActionGroupBiz:
             for action in action_group.actions:
                 if action.id in action_ids:
                     result[action.id].extend(
-                        [a.id for a in action_group.actions if a.id != action.id]
+                        [a.id for a in action_group.actions if a.id not in action_ids]
                     )  # 兼容可能一个操作在多个分组中
                     continue
 

@@ -223,7 +223,8 @@ export const m = {
         '新增模板': 'Add a template',
         '导出': 'export',
         '查询': 'Search',
-        '生效条件': 'Effective condition'
+        '生效条件': 'Effective condition',
+        '批量添加成员': 'Add members in bulk'
     },
     // 校验
     verify: {
@@ -391,7 +392,9 @@ export const m = {
         '资源权限管理': 'Resource rights management',
         '发起需求': 'Initiate demand',
         '工作台': 'Workbench',
-        '开发者': 'Developers'
+        '开发者': 'Developers',
+        '切换分级管理员': 'switch rating manager',
+        '【分级管理员】 功能，全面升级为【权限管理空间】啦！': 'The function of [Grading Administrator] has been fully upgraded to [Permission Management Space]!'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -428,7 +431,7 @@ export const m = {
         '保存为常用操作提示': 'You can save a batch of frequently selected operations as common operations',
         '请先勾选一些操作': 'Please check some operations first',
         '取消续期': 'Cancel renewal',
-        '根据你的需求，自动匹配到以下的用户组（包含更多可申请权限）': 'According to your requirements, automatically matched to the following user groups (including more applicable permissions)',
+        '根据你的需求，自动匹配到以下的用户组': 'According to your requirements, automatically matched to the following user groups (including more applicable permissions)',
         '你也可以继续申请独立权限': 'You can also continue to apply for independent access',
         '你可以申请独立权限': 'You can apply for independent access',
         '以下相关权限，你可以按需申请': 'The following permissions are associated permissions, you can apply for them as needed',
@@ -687,6 +690,7 @@ export const m = {
         '授权人员范围': 'This range indicates who you can assign permissions to, and only they can apply for the user group you created',
         '聚合操作': 'You can select instances in batches by combining selections',
         '切换分级管理员': 'Congratulations on becoming a hierarchical administrator! You can switch identities here',
+        '分级管理员导航': 'The original [Classification Manager] function has been adjusted here!',
         '创建模板': `Let's create a permission template first`,
         '创建用户组': `Let's create a group first`,
         '创建审批流程': 'You can also bind the required approval process to the user group',
