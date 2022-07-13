@@ -137,7 +137,7 @@
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id,
                         limit: this.pageConf.limit,
-                        offset: (this.pageConf.current - 1) * this.pageConf.limit
+                        offset: this.pageConf.current
                     });
                     this.pageConf.count = res.data.count || 0;
                     this.dataList.splice(0, this.dataList.length, ...(res.data.results || []));

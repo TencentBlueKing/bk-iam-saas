@@ -297,14 +297,12 @@ class GroupBiz:
         return relation_beans
 
     def list_paging_subject_group(
-        self, subject: Subject, is_recursive: bool = False, limit: int = 10, offset: int = 0
+        self, subject: Subject, limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[SubjectGroupBean]]:
         """
         查询subject所属的用户组
         """
-        count, relations = self.group_svc.list_subject_group(
-            subject, is_recursive=is_recursive, limit=limit, offset=offset
-        )
+        count, relations = self.group_svc.list_subject_group(subject, limit=limit, offset=offset)
         return count, self._convert_to_subject_group_beans(relations)
 
     def list_paging_subject_group_before_expired_at(
@@ -330,6 +328,13 @@ class GroupBiz:
         注意: 分页查询, 可能会有性能问题
         """
         relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at)
+        return self._convert_to_subject_group_beans(relations)
+
+    def list_all_user_department_group(self, subject: Subject) -> List[SubjectGroupBean]:
+        """
+        查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)
+        """
+        relations = self.group_svc.list_user_department_group(subject)
         return self._convert_to_subject_group_beans(relations)
 
     def update_members_expired_at(self, group_id: int, members: List[GroupMemberExpiredAtBean]):
