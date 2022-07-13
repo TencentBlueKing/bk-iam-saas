@@ -125,13 +125,13 @@
                 try {
                     const [res1, res2, res3, res4, res5, res6] = await Promise.all([
                         this.$store.dispatch('perm/getPersonalGroups', {
-                            limit: 10,
-                            offset: 0
+                            page_size: 10,
+                            page: 1
                         }),
                         this.$store.dispatch('permApply/getHasPermSystem'),
                         this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                            limit: 10,
-                            offset: 0
+                            page_size: 10,
+                            page: 1
                         }),
                         this.$store.dispatch('renewal/getExpireSoonPerm'),
                         this.$store.dispatch('permApply/getTeporHasPermSystem'),

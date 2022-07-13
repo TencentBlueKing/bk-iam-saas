@@ -1,5 +1,5 @@
 <template>
-    <div class="my-perm-group-perm">
+    <div class="my-perm-group-perm" v-bkloading="{ isLoading, opacity: 1 }">
         <bk-table
             data-test-id="myPerm_table_group"
             :data="curPageData"
@@ -118,7 +118,7 @@
                 pageConf: {
                     current: 1,
                     count: 0,
-                    limit: 1
+                    limit: 10
                     // limitList: [5, 10, 20, 50]
                 },
                 curPageData: [],
@@ -135,7 +135,8 @@
                 // 控制侧边弹出层显示
                 isShowGradeSlider: false,
                 sliderLoading: false,
-                gradeSliderTitle: ''
+                gradeSliderTitle: '',
+                isLoading: false
             };
         },
         computed: {
@@ -208,10 +209,11 @@
              * @return {Array} 当前页数据
              */
             async getDataByPage () {
+                this.isLoading = true;
                 try {
                     const res = await this.$store.dispatch('perm/getPersonalGroups', {
-                        limit: this.pageConf.limit,
-                        offset: (this.pageConf.current - 1) * this.pageConf.limit
+                        page_size: this.pageConf.limit,
+                        page: this.pageConf.current
                     });
                     this.pageConf.count = res.data.count;
                     this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
@@ -224,6 +226,8 @@
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
+                } finally {
+                    this.isLoading = false;
                 }
                 // if (!page) {
                 //     this.pageConf.current = page = 1;

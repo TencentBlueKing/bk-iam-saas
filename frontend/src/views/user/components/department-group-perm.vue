@@ -1,5 +1,5 @@
 <template>
-    <div class="my-perm-group-perm">
+    <div class="my-perm-group-perm" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
         <bk-table
             data-test-id="myPerm_table_group"
             :data="curPageData"
@@ -68,7 +68,7 @@
             @on-cancel="cancelDelete"
             @on-sumbit="confirmDelete" />
 
-        <render-group-perm-sideslider
+        <render-perm-sideslider
             :show="isShowPermSidesilder"
             :name="curGroupName"
             :group-id="curGroupId"
@@ -98,18 +98,20 @@
 <script>
     import { mapGetters } from 'vuex';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
-    import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
+    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
 
     export default {
         name: '',
         components: {
             DeleteDialog,
-            RenderGroupPermSideslider
+            RenderPermSideslider
         },
         props: {
-            departmentGroupList: {
-                type: Array,
-                default: () => []
+            data: {
+                type: Object,
+                default: () => {
+                    return {};
+                }
             }
         },
         data () {
@@ -140,27 +142,21 @@
         computed: {
             ...mapGetters(['user'])
         },
-        watch: {
-            departmentGroupList: {
-                handler (v) {
-                    if (v.length) {
-                        this.dataList.splice(0, this.dataList.length, ...v);
-                        this.initPageConf();
-                        this.curPageData = this.getDataByPage(this.pageConf.current);
-                    }
-                },
-                immediate: true
-            }
-        },
         async created () {
+            await this.fetchSystems();
         },
         methods: {
-            /**
-             * 获取 user 信息
-             */
-            async fetchUser () {
+            async fetchSystems () {
+                this.pageLoading = true;
+                const { type } = this.data;
                 try {
-                    await this.$store.dispatch('userInfo');
+                    const res = await this.$store.dispatch('perm/getDepartPermGroups', {
+                        subjectType: type === 'user' ? type : 'department',
+                        subjectId: type === 'user' ? this.data.username : this.data.id
+                    });
+                    this.dataList = res.data || [];
+                    this.pageConf.count = this.dataList.length;
+                    this.curPageData = this.getDataByPage(this.pageConf.current);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -170,6 +166,8 @@
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
+                } finally {
+                    this.pageLoading = false;
                 }
             },
 
@@ -337,5 +335,24 @@
     };
 </script>
 <style lang="postcss">
-    @import './index.css';
+    .iam-group-perm-wrapper {
+        height: calc(100vh - 204px);
+        .iam-perm-ext-cls {
+            margin-top: 10px;
+        }
+        .bk-table {
+            border-right: none;
+            border-bottom: none;
+            &.is-be-loading {
+                border-bottom: 1px solid #dfe0e5;
+            }
+            .user-group-name {
+                color: #3a84ff;
+                cursor: pointer;
+                &:hover {
+                    color: #699df4;
+                }
+            }
+        }
+    }
 </style>
