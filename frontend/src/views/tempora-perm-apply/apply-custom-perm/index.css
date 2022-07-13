@@ -1,6 +1,7 @@
 .biz-perm-apply {
     position: relative;
     font-size: 14px;
+    padding-bottom: 50px;
     .actions-wrapper {
         .bk-checkbox-text {
             font-size: 12px;

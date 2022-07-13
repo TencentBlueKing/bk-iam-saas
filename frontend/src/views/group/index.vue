@@ -10,6 +10,10 @@
                 style="margin-left: 6px;"
                 data-test-id="group_btn_transferOut"
                 @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
+            <!-- <bk-button :disabled="currentSelectList.length < 1"
+                theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
+                {{ $t(`m.common['批量添加成员']`) }}
+            </bk-button> -->
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -111,6 +115,7 @@
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
+            :is-batch="isBatch"
             :loading="loading"
             :name="curName"
             :id="curId"
@@ -125,6 +130,7 @@
             :group-ids="curSelectIds"
             @on-success="handleTransferOutSuccess"
             @on-cancel="handleTransferOutCancel" />
+        <novice-guide :flag="showNoviceGuide" :content="content" />
     </div>
 </template>
 <script>
@@ -137,6 +143,7 @@
     import AddMemberDialog from './components/iam-add-member';
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
+    import NoviceGuide from '@/components/iam-novice-guide';
     export default {
         name: '',
         components: {
@@ -144,7 +151,8 @@
             AddMemberDialog,
             EditProcessDialog,
             IamSearchSelect,
-            TransferOutDialog
+            TransferOutDialog,
+            NoviceGuide
         },
         data () {
             return {
@@ -175,11 +183,15 @@
 
                 curRole: 'staff',
 
-                isShowRolloutGroupDialog: false
+                isShowRolloutGroupDialog: false,
+
+                isBatch: false,
+
+                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]')
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'showNoviceGuide']),
             isCanEditProcess () {
                 return this.currentSelectList.length > 0;
             },
@@ -201,6 +213,7 @@
                 handler (value) {
                     this.curRole = value.role.type || 'staff';
                 },
+                immediate: true,
                 deep: true
             }
         },
@@ -485,8 +498,15 @@
                     expired_at: expired,
                     id: this.curId
                 };
+                let fetchUrl = 'userGroup/addUserGroupMember';
+                if (this.isBatch) {
+                    params.group_ids = this.curSelectIds;
+                    delete params.id;
+                    fetchUrl = 'userGroup/batchAddUserGroupMember';
+                }
+                console.log('params', params);
                 try {
-                    await this.$store.dispatch('userGroup/addUserGroupMember', params);
+                    await this.$store.dispatch(fetchUrl, params);
                     this.isShowAddMemberDialog = false;
                     this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
                     this.fetchUserGroupList(true);
@@ -588,7 +608,12 @@
                 this.currentUserGroup = {};
             },
 
-            handleAfterEditLeave () {}
+            handleAfterEditLeave () {},
+
+            handleBatchAddMember () {
+                this.isBatch = true;
+                this.isShowAddMemberDialog = true;
+            }
         }
     };
 </script>

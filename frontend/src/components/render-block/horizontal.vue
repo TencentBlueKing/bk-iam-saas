@@ -9,7 +9,7 @@
         </div>
     </div>
 </template>
-<style lang="postcss" scoped>
+<style lang="postcss">
     .horizontal-item {
         position: relative;
         padding: 30px;

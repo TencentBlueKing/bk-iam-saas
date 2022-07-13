@@ -14,6 +14,7 @@ import traceback
 from typing import Optional
 
 from blue_krill.web.std_error import APIError
+from django.conf import settings
 from rest_framework import status
 from rest_framework.exceptions import (
     AuthenticationFailed,
@@ -139,6 +140,10 @@ def exception_handler(exc, context):
 
         # notify sentry
         capture_exception(exc)
+
+        # 如果是调试，异常交给Django 默认处理
+        if settings.DEBUG:
+            return
 
     # NOTE: openapi 为了兼容调用方使用习惯, 除以下error外，其他error的status code 默认返回 200
     ignore_error_codes = {

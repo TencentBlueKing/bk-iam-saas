@@ -39,6 +39,8 @@ def user_group_policy_expire_remind():
     policy_biz = PolicyQueryBiz()
     group_biz = GroupBiz()
 
+    # FIXME: 重要, 不应该遍历所有用户, 应该先获取有配置策略的用户列表
+
     # 分页遍历所有的用户
     qs = User.objects.filter(staff_status=StaffStatus.IN.value)
     paginator = Paginator(qs, 100)
@@ -53,7 +55,8 @@ def user_group_policy_expire_remind():
         for user in paginator.page(i):
             subject = Subject(type=SubjectType.USER.value, id=user.username)
 
-            groups = group_biz.list_subject_group_before_expired_at(subject, expired_at)
+            # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
+            groups = group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
 
             policies = policy_biz.list_expired(subject, expired_at)
 
@@ -66,7 +69,8 @@ def user_group_policy_expire_remind():
             url = base_url + "?" + urlencode(params)
 
             mail_content = render_to_string(
-                "user_expired_mail.html", {"groups": groups, "policies": policies, "url": url, "user": user}
+                "user_expired_mail.html",
+                {"groups": groups, "policies": policies, "url": url, "user": user, "index_url": settings.APP_URL},
             )
             try:
                 esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)
