@@ -12,8 +12,24 @@ from copy import deepcopy
 
 import pytest
 
+from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum
 from backend.service.models.instance_selection import InstanceSelection, PathResourceType
-from backend.service.models.policy import PathNode, PathNodeList
+from backend.service.models.policy import (
+    AbacPolicyChangeContent,
+    Attribute,
+    Condition,
+    Environment,
+    Instance,
+    PathNode,
+    PathNodeList,
+    RbacPolicyChangeContent,
+    RelatedResource,
+    ResourceGroup,
+    ResourceGroupList,
+    UniversalPolicy,
+    UniversalPolicyChangedContent,
+    Value,
+)
 
 
 @pytest.fixture()
@@ -74,3 +90,526 @@ class TestPathNodeList:
         new_path_node_list = path_node_list.ignore_path(instance_selection)
         assert len(new_path_node_list) == 1
         assert new_path_node_list[0].type == "type1"
+
+
+class TestUniversalPolicy:
+    @pytest.mark.parametrize(
+        "resource_groups,action_auth_type,expected",
+        [
+            # Action类型为ABAC
+            (
+                # resource_groups
+                ResourceGroupList(__root__=[]),
+                # action_auth_type
+                AuthTypeEnum.ABAC.value,
+                # expected
+                True,
+            ),
+            # 与资源实例无关
+            (
+                # resource_groups
+                ResourceGroupList(__root__=[]),
+                # action_auth_type
+                AuthTypeEnum.RBAC.value,
+                # expected
+                True,
+            ),
+            # 关联多种资源类型 - 基于多分组
+            (
+                # resource_groups
+                ResourceGroupList(
+                    __root__=[
+                        ResourceGroup(related_resource_types=[]),
+                        ResourceGroup(related_resource_types=[]),
+                    ]
+                ),
+                # action_auth_type
+                AuthTypeEnum.RBAC.value,
+                # expected
+                True,
+            ),
+            # 关联多种资源类型 - 基于只有一组
+            (
+                # resource_groups
+                ResourceGroupList(
+                    __root__=[
+                        ResourceGroup(
+                            related_resource_types=[
+                                RelatedResource(system_id="s1", type="rt1", condition=[]),
+                                RelatedResource(system_id="s1", type="rt2", condition=[]),
+                            ]
+                        ),
+                    ]
+                ),
+                # action_auth_type
+                AuthTypeEnum.RBAC.value,
+                # expected
+                True,
+            ),
+            # 环境属性
+            (
+                # resource_groups
+                ResourceGroupList(
+                    __root__=[
+                        ResourceGroup(
+                            related_resource_types=[RelatedResource(system_id="s1", type="rt1", condition=[])],
+                            environments=[Environment(type="e_type", condition=[])],
+                        ),
+                    ]
+                ),
+                # action_auth_type
+                AuthTypeEnum.RBAC.value,
+                # expected
+                True,
+            ),
+            # Any策略
+            (
+                # resource_groups
+                ResourceGroupList(
+                    __root__=[
+                        ResourceGroup(
+                            related_resource_types=[RelatedResource(system_id="s1", type="rt1", condition=[])],
+                        ),
+                    ]
+                ),
+                # action_auth_type
+                AuthTypeEnum.RBAC.value,
+                # expected
+                True,
+            ),
+            # RBAC策略
+            (
+                # resource_groups
+                ResourceGroupList(
+                    __root__=[
+                        ResourceGroup(
+                            related_resource_types=[
+                                RelatedResource(
+                                    system_id="s1", type="rt1", condition=[Condition(instances=[], attributes=[])]
+                                )
+                            ],
+                        ),
+                    ]
+                ),
+                # action_auth_type
+                AuthTypeEnum.RBAC.value,
+                # expected
+                False,
+            ),
+        ],
+    )
+    def test_is_absolute_abac(self, resource_groups, action_auth_type, expected):
+        is_absolute_abac = UniversalPolicy._is_absolute_abac(resource_groups, action_auth_type)
+
+        assert is_absolute_abac == expected
+
+    @pytest.mark.parametrize(
+        "expression_resource_groups,expected",
+        [
+            (ResourceGroupList(__root__=[]), False),
+            (ResourceGroupList(__root__=[ResourceGroup(related_resource_types=[])]), True),
+            (
+                ResourceGroupList(
+                    __root__=[ResourceGroup(related_resource_types=[]), ResourceGroup(related_resource_types=[])]
+                ),
+                True,
+            ),
+        ],
+    )
+    def test_has_abac(self, expression_resource_groups, expected):
+        p = UniversalPolicy(
+            action_id="a",
+            policy_id=0,
+            expired_at=0,
+            resource_groups=ResourceGroupList(__root__=[]),
+            expression_resource_groups=expression_resource_groups,
+        )
+        assert p.has_abac() == expected
+
+    @pytest.mark.parametrize(
+        "instances,expected",
+        [
+            ([], False),
+            ([PathNode(id="id", name="name", system_id="s_id", type="rt_id")], True),
+            (
+                [
+                    PathNode(id="id1", name="name1", system_id="s_id1", type="rt_id1"),
+                    PathNode(id="id2", name="name2", system_id="s_id2", type="rt_id2"),
+                ],
+                True,
+            ),
+        ],
+    )
+    def test_has_rbac(self, instances, expected):
+        p = UniversalPolicy(
+            action_id="a",
+            policy_id=0,
+            expired_at=0,
+            resource_groups=ResourceGroupList(__root__=[]),
+            instances=instances,
+        )
+        assert p.has_rbac() == expected
+
+    @pytest.mark.parametrize(
+        "has_abac,has_rbac,expected",
+        [
+            (True, True, AuthTypeEnum.ALL.value),
+            (True, False, AuthTypeEnum.ABAC.value),
+            (False, True, AuthTypeEnum.RBAC.value),
+            (False, False, AuthTypeEnum.NONE.value),
+        ],
+    )
+    def test_calculate_auth_type(self, has_abac, has_rbac, expected):
+        auth_type = UniversalPolicy._calculate_auth_type(has_abac, has_rbac)
+
+        assert auth_type == expected
+
+    @pytest.mark.parametrize(
+        "related_resource,expected",
+        [
+            # 包含属性
+            (
+                # related_resource
+                RelatedResource(
+                    system_id="s_id",
+                    type="rt_id",
+                    condition=[
+                        Condition(
+                            id="97395903b0b84c0187284cb213dfa28a",
+                            instances=[],
+                            attributes=[Attribute(id="attr_id", name="name_id", values=[Value(id="id", name="name")])],
+                        )
+                    ],
+                ),
+                # expected
+                (
+                    # expression_resource_groups
+                    ResourceGroupList(
+                        __root__=[
+                            ResourceGroup(
+                                related_resource_types=[
+                                    RelatedResource(
+                                        system_id="s_id",
+                                        type="rt_id",
+                                        condition=[
+                                            Condition(
+                                                id="97395903b0b84c0187284cb213dfa28a",
+                                                instances=[],
+                                                attributes=[
+                                                    Attribute(
+                                                        id="attr_id",
+                                                        name="name_id",
+                                                        values=[Value(id="id", name="name")],
+                                                    )
+                                                ],
+                                            )
+                                        ],
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    # rbac_instances
+                    [],
+                ),
+            ),
+            # 仅仅RBAC
+            (
+                # related_resource
+                RelatedResource(
+                    system_id="s_id",
+                    type="rt_id",
+                    condition=[
+                        Condition(
+                            id="97395903b0b84c0187284cb213dfa28a",
+                            instances=[
+                                Instance(
+                                    type="rt_id",
+                                    path=[
+                                        PathNodeList(
+                                            __root__=[
+                                                PathNode(id="r_id1", name="r_name1", system_id="s_id", type="rt_id1"),
+                                                PathNode(id="*", name="r_name", system_id="s_id", type="rt_id"),
+                                            ]
+                                        ),
+                                        PathNodeList(
+                                            __root__=[
+                                                PathNode(id="r_id3", name="r_name3", system_id="s_id", type="rt_id3"),
+                                                PathNode(id="r_id2", name="r_name2", system_id="s_id", type="rt_id2"),
+                                            ]
+                                        ),
+                                    ],
+                                )
+                            ],
+                            attributes=[],
+                        )
+                    ],
+                ),
+                # expected
+                (
+                    # expression_resource_groups
+                    ResourceGroupList(__root__=[]),
+                    # rbac_instances
+                    [
+                        PathNode(id="r_id1", name="r_name1", system_id="s_id", type="rt_id1"),
+                        PathNode(id="r_id2", name="r_name2", system_id="s_id", type="rt_id2"),
+                    ],
+                ),
+            ),
+        ],
+    )
+    def test_parse_abac_and_rbac(self, related_resource, expected):
+        expression_resource_groups, rbac_instances = UniversalPolicy._parse_abac_and_rbac(related_resource)
+
+        assert expression_resource_groups == expected[0]
+        assert set(rbac_instances) == set(expected[1])
+
+    @pytest.mark.parametrize(
+        "new,old,expected",
+        [
+            # Create
+            (
+                # new
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.ABAC.value,
+                    expression_resource_groups=ResourceGroupList(
+                        __root__=[
+                            ResourceGroup(
+                                related_resource_types=[
+                                    RelatedResource(
+                                        system_id="s_id",
+                                        type="rt_id",
+                                        condition=[
+                                            Condition(
+                                                id="97395903b0b84c0187284cb213dfa28a",
+                                                instances=[],
+                                                attributes=[
+                                                    Attribute(
+                                                        id="attr_id",
+                                                        name="name_id",
+                                                        values=[Value(id="id", name="name")],
+                                                    )
+                                                ],
+                                            )
+                                        ],
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    instances=[],
+                ),
+                # old
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.ABAC.value,
+                    expression_resource_groups=ResourceGroupList(__root__=[]),
+                    instances=[],
+                ),
+                # expected
+                UniversalPolicyChangedContent(
+                    action_id="a_id",
+                    auth_type=AuthTypeEnum.ABAC.value,
+                    abac=AbacPolicyChangeContent(
+                        change_type=AbacPolicyChangeType.CREATED.value,
+                        resource_expression='{"StringEquals":{"s_id.rt_id.attr_id":["id"]}}',
+                    ),
+                ),
+            ),
+            # Update
+            (
+                # new
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.ABAC.value,
+                    expression_resource_groups=ResourceGroupList(
+                        __root__=[
+                            ResourceGroup(
+                                related_resource_types=[
+                                    RelatedResource(
+                                        system_id="s_id",
+                                        type="rt_id",
+                                        condition=[
+                                            Condition(
+                                                id="97395903b0b84c0187284cb213dfa28a",
+                                                instances=[],
+                                                attributes=[
+                                                    Attribute(
+                                                        id="attr_id",
+                                                        name="name_id",
+                                                        values=[Value(id="id", name="name")],
+                                                    )
+                                                ],
+                                            )
+                                        ],
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    instances=[],
+                ),
+                # old
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    backend_policy_id=1,
+                    auth_type=AuthTypeEnum.ABAC.value,
+                    expression_resource_groups=ResourceGroupList(__root__=[ResourceGroup(related_resource_types=[])]),
+                    instances=[],
+                ),
+                # expected
+                UniversalPolicyChangedContent(
+                    action_id="a_id",
+                    auth_type=AuthTypeEnum.ABAC.value,
+                    abac=AbacPolicyChangeContent(
+                        id=1,
+                        change_type=AbacPolicyChangeType.UPDATED.value,
+                        resource_expression='{"StringEquals":{"s_id.rt_id.attr_id":["id"]}}',
+                    ),
+                ),
+            ),
+            # Delete
+            (
+                # new
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.NONE.value,
+                    expression_resource_groups=ResourceGroupList(__root__=[]),
+                    instances=[],
+                ),
+                # old
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    backend_policy_id=1,
+                    auth_type=AuthTypeEnum.ABAC.value,
+                    expression_resource_groups=ResourceGroupList(
+                        __root__=[
+                            ResourceGroup(
+                                related_resource_types=[
+                                    RelatedResource(
+                                        system_id="s_id",
+                                        type="rt_id",
+                                        condition=[
+                                            Condition(
+                                                id="97395903b0b84c0187284cb213dfa28a",
+                                                instances=[],
+                                                attributes=[
+                                                    Attribute(
+                                                        id="attr_id",
+                                                        name="name_id",
+                                                        values=[Value(id="id", name="name")],
+                                                    )
+                                                ],
+                                            )
+                                        ],
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    instances=[],
+                ),
+                # expected
+                UniversalPolicyChangedContent(
+                    action_id="a_id",
+                    auth_type=AuthTypeEnum.NONE.value,
+                    abac=AbacPolicyChangeContent(
+                        id=1,
+                        change_type=AbacPolicyChangeType.DELETED.value,
+                    ),
+                ),
+            ),
+            # RBAC: Create
+            (
+                # new
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.RBAC.value,
+                    expression_resource_groups=ResourceGroupList(__root__=[]),
+                    instances=[
+                        PathNode(id="id1", name="name1", system_id="s_id1", type="rt_id1"),
+                    ],
+                ),
+                # old
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.RBAC.value,
+                    expression_resource_groups=ResourceGroupList(__root__=[]),
+                    instances=[],
+                ),
+                # expected
+                UniversalPolicyChangedContent(
+                    action_id="a_id",
+                    auth_type=AuthTypeEnum.RBAC.value,
+                    rbac=RbacPolicyChangeContent(
+                        created=[
+                            PathNode(id="id1", name="name1", system_id="s_id1", type="rt_id1"),
+                        ]
+                    ),
+                ),
+            ),
+            # RBAC: Delete
+            (
+                # new
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.RBAC.value,
+                    expression_resource_groups=ResourceGroupList(__root__=[]),
+                    instances=[],
+                ),
+                # old
+                UniversalPolicy(
+                    action_id="a_id",
+                    policy_id=0,
+                    expired_at=0,
+                    resource_groups=ResourceGroupList(__root__=[]),
+                    auth_type=AuthTypeEnum.RBAC.value,
+                    expression_resource_groups=ResourceGroupList(__root__=[]),
+                    instances=[
+                        PathNode(id="id1", name="name1", system_id="s_id1", type="rt_id1"),
+                    ],
+                ),
+                # expected
+                UniversalPolicyChangedContent(
+                    action_id="a_id",
+                    auth_type=AuthTypeEnum.RBAC.value,
+                    rbac=RbacPolicyChangeContent(
+                        deleted=[
+                            PathNode(id="id1", name="name1", system_id="s_id1", type="rt_id1"),
+                        ]
+                    ),
+                ),
+            ),
+        ],
+    )
+    def test_calculate_pre_changed_content(self, new, old, expected):
+        policy_changed_content = new.calculate_pre_changed_content("mock_system", old)
+        assert policy_changed_content == expected
