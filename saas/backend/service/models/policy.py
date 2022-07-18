@@ -352,7 +352,7 @@ class AbacPolicyChangeContent(BaseModel):
     change_type: AbacPolicyChangeType = AbacPolicyChangeType.NONE.value
     id: int = 0
     resource_expression: str = ""
-    environment: str = "{}"
+    environment: str = ""
     expired_at = PERMANENT_SECONDS
 
 
@@ -539,13 +539,13 @@ class UniversalPolicy(Policy):
                 resource_expression=self.to_resource_expression(system_id),
             )
         # 新策略无ABAC策略，但老策略有ABAC策略，则需要将老的ABAC策略删除
-        elif self.has_abac and old.has_abac():
+        elif not self.has_abac() and old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.DELETED.value,
                 id=old.backend_policy_id,
             )
         # 新策略有ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
-        elif self.has_abac() and old.has_abac():
+        elif self.has_abac() and not old.has_abac():
             policy_changed_content.abac = AbacPolicyChangeContent(
                 change_type=AbacPolicyChangeType.CREATED.value,
                 resource_expression=self.to_resource_expression(system_id),
