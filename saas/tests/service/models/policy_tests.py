@@ -55,7 +55,7 @@ class TestPathNode:
     def test_to_path_resource_type(self, path_node: PathNode):
         assert path_node.to_path_resource_type() == PathResourceType(system_id="system_id", id="type")
 
-    def test_match_resource_type(sef, path_node: PathNode):
+    def test_match_resource_type(self, path_node: PathNode):
         assert path_node.match_resource_type("system_id", "type")
 
 
