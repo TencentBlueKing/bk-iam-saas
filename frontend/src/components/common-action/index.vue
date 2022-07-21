@@ -14,7 +14,7 @@
                 v-if="item.id !== 0 && isEditMode"
                 @click.stop="handleDelete(item.id, item.$id, index)" />
         </section>
-        <template v-if="isEditMode">
+        <template v-if="isEditMode && !isDisabled">
             <bk-button
                 text
                 theme="primary"
