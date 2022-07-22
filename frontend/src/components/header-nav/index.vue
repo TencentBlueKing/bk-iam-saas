@@ -52,7 +52,7 @@
                         <div class="operation">
                             <div class="user-dropdown-item " @click="handleLogout">
                                 <Icon type="logout" />
-                                {{ $t(`m.nav['注销']`) }}
+                                {{ $t(`m.nav['退出登录']`) }}
                             </div>
                         </div>
                     </template>

@@ -21,7 +21,7 @@
                     :name="item.name">
                 </bk-option>
                 <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer;">
-                    <i class="bk-icon icon-plus-circle"></i>管理我的分级管理员
+                    <i class="bk-icon icon-plus-circle mr10"></i>管理我的分级管理员
                 </div>
             </bk-select>
             <div class="nav-slider-list">

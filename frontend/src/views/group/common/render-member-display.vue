@@ -8,7 +8,7 @@
             <div v-for="(item, index) in data"
                 :key="index"
                 class="member-item"
-                :title="isDepartment ? (`${item.fullName}` ? `${item.fullName}` : ` ${item.name}`) :
+                :title="isDepartment ? (item.fullName ? `${item.fullName}` : `${item.name}`) :
                     item.name !== '' ? `${item.username}(${item.name})` : item.username">
                 <span class="member-name">
                     {{ isDepartment ? item.name : item.username }}
