@@ -44,7 +44,8 @@
                             v-model="actionId"
                             :clearable="true"
                             :placeholder="$t(`m.verify['请选择']`)"
-                            @selected="handleSelected">
+                            @selected="handleSelected"
+                            searchable>
                             <bk-option v-for="option in processesList"
                                 :key="option.id"
                                 :id="option.id"
