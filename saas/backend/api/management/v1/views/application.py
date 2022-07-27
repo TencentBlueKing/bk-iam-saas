@@ -16,8 +16,8 @@ from rest_framework.viewsets import GenericViewSet
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
-from backend.api.management.permissions import ManagementAPIPermission
-from backend.api.management.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
+from backend.api.management.v1.permissions import ManagementAPIPermission
+from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
 from backend.biz.group import GroupCheckBiz
 from backend.service.constants import ApplicationTypeEnum, SubjectType

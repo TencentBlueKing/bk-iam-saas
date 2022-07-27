@@ -62,6 +62,14 @@ urlpatterns = [
             ]
         ),
     ),
+    url(
+        r"^api/v2/",
+        include(
+            [
+                url(r"^open/", include("backend.api.urls_v2")),
+            ]
+        ),
+    ),
     # healthz
     url("", include("backend.healthz.urls")),
     # prometheus

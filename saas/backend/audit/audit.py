@@ -20,6 +20,7 @@ from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.audit.models import get_event_model
+from backend.common.base import is_open_api_request
 from backend.common.local import local
 from backend.service.models import Subject
 
@@ -124,7 +125,7 @@ def log_api_event(request, provider: DataProvider):
 
 
 def _parse_request_audit_type(request):
-    if "/api/v1/open/" in request.path:
+    if is_open_api_request(request.path):
         return AuditSourceType.OPENAPI.value, request.bk_app_code
 
     return AuditSourceType.WEB.value, ""

@@ -8,17 +8,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf.urls import include, url
+import re
 
-urlpatterns = [
-    # 授权类API
-    url(r"^authorization/", include("backend.api.authorization.urls")),
-    # 无权限跳转
-    url(r"^application/", include("backend.api.application.urls")),
-    # 初始化
-    url(r"^initialization/", include("backend.api.initialization.urls")),
-    # 管理类API
-    url(r"^management/", include("backend.api.management.v1.urls")),
-    # 超级管理类API, 审计/安全等系统也统一走超级管理类接口
-    url(r"^admin/", include("backend.api.admin.urls")),
-]
+# 只需要判断 v1 - v9 的 open api，一般不会有超过9个版本的Open API
+OPEN_API_PATH_PATTERN = re.compile(r"/api/v\d/open/")
+
+
+def is_open_api_request(path: str) -> bool:
+    """检查路径是否为open api请求的路径"""
+    return OPEN_API_PATH_PATTERN.search(path) is not None
+
+
+def _is_certain_version_open_api_request(path: str, version: int) -> bool:
+    """判断是否某个固定版本OpenAPI路径"""
+    version_open_api_path = f"/api/v{version}/open/"
+    return version_open_api_path in path
+
+
+def is_v1_open_api_request(path: str) -> bool:
+    """判断是否V1 Open API请求"""
+    return _is_certain_version_open_api_request(path, version=1)

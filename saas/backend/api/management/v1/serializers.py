@@ -22,9 +22,15 @@ from backend.service.models import Subject
 class ManagementSourceSystemSLZ(serializers.Serializer):
     system = serializers.CharField(label="调用API的系统id", max_length=32, help_text="用于认证是哪个系统调用了API")
 
+    class Meta:
+        ref_name = "V1ManagementSourceSystemSLZ"
+
 
 class ManagementActionSLZ(serializers.Serializer):
     id = serializers.CharField(label="操作ID")
+
+    class Meta:
+        ref_name = "V1ManagementActionSLZ"
 
 
 class ManagementResourcePathNodeSLZ(serializers.Serializer):
@@ -35,6 +41,9 @@ class ManagementResourcePathNodeSLZ(serializers.Serializer):
         label="资源实例ID名称", allow_blank=True, trim_whitespace=False
     )  # 路径节点存在无限制，当id="*"则name可以为空
 
+    class Meta:
+        ref_name = "V1ManagementResourcePathNodeSLZ"
+
 
 class ManagementResourcePathsSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID")
@@ -44,6 +53,9 @@ class ManagementResourcePathsSLZ(serializers.Serializer):
         child=serializers.ListField(label="拓扑层级", child=ManagementResourcePathNodeSLZ(label="实例"), allow_empty=False),
         allow_empty=True,
     )
+
+    class Meta:
+        ref_name = "V1ManagementResourcePathsSLZ"
 
 
 class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
@@ -56,12 +68,18 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
         allow_empty=True,
     )
 
+    class Meta:
+        ref_name = "V1ManagementRoleScopeAuthorizationSLZ"
+
 
 class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+
+    class Meta:
+        ref_name = "V1ManagementGradeManagerCreateSLZ"
 
 
 class ManagementGradeManagerUpdateSLZ(serializers.Serializer):
@@ -81,15 +99,24 @@ class ManagementGradeManagerUpdateSLZ(serializers.Serializer):
         allow_empty=False,
     )
 
+    class Meta:
+        ref_name = "V1ManagementGradeManagerUpdateSLZ"
 
-class ManagementGradeManagerBasicInfoSZL(serializers.Serializer):
+
+class ManagementGradeManagerBasicInfoSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="分级管理员ID")
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
 
+    class Meta:
+        ref_name = "V1ManagementGradeManagerBasicInfoSZL"
+
 
 class ManagementGradeManagerMembersSLZ(serializers.Serializer):
     members = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)
+
+    class Meta:
+        ref_name = "V1ManagementGradeManagerMembersSLZ"
 
     def validate(self, data):
         """
@@ -104,6 +131,9 @@ class ManagementGradeManagerMembersSLZ(serializers.Serializer):
 
 class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
     members = serializers.CharField(label="用户名", help_text="用户名，多个以英文逗号分隔")
+
+    class Meta:
+        ref_name = "V1ManagementGradeManagerMembersDeleteSLZ"
 
     def validate(self, data):
         # 验证 member的合法性，并转化为后续view需要数据格式
@@ -124,13 +154,22 @@ class ManagementGroupBasicInfoSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=5, max_length=128)
     description = serializers.CharField(label="描述", min_length=10)
 
+    class Meta:
+        ref_name = "V1ManagementGroupBasicInfoSLZ"
+
 
 class ManagementGroupBasicCreateSLZ(ManagementGroupBasicInfoSLZ):
     readonly = serializers.BooleanField(label="是否只读", default=True, required=False)
 
+    class Meta:
+        ref_name = "V1ManagementGroupBasicCreateSLZ"
+
 
 class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
     groups = serializers.ListField(child=ManagementGroupBasicCreateSLZ(label="用户组"), max_length=10)
+
+    class Meta:
+        ref_name = "V1ManagementGradeManagerGroupCreateSLZ"
 
     def validate(self, data):
         """
@@ -148,10 +187,16 @@ class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
 class ManagementGroupBasicSLZ(ManagementGroupBasicInfoSLZ):
     id = serializers.IntegerField(label="用户组ID")
 
+    class Meta:
+        ref_name = "V1ManagementGroupBasicSLZ"
+
 
 class ManagementGroupBaseInfoUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=5, max_length=128, required=False)
     description = serializers.CharField(label="描述", min_length=10, required=False)
+
+    class Meta:
+        ref_name = "V1ManagementGroupBaseInfoUpdateSLZ"
 
 
 class ManagementGroupMemberSLZ(serializers.Serializer):
@@ -160,12 +205,18 @@ class ManagementGroupMemberSLZ(serializers.Serializer):
     name = serializers.CharField(label="名称")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
 
+    class Meta:
+        ref_name = "V1ManagementGroupMemberSLZ"
+
 
 class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
     type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
     ids = serializers.CharField(
         label="成员IDs", help_text="成员IDs，多个以英文逗号分隔, 对于type=user，则ID为用户名，对于type=department，则为部门ID"
     )
+
+    class Meta:
+        ref_name = "V1ManagementGroupMemberDeleteSLZ"
 
     def validate(self, data):
         # 验证 ID的合法性，并转化为后续view需要数据格式
@@ -185,35 +236,56 @@ class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
 class ManagementGradeManagerBasicSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="分级管理员ID")
 
+    class Meta:
+        ref_name = "V1ManagementGradeManagerBasicSLZ"
+
 
 class ManagementUserQuerySLZ(serializers.Serializer):
     user_id = serializers.CharField(label="用户名", max_length=32)
 
+    class Meta:
+        ref_name = "V1ManagementUserQuerySLZ"
+
 
 class ManagementUserGradeManagerQuerySLZ(ManagementUserQuerySLZ, ManagementSourceSystemSLZ):
-    pass
+    class Meta:
+        ref_name = "V1ManagementUserGradeManagerQuerySLZ"
 
 
 class ManagementGroupGrantSLZ(ManagementRoleScopeAuthorizationSLZ):
-    pass
+    class Meta:
+        ref_name = "V1ManagementGroupGrantSLZ"
 
 
 class ManagementGroupRevokeSLZ(ManagementRoleScopeAuthorizationSLZ):
-    pass
+    class Meta:
+        ref_name = "V1ManagementGroupRevokeSLZ"
 
 
 class ManagementGroupPolicyDeleteSLZ(serializers.Serializer):
     system = serializers.CharField(label="授权的系统id", max_length=32)
     actions = serializers.ListField(label="操作", child=ManagementActionSLZ(label="操作"), allow_empty=False)
 
+    class Meta:
+        ref_name = "V1ManagementGroupPolicyDeleteSLZ"
+
 
 class ManagementGroupIDsSLZ(serializers.Serializer):
     group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
+
+    class Meta:
+        ref_name = "V1ManagementGroupIDsSLZ"
 
 
 class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, ReasonSLZ):
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
 
+    class Meta:
+        ref_name = "V1ManagementGroupApplicationCreateSLZ"
+
 
 class ManagementApplicationIDSLZ(serializers.Serializer):
     ids = serializers.ListField(label="申请单据ID列表", child=serializers.CharField(label="申请单据ID"))
+
+    class Meta:
+        ref_name = "V1ManagementApplicationIDSLZ"

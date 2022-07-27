@@ -11,14 +11,6 @@ specific language governing permissions and limitations under the License.
 from django.conf.urls import include, url
 
 urlpatterns = [
-    # 授权类API
-    url(r"^authorization/", include("backend.api.authorization.urls")),
-    # 无权限跳转
-    url(r"^application/", include("backend.api.application.urls")),
-    # 初始化
-    url(r"^initialization/", include("backend.api.initialization.urls")),
-    # 管理类API
-    url(r"^management/", include("backend.api.management.v1.urls")),
-    # 超级管理类API, 审计/安全等系统也统一走超级管理类接口
-    url(r"^admin/", include("backend.api.admin.urls")),
+    # 管理类API - 对于V2 API，所有管理类API都默认在系统下
+    url(r"^management/systems/(?P<system_id>\w+)/", include("backend.api.management.v2.urls")),
 ]

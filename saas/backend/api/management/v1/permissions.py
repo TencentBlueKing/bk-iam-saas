@@ -10,8 +10,13 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import permissions
 
-from .constants import IGNORE_VERIFY_API_CONFIG, VerifyAPIParamLocationEnum, VerifyAPIParamSourceToObjectTypeMap
-from .mixins import ManagementAPIPermissionCheckMixin
+from backend.api.management.constants import (
+    IGNORE_VERIFY_API_CONFIG,
+    VerifyAPIParamLocationEnum,
+    VerifyAPIParamSourceToObjectTypeMap,
+)
+from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
+
 from .serializers import ManagementGroupIDsSLZ, ManagementSourceSystemSLZ
 
 
