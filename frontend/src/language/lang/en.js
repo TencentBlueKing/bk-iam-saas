@@ -394,7 +394,11 @@ export const m = {
         '工作台': 'Workbench',
         '开发者': 'Developers',
         '切换分级管理员': 'switch rating manager',
-        '【分级管理员】 功能，全面升级为【权限管理空间】啦！': 'The function of [Grading Administrator] has been fully upgraded to [Permission Management Space]!'
+        '【分级管理员】 功能，全面升级为【权限管理空间】啦！': 'The function of [Grading Administrator] has been fully upgraded to [Permission Management Space]!',
+        '个人工作台': 'Personal workbench',
+        '权限管理': 'Permission management',
+        '统计分析': 'Statistical analysis',
+        '平台管理': 'Platform management',
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
