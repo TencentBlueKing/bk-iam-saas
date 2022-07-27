@@ -12,16 +12,21 @@
             v-bkloading="{ isLoading, opacity: 1 }">
             <template v-if="isShowContent">
                 <div class="left-wrapper">
-                    <bk-input
-                        clearable
-                        right-icon="bk-icon icon-search"
-                        style="width: 210px;"
-                        v-model="keyword"
-                        :placeholder="$t(`m.verify['请输入']`)"
-                        @input="handleInput"
-                        @enter="handleSearch">
-                    </bk-input>
-                    <div class="system-wrapper">
+                    <div class="search-wrapper">
+                        <bk-input
+                            clearable
+                            right-icon="bk-icon icon-search"
+                            style="width: 210px;"
+                            v-model="keyword"
+                            :placeholder="$t(`m.verify['请输入']`)"
+                            @input="handleInput"
+                            @enter="handleSearch">
+                        </bk-input>
+                        <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+                            <i class="iam-icon iamcenter-refresh"></i>
+                        </div>
+                    </div>
+                    <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
                         <template v-if="curSystemList.length > 0">
                             <div class="system-item"
                                 v-for="item in curSystemList"
@@ -37,10 +42,22 @@
                                         :val="systemData[item.id].count" />
                                 </template>
                             </div>
+                            <div
+                                :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
+                                :title="$t(`m.grading['修改分级管理员授权范围']`)"
+                                @click="handleSkip">
+                                <i class="iam-icon iamcenter-edit-fill"></i>
+                                {{ $t(`m.grading['修改分级管理员授权范围']`) }}
+                            </div>
                         </template>
                         <template v-else>
-                            <div class="empty-wrapper">
-                                <iam-svg />
+                            <div class="empty-wrapper empty-wrapper2">
+                                <bk-exception
+                                    class="exception-wrap-item exception-part"
+                                    type="search-empty"
+                                    scene="part"></bk-exception>
+                                <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改分级管理员授权范围']`) }}</p>
+                                <!-- <iam-svg /> -->
                             </div>
                         </template>
                     </div>
@@ -812,6 +829,20 @@
                     this.$emit('update:isShow', false);
                     this.resetData();
                 }, _ => _);
+            },
+
+            handleSkip () {
+                this.$router.push({
+                    name: 'gradingAdminEdit',
+                    params: {
+                        id: this.$store.getters.navCurRoleId
+                    }
+                });
+            },
+
+            refreshList () {
+                this.keyword = '';
+                this.fetchSystems();
             }
         }
     };
@@ -863,6 +894,32 @@
                             right: 15px;
                         }
                     }
+                    .skip-link {
+                        text-align: center;
+                        font-size: 14px;
+                        padding: 8px 5px;
+                        margin-top: 10px;
+                        margin-right: 20px;
+                        background: #f5f6fa;
+                        cursor: pointer;
+                        border-radius: 3px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+
+                        &:hover {
+                            color: #3a84ff;
+                            background-color: #f0f8ff;
+                        }
+                    }
+                    .skip-link-fixed {
+                        position: fixed;
+                        bottom: 80px;
+                        width: 218px;
+                    }
+                }
+                .system-item-fixed {
+                    margin-bottom: 40px;
                 }
                 .empty-wrapper {
                     position: absolute;
@@ -871,6 +928,13 @@
                     transform: translate(-50%, -50%);
                     img {
                         width: 120px;
+                    }
+                    .tips-link {
+                        width: 218px;
+                        font-size: 12px;
+                        color: #3a84ff;
+                        cursor: pointer;
+                        text-align: center;
                     }
                 }
             }
@@ -985,6 +1049,33 @@
                         width: 120px;
                     }
                 }
+            }
+        }
+        .search-wrapper {
+            display: flex;
+
+            .icon-iamcenter-wrapper {
+                margin: 0 10px 0 8px;
+                height: 32px;
+                padding: 0 6px;
+                border: 1px solid #c4c6cc;
+                border-radius: 2px;
+                cursor: pointer;
+
+                &:hover {
+                    border-color: #979ba5;
+                    color: #63656e;
+                }
+
+                i {
+                    line-height: 32px;
+                }
+            }
+        }
+
+        .empty-wrapper2 {
+            img {
+                width: 220px !important;
             }
         }
     }

@@ -148,6 +148,15 @@ export const beforeEach = async (to, from, next) => {
             window.localStorage.setItem('index', 0);
         }
 
+        if (to.name === 'gradingAdminCreate') {
+            await store.dispatch('role/updateCurrentRole', { id: 0 });
+            await store.dispatch('userInfo');
+            if (to.params.id) {
+                store.commit('updateNavId', to.params.id);
+            }
+            curRole = 'staff';
+        }
+
         let difference = [];
         if (navIndex === 1) {
             difference = getRouterDiff(curRole);
