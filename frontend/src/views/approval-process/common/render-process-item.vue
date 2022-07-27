@@ -26,7 +26,8 @@
                     :key="option.id"
                     :id="option.id"
                     :name="option.name">
-                    <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">{{ option.name }}</span>
+                    <!-- option.node_names.join(' -> ') -->
+                    <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${ optionMap(option) }`">{{ option.name }}</span>
                 </bk-option>
                 <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }" @click="handleOpenCreateLink" style="cursor: not-allowed;">
                     <Icon bk type="plus-circle" />
@@ -101,15 +102,18 @@
                 immediate: true
             }
         },
+        created () {
+            console.log('list', this.list);
+        },
         methods: {
             handleToogleSelect () {
-                // if (!this.isToggle) {
-                //     this.isToggle = true
-                //     this.$refs.select.show()
-                //     return
-                // }
-                // this.isToggle = false
-                // this.$refs.select.close()
+                if (!this.isToggle) {
+                    this.isToggle = true;
+                    this.$refs.select.show();
+                    return;
+                }
+                this.isToggle = false;
+                this.$refs.select.close();
             },
 
             handleProcessSelect (value, option) {
@@ -131,6 +135,11 @@
 
             handleStatusChange (payload) {
                 this.$emit('change', payload);
+            },
+            optionMap (option) {
+                if (option.node_names) {
+                    return option.node_names.join(' -> ');
+                }
             }
         }
     };
