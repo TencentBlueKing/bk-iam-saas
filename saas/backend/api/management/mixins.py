@@ -14,9 +14,9 @@ from rest_framework import exceptions
 
 from backend.api.constants import ALLOW_ANY
 from backend.api.mixins import SystemClientCheckMixin
-from backend.apps.role.models import RoleRelatedObject, RoleSource
+from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
 from backend.common.cache import cachedmethod
-from backend.service.constants import RoleRelatedObjectType, RoleSourceTypeEnum
+from backend.service.constants import RoleRelatedObjectType, RoleSourceTypeEnum, RoleType
 
 from .constants import ManagementAPIEnum, VerifyAPIObjectTypeEnum
 from .models import ManagementAPIAllowListConfig, SystemAllowAuthSystem
@@ -75,7 +75,7 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         # API鉴权
         self.verify_api_allow_list(system_id, api)
 
-    def verify_api_by_role(self, app_code: str, role_id: int, api: ManagementAPIEnum):
+    def verify_api_by_role(self, app_code: str, role_id: int, api: ManagementAPIEnum, system_id: str = ""):
         """
         由于管理员API有很大一部分都是在需要在分级管理员角色下操作的
         所以该方法主要是封装了对角色下的API校验
@@ -84,14 +84,24 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         role_source = RoleSource.objects.filter(source_type=RoleSourceTypeEnum.API.value, role_id=role_id).first()
         # 角色来源不存在，说明页面创建或默认初始化的，非API创建，所以任何系统都无法操作
         if role_source is None:
-            raise exceptions.PermissionDenied(
-                detail=f"role[{role_id}] can not be operated by app_code[{app_code}], since role source not exists"
-            )
+            # 如果role是对应system_id的系统管理员，则其来源则默认为传入的系统
+            if (
+                system_id
+                and Role.objects.filter(id=role_id, type=RoleType.SYSTEM_MANAGER.value, code=system_id).exists()
+            ):
+                source_system_id = system_id
+
+            else:
+                raise exceptions.PermissionDenied(
+                    detail=f"role[{role_id}] can not be operated by app_code[{app_code}], since role source not exists"
+                )
+        else:
+            source_system_id = role_source.source_system_id
 
         # API认证和API鉴权
-        self.verify_api(app_code, role_source.source_system_id, api)
+        self.verify_api(app_code, source_system_id, api)
 
-    def verify_api_by_group(self, app_code: str, group_id: int, api: ManagementAPIEnum):
+    def verify_api_by_group(self, app_code: str, group_id: int, api: ManagementAPIEnum, system_id: str = ""):
         """
         对用户组下的对象进行操作时，比如增删成员、添加权限等，需要进行API认证鉴权
         所以该方法主要是封装了对用户组下的API校验
@@ -106,10 +116,15 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
                 detail=f"group[{group_id}] can not operated by app_code[{app_code}], since related role not exists"
             )
         # 使用角色校验API
-        self.verify_api_by_role(app_code, role_related_object.role_id, api)
+        self.verify_api_by_role(app_code, role_related_object.role_id, api, system_id)
 
     def verify_api_by_object(
-        self, app_code: str, object_type: VerifyAPIObjectTypeEnum, object_id: int, api: ManagementAPIEnum
+        self,
+        app_code: str,
+        object_type: VerifyAPIObjectTypeEnum,
+        object_id: int,
+        api: ManagementAPIEnum,
+        system_id: str = "",
     ):
         """
         对Group/Role等对象下操作的管理类API认证和鉴权
@@ -119,11 +134,11 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
             raise exceptions.PermissionDenied(detail=f"not support verify api by [{object_type}]")
 
         if object_type == VerifyAPIObjectTypeEnum.ROLE.value:
-            self.verify_api_by_role(app_code, object_id, api)
+            self.verify_api_by_role(app_code, object_id, api, system_id)
         elif object_type == VerifyAPIObjectTypeEnum.GROUP.value:
-            self.verify_api_by_group(app_code, object_id, api)
+            self.verify_api_by_group(app_code, object_id, api, system_id)
 
-    def verify_api_by_groups(self, app_code: str, group_ids: List[int], api: ManagementAPIEnum):
+    def verify_api_by_groups(self, app_code: str, group_ids: List[int], api: ManagementAPIEnum, system_id: str = ""):
         """
         批量操作用户组，需要进行API认证鉴权
         所以该方法主要是封装了对用户组下的API校验
@@ -147,4 +162,4 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         # 使用角色校验API
         role_ids_set = {r.role_id for r in role_related_objects}
         for role_id in role_ids_set:
-            self.verify_api_by_role(app_code, role_id, api)
+            self.verify_api_by_role(app_code, role_id, api, system_id)

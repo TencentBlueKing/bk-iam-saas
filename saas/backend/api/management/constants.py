@@ -43,6 +43,22 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 用户组申请单
     GROUP_APPLICATION_CREATE = auto()
 
+    # V2 API
+    # 用户组
+    V2_GROUP_BATCH_CREATE = auto()
+    V2_GROUP_UPDATE = auto()
+    V2_GROUP_DELETE = auto()
+    # 用户组成员
+    V2_GROUP_MEMBER_LIST = auto()
+    V2_GROUP_MEMBER_ADD = auto()
+    V2_GROUP_MEMBER_DELETE = auto()
+    # 用户组权限
+    V2_GROUP_POLICY_GRANT = auto()
+    V2_GROUP_POLICY_REVOKE = auto()
+    V2_GROUP_POLICY_DELETE = auto()
+    # 用户组申请单
+    V2_GROUP_APPLICATION_CREATE = auto()
+
     _choices_labels = skip(
         (
             # 分级管理员
@@ -70,6 +86,21 @@ class ManagementAPIEnum(BaseAPIEnum):
             (USER_ROLE_GROUP_LIST, "获取某个分级管理员下用户加入的用户组列表"),
             # 用户组申请单
             (GROUP_APPLICATION_CREATE, "创建用户组申请单"),
+            # V2
+            # 用户组
+            (V2_GROUP_BATCH_CREATE, "[V2]批量创建用户组"),
+            (V2_GROUP_UPDATE, "[V2]更新用户组"),
+            (V2_GROUP_DELETE, "[V2]删除用户组"),
+            # 用户组成员
+            (V2_GROUP_MEMBER_LIST, "[V2]获取用户组成员列表"),
+            (V2_GROUP_MEMBER_ADD, "[V2]添加用户组成员"),
+            (V2_GROUP_MEMBER_DELETE, "[V2]删除用户组成员"),
+            # 用户组权限
+            (V2_GROUP_POLICY_GRANT, "[V2]授权用户组"),
+            (V2_GROUP_POLICY_REVOKE, "[V2]回收用户组权限"),
+            (V2_GROUP_POLICY_DELETE, "[V2]删除用户组策略"),
+            # 用户组申请单
+            (V2_GROUP_APPLICATION_CREATE, "[V2]创建用户组申请单"),
         )
     )
 
@@ -87,6 +118,8 @@ class VerifyAPIParamLocationEnum(ChoicesEnum, LowerStrEnum):
     SYSTEM_IN_BODY = auto()
     SYSTEM_IN_QUERY = auto()
     GROUP_IDS_IN_BODY = auto()
+    SYSTEM_IN_PATH = auto()
+    GROUP_IDS_IN_QUERY = auto()
 
     _choices_labels = skip(
         (
@@ -95,6 +128,8 @@ class VerifyAPIParamLocationEnum(ChoicesEnum, LowerStrEnum):
             (SYSTEM_IN_BODY, "在body data里的system参数"),
             (SYSTEM_IN_QUERY, "在get请求query里的system参数"),
             (GROUP_IDS_IN_BODY, "在body data里的groups_ids参数"),
+            (SYSTEM_IN_PATH, "在路径里的system参数"),
+            (GROUP_IDS_IN_QUERY, "在get请求query里的groups_ids参数"),
         )
     )
 
