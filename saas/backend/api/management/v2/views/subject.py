@@ -68,7 +68,7 @@ class ManagementDepartmentGroupBelongViewSet(GenericViewSet):
     management_api_permission = {
         "get": (
             VerifyAPIParamLocationEnum.GROUP_IDS_IN_QUERY.value,
-            ManagementAPIEnum.V2_USER_GROUPS_BELONG_CHECK.value,
+            ManagementAPIEnum.V2_DEPARTMENT_GROUPS_BELONG_CHECK.value,
         ),
     }
 
