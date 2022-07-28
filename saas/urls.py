@@ -50,7 +50,7 @@ urlpatterns = [
                 url(r"^subjects/", include("backend.apps.subject.urls")),
                 url(r"^templates/", include("backend.apps.template.urls")),
                 url(r"^organizations/", include("backend.apps.organization.urls")),
-                url(r"^open/", include("backend.api.urls")),
+                url(r"^open/", include("backend.api.urls_v1")),
                 url(r"^roles/", include("backend.apps.role.urls")),
                 url(r"^users/", include("backend.apps.user.urls")),
                 url(r"^modeling/", include("backend.apps.model_builder.urls")),

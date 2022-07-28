@@ -34,7 +34,7 @@ from sentry_sdk import capture_exception
 from backend.common.debug import log_api_error_trace
 from backend.common.error_codes import error_codes
 
-from .base import is_open_api_request, is_v1_open_api_request
+from .base import is_open_api_request_path, is_v1_open_api_request_path
 
 logger = logging.getLogger("app")
 
@@ -97,7 +97,7 @@ def _exception_to_error(request, exc) -> Optional[APIError]:
         return error_codes.JSON_FORMAT_ERROR.format(message=exc.detail)
 
     if isinstance(exc, ValidationError):
-        if is_open_api_request(request.path):
+        if is_open_api_request_path(request.path):
             return error_codes.VALIDATE_ERROR.format(message=json.dumps(exc.detail), replace=True)
 
         return error_codes.VALIDATE_ERROR.format(message=_one_line_error(exc))
@@ -153,7 +153,7 @@ def exception_handler(exc, context):
 
     status_code = error.status_code
     if (
-        is_v1_open_api_request(request.path)
+        is_v1_open_api_request_path(request.path)
         and isinstance(error, APIError)
         and error.code_num not in ignore_error_codes
     ):
