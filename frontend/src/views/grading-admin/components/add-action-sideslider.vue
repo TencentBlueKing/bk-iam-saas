@@ -22,7 +22,10 @@
                             @input="handleInput"
                             @enter="handleSearch">
                         </bk-input>
-                        <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+                        <div
+                            v-if="isHierarchicalAdmin.type === 'rating_manager'"
+                            class="icon-iamcenter-wrapper"
+                            @click.stop="refreshList">
                             <i class="iam-icon iamcenter-refresh"></i>
                         </div>
                     </div>
@@ -43,6 +46,7 @@
                                 </template>
                             </div>
                             <div
+                                v-if="isHierarchicalAdmin.type === 'rating_manager'"
                                 :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
                                 :title="$t(`m.grading['修改分级管理员授权范围']`)"
                                 @click="handleSkip">
@@ -52,12 +56,14 @@
                         </template>
                         <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
-                                <bk-exception
-                                    class="exception-wrap-item exception-part"
-                                    type="search-empty"
-                                    scene="part"></bk-exception>
-                                <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改分级管理员授权范围']`) }}</p>
-                                <!-- <iam-svg /> -->
+                                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                                    <bk-exception
+                                        class="exception-wrap-item exception-part"
+                                        type="search-empty"
+                                        scene="part"></bk-exception>
+                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改分级管理员授权范围']`) }}</p>
+                                </template>
+                                <iam-svg v-else />
                             </div>
                         </template>
                     </div>
@@ -224,6 +230,9 @@
                     flag = false;
                 }
                 return this.initRequestQueue.length > 0 || !flag;
+            },
+            isHierarchicalAdmin () {
+                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
             }
         },
         watch: {
@@ -1073,7 +1082,7 @@
             }
         }
 
-        .empty-wrapper2 {
+        .empty-wrapper2 .exception-part {
             img {
                 width: 220px !important;
             }

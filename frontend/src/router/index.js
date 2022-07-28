@@ -148,7 +148,7 @@ export const beforeEach = async (to, from, next) => {
             window.localStorage.setItem('index', 0);
         }
 
-        if (to.name === 'gradingAdminCreate') {
+        if (to.name === 'gradingAdminEdit') {
             await store.dispatch('role/updateCurrentRole', { id: 0 });
             await store.dispatch('userInfo');
             if (to.params.id) {
@@ -187,6 +187,9 @@ export const beforeEach = async (to, from, next) => {
                 } else if (
                     ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(to.name) && noFrom
                 ) {
+                    if (to.name === 'gradingAdminEdit') {
+                        next({ path: `${to.path}` });
+                    }
                     next({ path: `${SITE_URL}rating-manager` });
                 } else {
                     next();

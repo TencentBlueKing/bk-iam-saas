@@ -50,7 +50,7 @@
                                 <span style="color: #c4c6cc;">({{ option.id }})</span>
                             </bk-option>
                             <div slot="extension" class="select-extension-wrapper">
-                                <div class="left" @click.stop="handleSkip">
+                                <div class="left" @click.stop="handleSkip" v-if="user.role.type === 'rating_manager'">
                                     <i class="iam-icon iamcenter-edit-fill mr5"></i>{{ $t(`m.grading['修改分级管理员授权范围']`) }}
                                 </div>
                                 <div class="right" @click.stop="refreshList">
@@ -857,18 +857,12 @@
             },
 
             handleSkip () {
-                // ??
-                // this.$router.push({
-                //     name: 'gradingAdminEdit',
-                //     params: {
-                //         id: this.$store.getters.navCurRoleId
-                //     }
-                // });
-                // :id/rating-manager-edit
-                // :id/rating-manager-update-template
                 // 跳转至我的分级管理员
-                const routeData = this.$router.resolve({ path: `0/rating-manager-create`, params: { id: this.$store.getters.navCurRoleId } });
-                window.open(routeData.href, '_blank');
+                bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                if (this.user.role.type === 'rating_manager') {
+                    const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+                    window.open(routeData.href, '_blank');
+                }
             },
 
             refreshList () {

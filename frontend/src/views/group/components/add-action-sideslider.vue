@@ -22,7 +22,10 @@
                             @input="handleInput"
                             @enter="handleSearch">
                         </bk-input>
-                        <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+                        <div
+                            v-if="user.role.type === 'rating_manager'"
+                            class="icon-iamcenter-wrapper"
+                            @click.stop="refreshList">
                             <i class="iam-icon iamcenter-refresh"></i>
                         </div>
                     </div>
@@ -42,15 +45,22 @@
                                         :val="systemData[item.id].count" />
                                 </template>
                             </div>
-                            <div :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']" title="$t(`m.grading['修改分级管理员授权范围']`)" @click="handleSkip">
+                            <div
+                                v-if="user.role.type === 'rating_manager'"
+                                :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
+                                title="$t(`m.grading['修改分级管理员授权范围']`)"
+                                @click="handleSkip">
                                 <i class="iam-icon iamcenter-edit-fill"></i>
                                 {{ $t(`m.grading['修改分级管理员授权范围']`) }}
                             </div>
                         </template>
                         <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
-                                <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
-                                <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改分级管理员授权范围']`) }}</p>
+                                <template v-if="user.role.type === 'rating_manager'">
+                                    <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
+                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改分级管理员授权范围']`) }}</p>
+                                </template>
+                                <iam-svg v-else />
                             </div>
                         </template>
                     </div>
@@ -153,6 +163,8 @@
     import { leaveConfirm } from '@/common/leave-confirm';
     import { guid } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
+    import { mapGetters } from 'vuex';
+    import { bus } from '@/common/bus';
 
     export default {
         name: '',
@@ -212,6 +224,7 @@
             };
         },
         computed: {
+            ...mapGetters(['user']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -917,8 +930,11 @@
             },
 
             handleSkip () {
-                const routeData = this.$router.resolve({ path: `0/rating-manager-create`, params: { id: this.$store.getters.navCurRoleId } });
-                window.open(routeData.href, '_blank');
+                bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                if (this.user.role.type === 'rating_manager') {
+                    const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+                    window.open(routeData.href, '_blank');
+                }
             },
 
             refreshList () {
@@ -1159,7 +1175,7 @@
             }
         }
 
-        .empty-wrapper2 {
+        .empty-wrapper2 .exception-part {
             img {
                 width: 220px !important;
             }

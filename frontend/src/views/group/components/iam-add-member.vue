@@ -138,8 +138,10 @@
                             </bk-input>
                             <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
                             <p class="manual-error-text pr10" v-if="manualInputError">
-                                {{ $t(`m.common['手动输入提示2']`) }}，
-                                {{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
+                                {{ $t(`m.common['手动输入提示2']`) }}
+                                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                                    ，{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
+                                </template>
                             </p>
                             <bk-button
                                 theme="primary"
@@ -433,6 +435,9 @@
                     return false;
                 }
                 return this.isRatingManager;
+            },
+            isHierarchicalAdmin () {
+                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
             }
         },
         watch: {
