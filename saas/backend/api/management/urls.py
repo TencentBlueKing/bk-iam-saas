@@ -55,7 +55,7 @@ urlpatterns = [
     ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
     path(
-        "groups/<int:id>/actions/policies",
+        "groups/<int:id>/actions/policies/",
         views.ManagementGroupActionPolicyViewSet.as_view({"delete": "destroy"}),
         name="open.management.group_action",
     ),
