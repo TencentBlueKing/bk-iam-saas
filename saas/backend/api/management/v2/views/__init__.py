@@ -12,6 +12,7 @@ from .application import ManagementGroupApplicationViewSet
 from .group import (
     ManagementGradeManagerGroupViewSet,
     ManagementGroupActionPolicyViewSet,
+    ManagementGroupMemberExpiredAtViewSet,
     ManagementGroupMemberViewSet,
     ManagementGroupPolicyViewSet,
     ManagementGroupViewSet,
@@ -25,6 +26,7 @@ __all__ = [
     "ManagementGradeManagerGroupViewSet",
     "ManagementGroupViewSet",
     "ManagementGroupMemberViewSet",
+    "ManagementGroupMemberExpiredAtViewSet",
     "ManagementGroupPolicyViewSet",
     "ManagementGroupApplicationViewSet",
     "ManagementGroupActionPolicyViewSet",

@@ -33,6 +33,7 @@ from backend.apps.group.audit import (
     GroupDeleteAuditProvider,
     GroupMemberCreateAuditProvider,
     GroupMemberDeleteAuditProvider,
+    GroupMemberRenewAuditProvider,
     GroupPolicyCreateAuditProvider,
     GroupPolicyDeleteAuditProvider,
     GroupPolicyUpdateAuditProvider,
@@ -42,7 +43,13 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
+from backend.biz.group import (
+    GroupBiz,
+    GroupCheckBiz,
+    GroupCreateBean,
+    GroupMemberExpiredAtBean,
+    GroupTemplateGrantBean,
+)
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.common.pagination import CompatiblePagination
@@ -274,6 +281,52 @@ class ManagementGroupMemberViewSet(GenericViewSet):
 
         # 写入审计上下文
         audit_context_setter(group=group, members=[m.dict() for m in members])
+
+        return Response({})
+
+
+class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
+    """用户组成员有效期"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "put": (
+            VerifyAPIParamLocationEnum.GROUP_IN_PATH.value,
+            ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_UPDATE.value,
+        ),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户组成员有效期更新",
+        request_body=GroupAddMemberSLZ(label="用户组成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.member"],
+    )
+    @view_audit_decorator(GroupMemberRenewAuditProvider)
+    def update(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        serializer = GroupAddMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        members = [
+            GroupMemberExpiredAtBean(type=m["type"], id=m["id"], policy_expired_at=data["expired_at"])
+            for m in data["members"]
+        ]
+
+        # 更新有效期
+        self.biz.update_members_expired_at(group.id, members)
+
+        # 写入审计上下文
+        audit_context_setter(group=group, members=data["members"])
 
         return Response({})
 

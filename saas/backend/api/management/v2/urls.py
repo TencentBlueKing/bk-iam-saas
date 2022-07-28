@@ -39,12 +39,12 @@ urlpatterns = [
         views.ManagementGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.group_member",
     ),
-    # # 用户组成员有效期
-    # path(
-    #     "groups/<int:id>/members/-/expired_at/",
-    #     views.ManagementGroupMemberExpiredAtViewSet.as_view({"put": "update"}),
-    #     name="open.management.group_member.expired_at",
-    # ),
+    # 用户组成员有效期
+    path(
+        "groups/<int:id>/members/-/expired_at/",
+        views.ManagementGroupMemberExpiredAtViewSet.as_view({"put": "update"}),
+        name="open.management.group_member.expired_at",
+    ),
     # -------------- 用户组权限 --------------
     # 用户组自定义权限
     path(

@@ -52,6 +52,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GROUP_MEMBER_LIST = auto()
     V2_GROUP_MEMBER_ADD = auto()
     V2_GROUP_MEMBER_DELETE = auto()
+    V2_GROUP_MEMBER_EXPIRED_AT_UPDATE = auto()
     # 用户组权限
     V2_GROUP_POLICY_GRANT = auto()
     V2_GROUP_POLICY_REVOKE = auto()
