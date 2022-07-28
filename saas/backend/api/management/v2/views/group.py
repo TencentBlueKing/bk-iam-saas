@@ -471,3 +471,36 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         audit_context_setter(group=group, system_id=system_id, policies=policies)
 
         return Response({})
+
+
+class ManagementGroupPolicyActionViewSet(GenericViewSet):
+    """用户组自定义权限 - 操作"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "get": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_ACTION_LIST.value),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    group_biz = GroupBiz()
+    policy_query_biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="查询用户组有权限的Action列表",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        system_id = kwargs["system_id"]
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+
+        # 查询用户组Policy列表
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
+
+        return Response([{"id": p.action_id} for p in policies])

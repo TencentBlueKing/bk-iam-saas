@@ -58,11 +58,11 @@ urlpatterns = [
         views.ManagementGroupActionPolicyViewSet.as_view({"delete": "destroy"}),
         name="open.management.group_action",
     ),
-    # path(
-    #     "groups/<int:id>/policies/-/actions/",
-    #     views.ManagementGroupPolicyActionViewSet.as_view({"get": "list"}),
-    #     name="open.management.group_action",
-    # ),
+    path(
+        "groups/<int:id>/policies/-/actions/",
+        views.ManagementGroupPolicyActionViewSet.as_view({"get": "list"}),
+        name="open.management.group_action",
+    ),
     # -------------- 申请 --------------
     # 用户组申请单
     path(

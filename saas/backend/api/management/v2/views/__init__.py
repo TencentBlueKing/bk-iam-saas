@@ -14,6 +14,7 @@ from .group import (
     ManagementGroupActionPolicyViewSet,
     ManagementGroupMemberExpiredAtViewSet,
     ManagementGroupMemberViewSet,
+    ManagementGroupPolicyActionViewSet,
     ManagementGroupPolicyViewSet,
     ManagementGroupViewSet,
     ManagementSystemManagerGroupViewSet,
@@ -30,7 +31,7 @@ __all__ = [
     "ManagementGroupPolicyViewSet",
     "ManagementGroupApplicationViewSet",
     "ManagementGroupActionPolicyViewSet",
-    # "ManagementGroupPolicyActionViewSet",
+    "ManagementGroupPolicyActionViewSet",
     # "ManagementUserGroupBelongViewSet",
     # "ManagementDepartmentGroupBelongViewSet",
 ]

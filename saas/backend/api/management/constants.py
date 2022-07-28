@@ -57,6 +57,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GROUP_POLICY_GRANT = auto()
     V2_GROUP_POLICY_REVOKE = auto()
     V2_GROUP_POLICY_DELETE = auto()
+    V2_GROUP_POLICY_ACTION_LIST = auto()
     # 用户组申请单
     V2_GROUP_APPLICATION_CREATE = auto()
 
@@ -96,10 +97,12 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_GROUP_MEMBER_LIST, "[V2]获取用户组成员列表"),
             (V2_GROUP_MEMBER_ADD, "[V2]添加用户组成员"),
             (V2_GROUP_MEMBER_DELETE, "[V2]删除用户组成员"),
+            (V2_GROUP_MEMBER_EXPIRED_AT_UPDATE, "[V2]用户组成员续期"),
             # 用户组权限
             (V2_GROUP_POLICY_GRANT, "[V2]授权用户组"),
             (V2_GROUP_POLICY_REVOKE, "[V2]回收用户组权限"),
             (V2_GROUP_POLICY_DELETE, "[V2]删除用户组策略"),
+            (V2_GROUP_POLICY_ACTION_LIST, "[V2]用户组策略对应操作列表"),
             # 用户组申请单
             (V2_GROUP_APPLICATION_CREATE, "[V2]创建用户组申请单"),
         )
