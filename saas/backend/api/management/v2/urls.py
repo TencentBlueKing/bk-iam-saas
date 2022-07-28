@@ -70,17 +70,17 @@ urlpatterns = [
         views.ManagementGroupApplicationViewSet.as_view({"post": "create"}),
         name="open.management.group_application",
     ),
-    # # -------------- Subject --------------
-    # # 用户 - 所属用户组判定
-    # path(
-    #     "users/<str:user_id>/groups/belong/",
-    #     views.ManagementUserGroupBelongViewSet.as_view({"get": "get"}),
-    #     name="open.management.user_group_belong",
-    # ),
-    # # 部门 - 所属用户组判定
-    # path(
-    #     "departments/<int:id>/groups/belong/",
-    #     views.ManagementDepartmentGroupBelongViewSet.as_view({"get": "get"}),
-    #     name="open.management.department_group_belong",
-    # ),
+    # -------------- Subject --------------
+    # 用户 - 所属用户组判定
+    path(
+        "users/<str:user_id>/groups/belong/",
+        views.ManagementUserGroupBelongViewSet.as_view({"get": "check"}),
+        name="open.management.user_group_belong",
+    ),
+    # 部门 - 所属用户组判定
+    path(
+        "departments/<int:id>/groups/belong/",
+        views.ManagementDepartmentGroupBelongViewSet.as_view({"get": "check"}),
+        name="open.management.department_group_belong",
+    ),
 ]

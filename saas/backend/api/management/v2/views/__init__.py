@@ -19,8 +19,7 @@ from .group import (
     ManagementGroupViewSet,
     ManagementSystemManagerGroupViewSet,
 )
-
-# from .subject import ManagementDepartmentGroupBelongViewSet, ManagementUserGroupBelongViewSet
+from .subject import ManagementDepartmentGroupBelongViewSet, ManagementUserGroupBelongViewSet
 
 __all__ = [
     "ManagementSystemManagerGroupViewSet",
@@ -32,6 +31,6 @@ __all__ = [
     "ManagementGroupApplicationViewSet",
     "ManagementGroupActionPolicyViewSet",
     "ManagementGroupPolicyActionViewSet",
-    # "ManagementUserGroupBelongViewSet",
-    # "ManagementDepartmentGroupBelongViewSet",
+    "ManagementUserGroupBelongViewSet",
+    "ManagementDepartmentGroupBelongViewSet",
 ]

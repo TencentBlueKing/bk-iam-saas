@@ -217,3 +217,8 @@ class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, R
 
 class ManagementApplicationIDSLZ(serializers.Serializer):
     ids = serializers.ListField(label="申请单据ID列表", child=serializers.CharField(label="申请单据ID"))
+
+
+class ManagementSubjectGroupBelongSLZ(serializers.Serializer):
+    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255)
+    inherit = serializers.BooleanField(label="是否包含继承的用户组", required=False, default=False)

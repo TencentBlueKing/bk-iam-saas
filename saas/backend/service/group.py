@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from django.db import transaction
 from django.db.models import F
@@ -114,6 +114,21 @@ class GroupService:
             user_count=F("user_count") - type_count[SubjectType.USER.value],
             department_count=F("department_count") - type_count[SubjectType.DEPARTMENT.value],
         )
+
+    def check_subject_groups_belong(
+        self, subject: Subject, group_ids: List[int], inherit: bool = False
+    ) -> Dict[int, bool]:
+        """
+        校验Subject与用户组是否存在关系
+        """
+        # 对于非用户，则不存在继承的查询
+        if subject.type != SubjectType.USER.value:
+            inherit = False
+
+        group_belongs = iam.check_subject_groups_belong(subject.type, subject.id, group_ids, inherit)
+
+        # 将group_id从str转为int
+        return {int(k): v for k, v in group_belongs.items()}
 
     def list_subject_group(self, subject: Subject, limit: int = 10, offset: int = 0) -> Tuple[int, List[SubjectGroup]]:
         """
