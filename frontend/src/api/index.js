@@ -154,13 +154,6 @@ async function getPromise (method, url, data, userConfig = {}) {
         //     reject(error)
         // })
     }).catch(error => {
-        if (error.response.status === 403) {
-            global.mainComponent.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: error.response.data.message || error.response.message || error.response.statusText
-            });
-        }
         console.warn(error.response);
         return handleReject(error, config);
     }).finally(() => {
