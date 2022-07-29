@@ -796,7 +796,6 @@
                     id: this.$route.params.id
                 };
                 console.log('params', params);
-                debugger;
                 try {
                     await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
                     await this.$store.dispatch('roleList');
@@ -876,7 +875,7 @@
                 this.submitLoading = true;
                 window.changeDialog = false;
                 console.log('params', params);
-                debugger;
+                
                 const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
                 try {
                     await this.$store.dispatch(`role/${dispatchMethod}`, params);

@@ -102,9 +102,6 @@
                 immediate: true
             }
         },
-        created () {
-            console.log('list', this.list);
-        },
         methods: {
             handleToogleSelect () {
                 if (!this.isToggle) {
