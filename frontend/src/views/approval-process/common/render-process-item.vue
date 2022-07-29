@@ -26,7 +26,6 @@
                     :key="option.id"
                     :id="option.id"
                     :name="option.name">
-                    <!-- option.node_names.join(' -> ') -->
                     <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${ optionMap(option) }`">{{ option.name }}</span>
                 </bk-option>
                 <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }" @click="handleOpenCreateLink" style="cursor: not-allowed;">
