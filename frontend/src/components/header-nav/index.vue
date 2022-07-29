@@ -209,7 +209,7 @@
                 userGroupName: '',
                 navData: [
                     { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
-                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: true, type: 'all_manager' },
+                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: false, type: 'all_manager' },
                     { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
                     { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],
@@ -322,6 +322,7 @@
                 bus.$off('refresh-role');
                 bus.$off('on-set-tab');
                 bus.$off('rating-admin-change');
+                bus.$off('roleList-update');
             });
         },
         mounted () {
@@ -333,6 +334,16 @@
                 const data = this.navData.find(e => e.type === 'staff');
                 this.isRatingChange = true;
                 this.handleSelect(data, 0);
+            });
+
+            bus.$on('roleList-update', length => {
+                if (length > 1) {
+                    this.navData.forEach(item => {
+                        if (item.type === 'all_manager') {
+                            item.show = true;
+                        }
+                    });
+                }
             });
         },
         methods: {
