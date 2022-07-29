@@ -43,7 +43,7 @@
                     v-show="isShowGradingWrapper"
                     v-bk-clickoutside="handleClickOutSide">
                     <template>
-                        <div class="operation auth-manager">
+                        <div class="operation auth-manager" v-if="roleList.length">
                             <div class="user-dropdown-item " @click="handleManager">
                                 <Icon type="grade-admin" class="iam-manager-icon" />
                                 {{ $t(`m.nav['切换分级管理员']`) }}
@@ -214,7 +214,8 @@
                     { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],
                 isRatingChange: false,
-                showNavDataLength: 0
+                showNavDataLength: 0,
+                curHeight: 78
             };
         },
         computed: {
@@ -230,7 +231,7 @@
             ]),
             style () {
                 return {
-                    height: `${this.curHeight}px`
+                    height: `${this.roleList.length ? this.curHeight : 46}px`
                 };
             },
             curAccountLogo () {
