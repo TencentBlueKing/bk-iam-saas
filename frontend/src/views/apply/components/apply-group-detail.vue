@@ -121,7 +121,7 @@
     .iam-apply-group-detail-wrapper {
         height: calc(100vh - 121px);
         .action {
-            padding-bottom: 20px;
+            padding-bottom: 50px;
         }
     }
 </style>
