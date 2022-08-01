@@ -407,7 +407,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()
         # 序列化数据
-        serializer = ManagementGroupRevokeSLZ(data=request.data)
+        serializer = ManagementGroupPolicyDeleteSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
