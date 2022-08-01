@@ -393,7 +393,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组权限回收",
-        request_body=ManagementGroupGrantSLZ(label="权限"),
+        request_body=ManagementGroupRevokeSLZ(label="权限"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.policy"],
     )
@@ -449,7 +449,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         group = self.get_object()
         # 序列化数据
-        serializer = ManagementGroupRevokeSLZ(data=request.data)
+        serializer = ManagementGroupPolicyDeleteSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
