@@ -611,6 +611,7 @@ export const m = {
         '操作人': 'Operator',
         '触发类型': 'Trigger type',
         '日志详情': 'Log details',
+        '暂无日志详情': 'No log details are available',
         '成功': 'Succeed',
         '失败': 'Failed',
         '同步记录': 'Synchronized records',
