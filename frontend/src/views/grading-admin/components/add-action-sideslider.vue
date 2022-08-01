@@ -29,7 +29,9 @@
                             <i class="iam-icon iamcenter-refresh"></i>
                         </div>
                     </div>
-                    <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
+                    <div
+                        :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']"
+                        v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
                         <template v-if="curSystemList.length > 0">
                             <div class="system-item"
                                 v-for="item in curSystemList"
@@ -205,7 +207,8 @@
                 linearAction: [],
                 quickClose: false,
                 tagActionList: [],
-                tagActionListBackUp: []
+                tagActionListBackUp: [],
+                systemListIsLoading: false
             };
         },
         computed: {
@@ -474,6 +477,7 @@
              * 获取系统列表
              */
             async fetchSystems () {
+                this.systemListIsLoading = true;
                 try {
                     const res = await this.$store.dispatch('system/getSystems');
                     this.systemList = _.cloneDeep(res.data);
@@ -521,6 +525,7 @@
                     });
                 } finally {
                     this.initRequestQueue.shift();
+                    this.systemListIsLoading = false;
                 }
             },
 
