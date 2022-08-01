@@ -15,16 +15,15 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
-from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
-from backend.api.management.permissions import ManagementAPIPermission
-from backend.api.management.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
+from backend.api.management.v2.permissions import ManagementAPIPermission
+from backend.api.management.v2.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
 from backend.biz.group import GroupCheckBiz
 from backend.service.constants import ApplicationTypeEnum, SubjectType
 from backend.service.models import Subject
 
 
-class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+class ManagementGroupApplicationViewSet(GenericViewSet):
     """用户组申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -32,7 +31,7 @@ class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, Gener
     management_api_permission = {
         "create": (
             VerifyAPIParamLocationEnum.GROUP_IDS_IN_BODY.value,
-            ManagementAPIEnum.GROUP_APPLICATION_CREATE.value,
+            ManagementAPIEnum.V2_GROUP_APPLICATION_CREATE.value,
         ),
     }
 

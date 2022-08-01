@@ -136,6 +136,7 @@ class GroupBiz:
     # 直通的方法
     add_members = GroupService.__dict__["add_members"]
     remove_members = GroupService.__dict__["remove_members"]
+    check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
@@ -622,6 +623,8 @@ class GroupCheckBiz:
         """
         批量检查角色的用户组名字是否唯一
         """
+        # FIXME: 对于RBAC模型下，某个系统管理员下可能有上亿个用户组（10万项目 * 500流水线 * 3个用户组 = 1.5亿用户组 ）
+        #  性能问题如何解决？？
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
         if Group.objects.filter(name__in=names, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
