@@ -165,6 +165,7 @@ export const beforeEach = async (to, from, next) => {
         }
         
         if (difference.length) {
+            console.log('to', to);
             store.dispatch('versionLogInfo');
             if (difference.includes(to.name)) {
                 store.commit('setHeaderTitle', '');
@@ -185,12 +186,11 @@ export const beforeEach = async (to, from, next) => {
                 } else if (['createUserGroup'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}user-group` });
                 } else if (
-                    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(to.name) && noFrom
+                    ['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom
                 ) {
-                    if (to.name === 'gradingAdminEdit') {
-                        next({ path: `${to.path}` });
-                    }
                     next({ path: `${SITE_URL}rating-manager` });
+                } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
+                    next();
                 } else {
                     next();
                 }
