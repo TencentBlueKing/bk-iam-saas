@@ -18,69 +18,69 @@ urlpatterns = [
     path(
         "grade_managers/-/groups/",
         views.ManagementSystemManagerGroupViewSet.as_view({"post": "create"}),
-        name="open.management.system_manager_group",
+        name="open.management.v2.system_manager_group",
     ),
     # 分级管理员下创建用户组
     path(
         "grade_managers/<int:id>/groups/",
         views.ManagementGradeManagerGroupViewSet.as_view({"post": "create"}),
-        name="open.management.grade_manager_group",
+        name="open.management.v2.grade_manager_group",
     ),
     # 用户组基本信息更新 & 删除
     path(
         "groups/<int:id>/",
         views.ManagementGroupViewSet.as_view({"put": "update", "delete": "destroy"}),
-        name="open.management.group",
+        name="open.management.v2.group",
     ),
     # -------------- 用户组成员 --------------
     # 用户组成员
     path(
         "groups/<int:id>/members/",
         views.ManagementGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
-        name="open.management.group_member",
+        name="open.management.v2.group_member",
     ),
     # 用户组成员有效期
     path(
         "groups/<int:id>/members/-/expired_at/",
         views.ManagementGroupMemberExpiredAtViewSet.as_view({"put": "update"}),
-        name="open.management.group_member.expired_at",
+        name="open.management.v2.group_member.expired_at",
     ),
     # -------------- 用户组权限 --------------
     # 用户组自定义权限
     path(
         "groups/<int:id>/policies/",
         views.ManagementGroupPolicyViewSet.as_view({"post": "create", "delete": "destroy"}),
-        name="open.management.group_policy",
+        name="open.management.v2.group_policy",
     ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
     path(
         "groups/<int:id>/actions/-/policies/",
         views.ManagementGroupActionPolicyViewSet.as_view({"delete": "destroy"}),
-        name="open.management.group_action",
+        name="open.management.v2.group_action",
     ),
     path(
         "groups/<int:id>/policies/-/actions/",
         views.ManagementGroupPolicyActionViewSet.as_view({"get": "list"}),
-        name="open.management.group_action",
+        name="open.management.v2.group_action",
     ),
     # -------------- 申请 --------------
     # 用户组申请单
     path(
         "groups/-/applications/",
         views.ManagementGroupApplicationViewSet.as_view({"post": "create"}),
-        name="open.management.group_application",
+        name="open.management.v2.group_application",
     ),
     # -------------- Subject --------------
     # 用户 - 所属用户组判定
     path(
         "users/<str:user_id>/groups/belong/",
         views.ManagementUserGroupBelongViewSet.as_view({"get": "check"}),
-        name="open.management.user_group_belong",
+        name="open.management.v2.user_group_belong",
     ),
     # 部门 - 所属用户组判定
     path(
         "departments/<int:id>/groups/belong/",
         views.ManagementDepartmentGroupBelongViewSet.as_view({"get": "check"}),
-        name="open.management.department_group_belong",
+        name="open.management.v2.department_group_belong",
     ),
 ]
