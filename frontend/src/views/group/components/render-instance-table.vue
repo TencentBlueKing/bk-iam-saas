@@ -1359,7 +1359,6 @@
                         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
                     }
                 }
-                debugger;
 
                 this.tableList.forEach(item => {
                     let actionParam = {};

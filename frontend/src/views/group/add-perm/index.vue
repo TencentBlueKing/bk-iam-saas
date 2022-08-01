@@ -625,7 +625,6 @@
                     }
                 };
                 console.log('params', params);
-                debugger;
                 try {
                     await this.$store.dispatch('userGroup/addUserGroupPolicy', params);
                     this.messageSuccess(this.$t(`m.info['用户组添加权限成功']`), 1000);
