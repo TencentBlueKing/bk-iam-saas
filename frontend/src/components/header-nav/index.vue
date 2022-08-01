@@ -43,7 +43,7 @@
                     v-show="isShowGradingWrapper"
                     v-bk-clickoutside="handleClickOutSide">
                     <template>
-                        <div class="operation auth-manager">
+                        <div class="operation auth-manager" v-if="roleList.length">
                             <div class="user-dropdown-item " @click="handleManager">
                                 <Icon type="grade-admin" class="iam-manager-icon" />
                                 {{ $t(`m.nav['切换分级管理员']`) }}
@@ -208,13 +208,14 @@
                 placeholderValue: '',
                 userGroupName: '',
                 navData: [
-                    { text: '个人工作台', id: 0, show: true, type: 'staff' },
-                    { text: '权限管理', id: 1, show: true, type: 'all_manager' },
-                    { text: '统计分析', id: 2, show: false, type: 'super_manager' },
-                    { text: '平台管理', id: 3, show: false, type: 'super_manager' }
+                    { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
+                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: false, type: 'all_manager' },
+                    { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
+                    { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],
                 isRatingChange: false,
-                showNavDataLength: 0
+                showNavDataLength: 0,
+                curHeight: 78
             };
         },
         computed: {
@@ -230,7 +231,7 @@
             ]),
             style () {
                 return {
-                    height: `${this.curHeight}px`
+                    height: `${this.roleList.length ? this.curHeight : 46}px`
                 };
             },
             curAccountLogo () {
@@ -322,6 +323,7 @@
                 bus.$off('refresh-role');
                 bus.$off('on-set-tab');
                 bus.$off('rating-admin-change');
+                bus.$off('roleList-update');
             });
         },
         mounted () {
@@ -333,6 +335,16 @@
                 const data = this.navData.find(e => e.type === 'staff');
                 this.isRatingChange = true;
                 this.handleSelect(data, 0);
+            });
+
+            bus.$on('roleList-update', length => {
+                if (length > 1) {
+                    this.navData.forEach(item => {
+                        if (item.type === 'all_manager') {
+                            item.show = true;
+                        }
+                    });
+                }
             });
         },
         methods: {
