@@ -18,8 +18,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
-from backend.api.management.permissions import ManagementAPIPermission
-from backend.api.management.serializers import (
+from backend.api.management.v1.permissions import ManagementAPIPermission
+from backend.api.management.v1.serializers import (
     ManagementGradeManagerGroupCreateSLZ,
     ManagementGroupBaseInfoUpdateSLZ,
     ManagementGroupBasicSLZ,

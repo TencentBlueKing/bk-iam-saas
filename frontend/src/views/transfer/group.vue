@@ -110,8 +110,8 @@
                 this.isLoading = true;
                 try {
                     const res = await this.$store.dispatch('perm/getPersonalGroups', {
-                        limit: 10,
-                        offset: 0
+                        page_size: 100,
+                        page: 1
                     });
                     const groupList = res.data.results || [];
                     groupList.forEach(item => {

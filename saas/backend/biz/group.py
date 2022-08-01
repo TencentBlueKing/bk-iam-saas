@@ -136,6 +136,7 @@ class GroupBiz:
     # 直通的方法
     add_members = GroupService.__dict__["add_members"]
     remove_members = GroupService.__dict__["remove_members"]
+    check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
@@ -297,14 +298,12 @@ class GroupBiz:
         return relation_beans
 
     def list_paging_subject_group(
-        self, subject: Subject, is_recursive: bool = False, limit: int = 10, offset: int = 0
+        self, subject: Subject, limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[SubjectGroupBean]]:
         """
         查询subject所属的用户组
         """
-        count, relations = self.group_svc.list_subject_group(
-            subject, is_recursive=is_recursive, limit=limit, offset=offset
-        )
+        count, relations = self.group_svc.list_subject_group(subject, limit=limit, offset=offset)
         return count, self._convert_to_subject_group_beans(relations)
 
     def list_paging_subject_group_before_expired_at(
@@ -330,6 +329,13 @@ class GroupBiz:
         注意: 分页查询, 可能会有性能问题
         """
         relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at)
+        return self._convert_to_subject_group_beans(relations)
+
+    def list_all_user_department_group(self, subject: Subject) -> List[SubjectGroupBean]:
+        """
+        查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)
+        """
+        relations = self.group_svc.list_user_department_group(subject)
         return self._convert_to_subject_group_beans(relations)
 
     def update_members_expired_at(self, group_id: int, members: List[GroupMemberExpiredAtBean]):
@@ -617,6 +623,8 @@ class GroupCheckBiz:
         """
         批量检查角色的用户组名字是否唯一
         """
+        # FIXME: 对于RBAC模型下，某个系统管理员下可能有上亿个用户组（10万项目 * 500流水线 * 3个用户组 = 1.5亿用户组 ）
+        #  性能问题如何解决？？
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
         if Group.objects.filter(name__in=names, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))

@@ -121,8 +121,8 @@
             async fetchData () {
                 this.tableLoading = true;
                 const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                    limit: 10,
-                    offset: 0
+                    page_size: 10,
+                    page: 1
                 }), this.$store.dispatch('renewal/getExpireSoonPerm')];
                 const resultList = await Promise.all(promiseList).finally(() => {
                     this.tableLoading = false;
