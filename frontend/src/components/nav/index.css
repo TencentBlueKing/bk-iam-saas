@@ -127,7 +127,7 @@ $duration: 0.3s;
             color: #c4c6cc !important;
 
             &::placeholder {
-                color: #70737a;
+                color: #979ba5;
             }
         }
         .bk-select-search-input {
