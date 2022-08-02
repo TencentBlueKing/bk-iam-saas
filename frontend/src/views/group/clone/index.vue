@@ -596,7 +596,6 @@
                 } else {
                     this.tableList.push(..._.cloneDeep(tempList));
                 }
-                console.log('this.tableList', this.tableList);
                 this.tableListBackup = _.cloneDeep(this.tableList);
 
                 // 处理聚合的数据，将表格数据按照相同的聚合id分配好
@@ -996,8 +995,6 @@
                         expired_at: this.expired_at,
                         templates
                     };
-                    console.log('params', params);
-                    debugger;
                     try {
                         await this.$store.dispatch('userGroup/addUserGroup', params);
                         this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);

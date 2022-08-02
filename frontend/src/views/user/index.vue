@@ -752,7 +752,6 @@
                 });
                 payload.selected = true;
                 this.curSelectedData = _.cloneDeep(payload);
-                console.log('this.curSelectedData', this.curSelectedData);
             },
 
             handleSearchSelected () {},
@@ -769,7 +768,6 @@
                     }
                 });
                 this.curSelectedData = _.cloneDeep(payload);
-                console.log('this.curSelectedData', this.curSelectedData);
             },
 
             /**
