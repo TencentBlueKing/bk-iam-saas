@@ -8,14 +8,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ModelEvent(BaseModel):
-    id: int
+    id: int = Field(alias="pk")
     type: str
     status: str
     system_id: str
     # 变更影响的模型，可能是action、policy、resource_type
     model_type: str
     model_id: str
+
+    class Config:
+        allow_population_by_field_name = True  # 支持alias字段同时传 id 与 pk

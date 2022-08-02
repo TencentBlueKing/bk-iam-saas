@@ -1102,7 +1102,6 @@
                         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
                     }
                 }
-                debugger;
                 this.tableList.forEach(item => {
                     const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id);
                     if (!item.isAggregate) {
