@@ -165,6 +165,8 @@ export const beforeEach = async (to, from, next) => {
                     next({ path: `${SITE_URL}my-perm` });
                 } else {
                     if (to.name === 'groupPermRenewal') {
+                        store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
                         next();
                     } else {
                         next({ path: `${SITE_URL}user-group` });
