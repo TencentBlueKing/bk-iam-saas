@@ -164,7 +164,13 @@ export const beforeEach = async (to, from, next) => {
                 if (curRole === 'staff' || curRole === '') {
                     next({ path: `${SITE_URL}my-perm` });
                 } else {
-                    next({ path: `${SITE_URL}user-group` });
+                    if (to.name === 'groupPermRenewal') {
+                        store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                        next();
+                    } else {
+                        next({ path: `${SITE_URL}user-group` });
+                    }
                 }
                 // next();
             } else {
