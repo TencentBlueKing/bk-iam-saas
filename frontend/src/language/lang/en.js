@@ -415,7 +415,8 @@ export const m = {
         '申请自定义权限标题': 'If the previous permission package does not meet your needs, please apply for the permission through customization',
         '申请自定义权限场景1': 'Certain permissions for a single system',
         '申请自定义权限场景2': 'More flexible permission requirements',
-        '申请加入用户组搜索提示': 'Enter group name, description, belonging system, hierarchical administrator, etc. to search'
+        '申请加入用户组搜索提示': 'Enter group name, description, belonging system, hierarchical administrator, etc. to search',
+        '超级管理员申请加入用户组搜索提示': 'Search Tips for Super Administrators Applying to Join User Groups'
     },
     permApply: {
         '选择系统': 'Select System',

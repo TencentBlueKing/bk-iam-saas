@@ -90,10 +90,10 @@
             user: {
                 handler (value) {
                     if (['rating_manager', 'system_manager'].includes(value.role.type)) {
-                        this.processGuideStyle.top = '220px';
+                        this.processGuideStyle.top = '305px';
                     }
                     if (value.role.type === 'super_manager') {
-                        this.processGuideStyle.top = '342px';
+                        this.processGuideStyle.top = '255px';
                     }
                 },
                 immediate: true,

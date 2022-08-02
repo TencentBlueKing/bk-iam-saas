@@ -78,7 +78,8 @@
                 handler (val) {
                     let oldSearchComponentValue = [];
                     if (this.$refs.searchSelect) {
-                        oldSearchComponentValue = this.$refs.searchSelect.chip.list;
+                        // eslint-disable-next-line max-len
+                        oldSearchComponentValue = (this.$refs.searchSelect.chip && this.$refs.searchSelect.chip.list) || [];
                     }
                     this.searchValue = filterValue([...oldSearchComponentValue, ...val]);
                 },

@@ -63,6 +63,10 @@ const UserGroup = () => import(
 const CreateUserGroup = () => import(
     /* webpackChunkName: 'user-group' */'../views/group/create');
 
+// 用户组克隆
+const CloneUserGroup = () => import(
+    /* webpackChunkName: 'user-group' */'../views/group/clone');
+
 // 用户组详情
 const UserGroupDetail = () => import(
     /* webpackChunkName: 'user-group' */'../views/group/detail');
@@ -308,6 +312,15 @@ export const routes = [
                     backRouter: 'userGroup'
                 },
                 component: CreateUserGroup
+            },
+            {
+                path: 'clone-user-group',
+                name: 'cloneUserGroup',
+                meta: {
+                    headerTitle: il8n('userGroup', '用户组克隆'),
+                    backRouter: 'userGroup'
+                },
+                component: CloneUserGroup
             },
             {
                 path: 'user-group-detail/:id',
