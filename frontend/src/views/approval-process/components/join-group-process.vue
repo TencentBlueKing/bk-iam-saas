@@ -159,7 +159,8 @@
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
                         if (this.list.find(item => item.id === payload.process_id)) {
-                            return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
+                            const result = this.list.find(item => item.id === payload.process_id);
+                            return result ? `${this.$t(`m.approvalProcess['审批节点']`)}：${result.node_names.join(' -> ')}` : '';
                         } else {
                             return '';
                         }
