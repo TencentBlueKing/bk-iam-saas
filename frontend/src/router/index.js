@@ -154,6 +154,8 @@ export const beforeEach = async (to, from, next) => {
             if (to.params.id) {
                 store.commit('updateNavId', to.params.id);
             }
+            store.commit('updateIndex', 0);
+            window.localStorage.setItem('index', 0);
             curRole = 'staff';
         }
 
