@@ -193,7 +193,6 @@ CELERY_IMPORTS = (
     "backend.apps.action.tasks",
     "backend.apps.policy.tasks",
     "backend.audit.tasks",
-    "backend.publisher.tasks",
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
 )
@@ -360,12 +359,6 @@ MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
 MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
-
-# 用于发布订阅的Redis
-PUB_SUB_REDIS_HOST = env.str("BKAPP_PUB_SUB_REDIS_HOST", default="")
-PUB_SUB_REDIS_PORT = env.str("BKAPP_PUB_SUB_REDIS_PORT", default="")
-PUB_SUB_REDIS_PASSWORD = env.str("BKAPP_PUB_SUB_REDIS_PASSWORD", default="")
-PUB_SUB_REDIS_DB = env.int("BKAPP_PUB_SUB_REDIS_DB", default=0)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
