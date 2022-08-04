@@ -213,7 +213,7 @@
 <style lang="postcss">
     .iam-user-group-detail {
         position: relative;
-        min-height: calc(100vh - 145px);
+        min-height: calc(100vh - 210px);
         .user-group-member {
             margin-bottom: 0 !important;
         }

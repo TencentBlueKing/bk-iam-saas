@@ -269,7 +269,6 @@
              * @return {*}
              */
             async handleTemplateExpanded (flag, item) {
-                console.log('flag', flag);
                 if (!flag) {
                     this.$set(item, 'isEdit', false);
                     return;
@@ -324,6 +323,7 @@
                 });
 
                 this.linearActionList = _.cloneDeep(linearActions);
+                console.log('this.linearActionList', this.linearActionList);
             },
 
             async getGroupTemplateDetail (item) {
@@ -565,7 +565,7 @@
 <style lang="postcss">
     .iam-user-group-perm-wrapper {
         position: relative;
-        min-height: calc(100vh - 145px);
+        min-height: calc(100vh - 211px);
         .iam-perm-ext-cls {
             margin-top: 10px;
         }
