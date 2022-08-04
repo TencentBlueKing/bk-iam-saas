@@ -334,6 +334,7 @@
             cursor: pointer;
             margin-right: 8px;
             .tab-title{
+                display: flex;
                 font-weight: Bold;
                 font-size: 14px;
                 color: #63656E;
@@ -349,6 +350,13 @@
                     border-radius: 2px;
                     text-align: center;
                     font-weight: 400;
+                }
+                .tab-item-title {
+                    width: 170px;
+                    display: inline-block;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             }
             .tab-desc{
