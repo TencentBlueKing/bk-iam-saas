@@ -37,7 +37,7 @@
             @select="handlerChange"
             @select-all="handlerAllChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column v-if="isSuperManager" type="selection" align="center" :selectable="getIsSelect"
+            <bk-table-column type="selection" align="center" :selectable="getIsSelect"
                 reserve-selection></bk-table-column>
             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                 <template slot-scope="{ row }">
