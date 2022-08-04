@@ -18,7 +18,7 @@
                             @input="handleNameInput"
                             @blur="handleNameBlur">
                         </bk-input>
-                        <p class="error-tips" v-if="isShowNameError">{{ nameValidateText }}</p>
+                        <p class="error-tips mt5" v-if="isShowNameError">{{ nameValidateText }}</p>
                     </div>
                 </div>
                 <div class="bk-form-item is-required">
@@ -93,7 +93,7 @@
                             {{ $t(`m.permApply['暂无可申请的操作']`) }}
                         </div>
                     </div>
-                    <p v-if="isShowActionError" class="error-tips mt">{{ $t(`m.verify['请选择操作']`) }}</p>
+                    <p v-if="isShowActionError" class="error-tips mt mb10">{{ $t(`m.verify['请选择操作']`) }}</p>
                 </div>
             </div>
         </render-horizontal-block>
@@ -886,6 +886,7 @@
             }
         }
         .error-tips {
+            position: relative;
             font-size: 12px;
             color: #ff4d4d;
             &.mt {
