@@ -22,7 +22,7 @@
         </render-action>
         <render-horizontal-block
             :label="$t(`m.grading['操作和资源范围']`)"
-            v-if="isHasPermTemplate">
+            v-show="isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm">
@@ -41,7 +41,7 @@
                         <span class="text">{{ expandedText }}</span>
                     </section>
                 </div>
-                <section ref="instanceTableContentRef">
+                <section ref="instanceTableContentRef" v-bkloading="{ isLoading: cloneLoading, opacity: 1 }">
                     <resource-instance-table
                         is-edit
                         mode="create"
@@ -175,6 +175,8 @@
                 tableListBackup: [],
                 tempalteDetailList: [],
                 aggregationData: {},
+                aggregationDataClone: {},
+                authorizationDataClone: {},
                 authorizationData: {},
                 aggregationDataByCustom: {},
                 authorizationDataByCustom: {},
@@ -187,7 +189,11 @@
                     isShow: false,
                     id: ''
                 },
-                curMap: null
+                curMap: null,
+                groupSystemList: [],
+                groupSystemListLength: 0,
+                groupId: '',
+                cloneLoading: true
             };
         },
         computed: {
@@ -200,6 +206,7 @@
                     return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
                 }, []);
                 const temps = [];
+                console.log('aggregationIds', this.tableList, aggregationIds);
                 aggregationIds.forEach(item => {
                     if (!temps.some(sub => sub.includes(item))) {
                         temps.push([item]);
@@ -267,11 +274,227 @@
                 return this.user.role.type === 'super_manager';
             },
             curAuthorizationData () {
-                const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
+                const data = Object.assign(
+                 this.authorizationData,
+                 this.authorizationDataByCustom,
+                 this.authorizationDataClone);
                 return data;
             }
         },
+        mounted () {
+            this.formData.name = `${this.$route.query.name}_克隆`;
+            this.formData.description = this.$route.query.description;
+            this.groupId = this.$route.query.id;
+            console.log(this.groupId, this.groupId);
+            this.handleInit();
+        },
         methods: {
+            // 先请求最外层数据（系统）
+            async handleInit () {
+                this.tableList = [];
+                try {
+                    const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    this.groupSystemList = res.data || []; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
+                    this.groupSystemListLength = res.data.length;
+                    console.log('this.groupSystemList', this.groupSystemList);
+                    for (let i = 0; i < this.groupSystemList.length; i++) {
+                        this.groupSystemList[i].count = this.groupSystemList[i].custom_policy_count;
+                        this.fetchAggregationAction(this.groupSystemList[i].id);
+                        this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
+                        if (this.groupSystemList[i].count > 0) {
+                            await this.getGroupCustomPolicy(this.groupSystemList[i]);
+                        } else {
+                            await this.getGroupTemplateList(this.groupSystemList[i]);
+                        }
+                    }
+                    this.handleAggregateData();
+                    this.cloneLoading = false;
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            // 自定义权限
+            async getGroupCustomPolicy (item) {
+                item.loading = true;
+                try {
+                    const res = await this.$store.dispatch('userGroup/getGroupPolicy', {
+                        id: this.groupId,
+                        systemId: item.id
+                    });
+                    const tableData = res.data.map(row => {
+                        console.log('row', row);
+                        row.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(resourceTypeItem => {
+                                resourceTypeItem.id = resourceTypeItem.type;
+                                resourceTypeItem.condition = '';
+                            });
+                        });
+                        // eslint-disable-next-line max-len
+                        // row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        return new GroupPolicy(
+                            row,
+                            'add', // 此属性为flag，会在related-resource-types赋值为add
+                            'custom',
+                            {
+                                system: {
+                                    id: item.id,
+                                    name: item.name
+                                },
+                                id: CUSTOM_PERM_TEMPLATE_ID
+                            }
+                        );
+                    });
+                    // const tableDataBackup = res.data.map(row => {
+                    //     // eslint-disable-next-line max-len
+                    //     row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                    //     return new GroupPolicy(
+                    //         row,
+                    //         'detail',
+                    //         'custom',
+                    //         { system: item.system }
+                    //     );
+                    // });
+                    this.tableList.push(..._.cloneDeep(tableData));
+                    this.tableListBackup = _.cloneDeep(this.tableList);
+                    // this.$set(item, 'tableDataBackup', tableDataBackup);
+
+                    console.log('res', res);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            // 模版列表
+            async getGroupTemplateList (groupSystem) {
+                let res;
+                try {
+                    res = await this.$store.dispatch('userGroup/getUserGroupTemplateList', {
+                        id: this.groupId,
+                        systemId: groupSystem.id
+                    });
+                    for (let i = 0; i < res.data.length; i++) {
+                        await this.getGroupTemplateDetail(res.data[i]);
+                    }
+
+                    // res.data.forEach(async item => {
+                    //     await this.getGroupTemplateDetail(item);
+                    // });
+                    groupSystem.templates = res.data; // 赋值给展开项
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            // 模版详情
+            async getGroupTemplateDetail (item) {
+                item.loading = true;
+                try {
+                    const res = await this.$store.dispatch('userGroup/getGroupTemplateDetail', {
+                        id: this.groupId,
+                        templateId: item.id
+                    });
+                    const tableData = res.data.actions.map(row => {
+                        row.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(resourceTypeItem => {
+                                resourceTypeItem.id = resourceTypeItem.type;
+                                resourceTypeItem.condition = '';
+                            });
+                        });
+                        // const temp = _.cloneDeep(row)
+                        // eslint-disable-next-line max-len
+                        // row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        return new GroupPolicy(
+                            { ...row, policy_id: 1 },
+                            'add',
+                            'template',
+                            { ...item }
+                        );
+                    });
+                    // const tableDataBackup = res.data.actions.map(row => {
+                    //     // eslint-disable-next-line max-len
+                    //     // row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                    //     return new GroupPolicy(
+                    //         { ...row, policy_id: 1 },
+                    //         'detail',
+                    //         'template',
+                    //         { system: res.data.system }
+                    //     );
+                    // });
+                    // this.$set(item, 'tableData', tableData);
+                    this.tableList.push(..._.cloneDeep(tableData));
+                    this.tableListBackup = _.cloneDeep(this.tableList);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    item.loading = false;
+                }
+            },
+
+            // 合并操作需要的信息
+            async fetchAggregationAction (id) {
+                try {
+                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: id });
+                    this.aggregationDataClone[id] = res.data.aggregations;
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            async fetchAuthorizationScopeActions (id) {
+                try {
+                    const res = await this.$store.dispatch(
+                        'permTemplate/getAuthorizationScopeActions',
+                        { systemId: id }
+                    );
+                    this.authorizationDataClone[id] = res.data.filter(item => item.id !== '*');
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
             /**
              * handleBasicInfoChange
              */
@@ -465,7 +688,10 @@
              */
             handleAggregateData () {
                 // debugger
-                this.allAggregationData = Object.assign(this.aggregationData, this.aggregationDataByCustom);
+                this.allAggregationData = Object.assign(
+                    this.aggregationData,
+                    this.aggregationDataByCustom,
+                    this.aggregationDataClone);
                 const keys = Object.keys(this.allAggregationData);
                 const data = {};
                 keys.forEach(item => {

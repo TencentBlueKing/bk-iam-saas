@@ -473,7 +473,6 @@
                 try {
                     const res = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: false });
                     this.tempalteDetailList.push(res.data);
-                    console.log('this.tempalteDetailList1', this.tempalteDetailList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
