@@ -394,7 +394,11 @@ export const m = {
         '工作台': 'Workbench',
         '开发者': 'Developers',
         '切换分级管理员': 'switch rating manager',
-        '【分级管理员】 功能，全面升级为【权限管理空间】啦！': 'The function of [Grading Administrator] has been fully upgraded to [Permission Management Space]!'
+        '【分级管理员】 功能，全面升级为【权限管理空间】啦！': 'The function of [Grading Administrator] has been fully upgraded to [Permission Management Space]!',
+        '个人工作台': 'Personal workbench',
+        '权限管理': 'Permission management',
+        '统计分析': 'Statistical analysis',
+        '平台管理': 'Platform management',
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -411,7 +415,8 @@ export const m = {
         '申请自定义权限标题': 'If the previous permission package does not meet your needs, please apply for the permission through customization',
         '申请自定义权限场景1': 'Certain permissions for a single system',
         '申请自定义权限场景2': 'More flexible permission requirements',
-        '申请加入用户组搜索提示': 'Enter group name, description, belonging system, hierarchical administrator, etc. to search'
+        '申请加入用户组搜索提示': 'Enter group name, description, belonging system, hierarchical administrator, etc. to search',
+        '超级管理员申请加入用户组搜索提示': 'Search Tips for Super Administrators Applying to Join User Groups'
     },
     permApply: {
         '选择系统': 'Select System',
@@ -438,7 +443,11 @@ export const m = {
         '以下是你必须申请的权限': 'Here are the permissions you must apply for',
         '你已获得该组权限，但是已过期': 'You have been granted permission for this group, but it has expired',
         '去续期': 'Go to renew',
-        '请选择生效条件，默认无限制': 'Please select the effective conditions, the default is unlimited'
+        '请选择生效条件，默认无限制': 'Please select the effective conditions, the default is unlimited',
+        '用户组推荐': 'User group recommendation',
+        '细粒度权限': 'Fine grained permissions',
+        '包含更大范围的权限（运维\开发\测试等角色类权限）': 'Include a wider range of permissions (role permissions such as operation and maintenance development and testing)',
+        '只包含当前需要的最小范围权限': 'Only the minimum range permission currently required is included'
     },
     myApply: {
         '申请列表': 'Apply List',

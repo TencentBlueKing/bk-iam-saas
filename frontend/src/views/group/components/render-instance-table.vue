@@ -573,7 +573,8 @@
             },
             getScopeActionResource (payload, id, systemId) {
                 const scopeAction = this.authorization[systemId];
-                const actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id));
+                // eslint-disable-next-line max-len
+                const actions = (scopeAction && scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))) || [];
                 const conditions = actions.map(
                     item => item.resource_groups[0].related_resource_types[0].condition
                 ).filter(_ => _.length > 0);
@@ -1359,7 +1360,6 @@
                         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
                     }
                 }
-                debugger;
 
                 this.tableList.forEach(item => {
                     let actionParam = {};

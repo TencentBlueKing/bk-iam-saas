@@ -269,7 +269,6 @@
              * @return {*}
              */
             async handleTemplateExpanded (flag, item) {
-                console.log('flag', flag);
                 if (!flag) {
                     this.$set(item, 'isEdit', false);
                     return;
@@ -324,6 +323,7 @@
                 });
 
                 this.linearActionList = _.cloneDeep(linearActions);
+                console.log('this.linearActionList', this.linearActionList);
             },
 
             async getGroupTemplateDetail (item) {
@@ -342,8 +342,9 @@
                     //     }]
                     // })
                     const tableData = res.data.actions.map(row => {
+                        const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
                         // eslint-disable-next-line max-len
-                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        row.related_environments = linearActionList ? linearActionList.related_environments : [];
                         return new GroupPolicy(
                             { ...row, policy_id: 1 },
                             'detail',
@@ -352,8 +353,9 @@
                         );
                     });
                     const tableDataBackup = res.data.actions.map(row => {
+                        const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
                         // eslint-disable-next-line max-len
-                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        row.related_environments = linearActionList ? linearActionList.related_environments : [];
                         return new GroupPolicy(
                             { ...row, policy_id: 1 },
                             'detail',
@@ -386,8 +388,9 @@
                         systemId: item.system.id
                     });
                     const tableData = res.data.map(row => {
+                        const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
                         // eslint-disable-next-line max-len
-                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        row.related_environments = linearActionList ? linearActionList.related_environments : [];
                         return new GroupPolicy(
                             row,
                             'detail', // 此属性为flag，会在related-resource-types赋值为add
@@ -396,8 +399,9 @@
                         );
                     });
                     const tableDataBackup = res.data.map(row => {
+                        const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
                         // eslint-disable-next-line max-len
-                        row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
+                        row.related_environments = linearActionList ? linearActionList.related_environments : [];
                         return new GroupPolicy(
                             row,
                             'detail',
@@ -561,7 +565,7 @@
 <style lang="postcss">
     .iam-user-group-perm-wrapper {
         position: relative;
-        min-height: calc(100vh - 145px);
+        min-height: calc(100vh - 211px);
         .iam-perm-ext-cls {
             margin-top: 10px;
         }

@@ -222,10 +222,10 @@
                     v-for="(item, index) in tabData" :key="item.key"
                     @click="clickTab(index, item.key)">
                     <div class="tab-title">
-                        {{item.title}}
+                        <span :title="item.title" :class="index === 0 ? 'tab-item-title' : ''">{{item.title}}</span>
                         <span class="recommend" v-if="index === 0">推荐</span>
                     </div>
-                    <div class="tab-desc">{{item.desc}}</div>
+                    <div class="tab-desc" :title="item.desc">{{item.desc}}</div>
                 </div>
             </div>
             <div class="groupPermissionQequest" v-if="isShowUserGroup">
@@ -604,8 +604,8 @@
                 isRecommend: true,
                 tagActionList: [],
                 tabData: [
-                    { title: '用户组推荐', desc: '包含更大范围的权限（运维\开发\测试等角色类权限）', key: 'userGroup' },
-                    { title: '细粒度权限', desc: '只包含当前需要的最小范围权限', key: 'independent' }
+                    { title: this.$t(`m.permApply['用户组推荐']`), desc: this.$t(`m.permApply['包含更大范围的权限（运维\开发\测试等角色类权限）']`), key: 'userGroup' },
+                    { title: this.$t(`m.permApply['细粒度权限']`), desc: this.$t(`m.permApply['只包含当前需要的最小范围权限']`), key: 'independent' }
                 ],
                 tabIndex: 0
             };
