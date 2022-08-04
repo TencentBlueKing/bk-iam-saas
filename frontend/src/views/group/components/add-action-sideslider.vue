@@ -1030,6 +1030,7 @@
                         width: 120px;
                     }
                     .tips-link {
+                        margin-top: 10px;
                         width: 218px;
                         font-size: 12px;
                         color: #3a84ff;
