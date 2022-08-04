@@ -30,28 +30,30 @@
                         </div>
                     </div>
                     <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
-                        <template v-if="curSystemList.length > 0" v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                            <div class="system-item"
-                                v-for="item in curSystemList"
-                                :key="item.id"
-                                :class="item.id === curSystem ? 'active' : ''"
-                                :title="item.name"
-                                @click.stop="handleSysChange(item)">
-                                {{ item.name }}
-                                <template v-if="systemData[item.id].count">
-                                    <bk-badge
-                                        :theme="getComputedTheme(item.id)"
-                                        ext-cls="action-count-badge-cls"
-                                        :val="systemData[item.id].count" />
-                                </template>
-                            </div>
-                            <div
-                                v-if="user.role.type === 'rating_manager'"
-                                :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                :title="$t(`m.grading['修改分级管理员授权范围']`)"
-                                @click="handleSkip">
-                                <i class="iam-icon iamcenter-edit-fill"></i>
-                                {{ $t(`m.grading['修改分级管理员授权范围']`) }}
+                        <template v-if="curSystemList.length > 0">
+                            <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
+                                <div class="system-item"
+                                    v-for="item in curSystemList"
+                                    :key="item.id"
+                                    :class="item.id === curSystem ? 'active' : ''"
+                                    :title="item.name"
+                                    @click.stop="handleSysChange(item)">
+                                    {{ item.name }}
+                                    <template v-if="systemData[item.id].count">
+                                        <bk-badge
+                                            :theme="getComputedTheme(item.id)"
+                                            ext-cls="action-count-badge-cls"
+                                            :val="systemData[item.id].count" />
+                                    </template>
+                                </div>
+                                <div
+                                    v-if="user.role.type === 'rating_manager'"
+                                    :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
+                                    :title="$t(`m.grading['修改分级管理员授权范围']`)"
+                                    @click="handleSkip">
+                                    <i class="iam-icon iamcenter-edit-fill"></i>
+                                    {{ $t(`m.grading['修改分级管理员授权范围']`) }}
+                                </div>
                             </div>
                         </template>
                         <template v-else>
@@ -1022,7 +1024,7 @@
                     margin-bottom: 40px;
                 }
                 .empty-wrapper {
-                    position: absolute;
+                    position: absolute !important;
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
