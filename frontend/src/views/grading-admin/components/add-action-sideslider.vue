@@ -30,9 +30,10 @@
                         </div>
                     </div>
                     <div
-                        :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']"
-                        v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                        <template v-if="curSystemList.length > 0">
+                        :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
+                        <template
+                            v-if="curSystemList.length > 0"
+                            v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
                             <div class="system-item"
                                 v-for="item in curSystemList"
                                 :key="item.id"

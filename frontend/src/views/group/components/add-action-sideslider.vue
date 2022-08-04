@@ -29,8 +29,8 @@
                             <i class="iam-icon iamcenter-refresh"></i>
                         </div>
                     </div>
-                    <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']" v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                        <template v-if="curSystemList.length > 0">
+                    <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
+                        <template v-if="curSystemList.length > 0" v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
                             <div class="system-item"
                                 v-for="item in curSystemList"
                                 :key="item.id"
@@ -48,7 +48,7 @@
                             <div
                                 v-if="user.role.type === 'rating_manager'"
                                 :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                title="$t(`m.grading['修改分级管理员授权范围']`)"
+                                :title="$t(`m.grading['修改分级管理员授权范围']`)"
                                 @click="handleSkip">
                                 <i class="iam-icon iamcenter-edit-fill"></i>
                                 {{ $t(`m.grading['修改分级管理员授权范围']`) }}
