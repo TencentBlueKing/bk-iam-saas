@@ -148,6 +148,17 @@ export const beforeEach = async (to, from, next) => {
             window.localStorage.setItem('index', 0);
         }
 
+        if (to.name === 'gradingAdminEdit') {
+            await store.dispatch('role/updateCurrentRole', { id: 0 });
+            await store.dispatch('userInfo');
+            if (to.params.id) {
+                store.commit('updateNavId', to.params.id);
+            }
+            store.commit('updateIndex', 0);
+            window.localStorage.setItem('index', 0);
+            curRole = 'staff';
+        }
+
         let difference = [];
         if (navIndex === 1) {
             difference = getRouterDiff(curRole);
@@ -156,6 +167,7 @@ export const beforeEach = async (to, from, next) => {
         }
         
         if (difference.length) {
+            console.log('to', to);
             store.dispatch('versionLogInfo');
             if (difference.includes(to.name)) {
                 store.commit('setHeaderTitle', '');
@@ -182,9 +194,11 @@ export const beforeEach = async (to, from, next) => {
                 } else if (['createUserGroup'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}user-group` });
                 } else if (
-                    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(to.name) && noFrom
+                    ['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom
                 ) {
                     next({ path: `${SITE_URL}rating-manager` });
+                } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
+                    next();
                 } else {
                     next();
                 }
