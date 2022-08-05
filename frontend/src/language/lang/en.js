@@ -449,7 +449,8 @@ export const m = {
         '用户组推荐': 'User group recommendation',
         '细粒度权限': 'Fine grained permissions',
         '包含更大范围的权限（运维\开发\测试等角色类权限）': 'Include a wider range of permissions (role permissions such as operation and maintenance development and testing)',
-        '只包含当前需要的最小范围权限': 'Only the minimum range permission currently required is included'
+        '只包含当前需要的最小范围权限': 'Only the minimum range permission currently required is included',
+        '推荐': 'recommend'
     },
     myApply: {
         '申请列表': 'Apply List',
