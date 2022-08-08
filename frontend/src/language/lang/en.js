@@ -662,7 +662,8 @@ export const m = {
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',
-        '成员列表': 'Member List：'
+        '成员列表': 'Member List：',
+        '管理员列表': 'administrators List：',
     },
     set: {
         '超级管理员提示': 'Super administrators have all authorization permissions default',

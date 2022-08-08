@@ -235,6 +235,8 @@
                 return this.initRequestQueue.length > 0 || !flag;
             },
             isHierarchicalAdmin () {
+                console.log('$$$', this.$store.getters.roleList, this.$store.getters.navCurRoleId);
+                console.log('---', this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {});
                 return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
             }
         },
@@ -845,13 +847,27 @@
                 }, _ => _);
             },
 
-            handleSkip () {
-                this.$router.push({
-                    name: 'gradingAdminEdit',
-                    params: {
-                        id: this.$store.getters.navCurRoleId
-                    }
-                });
+            async handleSkip () {
+                try {
+                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.$store.getters.navCurRoleId });
+                    this.$store.commit('setHeaderTitle', res.data.name);
+                    window.localStorage.setItem('iam-header-name-cache', res.data.name);
+                    this.$router.push({
+                        name: 'gradingAdminEdit',
+                        params: {
+                            id: this.$store.getters.navCurRoleId
+                        }
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
             },
 
             refreshList () {

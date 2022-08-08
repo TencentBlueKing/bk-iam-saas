@@ -10,7 +10,7 @@
                         :value="formData.name"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>
-                <detail-item :label="$t(`m.gradingDetail['成员列表']`)">
+                <detail-item :label="$t(`m.gradingDetail['管理员列表']`)">
                     <iam-edit-member
                         field="members"
                         :value="formData.members"

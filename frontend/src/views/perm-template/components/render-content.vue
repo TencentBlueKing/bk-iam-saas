@@ -857,6 +857,7 @@
             },
 
             handleSkip () {
+                window.localStorage.setItem('iam-header-name-cache', this.user.role.name);
                 // 跳转至我的分级管理员
                 bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
                 if (this.user.role.type === 'rating_manager') {

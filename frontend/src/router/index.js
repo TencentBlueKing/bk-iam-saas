@@ -198,6 +198,8 @@ export const beforeEach = async (to, from, next) => {
                 ) {
                     next({ path: `${SITE_URL}rating-manager` });
                 } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
+                    const headerTitle = window.localStorage.getItem('iam-header-name-cache');
+                    store.commit('setHeaderTitle', headerTitle);
                     next();
                 } else {
                     next();
