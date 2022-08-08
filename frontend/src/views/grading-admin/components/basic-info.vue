@@ -17,7 +17,7 @@
                     @change="handleNameChange" />
                 <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
             </iam-form-item>
-            <iam-form-item :label="$t(`m.set['成员列表']`)" required>
+            <iam-form-item :label="$t(`m.set['管理员列表']`)" required>
                 <bk-user-selector
                     :value="formData.members"
                     :api="userApi"
