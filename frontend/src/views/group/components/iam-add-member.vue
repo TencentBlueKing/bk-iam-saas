@@ -137,10 +137,15 @@
                                 @input="handleManualInput">
                             </bk-input>
                             <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
-                            <p class="manual-error-text" v-if="manualInputError">{{ $t(`m.common['手动输入提示2']`) }}</p>
+                            <p class="manual-error-text pr10" v-if="manualInputError">
+                                {{ $t(`m.common['手动输入提示2']`) }}
+                                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                                    ，{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
+                                </template>
+                            </p>
                             <bk-button
                                 theme="primary"
-                                style="width: 100%; margin-top: 35px;"
+                                :style="{ width: '100%', marginTop: curLanguageIsCn ? '35px' : '50px' }"
                                 :loading="manualAddLoading"
                                 :disabled="isManualDisabled || isAll"
                                 data-test-id="group_addGroupMemberDialog_btn_addManualUser"
@@ -398,7 +403,7 @@
                 if (this.showExpiredAt) {
                     if (this.isPrev) {
                         return {
-                            height: '383px'
+                            height: this.curLanguageIsCn ? '383px' : '400px'
                         };
                     }
                     return {
@@ -430,6 +435,9 @@
                     return false;
                 }
                 return this.isRatingManager;
+            },
+            isHierarchicalAdmin () {
+                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
             }
         },
         watch: {
@@ -1176,6 +1184,15 @@
             evil (fn) {
                 const Fn = Function;
                 return new Fn('return ' + fn)();
+            },
+            
+            handleSkip () {
+                this.$router.push({
+                    name: 'gradingAdminEdit',
+                    params: {
+                        id: this.$store.getters.navCurRoleId
+                    }
+                });
             }
         }
     };
@@ -1349,6 +1366,7 @@
                         margin-top: 4px;
                         font-size: 12px;
                         color: #ff4d4d;
+                        line-height: 14px;
                     }
                 }
             }
@@ -1454,6 +1472,12 @@
                     }
                 }
             }
+        }
+
+        .highlight {
+            color: #3a84ff;
+            cursor: pointer;
+            user-select: none;
         }
     }
 </style>

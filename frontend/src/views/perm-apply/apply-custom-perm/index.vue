@@ -223,7 +223,7 @@
                     @click="clickTab(index, item.key)">
                     <div class="tab-title">
                         <span :title="item.title" :class="index === 0 ? 'tab-item-title' : ''">{{item.title}}</span>
-                        <span class="recommend" v-if="index === 0">推荐</span>
+                        <span class="recommend" v-if="index === 0">{{$t(`m.permApply['推荐']`)}}</span>
                     </div>
                     <div class="tab-desc" :title="item.desc">{{item.desc}}</div>
                 </div>

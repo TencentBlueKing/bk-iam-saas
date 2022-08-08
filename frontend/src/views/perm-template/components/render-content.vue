@@ -36,7 +36,12 @@
                             searchable
                             :clearable="false"
                             @selected="handleSysSelected">
-                            <bk-option v-for="option in systemList"
+                            <div
+                                v-show="isSystemListLoading"
+                                style="height: 200px;"
+                                v-bkloading="{ isLoading: isSystemListLoading, zIndex: 10 }">
+                            </div>
+                            <bk-option v-show="!isSystemListLoading" v-for="option in systemList"
                                 :key="option.id"
                                 :id="option.id"
                                 :name="option.displayName"
@@ -44,6 +49,14 @@
                                 <span>{{ option.name }}</span>
                                 <span style="color: #c4c6cc;">({{ option.id }})</span>
                             </bk-option>
+                            <div slot="extension" class="select-extension-wrapper">
+                                <div class="left" @click.stop="handleSkip" v-if="user.role.type === 'rating_manager'">
+                                    <i class="iam-icon iamcenter-edit-fill mr5"></i>{{ $t(`m.grading['修改分级管理员授权范围']`) }}
+                                </div>
+                                <div class="right" @click.stop="refreshList">
+                                    <i class="iam-icon iamcenter-refresh mr5"></i>{{ $t(`m.grading['刷新列表']`) }}
+                                </div>
+                            </div>
                         </bk-select>
                         <bk-input v-model="systemName" disabled style="width: 450px;" v-else></bk-input>
                     </div>
@@ -182,7 +195,8 @@
                 initialValue: [],
                 initialTempName: '',
                 initialDescription: '',
-                tagActionList: []
+                tagActionList: [],
+                isSystemListLoading: false
             };
         },
         computed: {
@@ -461,6 +475,8 @@
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
+                } finally {
+                    this.isSystemListLoading = false;
                 }
             },
 
@@ -838,6 +854,20 @@
                         name: 'permTemplate'
                     });
                 }, _ => _);
+            },
+
+            handleSkip () {
+                // 跳转至我的分级管理员
+                bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                if (this.user.role.type === 'rating_manager') {
+                    const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+                    window.open(routeData.href, '_blank');
+                }
+            },
+
+            refreshList () {
+                this.isSystemListLoading = true;
+                this.fetchSystems();
             }
         }
     };
@@ -907,6 +937,30 @@
                     top: -1px;
                 }
             }
+        }
+    }
+
+    .bk-select-extension .select-extension-wrapper {
+        display: flex;
+        text-align: center;
+        position: relative;
+
+        .left {
+            flex: 1;
+            cursor: pointer;
+            &::after {
+                content: '';
+                position: absolute;
+                width: 1px;
+                height: 18px;
+                top: 7px;
+                right: calc(50% - 16px);
+                background: #dcdee5;
+            }
+        }
+        .right {
+            flex: 1;
+            cursor: pointer;
         }
     }
 </style>

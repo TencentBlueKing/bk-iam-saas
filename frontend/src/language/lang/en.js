@@ -158,6 +158,8 @@ export const m = {
         '手动输入': 'Manual Input',
         '手动输入提示1': 'You can only add up to 100 people at a time',
         '手动输入提示2': 'The above user does not exist or does not belong to the authorization scope of the administrator',
+        '请尝试': 'Please try ',
+        '修改授权人员范围': 'to modify the authorized personnel range',
         '添加到已选列表': 'Add to selected list',
         '手动输入提示': 'Please enter the username, separated by Enter/semicolon/space',
         '重置': 'Reset',
@@ -448,7 +450,8 @@ export const m = {
         '用户组推荐': 'User group recommendation',
         '细粒度权限': 'Fine grained permissions',
         '包含更大范围的权限（运维\开发\测试等角色类权限）': 'Include a wider range of permissions (role permissions such as operation and maintenance development and testing)',
-        '只包含当前需要的最小范围权限': 'Only the minimum range permission currently required is included'
+        '只包含当前需要的最小范围权限': 'Only the minimum range permission currently required is included',
+        '推荐': 'recommend'
     },
     myApply: {
         '申请列表': 'Apply List',
@@ -636,6 +639,8 @@ export const m = {
         '选择可授权人员范围': 'Select scope of authorized personnel',
         '被授权范围': 'Authorized scope',
         '添加系统和操作': 'Add systems and actions',
+        '修改分级管理员授权范围': 'Modify the authorization scope of hierarchical administrator',
+        '刷新列表': 'Refresh List',
         '如需编辑分级管理员的内容请点击': 'Click to edit',
         '操作和资源范围': 'Actions and resources',
         '资源实例范围': 'Resource instance scope',
@@ -671,6 +676,7 @@ export const m = {
         '拥有该系统的所有操作权限': 'Have all operation permissions of the corresponding system',
         '系统名称': 'System Name',
         '成员列表': 'Member List',
+        '管理员列表': 'administrators List',
         '设置成功': 'Set successfully',
         '取消设置成功': 'Unset successfully',
         '确定删除该超级管理员': 'Is sure to delete the super administrator？'
