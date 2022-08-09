@@ -159,15 +159,17 @@ def delete_subjects(subjects: List[dict]) -> None:
     return result
 
 
-def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
-    """通过自动分页批量删除Subject"""
+# Note: 对于SaaS已删除部门，由于不确定是用户管理本身有bug导致的还是部门真实不存在了，所以为了避免影响部门权限，这里将不删除后端部门
+# 后续将会通过SaaS标记已删除部门，然后发起审批流程等方式再进行后端用户权限的删除
+# def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
+#     """通过自动分页批量删除Subject"""
 
-    def delete_paging_subjects(paging_data):
-        """[分页]删除Subject"""
-        url_path = "/api/v1/web/subjects"
-        _call_iam_api(http_delete, url_path, data=paging_data)
+#     def delete_paging_subjects(paging_data):
+#         """[分页]删除Subject"""
+#         url_path = "/api/v1/web/subjects"
+#         _call_iam_api(http_delete, url_path, data=paging_data)
 
-    return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
+#     return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
 
 
 def list_all_subject(_type: str) -> List[Dict]:
@@ -362,58 +364,6 @@ def delete_policies(system_id: str, subject_type: str, subject_id: str, policy_i
     return result
 
 
-def create_and_delete_template_policies(
-    system_id: str,
-    subject_type: str,
-    subject_id: str,
-    template_id: int,
-    create_policies: List[Dict],
-    delete_policy_ids: List[int],
-) -> None:
-    """
-    创建/删除权限模板授权信息
-    """
-    url_path = "/api/v1/web/perm-templates/policies"
-    data = {
-        "subject": {"type": subject_type, "id": subject_id},
-        "system_id": system_id,
-        "template_id": template_id,
-        "create_policies": create_policies,
-        "delete_policy_ids": delete_policy_ids,
-    }
-    permission_logger.info("iam create and delete template policies url: %s, data: %s", url_path, data)
-    result = _call_iam_api(http_post, url_path, data=data)
-    return result
-
-
-def update_template_policies(
-    system_id: str, subject_type: str, subject_id: str, template_id: int, update_policies: List[Dict]
-) -> None:
-    """
-    更新权限模板授权信息
-    """
-    url_path = "/api/v1/web/perm-templates/policies"
-    data = {
-        "subject": {"type": subject_type, "id": subject_id},
-        "system_id": system_id,
-        "template_id": template_id,
-        "update_policies": update_policies,
-    }
-    permission_logger.info("iam update template policies url: %s, data: %s", url_path, data)
-    return _call_iam_api(http_put, url_path, data=data)
-
-
-def delete_template_policies(system_id: str, subject_type: str, subject_id: str, template_id: int) -> None:
-    """
-    删除权限模板授权信息
-    """
-    url_path = "/api/v1/web/perm-templates/policies"
-    data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "template_id": template_id}
-    permission_logger.info("iam delete template policies url: %s, data: %s", url_path, data)
-    result = _call_iam_api(http_delete, url_path, data=data)
-    return result
-
-
 def create_subject_role(subjects: List[Dict[str, str]], role_type: str, system_id: str = "SUPER"):
     """
     创建后台的subject角色信息
@@ -445,19 +395,6 @@ def list_policy(subject_type: str, subject_id: str, expired_at: int) -> List[Dic
         "before_expired_at": expired_at,
     }
     return _call_iam_api(http_get, url_path, data=params)
-
-
-def update_policy_expired_at(subject_type: str, subject_id: str, policies: List[Dict]) -> List[Dict]:
-    """
-    更新策略的过期时间
-    """
-    url_path = "/api/v1/web/policies/expired_at"
-    data = {
-        "subject_type": subject_type,
-        "subject_id": subject_id,
-        "policies": policies,
-    }
-    return _call_iam_api(http_put, url_path, data=data)
 
 
 def update_subject_members_expired_at(_type: str, id: str, members: List[dict]) -> List[Dict]:
