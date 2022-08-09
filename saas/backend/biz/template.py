@@ -17,7 +17,7 @@ from pydantic import BaseModel, parse_obj_as
 from pydantic.fields import Field
 
 from backend.apps.group.models import GroupAuthorizeLock
-from backend.apps.role.models import RoleRelatedObject
+from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.template.models import (
     PermTemplate,
     PermTemplatePolicyAuthorized,
@@ -237,6 +237,16 @@ class TemplateBiz:
         """
         queryset = PermTemplate.objects.filter(id__in=template_ids).only("name")
         return TemplateNameDict(data={one.id: one.name for one in queryset})
+
+    def get_role_by_template_id(self, template_id: int) -> Role:
+        """
+        通过模板ID查询其对应的角色
+        """
+        role_id = RoleRelatedObject.objects.filter(
+           object_type=RoleRelatedObjectType.TEMPLATE.value,
+           object_id=template_id).values("role_id").first()["role_id"]
+        role = Role.objects.filter(id=role_id).first()
+        return role
 
 
 class TemplateCheckBiz:

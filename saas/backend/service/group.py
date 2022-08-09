@@ -188,7 +188,7 @@ class GroupService:
 
         exist_group_ids = []
         for i in range(0, len(subjects), 500):
-            part_subjects = subjects[i : i + 500]
+            part_subjects = subjects[i: i + 500]
             data = iam.list_exist_subjects_before_expired_at(part_subjects, expired_at)
             exist_group_ids.extend([int(m["id"]) for m in data])
 

@@ -72,4 +72,60 @@ urlpatterns = [
             ]
         ),
     ),
+
+    path(
+        "templates/",
+        include(
+            [
+                path(
+                    "",
+                    views.MgmtTemplateViewSet.as_view({"get": "list"}),
+                    name="mgmt.template.template",
+                ),
+                path(
+                    "<int:id>/",
+                    views.MgmtTemplateViewSet.as_view({"get": "retrieve", "delete": "destroy", "patch": "partial_update"}),
+                    name="mgmt.template.detail",
+                ),
+                path(
+                    "<int:id>/members/",
+                    views.MgmtTemplateMemberViewSet.as_view({"get": "list"}),
+                    name="mgmt.template.members",
+                ),
+                # 权限模板更新 api
+                path(
+                    "<int:id>/",
+                    include(
+                        [
+                            # 模板更新预提交
+                            path(
+                                "pre_update/",
+                                views.MgmtTemplatePreUpdateViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
+                                name="mgmt.template.pre_update",
+                            ),
+                            # 用户组同步预提交
+                            path(
+                                "pre_group_sync/",
+                                views.MgmtTemplatePreGroupSyncViewSet.as_view({"post": "create"}),
+                                name="mgmt.template.pre_group_sync",
+                            ),
+                            # 用户组预览
+                            path(
+                                "groups_preview/",
+                                views.MgmtTemplateGroupSyncPreviewViewSet.as_view({"get": "list"}),
+                                name="mgmt.template.groups_preview",
+                            ),
+                            # 模板更新提交
+                            path(
+                                "update_commit/",
+                                views.MgmtTemplateUpdateCommitViewSet.as_view({"post": "create"}),
+                                name="mgmt.template.update_commit",
+                            ),
+
+                        ]
+                    )
+                )
+            ]
+        )
+    )
 ]

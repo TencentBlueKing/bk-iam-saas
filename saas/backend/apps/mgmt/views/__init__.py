@@ -10,6 +10,14 @@ specific language governing permissions and limitations under the License.
 """
 
 from backend.apps.mgmt.views.long_task import LongTaskViewSet
+from backend.apps.mgmt.views.template import (
+    MgmtTemplateGroupSyncPreviewViewSet,
+    MgmtTemplateMemberViewSet,
+    MgmtTemplatePreGroupSyncViewSet,
+    MgmtTemplatePreUpdateViewSet,
+    MgmtTemplateUpdateCommitViewSet,
+    MgmtTemplateViewSet,
+)
 from backend.apps.mgmt.views.white_list import (
     AdminApiWhiteListViewSet,
     ApiViewSet,
@@ -23,4 +31,9 @@ __all__ = [
     "AuthorizationApiWhiteListViewSet",
     "ManagementApiWhiteListViewSet",
     "LongTaskViewSet",
+    "MgmtTemplateViewSet",
+    "MgmtTemplateMemberViewSet",
+    "MgmtTemplatePreUpdateViewSet",
+    "MgmtTemplateGroupSyncPreviewViewSet",
+    "MgmtTemplateUpdateCommitViewSet"
 ]
