@@ -15,7 +15,6 @@ from django.conf import settings
 
 from backend.common.cache import cached
 from backend.common.local import local
-from backend.publisher import shortcut as publisher_shortcut
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
@@ -157,8 +156,6 @@ def delete_subjects(subjects: List[dict]) -> None:
     """
     url_path = "/api/v1/web/subjects"
     result = _call_iam_api(http_delete, url_path, data=subjects)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_subject(subjects)
     return result
 
 
@@ -169,8 +166,6 @@ def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
         """[分页]删除Subject"""
         url_path = "/api/v1/web/subjects"
         _call_iam_api(http_delete, url_path, data=paging_data)
-        # 发布订阅-删除策略
-        publisher_shortcut.publish_delete_policies_by_subject(paging_data)
 
     return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
 
@@ -353,8 +348,6 @@ def alter_policies(
     }
     permission_logger.info("iam alter policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_post, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_id(delete_policy_ids)
     return result
 
 
@@ -366,8 +359,6 @@ def delete_policies(system_id: str, subject_type: str, subject_id: str, policy_i
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
     permission_logger.info("iam delete policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_delete, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_id(policy_ids)
     return result
 
 
@@ -392,8 +383,6 @@ def create_and_delete_template_policies(
     }
     permission_logger.info("iam create and delete template policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_post, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_id(delete_policy_ids)
     return result
 
 
@@ -422,8 +411,6 @@ def delete_template_policies(system_id: str, subject_type: str, subject_id: str,
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "template_id": template_id}
     permission_logger.info("iam delete template policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_delete, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_template_subject(template_id, subject_type, subject_id)
     return result
 
 
