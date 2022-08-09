@@ -33,6 +33,7 @@ __all__ = [
     "LongTaskViewSet",
     "MgmtTemplateViewSet",
     "MgmtTemplateMemberViewSet",
+    "MgmtTemplatePreGroupSyncViewSet",
     "MgmtTemplatePreUpdateViewSet",
     "MgmtTemplateGroupSyncPreviewViewSet",
     "MgmtTemplateUpdateCommitViewSet"

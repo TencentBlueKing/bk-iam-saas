@@ -243,8 +243,8 @@ class TemplateBiz:
         通过模板ID查询其对应的角色
         """
         role_id = RoleRelatedObject.objects.filter(
-           object_type=RoleRelatedObjectType.TEMPLATE.value,
-           object_id=template_id).values("role_id").first()["role_id"]
+            object_type=RoleRelatedObjectType.TEMPLATE.value,
+            object_id=template_id).values("role_id").first()["role_id"]
         role = Role.objects.filter(id=role_id).first()
         return role
 

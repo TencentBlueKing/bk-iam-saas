@@ -84,7 +84,13 @@ urlpatterns = [
                 ),
                 path(
                     "<int:id>/",
-                    views.MgmtTemplateViewSet.as_view({"get": "retrieve", "delete": "destroy", "patch": "partial_update"}),
+                    views.MgmtTemplateViewSet.as_view(
+                        {
+                            "get": "retrieve",
+                            "delete": "destroy",
+                            "patch": "partial_update"
+                        }
+                    ),
                     name="mgmt.template.detail",
                 ),
                 path(
@@ -100,7 +106,13 @@ urlpatterns = [
                             # 模板更新预提交
                             path(
                                 "pre_update/",
-                                views.MgmtTemplatePreUpdateViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
+                                views.MgmtTemplatePreUpdateViewSet.as_view(
+                                    {
+                                        "get": "list",
+                                        "post": "create",
+                                        "delete": "destroy"
+                                    }
+                                ),
                                 name="mgmt.template.pre_update",
                             ),
                             # 用户组同步预提交

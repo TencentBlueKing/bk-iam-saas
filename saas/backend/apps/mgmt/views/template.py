@@ -106,7 +106,6 @@ class MgmtTemplateViewSet(TemplateQueryMixin, TemplateViewSet):
         )
         return Response(serializer.data)
 
-
     @swagger_auto_schema(
         operation_description="模板详情",
         query_serializer=TemplateDetailQuerySLZ(),
