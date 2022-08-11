@@ -292,7 +292,7 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "put": (
+        "update": (
             VerifyAPIParamLocationEnum.GROUP_IN_PATH.value,
             ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_UPDATE.value,
         ),
@@ -480,7 +480,7 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "get": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_ACTION_LIST.value),
+        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_ACTION_LIST.value),
     }
 
     lookup_field = "id"

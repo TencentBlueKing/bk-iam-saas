@@ -28,7 +28,7 @@ class ManagementUserGroupBelongViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "get": (
+        "check": (
             VerifyAPIParamLocationEnum.GROUP_IDS_IN_QUERY.value,
             ManagementAPIEnum.V2_USER_GROUPS_BELONG_CHECK.value,
         ),
@@ -66,7 +66,7 @@ class ManagementDepartmentGroupBelongViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "get": (
+        "check": (
             VerifyAPIParamLocationEnum.GROUP_IDS_IN_QUERY.value,
             ManagementAPIEnum.V2_DEPARTMENT_GROUPS_BELONG_CHECK.value,
         ),
