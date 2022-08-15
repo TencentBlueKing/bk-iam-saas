@@ -10,10 +10,10 @@
                 style="margin-left: 6px;"
                 data-test-id="group_btn_transferOut"
                 @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
-            <!-- <bk-button :disabled="currentSelectList.length < 1"
+            <bk-button :disabled="currentSelectList.length < 1"
                 theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
                 {{ $t(`m.common['批量添加成员']`) }}
-            </bk-button> -->
+            </bk-button>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -37,7 +37,7 @@
             @select="handlerChange"
             @select-all="handlerAllChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column v-if="isSuperManager" type="selection" align="center" :selectable="getIsSelect"
+            <bk-table-column type="selection" align="center" :selectable="getIsSelect"
                 reserve-selection></bk-table-column>
             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                 <template slot-scope="{ row }">
@@ -89,6 +89,9 @@
                         </bk-button>
                         <bk-button theme="primary" text style="margin-left: 10px;" @click="handleAddPerm(row)">
                             {{ $t(`m.common['添加权限']`) }}
+                        </bk-button>
+                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleClone(row)">
+                            {{ $t(`m.grading['克隆']`) }}
                         </bk-button>
                         <bk-button theme="primary" text style="margin-left: 10px;" @click="handleDelete(row)">
                             {{ $t(`m.common['删除']`) }}
@@ -407,6 +410,17 @@
             handleCreate () {
                 this.$router.push({
                     name: 'createUserGroup'
+                });
+            },
+
+            handleClone (data) {
+                this.$router.push({
+                    name: 'cloneUserGroup',
+                    query: {
+                        name: data.name,
+                        description: data.description,
+                        id: data.id
+                    }
                 });
             },
 

@@ -48,7 +48,7 @@
             });
         },
         mounted () {
-            this.componentWrapperHeight = window.innerHeight - 108 - 2;
+            this.componentWrapperHeight = window.innerHeight - 180;
             const query = this.$route.query;
             const tab = (query.tab || '').toLowerCase();
             this.componentName = (tab === 'group_perm' || tab === 'GroupPerm') ? 'GroupPerm' : 'GroupDetail';
