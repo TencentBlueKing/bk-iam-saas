@@ -2,12 +2,12 @@
 
 #### Parameters
 
-| 字段      |  类型      | 必选   | 位置 |描述      |
-|-----------|------------|--------|------------|------------|
-| group_id | int | 是 | path | 用户组ID |
-| system |  string  | 是   | body | 系统id |
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| system_id | string | path | 是 | 接入系统唯一标识 |
+| group_id | int | path | 是 | 用户组ID |
 | actions |  array[object]   | 是   | body | 操作 |
-| resources |  array[object]   | 是   | body | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致|
+| resources |  array[object]   | 是   | body | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致 |
 
 actions
 
@@ -39,7 +39,6 @@ paths
 
 ```json
 {
-  "system": "bk_cmdb",
   "actions": [
     {
       "id": "edit_host"
