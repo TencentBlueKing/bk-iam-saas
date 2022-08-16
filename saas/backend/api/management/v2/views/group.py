@@ -364,7 +364,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        system_id = data["system"]
+        system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
@@ -405,7 +405,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        system_id = data["system"]
+        system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
@@ -453,7 +453,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        system_id = data["system"]
+        system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
 
         # 查询将要被删除PolicyID列表
