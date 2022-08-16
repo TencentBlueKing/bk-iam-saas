@@ -195,15 +195,15 @@ class ManagementUserGradeManagerQuerySLZ(ManagementUserQuerySLZ, ManagementSourc
 
 
 class ManagementGroupGrantSLZ(ManagementRoleScopeAuthorizationSLZ):
-    pass
+    system = serializers.CharField(label="授权的系统id", max_length=32, required=False, allow_blank=True, default="")
 
 
 class ManagementGroupRevokeSLZ(ManagementRoleScopeAuthorizationSLZ):
-    pass
+    system = serializers.CharField(label="授权的系统id", max_length=32, required=False, allow_blank=True, default="")
 
 
 class ManagementGroupPolicyDeleteSLZ(serializers.Serializer):
-    system = serializers.CharField(label="授权的系统id", max_length=32)
+    system = serializers.CharField(label="授权的系统id", max_length=32, required=False, allow_blank=True, default="")
     actions = serializers.ListField(label="操作", child=ManagementActionSLZ(label="操作"), allow_empty=False)
 
 
