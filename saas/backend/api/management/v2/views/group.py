@@ -380,7 +380,9 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         role = self.role_biz.get_role_by_group_id(group.id)
 
         # 检查数据正确性：授权范围是否超限角色访问，这里不需要检查资源实例名称，因为授权时，接入系统可能使用同步方式，这时候资源可能还没创建
-        self.group_biz.check_before_grant(group, [template], role, need_check_resource_name=False)
+        self.group_biz.check_before_grant(
+            group, [template], role, need_check_action_not_exists=False, need_check_resource_name=False
+        )
 
         # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可

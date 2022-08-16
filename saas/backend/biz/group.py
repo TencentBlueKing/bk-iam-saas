@@ -447,7 +447,12 @@ class GroupBiz:
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板或自定义权限已经在授权中, 不能重复授权!"))
 
     def check_before_grant(
-        self, group: Group, templates: List[GroupTemplateGrantBean], role: Role, need_check_resource_name=True
+        self,
+        group: Group,
+        templates: List[GroupTemplateGrantBean],
+        role: Role,
+        need_check_action_not_exists=True,
+        need_check_resource_name=True,
     ):
         """
         检查用户组授权自定义权限或模板
@@ -462,7 +467,7 @@ class GroupBiz:
             if template.template_id != 0:
                 # 检查操作列表是否与模板一致
                 self.template_check_biz.check_add_member(template.template_id, subject, action_ids)
-            else:
+            elif need_check_action_not_exists:
                 # 检查操作列表是否为新增自定义权限
                 self._valid_grant_actions_not_exists(subject, template.system_id, action_ids)
 
