@@ -18,9 +18,7 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLo
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
-from backend.biz.group import GroupCheckBiz
-from backend.service.constants import ApplicationTypeEnum, SubjectType
-from backend.service.models import Subject
+from backend.service.constants import ApplicationTypeEnum
 
 
 class ManagementGroupApplicationViewSet(GenericViewSet):
@@ -35,7 +33,6 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         ),
     }
 
-    group_check_biz = GroupCheckBiz()
     biz = ApplicationBiz()
 
     @swagger_auto_schema(
@@ -54,7 +51,6 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
 
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
-        self.group_check_biz.check_subject_group_limit(Subject(type=SubjectType.USER.value, id=user_id))
 
         # 创建申请
         applications = self.biz.create_for_group(
