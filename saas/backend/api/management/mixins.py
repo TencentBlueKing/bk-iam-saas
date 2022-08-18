@@ -38,7 +38,7 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         if not allowed:
             raise exceptions.PermissionDenied(
                 detail=(
-                    f"system[{system_id}] does not allow call management api[{api}], "
+                    f"system[{system_id}] is not allowed to call management api[{api}], "
                     "please contact the developer to add a whitelist"
                 )
             )
@@ -69,7 +69,7 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
             if sys_id not in allowed_system_ids:
                 raise exceptions.PermissionDenied(
                     detail=(
-                        f"system[{system_id}] does not operate system[{sys_id}]'s permission data, "
+                        f"system[{system_id}] is not allow to operate system[{sys_id}]'s permission data, "
                         "please contact the developer to add a whitelist"
                     )
                 )
@@ -95,7 +95,8 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
             raise exceptions.PermissionDenied(
                 detail=(
                     f"role[{role_id}] can not be operated by app_code[{app_code}], "
-                    "since role source not exists, only roles created through the management api can be operated"
+                    "because the role source is not api, "
+                    "only roles created through the management api can be operated"
                 )
             )
 
@@ -114,8 +115,8 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         # 查询不到用户组对应的角色，说明无权限访问
         if role_related_object is None:
             raise exceptions.PermissionDenied(
-                detail=f"group[{group_id}] can not operated by app_code[{app_code}], "
-                "since related role not exists, only roles created through the management api can be operated"
+                detail=f"group[{group_id}] can not be operated by app_code[{app_code}], "
+                "because related role source is not api, only roles created through the management api can be operated"
             )
         # 使用角色校验API
         self.verify_api_by_role(app_code, role_related_object.role_id, api)
@@ -152,8 +153,9 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         # 如果存在未认证的用户组ID，则说明越权了
         if len(unauthorized_group_ids) > 0:
             raise exceptions.PermissionDenied(
-                detail=f"groups[{unauthorized_group_ids}] can not operated by app_code[{app_code}], "
-                f"since related role not exists, only roles created through the management api can be operated"
+                detail=f"groups[{unauthorized_group_ids}] can not be operated by app_code[{app_code}], "
+                "because related role source is not api, "
+                "only roles created through the management api can be operated"
             )
 
         # 使用角色校验API
