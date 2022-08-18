@@ -16,7 +16,6 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
-from rest_framework import serializers
 
 from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.apps.policy.models import Policy as PolicyModel
@@ -583,17 +582,6 @@ class GroupCheckBiz:
                     group.name, exists_count, new_member_count, member_limit
                 ),
                 True,
-            )
-
-    def check_subject_group_limit(self, subject: Subject):
-        """
-        检查subject授权的group数量是否超限
-        """
-        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["default_subject_group_limit"]
-        count, __ = self.svc.list_subject_group(subject, limit=1, offset=0)
-        if count >= limit:
-            raise serializers.ValidationError(
-                _("被授权对象: {} {} 加入的用户组数量已超过最大值 {}").format(subject.type, subject.id, limit)
             )
 
     def check_role_group_name_unique(self, role_id: int, name: str, group_id: int = 0):
