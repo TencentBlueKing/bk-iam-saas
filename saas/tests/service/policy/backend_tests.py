@@ -9,13 +9,17 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import pytest
+from mock import Mock, patch
 
+from backend.apps.policy.models import Policy as PolicyModel
+from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import AbacPolicyChangeType
+from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum, SubjectType
 from backend.service.models import (
     AbacPolicyChangeContent,
     PathNode,
     RbacPolicyChangeContent,
+    Subject,
     UniversalPolicyChangedContent,
 )
 from backend.service.policy.backend import AuthTypeStatistics, BackendPolicyOperationService
@@ -327,3 +331,121 @@ class TestBackendPolicyOperationService:
         resource_action_data = svc.generate_abac_data(changed_policies)
 
         assert resource_action_data == excepted
+
+    @pytest.mark.parametrize(
+        "changed_policy_auth_types,custom_policy_auth_types,template_policy_auth_types,excepted",
+        [
+            # params all
+            (
+                # changed_policy_auth_types
+                {"test1": AuthTypeEnum.ALL.value, "test2": AuthTypeEnum.ALL.value},
+                # custom_policy_auth_types
+                None,
+                # template_policy_auth_types
+                None,
+                # excepted
+                AuthTypeEnum.ALL.value,
+            ),
+            # custom policy all
+            (
+                # changed_policy_auth_types
+                {"test1": AuthTypeEnum.ABAC.value},
+                # custom_policy_auth_types
+                [{"action_id": "test3", "auth_type": AuthTypeEnum.ALL.value}],
+                # template_policy_auth_types
+                None,
+                # excepted
+                AuthTypeEnum.ALL.value,
+            ),
+            # template policy all
+            (
+                # changed_policy_auth_types
+                {"test1": AuthTypeEnum.ABAC.value},
+                # custom_policy_auth_types
+                [{"action_id": "test3", "auth_type": AuthTypeEnum.ABAC.value}],
+                # template_policy_auth_types
+                [{"template_id": 1, "_auth_types": '{"test1": "all"}'}],
+                # excepted
+                AuthTypeEnum.ALL.value,
+            ),
+            # abac
+            (
+                # changed_policy_auth_types
+                {"test1": AuthTypeEnum.ABAC.value},
+                # custom_policy_auth_types
+                [{"action_id": "test3", "auth_type": AuthTypeEnum.ABAC.value}],
+                # template_policy_auth_types
+                [{"template_id": 1, "_auth_types": '{"test1": "abac"}'}],
+                # excepted
+                AuthTypeEnum.ABAC.value,
+            ),
+        ],
+    )
+    def test_calculate_auth_type(
+        self, changed_policy_auth_types, custom_policy_auth_types, template_policy_auth_types, excepted
+    ):
+        policy_qs = Mock(spec=PolicyModel.objects)
+        policy_qs.filter.return_value = policy_qs
+        policy_qs.values.return_value = custom_policy_auth_types
+
+        template_qs = Mock(spec=PermTemplatePolicyAuthorized.objects)
+        template_qs.filter.return_value = template_qs
+        template_qs.values.return_value = template_policy_auth_types
+
+        with patch("backend.apps.policy.models.Policy.objects", policy_qs), patch(
+            "backend.apps.template.models.PermTemplatePolicyAuthorized.objects", template_qs
+        ):
+
+            svc = BackendPolicyOperationService()
+            auth_type = svc._calculate_auth_type(
+                Subject(type=SubjectType.GROUP.value, id="1"), 0, "test", changed_policy_auth_types
+            )
+            assert auth_type == excepted
+
+        if custom_policy_auth_types:
+            policy_qs.values.assert_called()
+
+        if template_policy_auth_types:
+            template_qs.values.assert_called()
+
+    def test_alter_backend_policies_error(self):
+        svc = BackendPolicyOperationService()
+        with pytest.raises(AssertionError):
+            svc.alter_backend_policies(Subject(type=SubjectType.USER.value, id="1"), 0, "test", [])
+
+    def test_alter_backend_policies_ok(self):
+        svc = BackendPolicyOperationService()
+        with patch.object(svc, "_calculate_auth_type", return_value=AuthTypeEnum.ABAC.value), patch(
+            "backend.component.iam.alter_group_policies_v2"
+        ) as mock_alter_group_policies_v2:
+            svc.alter_backend_policies(
+                Subject(type=SubjectType.GROUP.value, id="1"),
+                0,
+                "test",
+                [
+                    UniversalPolicyChangedContent(
+                        action_id="a",
+                        abac=AbacPolicyChangeContent(
+                            change_type=AbacPolicyChangeType.CREATED.value,
+                            resource_expression="re",
+                        ),
+                    ),
+                    UniversalPolicyChangedContent(
+                        action_id="a",
+                        abac=AbacPolicyChangeContent(
+                            change_type=AbacPolicyChangeType.UPDATED.value,
+                            id=1,
+                            resource_expression="re",
+                        ),
+                    ),
+                    UniversalPolicyChangedContent(
+                        action_id="a",
+                        abac=AbacPolicyChangeContent(
+                            change_type=AbacPolicyChangeType.DELETED.value,
+                            id=1,
+                        ),
+                    ),
+                ],
+            )
+
+            mock_alter_group_policies_v2.assert_called()
