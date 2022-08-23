@@ -338,7 +338,7 @@
             });
 
             bus.$on('roleList-update', length => {
-                if (length > 1) {
+                if (length) {
                     this.navData.forEach(item => {
                         if (item.type === 'all_manager') {
                             item.show = true;
