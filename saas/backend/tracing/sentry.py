@@ -8,24 +8,40 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import os
+from typing import List
 
 import sentry_sdk
-from sentry_sdk.integrations.celery import CeleryIntegration
-from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.redis import RedisIntegration
+from sentry_sdk.integrations import Integration
 
 
-def init_sentry_sdk():
+def init_sentry_sdk(
+    service_name: str, django_integrated: bool = True, redis_integrated: bool = False, celery_integrated: bool = False
+):
     """Register celery error events to sentry"""
     from django.conf import settings
+
+    integrations: List[Integration] = []
+    if django_integrated:
+        from sentry_sdk.integrations.django import DjangoIntegration
+
+        integrations.append(DjangoIntegration())
+
+    if redis_integrated:
+        from sentry_sdk.integrations.redis import RedisIntegration
+
+        integrations.append(RedisIntegration())
+
+    if celery_integrated:
+        from sentry_sdk.integrations.celery import CeleryIntegration
+
+        integrations.append(CeleryIntegration())
 
     if settings.SENTRY_DSN:
         # 初始化 sentry_sdk
         sentry_sdk.init(
             # debug=True,
             dsn=settings.SENTRY_DSN,
-            integrations=[DjangoIntegration(), CeleryIntegration(), RedisIntegration()],
+            integrations=integrations,
             # Set traces_sample_rate to 1.0 to capture 100%
             # of transactions for performance monitoring.
             # We recommend adjusting this value in production,
@@ -42,4 +58,4 @@ def init_sentry_sdk():
             # environment="production",
         )
         # set global tag
-        sentry_sdk.set_tag("service_name", "bk-iam-%s" % os.getenv("BKPAAS_PROCESS_TYPE", "unknown"))
+        sentry_sdk.set_tag("service_name", service_name)
