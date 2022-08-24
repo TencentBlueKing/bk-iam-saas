@@ -58,7 +58,9 @@ def setup_trace_config():
         trace.set_tracer_provider(
             TracerProvider(resource=Resource.create({SERVICE_NAME: settings.BKAPP_OTEL_SERVICE_NAME}))
         )
-        jaeger_exporter = JaegerExporter(agent_host_name="localhost", agent_port=6831, udp_split_oversized_batches=True)
+        jaeger_exporter = JaegerExporter(
+            agent_host_name="localhost", agent_port=6831, udp_split_oversized_batches=True
+        )
         trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(jaeger_exporter))
     else:
         trace.set_tracer_provider(
