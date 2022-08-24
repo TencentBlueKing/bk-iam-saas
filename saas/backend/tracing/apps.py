@@ -12,8 +12,8 @@ specific language governing permissions and limitations under the License.
 from celery.signals import worker_process_init
 from django.apps import AppConfig
 
+from .otel import setup_by_settings
 from .sentry import init_sentry_sdk
-from .setup import setup_by_settings
 
 
 class TracingConfig(AppConfig):
@@ -21,8 +21,7 @@ class TracingConfig(AppConfig):
 
     def ready(self):
         setup_by_settings()
-        # from .celery import worker_process_init_otel_trace_setup  # noqa
-        init_sentry_sdk()
+        init_sentry_sdk("bk-iam-saas", django_integrated=True, redis_integrated=True, celery_integrated=True)
 
 
 @worker_process_init.connect(weak=False)
@@ -32,4 +31,4 @@ def worker_process_init_otel_trace_setup(*args, **kwargs):
 
 @worker_process_init.connect(weak=False)
 def worker_process_init_sentry_setup(*args, **kwargs):
-    init_sentry_sdk()
+    init_sentry_sdk("bk-iam-saas", django_integrated=True, redis_integrated=True, celery_integrated=True)
