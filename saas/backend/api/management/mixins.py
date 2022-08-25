@@ -34,7 +34,12 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         """
         allowed = ManagementAPIAllowListConfig.is_allowed(system_id, api)
         if not allowed:
-            raise exceptions.PermissionDenied(detail=f"system[{system_id}] does not allow call management api[{api}]")
+            raise exceptions.PermissionDenied(
+                detail=(
+                    f"system[{system_id}] is not allowed to call management api[{api}], "
+                    "please contact the developer to add a whitelist"
+                )
+            )
 
     def verify_system_scope(self, system_id: str, auth_system_ids: List[str]):
         """
@@ -61,7 +66,10 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         for sys_id in auth_system_ids:
             if sys_id not in allowed_system_ids:
                 raise exceptions.PermissionDenied(
-                    detail=f"system[{system_id}] does not operate system[{sys_id}]'s permission data"
+                    detail=(
+                        f"system[{system_id}] is not allow to operate system[{sys_id}]'s permission data, "
+                        "please contact the developer to add a whitelist"
+                    )
                 )
 
     def verify_api(self, app_code: str, system_id: str, api: ManagementAPIEnum):
