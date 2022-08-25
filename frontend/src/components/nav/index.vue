@@ -179,6 +179,7 @@
         created () {
             this.curRole = this.user.role.type;
             this.curRoleId = this.navCurRoleId || this.user.role.id;
+            this.$store.commit('updateCurRoleId', this.curRoleId);
             this.isUnfold = this.navStick || !this.navFold;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('theme-change');
@@ -193,6 +194,7 @@
 
             bus.$on('nav-change', ({ id }, index) => {
                 this.curRoleId = id;
+                this.$store.commit('updateCurRoleId', this.curRoleId);
             });
         },
         methods: {
@@ -267,6 +269,7 @@
                 try {
                     await this.$store.dispatch('role/updateCurrentRole', { id });
                     this.curRoleId = id;
+                    this.$store.commit('updateCurRoleId', this.curRoleId);
                     this.curRole = type;
                     this.$store.commit('updateIdentity', { id, type, name });
                     this.$store.commit('updateNavId', id);
