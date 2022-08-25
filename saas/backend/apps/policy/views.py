@@ -372,6 +372,7 @@ class RecommendPolicyViewSet(GenericViewSet):
 
     action_biz = ActionBiz()
     action_group_biz = ActionGroupBiz()
+    policy_query_biz = PolicyQueryBiz()
     related_policy_biz = RelatedPolicyBiz()
 
     application_policy_list_cache = ApplicationPolicyListCache()
@@ -413,6 +414,15 @@ class RecommendPolicyViewSet(GenericViewSet):
 
             policy_list.add(PolicyBeanList(system_id, recommend_policies))  # 合并去重
 
+        # 移除用户已有的操作
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        own_policies = self.policy_query_biz.list_by_subject(system_id, subject)
+
+        own_action_id_set = {p.action_id for p in own_policies}
+        policy_list = PolicyBeanList(
+            system_id, [p for p in policy_list.policies if p.action_id not in own_action_id_set]
+        )
+
         policy_list.fill_empty_fields()
 
         # 生成推荐的操作, 排除已生成推荐策略的操作
@@ -421,6 +431,10 @@ class RecommendPolicyViewSet(GenericViewSet):
             if action_id in action_id_set:  # 去重
                 continue
             action_id_set.add(action_id)
+
+            # 用户已有的操作不需要推荐
+            if action_id in own_action_id_set:
+                continue
 
             action = action_list.get(action_id)
             if not action:
