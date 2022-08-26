@@ -1400,6 +1400,10 @@ class PolicyQueryBiz:
         action_list_dict = {system_id: self.action_svc.new_action_list(system_id) for system_id in system_id_set}
         system_list = self.system_svc.new_system_list()
 
+        # 查询saas policy id
+        all_action_id = {p.action_id for p in backend_policies}
+        action_id_dict = self.svc.get_action_id_dict(subject, all_action_id)
+
         # 填充action, system
         expired_policies = []
         for p in backend_policies:
@@ -1408,8 +1412,12 @@ class PolicyQueryBiz:
             ) or ThinAction(id="", name="", name_en="")
             system = system_list.get(p.system) or ThinSystem(id="", name="", name_en="")
 
+            id = action_id_dict.get((p.system, p.action_id), 0)
+            if not id:
+                continue
+
             expired_policies.append(
-                ExpiredPolicy(system=system.dict(), action=action.dict(), **p.dict(exclude={"system"}))
+                ExpiredPolicy(id=id, system=system.dict(), action=action.dict(), **p.dict(exclude={"id", "system"}))
             )
 
         return expired_policies
