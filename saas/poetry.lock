@@ -35,20 +35,24 @@ python-versions = "*"
 
 [[package]]
 name = "apigw-manager"
-version = "1.0.2"
+version = "1.1.5"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.6.1,<4.0.0"
 
 [package.dependencies]
-bkapi-bk-apigateway = ">=1.0.3,<2.0.0"
-bkapi-client-core = ">=1.0.8,<2.0.0"
+bkapi-bk-apigateway = ">=1.0.6,<2.0.0"
+bkapi-client-core = ">=1.1.3"
 future = "0.18.2"
-pyjwt = ">=1.6.4"
-python-dateutil = "2.8.1"
-pyyaml = ">=5.4.1,<6.0.0"
+packaging = ">=21.0"
+pyyaml = ">=5.4.1"
 urllib3 = ">=1.25.3"
+
+[package.extras]
+demo = ["PyMySQL (>=1.0.2,<2.0.0)", "Django (>=1.11.1)", "django-environ (>=0.8.1)", "pyjwt (>=1.6.4)"]
+cryptography = ["cryptography (>=3.1.1)", "pyjwt (>=1.6.4)"]
+django = ["Django (>=1.11.1)", "pyjwt (>=1.6.4)"]
 
 [[package]]
 name = "appdirs"
@@ -98,7 +102,7 @@ python-versions = "*"
 
 [[package]]
 name = "bkapi-bk-apigateway"
-version = "1.0.3"
+version = "1.0.6"
 description = "蓝鲸API网关"
 category = "main"
 optional = false
@@ -112,19 +116,20 @@ django = ["bkapi-client-core[django] (>=1.0.2,<2.0.0)"]
 
 [[package]]
 name = "bkapi-client-core"
-version = "1.1.0"
+version = "1.1.8"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 
 [package.dependencies]
-curlify = ">=2.0,<3.0"
-requests = ">=2.20,<3.0"
-typing-extensions = ">=3.7.4,<4.0.0"
+curlify = ">=2.0"
+requests = ">=2.20"
+typing-extensions = ">=3.7.4"
 
 [package.extras]
-django = ["bkoauth (>=0.0.10)"]
+django = ["bkoauth (>=0.0.10)", "prometheus-client (>=0.9.0)"]
+monitor = ["prometheus-client (>=0.9.0)"]
 
 [[package]]
 name = "black"
@@ -1323,17 +1328,6 @@ docs = ["sphinx", "sphinx-rtd-theme"]
 testing = ["django", "django-configurations (>=2.0)"]
 
 [[package]]
-name = "python-dateutil"
-version = "2.8.1"
-description = "Extensions to the standard Python datetime module"
-category = "main"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
-
-[package.dependencies]
-six = ">=1.5"
-
-[[package]]
 name = "python-editor"
 version = "1.0.4"
 description = "Programmatically open an editor, capture the result."
@@ -1586,7 +1580,7 @@ optional = false
 python-versions = ">=3.6"
 
 [package.extras]
-watchmedo = ["PyYAML (>=3.10)", "argh (>=0.24.1)"]
+watchmedo = ["argh (>=0.24.1)", "PyYAML (>=3.10)"]
 
 [[package]]
 name = "werkzeug"
@@ -1678,9 +1672,7 @@ amqp = [
 anyjson = [
     {file = "anyjson-0.3.3.tar.gz", hash = "sha256:37812d863c9ad3e35c0734c42e0bf0320ce8c3bed82cd20ad54cb34d158157ba"},
 ]
-apigw-manager = [
-    {file = "apigw_manager-1.0.2-py3-none-any.whl", hash = "sha256:96e232038e94807640698400fe40b0be6f7de51a53645d83772b90f772359ad1"},
-]
+apigw-manager = []
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
@@ -1707,20 +1699,13 @@ billiard = [
     {file = "billiard-3.3.0.23-cp33-none-win_amd64.whl", hash = "sha256:d4d2fed1a251ea58eed47b48db3778ebb92f5ff4407dc91869c6f41c3a9249d0"},
     {file = "billiard-3.3.0.23.tar.gz", hash = "sha256:692a2a5a55ee39a42bcb7557930e2541da85df9ea81c6e24827f63b80cd39d0b"},
 ]
-bkapi-bk-apigateway = [
-    {file = "bkapi-bk-apigateway-1.0.3.tar.gz", hash = "sha256:3bc9ae60524c1f64431092d7dad72f73d718514e9fc860b7650c70b3c1b0d887"},
-]
-bkapi-client-core = [
-    {file = "bkapi_client_core-1.1.0-py2.py3-none-any.whl", hash = "sha256:de9d862b89d35cd33466eb3c142a91a027e2e002b02960b7401606d0dad10540"},
-]
+bkapi-bk-apigateway = []
+bkapi-client-core = []
 black = [
     {file = "black-21.7b0-py3-none-any.whl", hash = "sha256:1c7aa6ada8ee864db745b22790a32f94b2795c253a75d6d9b5e439ff10d23116"},
     {file = "black-21.7b0.tar.gz", hash = "sha256:c8373c6491de9362e39271630b65b964607bc5c79c83783547d76c839b3aa219"},
 ]
-blue-krill = [
-    {file = "blue-krill-1.1.0.tar.gz", hash = "sha256:d18093f1f133223b2a40cec75f5b7813b87816d876be5b249261b6e8f17d375b"},
-    {file = "blue_krill-1.1.0-py3-none-any.whl", hash = "sha256:5df10caa0726f9731d7b9b4cd27693560b640e86ba6dc0b0e328bcc33c8b09a3"},
-]
+blue-krill = []
 celery = [
     {file = "celery-3.1.25-py2.py3-none-any.whl", hash = "sha256:1954a224805f3835e5b6f5998ec9fe51db3413cc49e59fc720d314c7913427cf"},
     {file = "celery-3.1.25.tar.gz", hash = "sha256:6ced63033bc663e60c992564954dbb5c84c43899f7f1a04b739957350f6b55f3"},
@@ -2498,17 +2483,7 @@ pytest-django = [
     {file = "pytest-django-4.1.0.tar.gz", hash = "sha256:26f02c16d36fd4c8672390deebe3413678d89f30720c16efb8b2a6bf63b9041f"},
     {file = "pytest_django-4.1.0-py3-none-any.whl", hash = "sha256:10e384e6b8912ded92db64c58be8139d9ae23fb8361e5fc139d8e4f8fc601bc2"},
 ]
-python-dateutil = [
-    {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
-    {file = "python_dateutil-2.8.1-py2.py3-none-any.whl", hash = "sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"},
-]
-python-editor = [
-    {file = "python-editor-1.0.4.tar.gz", hash = "sha256:51fda6bcc5ddbbb7063b2af7509e43bd84bfc32a4ff71349ec7847713882327b"},
-    {file = "python_editor-1.0.4-py2-none-any.whl", hash = "sha256:5f98b069316ea1c2ed3f67e7f5df6c0d8f10b689964a4a811ff64f0106819ec8"},
-    {file = "python_editor-1.0.4-py2.7.egg", hash = "sha256:ea87e17f6ec459e780e4221f295411462e0d0810858e055fc514684350a2f522"},
-    {file = "python_editor-1.0.4-py3-none-any.whl", hash = "sha256:1bf6e860a8ad52a14c3ee1252d5dc25b2030618ed80c022598f00176adc8367d"},
-    {file = "python_editor-1.0.4-py3.5.egg", hash = "sha256:c3da2053dbab6b29c94e43c486ff67206eafbe7eb52dbec7390b5e2fb05aac77"},
-]
+python-editor = []
 python-json-logger = [
     {file = "python-json-logger-0.1.7.tar.gz", hash = "sha256:aeee3edcf155e1d8bf2fb11330b7cc24b2a9488607d8a96ff7dd7db0a002b4d3"},
 ]
@@ -2709,25 +2684,7 @@ urllib3 = [
     {file = "urllib3-1.26.6-py2.py3-none-any.whl", hash = "sha256:39fb8672126159acb139a7718dd10806104dec1e2f0f6c88aab05d17df10c8d4"},
     {file = "urllib3-1.26.6.tar.gz", hash = "sha256:f57b4c16c62fa2760b7e3d97c35b255512fb6b59a259730f36ba32ce9f8e342f"},
 ]
-watchdog = [
-    {file = "watchdog-1.0.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:e2a531e71be7b5cc3499ae2d1494d51b6a26684bcc7c3146f63c810c00e8a3cc"},
-    {file = "watchdog-1.0.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:e7c73edef48f4ceeebb987317a67e0080e5c9228601ff67b3c4062fa020403c7"},
-    {file = "watchdog-1.0.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:85e6574395aa6c1e14e0f030d9d7f35c2340a6cf95d5671354ce876ac3ffdd4d"},
-    {file = "watchdog-1.0.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:27d9b4666938d5d40afdcdf2c751781e9ce36320788b70208d0f87f7401caf93"},
-    {file = "watchdog-1.0.2-pp36-pypy36_pp73-macosx_10_9_x86_64.whl", hash = "sha256:2f1ade0d0802503fda4340374d333408831cff23da66d7e711e279ba50fe6c4a"},
-    {file = "watchdog-1.0.2-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:f1d0e878fd69129d0d68b87cee5d9543f20d8018e82998efb79f7e412d42154a"},
-    {file = "watchdog-1.0.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:d948ad9ab9aba705f9836625b32e965b9ae607284811cd98334423f659ea537a"},
-    {file = "watchdog-1.0.2-py3-none-manylinux2014_armv7l.whl", hash = "sha256:101532b8db506559e52a9b5d75a308729b3f68264d930670e6155c976d0e52a0"},
-    {file = "watchdog-1.0.2-py3-none-manylinux2014_i686.whl", hash = "sha256:b1d723852ce90a14abf0ec0ca9e80689d9509ee4c9ee27163118d87b564a12ac"},
-    {file = "watchdog-1.0.2-py3-none-manylinux2014_ppc64.whl", hash = "sha256:68744de2003a5ea2dfbb104f9a74192cf381334a9e2c0ed2bbe1581828d50b61"},
-    {file = "watchdog-1.0.2-py3-none-manylinux2014_ppc64le.whl", hash = "sha256:602dbd9498592eacc42e0632c19781c3df1728ef9cbab555fab6778effc29eeb"},
-    {file = "watchdog-1.0.2-py3-none-manylinux2014_s390x.whl", hash = "sha256:016b01495b9c55b5d4126ed8ae75d93ea0d99377084107c33162df52887cee18"},
-    {file = "watchdog-1.0.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:5f1f3b65142175366ba94c64d8d4c8f4015825e0beaacee1c301823266b47b9b"},
-    {file = "watchdog-1.0.2-py3-none-win32.whl", hash = "sha256:57f05e55aa603c3b053eed7e679f0a83873c540255b88d58c6223c7493833bac"},
-    {file = "watchdog-1.0.2-py3-none-win_amd64.whl", hash = "sha256:f84146f7864339c8addf2c2b9903271df21d18d2c721e9a77f779493234a82b5"},
-    {file = "watchdog-1.0.2-py3-none-win_ia64.whl", hash = "sha256:ee21aeebe6b3e51e4ba64564c94cee8dbe7438b9cb60f0bb350c4fa70d1b52c2"},
-    {file = "watchdog-1.0.2.tar.gz", hash = "sha256:376cbc2a35c0392b0fe7ff16fbc1b303fd99d4dd9911ab5581ee9d69adc88982"},
-]
+watchdog = []
 werkzeug = [
     {file = "Werkzeug-1.0.1-py2.py3-none-any.whl", hash = "sha256:2de2a5db0baeae7b2d2664949077c2ac63fbd16d98da0ff71837f7d1dea3fd43"},
     {file = "Werkzeug-1.0.1.tar.gz", hash = "sha256:6c80b1e5ad3665290ea39320b91e1be1e0d5f60652b964a3070216de83d2e47c"},
