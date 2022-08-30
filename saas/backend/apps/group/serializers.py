@@ -128,7 +128,7 @@ class GroupsAddMemberSLZ(GroupAddMemberSLZ):
 
 
 class GroupUpdateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", min_length=5, max_length=128)
+    name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
     description = serializers.CharField(label="描述", min_length=10)
 
     def validate(self, data):
@@ -296,7 +296,7 @@ def validate_template_authorization(templates):
 
 
 class GroupCreateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", min_length=5, max_length=128)
+    name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
     description = serializers.CharField(label="描述", min_length=10)
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
