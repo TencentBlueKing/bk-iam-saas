@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from django.db.models import Count
 
@@ -193,6 +193,18 @@ class PolicyQueryService:
         """
         backend_policies = iam.list_policy(subject.type, subject.id, expired_at)
         return [BackendThinPolicy(**policy) for policy in backend_policies]
+
+    def get_action_id_dict(self, subject: Subject, action_ids: List[str]) -> Dict[Tuple[str, str], int]:
+        """
+        获取操作与saas policy id的dict
+
+        key: tuple(system_id, action_id)
+        value: saas policy id
+        """
+        policies = PolicyModel.objects.filter(
+            subject_type=subject.type, subject_id=subject.id, action_id__in=action_ids
+        ).only("system_id", "action_id", "id")
+        return {(p.system_id, p.action_id): p.id for p in policies}
 
     def new_policy_list_by_subject(self, system_id: str, subject: Subject) -> PolicyList:
         return PolicyList(self.list_by_subject(system_id, subject))
