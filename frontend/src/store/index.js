@@ -30,7 +30,7 @@ import http from '@/api';
 import { unifyObjectStyle, json2Query } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
-import { bus } from '@/common/bus';
+// import { bus } from '@/common/bus';
 
 // 系统模块
 import system from './modules/system';
@@ -490,7 +490,7 @@ const store = new Vuex.Store({
 
         updateRoleList (state, payload) {
             state.roleList.splice(0, state.roleList.length, ...payload);
-            bus.$emit('roleList-update', payload.length);
+            // bus.$emit('roleList-update', payload.length);
         },
 
         updateNavData (state, payload) {
