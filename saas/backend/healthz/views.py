@@ -28,11 +28,14 @@ def pong(request):
 
 def healthz(request):
     checker = HealthChecker()
-    for name in ["mysql", "redis", "celery", "iam", "usermgr"]:
+    for name in ["mysql", "redis", "celery", "iam"]:
         ok, message = getattr(checker, name)()
         if not ok:
             return HttpResponseServerError(message)
-    return HttpResponse("ok")
+
+    # NOTE: 用户管理如果不可用, 不能影响到权限中心的正常使用, 这里只返回消息, 不抛异常
+    _, message = checker.usermgr()
+    return HttpResponse(message)
 
 
 class HealthChecker:
@@ -142,18 +145,7 @@ class HealthChecker:
             categories = usermgr.list_category()
             for category in categories:
                 CategorySLZ(data=category).is_valid(raise_exception=True)
-
-            # 校验查询用户返回的字段是否完整
-            class UserFieldSLZ(serializers.Serializer):
-                id = serializers.IntegerField()
-                username = serializers.CharField()
-                display_name = serializers.CharField(allow_blank=True)
-                staff_status = serializers.ChoiceField(choices=(("IN", "IN"), ("OUT", "OUT")))
-                category_id = serializers.IntegerField()
-
-            userinfo = usermgr.retrieve_user("admin")
-            UserFieldSLZ(data=userinfo).is_valid(raise_exception=True)
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("usermgr request fail")
-            return False, f"usermgr request fail, error: {str(e)}"
+            return True, f"usermgr request fail, error: {str(e)}"
         return True, "ok"
