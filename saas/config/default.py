@@ -258,6 +258,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
+    "periodic_retry_user_permission_clean_task": {
+        "task": "backend.apps.user.tasks.retry_user_permission_clean_task",
+        "schedule": crontab(minute=0, hour="*"),  # 每小时执行
+    },
 }
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL

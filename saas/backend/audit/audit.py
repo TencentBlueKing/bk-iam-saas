@@ -23,7 +23,7 @@ from backend.audit.models import get_event_model
 from backend.common.local import local
 from backend.service.models import Subject
 
-from .constants import AuditObjectType, AuditSourceType
+from .constants import AuditObjectType, AuditSourceType, AuditType
 
 logger = logging.getLogger("app")
 
@@ -289,6 +289,32 @@ def log_user_blacklist_event(
         object_type=AuditObjectType.USER_BLACK_LIST.value,
         object_id="0",
         object_name="global_user_black_list",
+        source_type=source_type,
+    )
+    extra = extra if extra else {}
+    if data:
+        extra["members"] = data
+    event.extra = extra
+
+    event.save(force_insert=True)
+
+
+def log_user_permission_clean_event(
+    subject: Subject,
+    data: List[str],
+    extra: Optional[Dict[str, Any]] = None,
+    source_type: str = AuditSourceType.OPENAPI.value,
+):
+    """
+    记录角色相关的审批事件
+    """
+    Event = get_event_model()
+    event = Event(
+        type=AuditType.USER_PERMISSION_CLEANUP.value,
+        username=subject.id,
+        object_type=AuditObjectType.USER_PERMISSION_CLEANUP.value,
+        object_id="0",
+        object_name="user_permission_cleanup",
         source_type=source_type,
     )
     extra = extra if extra else {}
