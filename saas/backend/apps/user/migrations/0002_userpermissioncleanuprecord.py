@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('created_time', models.DateTimeField(auto_now_add=True)),
                 ('updated_time', models.DateTimeField(auto_now=True)),
                 ('username', models.CharField(db_index=True, max_length=255, unique=True, verbose_name='用户名')),
-                ('status', models.CharField(choices=[('created', '已创建'), ('running', '正在清理'), ('succeed', '交接成功'), ('failed', '交接失败')], default='created', max_length=32, verbose_name='单据状态')),
+                ('status', models.CharField(choices=[('created', '已创建'), ('running', '正在清理'), ('succeed', '清理成功'), ('failed', '清理失败')], default='created', max_length=32, verbose_name='单据状态')),
                 ('error_info', models.TextField(default='', verbose_name='交接异常')),
             ],
             options={

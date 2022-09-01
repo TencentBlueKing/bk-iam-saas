@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userpermissioncleanuprecord',
             name='retry_count',
-            field=models.IntegerField(default=0, verbose_name='检查次数'),
+            field=models.IntegerField(default=0, verbose_name='重试次数'),
         ),
         migrations.AlterField(
             model_name='userpermissioncleanuprecord',

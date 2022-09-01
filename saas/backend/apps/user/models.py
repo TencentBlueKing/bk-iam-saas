@@ -54,7 +54,7 @@ class UserPermissionCleanupRecord(BaseModel):
         default=UserPermissionCleanupRecordStatusEnum.CREATED.value,
     )
     error_info = models.TextField("交接异常", default="")
-    retry_count = models.IntegerField("检查次数", default=0)
+    retry_count = models.IntegerField("重试次数", default=0)
 
     class Meta:
         verbose_name = "用户权限清理记录"
