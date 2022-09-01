@@ -52,10 +52,7 @@ class UserPermissionCleanupRecordStatusEnum(ChoicesEnum, LowerStrEnum):
         (
             (CREATED, _("已创建")),
             (RUNNING, _("正在清理")),
-            (SUCCEED, _("交接成功")),
-            (
-                FAILED,
-                _("交接失败"),
-            ),
+            (SUCCEED, _("清理成功")),
+            (FAILED, _("清理失败")),
         )
     )

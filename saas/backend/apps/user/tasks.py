@@ -16,6 +16,7 @@ from urllib.parse import urlencode
 from celery import task
 from django.conf import settings
 from django.core.paginator import Paginator
+from django.db.models import F, Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -36,6 +37,9 @@ from backend.util.url import url_join
 from .constants import UserPermissionCleanupRecordStatusEnum
 
 logger = logging.getLogger("celery")
+
+
+MAX_USER_PERMISSION_CLEANUP_RETRY_COUNT = 3
 
 
 @task(ignore_result=True)
@@ -157,7 +161,8 @@ class UserPermissionCleaner:
             self._record.error_info = str(e)
             self._record.save(update_fields=["status", "error_info"])
         else:
-            self._record.delete()
+            self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
+            self._record.save(update_fields=["status"])
 
     def _cleanup_policy(self):
         """
@@ -221,13 +226,23 @@ def user_permission_cleanup(username: str):
 
 
 @task(ignore_result=True)
-def retry_user_permission_clean_task():
+def check_user_permission_clean_task():
     """
-    重试1小时以前未完成的清理任务
+    检查用户权限清理任务
     """
-    day_before = timezone.now() - timedelta(hours=1)
+    hour_before = timezone.now() - timedelta(hours=1)
 
-    qs = UserPermissionCleanupRecord.objects.filter(created_time__lt=day_before)
-    qs.update(status=UserPermissionCleanupRecordStatusEnum.CREATED.value)  # 重置status
+    qs = UserPermissionCleanupRecord.objects.filter(
+        created_time__lt=hour_before, retry_count__lte=MAX_USER_PERMISSION_CLEANUP_RETRY_COUNT
+    ).filter(~Q(status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value))
+
+    qs.update(status=UserPermissionCleanupRecordStatusEnum.CREATED.value, retry_count=F("retry_count") + 1)  # 重置status
+
     for r in qs:
         user_permission_cleanup(r.username)
+
+    # 删除3天之前已完成的记录
+    day_before = timezone.now() - timedelta(days=3)
+    UserPermissionCleanupRecord.objects.filter(
+        created_time__lt=day_before, status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value
+    ).delete()

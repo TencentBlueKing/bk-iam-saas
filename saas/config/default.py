@@ -258,8 +258,8 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
-    "periodic_retry_user_permission_clean_task": {
-        "task": "backend.apps.user.tasks.retry_user_permission_clean_task",
+    "check_user_permission_clean_task": {
+        "task": "backend.apps.user.tasks.check_user_permission_clean_task",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
 }
