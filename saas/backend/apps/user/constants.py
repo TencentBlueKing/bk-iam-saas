@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from aenum import LowerStrEnum, auto, skip
+from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
 
@@ -37,5 +38,21 @@ class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
             (ADD_GROUP_MEMBER, "添加用户组成员"),
             (ADD_GROUP_PERM_TEMPLATE, "添加用户组权限"),
             (SET_GROUP_APPROVAL_PROCESS, "配置用户组审批流程"),
+        )
+    )
+
+
+class UserPermissionCleanupRecordStatusEnum(ChoicesEnum, LowerStrEnum):
+    CREATED = auto()
+    RUNNING = auto()
+    SUCCEED = auto()
+    FAILED = auto()
+
+    _choices_labels = skip(
+        (
+            (CREATED, _("已创建")),
+            (RUNNING, _("正在清理")),
+            (SUCCEED, _("清理成功")),
+            (FAILED, _("清理失败")),
         )
     )

@@ -209,7 +209,7 @@
                 userGroupName: '',
                 navData: [
                     { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
-                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: false, type: 'all_manager' },
+                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: true, type: 'all_manager' },
                     { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
                     { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],
@@ -276,6 +276,7 @@
                     if (this.curRoleList.length) {
                         this.setTabRoleData();
                     }
+                    this.setNavData();
                 },
                 immediate: true
             },
@@ -323,8 +324,8 @@
                 bus.$off('refresh-role');
                 bus.$off('on-set-tab');
                 bus.$off('rating-admin-change');
-                bus.$off('roleList-update');
             });
+            this.setNavData();
         },
         mounted () {
             bus.$on('on-set-tab', data => {
@@ -335,16 +336,6 @@
                 const data = this.navData.find(e => e.type === 'staff');
                 this.isRatingChange = true;
                 this.handleSelect(data, 0);
-            });
-
-            bus.$on('roleList-update', length => {
-                if (length) {
-                    this.navData.forEach(item => {
-                        if (item.type === 'all_manager') {
-                            item.show = true;
-                        }
-                    });
-                }
             });
         },
         methods: {
@@ -553,6 +544,19 @@
                     }
                 });
                 this.$store.commit('updateNavData', this.navData);
+            },
+
+            setNavData () {
+                for (let i = 0; i < this.navData.length; i++) {
+                    if (this.navData[i].type === 'all_manager') {
+                        if (this.roleList.length) {
+                            this.navData[i].show = true;
+                        } else {
+                            this.navData[i].show = false;
+                        }
+                        break;
+                    }
+                }
             }
         }
     };
