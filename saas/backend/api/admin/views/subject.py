@@ -232,7 +232,7 @@ class AdminSubjectPermissionExistsViewSet(GenericViewSet):
         tags=["admin.subject.permission.exists"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        subject = Subject(type=SubjectType.USER.value, id=kwargs["subject_id"])
         if Policy.objects.filter(subject_type=subject.type, subject_id=subject.id).exists():
             return Response(True)
 

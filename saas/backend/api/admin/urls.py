@@ -27,12 +27,6 @@ urlpatterns = [
         views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
         name="open.admin.subject_group",
     ),
-    # Subject permission exists
-    path(
-        "subjects/<str:subject_type>/<str:subject_id>/permission/exists/",
-        views.AdminSubjectPermissionExistsViewSet.as_view({"get": "list"}),
-        name="open.admin.subject_group",
-    ),
     # 系统列表 list(不分页, 或者分页, page_size不传默认100?)
     path(
         "systems/",
@@ -56,6 +50,12 @@ urlpatterns = [
         "subjects/user/<str:subject_id>/roles/",
         views.AdminSubjectRoleViewSet.as_view({"get": "list"}),
         name="open.admin.subject.roles",
+    ),
+    # user permission exists
+    path(
+        "subjects/user/<str:subject_id>/permission/exists/",
+        views.AdminSubjectPermissionExistsViewSet.as_view({"get": "list"}),
+        name="open.admin.subject.permission",
     ),
     # 冻结, 解冻, 查询冻结的用户列表接口 (冻结这个用户在蓝鲸平台的所有权限, 包括权限中心本身; 注意只能冻结用户, 部门和组无法冻结)
     path(
