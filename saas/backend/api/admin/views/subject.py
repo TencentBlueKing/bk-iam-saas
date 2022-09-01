@@ -18,14 +18,11 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import (
-    AdminSubjectGroupSLZ,
-    FreezeSubjectResponseSLZ,
-    FreezeSubjectSLZ,
-    SubjectRoleSLZ,
-)
+from backend.api.admin.serializers import AdminSubjectGroupSLZ, FreezeSubjectResponseSLZ, SubjectRoleSLZ, SubjectSLZ
 from backend.api.authentication import ESBAuthentication
-from backend.audit.audit import log_user_blacklist_event
+from backend.apps.user.models import UserPermissionCleanupRecord
+from backend.apps.user.tasks import user_permission_cleanup
+from backend.audit.audit import log_user_blacklist_event, log_user_permission_clean_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
@@ -118,7 +115,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
         tags=["admin.subject.freeze"],
     )
     def freeze(self, request, *args, **kwargs):
-        serializer = FreezeSubjectSLZ(data=request.data, many=True)
+        serializer = SubjectSLZ(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
         if not serializer.validated_data:
@@ -147,7 +144,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
         tags=["admin.subject.freeze"],
     )
     def unfreeze(self, request, *args, **kwargs):
-        serializer = FreezeSubjectSLZ(data=request.data, many=True)
+        serializer = SubjectSLZ(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
         if not serializer.validated_data:
@@ -163,4 +160,45 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
             source_type=AuditSourceType.OPENAPI.value,
         )
         logger.info("unfreeze users: %s", serializer.data)
+        return Response({}, status=status.HTTP_200_OK)
+
+
+class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
+    """用户权限清理"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {
+        "cleanup": AdminAPIEnum.SUBJECT_PERMISSION_CLEANUP.value,
+    }
+
+    pagination_class = None
+
+    @swagger_auto_schema(
+        operation_description="清理用户权限",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["admin.subject.cleanup"],
+    )
+    def cleanup(self, request, *args, **kwargs):
+        serializer = SubjectSLZ(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        if not serializer.validated_data:
+            raise error_codes.INVALID_ARGS.format(_("至少传递一个用户"))
+
+        # 创建清理记录
+        records = [UserPermissionCleanupRecord(username=s["id"]) for s in serializer.data]
+        UserPermissionCleanupRecord.objects.bulk_create(records, ignore_conflicts=True)
+
+        # 触发清理任务
+        for r in records:
+            user_permission_cleanup.delay(r.username)
+
+        log_user_permission_clean_event(
+            Subject(type=SubjectType.USER.value, id=request.user.username),
+            serializer.data,
+            extra={},
+            source_type=AuditSourceType.OPENAPI.value,
+        )
+        logger.info("cleanup users permission: %s", serializer.data)
         return Response({}, status=status.HTTP_200_OK)

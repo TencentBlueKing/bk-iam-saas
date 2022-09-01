@@ -63,4 +63,10 @@ urlpatterns = [
         views.AdminAuditEventViewSet.as_view({"get": "list"}),
         name="open.admin.audit.events",
     ),
+    # 清理用户权限
+    path(
+        "cleanup/users/permission/",
+        views.AdminSubjectPermissionCleanupViewSet.as_view({"delete": "cleanup"}),
+        name="open.admin.subject.cleanup",
+    ),
 ]
