@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import copy
+import json
 from logging import getLogger
 
 import requests
@@ -28,14 +29,19 @@ def pong(request):
 
 def healthz(request):
     checker = HealthChecker()
-    for name in ["mysql", "redis", "celery", "iam"]:
+
+    result, data = True, {}
+    for name in ["mysql", "redis", "celery", "iam", "usermgr"]:
         ok, message = getattr(checker, name)()
         if not ok:
-            return HttpResponseServerError(message)
+            result = ok
+        data[name] = message
 
-    # NOTE: 用户管理如果不可用, 不能影响到权限中心的正常使用, 这里只返回消息, 不抛异常
-    _, message = checker.usermgr()
-    return HttpResponse(message)
+    content = json.dumps({"result": result, "data": data})
+    if not result:
+        return HttpResponseServerError(content)
+
+    return HttpResponse(content)
 
 
 class HealthChecker:
