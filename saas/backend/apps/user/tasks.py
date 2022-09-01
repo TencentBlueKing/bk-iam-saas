@@ -195,9 +195,13 @@ class UserPermissionCleaner:
         """
 
         # 查询所有的用户组id, 删除
-        groups = self.group_biz.list_subject_group(self._subject)
-        for group in groups:
-            self.group_biz.remove_members(str(group.id), [self._subject])
+        while True:
+            groups = self.group_biz.list_paging_subject_group(self._subject, limit=1000)
+            for group in groups:
+                self.group_biz.remove_members(str(group.id), [self._subject])
+
+            if len(groups) < 1000:
+                break
 
     def _cleanup_role(self):
         """
