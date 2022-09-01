@@ -161,7 +161,7 @@ class UserPermissionCleaner:
             self._record.error_info = str(e)
             self._record.save(update_fields=["status", "error_info"])
         else:
-            self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
+            self._record.status = UserPermissionCleanupRecordStatusEnum.SUCCEED.value
             self._record.save(update_fields=["status"])
 
     def _cleanup_policy(self):
@@ -241,8 +241,11 @@ def check_user_permission_clean_task():
     for r in qs:
         user_permission_cleanup(r.username)
 
+
+@task(ignore_result=True)
+def clean_user_permission_clean_record():
     # 删除3天之前已完成的记录
-    day_before = timezone.now() - timedelta(days=3)
+    day_before = timezone.now() - timedelta(days=30)
     UserPermissionCleanupRecord.objects.filter(
         created_time__lt=day_before, status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value
     ).delete()
