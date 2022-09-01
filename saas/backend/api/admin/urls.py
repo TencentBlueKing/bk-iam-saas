@@ -27,6 +27,12 @@ urlpatterns = [
         views.AdminSubjectGroupViewSet.as_view({"get": "list"}),
         name="open.admin.subject_group",
     ),
+    # Subject permission exists
+    path(
+        "subjects/<str:subject_type>/<str:subject_id>/permission/exists/",
+        views.AdminSubjectPermissionExistsViewSet.as_view({"get": "list"}),
+        name="open.admin.subject_group",
+    ),
     # 系统列表 list(不分页, 或者分页, page_size不传默认100?)
     path(
         "systems/",
