@@ -196,7 +196,7 @@ class UserPermissionCleaner:
 
         # 查询所有的用户组id, 删除
         while True:
-            groups = self.group_biz.list_paging_subject_group(self._subject, limit=1000)
+            _, groups = self.group_biz.list_paging_subject_group(self._subject, limit=1000)
             for group in groups:
                 self.group_biz.remove_members(str(group.id), [self._subject])
 
