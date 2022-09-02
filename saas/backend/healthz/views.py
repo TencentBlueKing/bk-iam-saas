@@ -112,7 +112,7 @@ class HealthChecker:
             # 这里仅仅是测试ping命令能否被发送的消息队列（上面代码已设置与消息队列通讯的相关配置），无法送达将raise exception
             # 不对ping命令的返回结果进行检查，因为worker可能存在满负载情况，无法及时消费
             # Limit=1表示只要有一个worker响应了就进行返回，没必要等待timeout再返回结果，Timeout表示最多等待多少秒返回结果
-            new_app.control.inspect(limit=1, timeout=1).ping()
+            new_app.control.inspect(limit=1, timeout=2).ping()
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("celery ping test fail")
             return False, f"celery ping test fail, error: {str(e)}"
