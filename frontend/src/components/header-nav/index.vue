@@ -310,6 +310,7 @@
                         this.showGuide = true;
                     }
                     this.showNavDataLength = newValue.filter(e => e.show).length;
+                    console.log('this.showNavDataLength', this.showNavDataLength);
                 },
                 immediate: true,
                 deep: true
@@ -547,16 +548,18 @@
             },
 
             setNavData () {
-                for (let i = 0; i < this.navData.length; i++) {
-                    if (this.navData[i].type === 'all_manager') {
-                        if (this.roleList.length) {
-                            this.navData[i].show = true;
-                        } else {
-                            this.navData[i].show = false;
+                this.$nextTick(() => {
+                    for (let i = 0; i < this.navData.length; i++) {
+                        if (this.navData[i].type === 'all_manager') {
+                            if (this.roleList.length) {
+                                this.navData[i].show = true;
+                            } else {
+                                this.navData[i].show = false;
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
+                });
             }
         }
     };
