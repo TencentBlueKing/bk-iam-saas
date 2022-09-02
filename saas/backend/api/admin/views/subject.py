@@ -20,6 +20,9 @@ from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import AdminSubjectGroupSLZ, FreezeSubjectResponseSLZ, SubjectRoleSLZ, SubjectSLZ
 from backend.api.authentication import ESBAuthentication
+from backend.apps.policy.models import Policy
+from backend.apps.role.models import RoleUser
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.apps.user.tasks import user_permission_cleanup
 from backend.audit.audit import log_user_blacklist_event, log_user_permission_clean_event
@@ -205,3 +208,45 @@ class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
         )
         logger.info("cleanup users permission: %s", serializer.data)
         return Response({}, status=status.HTTP_200_OK)
+
+
+class AdminSubjectPermissionExistsViewSet(GenericViewSet):
+    """
+    Subject是否存在权限数据
+
+    1. 判断是否有自定义权限
+    2. 判断是否有临时权限
+    3. 判断是否有用户组
+    4. 判断是否有分级管理员
+    """
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_PERMISSION_EXISTS.value}
+
+    group_biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject是否存在权限",
+        responses={status.HTTP_200_OK: AdminSubjectGroupSLZ(label="用户组", many=True)},
+        tags=["admin.subject.permission.exists"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject(type=SubjectType.USER.value, id=kwargs["subject_id"])
+        if Policy.objects.filter(subject_type=subject.type, subject_id=subject.id).exists():
+            return Response(True)
+
+        if TemporaryPolicy.objects.filter(subject_type=subject.type, subject_id=subject.id).exists():
+            return Response(True)
+
+        if RoleUser.objects.filter(username=subject.id).exists():
+            return Response(True)
+
+        count, _ = self.group_biz.list_paging_subject_group(subject, limit=1)
+        if count:
+            return Response(True)
+
+        return Response(False)
