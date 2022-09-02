@@ -245,8 +245,8 @@ class AdminSubjectPermissionExistsViewSet(GenericViewSet):
         if RoleUser.objects.filter(username=subject.id).exists():
             return Response(True)
 
-        relations = self.group_biz.list_subject_group(subject, is_recursive=False)
-        if relations:
+        count, _ = self.group_biz.list_paging_subject_group(subject, limit=1)
+        if count:
             return Response(True)
 
         return Response(False)
