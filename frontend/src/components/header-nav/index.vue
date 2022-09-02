@@ -310,7 +310,6 @@
                         this.showGuide = true;
                     }
                     this.showNavDataLength = newValue.filter(e => e.show).length;
-                    console.log('this.showNavDataLength', this.showNavDataLength);
                 },
                 immediate: true,
                 deep: true
