@@ -489,6 +489,7 @@ const store = new Vuex.Store({
 
         updateRoleList (state, payload) {
             state.roleList.splice(0, state.roleList.length, ...payload);
+            // bus.$emit('roleList-update', payload.length);
         },
 
         updateNavData (state, payload) {
