@@ -93,6 +93,11 @@ class ESBAuthentication(BaseAuthentication):
     def _get_app_code_from_jwt_payload(self, jwt_payload):
         """从jwt里获取app_code"""
         app = jwt_payload.get("app", {})
+
+        if not app.get("verified", False):
+            logger.warning("app not verified in the payload of jwt(esb or apigateway): %s", jwt_payload)
+            return ""
+
         # 兼容多版本(企业版/TE版/社区版) 以及兼容APIGW/ESB
         app_code = app.get("bk_app_code", "") or app.get("app_code", "")
 
