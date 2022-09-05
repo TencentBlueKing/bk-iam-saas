@@ -130,6 +130,12 @@ class GroupService:
         # 将group_id从str转为int
         return {int(k): v for k, v in group_belongs.items()}
 
+    def check_subject_groups_quota(self, subject: Subject, group_ids: List[int]) -> None:
+        """
+        校验Subject与用户组是否数量超限
+        """
+        iam.check_subject_groups_quota(subject.type, subject.id, group_ids)
+
     def list_subject_group(self, subject: Subject, limit: int = 10, offset: int = 0) -> Tuple[int, List[SubjectGroup]]:
         """
         查询Subject的Group关系列表
