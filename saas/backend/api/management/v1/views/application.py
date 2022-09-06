@@ -15,16 +15,13 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
-from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
-from backend.api.management.permissions import ManagementAPIPermission
-from backend.api.management.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
+from backend.api.management.v1.permissions import ManagementAPIPermission
+from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
-from backend.biz.group import GroupCheckBiz
-from backend.service.constants import ApplicationTypeEnum, SubjectType
-from backend.service.models import Subject
+from backend.service.constants import ApplicationTypeEnum
 
 
-class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+class ManagementGroupApplicationViewSet(GenericViewSet):
     """用户组申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -36,7 +33,6 @@ class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, Gener
         ),
     }
 
-    group_check_biz = GroupCheckBiz()
     biz = ApplicationBiz()
 
     @swagger_auto_schema(
@@ -55,7 +51,6 @@ class ManagementGroupApplicationViewSet(ManagementAPIPermissionCheckMixin, Gener
 
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
-        self.group_check_biz.check_subject_group_limit(Subject(type=SubjectType.USER.value, id=user_id))
 
         # 创建申请
         applications = self.biz.create_for_group(

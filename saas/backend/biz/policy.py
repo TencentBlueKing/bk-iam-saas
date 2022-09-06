@@ -22,7 +22,7 @@ from pydantic.main import BaseModel
 from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
-from backend.common.lock import gen_policy_alert_lock
+from backend.common.lock import gen_policy_alter_lock
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
 from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
@@ -1383,7 +1383,7 @@ class PolicyQueryBiz:
         """
         查询指定Policy的资源类型的condition
         """
-        _, policy = self.get_system_policy(subject, policy_id)
+        policy = self.get_policy_by_id(subject, policy_id)
         related_resource_type = policy.get_related_resource_type(resource_group_id, resource_system, resource_type)
         if not related_resource_type:
             return []
@@ -1400,6 +1400,10 @@ class PolicyQueryBiz:
         action_list_dict = {system_id: self.action_svc.new_action_list(system_id) for system_id in system_id_set}
         system_list = self.system_svc.new_system_list()
 
+        # 查询saas policy id
+        all_action_id = {p.action_id for p in backend_policies}
+        action_id_dict = self.svc.get_action_id_dict(subject, all_action_id)
+
         # 填充action, system
         expired_policies = []
         for p in backend_policies:
@@ -1408,22 +1412,32 @@ class PolicyQueryBiz:
             ) or ThinAction(id="", name="", name_en="")
             system = system_list.get(p.system) or ThinSystem(id="", name="", name_en="")
 
+            id = action_id_dict.get((p.system, p.action_id), 0)
+            if not id:
+                continue
+
             expired_policies.append(
-                ExpiredPolicy(system=system.dict(), action=action.dict(), **p.dict(exclude={"system"}))
+                ExpiredPolicy(id=id, system=system.dict(), action=action.dict(), **p.dict(exclude={"id", "system"}))
             )
 
         return expired_policies
 
-    def get_system_policy(self, subject: Subject, policy_id: int) -> Tuple[str, PolicyBean]:
+    def get_policy_by_id(self, subject: Subject, policy_id: int) -> PolicyBean:
         """
         获取指定的Policy
         """
-        system_id, policy = self.svc.get_system_policy(policy_id, subject)
+        system_id, policy = self.svc.get_policy_by_id(policy_id, subject)
         policy_list = PolicyBeanList(system_id, [PolicyBean.parse_obj(policy)], need_fill_empty_fields=True)
-        return system_id, policy_list.policies[0]
+        return policy_list.policies[0]
+
+    def get_policy_system_by_id(self, subject: Subject, policy_id: int) -> str:
+        """
+        获取指定策略的system
+        """
+        return self.svc.get_policy_system_by_id(policy_id, subject)
 
 
-def policy_change_lock(func):
+def custom_policy_change_lock(func):
     """装饰器：策略变更的分布式全局锁，避免并发导致数据错误
     Note: 若被添加于类的方法上，需要使用method_decorator，主要是为了不关注类的self/cls参数
     from django.utils.decorators import method_decorator
@@ -1436,8 +1450,9 @@ def policy_change_lock(func):
         system_id = kwargs["system_id"] if "system_id" in kwargs else args[0]
         subject = kwargs["subject"] if "subject" in kwargs else args[1]
 
-        # 加 system + subject 锁
-        with gen_policy_alert_lock(f"{system_id}:{subject.type}:{subject.id}"):
+        # 加 template_id + system + subject 锁
+        template_id = 0  # 自定义权限，TemplateID默认为0
+        with gen_policy_alter_lock(template_id, system_id, subject.type, subject.id):
             return func(*args, **kwargs)
 
     return wrapper
@@ -1449,7 +1464,7 @@ class PolicyOperationBiz:
     svc = PolicyOperationService()
     action_svc = ActionService()
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
         """
         删除policies
@@ -1462,15 +1477,14 @@ class PolicyOperationBiz:
         """
         self.svc.delete_temporary_policies_by_ids(system_id, subject, policy_ids)
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def delete_by_resource_group_id(
         self, system_id: str, subject: Subject, policy_id: int, resource_group_id: str
     ) -> PolicyBean:
         """
         删除policy中指定resource_group_id的部分
         """
-        # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
-        __, policy = self.query_biz.get_system_policy(subject, policy_id)
+        policy = self.query_biz.get_policy_by_id(subject, policy_id)
         # 任意的policy不能删除
         if len(policy.resource_groups) == 0:
             raise error_codes.INVALID_ARGS.format(_("资源组不存在"))
@@ -1488,7 +1502,7 @@ class PolicyOperationBiz:
 
         return policy
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def delete_partial(
         self,
         system_id: str,
@@ -1504,8 +1518,7 @@ class PolicyOperationBiz:
         Policy条件部分删除
         返回更新后的Policy
         """
-        # 为避免需要忽略的变量与国际化翻译函数变量名"_"冲突，所以使用"__"
-        __, policy = self.query_biz.get_system_policy(subject, policy_id)
+        policy = self.query_biz.get_policy_by_id(subject, policy_id)
         resource_type = policy.get_related_resource_type(resource_group_id, resource_system_id, resource_type_id)
         if not resource_type:
             raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
@@ -1531,7 +1544,7 @@ class PolicyOperationBiz:
 
         return policy
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def update(self, system_id: str, subject: Subject, policies: List[PolicyBean]) -> List[PolicyBean]:
         """
         更新subject的权限策略
@@ -1559,7 +1572,7 @@ class PolicyOperationBiz:
 
         return update_policy_list.policies
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def alter(self, system_id: str, subject: Subject, policies: List[PolicyBean]):
         """
         变更subject权限策略
@@ -1583,7 +1596,7 @@ class PolicyOperationBiz:
             action_list=self.action_svc.new_action_list(system_id),
         )
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def revoke(self, system_id: str, subject: Subject, delete_policies: List[PolicyBean]) -> List[PolicyBean]:
         """
         删除策略，这里diff可能进行部分删除，若完全一样，则整条策略删除
@@ -1607,7 +1620,7 @@ class PolicyOperationBiz:
 
         return update_policy_list.policies + whole_delete_policy_list.policies
 
-    @method_decorator(policy_change_lock)
+    @method_decorator(custom_policy_change_lock)
     def update_due_to_renamed_resource(
         self, system_id: str, subject: Subject, policies: List[PolicyBean]
     ) -> List[PolicyBean]:
@@ -1619,7 +1632,7 @@ class PolicyOperationBiz:
         updated_policies = policy_list.auto_update_resource_name()
         if len(updated_policies) > 0:
             # 只需要修改DB，且只修改有更新的策略
-            self.svc.update_db_policies(system_id, subject, updated_policies)
+            self.svc.only_update_db_policies(system_id, subject, updated_policies)
 
         # 返回的是所有策略，包括未被更新的
         return policy_list.policies

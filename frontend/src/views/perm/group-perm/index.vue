@@ -1,5 +1,5 @@
 <template>
-    <div class="my-perm-group-perm">
+    <div class="my-perm-group-perm" v-bkloading="{ isLoading, opacity: 1 }">
         <bk-table
             data-test-id="myPerm_table_group"
             :data="curPageData"
@@ -135,7 +135,8 @@
                 // 控制侧边弹出层显示
                 isShowGradeSlider: false,
                 sliderLoading: false,
-                gradeSliderTitle: ''
+                gradeSliderTitle: '',
+                isLoading: false
             };
         },
         computed: {
@@ -145,9 +146,10 @@
             personalGroupList: {
                 handler (v) {
                     if (v.length) {
-                        this.dataList.splice(0, this.dataList.length, ...v);
-                        this.initPageConf();
-                        this.curPageData = this.getDataByPage(this.pageConf.current);
+                        // this.dataList.splice(0, this.dataList.length, ...v);
+                        // this.initPageConf();
+                        // this.curPageData = this.getDataByPage(this.pageConf.current);
+                        this.getDataByPage();
                     }
                 },
                 immediate: true
@@ -196,8 +198,7 @@
              */
             handlePageChange (page = 1) {
                 this.pageConf.current = page;
-                const data = this.getDataByPage(page);
-                this.curPageData.splice(0, this.curPageData.length, ...data);
+                this.getDataByPage(page);
             },
 
             /**
@@ -207,19 +208,39 @@
              *
              * @return {Array} 当前页数据
              */
-            getDataByPage (page) {
-                if (!page) {
-                    this.pageConf.current = page = 1;
+            async getDataByPage () {
+                this.isLoading = true;
+                try {
+                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                        page_size: this.pageConf.limit,
+                        page: this.pageConf.current
+                    });
+                    this.pageConf.count = res.data.count;
+                    this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.isLoading = false;
                 }
-                let startIndex = (page - 1) * this.pageConf.limit;
-                let endIndex = page * this.pageConf.limit;
-                if (startIndex < 0) {
-                    startIndex = 0;
-                }
-                if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length;
-                }
-                return this.dataList.slice(startIndex, endIndex);
+                // if (!page) {
+                //     this.pageConf.current = page = 1;
+                // }
+                // let startIndex = (page - 1) * this.pageConf.limit;
+                // let endIndex = page * this.pageConf.limit;
+                // if (startIndex < 0) {
+                //     startIndex = 0;
+                // }
+                // if (endIndex > this.dataList.length) {
+                //     endIndex = this.dataList.length;
+                // }
+                // return this.dataList.slice(startIndex, endIndex);
             },
 
             /**

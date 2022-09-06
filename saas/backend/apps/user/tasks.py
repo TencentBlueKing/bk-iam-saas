@@ -50,6 +50,8 @@ def user_group_policy_expire_remind():
     policy_biz = PolicyQueryBiz()
     group_biz = GroupBiz()
 
+    # FIXME: 重要, 不应该遍历所有用户, 应该先获取有配置策略的用户列表
+
     # 分页遍历所有的用户
     qs = User.objects.filter(staff_status=StaffStatus.IN.value)
     paginator = Paginator(qs, 100)
@@ -64,7 +66,8 @@ def user_group_policy_expire_remind():
         for user in paginator.page(i):
             subject = Subject(type=SubjectType.USER.value, id=user.username)
 
-            groups = group_biz.list_subject_group_before_expired_at(subject, expired_at)
+            # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
+            groups = group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
 
             policies = policy_biz.list_expired(subject, expired_at)
 
@@ -192,9 +195,13 @@ class UserPermissionCleaner:
         """
 
         # 查询所有的用户组id, 删除
-        groups = self.group_biz.list_subject_group(self._subject)
-        for group in groups:
-            self.group_biz.remove_members(str(group.id), [self._subject])
+        while True:
+            _, groups = self.group_biz.list_paging_subject_group(self._subject, limit=1000)
+            for group in groups:
+                self.group_biz.remove_members(str(group.id), [self._subject])
+
+            if len(groups) < 1000:
+                break
 
     def _cleanup_role(self):
         """

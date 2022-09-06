@@ -18,11 +18,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
-from backend.api.management.permissions import ManagementAPIPermission
-from backend.api.management.serializers import (
+from backend.api.management.v2.permissions import ManagementAPIPermission
+from backend.api.management.v2.serializers import (
     ManagementGradeManagerGroupCreateSLZ,
     ManagementGroupBaseInfoUpdateSLZ,
-    ManagementGroupBasicSLZ,
     ManagementGroupGrantSLZ,
     ManagementGroupMemberDeleteSLZ,
     ManagementGroupMemberSLZ,
@@ -34,6 +33,7 @@ from backend.apps.group.audit import (
     GroupDeleteAuditProvider,
     GroupMemberCreateAuditProvider,
     GroupMemberDeleteAuditProvider,
+    GroupMemberRenewAuditProvider,
     GroupPolicyCreateAuditProvider,
     GroupPolicyDeleteAuditProvider,
     GroupPolicyUpdateAuditProvider,
@@ -43,9 +43,15 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
+from backend.biz.group import (
+    GroupBiz,
+    GroupCheckBiz,
+    GroupCreateBean,
+    GroupMemberExpiredAtBean,
+    GroupTemplateGrantBean,
+)
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz, RoleListQuery
+from backend.biz.role import RoleBiz
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
@@ -53,19 +59,17 @@ from backend.trans.open_management import ManagementCommonTrans
 
 
 class ManagementGradeManagerGroupViewSet(GenericViewSet):
-    """用户组"""
+    """分级管理员下用户组"""
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "create": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GROUP_BATCH_CREATE.value),
-        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GROUP_LIST.value),
+        "create": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
     }
 
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
-    pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -100,36 +104,28 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
         return Response([group.id for group in groups])
 
+
+class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        # 对于在系统管理员下创建用户组，可以忽略参数里的权限校验来源
+        "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
+    }
+
+    lookup_field = "code"
+    lookup_url_kwarg = "system_id"
+    queryset = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value).order_by("-updated_time")
+
     @swagger_auto_schema(
-        operation_description="用户组列表",
-        responses={status.HTTP_200_OK: ManagementGroupBasicSLZ(label="用户组信息", many=True)},
+        operation_description="系统管理员下批量创建用户组",
+        request_body=ManagementGradeManagerGroupCreateSLZ(label="用户组"),
+        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组ID"))},
         tags=["management.role.group"],
     )
-    def list(self, request, *args, **kwargs):
-        role = self.get_object()
-
-        # 分页参数
-        limit, offset = CompatiblePagination().get_limit_offset_pair(request)
-
-        # 查询当前分级管理员可以管理的用户组
-        group_queryset = RoleListQuery(role, None).query_group()
-
-        # 分页数据
-        count = group_queryset.count()
-        groups = group_queryset[offset : offset + limit]
-
-        # 查询用户组属性
-        group_attrs = self.group_biz.batch_get_attributes([g.id for g in groups])
-        results = [
-            {
-                "id": g.id,
-                "name": g.name,
-                "description": g.description,
-                "attributes": group_attrs[g.id].get_attributes(),
-            }
-            for g in groups
-        ]
-        return Response({"count": count, "results": results})
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
 
 class ManagementGroupViewSet(GenericViewSet):
@@ -139,8 +135,8 @@ class ManagementGroupViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "update": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_UPDATE.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_DELETE.value),
+        "update": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_UPDATE.value),
+        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_DELETE.value),
     }
 
     lookup_field = "id"
@@ -206,9 +202,9 @@ class ManagementGroupMemberViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_LIST.value),
-        "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_ADD.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_DELETE.value),
+        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_LIST.value),
+        "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_ADD.value),
+        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_DELETE.value),
     }
 
     lookup_field = "id"
@@ -289,6 +285,52 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         return Response({})
 
 
+class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
+    """用户组成员有效期"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "update": (
+            VerifyAPIParamLocationEnum.GROUP_IN_PATH.value,
+            ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_UPDATE.value,
+        ),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户组成员有效期更新",
+        request_body=GroupAddMemberSLZ(label="用户组成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.member"],
+    )
+    @view_audit_decorator(GroupMemberRenewAuditProvider)
+    def update(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        serializer = GroupAddMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        members = [
+            GroupMemberExpiredAtBean(type=m["type"], id=m["id"], policy_expired_at=data["expired_at"])
+            for m in data["members"]
+        ]
+
+        # 更新有效期
+        self.biz.update_members_expired_at(group.id, members)
+
+        # 写入审计上下文
+        audit_context_setter(group=group, members=data["members"])
+
+        return Response({})
+
+
 class ManagementGroupPolicyViewSet(GenericViewSet):
     """用户组权限 - 自定义权限"""
 
@@ -322,7 +364,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        system_id = data["system"]
+        system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
@@ -338,7 +380,9 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         role = self.role_biz.get_role_by_group_id(group.id)
 
         # 检查数据正确性：授权范围是否超限角色访问，这里不需要检查资源实例名称，因为授权时，接入系统可能使用同步方式，这时候资源可能还没创建
-        self.group_biz.check_before_grant(group, [template], role, need_check_resource_name=False)
+        self.group_biz.check_before_grant(
+            group, [template], role, need_check_action_not_exists=False, need_check_resource_name=False
+        )
 
         # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
@@ -351,7 +395,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组权限回收",
-        request_body=ManagementGroupGrantSLZ(label="权限"),
+        request_body=ManagementGroupRevokeSLZ(label="权限"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["management.role.group.policy"],
     )
@@ -363,7 +407,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        system_id = data["system"]
+        system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
         resources = data["resources"]
 
@@ -387,7 +431,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_DELETE.value),
+        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_DELETE.value),
     }
 
     lookup_field = "id"
@@ -411,7 +455,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        system_id = data["system"]
+        system_id = data["system"] or kwargs["system_id"]
         action_ids = [a["id"] for a in data["actions"]]
 
         # 查询将要被删除PolicyID列表
@@ -429,3 +473,36 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         audit_context_setter(group=group, system_id=system_id, policies=policies)
 
         return Response({})
+
+
+class ManagementGroupPolicyActionViewSet(GenericViewSet):
+    """用户组自定义权限 - 操作"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_ACTION_LIST.value),
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+
+    group_biz = GroupBiz()
+    policy_query_biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="查询用户组有权限的Action列表",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.role.group.policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        system_id = kwargs["system_id"]
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+
+        # 查询用户组Policy列表
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
+
+        return Response([{"id": p.action_id} for p in policies])
