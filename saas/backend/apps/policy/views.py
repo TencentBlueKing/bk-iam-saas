@@ -29,6 +29,7 @@ from backend.biz.policy import (
     ConditionBean,
     PolicyBean,
     PolicyBeanList,
+    PolicyEmptyException,
     PolicyOperationBiz,
     PolicyQueryBiz,
     RelatedResourceBean,
@@ -259,6 +260,7 @@ class RelatedPolicyViewSet(GenericViewSet):
     生成依赖操作
     """
 
+    policy_query_biz = PolicyQueryBiz()
     related_policy_biz = RelatedPolicyBiz()
 
     @swagger_auto_schema(
@@ -274,6 +276,18 @@ class RelatedPolicyViewSet(GenericViewSet):
         data = slz.validated_data
         system_id = data["system_id"]
         source_policy = PolicyBean.parse_obj(data["source_policy"])
+
+        # 移除用户已有的权限, 只需要生成新增数据的依赖操作权限
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        old_policy_list = self.policy_query_biz.new_policy_list(system_id, subject)
+        old_policy = old_policy_list.get(source_policy.action_id)
+        if old_policy:
+            try:
+                # 移除用户已有的资源实例
+                source_policy = source_policy.remove_resource_group_list(old_policy.resource_groups)
+            except PolicyEmptyException:
+                # 如果来源policy与用户已有的策略完全一致, 不需要生成依赖操作
+                return Response([])
 
         # 关联操作
         related_policies = self.related_policy_biz.create_related_policies(system_id, source_policy)
