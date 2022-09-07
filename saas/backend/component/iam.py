@@ -565,6 +565,19 @@ def check_subject_groups_belong(
     return _call_iam_api(http_get, url_path, data=data)
 
 
+def check_subject_groups_quota(subject_type: str, subject_id: str, group_ids: List[int]) -> Dict[str, bool]:
+    """
+    校验Subject与用户组是否数量超限
+    """
+    url_path = "/api/v1/web/subjects-groups/quota"
+    data = {
+        "type": subject_type,
+        "id": subject_id,
+        "group_ids": ",".join(map(str, group_ids)),
+    }
+    return _call_iam_api(http_get, url_path, data=data)
+
+
 # --------------------------------- V2 API ---------------------------------
 def alter_group_policies_v2(
     subject_type: str,

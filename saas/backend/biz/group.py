@@ -136,6 +136,7 @@ class GroupBiz:
     add_members = GroupService.__dict__["add_members"]
     remove_members = GroupService.__dict__["remove_members"]
     check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
+    check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
