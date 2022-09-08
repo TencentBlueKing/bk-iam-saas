@@ -11,8 +11,10 @@ specific language governing permissions and limitations under the License.
 from typing import List, Optional, Tuple
 
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 
 from backend.apps.policy.models import Policy as PolicyModel
+from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.error_codes import error_codes
 from backend.component import iam
 
@@ -55,7 +57,7 @@ class PolicyList:
             self.extend_without_repeated([policy])
             return
 
-        old_policy.related_resource_types = policy.related_resource_types
+        old_policy.resource_groups = policy.resource_groups
         old_policy.expired_at = policy.expired_at
         old_policy.policy_id = policy.policy_id
 
@@ -89,6 +91,13 @@ class PolicyQueryService:
 
         return self._trans_from_queryset(system_id, subject, qs)
 
+    def list_temporary_by_subject(self, system_id: str, subject: Subject) -> List[Policy]:
+        """
+        查询subject指定系统下的临时权限
+        """
+        qs = TemporaryPolicy.objects.filter(system_id=system_id, subject_type=subject.type, subject_id=subject.id)
+        return [Policy.from_db_model(one, one.expired_at) for one in qs]
+
     def _trans_from_queryset(self, system_id: str, subject: Subject, queryset) -> List[Policy]:
         """
         db policy queryset 转换为List[Policy]
@@ -111,6 +120,15 @@ class PolicyQueryService:
         )
         return self._trans_from_queryset(system_id, subject, qs)
 
+    def list_temporary_by_policy_ids(self, system_id: str, subject: Subject, policy_ids: List[int]) -> List[Policy]:
+        """
+        查询指定policy_ids的临时策略
+        """
+        qs = TemporaryPolicy.objects.filter(
+            system_id=system_id, subject_type=subject.type, subject_id=subject.id, policy_id__in=policy_ids
+        )
+        return [Policy.from_db_model(one, one.expired_at) for one in qs]
+
     def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
         """
         查询subject有权限的系统-policy数量信息
@@ -123,11 +141,25 @@ class PolicyQueryService:
 
         return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
 
+    def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
+        """
+        查询subject有权限的系统-临时policy数量信息
+        """
+        qs = (
+            TemporaryPolicy.objects.filter(subject_type=subject.type, subject_id=subject.id)
+            .values("system_id")
+            .annotate(count=Count("system_id"))
+        )
+
+        return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
+
     def get_system_policy(self, policy_id: int, subject: Subject) -> Tuple[str, Policy]:
         """
         获取指定的Policy
         """
-        db_policy = PolicyModel.objects.get(policy_id=policy_id, subject_type=subject.type, subject_id=subject.id)
+        db_policy = get_object_or_404(
+            PolicyModel, policy_id=policy_id, subject_type=subject.type, subject_id=subject.id
+        )
 
         backend_policy_list = new_backend_policy_list_by_subject(db_policy.system_id, subject)
 

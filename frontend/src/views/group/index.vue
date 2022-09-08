@@ -1,12 +1,19 @@
 <template>
     <div class="iam-user-group-wrapper">
         <render-search>
-            <bk-button theme="primary" @click="handleCreate">{{ $t(`m.common['新建']`) }}</bk-button>
+            <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
+                {{ $t(`m.common['新建']`) }}
+            </bk-button>
             <bk-button
                 v-if="isSuperManager"
                 :disabled="currentSelectList.length < 1"
                 style="margin-left: 6px;"
+                data-test-id="group_btn_transferOut"
                 @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
+            <bk-button :disabled="currentSelectList.length < 1"
+                theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
+                {{ $t(`m.common['批量添加成员']`) }}
+            </bk-button>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -30,7 +37,7 @@
             @select="handlerChange"
             @select-all="handlerAllChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column v-if="isSuperManager" type="selection" align="center" :selectable="getIsSelect"
+            <bk-table-column type="selection" align="center" :selectable="getIsSelect"
                 reserve-selection></bk-table-column>
             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                 <template slot-scope="{ row }">
@@ -83,6 +90,9 @@
                         <bk-button theme="primary" text style="margin-left: 10px;" @click="handleAddPerm(row)">
                             {{ $t(`m.common['添加权限']`) }}
                         </bk-button>
+                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleClone(row)">
+                            {{ $t(`m.grading['克隆']`) }}
+                        </bk-button>
                         <bk-button theme="primary" text style="margin-left: 10px;" @click="handleDelete(row)">
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
@@ -108,6 +118,7 @@
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
+            :is-batch="isBatch"
             :loading="loading"
             :name="curName"
             :id="curId"
@@ -122,18 +133,20 @@
             :group-ids="curSelectIds"
             @on-success="handleTransferOutSuccess"
             @on-cancel="handleTransferOutCancel" />
+        <novice-guide :flag="showNoviceGuide" :content="content" />
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import { mapGetters } from 'vuex'
-    import IamSearchSelect from '@/components/iam-search-select'
-    import { fuzzyRtxSearch } from '@/common/rtx'
-    import { buildURLParams } from '@/common/url'
-    import DeleteDialog from './components/delete-user-group-dialog'
-    import AddMemberDialog from './components/iam-add-member'
-    import EditProcessDialog from './components/edit-process-dialog'
-    import TransferOutDialog from './components/transfer-out-dialog'
+    import _ from 'lodash';
+    import { mapGetters } from 'vuex';
+    import IamSearchSelect from '@/components/iam-search-select';
+    import { fuzzyRtxSearch } from '@/common/rtx';
+    import { buildURLParams } from '@/common/url';
+    import DeleteDialog from './components/delete-user-group-dialog';
+    import AddMemberDialog from './components/iam-add-member';
+    import EditProcessDialog from './components/edit-process-dialog';
+    import TransferOutDialog from './components/transfer-out-dialog';
+    import NoviceGuide from '@/components/iam-novice-guide';
     export default {
         name: '',
         components: {
@@ -141,7 +154,8 @@
             AddMemberDialog,
             EditProcessDialog,
             IamSearchSelect,
-            TransferOutDialog
+            TransferOutDialog,
+            NoviceGuide
         },
         data () {
             return {
@@ -172,37 +186,42 @@
 
                 curRole: 'staff',
 
-                isShowRolloutGroupDialog: false
-            }
+                isShowRolloutGroupDialog: false,
+
+                isBatch: false,
+
+                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]')
+            };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'showNoviceGuide']),
             isCanEditProcess () {
-                return this.currentSelectList.length > 0
+                return this.currentSelectList.length > 0;
             },
             isRatingManager () {
-                return this.curRole === 'rating_manager'
+                return this.curRole === 'rating_manager';
             },
             isSuperManager () {
-                return this.curRole === 'super_manager'
+                return this.curRole === 'super_manager';
             },
             curSelectIds () {
-                return this.currentSelectList.map(item => item.id)
+                return this.currentSelectList.map(item => item.id);
             }
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             user: {
                 handler (value) {
-                    this.curRole = value.role.type || 'staff'
+                    this.curRole = value.role.type || 'staff';
                 },
+                immediate: true,
                 deep: true
             }
         },
         created () {
-            this.curRole = this.user.role.type || 'staff'
+            this.curRole = this.user.role.type || 'staff';
             this.searchData = [
                 {
                     id: 'id',
@@ -242,30 +261,30 @@
                     name: this.$t(`m.common['组织ID包含']`),
                     disabled: true
                 }
-            ]
+            ];
             const isObject = payload => {
-                return Object.prototype.toString.call(payload) === '[object Object]'
-            }
+                return Object.prototype.toString.call(payload) === '[object Object]';
+            };
 
-            const currentQueryCache = this.getCurrentQueryCache()
+            const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
+                    this.pagination.limit = currentQueryCache.limit;
+                    this.pagination.current = currentQueryCache.current;
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
-                        const curData = currentQueryCache[key]
-                        const tempData = this.searchData.find(item => item.id === key)
+                        const curData = currentQueryCache[key];
+                        const tempData = this.searchData.find(item => item.id === key);
                         if (isObject(curData)) {
                             if (tempData) {
                                 this.searchValue.push({
                                     id: key,
                                     name: tempData.name,
                                     values: [curData]
-                                })
-                                this.searchList.push(..._.cloneDeep(this.searchValue))
-                                this.searchParams[key] = curData.id
+                                });
+                                this.searchList.push(..._.cloneDeep(this.searchValue));
+                                this.searchParams[key] = curData.id;
                             }
                         } else if (tempData) {
                             this.searchValue.push({
@@ -275,11 +294,11 @@
                                     id: curData,
                                     name: curData
                                 }]
-                            })
-                            this.searchList.push(..._.cloneDeep(this.searchValue))
-                            this.searchParams[key] = curData
+                            });
+                            this.searchList.push(..._.cloneDeep(this.searchValue));
+                            this.searchParams[key] = curData;
                         } else {
-                            this.searchParams[key] = curData
+                            this.searchParams[key] = curData;
                         }
                     }
                 }
@@ -290,47 +309,47 @@
              * 获取页面数据
              */
             async fetchPageData () {
-                await this.fetchUserGroupList()
+                await this.fetchUserGroupList();
             },
 
             getIsSelect () {
-                return this.tableList.length > 0
+                return this.tableList.length > 0;
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination
-                const params = {}
+                const { limit, current } = this.pagination;
+                const params = {};
                 const queryParams = {
                     limit,
                     current,
                     ...this.searchParams,
                     ...this.$route.query
-                }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
+                };
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
-                    const tempObj = this.searchData.find(item => key === item.id)
+                    const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
-                            const tempData = this.searchList.find(item => item.id === key)
-                            params[key] = tempData.values[0]
+                            const tempData = this.searchList.find(item => item.id === key);
+                            params[key] = tempData.values[0];
                         }
                     } else {
-                        params[key] = this.searchParams[key]
+                        params[key] = this.searchParams[key];
                     }
                 }
                 return {
                     ...params,
                     limit,
                     current
-                }
+                };
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('groupList', JSON.stringify(payload))
+                window.localStorage.setItem('groupList', JSON.stringify(payload));
             },
 
             getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('groupList'))
+                return JSON.parse(window.localStorage.getItem('groupList'));
             },
 
             quickSearchMethod (value) {
@@ -338,78 +357,90 @@
                     name: this.$t(`m.common['关键字']`),
                     id: 'keyword',
                     values: [value]
-                }
+                };
             },
 
             async fetchUserGroupList (isLoading = false) {
-                this.tableLoading = isLoading
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
+                this.tableLoading = isLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
                     ...this.searchParams,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params)
-                    this.pagination.count = res.data.count || 0
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    this.pagination.count = res.data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                     this.currentSelectList = this.currentSelectList.filter(item => {
-                        return this.tableList.map(_ => _.id).includes(item.id)
-                    })
+                        return this.tableList.map(_ => _.id).includes(item.id);
+                    });
                     if (this.currentSelectList.length < 1) {
-                        this.$refs.tableRef && this.$refs.tableRef.clearSelection()
+                        this.$refs.tableRef && this.$refs.tableRef.clearSelection();
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
             handleRemoteRtx (value) {
+                console.log('value', value);
                 return fuzzyRtxSearch(value)
                     .then(data => {
-                        return data.results
-                    })
+                        return data.results;
+                    });
             },
 
             handleRemoteSystem (value) {
                 return this.$store.dispatch('system/getSystems')
                     .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1)
-                    })
+                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
+                    });
             },
 
             handleCreate () {
                 this.$router.push({
                     name: 'createUserGroup'
-                })
+                });
+            },
+
+            handleClone (data) {
+                this.$router.push({
+                    name: 'cloneUserGroup',
+                    query: {
+                        name: data.name,
+                        description: data.description,
+                        id: data.id
+                    }
+                });
             },
 
             handleTransferOut () {
-                this.isShowRolloutGroupDialog = true
+                this.isShowRolloutGroupDialog = true;
             },
 
             handleTransferOutSuccess () {
-                this.currentSelectList = []
-                this.handleTransferOutCancel()
-                this.resetPagination()
-                this.fetchUserGroupList(true)
+                this.currentSelectList = [];
+                this.handleTransferOutCancel();
+                this.resetPagination();
+                this.fetchUserGroupList(true);
             },
 
             handleTransferOutCancel () {
-                this.isShowRolloutGroupDialog = false
+                this.isShowRolloutGroupDialog = false;
             },
 
             handleEditApprovalProcess () {
-                this.isShowEditProcessDialog = true
+                this.isShowEditProcessDialog = true;
             },
 
             resetPagination () {
@@ -417,20 +448,20 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             handleSearch (payload, result) {
-                this.searchParams = payload
-                this.searchList = result
-                this.resetPagination()
-                this.fetchUserGroupList(true)
+                this.searchParams = payload;
+                this.searchList = result;
+                this.resetPagination();
+                this.fetchUserGroupList(true);
             },
 
             handleAddMember (payload) {
-                this.curName = payload.name
-                this.curId = payload.id
-                this.isShowAddMemberDialog = true
+                this.curName = payload.name;
+                this.curId = payload.id;
+                this.isShowAddMemberDialog = true;
             },
 
             handleAddPerm (payload) {
@@ -439,154 +470,166 @@
                     params: {
                         id: payload.id
                     }
-                })
+                });
             },
 
             handleCancelAdd () {
-                this.curId = 0
-                this.isShowAddMemberDialog = false
+                this.curId = 0;
+                this.isShowAddMemberDialog = false;
             },
 
             async handleSumbitAdd (payload) {
-                this.loading = true
-                const { users, departments, expiredAt } = payload
-                let expired = payload.policy_expired_at
+                this.loading = true;
+                const { users, departments, expiredAt } = payload;
+                let expired = payload.policy_expired_at;
                 // 4102444800：非永久时需加上当前时间
                 if (expiredAt !== 4102444800) {
-                    const nowTimestamp = +new Date() / 1000
-                    const tempArr = String(nowTimestamp).split('')
-                    const dotIndex = tempArr.findIndex(item => item === '.')
-                    const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10)
-                    expired = expired + nowSecond
+                    const nowTimestamp = +new Date() / 1000;
+                    const tempArr = String(nowTimestamp).split('');
+                    const dotIndex = tempArr.findIndex(item => item === '.');
+                    const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
+                    expired = expired + nowSecond;
                 }
-                const arr = []
+                const arr = [];
                 if (departments.length > 0) {
                     arr.push(...departments.map(item => {
                         return {
                             id: item.id,
                             type: 'department'
-                        }
-                    }))
+                        };
+                    }));
                 }
                 if (users.length > 0) {
                     arr.push(...users.map(item => {
                         return {
                             id: item.username,
                             type: 'user'
-                        }
-                    }))
+                        };
+                    }));
                 }
                 const params = {
                     members: arr,
                     expired_at: expired,
                     id: this.curId
+                };
+                let fetchUrl = 'userGroup/addUserGroupMember';
+                if (this.isBatch) {
+                    params.group_ids = this.curSelectIds;
+                    delete params.id;
+                    fetchUrl = 'userGroup/batchAddUserGroupMember';
                 }
+                console.log('params', params);
                 try {
-                    await this.$store.dispatch('userGroup/addUserGroupMember', params)
-                    this.isShowAddMemberDialog = false
-                    this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000)
-                    this.fetchUserGroupList(true)
+                    await this.$store.dispatch(fetchUrl, params);
+                    this.isShowAddMemberDialog = false;
+                    this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
+                    this.fetchUserGroupList(true);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.loading = false
+                    this.loading = false;
                 }
             },
 
             handleAddAfterClose  () {
-                this.curName = ''
-                this.curId = 0
+                this.curName = '';
+                this.curId = 0;
             },
 
             handleDelete (payload) {
-                this.currentUserGroup = payload
-                this.isShowDeleteDialog = true
+                this.currentUserGroup = payload;
+                this.isShowDeleteDialog = true;
             },
 
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchUserGroupList(true)
+                this.pagination.current = page;
+                this.fetchUserGroupList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchUserGroupList(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchUserGroupList(true);
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handleView (payload) {
-                window.localStorage.setItem('iam-header-title-cache', payload.name)
-                window.localStorage.setItem('iam-header-name-cache', payload.name)
-                this.$store.commit('setHeaderTitle', payload.name)
+                window.localStorage.setItem('iam-header-title-cache', payload.name);
+                window.localStorage.setItem('iam-header-name-cache', payload.name);
+                this.$store.commit('setHeaderTitle', payload.name);
                 this.$router.push({
                     name: 'userGroupDetail',
                     params: {
                         id: payload.id
                     }
-                })
+                });
             },
 
             async handleSumbitDelete () {
-                this.deleteLoading = true
+                this.deleteLoading = true;
                 try {
                     await this.$store.dispatch('userGroup/deleteUserGroup', {
                         id: this.currentUserGroup.id
-                    })
-                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000)
-                    this.isShowDeleteDialog = false
-                    this.resetPagination()
-                    this.fetchUserGroupList(true)
+                    });
+                    this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                    this.isShowDeleteDialog = false;
+                    this.resetPagination();
+                    this.fetchUserGroupList(true);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.deleteLoading = false
+                    this.deleteLoading = false;
                 }
             },
 
             handleSumbitEdit () {
-                this.isShowEditProcessDialog = false
+                this.isShowEditProcessDialog = false;
             },
 
             hideCancelDelete () {
-                this.isShowDeleteDialog = false
+                this.isShowDeleteDialog = false;
             },
 
             hideCancelEdit () {
-                this.isShowEditProcessDialog = false
+                this.isShowEditProcessDialog = false;
             },
 
             handleAfterDeleteLeave () {
-                this.currentUserGroup = {}
+                this.currentUserGroup = {};
             },
 
-            handleAfterEditLeave () {}
+            handleAfterEditLeave () {},
+
+            handleBatchAddMember () {
+                this.isBatch = true;
+                this.isShowAddMemberDialog = true;
+            }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-user-group-wrapper {

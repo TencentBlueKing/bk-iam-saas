@@ -15,7 +15,7 @@ from backend.component import iam
 
 from .base import BaseSyncIAMBackendService
 
-organization_logger = logging.getLogger("organization")
+logger = logging.getLogger("organization")
 
 
 class IAMBackendUserSyncService(BaseSyncIAMBackendService):
@@ -40,25 +40,24 @@ class IAMBackendUserSyncService(BaseSyncIAMBackendService):
 
         iam.create_subjects_by_auto_paging(created_users)
 
-        organization_logger.info(
-            f"create users by sync task, the length of users: {len(created_users)} "
-            f"the detail of users: {created_users}"
-        )
+        logger.info(f"create users by sync task, count={len(created_users)} detail={created_users}")
 
     def deleted_handler(self):
         """后台需要删除的用户处理"""
-        db_user_set = {i.username for i in self.db_users}
-        deleted_users = [{"type": "user", "id": i["id"]} for i in self.backend_users if i["id"] not in db_user_set]
-
-        if not deleted_users:
-            return
-
-        iam.delete_subjects_by_auto_paging(deleted_users)
-
-        organization_logger.info(
-            f"delete users by sync task, the length of users: {len(deleted_users)} "
-            f"the detail of users: {deleted_users}"
-        )
+        # db_user_set = {i.username for i in self.db_users}
+        # deleted_users = [{"type": "user", "id": i["id"]} for i in self.backend_users if i["id"] not in db_user_set]
+        #
+        # if not deleted_users:
+        #     return
+        #
+        # iam.delete_subjects_by_auto_paging(deleted_users)
+        #
+        # logger.info(
+        #     f"delete users by sync task, count={len(deleted_users)} detail={deleted_users}"
+        # )
+        # Note: 对于SaaS已删除用户，由于不确定是用户管理本身有bug导致的还是用户真实不存在了，所以为了避免影响用户权限，这里将不删除后端用户
+        # 后续将会通过SaaS标记已删除用户，然后发起审批流程等方式再进行后端用户权限的删除
+        pass
 
     def sync_to_iam_backend(self):
         """同步IAM后台 相关变更"""

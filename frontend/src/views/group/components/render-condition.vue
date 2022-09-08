@@ -28,22 +28,15 @@
             <Icon v-else type="paste" />
         </div>
 
-        <div class="iam-condition-batch-paste"
+        <!-- 批量粘贴 -->
+        <div class="operate-icon"
+            :title="$t(`m.common['批量粘贴']`)"
+            @mouseenter="iconEnter = true"
+            @mouseleave="iconEnter = false"
+            @click.stop="handleBatchPaste"
             v-if="(canOperate && canPaste) || immediatelyShow">
-            <section class="batch-paste-wrapper">
-                <section class="batch-paste-action">
-                    <spin-loading v-if="isLoading" />
-                    <bk-button
-                        v-else
-                        text
-                        theme="primary"
-                        @click.native.stop
-                        @click="handleBatchPaste">
-                        {{ $t(`m.common['批量粘贴']`) }}
-                    </bk-button>
-                </section>
-                <div class="triangle"></div>
-            </section>
+            <iam-svg v-if="!iconEnter" name="brush-fill" />
+            <iam-svg v-else name="brush-fill-active" />
         </div>
     </div>
 </template>
@@ -82,7 +75,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -92,142 +85,143 @@
                 isActive: false,
                 immediatelyShow: false,
                 isLoading: false,
-                pasteLoading: false
-            }
+                pasteLoading: false,
+                iconEnter: false
+            };
         },
         computed: {
             style () {
-                const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length
+                const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length;
                 return {
                     width: `calc(100% - ${statusLen * 20}px)`
-                }
+                };
             },
             isDisabled () {
-                return this.isLoading || this.pasteLoading
+                return this.isLoading || this.pasteLoading;
             }
         },
         watch: {
             value: {
                 handler (val) {
-                    this.curValue = val
+                    this.curValue = val;
                 },
                 immediate: true
             }
         },
         methods: {
             handleView () {
-                this.$emit('on-view')
+                this.$emit('on-view');
             },
 
             handleCopy () {
-                this.$emit('on-copy')
+                this.$emit('on-copy');
             },
 
             handleClick () {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.$emit('on-click')
+                this.$emit('on-click');
             },
 
             handleMouseenter () {
-                this.isActive = true
-                this.$emit('on-mouseover')
+                this.isActive = true;
+                this.$emit('on-mouseover');
             },
 
             handleMouseleave () {
-                this.isActive = false
-                this.immediatelyShow = false
-                this.$emit('on-mouseleave')
+                this.isActive = false;
+                this.immediatelyShow = false;
+                this.$emit('on-mouseleave');
             },
 
             async handlePaste () {
                 // 无限制时无需请求接口
                 if (Object.keys(this.params).length < 1) {
-                    this.$emit('on-paste')
-                    return
+                    this.$emit('on-paste');
+                    return;
                 }
                 if (this.params.resource_type.condition.length === 0) {
                     this.$emit('on-paste', {
                         flag: true,
                         data: []
-                    })
-                    return
+                    });
+                    return;
                 }
-                this.pasteLoading = true
+                this.pasteLoading = true;
                 const params = {
                     resource_type: this.params.resource_type,
                     actions: this.params.actions.slice(0, 1)
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permApply/resourceBatchCopy', params)
-                    console.warn(res)
-                    const condition = res.data[0].resource_type.condition
+                    const res = await this.$store.dispatch('permApply/resourceBatchCopy', params);
+                    console.warn(res);
+                    const condition = res.data[0].resource_type.condition;
                     this.$emit('on-paste', {
                         flag: true,
                         data: condition
-                    })
+                    });
                 } catch (e) {
                     this.$emit('on-paste', {
                         flag: false,
                         data: null
-                    })
-                    console.error(e)
+                    });
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.pasteLoading = false
+                    this.pasteLoading = false;
                 }
             },
 
             async handleBatchPaste () {
                 if (Object.keys(this.params).length < 1) {
-                    this.$emit('on-batch-paste')
-                    return
+                    this.$emit('on-batch-paste');
+                    return;
                 }
                 // 无限制时无需请求接口
                 if (this.params.resource_type.condition.length === 0) {
                     this.$emit('on-batch-paste', {
                         flag: true,
                         data: []
-                    })
-                    return
+                    });
+                    return;
                 }
-                this.isLoading = true
+                this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('permApply/resourceBatchCopy', this.params)
+                    const res = await this.$store.dispatch('permApply/resourceBatchCopy', this.params);
                     this.$emit('on-batch-paste', {
                         flag: true,
                         data: res.data
-                    })
+                    });
                 } catch (e) {
                     this.$emit('on-batch-paste', {
                         flag: false,
                         data: null
-                    })
-                    console.error(e)
+                    });
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.isLoading = false
+                    this.isLoading = false;
                 }
             },
 
             setImmediatelyShow (payload) {
-                this.immediatelyShow = !!payload
+                this.immediatelyShow = !!payload;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-condition-item {

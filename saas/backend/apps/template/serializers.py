@@ -31,7 +31,7 @@ from .constants import TemplateTag
 class TemplateCreateSLZ(serializers.Serializer):
     name = serializers.CharField(label="模板名称", max_length=128)
     system_id = serializers.CharField(label="系统id", max_length=32)
-    action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), required=True, allow_empty=False)
+    action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), allow_empty=False)
     description = serializers.CharField(label="描述", max_length=255, allow_blank=True)
 
     def validate(self, data):
@@ -65,11 +65,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
         self._lock_ids = set()
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
             template_ids = [template.id for template in self.instance]
-            self._lock_ids = set(
-                PermTemplatePreUpdateLock.objects.filter(template_id__in=template_ids).values_list(
-                    "template_id", flat=True
-                )
-            )
+            self._lock_ids = set(PermTemplatePreUpdateLock.objects.filter_exists_template_ids(template_ids))
 
     class Meta:
         model = PermTemplate
@@ -119,7 +115,7 @@ class TemplateListSLZ(serializers.ModelSerializer):
 
 
 class TemplateListSchemaSLZ(serializers.ModelSerializer):
-    system = SystemInfoSLZ(label="系统信息", required=True)
+    system = SystemInfoSLZ(label="系统信息")
     tag = serializers.CharField(label="标签")
     is_lock = serializers.BooleanField(label="是否锁定")
     need_to_update = serializers.BooleanField(label="是否需要更新")
@@ -188,9 +184,7 @@ class TemplateMemberSLZ(serializers.Serializer):
 
 
 class TemplateDeleteMemberSLZ(serializers.Serializer):
-    members = serializers.ListField(
-        label="成员列表", child=TemplateMemberSLZ(label="成员"), required=True, allow_empty=False
-    )
+    members = serializers.ListField(label="成员列表", child=TemplateMemberSLZ(label="成员"), allow_empty=False)
 
 
 class TemplateDetailQuerySLZ(serializers.Serializer):
@@ -203,14 +197,12 @@ class TemplatePartialUpdateSLZ(serializers.Serializer):
 
 
 class TemplatePreUpdateSLZ(serializers.Serializer):
-    action_ids = serializers.ListField(label="操作ID", child=serializers.CharField(), required=True, allow_empty=False)
+    action_ids = serializers.ListField(label="操作ID", child=serializers.CharField(), allow_empty=False)
 
 
 class GroupAuthorationPreUpdateSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="用户组id")
-    actions = serializers.ListField(
-        label="操作策略", child=BasePolicyActionSLZ(label="策略"), required=True, allow_empty=False
-    )
+    actions = serializers.ListField(label="操作策略", child=BasePolicyActionSLZ(label="策略"), allow_empty=False)
 
     def validate(self, data):
         action_ids = {action["id"] for action in data["actions"]}
@@ -224,9 +216,7 @@ class TemplateGroupAuthorationPreUpdateSLZ(serializers.Serializer):
     用户组同步信息预提交结构
     """
 
-    groups = serializers.ListField(
-        label="用户组更新信息", child=GroupAuthorationPreUpdateSLZ(), required=True, allow_empty=False
-    )
+    groups = serializers.ListField(label="用户组更新信息", child=GroupAuthorationPreUpdateSLZ(), allow_empty=False)
 
 
 class GroupCopyActionInstanceSLZ(serializers.Serializer):
@@ -236,9 +226,7 @@ class GroupCopyActionInstanceSLZ(serializers.Serializer):
 
     action_id = serializers.CharField(label="新操作ID")
     clone_from_action_id = serializers.CharField(label="复制的操作ID")
-    group_ids = serializers.ListField(
-        label="用户组ID列表", child=serializers.IntegerField(), required=True, allow_empty=False
-    )
+    group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(), allow_empty=False)
 
 
 class TemplatePreUpdateGroupSyncSchemaSLZ(TemplateListSchemaSLZ):
@@ -286,4 +274,4 @@ class TemplateGroupPreViewSchemaSLZ(TemplateGroupPreViewSLZ):
 
 
 class TemplatePreUpdateSchemaSLZ(serializers.Serializer):
-    action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), required=True, allow_empty=False)
+    action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), allow_empty=False)

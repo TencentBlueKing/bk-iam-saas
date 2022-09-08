@@ -10,12 +10,12 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.account.serializers import AccountRoleSLZ
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.audit import SubjectGroupDeleteAuditProvider
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
@@ -24,25 +24,23 @@ from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
 from backend.common.serializers import SystemQuerySLZ
-from backend.common.swagger import ResponseSwaggerAutoSchema
 from backend.common.time import get_soon_expire_ts
 from backend.service.constants import SubjectRelationType, SubjectType
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
+from .serializers import GroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
 
 permission_logger = logging.getLogger("permission")
 
 
 class UserGroupViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="我的权限-用户组列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["user"],
     )
@@ -54,9 +52,8 @@ class UserGroupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="我的权限-退出用户组",
-        auto_schema=ResponseSwaggerAutoSchema,
-        query_serializer=UserRelationSLZ,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        query_serializer=UserRelationSLZ(),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
     )
     @view_audit_decorator(SubjectGroupDeleteAuditProvider)
@@ -67,7 +64,13 @@ class UserGroupViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        permission_logger.info("subject group delete by user: %s", request.user.username)
+        permission_logger.info(
+            "subject type=%s, id=%s group %s deleted by user %s",
+            subject.type,
+            subject.id,
+            data["id"],
+            request.user.username,
+        )
 
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:
@@ -81,14 +84,13 @@ class UserGroupViewSet(GenericViewSet):
 
 class UserGroupRenewViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     # service
     group_biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="用户即将过期用户组列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["user"],
     )
@@ -104,11 +106,10 @@ class UserProfileNewbieViewSet(GenericViewSet):
     用户配置-新手指引
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="用户配置-新手指引",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: UserNewbieSLZ(label="新手指引", many=True)},
         tags=["user"],
     )
@@ -119,7 +120,7 @@ class UserProfileNewbieViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户配置-新手指引设置",
         request_body=UserNewbieUpdateSLZ(label="场景"),
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
     )
     def create(self, request, *args, **kwargs):
@@ -137,14 +138,13 @@ class UserCommonActionViewSet(GenericViewSet):
     常用操作
     """
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     role_biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="常用操作列表",
-        query_serializer=SystemQuerySLZ,
-        auto_schema=ResponseSwaggerAutoSchema,
+        query_serializer=SystemQuerySLZ(),
         responses={status.HTTP_200_OK: RoleCommonActionSLZ(label="常用操作", many=True)},
         tags=["user"],
     )
@@ -156,3 +156,24 @@ class UserCommonActionViewSet(GenericViewSet):
             data = self.role_biz.list_system_common_actions(system_id)
 
         return Response([one.dict() for one in data])
+
+
+class RoleViewSet(GenericViewSet):
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    biz = RoleBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户角色权限",
+        query_serializer=QueryRoleSLZ(label="query_role"),
+        responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = QueryRoleSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        with_perm = slz.validated_data["with_perm"]
+
+        user_roles = self.biz.list_user_role(request.user.username, with_perm)
+        return Response([one.dict() for one in user_roles])

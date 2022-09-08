@@ -21,15 +21,15 @@
         data () {
             return {
                 image: ''
-            }
+            };
         },
         watch: {
             name: {
                 handler (value) {
-                    this.image = require(`../../images/${value}.svg`)
+                    this.image = require(`../../images/${value}.svg`);
                 },
                 immediate: true
             }
         }
-    }
+    };
 </script>

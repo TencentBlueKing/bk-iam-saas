@@ -17,6 +17,8 @@ class AuditSourceType(ChoicesEnum, LowerStrEnum):
     WEB = auto()
     OPENAPI = auto()
     TASK = auto()
+    APPROVAL = auto()
+    HANDOVER = auto()
 
 
 class AuditObjectType(ChoicesEnum, LowerStrEnum):
@@ -29,6 +31,13 @@ class AuditObjectType(ChoicesEnum, LowerStrEnum):
     EVENT = auto()
     COMMONACTION = auto()
     ACTION = auto()
+    WHITE_LIST = auto()
+
+    # 用户黑名单, 用于冻结/解冻用户使用
+    USER_BLACK_LIST = auto()
+
+    # 用户权限清理
+    USER_PERMISSION_CLEANUP = auto()
 
 
 class AuditStatus(ChoicesEnum):
@@ -52,12 +61,16 @@ class AuditType(ChoicesEnum, StrEnum):
     GROUP_POLICY_UPDATE = auto()
     GROUP_POLICY_DELETE = auto()
     GROUP_TEMPLATE_CREATE = auto()
+    GROUP_TEMPLATE_DELETE = auto()
     GROUP_TRANSFER = auto()
 
     USER_POLICY_CREATE = auto()
     USER_POLICY_UPDATE = auto()
+    USER_POLICY_DELETE = auto()
     USER_GROUP_DELETE = auto()
     USER_ROLE_DELETE = auto()
+    USER_TEMPORARY_POLICY_CREATE = auto()
+    USER_TEMPORARY_POLICY_DELETE = auto()
     DEPARTMENT_GROUP_DELETE = auto()
     DEPARTMENT_UPDATE = auto()
 
@@ -65,10 +78,13 @@ class AuditType(ChoicesEnum, StrEnum):
     TEMPLATE_UPDATE = auto()
     TEMPLATE_DELETE = auto()
     TEMPLATE_MEMBER_CREATE = auto()
+    TEMPLATE_MEMBER_UPDATE = auto()
     TEMPLATE_MEMBER_DELETE = auto()
     TEMPLATE_PREUPDATE_CREATE = auto()
     TEMPLATE_PREUPDATE_DELETE = auto()
     TEMPLATE_UPDATE_COMMIT = auto()
+    TEMPLATE_VERSION_SYNC = auto()
+    TEMPLATE_VERSION_UPDATE = auto()
 
     ROLE_CREATE = auto()
     ROLE_UPDATE = auto()
@@ -86,3 +102,16 @@ class AuditType(ChoicesEnum, StrEnum):
     APPROVAL_GROUP_UPDATE = auto()
 
     EVENT_ROLLBACK = auto()
+
+    ADMIN_API_ALLOW_LIST_CONFIG_CREATE = auto()
+    ADMIN_API_ALLOW_LIST_CONFIG_DELETE = auto()
+
+    AUTHORIZATION_API_ALLOW_LIST_CONFIG_CREATE = auto()
+    AUTHORIZATION_API_ALLOW_LIST_CONFIG_DELETE = auto()
+
+    MANAGEMENT_API_ALLOW_LIST_CONFIG_CREATE = auto()
+    MANAGEMENT_API_ALLOW_LIST_CONFIG_DELETE = auto()
+
+    USER_BLACKLIST_MEMBER_CREATE = auto()
+    USER_BLACKLIST_MEMBER_DELETE = auto()
+    USER_PERMISSION_CLEANUP = auto()

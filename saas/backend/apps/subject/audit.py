@@ -43,7 +43,7 @@ class BaseSubjectProvider(DataProvider):
 
         if self.subject.type == SubjectType.USER.value:
             user = User.objects.filter(username=self.subject.id).first()
-            return user.display_name if user else ""
+            return user.display_name if user else self.subject.id
 
         return ""
 
@@ -86,6 +86,12 @@ class SubjectPolicyDeleteAuditProvider(BaseSubjectProvider):
     @property
     def system_id(self) -> str:
         return audit_context_getter(self.request, "system_id")
+
+
+class SubjectTemporaryPolicyDeleteAuditProvider(SubjectPolicyDeleteAuditProvider):
+    @property
+    def type(self):
+        return AuditType.USER_TEMPORARY_POLICY_DELETE.value
 
 
 # TODO: [重构] log_user_cleanup_policy_audit_event 放到 apps.user.audit里

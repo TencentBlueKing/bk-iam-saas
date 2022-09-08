@@ -55,11 +55,11 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import renderResourceInstance from '@/components/render-resource'
-    import renderOrderNumber from './order-number'
-    import CompareItem from '@/components/render-resource/compare-item'
-    import OrStatusBar from '@/components/render-status/bar'
+    import _ from 'lodash';
+    import renderResourceInstance from '@/components/render-resource';
+    import renderOrderNumber from './order-number';
+    import CompareItem from '@/components/render-resource/compare-item';
+    import OrStatusBar from '@/components/render-status/bar';
 
     export default {
         name: '',
@@ -82,20 +82,20 @@
         data () {
             return {
                 curCondition: []
-            }
+            };
         },
         computed: {
             isAllDelete () {
-                return this.curCondition.every(item => item.status === 'delete')
+                return this.curCondition.every(item => item.status === 'delete');
             },
             isAllAdd () {
-                return this.curCondition.every(item => item.status === 'add')
+                return this.curCondition.every(item => item.status === 'add');
             }
         },
         watch: {
             data: {
                 handler (value) {
-                    this.curCondition = _.cloneDeep(value)
+                    this.curCondition = _.cloneDeep(value);
                 },
                 immediate: true
             }
@@ -103,26 +103,26 @@
         methods: {
             computedIsGroup (payload) {
                 if (payload.hasOwnProperty('instance') && payload.hasOwnProperty('attribute')) {
-                    return true
+                    return true;
                 }
-                return false
+                return false;
             },
 
             handleExpanded (payload, item) {
-                item.isHovering = !payload
+                item.isHovering = !payload;
             },
 
             handleMouseenter (payload) {
                 if (!payload.instanceExpanded) {
-                    payload.isHovering = true
+                    payload.isHovering = true;
                 }
             },
 
             handleMouseleave (payload) {
-                payload.isHovering = false
+                payload.isHovering = false;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-resource-compare-wrapper {

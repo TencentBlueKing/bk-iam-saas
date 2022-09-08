@@ -43,7 +43,7 @@ module.exports = {
             '&:hover, &:focus': {
                 'background': bgHover
             }
-        }
+        };
     },
 
     /**
@@ -62,7 +62,7 @@ module.exports = {
                 'font-size': 0,
                 'visibility': 'hidden'
             }
-        }
+        };
     },
 
     /**
@@ -79,13 +79,13 @@ module.exports = {
             'overflow': 'hidden',
             'text-overflow': 'ellipsis',
             'white-space': 'nowrap'
-        }
+        };
 
         if (maxWidth) {
-            ret['max-width'] = maxWidth
+            ret['max-width'] = maxWidth;
         }
 
-        return ret
+        return ret;
     },
 
     /**
@@ -110,6 +110,6 @@ module.exports = {
                 'border-radius': '2px',
                 'background-color': backgroundColor
             }
-        }
+        };
     }
-}
+};

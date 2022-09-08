@@ -1,6 +1,0 @@
-# for deploy on paas v3
-gunicorn==19.6.0
-gevent==20.9.0
-
-# for sentry
-raven==6.5.0

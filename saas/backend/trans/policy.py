@@ -15,7 +15,7 @@ from typing import Any, Dict, List
 
 from pydantic.tools import parse_obj_as
 
-from backend.biz.action import ActionBean, ActionBeanList, ActionBiz, ActionCheckBiz, ActionForCheck
+from backend.biz.action import ActionBean, ActionBeanList, ActionBiz, ActionCheckBiz, ActionResourceGroupForCheck
 from backend.biz.policy import (
     ConditionBean,
     InstanceBean,
@@ -24,33 +24,37 @@ from backend.biz.policy import (
     PolicyBeanList,
     RelatedResourceBean,
 )
+from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
-from backend.util.cache import region
+from backend.service.models.policy import ResourceGroup
+from backend.util.uuid import gen_uuid
 
 
 class PolicyTrans:
     action_biz = ActionBiz()
     action_check_biz = ActionCheckBiz()
 
-    def _gen_instance_condition_by_aggregate_resources(self, aggregate_resource_type: Dict) -> ConditionBean:
+    def _gen_instance_condition_by_aggregate_resources(self, aggregate_resource_types: List[Dict]) -> ConditionBean:
         """
         将操作聚合里选择的资源实例转换为Policy里资源的Condition
-        {
+        [{
             system_id,
             id,
             instances: [
                 {id, name},
                 ...
             ]
-        }
+        }]
         """
-        system_id, resource_type_id, instances = (
-            aggregate_resource_type["system_id"],
-            aggregate_resource_type["id"],
-            aggregate_resource_type["instances"],
-        )
-        return ConditionBean(
-            instances=[
+        instance_beans: List[InstanceBean] = []
+        for aggregate_resource_type in aggregate_resource_types:
+            system_id, resource_type_id, instances = (
+                aggregate_resource_type["system_id"],
+                aggregate_resource_type["id"],
+                aggregate_resource_type["instances"],
+            )
+
+            instance_beans.append(
                 InstanceBean(
                     type=resource_type_id,
                     path=[
@@ -58,23 +62,29 @@ class PolicyTrans:
                         for i in instances
                     ],
                 )
-            ],
-            attributes=[],
-        )
+            )
+
+        return ConditionBean(instances=instance_beans, attributes=[])
 
     def _gen_policy_by_action_and_condition(
         self, action: ActionBean, condition: ConditionBean, expired_at: int
     ) -> PolicyBean:
         """通过操作模型和选择里实例的Condition生成对应策略"""
-        policy = PolicyBean(action_id=action.id, related_resource_types=[], expired_at=expired_at)
-        # 对于操作聚合来说，若操作包含多个资源类型，这些资源类型必须第一级一样，否则是不可能进行操作聚合的，所以它们的Condition可以直接赋值
-        for rrt in action.related_resource_types:
-            policy.related_resource_types.append(
-                RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
-            )
-        return policy
+        return PolicyBean(
+            action_id=action.id,
+            resource_groups=[
+                ResourceGroup(
+                    id=gen_uuid(),
+                    related_resource_types=[
+                        RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
+                        for rrt in action.related_resource_types
+                    ],
+                )
+            ],
+            expired_at=expired_at,
+        )
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def _get_action_list(self, system_id: str) -> ActionBeanList:
         """获取某个系统的操作列表"""
         return self.action_biz.list(system_id)
@@ -97,14 +107,14 @@ class PolicyTrans:
                     {system_id, id},
                     ...
                 ]
-                aggregate_resource_type: {
+                aggregate_resource_types: [{
                     system_id,
                     id,
                     instances: [
                         {id, name},
                         ...
                     ]
-                }
+                }]
                 expired_at,
             },
             ...  // 不同资源类型的操作聚合
@@ -116,7 +126,7 @@ class PolicyTrans:
         for aggregation in aggregations:
             expired_at = aggregation.get("expired_at", 0)
             # 资源
-            condition = self._gen_instance_condition_by_aggregate_resources(aggregation["aggregate_resource_type"])
+            condition = self._gen_instance_condition_by_aggregate_resources(aggregation["aggregate_resource_types"])
             # 遍历操作，给每个操作绑定上对应的资源实例
             for a in aggregation["actions"]:
                 # 查询操作的权限模型
@@ -185,7 +195,9 @@ class PolicyTrans:
         ]
         """
         # 1. 初步检查是否合法数据，与权限模型是否一致
-        self.action_check_biz.check(system_id, parse_obj_as(List[ActionForCheck], actions))
+        self.action_check_biz.check_action_resource_group(
+            system_id, parse_obj_as(List[ActionResourceGroupForCheck], actions)
+        )
         # 2. 转为PolicyBeanList
         policy_list = PolicyBeanList(
             system_id,
@@ -249,14 +261,14 @@ class PolicyTrans:
                         {system_id, id},
                         ...
                     ]
-                    aggregate_resource_type: {
+                    aggregate_resource_types: [{
                         system_id,
                         id,
                         instances: [
                             {id, name},
                             ...
                         ]
-                    }
+                    }]
                     expired_at,
                 }
             ]

@@ -29,12 +29,12 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import RenderSetItem from './common/render-process-item'
-    import JoinRateManagerProcess from './components/join-rate-manager-process'
-    import JoinGroupProcess from './components/join-group-process'
-    import CustomPermProcess from './components/custom-perm-process'
-    import CreateRateManagerProcess from './components/create-rate-manager-process'
+    import { mapGetters } from 'vuex';
+    import RenderSetItem from './common/render-process-item';
+    import JoinRateManagerProcess from './components/join-rate-manager-process';
+    import JoinGroupProcess from './components/join-group-process';
+    import CustomPermProcess from './components/custom-perm-process';
+    import CreateRateManagerProcess from './components/create-rate-manager-process';
 
     /**
      * ACTIVE_COMPONENT_MAP
@@ -44,7 +44,7 @@
         'JoinGroupProcess': 'join_group',
         'JoinRateManagerProcess': 'create_rating_manager',
         'CreateRateManagerProcess': 'alter_rating_manager'
-    }
+    };
 
     export default {
         components: {
@@ -89,7 +89,7 @@
                     // 'alter_rating_manager': []
                 },
                 activeMap: ACTIVE_COMPONENT_MAP
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
@@ -97,7 +97,7 @@
              * isSuperManager
              */
             isSuperManager () {
-                return this.curRole === 'super_manager'
+                return this.curRole === 'super_manager';
             }
         },
         watch: {
@@ -106,15 +106,15 @@
              */
             user: {
                 handler (value) {
-                    this.curRole = value.role.type || 'staff'
-                    this.getFilterPanels()
+                    this.curRole = value.role.type || 'staff';
+                    this.getFilterPanels();
                 },
                 immediate: true
             }
         },
         created () {
-            this.curRole = this.user.role.type || 'staff'
-            this.getFilterPanels()
+            this.curRole = this.user.role.type || 'staff';
+            this.getFilterPanels();
         },
         methods: {
             /**
@@ -125,16 +125,16 @@
                     await Promise.all([
                         this.fetchProcesses('grant_action'),
                         this.fetchProcesses('join_group')
-                    ])
+                    ]);
                 } else if (this.curRole === 'rating_manager') {
-                    await this.fetchProcesses('join_group')
+                    await this.fetchProcesses('join_group');
                 } else {
                     await Promise.all([
                         this.fetchProcesses('grant_action'),
                         this.fetchProcesses('join_group'),
                         this.fetchProcesses('create_rating_manager'),
                         this.fetchDefaultProcesses()
-                    ])
+                    ]);
                 }
             },
 
@@ -143,17 +143,17 @@
              */
             async fetchProcesses (type) {
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getProcessesList', { type })
-                    this.processData[type] = Object.freeze(res.data)
+                    const res = await this.$store.dispatch('approvalProcess/getProcessesList', { type });
+                    this.processData[type] = Object.freeze(res.data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -162,29 +162,29 @@
              */
             async fetchDefaultProcesses () {
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getDefaultProcesses')
-                    const defaultProcesses = res.data || []
-                    const grantAction = defaultProcesses.find(item => item.type === 'grant_action')
+                    const res = await this.$store.dispatch('approvalProcess/getDefaultProcesses');
+                    const defaultProcesses = res.data || [];
+                    const grantAction = defaultProcesses.find(item => item.type === 'grant_action');
                     if (grantAction) {
-                        this.processSetList[0].process_id = grantAction.process_id
+                        this.processSetList[0].process_id = grantAction.process_id;
                     }
-                    const joinGroup = defaultProcesses.find(item => item.type === 'join_group')
+                    const joinGroup = defaultProcesses.find(item => item.type === 'join_group');
                     if (joinGroup) {
-                        this.processSetList[1].process_id = joinGroup.process_id
+                        this.processSetList[1].process_id = joinGroup.process_id;
                     }
-                    const createRatingManager = defaultProcesses.find(item => item.type === 'create_rating_manager')
+                    const createRatingManager = defaultProcesses.find(item => item.type === 'create_rating_manager');
                     if (createRatingManager) {
-                        this.processSetList[2].process_id = createRatingManager.process_id
+                        this.processSetList[2].process_id = createRatingManager.process_id;
                     }
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -194,15 +194,15 @@
             getFilterPanels () {
                 switch (this.curRole) {
                     case 'system_manager':
-                        this.panels = this.panels.filter(item => ['CustomPermProcess', 'JoinGroupProcess'].includes(item.name))
-                        this.active = 'CustomPermProcess'
-                        break
+                        this.panels = this.panels.filter(item => ['CustomPermProcess', 'JoinGroupProcess'].includes(item.name));
+                        this.active = 'CustomPermProcess';
+                        break;
                     case 'rating_manager':
-                        this.panels = this.panels.filter(item => ['JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name))
-                        this.active = 'JoinGroupProcess'
-                        break
+                        this.panels = this.panels.filter(item => ['JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name));
+                        this.active = 'JoinGroupProcess';
+                        break;
                     default:
-                        this.active = 'CustomPermProcess'
+                        this.active = 'CustomPermProcess';
                 }
             },
 
@@ -214,23 +214,23 @@
                     await this.$store.dispatch('approvalProcess/updateDefaultProcesses', {
                         type: item.type,
                         process_id: payload
-                    })
-                    item.process_id = payload
-                    this.$refs[`${index}SetRef`][0] && this.$refs[`${index}SetRef`][0].setValue(item.process_id)
-                    this.messageSuccess(this.$t(`m.common['操作成功']`))
+                    });
+                    item.process_id = payload;
+                    this.$refs[`${index}SetRef`][0] && this.$refs[`${index}SetRef`][0].setValue(item.process_id);
+                    this.messageSuccess(this.$t(`m.common['操作成功']`));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-approval-process-set-wrapper {
@@ -249,7 +249,7 @@
             box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, .05);
             &.set-style {
                 margin-top: 20px;
-                min-height: calc(100vh - 185px);
+                min-height: calc(100vh - 250px);
             }
             .iam-approval-process-set-tab-cls {
                 .bk-tab-header {

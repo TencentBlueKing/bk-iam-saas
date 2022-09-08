@@ -15,12 +15,17 @@ from . import views
 urlpatterns = [
     path("", views.PolicyViewSet.as_view({"get": "list", "delete": "destroy"}), name="policy.list_policy"),
     path("<int:pk>/", views.PolicyViewSet.as_view({"put": "update"}), name="policy.detail"),
+    path(
+        "<int:pk>/<str:resource_group_id>/",
+        views.PolicyResourceGroupDeleteViewSet.as_view({"delete": "destroy"}),
+        name="policy.resource_group_delete",
+    ),
     path("systems/", views.PolicySystemViewSet.as_view({"get": "list"}), name="policy.list_policy_system"),
     path(
         "expire_soon/", views.PolicyExpireSoonViewSet.as_view({"get": "list"}), name="policy.list_policy_expire_soon"
     ),
     path(
-        "related_policy/",
+        "related/",
         views.RelatedPolicyViewSet.as_view({"post": "create"}),
         name="policy.generate_related_policy",
     ),
@@ -28,5 +33,10 @@ urlpatterns = [
         "resource_copy/",
         views.BatchPolicyResourceCopyViewSet.as_view({"post": "create"}),
         name="policy.resource_copy",
+    ),
+    path(
+        "recommended/",
+        views.RecommendPolicyViewSet.as_view({"get": "list"}),
+        name="policy.generate_recommend_policy",
     ),
 ]

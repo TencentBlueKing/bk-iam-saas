@@ -9,8 +9,12 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.conf import settings
+from django.utils import translation
+from django.utils.deprecation import MiddlewareMixin
 from pyinstrument.middleware import ProfilerMiddleware
 
+from backend.common.constants import DjangoLanguageEnum
+from backend.common.exception_handler import is_open_api_request
 from backend.common.local import local
 
 
@@ -63,3 +67,12 @@ class RequestProvider(object):
         response["X-Request-Id"] = request.request_id
         local.release()
         return response
+
+
+class LanguageMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        # 如果是 openapi 请求, 设置默认语言为 english
+        # openapi 的错误信息返回为英文
+        if is_open_api_request(request):
+            translation.activate(DjangoLanguageEnum.EN.value)
+            request.LANGUAGE_CODE = translation.get_language()

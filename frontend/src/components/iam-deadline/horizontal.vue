@@ -26,7 +26,7 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         props: {
@@ -57,21 +57,21 @@
                 currentActive: this.value,
                 customTime: 1,
                 isFocus: false
-            }
+            };
         },
         computed: {
             ...mapGetters(['user']),
             isShowCustomTime () {
-                return this.currentActive === 'custom'
+                return this.currentActive === 'custom';
             },
             isNormal () {
-                return this.type === 'normal'
+                return this.type === 'normal';
             },
             isDialog () {
-                return this.type === 'dialog'
+                return this.type === 'dialog';
             },
             isSuper () {
-                return this.user.role.type === 'super_manager'
+                return this.user.role.type === 'super_manager';
             }
         },
 
@@ -84,65 +84,65 @@
                     31104000: this.$t(`m.common['12个月']`),
                     4102444800: this.$t(`m.common['永久']`),
                     'custom': this.$t(`m.common['自定义']`)
-                }
+                };
             }
         },
         methods: {
             handleTimeFilter (payload) {
-                this.currentActive = payload
+                this.currentActive = payload;
                 if (payload === 'custom') {
-                    this.handleTrigger()
-                    this.$delete(this.timeFilters, 'custom')
+                    this.handleTrigger();
+                    this.$delete(this.timeFilters, 'custom');
                     this.$nextTick(() => {
-                        this.$refs.deadlineRef.focus()
-                    })
+                        this.$refs.deadlineRef.focus();
+                    });
                 } else {
-                    this.customTime = 1
-                    this.handleTrigger()
-                    this.$set(this.timeFilters, 'custom', this.$t(`m.common['自定义']`))
+                    this.customTime = 1;
+                    this.handleTrigger();
+                    this.$set(this.timeFilters, 'custom', this.$t(`m.common['自定义']`));
                 }
             },
 
             handleTimeFocus () {
-                this.isFocus = true
+                this.isFocus = true;
             },
 
             handleTimeBlur () {
-                this.isFocus = false
+                this.isFocus = false;
             },
 
             handleTimeInput (e) {
                 if (!/^[0-9]*$/.test(e.target.value)) {
-                    this.customTime = 1
-                    this.handleTrigger()
-                    return
+                    this.customTime = 1;
+                    this.handleTrigger();
+                    return;
                 }
                 if (e.target.value.length === 1) {
-                    this.customTime = e.target.value.replace(/[^1-9]/g, '')
+                    this.customTime = e.target.value.replace(/[^1-9]/g, '');
                 } else {
-                    this.customTime = e.target.value.replace(/\D/g, '')
+                    this.customTime = e.target.value.replace(/\D/g, '');
                 }
                 if (e.target.value > 365 && e.target.value.length === 3) {
-                    this.customTime = 365
+                    this.customTime = 365;
                 } else {
                     if (e.target.value.length > 3) {
-                        this.customTime = parseInt(e.target.value.slice(0, 3), 10)
+                        this.customTime = parseInt(e.target.value.slice(0, 3), 10);
                     }
                 }
-                this.handleTrigger()
+                this.handleTrigger();
             },
 
             handleTrigger () {
-                let timestamp = 0
+                let timestamp = 0;
                 if (this.currentActive === 'custom') {
-                    timestamp = this.customTime * 24 * 3600
+                    timestamp = this.customTime * 24 * 3600;
                 } else {
-                    timestamp = Number(this.currentActive)
+                    timestamp = Number(this.currentActive);
                 }
-                this.$emit('on-change', timestamp)
+                this.$emit('on-change', timestamp);
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-deadline-wrapper {

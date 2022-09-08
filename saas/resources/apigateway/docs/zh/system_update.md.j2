@@ -1,0 +1,40 @@
+### 更新 system
+
+`路径中system_id是唯一标识; body中只需要传入要更新的字段, 其中对于provider_config是全覆盖更新，不支持只更新provider_config中某个字段`
+
+注意:
+
+- 更新 system 时如果没有把自己加入 clients, 会自动将当前发起`更新system`的 app_code 加入`clients`(即, 更新发起者无法将自己移除`clients`)
+
+-------
+
+{% include '_api_v1_model_system.md.j2' %}
+
+#### Parameters
+
+|字段 |类型 |是否必须 |位置 |描述 |
+|:--|:--|:--|:--|:--|
+|system_id |string |是 |path |系统 ID |
+
+#### Request
+
+```json
+{
+    "name": "配置平台",
+    "name_en": "CMDB",
+    "clients": "bk_cmdb,cmdb",
+    "provider_config": {
+        "host": "http://cmdb_new.service.consul"
+    }
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

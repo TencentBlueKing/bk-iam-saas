@@ -17,6 +17,7 @@ class AccountRoleSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="角色唯一标识")
     type = serializers.CharField(label="角色类型", help_text=f"{RoleType.get_choices()}")
     name = serializers.CharField()
+    description = serializers.CharField()
 
 
 class AccountUserSLZ(serializers.Serializer):

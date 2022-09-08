@@ -1,6 +1,6 @@
 <template>
-    <div :class="['iam-template-item', extCls, { 'is-not-expanded': !isExpanded }]" @mouseleave="concealShowEditFill">
-        <div class="header" @click="handleExpanded" @mousemove="isShowEditFill">
+    <div :class="['iam-template-item', extCls, { 'is-not-expanded': !isExpanded }]">
+        <div class="header" @click="handleExpanded" @mousemove="isShowEditFill" @mouseleave="cancelShowEditFill">
             <section>
                 <Icon class="expanded-icon" :type="isExpanded ? 'down-angle' : 'right-angle'" />
                 <span>
@@ -9,9 +9,9 @@
                         ({{ count }})
                     </template>
                 </span>
-                <template v-if="isExpanded || ShowEditFill && !isUser">
+                <template v-if="(isExpanded || ShowEditFill) && !isUser">
                     <section class="edit-action" @click.stop="handleEdit">
-                        <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isUser ? false : true" />
+                        <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail ? false : true" />
                     </section>
                 </template>
                 <bk-popconfirm
@@ -21,7 +21,7 @@
                     v-if="isStaff || isPermTemplateDetail || isUser ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
                         <section class="delete-action" @click.stop="toDeletePolicyCount">
-                            <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail || isUser ? false : true" />
+                            <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
                         </section>
                     </template>
                 </bk-popconfirm>
@@ -51,7 +51,7 @@
     </div>
 </template>
 <script>
-    import store from '@/store'
+    import store from '@/store';
     export default {
         name: '',
         props: {
@@ -79,26 +79,10 @@
                 type: Boolean,
                 default: false
             },
-            deleteLoading: {
-                type: Boolean,
-                default: false
-            },
             // mode: edit，detail
             mode: {
                 type: String,
                 default: 'edit'
-            },
-            policyCount: {
-                type: Number,
-                default: 0
-            },
-            templateCount: {
-                type: Number,
-                default: 0
-            },
-            groupSystemListLength: {
-                type: Number,
-                default: 0
             }
         },
         data () {
@@ -110,74 +94,74 @@
                 isShowDeleteDialog: false,
                 showIcon: false,
                 footerPosition: 'center'
-            }
+            };
         },
         computed: {
             isDetail () {
-                return this.mode === 'detail'
+                return this.mode === 'detail';
             },
             isPermTemplateDetail () {
-                return this.$route.name === 'permTemplateDetail'
+                return this.$route.name === 'permTemplateDetail';
             },
             isStaff () {
-                return store.state.user.role.type === 'staff'
+                return store.state.user.role.type === 'staff';
             },
             isUser () {
-                return this.$route.name === 'user'
+                return this.$route.name === 'user';
             }
         },
         watch: {
             expanded (value) {
-                this.isExpanded = !!value
+                this.isExpanded = !!value;
             },
             isEdit: {
                 handler (value) {
-                    this.isEditMode = value
+                    this.isEditMode = value;
                 },
                 immediate: true
             }
         },
         methods: {
             handleExpanded () {
-                this.isExpanded = !this.isExpanded
-                this.$emit('update:expanded', true)
-                this.$emit('on-expanded', this.isExpanded)
-                this.$emit('toIsExpanded', false)
+                this.isExpanded = !this.isExpanded;
+                this.$emit('update:expanded', true);
+                this.$emit('on-expanded', this.isExpanded);
+                this.$emit('toIsExpanded', false);
             },
 
             handleEdit () {
-                this.isExpanded = true
-                this.$emit('on-expanded', this.isExpanded)
-                this.$emit('on-edit')
-                this.$emit('toIsExpanded', this.isExpanded)
+                this.isExpanded = true;
+                this.$emit('on-expanded', this.isExpanded);
+                this.$emit('on-edit');
+                this.$emit('toIsExpanded', this.isExpanded);
             },
 
             handleSave () {
-                this.$emit('on-save')
+                this.$emit('on-save');
             },
 
             handleCancel () {
-                this.isEditMode = false
-                this.$emit('on-cancel')
+                this.isEditMode = false;
+                this.$emit('on-cancel');
             },
             toDeletePolicyCount () {
-                this.isExpanded = true
-                this.isShowDeleteDialog = true
-                this.$emit('on-expanded', this.isExpanded)
+                this.isExpanded = true;
+                this.isShowDeleteDialog = true;
+                this.$emit('on-expanded', this.isExpanded);
             },
             async handleDelete () {
-                await this.$emit('on-delete')
+                await this.$emit('on-delete');
             },
 
             isShowEditFill () {
-                this.ShowEditFill = true
+                this.ShowEditFill = true;
             },
 
-            concealShowEditFill () {
-                this.ShowEditFill = false
+            cancelShowEditFill () {
+                this.ShowEditFill = false;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-template-item {

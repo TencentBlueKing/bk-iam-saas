@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @return {Promise} promise 对象
          */
         groupPermRenewal ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/group_renew/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/group_renew/`, params, config);
         },
 
         /**
@@ -61,7 +61,7 @@ export default {
          * @return {Promise} promise 对象
          */
         customPermRenewal ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/policy_renew/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/policy_renew/`, params, config);
         },
 
         /**
@@ -75,7 +75,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getExpireSoonPerm ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/policies/expire_soon/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/policies/expire_soon/`, config);
         },
 
         /**
@@ -89,7 +89,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getExpireSoonGroupWithUser ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/users/groups_expire_soon/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/users/groups_expire_soon/`, config);
         },
 
         /**
@@ -104,10 +104,10 @@ export default {
          * @return {Promise} promise 对象
          */
         groupMemberPermRenewal ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            const groupId = requestParams.groupId
-            delete requestParams.groupId
-            return http.post(`${AJAX_URL_PREFIX}/groups/${groupId}/members_renew/`, requestParams, config)
+            const requestParams = Object.assign({}, params);
+            const groupId = requestParams.groupId;
+            delete requestParams.groupId;
+            return http.post(`${AJAX_URL_PREFIX}/groups/${groupId}/members_renew/`, requestParams, config);
         },
 
         /**
@@ -122,7 +122,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getExpireSoonGroup ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/group_members_renew/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/group_members_renew/?${json2Query(params)}`, config);
         },
 
         /**
@@ -137,7 +137,7 @@ export default {
          * @return {Promise} promise 对象
          */
         roleGroupsRenewal ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/groups_renew/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/roles/groups_renew/`, params, config);
         },
 
         /**
@@ -152,7 +152,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getExpiredGroups ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/groups_renew/`, params, config)
+            return http.get(`${AJAX_URL_PREFIX}/roles/groups_renew/`, params, config);
         },
 
         /**
@@ -167,12 +167,12 @@ export default {
          * @return {Promise} promise 对象
          */
         getExpireSoonGroupMembers ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params)
-            delete requestParams.id
+            const requestParams = Object.assign({}, params);
+            delete requestParams.id;
             return http.get(
                 `${AJAX_URL_PREFIX}/roles/groups_renew/${params.id}/members/?${json2Query(requestParams)}`,
                 config
-            )
+            );
         }
     }
-}
+};

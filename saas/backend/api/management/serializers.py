@@ -8,12 +8,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.role.serializers import RatingMangerBaseInfoSZL, RoleScopeSubjectSLZ
-from backend.service.constants import GroupMemberType
+from backend.biz.role import RoleCheckBiz
+from backend.service.constants import GroupMemberType, SubjectType
+from backend.service.models import Subject
 
 
 class ManagementSourceSystemSLZ(serializers.Serializer):
@@ -27,14 +30,14 @@ class ManagementActionSLZ(serializers.Serializer):
 class ManagementResourcePathNodeSLZ(serializers.Serializer):
     system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
-    id = serializers.CharField(label="资源实例ID")
+    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
     name = serializers.CharField(
         label="资源实例ID名称", allow_blank=True, trim_whitespace=False
     )  # 路径节点存在无限制，当id="*"则name可以为空
 
 
 class ManagementResourcePathsSLZ(serializers.Serializer):
-    system = serializers.CharField(label="系统ID", required=True)
+    system = serializers.CharField(label="系统ID")
     type = serializers.CharField(label="资源类型")
     paths = serializers.ListField(
         label="批量层级",
@@ -53,33 +56,50 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
         allow_empty=True,
     )
 
-    def validate(self, data):
-        """多种资源类型时，只需要其中一种非无限制即可"""
-        resources = data["resources"]
-        # 计算有多少种资源类型的路径是非空的，路径空表示无限制
-        not_empty_paths_count = 0
-        for resource in resources:
-            if len(resource["paths"]) != 0:
-                not_empty_paths_count += 1
-
-        # 在与资源实例有关的情况下，若没有非空路径的资源，说明全部都是无限制，不支持
-        if len(resources) > 0 and not_empty_paths_count == 0:
-            raise serializers.ValidationError({"resources": ["不支持所有资源类型都是无限制，不可以所有paths字段都为空列表"]})
-
-        return data
-
 
 class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
     authorization_scopes = serializers.ListField(
-        label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), required=True, allow_empty=False
+        label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
+    )
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+
+
+class ManagementGradeManagerUpdateSLZ(serializers.Serializer):
+    name = serializers.CharField(label="分级管理员名称", max_length=128, required=False)
+    description = serializers.CharField(label="描述", allow_blank=True, required=False)
+
+    authorization_scopes = serializers.ListField(
+        label="可授权的权限范围",
+        child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"),
+        required=False,
+        allow_empty=False,
     )
     subject_scopes = serializers.ListField(
-        label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), required=True, allow_empty=False
+        label="授权对象",
+        child=RoleScopeSubjectSLZ(label="授权对象"),
+        required=False,
+        allow_empty=False,
     )
+
+
+class ManagementGradeManagerBasicInfoSZL(serializers.Serializer):
+    id = serializers.IntegerField(label="分级管理员ID")
+    name = serializers.CharField(label="分级管理员名称", max_length=128)
+    description = serializers.CharField(label="描述", allow_blank=True)
 
 
 class ManagementGradeManagerMembersSLZ(serializers.Serializer):
     members = serializers.ListField(child=serializers.CharField(label="成员"), max_length=100)
+
+    def validate(self, data):
+        """
+        校验成员加入的分级管理员数是否超过限制
+        """
+        role_check_biz = RoleCheckBiz()
+        for username in data["members"]:
+            # subject加入的分级管理员数量不能超过最大值
+            role_check_biz.check_subject_grade_manager_limit(Subject(type=SubjectType.USER.value, id=username))
+        return data
 
 
 class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
@@ -101,7 +121,7 @@ class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
 
 
 class ManagementGroupBasicInfoSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", min_length=5, max_length=128)
+    name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
     description = serializers.CharField(label="描述", min_length=10)
 
 
@@ -130,7 +150,7 @@ class ManagementGroupBasicSLZ(ManagementGroupBasicInfoSLZ):
 
 
 class ManagementGroupBaseInfoUpdateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", min_length=5, max_length=128, required=False)
+    name = serializers.CharField(label="用户组名称", min_length=2, max_length=128, required=False)
     description = serializers.CharField(label="描述", min_length=10, required=False)
 
 
@@ -176,6 +196,15 @@ class ManagementUserGradeManagerQuerySLZ(ManagementUserQuerySLZ, ManagementSourc
 
 class ManagementGroupGrantSLZ(ManagementRoleScopeAuthorizationSLZ):
     pass
+
+
+class ManagementGroupRevokeSLZ(ManagementRoleScopeAuthorizationSLZ):
+    pass
+
+
+class ManagementGroupPolicyDeleteSLZ(serializers.Serializer):
+    system = serializers.CharField(label="授权的系统id", max_length=32)
+    actions = serializers.ListField(label="操作", child=ManagementActionSLZ(label="操作"), allow_empty=False)
 
 
 class ManagementGroupIDsSLZ(serializers.Serializer):

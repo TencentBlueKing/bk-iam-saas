@@ -86,10 +86,12 @@ def role_group_expire_remind():
         params = {"source": "email", "current_role_id": role.id, "role_type": role.type}
         url = base_url + "?" + urlencode(params)
 
-        mail_content = render_to_string("group_expired_mail.html", {"groups": groups, "role": role, "url": url})
+        mail_content = render_to_string(
+            "group_expired_mail.html", {"groups": groups, "role": role, "url": url, "index_url": settings.APP_URL}
+        )
 
         usernames = RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
         try:
             esb.send_mail(",".join(usernames), "蓝鲸权限中心用户组续期提醒", mail_content)
         except Exception:  # pylint: disable=broad-except
-            logger.exception("send email error")
+            logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)

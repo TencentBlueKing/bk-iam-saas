@@ -9,12 +9,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-import logging
-from typing import List
+from typing import Any, List, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
-from pydantic import BaseModel, parse_obj_as
+from pydantic import BaseModel, Field, parse_obj_as
 
 from backend.apps.role.models import (
     Role,
@@ -29,16 +28,41 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.common.error_codes import error_codes
 from backend.component import iam
 from backend.util.json import json_dumps
+from backend.util.model import PartialModel
 
-from .constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
-from .models import RelatedResource, Subject
-
-logger = logging.getLogger("app")
+from .constants import (
+    DEAULT_RESOURCE_GROUP_ID,
+    RoleRelatedObjectType,
+    RoleScopeType,
+    RoleSourceTypeEnum,
+    RoleType,
+    SubjectType,
+)
+from .models import ResourceGroupList, Subject
 
 
 class AuthScopeAction(BaseModel):
-    id: str
-    related_resource_types: List[RelatedResource]
+    id: str = Field(alias="action_id")
+    resource_groups: ResourceGroupList
+
+    def __init__(self, **data: Any):
+        # NOTE 兼容 role, group授权信息的旧版结构
+        if "resource_groups" not in data and "related_resource_types" in data:
+            if not data["related_resource_types"]:
+                data["resource_groups"] = []
+            else:
+                data["resource_groups"] = [
+                    # NOTE: 固定resource_group_id方便删除逻辑
+                    {
+                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "related_resource_types": data.pop("related_resource_types"),
+                    }
+                ]
+
+        super().__init__(**data)
+
+    class Config:
+        allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
 
 
 class AuthScopeSystem(BaseModel):
@@ -51,9 +75,27 @@ class UserRole(BaseModel):
     type: str
     name: str
     name_en: str
+    description: str
+
+    @classmethod
+    def convert_from_role(cls, role):
+        return cls(
+            id=role.id,
+            type=role.type,
+            name=role.name,
+            name_en=role.name_en,
+            description=role.description,
+        )
 
 
-class RoleInfo(BaseModel):
+class UserRoleMember(BaseModel):
+    id: int
+    type: str
+    name: str
+    members: list
+
+
+class RoleInfo(PartialModel):
     code: str = ""
     name: str
     name_en: str = ""
@@ -90,14 +132,40 @@ class RoleService:
 
         return parse_obj_as(List[AuthScopeSystem], json.loads(role_scope.content))
 
-    def list_user_role(self, user_id: str) -> List[UserRole]:
+    def list_user_role(self, user_id: str, with_permission: bool = False) -> List[UserRole]:
         """查询用户的角色列表"""
-        role_ids = RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True)
-        return self.list_by_ids(role_ids)
+        role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
+
+        if not with_permission:
+            return self.list_by_ids(role_ids)
+
+        roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
+        role_dict = {role.id: role for role in roles}
+
+        role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
+        roles_with_permission = []
+
+        for role_user_system_perm in role_user_system_perms:
+            if user_id in role_user_system_perm.enabled_users or role_user_system_perm.global_enabled:
+                role = role_dict[role_user_system_perm.role_id]
+                roles_with_permission.append(UserRole.convert_from_role(role))
+        return roles_with_permission
+
+    def list_paging_user_role(self, user_id: str, limit: int, offset: int) -> Tuple[int, List[UserRole]]:
+        queryset = RoleUser.objects.filter(username=user_id)
+        count = queryset.count()
+
+        role_ids = list(queryset.values_list("role_id", flat=True)[offset : offset + limit])
+        return count, self.list_by_ids(role_ids)
+
+    def list_members_by_role_id(self, role_id: int):
+        """查询指定角色的成员列表"""
+        members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
+        return members
 
     def list_by_ids(self, role_ids: List[int]) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
-        data = [UserRole(id=role.id, type=role.type, name=role.name, name_en=role.name_en) for role in roles]
+        data = [UserRole.convert_from_role(role) for role in roles]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
         sort_index = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]
@@ -158,18 +226,33 @@ class RoleService:
         if subjects:
             ScopeSubject.objects.bulk_create(subjects)
 
-    def update(self, role: Role, info: RoleInfo, updater: str, partial=False):
+    def update(self, role: Role, info: RoleInfo, updater: str):
         """更新Role"""
+        # 查询实际RoleInfo里哪些字段可用
+        update_fields = info.get_partial_fields()
+
         with transaction.atomic():
-            role.name = info.name
-            role.name_en = info.name_en
-            role.description = info.description
+            # 基本信息
+            if "name" in update_fields:
+                role.name = info.name
+                role.name_en = info.name_en
+            if "description" in update_fields:
+                role.description = info.description
+
             role.updater = updater
             role.save()
 
-            self._update_members(role, info.members)
-            if not partial:
-                self._update_role_scope(role.id, info.subject_scopes, info.authorization_scopes)
+            # 分级管理员成员
+            if "members" in update_fields:
+                self._update_members(role, info.members)
+
+            # 可授权的权限范围
+            if "authorization_scopes" in update_fields:
+                self.update_role_auth_scope(role.id, info.authorization_scopes)
+
+            # 可授权的人员范围
+            if "subject_scopes" in update_fields:
+                self._update_role_subject_scope(role.id, info.subject_scopes)
 
     def _update_members(self, role: Role, members: List[str], need_sync_backend_role: bool = False):
         """更新Role成员"""
@@ -210,14 +293,6 @@ class RoleService:
                 role.type,
                 role.code or "SUPER",
             )
-
-    def _update_role_scope(self, role_id: int, subjects: List[Subject], systems: List[AuthScopeSystem]):
-        """更新Role的授权范围"""
-        # 1. 修改系统操作的限制范围
-        self.update_role_auth_scope(role_id, systems)
-
-        # 2. 修改授权对象的限制范围
-        self._update_role_subject_scope(role_id, subjects)
 
     def update_role_auth_scope(self, role_id: int, systems: List[AuthScopeSystem]):
         """更新Role可授权的权限范围"""
@@ -421,6 +496,27 @@ class RoleService:
         )
         # 查询角色
         return Role.objects.get(id=role_related_object.role_id)
+
+    def list_paging_role_for_system(self, system_id: str, limit: int = 10, offset: int = 0) -> Tuple[int, List[Role]]:
+        """查询某个系统通过API创建的分级管理员"""
+        # 需要过滤出source_system_id通过API创建的
+        system_role_queryset = RoleSource.objects.filter(
+            source_system_id=system_id,
+            source_type=RoleSourceTypeEnum.API.value,
+        )
+
+        # 分页
+        count = system_role_queryset.count()
+        system_role_ids = list(system_role_queryset.values_list("role_id", flat=True)[offset : offset + limit])
+
+        # 无数据则提前返回
+        if len(system_role_ids) == 0:
+            return 0, []
+
+        # 获取Role详情
+        roles = Role.objects.filter(id__in=system_role_ids)
+
+        return count, roles
 
     def list_user_role_for_system(self, user_id: str, system_id: str) -> List[UserRole]:
         """

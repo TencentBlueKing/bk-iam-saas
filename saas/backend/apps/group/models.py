@@ -12,6 +12,8 @@ from django.db import models
 
 from backend.common.models import BaseModel, CompressedJSONField, TimestampedModel
 
+from .managers import GroupAuthorizeLockManager
+
 
 class Group(BaseModel):
     """
@@ -22,6 +24,7 @@ class Group(BaseModel):
     description = models.CharField("描述", max_length=512)
     user_count = models.IntegerField("用户数", default=0)
     department_count = models.IntegerField("部门数", default=0)
+    readonly = models.BooleanField("用户组只读标识", default=False)  # 增加可读标识
 
     class Meta:
         verbose_name = "用户组"
@@ -39,6 +42,8 @@ class GroupAuthorizeLock(models.Model):
     system_id = models.CharField("系统ID", max_length=32)
     data = CompressedJSONField("授权数据", default=None)
     key = models.CharField("key", max_length=32)
+
+    objects = GroupAuthorizeLockManager()
 
     class Meta:
         verbose_name = "用户组授权锁"

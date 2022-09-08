@@ -15,6 +15,7 @@ from rest_framework import exceptions
 from backend.api.constants import ALLOW_ANY
 from backend.api.mixins import SystemClientCheckMixin
 from backend.apps.role.models import RoleRelatedObject, RoleSource
+from backend.common.cache import cachedmethod
 from backend.service.constants import RoleRelatedObjectType, RoleSourceTypeEnum
 
 from .constants import ManagementAPIEnum, VerifyAPIObjectTypeEnum
@@ -28,13 +29,19 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
     3. API数据鉴权：查询系统可管控的授权系统表
     """
 
+    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def verify_api_allow_list(self, system_id: str, api: ManagementAPIEnum):
         """
         API鉴权: 查询管理类API白名单表，判断是否允许访问API
         """
         allowed = ManagementAPIAllowListConfig.is_allowed(system_id, api)
         if not allowed:
-            raise exceptions.PermissionDenied(detail=f"system[{system_id}] does not allow call management api[{api}]")
+            raise exceptions.PermissionDenied(
+                detail=(
+                    f"system[{system_id}] is not allowed to call management api[{api}], "
+                    "please contact the developer to add a whitelist"
+                )
+            )
 
     def verify_system_scope(self, system_id: str, auth_system_ids: List[str]):
         """
@@ -61,7 +68,10 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         for sys_id in auth_system_ids:
             if sys_id not in allowed_system_ids:
                 raise exceptions.PermissionDenied(
-                    detail=f"system[{system_id}] does not operate system[{sys_id}]'s permission data"
+                    detail=(
+                        f"system[{system_id}] is not allow to operate system[{sys_id}]'s permission data, "
+                        "please contact the developer to add a whitelist"
+                    )
                 )
 
     def verify_api(self, app_code: str, system_id: str, api: ManagementAPIEnum):
@@ -83,7 +93,11 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         # 角色来源不存在，说明页面创建或默认初始化的，非API创建，所以任何系统都无法操作
         if role_source is None:
             raise exceptions.PermissionDenied(
-                detail=f"role[{role_id}] can not be operated by app_code[{app_code}], since role source not exists"
+                detail=(
+                    f"role[{role_id}] can not be operated by app_code[{app_code}], "
+                    "because the role source is not api, "
+                    "only roles created through the management api can be operated"
+                )
             )
 
         # API认证和API鉴权
@@ -101,7 +115,8 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         # 查询不到用户组对应的角色，说明无权限访问
         if role_related_object is None:
             raise exceptions.PermissionDenied(
-                detail=f"group[{group_id}] can not operated by app_code[{app_code}], since related role not exists"
+                detail=f"group[{group_id}] can not be operated by app_code[{app_code}], "
+                "because related role source is not api, only roles created through the management api can be operated"
             )
         # 使用角色校验API
         self.verify_api_by_role(app_code, role_related_object.role_id, api)
@@ -138,8 +153,9 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
         # 如果存在未认证的用户组ID，则说明越权了
         if len(unauthorized_group_ids) > 0:
             raise exceptions.PermissionDenied(
-                detail=f"groups[{unauthorized_group_ids}] can not operated by app_code[{app_code}], "
-                f"since related role not exists"
+                detail=f"groups[{unauthorized_group_ids}] can not be operated by app_code[{app_code}], "
+                "because related role source is not api, "
+                "only roles created through the management api can be operated"
             )
 
         # 使用角色校验API

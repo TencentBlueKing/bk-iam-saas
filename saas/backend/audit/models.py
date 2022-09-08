@@ -10,8 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import uuid
+from typing import Any, Dict, Type
 
-from django.apps import apps
 from django.db import connections, models
 from django.utils import timezone
 
@@ -21,6 +21,9 @@ from backend.service.constants import RoleType
 from backend.util.json import json_dumps
 
 from .constants import AuditObjectType, AuditSourceType, AuditStatus, AuditType
+
+# 用于缓存每个月审计表模型
+_audit_models: Dict[str, Type[Any]] = {}
 
 
 class Event(BaseModel):
@@ -101,17 +104,19 @@ def _get_model(name: str, suffix: str = ""):
     if not suffix:
         suffix = timezone.now().strftime("%Y%m")
 
-    try:
-        cls = apps.get_model(AuditConfig.name, f"{name}_{suffix}")
-    except LookupError:
-        base_cls = globals()[name]
-        cls = _get_sub_model(base_cls, suffix)
+    key = f"{name}_{suffix}"
+    cls = _audit_models.get(key)
+    if cls is not None:
+        return cls
 
+    base_cls = globals()[name]
+    cls = _get_sub_model(base_cls, suffix)
     if not cls.exists():
         # NOTE 并发时, 可能会raise
         with _get_connection().schema_editor() as schema_editor:
             schema_editor.create_model(cls)
 
+    _audit_models[key] = cls
     return cls
 
 

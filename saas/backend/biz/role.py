@@ -12,15 +12,18 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
 
+from blue_krill.web.std_error import APIError
+from django.conf import settings
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
+from rest_framework import serializers
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleUser, ScopeSubject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleSource, RoleUser, ScopeSubject
 from backend.apps.template.models import PermTemplate
 from backend.biz.policy import (
     ConditionBean,
@@ -29,9 +32,11 @@ from backend.biz.policy import (
     PathNodeBeanList,
     PolicyBean,
     PolicyBeanList,
+    RelatedResourceBean,
+    ResourceGroupBean,
     ThinSystem,
 )
-from backend.common.error_codes import APIException, error_codes
+from backend.common.error_codes import error_codes
 from backend.service.constants import (
     ACTION_ALL,
     SUBJECT_ALL,
@@ -41,6 +46,7 @@ from backend.service.constants import (
     ApplicationTypeEnum,
     RoleRelatedObjectType,
     RoleScopeSubjectType,
+    RoleSourceTypeEnum,
     RoleType,
     SubjectType,
 )
@@ -58,6 +64,14 @@ class RoleInfoBean(RoleInfo):
 class AuthScopeSystemBean(BaseModel):
     system: ThinSystem
     actions: List[PolicyBean]
+
+    def is_any_system(self) -> bool:
+        """是否任意系统"""
+        return self.system.id == SYSTEM_ALL
+
+    def is_any_action(self) -> bool:
+        """是否任意操作"""
+        return self.is_any_system() or (len(self.actions) == 1 and self.actions[0].action_id == ACTION_ALL)
 
 
 class RoleScopeSystemActions(BaseModel):
@@ -99,11 +113,14 @@ class RoleBiz:
     get_role_by_group_id = RoleService.__dict__["get_role_by_group_id"]
     list_system_common_actions = RoleService.__dict__["list_system_common_actions"]
     list_user_role = RoleService.__dict__["list_user_role"]
+    list_paging_user_role = RoleService.__dict__["list_paging_user_role"]
     list_user_role_for_system = RoleService.__dict__["list_user_role_for_system"]
+    list_paging_role_for_system = RoleService.__dict__["list_paging_role_for_system"]
     add_grade_manager_members = RoleService.__dict__["add_grade_manager_members"]
     list_subject_scope = RoleService.__dict__["list_subject_scope"]
     list_auth_scope = RoleService.__dict__["list_auth_scope"]
     list_by_ids = RoleService.__dict__["list_by_ids"]
+    list_members_by_role_id = RoleService.__dict__["list_members_by_role_id"]
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]
 
@@ -119,7 +136,7 @@ class RoleBiz:
         try:
             checker.check([Subject(type=SubjectType.USER.value, id=username)])
             return role
-        except APIException:
+        except APIError:
             return None
 
     def create(self, info: RoleInfoBean, creator: str) -> Role:
@@ -128,11 +145,11 @@ class RoleBiz:
         """
         return self.svc.create(info, creator)
 
-    def update(self, role: Role, info: RoleInfoBean, updater: str, partial=False):
+    def update(self, role: Role, info: RoleInfoBean, updater: str):
         """
         更新分级管理员
         """
-        return self.svc.update(role, info, updater, partial)
+        return self.svc.update(role, info, updater)
 
     def modify_system_manager_members(self, role_id: int, members: List[str]):
         """修改系统管理员的成员"""
@@ -164,7 +181,53 @@ class RoleBiz:
         """
         self.svc.update_super_manager_member_system_permission(username, need_sync_backend_role)
 
-    def list_auth_scope_bean(self, role_id: int) -> List[AuthScopeSystemBean]:
+    def _update_auth_scope_due_to_renamed_resource(
+        self, role_id: int, auth_systems: List[AuthScopeSystem], auth_system_beans: List[AuthScopeSystemBean]
+    ) -> List[AuthScopeSystemBean]:
+        """
+        更新分级管理员授权范围里的资源类型名称
+        auth_systems: 是DB里原始的授权范围数据
+        auth_system_beans: 即将给到页面的展示授权范围数据，与auth_systems相比，多了填充Name的展示数据
+        auth_system_beans长度有时候会小于auth_systems的长度，因为可能有时候只需要展示部分系统的数据，而不是整个授权范围所有系统的数据
+        返回更新后展示用途的授权范围数据
+        """
+        need_updated_policies_dict: Dict[str, List[PolicyBean]] = {}
+
+        # 遍历授权范围里的每个系统策略
+        for auth_system_bean in auth_system_beans:
+            system_id = auth_system_bean.system.id
+            # 任意Action，则跳过
+            if auth_system_bean.is_any_action():
+                continue
+            # 尝试更新
+            policy_list = PolicyBeanList(system_id=system_id, policies=auth_system_bean.actions)
+            updated_policies = policy_list.auto_update_resource_name()
+            # 需要更新
+            if len(updated_policies) > 0:
+                # 修改要返回的展示数据: 这里是完整覆盖，包括未被更新的策略，不能使用updated_policies
+                auth_system_bean.actions = policy_list.policies
+                # 记录要进行DB修改的数据
+                need_updated_policies_dict[system_id] = policy_list.policies
+
+        if len(need_updated_policies_dict) > 0:
+            # 直接修改原始数据auth_systems，而不是auth_system_beans
+            for auth_system in auth_systems:
+                policies = need_updated_policies_dict.get(auth_system.system_id)
+                # 不在修改范围内的，直接跳过
+                if policies is None:
+                    continue
+                # 直接修改原始数据
+                auth_system.actions = parse_obj_as(List[AuthScopeAction], policies)
+
+            # 变更可授权的权限范围
+            # Note: 这里的修改并没有处理并发的情况
+            self.svc.update_role_auth_scope(role_id, auth_systems)
+
+        return auth_system_beans
+
+    def list_auth_scope_bean(
+        self, role_id: int, should_auto_update_resource_name: bool = False
+    ) -> List[AuthScopeSystemBean]:
         """
         查询角色的auth授权范围Bean
         """
@@ -177,6 +240,13 @@ class RoleBiz:
             if not auth_system_bean:
                 continue
             auth_system_beans.append(auth_system_bean)
+
+        # ResourceNameAutoUpdate
+        # 判断是否主动检查更新授权范围
+        if should_auto_update_resource_name:
+            auth_system_beans = self._update_auth_scope_due_to_renamed_resource(
+                role_id, auth_systems, auth_system_beans
+            )
 
         return auth_system_beans
 
@@ -200,18 +270,30 @@ class RoleBiz:
 
         return AuthScopeSystemBean(system=ThinSystem.parse_obj(system), actions=policies)
 
-    def get_auth_scope_bean_by_system(self, role_id: int, system_id: str) -> Optional[AuthScopeSystemBean]:
+    def get_auth_scope_bean_by_system(
+        self, role_id: int, system_id: str, should_auto_update_resource_name: bool = False
+    ) -> Optional[AuthScopeSystemBean]:
         """
         获取指定系统的auth授权范围Bean
         """
         auth_systems = self.svc.list_auth_scope(role_id)
         system_list = self.system_svc.new_system_list()
 
+        auth_system_bean = None
         for auth_system in auth_systems:
             if auth_system.system_id == system_id:
-                return self._gen_auth_scope_bean(auth_system, system_list)
+                auth_system_bean = self._gen_auth_scope_bean(auth_system, system_list)
+                break
 
-        return None
+        # ResourceNameAutoUpdate
+        # 判断是否主动检查更新授权范围
+        if should_auto_update_resource_name and auth_system_bean is not None:
+            auth_system_beans = self._update_auth_scope_due_to_renamed_resource(
+                role_id, auth_systems, [auth_system_bean]
+            )
+            auth_system_bean = auth_system_beans[0]
+
+        return auth_system_bean
 
     def inc_update_auth_scope(self, role_id: int, system_id: str, incr_policies: List[PolicyBean]):
         """增量更新分级管理员的授权范围
@@ -280,6 +362,58 @@ class RoleCheckBiz:
         names = {i.data.get("name") for i in applications}
         if new_name in names:
             raise error_codes.CONFLICT_ERROR.format(_("正在申请的单据中名称[{}]已存在，请修改为其他名称，或等单据被处理后再提交").format(new_name), True)
+
+    def check_member_count(self, role_id: int, new_member_count: int):
+        """
+        检查分级管理员成员数据
+        """
+        exists_count = RoleUser.objects.filter(role_id=role_id).count()
+        member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"]
+        if exists_count + new_member_count > member_limit:
+            raise error_codes.VALIDATE_ERROR.format(
+                _("分级管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
+                    role_id, exists_count, new_member_count, member_limit
+                ),
+                True,
+            )
+
+    def check_subject_grade_manager_limit(self, subject: Subject):
+        """
+        检查subject加入的分级管理员数量是否超限
+        Note: 目前subject仅仅支持User
+        """
+        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["subject_grade_manager_limit"]
+        exists_count = RoleUser.objects.filter(username=subject.id).count()
+        if exists_count >= limit:
+            raise serializers.ValidationError(_("成员({}): 加入的分级管理员数量已超过最大值 {}").format(subject.id, limit))
+
+    def check_grade_manager_of_system_limit(self, system_id: str):
+        """
+        检查某个系统可创建的分级管理数量是否超限
+        """
+        default_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["default_grade_manager_of_system_limit"]
+        # 判断是否该系统有特殊配置限制数量
+        value = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_of_specified_systems_limit"]
+        try:
+            system_limits = {}
+            # 对value进行解析，value 格式为：system_id1:number1,system_id2:number2,...
+            split_system_limits = value.split(",") if value else []
+            for one_system_limit in split_system_limits:
+                system_limit = one_system_limit.split(":")
+                system_limits[system_limit[0].strip()] = int(system_limit[1].strip())
+        except Exception as error:
+            logger.error(
+                f"parse grade_manager_of_specified_systems_limit from setting failed, value:{value}, error: {error}"
+            )
+            system_limits = {}
+
+        limit = system_limits[system_id] if system_id in system_limits else default_limit
+
+        exists_count = RoleSource.objects.filter(
+            source_type=RoleSourceTypeEnum.API.value, source_system_id=system_id
+        ).count()
+        if exists_count >= limit:
+            raise serializers.ValidationError(_("系统({}): 创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
 
 
 class RoleListQuery:
@@ -439,6 +573,7 @@ class RoleObjectRelationChecker:
 class RoleAuthorizationScopeChecker:
     """
     角色模板授权范围检查
+    TODO 结构变更重点修改
     """
 
     svc = RoleService()
@@ -481,7 +616,20 @@ class RoleAuthorizationScopeChecker:
             return paths
 
         policy_scope = PolicyBean.parse_obj(self.system_action_scope[system_id][action_id])
-        for rrt in policy_scope.related_resource_types:
+        match_paths: List[List[PathNodeBean]] = []
+        path_string_set: Set[str] = set()
+        for rg in policy_scope.resource_groups:
+            match_paths.extend(self._filter_path_match_resource_group(paths, rg, path_string_set))
+            # 如果所有的路径都能匹配授权范围, 直接返回
+            if len(match_paths) == len(paths):
+                break
+
+        return match_paths
+
+    def _filter_path_match_resource_group(
+        self, paths: List[List[PathNodeBean]], resource_group: ResourceGroupBean, path_string_set: Set[str]
+    ) -> List[List[PathNodeBean]]:
+        for rrt in resource_group.related_resource_types:
             scope_str_paths = []
             inside_paths = []
             for path_list in rrt.iter_path_list(ignore_attribute=True):
@@ -493,15 +641,17 @@ class RoleAuthorizationScopeChecker:
                 scope_str_paths.append(sp)
 
             for path in paths:
-                if self._is_path_match_scope_paths(path, scope_str_paths):
+                ps = PathNodeBeanList.parse_obj(path).to_path_string()
+                if ps not in path_string_set and self._is_path_match_scope_paths(path, scope_str_paths):
                     inside_paths.append(path)
+                    path_string_set.add(ps)
 
             paths = inside_paths
 
         return paths
 
     def _is_path_match_scope_paths(self, path: List[PathNodeBean], scope_str_paths: List[str]):
-        tp = PathNodeBeanList(path).to_path_string()
+        tp = PathNodeBeanList.parse_obj(path).to_path_string()
         for sp in scope_str_paths:
             if tp.startswith(sp):
                 return True
@@ -519,7 +669,7 @@ class RoleAuthorizationScopeChecker:
         """与check_policies的检测逻辑一样，只是不直接抛异常，而是返回不满足的策略"""
         try:
             self._check_system_in_scope(system_id)
-        except APIException:
+        except APIError:
             # 整个系统都不满足，则返回原有所有策略
             return policies
 
@@ -528,7 +678,7 @@ class RoleAuthorizationScopeChecker:
         for p in policies:
             try:
                 self._check_policy_in_scope(system_id, p)
-            except APIException:
+            except APIError:
                 not_match_policies.append(p)
 
         return not_match_policies
@@ -668,8 +818,29 @@ class ActionScopeDiffer:
         self.scope_policy = scope_policy
 
     def diff(self) -> bool:
-        for rt in self.template_policy.related_resource_types:
-            scope_rt = self.scope_policy.get_related_resource_type(rt.system_id, rt.type)
+        """
+        1. 遍历每个resource_group是否能包含
+        2. 只要有一个不能包含就不能判断在范围内
+        """
+        for rg in self.template_policy.resource_groups:
+            if not self._diff_related_resource_types(rg.related_resource_types, self.scope_policy):
+                return False
+
+        return True
+
+    def _diff_related_resource_types(
+        self, related_resource_types: List[RelatedResourceBean], scope_policy: PolicyBean
+    ) -> bool:
+        for rg in scope_policy.resource_groups:
+            if self._diff_scope_resource_group(related_resource_types, rg):
+                return True
+        return False
+
+    def _diff_scope_resource_group(
+        self, related_resource_types: List[RelatedResourceBean], scope_resource_group: ResourceGroupBean
+    ) -> bool:
+        for rt in related_resource_types:
+            scope_rt = scope_resource_group.get_related_resource_type(rt.system_id, rt.type)
             if not scope_rt:
                 return False
             if not self._diff_conditions(rt.condition, scope_rt.condition):
@@ -681,7 +852,7 @@ class ActionScopeDiffer:
         scope_paths = []
         for i in scope_instances:
             for p in i.path:
-                sp = PathNodeBeanList(p).to_path_string()
+                sp = p.to_path_string()
 
                 # 处理路径中存在*的情况
                 if sp.endswith(",*/"):
@@ -691,7 +862,7 @@ class ActionScopeDiffer:
 
         for i in template_instances:
             for p in i.path:
-                path = PathNodeBeanList(p).to_path_string()
+                path = p.to_path_string()
                 for sp in scope_paths:
                     if path.startswith(sp):
                         break

@@ -64,12 +64,23 @@ class Local(Singleton):
     def get_http_request_id(self):
         """从接入层获取request_id，或者生成一个新的request_id"""
         # 在从header中获取
-        request_id = self.request.META.get("X-Request-Id", "")
+        request_id = self.request.META.get("HTTP_X_REQUEST_ID") or self.request.META.get("HTTP_X_BKAPI_REQUEST_ID", "")
         if request_id:
             return request_id
 
         # 最后主动生成一个
         return new_request_id()
+
+    @property
+    def request_username(self) -> str:
+        try:
+            # celery后台，openAPI都可能没有user，需要判断
+            if self.request and hasattr(self.request, "user"):
+                return self.request.user.username
+        except Exception:  # pylint: disable=broad-except
+            return ""
+
+        return ""
 
     def release(self):
         release_local(_local)

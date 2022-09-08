@@ -18,13 +18,14 @@ Rules:
 
 from __future__ import unicode_literals
 
-import time
 import logging
+import time
 import traceback
 from functools import partial
 from urllib.parse import urlparse
 
 import requests
+from django.conf import settings
 
 from backend.common.debug import http_trace
 from backend.metrics import component_request_duration, get_component_by_url
@@ -39,39 +40,48 @@ def _gen_header():
     return headers
 
 
+session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(
+    pool_connections=settings.REQUESTS_POOL_CONNECTIONS, pool_maxsize=settings.REQUESTS_POOL_MAXSIZE
+)
+session.mount("https://", adapter)
+session.mount("http://", adapter)
+
+
 def _http_request(method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None):
     trace_func = partial(http_trace, method=method, url=url, data=data)
 
+    request_id = headers.get("X-Request-Id", "-") if headers else "-"
     st = time.time()
     try:
         if method == "GET":
-            resp = requests.get(
+            resp = session.get(
                 url=url, headers=headers, params=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "HEAD":
-            resp = requests.head(url=url, headers=headers, verify=verify, cert=cert, cookies=cookies)
+            resp = session.head(url=url, headers=headers, verify=verify, cert=cert, cookies=cookies)
         elif method == "POST":
-            resp = requests.post(
+            resp = session.post(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "DELETE":
-            resp = requests.delete(
+            resp = session.delete(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "PUT":
-            resp = requests.put(
+            resp = session.put(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "PATCH":
-            resp = requests.patch(
+            resp = session.patch(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         else:
-            return False, None
-    except requests.exceptions.RequestException:
-        logger.exception("http request error! method: %s, url: %s, data: %s", method, url, data)
+            return False, {"error": "method not supported"}
+    except requests.exceptions.RequestException as e:
+        logger.exception("http request error! %s %s, data: %s, request_id: %s", method, url, data, request_id)
         trace_func(exc=traceback.format_exc())
-        return False, None
+        return False, {"error": str(e)}
     else:
         # record for /metrics
         latency = int((time.time() - st) * 1000)
@@ -82,15 +92,25 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
             status=resp.status_code,
         ).observe(latency)
 
+        # greater than 100ms
+        if latency > 100:
+            logger.warning("http slow request! method: %s, url: %s, latency: %dms", method, url, latency)
+
         if resp.status_code != 200:
-            content = resp.content[:100] if resp.content else ""
+            content = resp.content[:256] if resp.content else ""
             error_msg = (
-                "http request fail! method: %s, url: %s, data: %s, " "response_status_code: %s, response_content: %s"
+                "http request fail! %s %s, data: %s, request_id: %s, response.status_code: %s, response.body: %s"
             )
-            logger.error(error_msg, method, url, str(data), resp.status_code, content)
+            logger.error(error_msg, method, url, str(data), request_id, resp.status_code, content)
 
             trace_func(status_code=resp.status_code, content=content)
-            return False, None
+
+            return False, {
+                "error": (
+                    f"status_code is {resp.status_code}, not 200! "
+                    f"{method} {urlparse(url).path}, request_id={request_id}, resp.body={content}"
+                )
+            }
 
         return True, resp.json()
 

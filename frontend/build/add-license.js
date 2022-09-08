@@ -24,8 +24,8 @@
  * IN THE SOFTWARE.
 */
 
-const fs = require('fs')
-const path = require('path')
+const fs = require('fs');
+const path = require('path');
 
 /**
  * 遍历目录
@@ -36,33 +36,33 @@ const path = require('path')
 function walk (dir, callback) {
     fs.readdir(dir, (err, files) => {
         if (err) {
-            console.log(err)
+            console.log(err);
         } else {
             files.forEach(file => {
-                const pathname = path.join(dir, file)
+                const pathname = path.join(dir, file);
                 fs.stat(pathname, (err, stats) => {
                     if (err) {
-                        console.log(err)
+                        console.log(err);
                     } else if (stats.isDirectory()) {
-                        walk(pathname, callback)
+                        walk(pathname, callback);
                     } else {
-                        callback(pathname)
+                        callback(pathname);
                     }
-                })
-            })
+                });
+            });
         }
-    })
+    });
 }
 
 const dirList = [
     path.resolve(__dirname, './'),
     path.resolve(__dirname, '../src')
-]
+];
 
 dirList.forEach(dir => {
     walk(dir, function (pathname) {
         if (path.extname(pathname) === '.js') {
-            const data = fs.readFileSync(pathname, 'utf8').split('\n')
+            const data = fs.readFileSync(pathname, 'utf8').split('\n');
             if (data.indexOf(' * You may obtain a copy of the License at http://opensource.org/licenses/MIT') < 0) {
                 data.splice(0, 0, `/*
  * Tencent is pleased to support the open source community by making
@@ -88,9 +88,9 @@ dirList.forEach(dir => {
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/\n`)
-                fs.writeFileSync(pathname, data.join('\n'), 'utf8')
+*/\n`);
+                fs.writeFileSync(pathname, data.join('\n'), 'utf8');
             }
         }
-    })
-})
+    });
+});

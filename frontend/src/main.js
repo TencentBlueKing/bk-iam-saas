@@ -24,63 +24,65 @@
  * IN THE SOFTWARE.
 */
 
-import './public-path'
-import Vue from 'vue'
-import App from './App'
-import router from './router'
-import store from './store'
-import { injectCSRFTokenToHeaders } from './api'
-import auth from './common/auth'
-import Img403 from './images/403.png'
-import Exception from './components/exception'
-import { bus } from './common/bus'
-import AuthComponent from './components/auth'
-import iamFormItem from './components/iam-form/item'
-import SmartAction from './components/smart-action'
-import IamSvg from './components/iam-svg'
-import IamSpinLoading from './components/iam-spin-loading'
-import RenderHorizontalBlock from './components/render-block/horizontal'
-import RenderVerticalBlock from './components/render-block/vertical'
-import RenderSearch from './components/render-search'
-import Icon from './components/icon'
-import VueI18n from 'vue-i18n'
-import { language, il8n as il8nNew } from './language'
-import './common/bkmagic'
+import './public-path';
+import Vue from 'vue';
+import App from './App.vue';
+import router from './router';
+import store from './store';
+import { injectCSRFTokenToHeaders } from './api';
+import auth from './common/auth';
+import Img403 from './images/403.png';
+import Exception from './components/exception/index.vue';
+import { bus } from './common/bus';
+import AuthComponent from './components/auth/index.vue';
+import iamFormItem from './components/iam-form/item.vue';
+import SmartAction from './components/smart-action/index.vue';
+import IamSvg from './components/iam-svg/index.vue';
+import IamSpinLoading from './components/iam-spin-loading/index.vue';
+import RenderHorizontalBlock from './components/render-block/horizontal.vue';
+import RenderVerticalBlock from './components/render-block/vertical.vue';
+import RenderSearch from './components/render-search/index.vue';
+import Icon from './components/icon';
+import VueI18n from 'vue-i18n';
+import { language, il8n as il8nNew } from './language';
+import './common/bkmagic';
 
-import { lang, locale } from 'bk-magic-vue'
+import { lang, locale } from 'bk-magic-vue';
 
-import '@icon-cool/bk-icon-bk-iam'
+import '@icon-cool/bk-icon-bk-iam';
 
-Vue.component('app-exception', Exception)
-Vue.component('app-auth', AuthComponent)
-Vue.component('IamFormItem', iamFormItem)
-Vue.component('SmartAction', SmartAction)
-Vue.component('IamSvg', IamSvg)
-Vue.component('spinLoading', IamSpinLoading)
-Vue.component('RenderHorizontalBlock', RenderHorizontalBlock)
-Vue.component('RenderVerticalBlock', RenderVerticalBlock)
-Vue.component('RenderSearch', RenderSearch)
-Vue.component('Icon', Icon)
+Vue.component('app-exception', Exception);
+Vue.component('app-auth', AuthComponent);
+Vue.component('IamFormItem', iamFormItem);
+Vue.component('SmartAction', SmartAction);
+Vue.component('IamSvg', IamSvg);
+Vue.component('spinLoading', IamSpinLoading);
+Vue.component('RenderHorizontalBlock', RenderHorizontalBlock);
+Vue.component('RenderVerticalBlock', RenderVerticalBlock);
+Vue.component('RenderSearch', RenderSearch);
+Vue.component('Icon', Icon);
 
 Vue.prototype.scrollToLocation = function ($ref) {
-    const distance = $ref.getBoundingClientRect().top || 0
-    const $dom = document.getElementsByClassName('main-scroller')[0]
-    $dom.scrollTo(0, distance)
-}
+    const distance = ($ref && $ref.getBoundingClientRect().top) || 0;
+    const $dom = document.getElementsByClassName('main-scroller')[0];
+    $dom.scrollTo(0, distance);
+};
 
-Vue.use(VueI18n)
+Vue.use(VueI18n);
 
-const cn = require('./language/lang/zh')
+console.log('start');
 
-const en = require('./language/lang/en')
+const cn = require('./language/lang/zh');
+
+const en = require('./language/lang/en');
 
 const messages = {
     'zh-cn': Object.assign(lang.zhCN, cn),
-    'en': Object.assign(lang.enUS, en)
-}
+    en: Object.assign(lang.enUS, en)
+};
 
-window.changeAlert = false
-window.changeDialog = false
+window.changeAlert = false;
+window.changeDialog = false;
 
 const i18n = new VueI18n({
     // 语言标识
@@ -88,30 +90,30 @@ const i18n = new VueI18n({
     fallbackLocale: 'zh-cn',
     // this.$i18n.locale 通过切换locale的值来实现语言切换
     messages: messages
-})
+});
 
 if (language === 'zh-cn') {
-    locale.use(lang.zhCN)
+    locale.use(lang.zhCN);
 } else {
-    locale.use(lang.enUS)
+    locale.use(lang.enUS);
 }
 
-locale.i18n((key, value) => i18n.t(key, value))
+locale.i18n((key, value) => i18n.t(key, value));
 
-Vue.prototype.curLanguageIsCn = language === 'zh-cn'
+Vue.prototype.curLanguageIsCn = language === 'zh-cn';
 
-Vue.mixin(locale.mixin)
+Vue.mixin(locale.mixin);
 
 if (NODE_ENV === 'development') {
-    Vue.config.devtools = true
+    Vue.config.devtools = true;
 }
 
 auth.requestCurrentUser().then(user => {
-    injectCSRFTokenToHeaders()
+    injectCSRFTokenToHeaders();
     if (!user.isAuthenticated) {
-        auth.redirectToLogin()
+        auth.redirectToLogin();
     } else {
-        global.bus = bus
+        global.bus = bus;
         global.mainComponent = new Vue({
             el: '#app',
             i18n,
@@ -121,20 +123,20 @@ auth.requestCurrentUser().then(user => {
                 App
             },
             template: '<App/>'
-        })
+        });
         if (NODE_ENV === 'development') {
-            window.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = global.mainComponent.constructor
+            window.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = global.mainComponent.constructor;
         }
     }
 }, err => {
-    let message
+    let message;
     if (err.status === 403) {
-        message = il8nNew('common', '权限不足')
+        message = il8nNew('common', '权限不足');
         if (err.data && err.data.msg) {
-            message = err.data.msg
+            message = err.data.msg;
         }
     } else {
-        message = il8nNew('info', '无法连接到后端服务')
+        message = il8nNew('info', '无法连接到后端服务');
     }
 
     const divStyle = ''
@@ -144,14 +146,14 @@ auth.requestCurrentUser().then(user => {
         + 'position: absolute;'
         + 'top: 50%;'
         + 'left: 50%;'
-        + 'transform: translate(-50%, -50%);'
+        + 'transform: translate(-50%, -50%);';
 
-    const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal'
+    const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal';
 
     const content = ``
         + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
         + `<img src="${Img403}"><h2 class="exception-text" style="${h2Style}">${message}</h2>`
-        + `</div>`
+        + `</div>`;
 
-    document.write(content)
-})
+    document.write(content);
+});

@@ -10,13 +10,15 @@ specific language governing permissions and limitations under the License.
 """
 from aenum import LowerStrEnum, auto, skip
 
+from backend.api.constants import BaseAPIEnum
 from backend.util.enum import ChoicesEnum
 
 
-class ManagementAPIEnum(ChoicesEnum, LowerStrEnum):
+class ManagementAPIEnum(BaseAPIEnum):
     """这里的枚举的是每个具体管理类API"""
 
     # 分级管理员
+    GRADE_MANAGER_LIST = auto()
     GRADE_MANAGER_CREATE = auto()
     GRADE_MANAGER_UPDATE = auto()
     GRADE_MANAGER_MEMBER_LIST = auto()
@@ -33,6 +35,8 @@ class ManagementAPIEnum(ChoicesEnum, LowerStrEnum):
     GROUP_MEMBER_DELETE = auto()
     # 用户组权限
     GROUP_POLICY_GRANT = auto()
+    GROUP_POLICY_REVOKE = auto()
+    GROUP_POLICY_DELETE = auto()
     # 用户相关
     USER_ROLE_LIST = auto()
     USER_ROLE_GROUP_LIST = auto()
@@ -42,6 +46,7 @@ class ManagementAPIEnum(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(
         (
             # 分级管理员
+            (GRADE_MANAGER_LIST, "获取分级管理员列表"),
             (GRADE_MANAGER_CREATE, "新建分级管理员"),
             (GRADE_MANAGER_UPDATE, "更新分级管理员"),
             (GRADE_MANAGER_MEMBER_LIST, "获取分级管理员成员列表"),
@@ -58,6 +63,8 @@ class ManagementAPIEnum(ChoicesEnum, LowerStrEnum):
             (GROUP_MEMBER_DELETE, "删除用户组成员"),
             # 用户组权限
             (GROUP_POLICY_GRANT, "授权用户组"),
+            (GROUP_POLICY_REVOKE, "回收用户组权限"),
+            (GROUP_POLICY_DELETE, "删除用户组策略"),
             # 用户相关
             (USER_ROLE_LIST, "获取用户加入的分级管理员列表"),
             (USER_ROLE_GROUP_LIST, "获取某个分级管理员下用户加入的用户组列表"),

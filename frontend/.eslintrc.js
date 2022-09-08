@@ -24,6 +24,7 @@
  * IN THE SOFTWARE.
 */
 
+/* eslint-disable */
 module.exports = {
     root: true,
     parserOptions: {
@@ -103,7 +104,7 @@ module.exports = {
 
         // 禁止在语句末尾使用分号
         // https://eslint.org/docs/rules/semi
-        'semi': ['error', 'never'],
+        'semi': ['error', 'always'],
 
         // 禁用不必要的分号
         // https://eslint.org/docs/rules/no-extra-semi
@@ -523,9 +524,9 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/valid-v-text.md
         // v-text 指令必须合法
-        'vue/valid-v-text': 'error'
+        'vue/valid-v-text': 'error',
 
-        // 'codecc/comment-ratio': ['error', 10]
+        'codecc/comment-ratio': 'off'
     },
     overrides: [
         {
@@ -535,4 +536,4 @@ module.exports = {
             }
         }
     ]
-}
+};

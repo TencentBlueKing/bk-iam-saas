@@ -4,7 +4,7 @@
         <link rel="icon" href="{{ STATIC_URL }}/images/favicon.ico" type="image/x-icon" />
         <link rel="shortcut icon" href="{{ STATIC_URL }}/images/favicon.ico" type="image/x-icon" />
         <meta charset="utf-8">
-        <title>权限中心|蓝鲸智云</title>
+        <title>权限中心 | 腾讯蓝鲸智云</title>
     </head>
     <body>
         <div id="app"></div>
@@ -21,6 +21,7 @@
                 const CE_URL = 'https://bk.tencent.com/s-mart/community'
                 const BK_ITSM_APP_URL = '{{ BK_ITSM_APP_URL }}'
                 const ENABLE_MODEL_BUILD = '{{ ENABLE_MODEL_BUILD }}' || ''
+                const ENABLE_PERMISSION_HANDOVER = '{{ ENABLE_PERMISSION_HANDOVER }}' || ''
                 document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
                 window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
                 window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
@@ -33,6 +34,7 @@
                 window.PRODUCT_DOC_URL_PREFIX = PRODUCT_DOC_URL_PREFIX
                 window.BK_ITSM_APP_URL = BK_ITSM_APP_URL
                 window.ENABLE_MODEL_BUILD = ENABLE_MODEL_BUILD
+                window.ENABLE_PERMISSION_HANDOVER = ENABLE_PERMISSION_HANDOVER
                 window.CE_URL = CE_URL
             })()
 
@@ -52,9 +54,9 @@
                     CUR_LANGUAGE = 'zh-cn'
                 }
                 if (CUR_LANGUAGE === 'en') {
-                    document.title = 'BKIAM|Blueking'
+                    document.title = 'BKIAM | Tencent Blueking'
                 } else {
-                    document.title = '权限中心|蓝鲸智云'
+                    document.title = '权限中心 | 腾讯蓝鲸智云'
                 }
 
                 return CUR_LANGUAGE

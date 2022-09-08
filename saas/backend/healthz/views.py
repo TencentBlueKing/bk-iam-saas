@@ -13,7 +13,7 @@ from logging import getLogger
 
 import requests
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from rest_framework import serializers
 
 from backend.component import usermgr
@@ -28,11 +28,16 @@ def pong(request):
 
 def healthz(request):
     checker = HealthChecker()
+
+    data = {}
     for name in ["mysql", "redis", "celery", "iam", "usermgr"]:
         ok, message = getattr(checker, name)()
         if not ok:
             return HttpResponseServerError(message)
-    return HttpResponse("ok")
+
+        data[name] = message
+
+    return JsonResponse(data)
 
 
 class HealthChecker:
@@ -49,7 +54,7 @@ class HealthChecker:
         try:
             from django.db import connections
         except ImportError as e:
-            logger.exception(e)
+            logger.exception("mysql connect fail")
             return False, f"mysql connect fail, error: {str(e)}"
 
         try:
@@ -60,7 +65,7 @@ class HealthChecker:
                 if row is None:
                     return False, "mysql `Select 1` Not Return Row"
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
+            logger.exception("mysql query fail")
             return False, f"mysql query fail, error: {str(e)}"
 
         return True, "ok"
@@ -70,16 +75,17 @@ class HealthChecker:
         Check whether a redis cache is alive by pinging it.
         """
         try:
-            from django_redis import get_redis_connection
             from redis.exceptions import ConnectionError
+
+            from backend.common.redis import get_redis_connection
         except ImportError as e:
-            logger.exception(e)
+            logger.exception("redis module import fail")
             return False, f"redis module import fail, error: {str(e)}"
 
         try:
-            get_redis_connection("default").ping()
+            get_redis_connection().ping()
         except ConnectionError as e:
-            logger.exception(e)
+            logger.exception("redis ping test fail")
             return False, f"redis ping test fail, error: {str(e)}"
 
         return True, "ok"
@@ -91,7 +97,7 @@ class HealthChecker:
         try:
             from celery import current_app
         except ImportError as e:
-            logger.exception(e)
+            logger.exception("celery import fail")
             return False, f"celery import fail, error: {str(e)}"
 
         try:
@@ -106,10 +112,12 @@ class HealthChecker:
             # 这里仅仅是测试ping命令能否被发送的消息队列（上面代码已设置与消息队列通讯的相关配置），无法送达将raise exception
             # 不对ping命令的返回结果进行检查，因为worker可能存在满负载情况，无法及时消费
             # Limit=1表示只要有一个worker响应了就进行返回，没必要等待timeout再返回结果，Timeout表示最多等待多少秒返回结果
-            new_app.control.inspect(limit=1, timeout=0.05).ping()
+            new_app.control.inspect(limit=1, timeout=2).ping()
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
+            logger.exception("celery ping test fail")
             return False, f"celery ping test fail, error: {str(e)}"
+        finally:
+            new_app.close()
 
         return True, "ok"
 
@@ -120,7 +128,7 @@ class HealthChecker:
             if resp.status_code != requests.codes.ok:
                 return False, f"iam backend response status[{resp.status_code}] not OK"
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
+            logger.exception("iam backend request fail")
             return False, f"iam backend request fail, error: {str(e)}"
 
         return True, "ok"
@@ -139,18 +147,7 @@ class HealthChecker:
             categories = usermgr.list_category()
             for category in categories:
                 CategorySLZ(data=category).is_valid(raise_exception=True)
-
-            # 校验查询用户返回的字段是否完整
-            class UserFieldSLZ(serializers.Serializer):
-                id = serializers.IntegerField()
-                username = serializers.CharField()
-                display_name = serializers.CharField(allow_blank=True)
-                staff_status = serializers.ChoiceField(choices=(("IN", "IN"), ("OUT", "OUT")))
-                category_id = serializers.IntegerField()
-
-            userinfo = usermgr.retrieve_user("admin")
-            UserFieldSLZ(data=userinfo).is_valid(raise_exception=True)
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(e)
-            return False, f"usermgr request fail, error: {str(e)}"
+            logger.exception("usermgr request fail")
+            return True, f"usermgr request fail, error: {str(e)}"
         return True, "ok"

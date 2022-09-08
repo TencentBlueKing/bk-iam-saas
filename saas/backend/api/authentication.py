@@ -14,10 +14,11 @@ import logging
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
 
+from backend.common.cache import cachedmethod
 from backend.component import esb
-from backend.util.cache import region
 
 from .constants import BKNonEntityUser
 
@@ -70,7 +71,7 @@ class ESBAuthentication(BaseAuthentication):
 
     def _decode_jwt(self, content, public_key):
         try:
-            return jwt.decode(content, public_key, issuer="APIGW")
+            return jwt.decode(content, public_key, options={"verify_iss": False})
         except Exception:  # pylint: disable=broad-except
             logger.exception("decode jwt fail, jwt: %s", content)
             return None
@@ -93,12 +94,16 @@ class ESBAuthentication(BaseAuthentication):
     def _get_app_code_from_jwt_payload(self, jwt_payload):
         """从jwt里获取app_code"""
         app = jwt_payload.get("app", {})
+
+        if not app.get("verified", False):
+            raise exceptions.AuthenticationFailed("app is not verified")
+
         # 兼容多版本(企业版/TE版/社区版) 以及兼容APIGW/ESB
         app_code = app.get("bk_app_code", "") or app.get("app_code", "")
 
         # 虽然app_code为空对于后续的鉴权一定是不通过的，但鉴权不通过有很多原因，这里提前log便于问题排查
         if not app_code:
-            logger.warning("could not get app_code from esb payload: %s", jwt_payload)
+            raise exceptions.AuthenticationFailed("could not get app_code from esb/apigateway jwt payload! it's empty")
 
         return app_code
 
@@ -116,19 +121,19 @@ class ESBAuthentication(BaseAuthentication):
         """
         # 如果BK_APIGW_PUBLIC_KEY为空，则直接报错
         if not settings.BK_APIGW_PUBLIC_KEY:
-            logger.exception("BK_APIGW_PUBLIC_KEY can not be empty")
+            logger.error("BK_APIGW_PUBLIC_KEY can not be empty")
             return ""
 
         # base64解码
         try:
             public_key = base64.b64decode(settings.BK_APIGW_PUBLIC_KEY).decode("utf-8")
-        except Exception as error:  # pylint: disable=broad-except
-            logger.exception(f"BK_APIGW_PUBLIC_KEY is not the base64 string, base64.b64decode error: {error}")
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("BK_APIGW_PUBLIC_KEY is not the base64 string, base64.b64decode fail")
             return ""
 
         return public_key
 
-    @region.cache_on_arguments()
+    @cachedmethod(timeout=None)  # 缓存不过期，除非重新部署SaaS
     def _get_jwt_public_key(self, request_from):
         if request_from == "apigw":
             return self._get_apigw_public_key()

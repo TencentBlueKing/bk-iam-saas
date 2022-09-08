@@ -29,7 +29,7 @@ urlpatterns = [
         views.RoleAuthorizationScopeView.as_view(),
         name="role.authorization_scope_actions",
     ),
-    path("subject_scope/", views.RoleSubjectScopView.as_view(), name="role.subject_scope"),
+    path("subject_scope/", views.RoleSubjectScopeView.as_view(), name="role.subject_scope"),
     path("<int:id>/members/", views.RoleMemberView.as_view(), name="role.member"),
     # 系统管理员
     path("system_manager/", views.SystemManagerViewSet.as_view({"get": "list"}), name="role.system_manager"),
@@ -75,5 +75,15 @@ urlpatterns = [
         "auth_scope_include_user_roles/",
         views.AuthScopeIncludeUserRoleView.as_view(),
         name="role.auth_scope_include_user_roles",
+    ),
+    path(
+        "query_authorized_subjects/",
+        views.QueryAuthorizedSubjectsViewSet.as_view({"post": "post"}),
+        name="role.query_authorized_subjects",
+    ),
+    path(
+        "query_authorized_subjects/export/",
+        views.QueryAuthorizedSubjectsViewSet.as_view({"post": "export"}),
+        name="role.query_authorized_subjects.export",
     ),
 ]

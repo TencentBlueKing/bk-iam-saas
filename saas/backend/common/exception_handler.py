@@ -10,9 +10,11 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import logging
-from urllib.parse import urlencode
+import traceback
+from typing import Optional
 
-from django.conf import settings
+from blue_krill.web.std_error import APIError
+from rest_framework import status
 from rest_framework.exceptions import (
     AuthenticationFailed,
     MethodNotAllowed,
@@ -25,15 +27,16 @@ from rest_framework.fields import ListField
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings as drf_api_settings
-from rest_framework.views import exception_handler, set_rollback
+from rest_framework.views import set_rollback
+from sentry_sdk import capture_exception
 
 from backend.common.debug import log_api_error_trace
-from backend.common.error_codes import CodeException, error_codes
+from backend.common.error_codes import error_codes
 
 logger = logging.getLogger("app")
 
 
-def one_line_error(exc):
+def _one_line_error(exc):
     """
     从 serializer ValidationError 中抽取一行的错误消息
     """
@@ -53,17 +56,17 @@ def one_line_error(exc):
                 _, child = next(iter(error.items()))
                 child_error = ValidationError(child)
                 child_error.serializer = field.child
-                return one_line_error(child_error)
+                return _one_line_error(child_error)
             elif isinstance(field, Serializer):  # 处理嵌套的serializer
                 child_error = ValidationError(error)
                 child_error.serializer = field
-                return one_line_error(child_error)
+                return _one_line_error(child_error)
 
         if isinstance(exc.serializer, ListField):
             _, child = next(iter(detail.items()))
             child_error = ValidationError(child)
             child_error.serializer = exc.serializer.child
-            return one_line_error(child_error)
+            return _one_line_error(child_error)
 
     # handle non_field_errors, 非单个字段错误
     if key == drf_api_settings.NON_FIELD_ERRORS_KEY:
@@ -76,70 +79,80 @@ def one_line_error(exc):
     return f"{key}: {error}"
 
 
-def custom_exception_handler(exc, context):
+def is_open_api_request(request) -> bool:
+    return "/api/v1/open/" in request.path
+
+
+def _exception_to_error(request, exc) -> Optional[APIError]:
+    """把预期中的异常转换成error"""
     if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
-        set_rollback()
-        error = error_codes.UNAUTHORIZED
-        params = urlencode({"c_url": f"{settings.APP_URL}/login_success/", "app_code": settings.APP_CODE})
-        login_plain_url = f"{settings.LOGIN_SERVICE_PLAIN_URL}?{params}"
-        data = {
-            "result": False,
-            "code": error.code,
-            "message": error.message,
-            "data": {"login_url": settings.LOGIN_SERVICE_URL, "login_plain_url": login_plain_url},
-        }
-        return Response(data, status=error.status_code, headers={})
+        return error_codes.UNAUTHORIZED
 
-    elif isinstance(exc, PermissionDenied):
-        set_rollback()
-        error = error_codes.FORBIDDEN
-        data = {
-            "result": False,
-            "code": error.code,
-            "message": exc.detail,
-            "data": {},
-        }
-        return Response(data, status=error.status_code)
+    if isinstance(exc, PermissionDenied):
+        return error_codes.FORBIDDEN.format(message=exc.detail)
 
-    elif isinstance(exc, ParseError):
-        set_rollback()
-        error = error_codes.JSON_FORMAT_ERROR.format(message=exc.detail)
-        return Response(error.as_json(), status=error.status_code, headers={})
+    if isinstance(exc, MethodNotAllowed):
+        return error_codes.METHOD_NOT_ALLOWED.format(message=exc.detail)
 
-    elif isinstance(exc, ValidationError):
-        set_rollback()
-        error = error_codes.VALIDATE_ERROR.format(message=one_line_error(exc))
-        return Response(error.as_json(), status=error.status_code, headers={})
+    if isinstance(exc, ParseError):
+        return error_codes.JSON_FORMAT_ERROR.format(message=exc.detail)
 
-    elif isinstance(exc, CodeException):
+    if isinstance(exc, ValidationError):
+        if is_open_api_request(request):
+            return error_codes.VALIDATE_ERROR.format(message=json.dumps(exc.detail), replace=True)
+
+        return error_codes.VALIDATE_ERROR.format(message=_one_line_error(exc))
+
+    if isinstance(exc, APIError):
+        # 回滚事务
+        set_rollback()
         # 记录Debug信息
-        log_api_error_trace(context["request"])
+        log_api_error_trace(request)
 
-        set_rollback()
-        return Response(exc.as_json(), status=exc.status_code, headers={})
+        return exc
 
-    elif isinstance(exc, MethodNotAllowed):
-        set_rollback()
-        error = error_codes.METHOD_NOT_ALLOWED.format(message=exc.detail)
-        return Response(error.as_json(), status=error.status_code, headers={})
+    return None
 
-    message = "iam system error"
 
+def exception_handler(exc, context):
     request = context["request"]
-    if request:
-        message = "iam system error, url: {}, method: {}, data: {}".format(
-            request.path, request.method, json.dumps(getattr(request, request.method, None))
+
+    error = _exception_to_error(request, exc)
+    if error is None:
+        # 处理预期之外的异常
+        error = error_codes.SYSTEM_ERROR
+
+        # 用户未主动捕获的异常
+        logger.error(
+            (
+                """catch unhandled exception, stack->[%s], request url->[%s], """
+                """request method->[%s] request params->[%s]"""
+            ),
+            traceback.format_exc(),
+            request.path,
+            request.method,
+            json.dumps(getattr(request, request.method, None)),
         )
 
-    # 记录debug信息
-    log_api_error_trace(request, True)
+        # 记录debug信息
+        log_api_error_trace(request, True)
 
-    logger.exception(message)
+        # notify sentry
+        capture_exception(exc)
 
-    # Call REST framework's default exception handler to get the standard error response.
-    response = exception_handler(exc, context)
-    # Use a default error code
-    if response is not None:
-        response.data.update(code=error_codes.COMMON_ERROR.code)
+    # NOTE: openapi 为了兼容调用方使用习惯, 除以下error外，其他error的status code 默认返回 200
+    ignore_error_codes = {
+        error_codes.UNAUTHORIZED.code_num,
+        error_codes.FORBIDDEN.code_num,
+        error_codes.NOT_FOUND_ERROR.code_num,
+        error_codes.SYSTEM_ERROR.code_num,
+    }
 
-    return response
+    status_code = error.status_code
+    if is_open_api_request(request) and isinstance(error, APIError) and error.code_num not in ignore_error_codes:
+        status_code = status.HTTP_200_OK
+
+    return Response(
+        {"result": False, "code": error.code_num, "message": f"{error.message} ({error.code})", "data": error.data},
+        status=status_code,
+    )

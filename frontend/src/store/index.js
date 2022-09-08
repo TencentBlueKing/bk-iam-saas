@@ -24,90 +24,120 @@
  * IN THE SOFTWARE.
 */
 
-import Vue from 'vue'
-import Vuex from 'vuex'
-import http from '@/api'
-import { unifyObjectStyle, json2Query } from '@/common/util'
-import { getRouterDiff } from '@/common/router-handle'
-import il8n from '@/language'
+import Vue from 'vue';
+import Vuex from 'vuex';
+import http from '@/api';
+import { unifyObjectStyle, json2Query } from '@/common/util';
+import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
+import il8n from '@/language';
 
 // 系统模块
-import system from './modules/system'
+import system from './modules/system';
 
 // 权限模块
-import perm from './modules/perm'
+import perm from './modules/perm';
 
 // 权限模板 模块
-import permTemplate from './modules/permTemplate'
+import permTemplate from './modules/permTemplate';
 
 // 组织架构 模块
-import organization from './modules/organization'
+import organization from './modules/organization';
 
 // 权限申请 模块
-import permApply from './modules/permApply'
+import permApply from './modules/permApply';
 
 // 我的审批 模块
-import approval from './modules/approval'
+import approval from './modules/approval';
 
 // 我的申请 模块
-import myApply from './modules/myApply'
+import myApply from './modules/myApply';
 
 // 用户组 模块
-import userGroup from './modules/userGroup'
+import userGroup from './modules/userGroup';
 
 // 分级管理员模块
-import role from './modules/role'
+import role from './modules/role';
 
 // 审批流程设置
-import approvalProcess from './modules/approval-process'
+import approvalProcess from './modules/approval-process';
 
 // 操作聚合模块
-import aggregate from './modules/aggregate'
+import aggregate from './modules/aggregate';
 
 // 续期模块
-import renewal from './modules/renewal'
+import renewal from './modules/renewal';
 
 // 审计模块
-import audit from './modules/audit'
+import audit from './modules/audit';
 
 // 系统接入模块
-import access from './modules/access'
+import access from './modules/access';
 
-Vue.use(Vuex)
+// 资源权限模块
+import resourcePermiss from './modules/resource-permiss';
 
-const SITE_URL = window.SITE_URL
+// 临时权限模块
+import applyProvisionPerm from './modules/apply-provision-perm';
+
+Vue.use(Vuex);
+
+const SITE_URL = window.SITE_URL;
 
 const currentNav = [
     {
-        icon: 'perm-apply',
-        name: il8n('nav', '权限申请'),
-        id: 'permApplyNav',
-        rkey: 'applyJoinUserGroup',
-        path: `${SITE_URL}apply-join-user-group`,
-        disabled: false
+        icon: 'perm-manage',
+        name: il8n('nav', '发起需求'),
+        rkey: 'initiateDemand',
+        children: [
+            {
+                icon: 'perm-apply',
+                name: il8n('nav', '权限申请'),
+                id: 'permApplyNav',
+                rkey: 'applyJoinUserGroup',
+                path: `${SITE_URL}apply-join-user-group`,
+                disabled: false
+            },
+            {
+                icon: 'perm-apply',
+                name: il8n('nav', '临时权限申请'),
+                id: 'provisionPermApplyNav',
+                rkey: 'applyProvisionPerm',
+                path: `${SITE_URL}apply-provision-perm`,
+                disabled: false
+            }
+        ]
     },
+
     {
-        icon: 'my-apply',
-        id: 'applyNav',
-        rkey: 'apply',
-        name: il8n('nav', '我的申请'),
-        path: `${SITE_URL}apply`,
-        disabled: false
+        icon: 'perm-manage',
+        name: il8n('nav', '工作台'),
+        rkey: 'initiateDemand',
+        children: [
+            {
+                icon: 'my-apply',
+                id: 'applyNav',
+                rkey: 'apply',
+                name: il8n('nav', '我的申请'),
+                path: `${SITE_URL}apply`,
+                disabled: false
+            },
+            {
+                icon: 'my-approval',
+                id: 'approvalNav',
+                rkey: 'approval',
+                name: il8n('nav', '我的审批')
+            },
+            {
+                icon: 'my-perm',
+                id: 'myPermNav',
+                rkey: 'myPerm',
+                name: il8n('nav', '我的权限'),
+                path: `${SITE_URL}my-perm`,
+                disabled: false
+            }
+        ]
     },
-    {
-        icon: 'my-approval',
-        id: 'approvalNav',
-        rkey: 'approval',
-        name: il8n('nav', '我的审批')
-    },
-    {
-        icon: 'my-perm',
-        id: 'myPermNav',
-        rkey: 'myPerm',
-        name: il8n('nav', '我的权限'),
-        path: `${SITE_URL}my-perm`,
-        disabled: false
-    },
+    
     {
         icon: 'perm-manage',
         name: il8n('nav', '权限管理'),
@@ -148,6 +178,14 @@ const currentNav = [
         disabled: false
     },
     {
+        icon: 'grade-admin',
+        id: 'resourcePermissNav',
+        rkey: 'resourcePermiss',
+        name: il8n('nav', '资源权限管理'),
+        path: `${SITE_URL}resource-permiss`,
+        disabled: false
+    },
+    {
         icon: 'perm-manage',
         name: il8n('common', '设置'),
         rkey: 'set',
@@ -178,17 +216,24 @@ const currentNav = [
             }
         ]
     }
-]
+];
 
 if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
     currentNav.push({
-        icon: 'system-access',
-        id: 'systemAccessNav',
-        rkey: 'systemAccess',
-        name: il8n('nav', '系统接入'),
-        path: `${SITE_URL}system-access`,
-        disabled: true
-    })
+        icon: 'perm-manage',
+        name: il8n('nav', '开发者'),
+        rkey: 'Developers',
+        children: [
+            {
+                icon: 'system-access',
+                id: 'systemAccessNav',
+                rkey: 'systemAccess',
+                name: il8n('nav', '系统接入'),
+                path: `${SITE_URL}system-access`,
+                disabled: true
+            }
+        ]
+    });
 }
 
 const store = new Vuex.Store({
@@ -206,7 +251,9 @@ const store = new Vuex.Store({
         aggregate,
         renewal,
         audit,
-        access
+        access,
+        resourcePermiss,
+        applyProvisionPerm
     },
     state: {
         mainContentLoading: false,
@@ -254,7 +301,18 @@ const store = new Vuex.Store({
         // 系统回调地址
         host: '',
         // 前置路由
-        fromRouteName: ''
+        fromRouteName: '',
+
+        // nav导航
+        navData: [],
+
+        index: 0,
+
+        navCurRoleId: 0,
+
+        showNoviceGuide: false,
+
+        curRoleId: 0
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -274,41 +332,46 @@ const store = new Vuex.Store({
         noviceGuide: state => state.noviceGuide,
         loadingConf: state => state.loadingConf,
         host: state => state.host,
-        fromRouteName: state => state.fromRouteName
+        fromRouteName: state => state.fromRouteName,
+        navData: state => state.navData,
+        index: state => state.index,
+        navCurRoleId: state => state.navCurRoleId,
+        showNoviceGuide: state => state.showNoviceGuide,
+        curRoleId: state => state.curRoleId
     },
     mutations: {
         updateHost (state, params) {
-            state.host = params
+            state.host = params;
         },
         updateRoute (state, params) {
-            state.fromRouteName = params
+            state.fromRouteName = params;
         },
         updateGroup (state, obj) {
             if (obj.hasOwnProperty('hasPerm')) {
-                state.group.hasPerm = obj.hasPerm
+                state.group.hasPerm = obj.hasPerm;
             }
             if (obj.hasOwnProperty('hasMember')) {
-                state.group.hasMember = obj.hasMember
+                state.group.hasMember = obj.hasMember;
             }
             if (obj.hasOwnProperty('systems')) {
-                state.group.systems = [...obj.systems]
+                state.group.systems = [...obj.systems];
             }
         },
 
         updateSync (state, flag) {
-            state.isSync = !!flag
+            state.isSync = !!flag;
         },
 
         setNoviceGuide (state, payload) {
             payload.forEach(item => {
                 if (state.noviceGuide.hasOwnProperty(item.scene)) {
-                    state.noviceGuide[item.scene] = item.status
+                    state.noviceGuide[item.scene] = item.status;
                 }
-            })
+            });
         },
 
         updateNoviceGuide (state, type, flag = true) {
-            state.noviceGuide[type] = flag
+            state.noviceGuide[type] = flag;
         },
 
         /**
@@ -318,7 +381,7 @@ const store = new Vuex.Store({
          * @param {string} backRouter backRouter
          */
         setBackRouter (state, backRouter) {
-            state.header.backRouter = backRouter
+            state.header.backRouter = backRouter;
         },
 
         /**
@@ -328,7 +391,7 @@ const store = new Vuex.Store({
          * @param {string} title title
          */
         setHeaderTitle (state, title) {
-            state.header.title = title
+            state.header.title = title;
         },
 
         /**
@@ -338,7 +401,7 @@ const store = new Vuex.Store({
          * @param {number} index index
          */
         setHeaderIndicatorIndex (state, index) {
-            state.header.indicatorIndex = index
+            state.header.indicatorIndex = index;
         },
 
         /**
@@ -348,7 +411,7 @@ const store = new Vuex.Store({
          * @param {boolean} loading 是否显示 loading
          */
         setMainContentLoading (state, loading) {
-            state.mainContentLoading = loading
+            state.mainContentLoading = loading;
         },
 
         /**
@@ -358,7 +421,7 @@ const store = new Vuex.Store({
          * @param {Object} status 左侧导航状态
          */
         setNavStatus (state, status) {
-            state.nav = Object.assign(state.nav, status)
+            state.nav = Object.assign(state.nav, status);
         },
 
         /**
@@ -368,7 +431,7 @@ const store = new Vuex.Store({
          * @param {Object} user user 对象
          */
         updateUser (state, user) {
-            state.user = Object.assign({}, user)
+            state.user = Object.assign({}, user);
         },
 
         /**
@@ -378,7 +441,17 @@ const store = new Vuex.Store({
          * @param {Object} data
          */
         updateIdentity (state, data) {
-            state.user.role = Object.assign({}, data)
+            state.user.role = Object.assign({}, data);
+        },
+
+        /**
+         * 记录当前下拉框身份
+         *
+         * @param {Object} state store state
+         * @param {Object} data
+         */
+        updateNavId (state, id) {
+            state.navCurRoleId = id;
         },
 
         /**
@@ -388,7 +461,7 @@ const store = new Vuex.Store({
          * @param {Object} version version 对象
          */
         updateVersion (state, version) {
-            state.versionLogs.splice(0, state.versionLogs.length, ...version)
+            state.versionLogs.splice(0, state.versionLogs.length, ...version);
         },
 
         /**
@@ -398,20 +471,41 @@ const store = new Vuex.Store({
          * @param {Array} users users 对象
          */
         updateUsers (state, users) {
-            state.users = []
+            state.users = [];
             if (users.length) {
                 for (let i = 0; i < users.length; i++) {
-                    state.users.push(users[i])
+                    state.users.push(users[i]);
                 }
             }
         },
 
         updataRouterDiff (state, role) {
-            state.routerDiff = [...getRouterDiff(role)]
+            state.routerDiff = [...getRouterDiff(role)];
+        },
+
+        updataNavRouterDiff (state, index) {
+            state.routerDiff = [...getNavRouterDiff(index)];
         },
 
         updateRoleList (state, payload) {
-            state.roleList.splice(0, state.roleList.length, ...payload)
+            state.roleList.splice(0, state.roleList.length, ...payload);
+            // bus.$emit('roleList-update', payload.length);
+        },
+
+        updateNavData (state, payload) {
+            state.navData.splice(0, state.navData.length, ...payload);
+        },
+
+        updateIndex (state, payload) {
+            state.index = payload;
+        },
+
+        updateSelectManager (state, payload) {
+            state.showNoviceGuide = payload;
+        },
+
+        updateCurRoleId (state, id) {
+            state.curRoleId = id;
         }
     },
     actions: {
@@ -445,20 +539,28 @@ const store = new Vuex.Store({
             //     commit('updataRouterDiff', role)
             // }
             // return data
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
             return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then(response => {
-                const data = response ? response.data : {}
+                const data = response ? response.data : {};
                 if (data.role.type === 'system_manager') {
-                    data.role.name = `${data.role.name}${il8n('nav', '系统管理员')}`
+                    data.role.name = `${data.role.name}${il8n('nav', '系统管理员')}`;
                 }
-                commit('updateUser', data)
+                commit('updateUser', data);
 
                 if (Object.keys(data).length > 0) {
-                    const role = data.role.type
-                    commit('updataRouterDiff', role)
+                    const role = data.role.type;
+                    if (role === 'staff') {
+                        commit('updateIndex', 0);
+                    }
+                    state.index = state.index || Number(window.localStorage.getItem('index'));
+                    if (state.index && state.index > 1) {
+                        commit('updataNavRouterDiff', state.index);
+                    } else {
+                        commit('updataRouterDiff', role);
+                    }
                 }
-                return data
-            })
+                return data;
+            });
         },
 
         /**
@@ -472,17 +574,17 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         roleList ({ commit, state, dispatch }, config) {
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
             return http.get(`${AJAX_URL_PREFIX}/accounts/user/roles/`, config).then(response => {
-                const data = response ? response.data : []
+                const data = response ? response.data : [];
                 data.forEach(item => {
                     if (item.type === 'system_manager') {
-                        item.name = `${item.name}${il8n('nav', '系统管理员')}`
+                        item.name = `${item.name}${il8n('nav', '系统管理员')}`;
                     }
-                })
-                commit('updateRoleList', data)
-                return data
-            })
+                });
+                commit('updateRoleList', data);
+                return data;
+            });
         },
 
         /**
@@ -496,11 +598,11 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         versionLogInfo ({ commit, state, dispatch }, config) {
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
             return http.get(`${AJAX_URL_PREFIX}/version_log/`, config).then(response => {
-                commit('updateVersion', response.data)
-                return response.data
-            })
+                commit('updateVersion', response.data);
+                return response.data;
+            });
         },
 
         /**
@@ -514,11 +616,11 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         allUserInfo ({ commit, state, dispatch }, config) {
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
             return http.get(`${AJAX_URL_PREFIX}/accounts/users/`, config).then(response => {
-                commit('updateUsers', response.data)
-                return response.data
-            })
+                commit('updateUsers', response.data);
+                return response.data;
+            });
         },
 
         /**
@@ -532,11 +634,11 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         getNoviceGuide ({ commit, state, dispatch }, config) {
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
             return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then(response => {
-                commit('setNoviceGuide', response.data)
-                return response.data
-            })
+                commit('setNoviceGuide', response.data);
+                return response.data;
+            });
         },
 
         /**
@@ -551,8 +653,8 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         editNoviceGuide ({ commit, state, dispatch }, params, config) {
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
-            return http.post(`${AJAX_URL_PREFIX}/users/profile/newbie/`, params, config)
+            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
+            return http.post(`${AJAX_URL_PREFIX}/users/profile/newbie/`, params, config);
         },
 
         /**
@@ -567,10 +669,10 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         get ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=get&${json2Query(params)}`, config)
+            return http.get(`/app/index?invoke=get&${json2Query(params)}`, config);
         }
     }
-})
+});
 
 /**
  * hack vuex dispatch, add third parameter `config` to the dispatch method
@@ -582,24 +684,24 @@ const store = new Vuex.Store({
  * @return {Promise} 执行请求的 promise
  */
 store.dispatch = function (_type, _payload, config = {}) {
-    const { type, payload } = unifyObjectStyle(_type, _payload)
+    const { type, payload } = unifyObjectStyle(_type, _payload);
 
-    const action = { type, payload, config }
-    const entry = store._actions[type]
+    const action = { type, payload, config };
+    const entry = store._actions[type];
     if (!entry) {
         if (NODE_ENV !== 'production') {
-            console.error(`[vuex] unknown action type: ${type}`)
+            console.error(`[vuex] unknown action type: ${type}`);
         }
-        return
+        return;
     }
 
     store._actionSubscribers.forEach(sub => {
-        return sub(action, store.state)
-    })
+        return sub(action, store.state);
+    });
 
     return entry.length > 1
         ? Promise.all(entry.map(handler => handler(payload, config)))
-        : entry[0](payload, config)
-}
+        : entry[0](payload, config);
+};
 
-export default store
+export default store;

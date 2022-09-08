@@ -47,7 +47,6 @@
                 </bk-table-column>
                 <bk-table-column :label="$t(`m.approvalProcess['审批流程']`)">
                     <template slot-scope="{ row }">
-                        <!-- eslint-disable max-len -->
                         <section class="process-select-wrapper" v-if="row.canEdit || row.isToggle">
                             <bk-select
                                 :value="row.process_id"
@@ -59,9 +58,13 @@
                                     :key="option.id"
                                     :id="option.id"
                                     :name="option.name">
-                                    <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">{{ option.name }}</span>
+                                    <span style="display: block; line-height: 32px;"
+                                        :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">
+                                        {{ option.name }}
+                                    </span>
                                 </bk-option>
-                                <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }" @click="handleOpenCreateLink" style="cursor: not-allowed;">
+                                <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }"
+                                    @click="handleOpenCreateLink" style="cursor: not-allowed;">
                                     <Icon bk type="plus-circle" />
                                     <span>{{ $t(`m.common['新增']`) }}</span>
                                 </div>
@@ -94,9 +97,9 @@
     </div>
 </template>
 <script>
-    import { buildURLParams } from '@/common/url'
-    import editProcessDialog from './edit-process-dialog'
-    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider'
+    import { buildURLParams } from '@/common/url';
+    import editProcessDialog from './edit-process-dialog';
+    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
     export default {
         name: '',
         components: {
@@ -105,9 +108,9 @@
         },
         filters: {
             proceeNameFilter (value, list) {
-                const data = list.find(item => item.id === value)
-                if (data) return data.name
-                return ''
+                const data = list.find(item => item.id === value);
+                if (data) return data.name;
+                return '默认审批流程';
             }
         },
         props: {
@@ -135,140 +138,147 @@
                 batchEditLoading: false,
                 procssValue: '',
                 tips: this.$t(`m.common['暂未开放']`)
-            }
+            };
         },
         computed: {
             isCanBatchDelete () {
-                return this.currentSelectList.length > 0 && this.tableList.length > 0
+                return this.currentSelectList.length > 0 && this.tableList.length > 0;
             },
             curSelectName () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return this.list.find(item => item.id === payload.process_id).name
+                        if (this.list.find(item => item.id === payload.process_id)) {
+                            return this.list.find(item => item.id === payload.process_id).name;
+                        }
+                        return '默认审批流程';
                     }
-                    return ''
-                }
+                    return '';
+                };
             },
             curTitle () {
                 return payload => {
                     if (this.list.length > 0 && payload.process_id !== '') {
-                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`
+                        if (this.list.find(item => item.id === payload.process_id)) {
+                            return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
+                        } else {
+                            return '';
+                        }
                     }
-                    return ''
-                }
+                    return '';
+                };
             }
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             searchValue (newVal, oldVal) {
                 if (newVal === '' && oldVal !== '' && this.isFilter) {
-                    this.isFilter = false
+                    this.isFilter = false;
                     this.pagination = Object.assign({}, {
                         current: 1,
                         count: 1,
                         limit: 10
-                    })
-                    this.fetchGroupProcessesList()
+                    });
+                    this.fetchGroupProcessesList();
                 }
             }
         },
         created () {
-            this.isFilter = false
-            const currentQueryCache = this.getCurrentQueryCache()
+            this.isFilter = false;
+            const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit
-                    this.pagination.current = currentQueryCache.current
+                    this.pagination.limit = currentQueryCache.limit;
+                    this.pagination.current = currentQueryCache.current;
                 }
                 if (currentQueryCache.keyword) {
-                    this.searchValue = currentQueryCache.keyword
+                    this.searchValue = currentQueryCache.keyword;
                 }
                 if (this.searchValue !== '') {
-                    this.isFilter = true
+                    this.isFilter = true;
                 }
             }
-            this.fetchGroupProcessesList()
+            this.fetchGroupProcessesList();
         },
         methods: {
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination
+                const { limit, current } = this.pagination;
                 const queryParams = {
                     limit,
                     current
-                }
+                };
                 if (this.searchValue !== '') {
-                    queryParams.keyword = this.searchValue
+                    queryParams.keyword = this.searchValue;
                 }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`)
-                return queryParams
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                return queryParams;
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('joinGroupProcessList', JSON.stringify(payload))
+                window.localStorage.setItem('joinGroupProcessList', JSON.stringify(payload));
             },
 
             getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('joinGroupProcessList'))
+                return JSON.parse(window.localStorage.getItem('joinGroupProcessList'));
             },
 
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchGroupProcessesList()
+                this.pagination.current = page;
+                this.fetchGroupProcessesList();
             },
 
             setCellStyle ({ row, column, rowIndex, columnIndex }) {
                 if (rowIndex === 0 && columnIndex === 3) {
                     return {
                         paddingLeft: '10px'
-                    }
+                    };
                 }
-                return {}
+                return {};
             },
 
             async fetchGroupProcessesList (isLoading = true) {
-                this.tableLoading = isLoading
-                this.setCurrentQueryCache(this.refreshCurrentQuery())
+                this.tableLoading = isLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1),
                     keyword: this.searchValue
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getGroupProcessesList', params)
-                    this.pagination.count = res.data.count
-                    this.tableList = res.data.results
+                    const res = await this.$store.dispatch('approvalProcess/getGroupProcessesList', params);
+                    this.pagination.count = res.data.count;
+                    this.tableList = res.data.results;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
             async updateGroupProcesses (params = {}) {
                 try {
-                    await this.$store.dispatch('approvalProcess/updateGroupProcesses', params)
-                    this.messageSuccess(this.$t(`m.common['操作成功']`))
+                    await this.$store.dispatch('approvalProcess/updateGroupProcesses', params);
+                    this.messageSuccess(this.$t(`m.common['操作成功']`));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 }
             },
 
@@ -279,110 +289,110 @@
 
             handleSearch () {
                 if (this.searchValue === '') {
-                    return
+                    return;
                 }
-                this.isFilter = true
+                this.isFilter = true;
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 1,
                     limit: 10
-                })
-                this.fetchGroupProcessesList()
+                });
+                this.fetchGroupProcessesList();
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchGroupProcessesList()
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchGroupProcessesList();
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handleProcessSelect (value, option, item) {
                 const params = {
                     group_ids: [item.group_id],
                     process_id: value
-                }
-                item.process_id = value
-                this.updateGroupProcesses(params)
+                };
+                item.process_id = value;
+                this.updateGroupProcesses(params);
             },
 
             handleSelectToggle (payload, row) {
                 if (payload) {
-                    this.$set(row, 'isToggle', true)
+                    this.$set(row, 'isToggle', true);
                 } else {
-                    this.$delete(row, 'isToggle')
+                    this.$delete(row, 'isToggle');
                 }
             },
 
             handleRowMouseEnter (index) {
-                this.$set(this.tableList[index], 'canEdit', true)
+                this.$set(this.tableList[index], 'canEdit', true);
             },
 
             handleRowMouseLeave (index) {
-                this.$delete(this.tableList[index], 'canEdit')
+                this.$delete(this.tableList[index], 'canEdit');
             },
 
             getSelectable (row, index) {
                 if (this.tableList.length < 1) {
-                    return false
+                    return false;
                 }
-                return true
+                return true;
             },
 
             handleBatchDelete () {
-                this.isProcessDialogShow = true
-                const list = [...new Set(this.currentSelectList.map(item => item.process_id))]
+                this.isProcessDialogShow = true;
+                const list = [...new Set(this.currentSelectList.map(item => item.process_id))];
                 if (list.length === 1) {
-                    this.procssValue = list[0]
+                    this.procssValue = list[0];
                 }
             },
 
             handleAfterLeave () {
-                this.procssValue = ''
+                this.procssValue = '';
             },
 
             async handleEditProcess (payload) {
                 if (payload === this.procssValue) {
-                    this.isProcessDialogShow = false
-                    return
+                    this.isProcessDialogShow = false;
+                    return;
                 }
-                this.batchEditLoading = true
+                this.batchEditLoading = true;
                 try {
                     const params = {
                         group_ids: this.currentSelectList.map(item => item.group_id),
                         process_id: payload
-                    }
-                    await this.updateGroupProcesses(params)
-                    this.currentSelectList = []
-                    this.isProcessDialogShow = false
-                    this.fetchGroupProcessesList()
+                    };
+                    await this.updateGroupProcesses(params);
+                    this.currentSelectList = [];
+                    this.isProcessDialogShow = false;
+                    this.fetchGroupProcessesList();
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 } finally {
-                    this.batchEditLoading = false
+                    this.batchEditLoading = false;
                 }
             },
 
             handleViewDetail (payload) {
-                this.curGroupName = payload.group_name
-                this.curGroupId = payload.group_id
-                this.isShowPermSidesilder = true
+                this.curGroupName = payload.group_name;
+                this.curGroupId = payload.group_id;
+                this.isShowPermSidesilder = true;
             },
 
             handleAnimationEnd () {
-                this.curGroupName = ''
-                this.curGroupId = ''
-                this.isShowPermSidesilder = false
+                this.curGroupName = '';
+                this.curGroupId = '';
+                this.isShowPermSidesilder = false;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-join-group-process-wrapper {

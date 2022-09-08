@@ -15,12 +15,12 @@
         data () {
             return {
                 isShow: false
-            }
+            };
         },
         methods: {
 
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-long-time-task-slider {

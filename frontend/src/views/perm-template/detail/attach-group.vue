@@ -43,8 +43,8 @@
     </div>
 </template>
 <script>
-    import DeleteDialog from '@/components/iam-confirm-dialog'
-    import PermSideslider from '../components/render-group-perm-sideslider'
+    import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
+    import PermSideslider from '../components/render-group-perm-sideslider';
     export default {
         name: '',
         components: {
@@ -75,117 +75,117 @@
 
                 isShowPermSlider: false,
                 curGroupId: ''
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         created () {
-            this.fetchData(true)
+            this.fetchData(true);
         },
         methods: {
             async fetchData (isTabLoading = false, isTableLoading = false) {
-                this.tableLoading = isTableLoading
-                this.tabLoading = isTabLoading
+                this.tableLoading = isTableLoading;
+                this.tabLoading = isTabLoading;
                 if (isTabLoading) {
-                    this.$emit('on-init', true)
+                    this.$emit('on-init', true);
                 }
                 const params = {
                     id: this.id,
                     types: 'group',
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateMember', params)
-                    this.pagination.count = res.data.count
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    const res = await this.$store.dispatch('permTemplate/getTemplateMember', params);
+                    this.pagination.count = res.data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                     if (isTabLoading) {
-                        this.tabLoading = false
-                        this.$emit('on-init', false)
+                        this.tabLoading = false;
+                        this.$emit('on-init', false);
                     }
                 }
             },
 
             handleView ({ id }) {
-                this.curGroupId = id
-                this.isShowPermSlider = true
+                this.curGroupId = id;
+                this.isShowPermSlider = true;
             },
 
             handleAfterRemoveLeave () {
-                this.currentMember.splice(0, this.currentMember.length, ...[])
-                this.removeSubTitle = ''
+                this.currentMember.splice(0, this.currentMember.length, ...[]);
+                this.removeSubTitle = '';
             },
 
             hideCancelRemove () {
-                this.isShowRemoveDialog = false
+                this.isShowRemoveDialog = false;
             },
 
             async handleSumbitRemove () {
-                this.removeLoading = true
+                this.removeLoading = true;
                 const params = {
                     id: this.id,
                     data: {
                         members: this.currentMember
                     }
-                }
-                console.warn(params)
+                };
+                console.warn(params);
                 try {
-                    await this.$store.dispatch('permTemplate/deleteTemplateMember', params)
-                    this.isShowRemoveDialog = false
-                    this.messageSuccess(this.$t(`m.info['移除成功']`), 2000)
-                    this.fetchData(false, true)
+                    await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
+                    this.isShowRemoveDialog = false;
+                    this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+                    this.fetchData(false, true);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.removeLoading = false
+                    this.removeLoading = false;
                 }
             },
 
             handlePageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchData(false, true)
+                this.pagination.current = page;
+                this.fetchData(false, true);
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchData(false, true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchData(false, true);
             },
 
             handleRemove (payload) {
-                this.removeSubTitle = `${this.$t(`m.common['移除']`)}【${payload.name}】，${this.$t(`m.info['该用户组将不再继承对应模板的权限']`)}。`
+                this.removeSubTitle = `${this.$t(`m.common['移除']`)}【${payload.name}】，${this.$t(`m.info['该用户组将不再继承对应模板的权限']`)}。`;
                 this.currentMember.push({
                     type: payload.type,
                     id: payload.id
-                })
-                this.isShowRemoveDialog = true
+                });
+                this.isShowRemoveDialog = true;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-perm-template-attach-member-wrapper {

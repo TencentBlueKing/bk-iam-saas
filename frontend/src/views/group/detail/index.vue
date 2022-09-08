@@ -11,16 +11,16 @@
     </div>
 </template>
 <script>
-    import store from '@/store'
-    import { bus } from '@/common/bus'
+    import store from '@/store';
+    import { bus } from '@/common/bus';
 
     const GroupDetail = () => import(
         /* webpackChunkName: 'user-group' */'./group-detail'
-    )
+    );
 
     const GroupPerm = () => import(
         /* webpackChunkName: 'user-group' */'./group-perm-new'
-    )
+    );
 
     export default {
         name: '',
@@ -35,27 +35,27 @@
                 leftOffset: 260,
                 id: '',
                 comIsLoading: true
-            }
+            };
         },
         beforeRouteEnter (to, from, next) {
-            store.commit('setHeaderTitle', '')
-            next()
+            store.commit('setHeaderTitle', '');
+            next();
         },
         created () {
-            this.id = Number(this.$route.params.id)
+            this.id = Number(this.$route.params.id);
             this.$once('hook:beforeDestroy', () => {
-                bus.$off('on-tab-change')
-            })
+                bus.$off('on-tab-change');
+            });
         },
         mounted () {
-            this.componentWrapperHeight = window.innerHeight - 108 - 2
-            const query = this.$route.query
-            const tab = (query.tab || '').toLowerCase()
-            this.componentName = (tab === 'group_perm' || tab === 'GroupPerm') ? 'GroupPerm' : 'GroupDetail'
+            this.componentWrapperHeight = window.innerHeight - 180;
+            const query = this.$route.query;
+            const tab = (query.tab || '').toLowerCase();
+            this.componentName = (tab === 'group_perm' || tab === 'GroupPerm') ? 'GroupPerm' : 'GroupDetail';
             bus.$on('on-tab-change', async (name) => {
-                this.comIsLoading = true
-                this.componentName = name
-            })
+                this.comIsLoading = true;
+                this.componentName = name;
+            });
         },
         methods: {
             /**
@@ -64,8 +64,8 @@
              * @param {boolean} isLoading loading 状态
              */
             handleComInit (isLoading) {
-                this.comIsLoading = isLoading
+                this.comIsLoading = isLoading;
             }
         }
-    }
+    };
 </script>

@@ -1,11 +1,12 @@
 <template>
-    <div class="iam-system-access-wrapper">
+    <div class="iam-record-list-wrapper">
         <render-search>
-            <span class="display-name">同步记录</span>
+            <Icon type="arrows-left" class="breadcrumbs-back" @click="handleBackClick" />
+            <span class="display-name">{{$t(`m.user['同步记录']`)}}</span>
             <div slot="right">
                 <bk-date-picker
                     v-model="initDateTimeRange"
-                    :placeholder="'选择日期范围'"
+                    :placeholder="$t(`m.user['选择日期范围']`)"
                     :type="'daterange'"
                     placement="bottom-end"
                     :shortcuts="shortcuts"
@@ -37,7 +38,7 @@
             <bk-table-column :label="$t(`m.user['操作人']`)">
                 <template slot-scope="{ row }">
                     <span :title="row.executor">
-                        {{ row.trigger_type === 'periodic_task' ? '定时同步' : row.executor }}
+                        {{ row.trigger_type === 'periodic_task' ? $t(`m.user['定时同步']`) : row.executor }}
                     </span>
                 </template>
             </bk-table-column>
@@ -72,12 +73,12 @@
             <div slot="content" v-bkloading="{ isLoading: logDetailLoading, opacity: 1 }">
                 <section v-show="!logDetailLoading">
                     <div class="link-btn">
-                        <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">同步失败排查指引</bk-link>
+                        <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
                     </div>
                     <div class="msg-content">
                         <div v-if="exceptionMsg || tracebackMsg">
-                            <div>{{exceptionMsg}}</div>
-                            <div>{{tracebackMsg}}</div>
+                            <div v-html="exceptionMsg"></div>
+                            <div v-html="tracebackMsg"></div>
                         </div>
                         <div v-else>暂无日志详情</div>
                     </div>
@@ -87,25 +88,25 @@
     </div>
 </template>
 <script>
-    import { timestampToTime } from '@/common/util'
-    import RenderStatus from './render-status'
-    import moment from 'moment'
+    import { timestampToTime } from '@/common/util';
+    import RenderStatus from './render-status';
+    import moment from 'moment';
 
     export default {
         name: 'system-access-index',
         filters: {
             getDuration (val) {
-                const d = moment.duration(val, 'seconds')
+                const d = moment.duration(val, 'seconds');
                 if (val >= 86400) {
-                    return `${Math.floor(d.asDays())}d${d.hours()}h${d.minutes()}min${d.seconds()}s`
+                    return `${Math.floor(d.asDays())}d${d.hours()}h${d.minutes()}min${d.seconds()}s`;
                 }
                 if (val >= 3600) {
-                    return `${d.hours()}h${d.minutes()}min${d.seconds()}s`
+                    return `${d.hours()}h${d.minutes()}min${d.seconds()}s`;
                 }
                 if (val > 60) {
-                    return `${d.minutes()}min${d.seconds()}s`
+                    return `${d.minutes()}min${d.seconds()}s`;
                 }
-                return `${Math.floor(val)}s`
+                return `${Math.floor(val)}s`;
             }
         },
         components: {
@@ -127,116 +128,116 @@
                 tracebackMsg: '',
                 timestampToTime: timestampToTime,
                 initDateTimeRange: [],
-                triggerType: { 'periodic_task': '定时同步', 'manual_sync': '手动同步' },
+                triggerType: { 'periodic_task': this.$t(`m.user['定时同步']`), 'manual_sync': this.$t(`m.user['手动同步']`) },
                 shortcuts: [
                     {
                         text: '今天',
                         value () {
-                            const end = new Date()
-                            const start = new Date()
-                            return [start, end]
+                            const end = new Date();
+                            const start = new Date();
+                            return [start, end];
                         }
                     },
                     {
                         text: '最近7天',
                         value () {
-                            const end = new Date()
-                            const start = new Date()
-                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-                            return [start, end]
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                            return [start, end];
                         }
                     },
                     {
                         text: '最近30天',
                         value () {
-                            const end = new Date()
-                            const start = new Date()
-                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
-                            return [start, end]
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                            return [start, end];
                         }
                     }
                 ],
                 dateRange: { startTime: '', endTime: '' }
-            }
+            };
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             }
         },
         created () {
-            this.fetchPageData()
+            this.fetchPageData();
         },
         methods: {
             async fetchPageData () {
-                await this.fetchModelingList(true)
+                await this.fetchModelingList(true);
             },
 
             async fetchModelingList (isLoading = false) {
-                this.tableLoading = isLoading
+                this.tableLoading = isLoading;
                 const params = {
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1),
                     start_time: this.dateRange.startTime,
                     end_time: this.dateRange.endTime
-                }
+                };
                 try {
-                    const res = await this.$store.dispatch('organization/getRecordsList', params)
-                    this.pagination.count = res.data.count
+                    const res = await this.$store.dispatch('organization/getRecordsList', params);
+                    this.pagination.count = res.data.count;
                     res.data.results = res.data.results.length && res.data.results.sort(
-                        (a, b) => new Date(b.updated_time) - new Date(a.updated_time))
+                        (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
                         
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []))
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.tableLoading = false
+                    this.tableLoading = false;
                 }
             },
 
             handlePageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                this.fetchModelingList(true)
+                this.pagination.current = page;
+                this.fetchModelingList(true);
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.fetchModelingList(true)
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.fetchModelingList(true);
             },
 
             handleAnimationEnd () {
-                this.isShowLogDetails = false
+                this.isShowLogDetails = false;
             },
 
             async showLogDetails (data) {
-                this.isShowLogDetails = true
-                this.logDetailLoading = true
+                this.isShowLogDetails = true;
+                this.logDetailLoading = true;
                 try {
-                    const res = await this.$store.dispatch('organization/getRecordsLog', data.id)
-                    this.exceptionMsg = res.data.exception_msg
-                    this.tracebackMsg = res.data.traceback_msg
+                    const res = await this.$store.dispatch('organization/getRecordsLog', data.id);
+                    this.exceptionMsg = res.data.exception_msg.replace(/\n/g, '<br>');
+                    this.tracebackMsg = res.data.traceback_msg.replace(/\n/g, '<br>');
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.logDetailLoading = false
+                    this.logDetailLoading = false;
                 }
             },
 
@@ -245,23 +246,27 @@
                     limit: 10,
                     current: 1,
                     count: 0
-                })
+                });
             },
 
             handleDateChange (date) {
-                this.resetPagination()
+                this.resetPagination();
                 this.dateRange = {
                     startTime: `${date[0]}` ? `${date[0]} 00:00:00` : '',
                     endTime: `${date[1]}` ? `${date[1]} 23:59:59` : ''
-                }
-                this.fetchModelingList(true)
+                };
+                this.fetchModelingList(true);
+            },
+
+            handleBackClick () {
+                this.$emit('handleBack');
             }
             
         }
-    }
+    };
 </script>
 <style lang="postcss">
-    .iam-system-access-wrapper {
+    .iam-record-list-wrapper {
         .detail-link {
             color: #3a84ff;
             cursor: pointer;
@@ -300,6 +305,18 @@
             padding: 10px;
             max-height: 1200px;
             overflow-y: scroll;
+        }
+
+        .breadcrumbs-back{
+            cursor: pointer;
+            display: inline-block;
+            vertical-align: middle;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            font-size: 24px;
+            color: #3c96ff;
         }
     }
 </style>

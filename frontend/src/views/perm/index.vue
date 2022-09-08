@@ -11,10 +11,18 @@
             </bk-button>
             <bk-button
                 data-test-id="myPerm_btn_batchRenewal"
-                style="margin: 0 0 16px 6px;"
+                style="margin: 0 6px 16px 6px;"
                 :disabled="isEmpty || isNoRenewal"
                 @click="handleBatchRenewal">
                 {{ $t(`m.renewal['批量续期']`) }}
+            </bk-button>
+            <bk-button
+                v-if="enablePermissionHandover.toLowerCase() === 'true'"
+                data-test-id="myPerm_btn_transferPerm"
+                type="button"
+                style="margin-bottom: 16px;"
+                @click="handleGoPermTransfer">
+                {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
@@ -26,19 +34,23 @@
         </template>
         <bk-tab
             v-else
-            :active.sync="active"
+            :active="active"
             type="unborder-card"
             ext-cls="iam-my-perm-tab-cls"
             @tab-change="handleTabChange">
             <bk-tab-panel
                 v-for="(panel, index) in panels"
+                :data-test-id="`myPerm_tabPanel_${panel.name}`"
                 v-bind="panel"
                 :key="index">
                 <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
                     <component
-                        v-show="!componentLoading"
+                        v-if="!componentLoading && active === panel.name"
                         :is="active"
-                        @toggle-loading="toggleLoadingHandler"
+                        :personal-group-list="personalGroupList"
+                        :system-list="systemList"
+                        :tep-system-list="teporarySystemList"
+                        @refresh="fetchData"
                     ></component>
                 </div>
             </bk-tab-panel>
@@ -46,13 +58,16 @@
     </div>
 </template>
 <script>
-    import { buildURLParams } from '@/common/url'
-    import CustomPerm from './custom-perm'
-    import GroupPerm from './group-perm'
+    import { buildURLParams } from '@/common/url';
+    import CustomPerm from './custom-perm/index.vue';
+    import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
+    import GroupPerm from './group-perm/index.vue';
+
     export default {
-        name: '',
+        name: 'MyPerm',
         components: {
             CustomPerm,
+            TeporaryCustomPerm,
             GroupPerm
         },
         data () {
@@ -64,117 +79,142 @@
                     },
                     {
                         name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
+                    },
+                    {
+                        name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
                     }
                 ],
                 active: 'GroupPerm',
                 isEmpty: false,
                 isNoRenewal: false,
-                SoonGroupLength: '',
-                SoonPermLength: ''
-
-            }
+                soonGroupLength: 0,
+                soonPermLength: 0,
+                personalGroupList: [],
+                systemList: [],
+                teporarySystemList: [],
+                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
+            };
         },
         created () {
-            const query = this.$route.query
+            const query = this.$route.query;
             if (query.tab) {
-                this.componentLoading = true
-                this.active = query.tab
+                this.active = query.tab;
             }
         },
         methods: {
             async fetchPageData () {
-                await this.fetchData()
+                await this.fetchData();
             },
 
-            handleTabChange (payload) {
-                this.componentLoading = true
-                window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`)
+            async handleTabChange (tabName) {
+                this.active = tabName;
+                await this.fetchData();
+                window.history.replaceState({}, '', `?${buildURLParams({ tab: tabName })}`);
             },
+
             async fetchData () {
+                this.componentLoading = true;
                 try {
-                    const [res1, res2, res3, res4] = await Promise.all([
-                        this.fetchPermGroups(),
-                        this.fetchSystems(),
-                        this.fetchSoonGroupWithUser(),
-                        this.fetchSoonPerm()
-                    ])
-                    this.isEmpty = res1.data.length < 1 && res2.data.length < 1
-                    this.SoonGroupLength = res3.data.length
-                    this.SoonPermLength = res4.data.length
-                    this.isNoRenewal = this.SoonGroupLength < 1 && this.SoonPermLength < 1
+                    const [res1, res2, res3, res4, res5] = await Promise.all([
+                        this.$store.dispatch('perm/getPersonalGroups'),
+                        this.$store.dispatch('permApply/getHasPermSystem'),
+                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
+                        this.$store.dispatch('renewal/getExpireSoonPerm'),
+                        this.$store.dispatch('permApply/getTeporHasPermSystem')
+                        // this.fetchPermGroups(),
+                        // this.fetchSystems(),
+                        // this.fetchSoonGroupWithUser(),
+                        // this.fetchSoonPerm()
+                    ]);
+                    const personalGroupList = res1.data || [];
+                    this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
+
+                    const systemList = res2.data || [];
+                    this.systemList.splice(0, this.systemList.length, ...systemList);
+
+                    const teporarySystemList = res5.data || [];
+                    this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
+
+                    this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
+                        && teporarySystemList.length < 1;
+                    this.soonGroupLength = res3.data.length;
+                    this.soonPermLength = res4.data.length;
+                    this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
+                } finally {
+                    this.componentLoading = false;
                 }
             },
-            fetchSoonGroupWithUser () {
-                return this.$store.dispatch('renewal/getExpireSoonGroupWithUser')
-            },
-            fetchSoonPerm () {
-                return this.$store.dispatch('renewal/getExpireSoonPerm')
-            },
-            fetchSystems () {
-                return this.$store.dispatch('permApply/getHasPermSystem')
-            },
+            // fetchSoonGroupWithUser () {
+            //     return this.$store.dispatch('renewal/getExpireSoonGroupWithUser')
+            // },
+            // fetchSoonPerm () {
+            //     return this.$store.dispatch('renewal/getExpireSoonPerm')
+            // },
+            // fetchSystems () {
+            //     return this.$store.dispatch('permApply/getHasPermSystem')
+            // },
 
-            fetchPermGroups () {
-                return this.$store.dispatch('perm/getPersonalGroups')
-            },
+            // fetchPermGroups () {
+            //     return this.$store.dispatch('perm/getPersonalGroups')
+            // },
 
             handleGoApply () {
                 this.$router.push({
                     name: 'applyJoinUserGroup'
-                })
+                });
             },
 
             handleBatchRenewal () {
-                if (this.SoonGroupLength > 0 && this.SoonPermLength < 1) {
+                if (this.soonGroupLength > 0 && this.soonPermLength < 1) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
                             tab: 'group'
                         }
-                    })
-                } else if (this.SoonPermLength > 0 && this.SoonGroupLength < 1) {
+                    });
+                } else if (this.soonPermLength > 0 && this.soonGroupLength < 1) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
                             tab: 'custom'
                         }
-                    })
-                } else if (this.SoonPermLength > 0 && this.SoonGroupLength > 0) {
+                    });
+                } else if (this.soonPermLength > 0 && this.soonGroupLength > 0) {
                     this.$router.push({
                         name: 'permRenewal',
                         query: {
                             tab: this.active === 'GroupPerm' ? 'group' : 'custom'
                         }
-                    })
+                    });
                 }
             },
-
-            /**
-             * 切换父组件的 loading 状态回调函数
-             *
-             * @param {boolean} isLoading loading 状态
-             */
-            toggleLoadingHandler (isLoading) {
-                this.componentLoading = isLoading
+            // 权限交接
+            handleGoPermTransfer () {
+                this.$router.push({
+                    name: 'permTransfer'
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-my-perm-wrapper {
         position: relative;
+        .header {
+            position: relative;
+        }
         .content-wrapper {
             /* 20 + 20 + 42 + 24 + 24 + 61 + 48 */
-            min-height: calc(100vh - 239px);
+            min-height: calc(100vh - 325px);
         }
         .empty-wrapper {
             position: absolute;

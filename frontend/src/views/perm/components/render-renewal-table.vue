@@ -55,12 +55,12 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
-    import renderExpireDisplay from '@/components/render-renewal-dialog/display'
-    import { PERMANENT_TIMESTAMP } from '@/common/constants'
+    import { mapGetters } from 'vuex';
+    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
 
     // 过期时间的天数区间
-    const EXPIRED_DISTRICT = 15
+    const EXPIRED_DISTRICT = 15;
 
     export default {
         name: '',
@@ -98,18 +98,18 @@
                 currentBackup: 1,
                 tableProps: [],
                 systemFilter: []
-            }
+            };
         },
         computed: {
             ...mapGetters(['user'])
         },
         watch: {
             'pagination.current' (value) {
-                this.currentBackup = value
+                this.currentBackup = value;
             },
             type: {
                 handler (value) {
-                    this.tableProps = this.getTableProps(value)
+                    this.tableProps = this.getTableProps(value);
                 },
                 immediate: true
             },
@@ -117,20 +117,20 @@
                 handler (value) {
                     const getTimestamp = payload => {
                         if (this.renewalTime === PERMANENT_TIMESTAMP) {
-                            return this.renewalTime
+                            return this.renewalTime;
                         }
                         if (payload < this.user.timestamp) {
-                            return this.user.timestamp + this.renewalTime
+                            return this.user.timestamp + this.renewalTime;
                         }
-                        return payload + this.renewalTime
-                    }
+                        return payload + this.renewalTime;
+                    };
                     const templateList = value.map(item => {
                         return {
                             ...item,
                             expired_at: getTimestamp(item.expired_at)
-                        }
-                    })
-                    this.$emit('on-select', this.type, templateList)
+                        };
+                    });
+                    this.$emit('on-select', this.type, templateList);
                 },
                 immediate: true,
                 deep: true
@@ -138,58 +138,58 @@
             renewalTime (value) {
                 const getTimestamp = payload => {
                     if (value === PERMANENT_TIMESTAMP) {
-                        return value
+                        return value;
                     }
                     if (payload < this.user.timestamp) {
-                        return this.user.timestamp + value
+                        return this.user.timestamp + value;
                     }
-                    return payload + value
-                }
+                    return payload + value;
+                };
                 const templateList = this.currentSelectList.map(item => {
                     return {
                         ...item,
                         expired_at: getTimestamp(item.expired_at)
-                    }
-                })
-                this.$emit('on-select', this.type, templateList)
+                    };
+                });
+                this.$emit('on-select', this.type, templateList);
             },
             data: {
                 handler (value) {
-                    this.allData = value
-                    this.pagination.count = this.allData.length
-                    const data = this.getCurPageData()
-                    this.tableList.splice(0, this.tableList.length, ...data)
+                    this.allData = value;
+                    this.pagination.count = this.allData.length;
+                    const data = this.getCurPageData();
+                    this.tableList.splice(0, this.tableList.length, ...data);
                     const getDays = payload => {
-                        const dif = payload - this.user.timestamp
+                        const dif = payload - this.user.timestamp;
                         if (dif < 1) {
-                            return 0
+                            return 0;
                         }
-                        return Math.ceil(dif / (24 * 3600))
-                    }
-                    this.currentSelectList = this.tableList.filter(item => getDays(item.expired_at) < EXPIRED_DISTRICT)
+                        return Math.ceil(dif / (24 * 3600));
+                    };
+                    this.currentSelectList = this.tableList.filter(item => getDays(item.expired_at) < EXPIRED_DISTRICT);
                     if (this.type === 'custom') {
                         this.tableList.forEach(item => {
                             if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
                                 this.systemFilter.push({
                                     text: item.system.name,
                                     value: item.system.id
-                                })
+                                });
                             }
-                        })
+                        });
                     }
                     this.$nextTick(() => {
                         this.tableList.forEach(item => {
                             if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
-                                this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true)
+                                this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                             }
-                        })
-                    })
+                        });
+                    });
                 }
             }
         },
         methods: {
             getIsSelect () {
-                return this.tableList.length > 0
+                return this.tableList.length > 0;
             },
 
             getTableProps (payload) {
@@ -197,56 +197,56 @@
                     return [
                         { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
                         { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
-                    ]
+                    ];
                 }
                 return [
                     { label: this.$t(`m.common['操作']`), prop: 'action' },
                     { label: this.$t(`m.common['所属系统']`), prop: 'system' },
                     { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
-                ]
+                ];
             },
 
             systemFilterMethod (value, row, column) {
-                const property = column.property
-                return row[property].id === value
+                const property = column.property;
+                return row[property].id === value;
             },
 
             pageChange (page) {
                 if (this.currentBackup === page) {
-                    return
+                    return;
                 }
-                this.pagination.current = page
-                const data = this.getCurPageData(page)
-                this.tableList.splice(0, this.tableList.length, ...data)
+                this.pagination.current = page;
+                const data = this.getCurPageData(page);
+                this.tableList.splice(0, this.tableList.length, ...data);
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit
-                this.pagination.current = 1
-                this.pageChange()
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                this.pageChange();
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             handlerChange (selection, row) {
-                this.currentSelectList = [...selection]
+                this.currentSelectList = [...selection];
             },
 
             getCurPageData (page = 1) {
-                let startIndex = (page - 1) * this.pagination.limit
-                let endIndex = page * this.pagination.limit
+                let startIndex = (page - 1) * this.pagination.limit;
+                let endIndex = page * this.pagination.limit;
                 if (startIndex < 0) {
-                    startIndex = 0
+                    startIndex = 0;
                 }
                 if (endIndex > this.allData.length) {
-                    endIndex = this.allData.length
+                    endIndex = this.allData.length;
                 }
-                return this.allData.slice(startIndex, endIndex)
+                return this.allData.slice(startIndex, endIndex);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-perm-renewal-table-wrapper {

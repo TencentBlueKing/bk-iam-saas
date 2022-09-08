@@ -33,7 +33,6 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    url(r"^account/", include("blueapps.account.urls")),
     # backend apps url
     url(
         r"^api/v1/",
@@ -57,25 +56,26 @@ urlpatterns = [
                 url(r"^modeling/", include("backend.apps.model_builder.urls")),
                 url(r"^audits/", include("backend.audit.urls")),
                 url(r"^debug/", include("backend.debug.urls")),
+                url(r"^handover/", include("backend.apps.handover.urls")),
+                url(r"^mgmt/", include("backend.apps.mgmt.urls")),
+                url(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
             ]
         ),
     ),
     # healthz
     url("", include("backend.healthz.urls")),
-    # promethus
+    # prometheus
     url("", include("django_prometheus.urls")),
 ]
 
 # add swagger api document
-if settings.RUN_MODE == "DEVELOP":
+if settings.IS_LOCAL:
     urlpatterns += [
         url(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     ]
 
-# if deploy use smart, need staticfiles
-if settings.IS_SMART_DEPLOY:
-    # static file
-    urlpatterns += [
-        url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-        url(r"^.*$", never_cache(VueTemplateView.as_view())),
-    ]
+# static file
+urlpatterns += [
+    url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
+    url(r"^.*$", never_cache(VueTemplateView.as_view())),
+]

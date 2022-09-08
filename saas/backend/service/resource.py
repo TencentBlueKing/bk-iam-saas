@@ -9,16 +9,15 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from redis.exceptions import RedisError
-
+from backend.common.cache import Cache, CacheEnum, CacheKeyPrefixEnum, cachedmethod
 from backend.component import iam, resource_provider
 from backend.service.models.resource import ResourceApproverAttribute
 from backend.util.basic import chunked
-from backend.util.cache import redis_region, region
 from backend.util.url import url_join
 
+from .constants import FETCH_MAX_LIMIT
 from .models import (
     ResourceAttribute,
     ResourceAttributeValue,
@@ -31,13 +30,13 @@ from .models import (
 # 只暴露ResourceProvider，其他只是辅助ResourceProvider的
 __all__ = ["ResourceProvider"]
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 
 
 class SystemProviderConfigService:
     """提供系统配置"""
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def get_provider_config(self, system_id) -> SystemProviderConfig:
         """获取接入系统的回调信息，包括鉴权和Host"""
         system_info = iam.get_system(system_id, fields="provider_config")
@@ -49,7 +48,7 @@ class ResourceTypeProviderConfigService:
     """提供资源类型配置"""
 
     # TODO: 这里需要由后台提供查询某个系统某个资源类型的API，而不是使用批量查询系统资源类型
-    @region.cache_on_arguments(expiration_time=60)  # 一分钟
+    @cachedmethod(timeout=60)  # 一分钟
     def _list_resource_type_provider_config(self, system_id: str) -> Dict[str, Dict]:
         """提供给provider_config使用的获取某个系统所有资源类型"""
         resource_types = iam.list_resource_type([system_id], fields="id,provider_config")[system_id]
@@ -90,46 +89,48 @@ class ResourceIDNameCache:
     def __init__(self, system_id: str, resource_type_id: str):
         self.system_id = system_id
         self.resource_type_id = resource_type_id
+        self.cache = Cache(CacheEnum.REDIS.value, CacheKeyPrefixEnum.CALLBACK_RESOURCE_NAME.value)
 
-    def _generate_id_cache_key(self, resource_id: str) -> str:
+    def _make_key(self, resource_id: str) -> str:
         """
-        生成Cache Key
-        # TODO: 后面重构整个Cache模块时，将这些Key统一到一处，便于管理和避免key冲突
+        生成Key
         """
-        prefix = "bk_iam:rp:id_name"
-        return f"{prefix}:{self.system_id}:{self.resource_type_id}:{resource_id}"
+        return f"{self.system_id}:{self.resource_type_id}:{resource_id}"
 
     def set(self, id_name_map: Dict[str, str]):
-        """Cache所有短时间内使用list_instance/fetch_instance/search_instance的数据，用于校验和查询id与name使用"""
+        """
+        Cache所有短时间内使用list_instance/fetch_instance/search_instance的数据，用于校验和查询id与name使用
+        """
+        data = {self._make_key(_id): name for _id, name in id_name_map.items()}
+
         # 缓存有问题，不影响正常逻辑
         try:
-            with redis_region.backend.client.pipeline() as pipe:
-                for _id, name in id_name_map.items():
-                    # 只缓存name是字符串的，其他非法的不缓存
-                    if isinstance(name, str):
-                        pipe.set(self._generate_id_cache_key(_id), name, ex=5 * 60)  # 缓存5分钟
-                pipe.execute()
-        except RedisError as error:
-            logger.exception(f"set resource id name cache error: {error}")
+            self.cache.set_many(data, timeout=5 * 60)
+        except Exception:  # noqa
+            logger.exception("set resource id:name cache fail")
 
     def get(self, ids: List[str]) -> Dict[str, Optional[str]]:
         """
         获取缓存内容，对于缓存不存在的，则返回为空
+        无法获取到的缓存的ID，则不包含在返回Dict里
         """
+        map_keys = {self._make_key(id_): id_ for id_ in ids}
+
         # 缓存有问题，不影响正常逻辑
         try:
-            with redis_region.backend.client.pipeline() as pipe:
-                for _id in ids:
-                    # 如果不存在，则None
-                    pipe.get(self._generate_id_cache_key(_id))
-                # 有序的列表
-                result = pipe.execute()
+            results = self.cache.get_many(list(map_keys.keys()))
+        except Exception:  # noqa
+            logger.exception("get resource id:name cache fail")
+            results = {}
 
-        except RedisError as error:
-            logger.exception(f"get resource id name cache error: {error}")
-            result = [None] * len(ids)
+        data = {}
+        for key, id_ in map_keys.items():
+            value = results.get(key)
+            if value is None:
+                continue
+            data[id_] = value
 
-        return {_id: name for _id, name in zip(ids, result)}
+        return data
 
 
 class ResourceProvider:
@@ -150,6 +151,16 @@ class ResourceProvider:
         # 缓存服务
         self.id_name_cache = ResourceIDNameCache(system_id, resource_type_id)
 
+    def _get_page_params(self, limit: int, offset: int) -> Dict[str, int]:
+        """生成分页参数"""
+        return {
+            "page_size": limit,
+            "page": (offset // limit) + 1,
+            # 新的标准是page_size/page, 兼容之前协议limit/offset
+            "limit": limit,
+            "offset": offset,
+        }
+
     def list_attr(self) -> List[ResourceAttribute]:
         """查询某个资源类型可用于配置权限的属性列表"""
         return [
@@ -164,18 +175,19 @@ class ResourceProvider:
     ) -> Tuple[int, List[ResourceAttributeValue]]:
         """获取一个资源类型某个属性的值列表"""
         filter_condition = {"keyword": keyword}
-        page = {"limit": limit, "offset": offset}
+        page = self._get_page_params(limit, offset)
         count, results = self.client.list_attr_value(attr, filter_condition, page)
         return count, [ResourceAttributeValue(**i) for i in results]
 
     def list_instance(
-        self, parent_type: str = "", parent_id: str = "", limit: int = 10, offset: int = 0
+        self, ancestors: List[Dict[str, str]], limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
         """根据上级资源获取某个资源实例列表"""
-        filter_condition = {}
-        if parent_type and parent_id:
-            filter_condition["parent"] = {"type": parent_type, "id": parent_id}
-        page = {"limit": limit, "offset": offset}
+        filter_condition: Dict[str, Any] = {}
+        if ancestors:
+            filter_condition["ancestors"] = ancestors
+            filter_condition["parent"] = {"type": ancestors[-1]["type"], "id": ancestors[-1]["id"]}
+        page = self._get_page_params(limit, offset)
         count, results = self.client.list_instance(filter_condition, page)
 
         # 转换成需要的数据
@@ -194,7 +206,7 @@ class ResourceProvider:
         filter_condition: Dict = {"keyword": keyword}
         if parent_type and parent_id:
             filter_condition["parent"] = {"type": parent_type, "id": parent_id}
-        page = {"limit": limit, "offset": offset}
+        page = self._get_page_params(limit, offset)
         count, results = self.client.search_instance(filter_condition, page)
 
         # 转换成需要的数据
@@ -210,10 +222,9 @@ class ResourceProvider:
     ) -> List[ResourceInstanceInfo]:
         """批量查询资源实例属性，包括display_name等"""
         # fetch_instance_info 接口的批量限制
-        fetch_limit = 1000
         # 分页查询资源实例属性
         results = []
-        page_ids_list = chunked(ids, fetch_limit)
+        page_ids_list = chunked(ids, FETCH_MAX_LIMIT)
         for page_ids in page_ids_list:
             filter_condition = {"ids": page_ids, "attrs": attributes} if attributes else {"ids": page_ids}
             page_results = self.client.fetch_instance_info(filter_condition)
@@ -247,11 +258,9 @@ class ResourceProvider:
         """批量查询资源实例的Name属性"""
         # 先从缓存取，取不到的则再查询
         cache_id_name_map = self.id_name_cache.get(ids)
-        results = [
-            ResourceInstanceBaseInfo(id=_id, display_name=name) for _id, name in cache_id_name_map.items() if name
-        ]
+        results = [ResourceInstanceBaseInfo(id=_id, display_name=name) for _id, name in cache_id_name_map.items()]
         # 未被缓存的需要实时查询
-        not_cached_ids = [_id for _id, name in cache_id_name_map.items() if name is None]
+        not_cached_ids = [_id for _id in ids if _id not in cache_id_name_map]
         not_cached_results = self.fetch_instance_info(not_cached_ids, [self.name_attribute])
         results.extend(
             [

@@ -4,7 +4,7 @@
         <link rel="icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
         <link rel="shortcut icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
         <meta charset="utf-8">
-        <title>权限中心|蓝鲸智云</title>
+        <title>权限中心 | 蓝鲸智云</title>
     </head>
     <body>
         <div id="app"></div>
@@ -36,6 +36,8 @@
 
                 const ENABLE_MODEL_BUILD = 'True' || ''
 
+                const ENABLE_PERMISSION_HANDOVER = 'True' || ''
+
                 const CUR_LANGUAGE = handleLanguage()
                 window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
                 window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
@@ -48,6 +50,7 @@
                 window.PRODUCT_DOC_URL = PRODUCT_DOC_URL
                 window.CE_URL = CE_URL
                 window.ENABLE_MODEL_BUILD = ENABLE_MODEL_BUILD
+                window.ENABLE_PERMISSION_HANDOVER = ENABLE_PERMISSION_HANDOVER
             })()
 
             function handleLanguage () {
@@ -68,7 +71,7 @@
                 if (CUR_LANGUAGE === 'en') {
                     document.title = 'BKIAM|Blueking'
                 } else {
-                    document.title = '权限中心|蓝鲸智云'
+                    document.title = '权限中心 | 蓝鲸智云'
                 }
 
                 return CUR_LANGUAGE

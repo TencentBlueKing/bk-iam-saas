@@ -22,6 +22,7 @@ class ComponentEnum(LowerStrEnum):
     USERMGR = auto()
     ESB = auto()
     CMSI = auto()
+    LOGIN = auto()
 
 
 def get_component_by_url(url: str) -> str:
@@ -38,12 +39,14 @@ def get_component_by_url(url: str) -> str:
         return ComponentEnum.ESB.value
     elif "/api/c/compapi/cmsi/" in path:
         return ComponentEnum.CMSI.value
+    elif "/api/c/compapi/v2/bk_login/" in path or "/is_login/" in path or "/user/get_info" in path:
+        return ComponentEnum.LOGIN.value
     return "unknown"
 
 
 # for usermgr/itsm/login/iam_backend
 component_request_duration = Histogram(
-    "component_request_duration_milliseconds",
+    "bkiam_component_request_duration_milliseconds",
     "How long it took to process the request, partitioned by status code, method and HTTP path.",
     ("component", "method", "path", "status"),
     buckets=(50, 100, 200, 500, 1000, 2000, 5000),
@@ -51,7 +54,7 @@ component_request_duration = Histogram(
 
 # for callback of all systems
 callback_request_duration = Histogram(
-    "callback_request_duration_milliseconds",
+    "bkiam_callback_request_duration_milliseconds",
     "How long it took to process the request, partitioned by status code, method and HTTP path.",
     ("system", "resource_type", "function", "method", "path", "status"),
     buckets=(50, 100, 200, 500, 1000, 2000, 5000),

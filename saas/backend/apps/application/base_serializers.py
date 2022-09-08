@@ -8,34 +8,35 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from rest_framework import serializers
 
 
 class SystemInfoSLZ(serializers.Serializer):
-    id = serializers.CharField(label="系统ID", required=True)
+    id = serializers.CharField(label="系统ID")
 
 
 class AggResourceInstance(serializers.Serializer):
-    id = serializers.CharField(label="实例ID", required=True)
-    name = serializers.CharField(label="实例名称", required=True, trim_whitespace=False)
+    id = serializers.CharField(label="实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
+    name = serializers.CharField(label="实例名称", trim_whitespace=False)
 
 
 class AggResourceTypeSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=True)
-    id = serializers.CharField(label="资源类型ID", required=True)
-    instances = serializers.ListField(
-        label="资源实例", child=AggResourceInstance(label="资源实例"), required=True, allow_empty=False
-    )
+    system_id = serializers.CharField(label="系统ID")
+    id = serializers.CharField(label="资源类型ID")
+    instances = serializers.ListField(label="资源实例", child=AggResourceInstance(label="资源实例"), allow_empty=False)
 
 
 class AggActionSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=True)
-    id = serializers.CharField(label="操作ID", required=True)
+    system_id = serializers.CharField(label="系统ID")
+    id = serializers.CharField(label="操作ID")
 
 
 class BaseAggActionListSLZ(serializers.Serializer):
-    actions = serializers.ListField(label="操作策略", child=AggActionSLZ(label="策略"), required=True, allow_empty=False)
-    aggregate_resource_type = AggResourceTypeSLZ(label="聚合资源类型", required=True)
+    actions = serializers.ListField(label="操作策略", child=AggActionSLZ(label="策略"), allow_empty=False)
+    aggregate_resource_types = serializers.ListField(
+        label="聚合资源类型列表", child=AggResourceTypeSLZ(label="聚合资源类型"), allow_empty=False
+    )
 
 
 def validate_action_repeat(data):

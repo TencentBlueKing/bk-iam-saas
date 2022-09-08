@@ -15,12 +15,15 @@ from .application import (
     ApplicantDepartment,
     ApplicantInfo,
     ApplicationAuthorizationScope,
+    ApplicationEnvironment,
     ApplicationGroupInfo,
     ApplicationGroupPermTemplate,
     ApplicationPolicyInfo,
     ApplicationRelatedResource,
     ApplicationResourceAttribute,
     ApplicationResourceCondition,
+    ApplicationResourceGroup,
+    ApplicationResourceGroupList,
     ApplicationResourceInstance,
     ApplicationSubject,
     ApplicationSystem,
@@ -45,6 +48,7 @@ from .approval import (
 )
 from .group import GroupAttributes
 from .instance_selection import ChainNode, InstanceSelection, PathResourceType, RawInstanceSelection
+from .model_event import ModelEvent
 from .policy import (
     Attribute,
     BackendThinPolicy,
@@ -54,6 +58,8 @@ from .policy import (
     Policy,
     PolicyIDExpiredAt,
     RelatedResource,
+    ResourceGroup,
+    ResourceGroupList,
     SystemCounter,
     Value,
 )
@@ -119,6 +125,9 @@ __all__ = [
     "ApplicantDepartment",
     "ApplicationSystem",
     "ApplicationSubject",
+    "ApplicationEnvironment",
+    "ApplicationResourceGroup",
+    "ApplicationResourceGroupList",
     "BackendThinPolicy",
     "Policy",
     "SystemCounter",
@@ -130,4 +139,7 @@ __all__ = [
     "RelatedResource",
     "Value",
     "Attribute",
+    "ResourceGroup",
+    "ResourceGroupList",
+    "ModelEvent",
 ]

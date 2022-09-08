@@ -24,10 +24,10 @@
  * IN THE SOFTWARE.
 */
 
-import http from '@/api'
-import { json2Query } from '@/common/util'
+import http from '@/api';
+import { json2Query } from '@/common/util';
 
-const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX
+const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
     namespaced: true,
@@ -46,7 +46,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getActions ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/actions/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/actions/?${json2Query(params)}`, config);
         },
 
         /**
@@ -60,7 +60,21 @@ export default {
          * @return {Promise} promise 对象
          */
         getPolicies ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/policies/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/policies/?${json2Query(params)}`, config);
+        },
+
+        /**
+         * 获取系统下的临时权限列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 查询参数
+         *
+         * @return {Promise} promise 对象
+         */
+        getProvisionPolicies ({ commit, state, dispatch }, params, config) {
+            return http.get(`${AJAX_URL_PREFIX}/temporary_policies/?${json2Query(params)}`, config);
         },
 
         /**
@@ -74,7 +88,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getInstanceSelection ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/actions/instance_selection/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/actions/instance_selection/?${json2Query(params)}`, config);
         },
 
         /**
@@ -92,8 +106,8 @@ export default {
                 ...params,
                 limit: 10000,
                 offset: 0
-            }
-            return http.get(`${AJAX_URL_PREFIX}/resources/attributes/?${json2Query(searchParams)}`, config)
+            };
+            return http.get(`${AJAX_URL_PREFIX}/resources/attributes/?${json2Query(searchParams)}`, config);
         },
 
         /**
@@ -107,7 +121,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getResourceAttrValues ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/resources/attribute_values/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/resources/attribute_values/?${json2Query(params)}`, config);
         },
 
         /**
@@ -121,7 +135,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getResources ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/resources/?${json2Query(params)}`, config)
+            return http.post(`${AJAX_URL_PREFIX}/resources/`, params, config);
         },
 
         /**
@@ -134,7 +148,20 @@ export default {
          * @return {Promise} promise 对象
          */
         getHasPermSystem ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/policies/systems/`, config)
+            return http.get(`${AJAX_URL_PREFIX}/policies/systems/`, config);
+        },
+
+        /**
+         * 获取有临时权限的所有系统列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         *
+         * @return {Promise} promise 对象
+         */
+        getTeporHasPermSystem ({ commit, state, dispatch }, config) {
+            return http.get(`${AJAX_URL_PREFIX}/temporary_policies/systems/`, config);
         },
 
         /**
@@ -148,7 +175,7 @@ export default {
          * @return {Promise} promise 对象
          */
         permApply ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/`, params, config);
         },
 
         /**
@@ -163,7 +190,38 @@ export default {
          * @return {Promise} promise 对象
          */
         deletePerm ({ commit, state, dispatch }, { policyIds, systemId }, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/policies/?ids=${policyIds.join(',')}&system_id=${systemId}`, config)
+            return http.delete(`${AJAX_URL_PREFIX}/policies/?ids=${policyIds.join(',')}&system_id=${systemId}`, config);
+        },
+
+        /**
+         * 删除临时权限
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { policyIds, systemId } policyIds 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        deleteTemporaryPerm ({ commit, state, dispatch }, { policyIds, systemId }, config) {
+            return http.delete(`${AJAX_URL_PREFIX}/temporary_policies/?ids=${policyIds.join(',')}&system_id=${systemId}`, config);
+        },
+
+        /**
+         * 删除资源组权限
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { policyIds, systemId } policyIds 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+
+        deleteRosourceGroupPerm ({ commit, state, dispatch }, { id, resourceGroupId }, config) {
+            return http.delete(`${AJAX_URL_PREFIX}/policies/${id}/${resourceGroupId}/`, config);
         },
 
         /**
@@ -182,7 +240,27 @@ export default {
                 `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/policies/?`
                     + `ids=${policyIds.join(',')}&system_id=${systemId}`,
                 config
-            )
+            );
+        },
+
+        /**
+         * 组织架构删除临时权限
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params { policyIds, systemId } policyIds 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        deleteTemporarySubjectPerm ({ commit, state, dispatch },
+            { policyIds, systemId, subjectId, subjectType }, config) {
+            return http.delete(
+                `${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/temporary_policies/?`
+                    + `ids=${policyIds.join(',')}&system_id=${systemId}`,
+                config
+            );
         },
 
         /**
@@ -196,7 +274,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getActionPolicies ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/policies/attach_policies/?${json2Query(params)}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/policies/attach_policies/?${json2Query(params)}`, config);
         },
 
         /**
@@ -210,7 +288,7 @@ export default {
          * @return {Promise} promise 对象
          */
         conditionCompare ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/condition_compare/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/condition_compare/`, params, config);
         },
 
         /**
@@ -224,7 +302,7 @@ export default {
          * @return {Promise} promise 对象
          */
         attachActionCompare ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/topology_compare/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/topology_compare/`, params, config);
         },
 
         /**
@@ -239,8 +317,8 @@ export default {
          * @return {Promise} promise 对象
          */
         updatePerm ({ commit, state, dispatch }, params, config) {
-            const { id, data } = params
-            return http.put(`${AJAX_URL_PREFIX}/policies/${id}/`, data, config)
+            const { id, data } = params;
+            return http.put(`${AJAX_URL_PREFIX}/policies/${id}/`, data, config);
         },
 
         /**
@@ -255,8 +333,8 @@ export default {
          * @return {Promise} promise 对象
          */
         updateSubjectPerm ({ commit, state, dispatch }, params, config) {
-            const { id, subjectType, subjectId, data } = params
-            return http.put(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/policies/${id}/`, data, config)
+            const { id, subjectType, subjectId, data } = params;
+            return http.put(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/policies/${id}/`, data, config);
         },
 
         /**
@@ -271,7 +349,7 @@ export default {
          * @return {Promise} promise 对象
          */
         applyJoinGroup ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/group/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/applications/group/`, params, config);
         },
 
         /**
@@ -286,7 +364,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserCommonAction ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/users/common_actions/?system_id=${params.systemId}`, config)
+            return http.get(`${AJAX_URL_PREFIX}/users/common_actions/?system_id=${params.systemId}`, config);
         },
 
         /**
@@ -300,7 +378,7 @@ export default {
          * @return {Promise} promise 对象
          */
         resourceBatchCopy ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/policies/resource_copy/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/policies/resource_copy/`, params, config);
         },
 
         /**
@@ -314,7 +392,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getRelatedPolicy ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/policies/related_policy/`, params, config)
+            return http.post(`${AJAX_URL_PREFIX}/policies/related/`, params, config);
         }
     }
-}
+};

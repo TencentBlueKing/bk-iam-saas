@@ -65,55 +65,55 @@
                         system_id: 'CMDB'
                     }
                 ]
-            }
+            };
         },
         computed: {
             valueDisplay () {
                 if (this.currentValue.length) {
                     const selected = this.systemList.filter(
                         item => this.currentValue.includes(item.system_id)
-                    ).map(item => item.system_name)
-                    return selected.join('，')
+                    ).map(item => item.system_name);
+                    return selected.join('，');
                 }
-                return '请选择'
+                return '请选择';
             },
             systemListDisplay () {
                 if (this.filter === '') {
-                    return this.systemList
+                    return this.systemList;
                 }
-                return this.systemList.filter(item => item.system_name.indexOf(this.filter) > -1)
+                return this.systemList.filter(item => item.system_name.indexOf(this.filter) > -1);
             }
         },
         watch: {
             value (val) {
                 if (val.length) {
-                    this.currentValue = val
+                    this.currentValue = val;
                 }
             }
         },
         methods: {
             handleDropdownShow () {
-                this.isDropdownShow = true
+                this.isDropdownShow = true;
             },
             handleDropdownHide () {
-                this.isDropdownShow = false
+                this.isDropdownShow = false;
             },
             handleSearchInput (e) {
-                console.warn(e)
+                console.warn(e);
             },
             handleFocus (e) {
-                console.warn(e)
+                console.warn(e);
             },
             handleChange (payload) {
                 if (this.currentValue.includes(payload.system_id)) {
-                    const index = this.currentValue.findIndex(item => item === payload.system_id)
-                    this.currentValue.splice(index, 1)
-                    return
+                    const index = this.currentValue.findIndex(item => item === payload.system_id);
+                    this.currentValue.splice(index, 1);
+                    return;
                 }
-                this.currentValue.push(payload.system_id)
+                this.currentValue.push(payload.system_id);
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-system-selector-wrapper {

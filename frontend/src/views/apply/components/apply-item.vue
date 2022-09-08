@@ -36,7 +36,7 @@
             data: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             active: {
@@ -51,14 +51,14 @@
         data () {
             return {
                 fieldMap: { field: `${this.$t(`m.common['理由']`)}：`, value: 'reason' }
-            }
+            };
         },
         computed: {
             /**
              * isActive
              */
             isActive () {
-                return this.active === this.data.id
+                return this.active === this.data.id;
             }
         },
         methods: {
@@ -66,37 +66,40 @@
              * handleClick
              */
             handleClick () {
-                this.$emit('on-change', this.data)
+                this.$emit('on-change', this.data);
             },
 
             /**
              * getApplyTitle
              */
             getApplyTitle (data) {
-                let str = ''
+                let str = '';
                 switch (data.type) {
                     case 'grant_action':
-                        str = this.curLanguageIsCn ? `${data.extra_info.system_name}权限申请` : `Apply for ${data.extra_info.system_name} permissions`
-                        break
+                        str = this.curLanguageIsCn ? `${data.extra_info.system_name}权限申请` : `Apply for ${data.extra_info.system_name} permissions`;
+                        break;
+                    case 'grant_temporary_action':
+                        str = this.curLanguageIsCn ? `${data.extra_info.system_name}临时权限申请` : `Temporary Apply for ${data.extra_info.system_name} permissions`;
+                        break;
                     case 'renew_action':
-                        str = this.curLanguageIsCn ? `${data.extra_info.system_name}权限续期` : `Renewal for ${data.extra_info.system_name} permissions`
-                        break
+                        str = this.curLanguageIsCn ? `${data.extra_info.system_name}权限续期` : `Renewal for ${data.extra_info.system_name} permissions`;
+                        break;
                     case 'join_group':
-                        str = `${this.$t(`m.myApply['申请加入']`)} ${data.extra_info.group_count} ${this.$t(`m.common['个用户组#']`)}`
-                        break
+                        str = `${this.$t(`m.myApply['申请加入']`)} ${data.extra_info.group_count} ${this.$t(`m.common['个用户组#']`)}`;
+                        break;
                     case 'renew_group':
-                        str = `${this.$t(`m.info['申请续期']`)} ${data.extra_info.group_count} ${this.$t(`m.common['个用户组#']`)}`
-                        break
+                        str = `${this.$t(`m.info['申请续期']`)} ${data.extra_info.group_count} ${this.$t(`m.common['个用户组#']`)}`;
+                        break;
                     case 'create_rating_manager':
-                        str = this.$t(`m.info['申请创建分级管理员']`)
-                        break
+                        str = this.$t(`m.info['申请创建分级管理员']`);
+                        break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.info['申请编辑分级管理员']`)
-                        break
+                        str = this.$t(`m.info['申请编辑分级管理员']`);
+                        break;
                     default:
-                        str = ''
+                        str = '';
                 }
-                return str
+                return str;
             },
 
             /**
@@ -104,14 +107,14 @@
              */
             getComputedCreateTime (payload) {
                 if (payload === '') {
-                    return '--'
+                    return '--';
                 }
-                const date = payload.split(' ')[0]
-                const time = date.split('-')
-                return `${time[1]}-${time[2]}`
+                const date = payload.split(' ')[0];
+                const time = date.split('-');
+                return `${time[1]}-${time[2]}`;
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     @import './apply-item.css';

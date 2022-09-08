@@ -24,20 +24,22 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash'
-    import CustomPerm from './custom-perm'
-    import GroupPerm from './group-perm'
+    import _ from 'lodash';
+    import CustomPerm from './custom-perm';
+    import GroupPerm from './group-perm';
+    import TeporaryCustomPerm from './teporary-custom-perm';
     export default {
         name: '',
         components: {
             CustomPerm,
-            GroupPerm
+            GroupPerm,
+            TeporaryCustomPerm
         },
         props: {
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             }
         },
@@ -46,25 +48,26 @@
                 curData: {},
                 panels: [
                     { name: 'groupPerm', label: this.$t(`m.perm['用户组权限']`) },
-                    { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) }
+                    { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) },
+                    { name: 'teporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`) }
                 ],
                 active: 'groupPerm',
                 componentsKey: -1,
                 curCom: 'GroupPerm'
-            }
+            };
         },
         computed: {
             /**
              * isExistName
              */
             isExistName () {
-                return this.curData.name !== ''
+                return this.curData.name !== '';
             },
             /**
              * isShowPage
              */
             isShowPage () {
-                return Object.keys(this.params).length > 0
+                return Object.keys(this.params).length > 0;
             }
         },
         watch: {
@@ -74,10 +77,10 @@
             params: {
                 handler (value) {
                     if (Object.keys(value).length > 0) {
-                        this.active = 'groupPerm'
-                        this.curCom = 'GroupPerm'
-                        this.componentsKey = +new Date()
-                        this.curData = _.cloneDeep(value)
+                        this.active = 'groupPerm';
+                        this.curCom = 'GroupPerm';
+                        this.componentsKey = +new Date();
+                        this.curData = _.cloneDeep(value);
                     }
                 },
                 immediate: true
@@ -88,14 +91,15 @@
             active (value) {
                 const comMap = {
                     'customPerm': 'CustomPerm',
-                    'groupPerm': 'GroupPerm'
-                }
-                this.curCom = comMap[value]
-                this.componentsKey = +new Date()
+                    'groupPerm': 'GroupPerm',
+                    'teporaryCustomPerm': 'TeporaryCustomPerm'
+                };
+                this.curCom = comMap[value];
+                this.componentsKey = +new Date();
             }
         },
         methods: {}
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-personal-user-perm-wrapper {

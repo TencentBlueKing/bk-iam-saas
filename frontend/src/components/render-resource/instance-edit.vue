@@ -106,95 +106,95 @@
                 currentMode: this.mode,
                 isHovering: this.hovering,
                 isDisabled: this.disabled
-            }
+            };
         },
         computed: {
             isEdit () {
-                return this.currentMode === 'edit'
+                return this.currentMode === 'edit';
             },
             isInstanceEdit () {
-                return this.currentMode === 'edit' && this.type === 'instance'
+                return this.currentMode === 'edit' && this.type === 'instance';
             },
             isPropertyEdit () {
-                return this.currentMode === 'edit' && this.type === 'property'
+                return this.currentMode === 'edit' && this.type === 'property';
             },
             isShowClearAction () {
-                return this.currentMode === 'edit'
+                return this.currentMode === 'edit';
             },
             isShowEditAction () {
-                return this.currentMode === 'edit' && !this.isGroup
+                return this.currentMode === 'edit' && !this.isGroup;
             },
             operateTitle () {
-                return this.type === 'instance' ? this.$t(`m.resource['添加属性选择']`) : this.$t(`m.resource['添加拓扑实例']`)
+                return this.type === 'instance' ? this.$t(`m.resource['添加属性选择']`) : this.$t(`m.resource['添加拓扑实例']`);
             },
             isInstanceByGroup () {
-                return this.isGroup && this.type === 'instance'
+                return this.isGroup && this.type === 'instance';
             },
             isProPertyByGroup () {
-                return this.isGroup && this.type === 'property'
+                return this.isGroup && this.type === 'property';
             },
             isInsanceHover () {
-                return this.isGroup && this.type === 'property' && this.isHovering
+                return this.isGroup && this.type === 'property' && this.isHovering;
             },
             displayTitle () {
                 if (this.type === 'instance') {
-                    return this.title || `${this.$t(`m.resource['拓扑实例']`)}：`
+                    return this.title || `${this.$t(`m.resource['拓扑实例']`)}：`;
                 }
-                return this.title || `${this.$t(`m.resource['属性条件']`)}：`
+                return this.title || `${this.$t(`m.resource['属性条件']`)}：`;
             }
         },
         watch: {
             mode (value) {
-                this.currentMode = value
+                this.currentMode = value;
             },
             expanded (value) {
-                this.isExpanded = !!value
+                this.isExpanded = !!value;
             },
             hovering (value) {
-                this.isHovering = !!value
+                this.isHovering = !!value;
             },
             disabled (value) {
-                this.isDisabled = !!value
+                this.isDisabled = !!value;
                 if (value) {
-                    this.isExpanded = false
+                    this.isExpanded = false;
                 }
             }
         },
         methods: {
             handleExpanded () {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.isExpanded = !this.isExpanded
-                this.$emit('update:expanded', this.isExpanded)
-                this.$emit('on-expand', this.isExpanded)
+                this.isExpanded = !this.isExpanded;
+                this.$emit('update:expanded', this.isExpanded);
+                this.$emit('on-expand', this.isExpanded);
             },
             handleAdd () {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.$emit('on-add')
+                this.$emit('on-add');
             },
             handleDelete () {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.$emit('on-delete')
+                this.$emit('on-delete');
             },
             handleMouseenter () {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.$emit('on-mouseover')
+                this.$emit('on-mouseover');
             },
             handleMouseleave () {
                 if (this.isDisabled) {
-                    return
+                    return;
                 }
-                this.$emit('on-mouseleave')
+                this.$emit('on-mouseleave');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-resource-instance {

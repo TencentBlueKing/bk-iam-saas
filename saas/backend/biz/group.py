@@ -9,12 +9,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from datetime import datetime
-from itertools import groupby
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
+from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
 from rest_framework import serializers
@@ -27,12 +26,14 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
-from backend.common.error_codes import APIException, CodeException, error_codes
+from backend.biz.utils import fill_resources_attribute
+from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
-from backend.service.constants import RoleRelatedObjectType, SubjectType
+from backend.service.action import ActionService
+from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
@@ -44,7 +45,7 @@ from backend.service.template import TemplateService
 from backend.util.time import utc_string_to_local
 from backend.util.uuid import gen_uuid
 
-from .action import ActionCheckBiz, ActionForCheck
+from .action import ActionCheckBiz, ActionResourceGroupForCheck
 from .subject import SubjectInfoList
 
 
@@ -94,6 +95,13 @@ class GroupRoleDict(BaseModel):
         return self.data.get(group_id)
 
 
+class GroupNameDict(BaseModel):
+    data: Dict[int, str]
+
+    def get(self, group_id: int, default=""):
+        return self.data.get(group_id, default)
+
+
 class GroupMemberExpiredAtBean(GroupMemberExpiredAt):
     pass
 
@@ -116,6 +124,7 @@ class GroupBiz:
     group_attribute_svc = GroupAttributeService()
     engine_svc = EngineService()
     role_svc = RoleService()
+    action_svc = ActionService()
 
     # TODO 这里为什么是biz?
     action_check_biz = ActionCheckBiz()
@@ -223,32 +232,54 @@ class GroupBiz:
         # 检查新增的实例名字, 检查新增的实例是否满足角色的授权范围
         self.check_update_policies_resource_name_and_role_scope(role, system_id, template_id, policies, subject)
         # 检查策略是否与操作信息匹配
-        self.action_check_biz.check(system_id, [ActionForCheck.parse_obj(p.dict()) for p in policies])
+        self.action_check_biz.check_action_resource_group(
+            system_id, [ActionResourceGroupForCheck.parse_obj(p.dict()) for p in policies]
+        )
 
-        policy_list = PolicyBeanList(system_id, policies, need_ignore_path=True)
         # 设置过期时间为永久
-        for p in policy_list.policies:
+        for p in policies:
             p.set_expired_at(PERMANENT_SECONDS)
 
         # 自定义权限
         if template_id == 0:
-            self.policy_operation_biz.update(system_id, subject, policy_list.policies)
+            self.policy_operation_biz.update(system_id, subject, policies)
         # 权限模板权限
         else:
             self.template_svc.update_template_auth(
-                subject, template_id, parse_obj_as(List[Policy], policy_list.policies)
+                subject,
+                template_id,
+                parse_obj_as(List[Policy], policies),
+                action_list=self.action_svc.new_action_list(system_id),
             )
+
+    def update_template_due_to_renamed_resource(
+        self, group_id: int, template_id: int, policy_list: PolicyBeanList
+    ) -> List[PolicyBean]:
+        """
+        更新用户组被授权模板里的资源实例名称
+        返回的数据包括完全的模板授权信息，包括未被更新的授权策略
+        """
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+
+        updated_policies = policy_list.auto_update_resource_name()
+        # 只有存在更新，才修改DB数据
+        if len(updated_policies) > 0:
+            # 只修改DB数据，由于权限模板授权信息是完整一个json数据，所以只能使用policy_list.policies完整更新，不可使用updated_policies
+            self.template_svc.direct_update_db_template_auth(subject, template_id, policy_list.policies)
+
+        # 返回完整的模板授权信息，包括未被更新资源实例名称的策略
+        return policy_list.policies
 
     def _convert_to_subject_group_beans(self, relations: List[SubjectGroup]) -> List[SubjectGroupBean]:
         """
         转换类型
         """
         groups = Group.objects.filter(id__in=[int(one.id) for one in relations if one.type == SubjectType.GROUP.value])
-        relation_dict = {one.id: one for one in relations}
+        group_dict = {g.id: g for g in groups}
         relation_beans: List[SubjectGroupBean] = []
-        for group in groups:
-            relation = relation_dict.get(str(group.id))
-            if not relation:
+        for relation in relations:
+            group = group_dict.get(int(relation.id))
+            if not group:
                 continue
             relation_beans.append(
                 SubjectGroupBean(
@@ -262,6 +293,7 @@ class GroupBiz:
                     department_name=relation.department_name,
                 )
             )
+
         return relation_beans
 
     def list_subject_group(self, subject: Subject, is_recursive: bool = False) -> List[SubjectGroupBean]:
@@ -352,12 +384,12 @@ class GroupBiz:
             # 填充资源实例的属性
             for pr in policy_resources:
                 if len(pr.resources) != 0:
-                    self._fill_resources_attribute(pr.resources)
+                    fill_resources_attribute(pr.resources)
 
             results = self.engine_svc.query_subjects_by_policy_resources(
                 system_id, policy_resources, SubjectType.GROUP.value
             )
-        except APIException:
+        except APIError:
             return []
 
         # 取结果的交集
@@ -371,36 +403,6 @@ class GroupBiz:
 
         return [int(_id) for _id in subject_id_set] if subject_id_set else []
 
-    def _fill_resources_attribute(self, resources: List[Dict[str, Any]]):
-        """
-        用户组通过policy查询subjects的资源填充属性
-        """
-        need_fetch_resources = []
-        for resource in resources:
-            if resource["id"] != "*" and not resource["attribute"]:
-                need_fetch_resources.append(resource)
-
-        if not need_fetch_resources:
-            return
-
-        for key, parts in groupby(need_fetch_resources, key=lambda resource: (resource["system"], resource["type"])):
-            self._exec_fill_resources_attribute(key[0], key[1], list(parts))
-
-    def _exec_fill_resources_attribute(self, system_id, resource_type_id, resources):
-        # 查询属性
-        resource_ids = list({resource["id"] for resource in resources})
-        resource_info_dict = self.resource_biz.fetch_auth_attributes(
-            system_id, resource_type_id, resource_ids, raise_api_exception=False
-        )
-        # 填充属性
-        for resource in resources:
-            _id = resource["id"]
-            if not resource_info_dict.has(_id):
-                continue
-            attrs = resource_info_dict.get_attributes(_id, ignore_none_value=True)
-            # 填充
-            resource["attribute"] = attrs
-
     def _check_lock_before_grant(self, group: Group, templates: List[GroupTemplateGrantBean]):
         """
         检查用户组是否满足授权条件
@@ -413,11 +415,7 @@ class GroupBiz:
         if PermTemplatePreUpdateLock.objects.filter(template_id__in=template_ids).exists():
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板正在更新, 不能授权!"))
         # 判断该用户组在长时任务里是否正在添加涉及到的权限模板和自定义权限
-        if (
-            GroupAuthorizeLock.objects.filter(group_id=group.id)
-            .filter(Q(template_id__in=template_ids) | (Q(template_id=0) & Q(system_id__in=custom_action_system_ids)))
-            .exists()
-        ):
+        if GroupAuthorizeLock.objects.is_authorizing(group.id, template_ids, custom_action_system_ids):
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板或自定义权限已经在授权中, 不能重复授权!"))
 
     def check_before_grant(
@@ -448,7 +446,7 @@ class GroupBiz:
                 # 检查策略是否在role的授权范围内
                 scope_checker = RoleAuthorizationScopeChecker(role)
                 scope_checker.check_policies(template.system_id, template.policies)
-            except CodeException as e:
+            except APIError as e:
                 raise error_codes.VALIDATE_ERROR.format(
                     _("系统: {} 模板: {} 校验错误: {}").format(template.system_id, template.template_id, e.message),
                     replace=True,
@@ -501,7 +499,7 @@ class GroupBiz:
             task = TaskDetail.create(TaskType.GROUP_AUTHORIZATION.value, [subject.dict(), uuid])
 
         # 执行授权流程
-        TaskFactory().delay(task.id)
+        TaskFactory()(task.id)
 
     def get_group_role_dict_by_ids(self, group_ids: List[int]) -> GroupRoleDict:
         """
@@ -518,6 +516,21 @@ class GroupBiz:
         return GroupRoleDict(
             data={ro.object_id: role_dict.get(ro.role_id) for ro in related_objects if role_dict.get(ro.role_id)}
         )
+
+    def get_group_name_dict_by_ids(self, group_ids: List[int]) -> GroupNameDict:
+        """
+        获取用户组id: name的字典
+        """
+        queryset = Group.objects.filter(id__in=group_ids).only("name")
+        return GroupNameDict(data={one.id: one.name for one in queryset})
+
+    def search_member_by_keyword(self, group_id: int, keyword: str) -> List[GroupMemberBean]:
+        """根据关键词 获取指定用户组成员列表"""
+        maximum_number_of_member = 1000
+        _, group_members = self.list_paging_group_member(group_id=group_id, limit=maximum_number_of_member, offset=0)
+        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
+
+        return hit_members
 
 
 class GroupCheckBiz:
@@ -559,6 +572,24 @@ class GroupCheckBiz:
             role_group_ids.remove(group_id)
         if Group.objects.filter(name=name, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
+
+    def check_role_group_limit(self, role: Role, new_group_count: int):
+        """
+        检查角色下的用户组数量是否超限
+        """
+        # 只针对普通分级管理，对于超级管理员和系统管理员则无限制
+        if role.type in [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value]:
+            return
+
+        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_group_limit"]
+        role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role.id, RoleRelatedObjectType.GROUP.value)
+        if len(role_group_ids) + new_group_count > limit:
+            raise error_codes.VALIDATE_ERROR.format(
+                _("分级管理员({})已有{}个用户组，不可再添加{}个用户组，否则超出分级管理员最大用户组数量{}的限制").format(
+                    role.id, len(role_group_ids), new_group_count, limit
+                ),
+                True,
+            )
 
     def batch_check_role_group_names_unique(self, role_id: int, names: List[str]):
         """

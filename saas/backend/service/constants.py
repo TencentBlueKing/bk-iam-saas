@@ -40,6 +40,13 @@ class SubjectRelationType(ChoicesEnum, LowerStrEnum):
 
 
 # ---------------------------------------------------------------------------------------------- #
+# Resource Provider
+# ---------------------------------------------------------------------------------------------- #
+# fetch_instance_info 接口的批量限制
+FETCH_MAX_LIMIT = 1000
+
+
+# ---------------------------------------------------------------------------------------------- #
 # Group Constants
 # ---------------------------------------------------------------------------------------------- #
 class GroupMemberType(ChoicesEnum, LowerStrEnum):
@@ -146,6 +153,9 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_GLOBAL_SETTING = auto()
     MANAGE_ORGANIZATION = auto()
     MANAGE_COMMON_ACTION = auto()
+    VIEW_AUTHORIZED_SUBJECTS = auto()
+    MANAGE_API_WHITE_LIST = auto()
+    MANAGE_LONG_TASK = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -170,6 +180,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
     JOIN_RATING_MANAGER = auto()
     CREATE_RATING_MANAGER = auto()
     UPDATE_RATING_MANAGER = auto()
+    GRANT_TEMPORARY_ACTION = auto()
 
     _choices_labels = skip(
         (
@@ -180,6 +191,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
             (JOIN_RATING_MANAGER, "加入分级管理员"),
             (CREATE_RATING_MANAGER, "创建分级管理员"),
             (UPDATE_RATING_MANAGER, "修改分级管理员"),
+            (GRANT_TEMPORARY_ACTION, "临时权限申请"),
         )
     )
 
@@ -245,3 +257,64 @@ class ApplicationStatus(ChoicesEnum, LowerStrEnum):
     CANCELLED = auto()
 
     _choices_labels = skip(((PENDING, _("审批中")), (PASS, _("通过")), (REJECT, _("拒绝")), (CANCELLED, _("已取消"))))
+
+
+DEAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Policy environment
+# ---------------------------------------------------------------------------------------------- #
+class PolicyEnvTypeEnum(ChoicesEnum, LowerStrEnum):
+    PERIOD_DAILY = auto()
+
+    _choices_labels = skip(((PERIOD_DAILY, _("时间")),))
+
+
+class PolicyEnvConditionTypeEnum(ChoicesEnum, LowerStrEnum):
+    TZ = auto()
+    HMS = auto()
+    WEEKDAY = auto()
+
+    _choices_labels = skip(
+        (
+            (TZ, _("时区")),
+            (HMS, _("时分秒")),
+            (WEEKDAY, _("WEEKDAY")),
+        )
+    )
+
+
+class WeekDayEnum(ChoicesEnum):
+    SUN = 0
+    MON = 1
+    TUE = 2
+    WED = 3
+    THU = 4
+    FRI = 5
+    SAT = 6
+
+    _choices_labels = skip(
+        (
+            (SUN, _("星期天")),
+            (MON, _("星期一")),
+            (TUE, _("星期二")),
+            (WED, _("星期三")),
+            (THU, _("星期四")),
+            (FRI, _("星期五")),
+            (SAT, _("星期六")),
+        )
+    )
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Model Change Event
+# ---------------------------------------------------------------------------------------------- #
+class ModelChangeEventTypeEnum(ChoicesEnum, LowerStrEnum):
+    ActionPolicyDeleted = "action_policy_deleted"
+    ActionDeleted = "action_deleted"
+
+
+class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
+    Pending = auto()
+    Finished = auto()

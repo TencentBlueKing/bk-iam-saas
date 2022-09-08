@@ -21,11 +21,11 @@ from django.utils import translation
 from django.utils.functional import SimpleLazyObject
 from requests import auth
 
+from backend.common.cache import cachedmethod
 from backend.common.debug import http_trace
 from backend.common.error_codes import error_codes
 from backend.common.i18n import get_bk_language
 from backend.common.local import local
-from backend.util.cache import region
 from backend.metrics import callback_request_duration
 
 request_pool = requests.Session()
@@ -46,6 +46,17 @@ class AuthTypeEnum(LowerStrEnum):
     NONE = auto()
     BASIC = auto()
     DIGEST = auto()
+
+
+class ResourceAPIEnum(LowerStrEnum):
+    """资源回调的API"""
+
+    LIST_ATTR = auto()
+    LIST_ATTR_VALUE = auto()
+    LIST_INSTANCE = auto()
+    FETCH_INSTANCE_INFO = auto()
+    LIST_INSTANCE_BY_POLICY = auto()
+    SEARCH_INSTANCE = auto()
 
 
 def _generate_http_auth(auth_info: Dict[str, str]) -> Union[None, auth.HTTPBasicAuth, auth.HTTPDigestAuth]:
@@ -84,6 +95,7 @@ class ResourceProviderClient:
         self.resource_type_id = resource_type_id
         self.url = url
         self.request_id = local.request_id
+        self.request_username = local.request_username
         self.headers = {
             "Content-Type": "application/json",
             "Request-Id": self.request_id,
@@ -96,10 +108,16 @@ class ResourceProviderClient:
         """调用请求API"""
         trace_func = partial(http_trace, method="post", url=self.url, data=data)
 
+        # 特殊场景下，给到请求时的用户名
+        headers = self.headers.copy()
+        if data["method"] in [ResourceAPIEnum.LIST_INSTANCE.value, ResourceAPIEnum.SEARCH_INSTANCE.value]:
+            # 值有可能未空，因为并非所有请求都是来自页面
+            headers["Request-Username"] = self.request_username
+
         kwargs = {
             "url": self.url,
             "json": data,
-            "headers": self.headers,
+            "headers": headers,
             "auth": self.http_auth,
             "timeout": self.timeout,
             "verify": False,
@@ -110,12 +128,13 @@ class ResourceProviderClient:
         base_log_msg = SimpleLazyObject(
             lambda: (
                 "resource_provider [system={}, resource={}]; "
-                "API [request_id={}, url={}, data.method={}]; "
+                "API [request_id={}, request_username={}, url={}, data.method={}]; "
                 "Detail[{}]"
             ).format(
                 self.system_id,
                 self.resource_type_id,
                 self.request_id,
+                self.request_username,
                 self.url,
                 data["method"],
                 kwargs,
@@ -125,9 +144,10 @@ class ResourceProviderClient:
         # 回调请求的详细信息
         request_detail_info = (
             f"call {self.system_id}'s API fail! "
-            f"you should check the network/{self.system_id} is available and {self.system_id}'s log for more info. "
-            f"request: [POST {urlparse(self.url).path} body.data.method={data['method']}]"
-            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id})"
+            f"you should check: "
+            f"1.the network is ok 2.{self.system_id} is available 3.get details from {self.system_id}'s log. "
+            f"[POST {urlparse(self.url).path} body.data.method={data['method']}]"
+            f"(system_id={self.system_id}, resource_type_id={self.resource_type_id}) request_id={self.request_id}"
         )
 
         try:
@@ -136,8 +156,8 @@ class ResourceProviderClient:
             # 接入系统可返回request_id便于排查，避免接入系统未使用权限中心请求头里的request_id而自行生成，所以需要再获取赋值
             self.request_id = resp.headers.get("X-Request-Id") or self.request_id
             latency = int((time.time() - st) * 1000)
-            # 打印INFO日志，用于调试时使用
-            logger.info(
+            # 打印DEBUG日志，用于调试时使用
+            logger.debug(
                 f"Response [status_code={resp.status_code}, content={resp.text}, Latency={latency}ms]."
                 f"{base_log_msg}"
             )
@@ -151,7 +171,7 @@ class ResourceProviderClient:
                 status=resp.status_code,
             ).observe(latency)
         except requests.exceptions.RequestException as e:
-            logger.exception(f"RequestException! {base_log_msg} ")
+            logger.exception(f"RequestException! {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 接口不可达
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
@@ -168,15 +188,20 @@ class ResourceProviderClient:
             trace_func(exc=traceback.format_exc())
             # 接口状态码异常
             raise error_codes.RESOURCE_PROVIDER_ERROR.format(
-                f"{self.system_id}'s API response status code is `{resp.status_code}`, should be 200! "
+                f"{self.system_id}'s API response status code is `{resp.status_code}`, should be `200`! "
                 f"{request_detail_info}"
             )
         except Exception as error:  # pylint: disable=broad-except
-            logger.error(f"RespDataException response_content: {resp.text}， error: {error}. {base_log_msg}")
+            logger.exception(f"ResponseDataException! response_content: {resp.text}， error: {error}. {base_log_msg}")
             trace_func(exc=traceback.format_exc())
             # 数据异常，JSON解析出错
             raise error_codes.RESOURCE_PROVIDER_JSON_LOAD_ERROR.format(
                 f"{self.system_id}'s API error: {error}! " f"{request_detail_info}"
+            )
+
+        if "code" not in resp:
+            raise error_codes.RESOURCE_PROVIDER_ERROR.format(
+                f"{self.system_id}'s API response body.code missing! response_content: {resp}. {request_detail_info}"
             )
 
         code = resp["code"]
@@ -184,7 +209,7 @@ class ResourceProviderClient:
             # TODO: 验证Data数据的schema是否正确，可能得放到每个具体method去定义并校验
             return resp["data"]
 
-        logger.error(f"Return Code Not Zero, resp: %s. {base_log_msg} ", resp)
+        logger.error(f"Return Code Not Zero! response_content: {resp}. {base_log_msg}")
 
         # code不同值代表不同意思，401: 认证失败，404: 资源类型不存在，500: 接入系统异常，422: 资源内容过多，拒绝返回数据 等等
         if code not in ResponseCodeToErrorDict:
@@ -245,15 +270,24 @@ class ResourceProviderClient:
 
     def list_attr(self) -> List[Dict[str, str]]:
         """查询某个资源类型可用于配置权限的属性列表"""
-        data = {"type": self.resource_type_id, "method": "list_attr"}
-        return self._handle_empty_data(self._call_api(data), default=[])
+        data = {"type": self.resource_type_id, "method": ResourceAPIEnum.LIST_ATTR.value}
+        resp_data = self._handle_empty_data(self._call_api(data), default=[])
+
+        # {"id": "id", "display_name":""} should not be displayed in frontend for making policy
+        removed_attr_id_data = [d for d in resp_data if d.get("id") != "id"]
+        return removed_attr_id_data
 
     def list_attr_value(
         self, attr: str, filter_condition: Dict, page: Dict[str, int]
     ) -> Tuple[int, List[Dict[str, str]]]:
         """获取一个资源类型某个属性的值列表"""
         filter_condition["attr"] = attr
-        data = {"type": self.resource_type_id, "method": "list_attr_value", "filter": filter_condition, "page": page}
+        data = {
+            "type": self.resource_type_id,
+            "method": ResourceAPIEnum.LIST_ATTR_VALUE.value,
+            "filter": filter_condition,
+            "page": page,
+        }
         resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
 
         self._validate_paginated_data(resp_data)
@@ -261,7 +295,12 @@ class ResourceProviderClient:
 
     def list_instance(self, filter_condition: Dict, page: Dict[str, int]) -> Tuple[int, List[Dict[str, str]]]:
         """根据过滤条件查询实例"""
-        data = {"type": self.resource_type_id, "method": "list_instance", "filter": filter_condition, "page": page}
+        data = {
+            "type": self.resource_type_id,
+            "method": ResourceAPIEnum.LIST_INSTANCE.value,
+            "filter": filter_condition,
+            "page": page,
+        }
         resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
 
         self._validate_paginated_data(resp_data)
@@ -269,7 +308,11 @@ class ResourceProviderClient:
 
     def fetch_instance_info(self, filter_condition: Dict) -> List[Dict]:
         """批量获取资源实例详情"""
-        data = {"type": self.resource_type_id, "method": "fetch_instance_info", "filter": filter_condition}
+        data = {
+            "type": self.resource_type_id,
+            "method": ResourceAPIEnum.FETCH_INSTANCE_INFO.value,
+            "filter": filter_condition,
+        }
         return self._handle_empty_data(self._call_api(data), default=[])
 
     def list_instance_by_policy(
@@ -278,7 +321,7 @@ class ResourceProviderClient:
         """根据策略表达式查询资源实例"""
         data = {
             "type": self.resource_type_id,
-            "method": "list_instance_by_policy",
+            "method": ResourceAPIEnum.LIST_INSTANCE_BY_POLICY.value,
             "filter": filter_condition,
             "page": page,
         }
@@ -291,7 +334,7 @@ class ResourceProviderClient:
         """根据过滤条件且必须保证keyword不为空查询实例"""
         return self._search_instance(self.system_id, self.resource_type_id, filter_condition, page)
 
-    @region.cache_on_arguments(expiration_time=60)  # 缓存1分钟
+    @cachedmethod(timeout=60)  # 缓存1分钟
     def _search_instance(
         self, system_id: str, resource_type_id: str, filter_condition: Dict, page: Dict[str, int]
     ) -> Tuple[int, List[Dict[str, str]]]:
@@ -300,7 +343,12 @@ class ResourceProviderClient:
             raise error_codes.RESOURCE_PROVIDER_VALIDATE_ERROR.format(
                 f"search_instance[system:{system_id}] param keyword should not be empty"
             )
-        data = {"type": resource_type_id, "method": "search_instance", "filter": filter_condition, "page": page}
+        data = {
+            "type": resource_type_id,
+            "method": ResourceAPIEnum.SEARCH_INSTANCE.value,
+            "filter": filter_condition,
+            "page": page,
+        }
         resp_data = self._handle_empty_data(self._call_api(data), default={"count": 0, "results": []})
 
         self._validate_paginated_data(resp_data)

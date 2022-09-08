@@ -11,9 +11,9 @@
     </div>
 </template>
 <script>
-    import BasicInfo from './basic-info'
-    import RenderGroupTable from './apply-group-table'
-    import RenderProcess from '../common/render-process'
+    import BasicInfo from './basic-info';
+    import RenderGroupTable from './apply-group-table';
+    import RenderProcess from '../common/render-process';
     export default {
         name: '',
         components: {
@@ -25,7 +25,7 @@
             params: {
                 type: Object,
                 default: () => {
-                    return {}
+                    return {};
                 }
             },
             loading: {
@@ -40,34 +40,34 @@
                 status: '',
                 tableList: [],
                 count: 0
-            }
+            };
         },
         computed: {
             isLoading () {
-                return this.initRequestQueue.length > 0
+                return this.initRequestQueue.length > 0;
             },
             isShowAction () {
-                return this.status === 'pending'
+                return this.status === 'pending';
             },
             isShowPage () {
-                return !this.isLoading
+                return !this.isLoading;
             },
             isShowExpired () {
-                return this.basicInfo.type === 'join_group'
+                return this.basicInfo.type === 'join_group';
             }
         },
         watch: {
             params: {
                 handler (value) {
                     if (Object.keys(value).length > 0) {
-                        this.initRequestQueue = ['detail']
-                        this.fetchData(value.id)
+                        this.initRequestQueue = ['detail'];
+                        this.fetchData(value.id);
                     } else {
-                        this.initRequestQueue = []
-                        this.status = ''
-                        this.basicInfo = {}
-                        this.tableList = []
-                        this.count = 0
+                        this.initRequestQueue = [];
+                        this.status = '';
+                        this.basicInfo = {};
+                        this.tableList = [];
+                        this.count = 0;
                     }
                 },
                 immediate: true
@@ -76,11 +76,11 @@
         methods: {
             async fetchData (id) {
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id })
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url
-                    } = res.data
+                    } = res.data;
                     this.basicInfo = {
                         sn,
                         type,
@@ -92,36 +92,36 @@
                         ticket_url
                     }
                     ;(data.groups || []).forEach(item => {
-                        item.display_id = `#${item.id}`
-                    })
-                    this.tableList = [...data.groups]
-                    this.count = data.groups.length
-                    this.status = status
+                        item.display_id = `#${item.id}`;
+                    });
+                    this.tableList = [...data.groups];
+                    this.count = data.groups.length;
+                    this.status = status;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
-                    })
+                    });
                 } finally {
-                    this.initRequestQueue.shift()
+                    this.initRequestQueue.shift();
                 }
             },
 
             handleCancel () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-apply-group-detail-wrapper {
         height: calc(100vh - 121px);
         .action {
-            padding-bottom: 20px;
+            padding-bottom: 50px;
         }
     }
 </style>

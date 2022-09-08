@@ -12,7 +12,8 @@
         <div class="confirm-content-wrapper">
             <div style="text-align: center;">{{ subTitle }}</div>
             <div class="operate-buttons">
-                <bk-button theme="primary" :loading="loading" @click="handleSumbitDelete">
+                <bk-button theme="primary" :loading="loading" @click="handleSumbitDelete"
+                    data-test-id="group_btn_deleteSubmit">
                     {{ $t(`m.common['确定']`) }}
                 </bk-button>
                 <bk-button theme="default" style="margin-left: 10px;" @click="hideCancelDelete">
@@ -46,31 +47,31 @@
         data () {
             return {
                 isShowDialog: false
-            }
+            };
         },
         watch: {
             show: {
                 handler (value) {
-                    this.isShowDialog = !!value
+                    this.isShowDialog = !!value;
                 },
                 immediate: true
             }
         },
         methods: {
             handleSumbitDelete () {
-                this.$emit('on-sumbit')
+                this.$emit('on-sumbit');
             },
 
             hideCancelDelete () {
-                this.$emit('on-cancel')
+                this.$emit('on-cancel');
             },
 
             handleAfterDeleteLeave () {
-                this.$emit('update:show', false)
-                this.$emit('on-after-leave')
+                this.$emit('update:show', false);
+                this.$emit('on-after-leave');
             }
         }
-    }
+    };
 </script>
 <style lang='postcss'>
     .iam-confirm-dialog {

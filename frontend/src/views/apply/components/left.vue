@@ -32,9 +32,9 @@
     </div>
 </template>
 <script>
-    import il8n from '@/language'
-    import FilterItem from './filter-item'
-    import ApplyItem from './apply-item'
+    import il8n from '@/language';
+    import FilterItem from './filter-item';
+    import ApplyItem from './apply-item';
 
     export default {
         name: '',
@@ -57,7 +57,7 @@
                     return {
                         'all': il8n('common', '全部'),
                         'wait': il8n('myApproval', '待审批')
-                    }
+                    };
                 }
             },
             active: {
@@ -78,11 +78,11 @@
                 currentActive: '',
                 isScrollLoading: false,
                 isShowNoDataTips: false
-            }
+            };
         },
         computed: {
             isEmpty () {
-                return this.data.length < 1 && !this.isLoading
+                return this.data.length < 1 && !this.isLoading;
             }
         },
         watch: {
@@ -90,50 +90,50 @@
                 handler (value) {
                     if (value.length) {
                         if (!value.some(item => item.id === this.currentActive)) {
-                            this.currentActive = value[0].id
+                            this.currentActive = value[0].id;
                         }
                     } else {
-                        this.currentActive = ''
-                        this.isShowNoDataTips = false
+                        this.currentActive = '';
+                        this.isShowNoDataTips = false;
                     }
                 },
                 immediate: true
             },
             isLoading () {
-                this.isShowNoDataTips = false
+                this.isShowNoDataTips = false;
             }
         },
         methods: {
             handleChange (payload) {
-                this.currentActive = payload.id
-                this.$emit('on-change', payload)
+                this.currentActive = payload.id;
+                this.$emit('on-change', payload);
             },
             handleFilterChange (payload) {
-                this.handleResetScrollLoading()
-                this.$emit('on-filter-change', payload)
+                this.handleResetScrollLoading();
+                this.$emit('on-filter-change', payload);
             },
             handleResetScrollLoading () {
-                this.isShowNoDataTips = false
-                this.isScrollLoading = false
+                this.isShowNoDataTips = false;
+                this.isScrollLoading = false;
             },
             handleScroll (event) {
                 if (this.isLoading) {
-                    this.handleResetScrollLoading()
-                    return
+                    this.handleResetScrollLoading();
+                    return;
                 }
                 if (!this.canScrollLoad) {
-                    this.isShowNoDataTips = true
-                    this.isScrollLoading = false
-                    return
+                    this.isShowNoDataTips = true;
+                    this.isScrollLoading = false;
+                    return;
                 }
                 if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
-                    this.isScrollLoading = true
-                    this.isShowNoDataTips = false
-                    this.$emit('on-load')
+                    this.isScrollLoading = true;
+                    this.isShowNoDataTips = false;
+                    this.$emit('on-load');
                 }
             }
         }
-    }
+    };
 </script>
 <style lang='postcss' scoped>
     .iam-left-wrapper {

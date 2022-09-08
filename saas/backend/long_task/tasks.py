@@ -148,18 +148,15 @@ class SubTask(Task):
 
                 store.update(index, TaskStatus.SUCCESS.value)  # type: ignore[attr-defined]
 
-                logger.debug("long task {} sub task item: {} execute success".format(id, param))
+                logger.info(f"long task {id} sub task item: {param} execute success!")
             except Exception:  # pylint: disable=broad-except
-
                 store.update(
                     index,
                     TaskStatus.FAILURE.value,  # type: ignore[attr-defined]
                     traceback.format_exc(),
                 )
 
-                logger.warning(
-                    "long task {} sub task item: {} execute fail".format(id, param), exc_info=sys.exc_info()
-                )
+                logger.exception(f"long task {id} sub task item: {param} execute fail!")
 
                 # 子任务失败, 直接失败
                 if handler.break_:
@@ -203,7 +200,7 @@ class TaskFactory(Task):
 
         params = handler.get_params()
 
-        celery_id = self.request.id
+        celery_id = self.request.id or ""
         TaskDetail.objects.filter(pk=id).update(
             celery_id=celery_id,
             status=TaskStatus.RUNNING.value,  # type: ignore[attr-defined]
@@ -232,4 +229,4 @@ def retry_long_task():
         status__in=[TaskStatus.PENDING.value, TaskStatus.RUNNING.value], created_time__lt=day_before
     )
     for t in qs:
-        TaskFactory().delay(t.id)
+        TaskFactory()(t.id)

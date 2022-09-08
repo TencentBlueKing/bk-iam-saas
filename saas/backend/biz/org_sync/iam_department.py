@@ -15,7 +15,7 @@ from backend.component import iam
 
 from .base import BaseSyncIAMBackendService
 
-organization_logger = logging.getLogger("organization")
+logger = logging.getLogger("organization")
 
 
 class IAMBackendDepartmentSyncService(BaseSyncIAMBackendService):
@@ -40,27 +40,27 @@ class IAMBackendDepartmentSyncService(BaseSyncIAMBackendService):
 
         iam.create_subjects_by_auto_paging(created_depts)
 
-        organization_logger.info(
-            f"create departments by sync task, the length of departments: {len(created_depts)} "
-            f"the detail of departments: {created_depts}"
-        )
+        logger.info(f"create departments by sync task, count={len(created_depts)} detail={created_depts}")
 
     def deleted_handler(self):
         """后台需要删除的部门处理"""
-        db_dept_set = {str(i.id) for i in self.db_departments}
-        deleted_depts = [
-            {"type": "department", "id": i["id"]} for i in self.backend_departments if i["id"] not in db_dept_set
-        ]
+        # db_dept_set = {str(i.id) for i in self.db_departments}
+        # deleted_depts = [
+        #     {"type": "department", "id": i["id"]} for i in self.backend_departments if i["id"] not in db_dept_set
+        # ]
+        #
+        # if not deleted_depts:
+        #     return
+        #
+        # iam.delete_subjects_by_auto_paging(deleted_depts)
+        #
+        # logger.info(
+        #     f"delete departments by sync task, count={len(deleted_depts)} detail={deleted_depts}"
+        # )
 
-        if not deleted_depts:
-            return
-
-        iam.delete_subjects_by_auto_paging(deleted_depts)
-
-        organization_logger.info(
-            f"delete departments by sync task, the length of departments: {len(deleted_depts)} "
-            f"the detail of departments: {deleted_depts}"
-        )
+        # Note: 对于SaaS已删除部门，由于不确定是用户管理本身有bug导致的还是部门真实不存在了，所以为了避免影响部门权限，这里将不删除后端部门
+        # 后续将会通过SaaS标记已删除部门，然后发起审批流程等方式再进行后端用户权限的删除
+        pass
 
     def sync_to_iam_backend(self):
         """同步IAM后台 相关变更"""

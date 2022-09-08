@@ -24,13 +24,13 @@
  * IN THE SOFTWARE.
 */
 
-import childProcess from 'child_process'
+import childProcess from 'child_process';
 
-import chalk from 'chalk'
-import semver from 'semver'
-import shell from 'shelljs'
+import chalk from 'chalk';
+import semver from 'semver';
+import shell from 'shelljs';
 
-import pkg from '../package.json'
+import pkg from '../package.json';
 
 /**
  * 执行命令
@@ -39,7 +39,7 @@ import pkg from '../package.json'
  *
  * @return {string} 命令执行结果
  */
-const exec = cmd => childProcess.execSync(cmd).toString().trim()
+const exec = cmd => childProcess.execSync(cmd).toString().trim();
 
 const versionRequirements = [
     {
@@ -47,38 +47,38 @@ const versionRequirements = [
         currentVersion: semver.clean(process.version),
         versionRequirement: pkg.engines.node
     }
-]
+];
 
 if (shell.which('npm')) {
     versionRequirements.push({
         name: 'npm',
         currentVersion: exec('npm --version'),
         versionRequirement: pkg.engines.npm
-    })
+    });
 }
 
 export default function () {
-    const warnings = []
+    const warnings = [];
     for (let i = 0; i < versionRequirements.length; i++) {
-        const mod = versionRequirements[i]
+        const mod = versionRequirements[i];
         if (!semver.satisfies(mod.currentVersion, mod.versionRequirement)) {
             warnings.push(mod.name
                 + ': '
                 + chalk.red(mod.currentVersion)
                 + ' should be '
                 + chalk.green(mod.versionRequirement)
-            )
+            );
         }
     }
 
     if (warnings.length) {
-        console.log('')
-        console.log(chalk.yellow('To use this template, you must update following to modules:'))
-        console.log()
+        console.log('');
+        console.log(chalk.yellow('To use this template, you must update following to modules:'));
+        console.log();
         for (let i = 0; i < warnings.length; i++) {
-            console.log('  ' + warnings[i])
+            console.log('  ' + warnings[i]);
         }
-        console.log()
-        process.exit(1)
+        console.log();
+        process.exit(1);
     }
 }

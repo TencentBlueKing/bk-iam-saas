@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 
+from backend.util.model import ListModel
+
 from ..constants import ApplicationStatus, ApplicationTypeEnum, SubjectType
 
 
@@ -69,11 +71,15 @@ class ApplicationResourceInstancePathNode(BaseModel):
     type_name_en: str = ""
 
 
+class ApplicationResourceInstancePathList(ListModel):
+    __root__: List[ApplicationResourceInstancePathNode]
+
+
 class ApplicationResourceInstance(BaseModel):
     # 资源类型
     type: str
     # 对应配置的拓扑或实例
-    path: List[List[ApplicationResourceInstancePathNode]]
+    path: List[ApplicationResourceInstancePathList]
     # 资源类型名称
     name: str
     name_en: str = ""
@@ -109,11 +115,42 @@ class ApplicationRelatedResource(BaseModel):
     name_en: str = ""
 
 
+class ApplicationEnvironValue(BaseModel):
+    """环境属性值"""
+
+    name: str = ""
+    value: str
+
+
+class ApplicationEnvironCondition(BaseModel):
+    """环境属性条件"""
+
+    type: str
+    values: List[ApplicationEnvironValue]
+
+
+class ApplicationEnvironment(BaseModel):
+    """环境属性"""
+
+    type: str
+    condition: List[ApplicationEnvironCondition]
+
+
+class ApplicationResourceGroup(BaseModel):
+    id: str
+    related_resource_types: List[ApplicationRelatedResource]
+    environments: List[ApplicationEnvironment]
+
+
+class ApplicationResourceGroupList(ListModel):
+    __root__: List[ApplicationResourceGroup]
+
+
 class ApplicationPolicyInfo(BaseModel):
     """申请内容里的策略"""
 
     action_id: str = Field(alias="id")
-    related_resource_types: List[ApplicationRelatedResource]
+    resource_groups: ApplicationResourceGroupList
     expired_at: int = 0
     expired_display: str = ""
     # Action名称

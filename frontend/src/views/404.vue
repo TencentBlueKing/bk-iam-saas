@@ -11,9 +11,9 @@
      */
     export default {
         data () {
-            return {}
+            return {};
         }
-    }
+    };
 </script>
 
 <style lang="postcss" scoped>

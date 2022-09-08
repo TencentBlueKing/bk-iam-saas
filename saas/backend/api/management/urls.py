@@ -16,7 +16,12 @@ urlpatterns = [
     # 分级管理员
     path(
         "grade_managers/",
-        views.ManagementGradeManagerViewSet.as_view({"post": "create"}),
+        views.ManagementGradeManagerViewSet.as_view({"get": "list", "post": "create"}),
+        name="open.management.grade_manager",
+    ),
+    path(
+        "grade_managers/<int:id>/",
+        views.ManagementGradeManagerViewSet.as_view({"put": "update"}),
         name="open.management.grade_manager",
     ),
     # 分级管理员成员
@@ -45,8 +50,14 @@ urlpatterns = [
     # 用户组自定义权限
     path(
         "groups/<int:id>/policies/",
-        views.ManagementGroupPolicyViewSet.as_view({"post": "create"}),
+        views.ManagementGroupPolicyViewSet.as_view({"post": "create", "delete": "destroy"}),
         name="open.management.group_policy",
+    ),
+    # 用户组自定义权限 - 操作级别的变更，不涉及Resources
+    path(
+        "groups/<int:id>/actions/policies/",
+        views.ManagementGroupActionPolicyViewSet.as_view({"delete": "destroy"}),
+        name="open.management.group_action",
     ),
     # 用户
     path(

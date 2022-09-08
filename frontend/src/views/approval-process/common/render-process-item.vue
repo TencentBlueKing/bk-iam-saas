@@ -26,7 +26,7 @@
                     :key="option.id"
                     :id="option.id"
                     :name="option.name">
-                    <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">{{ option.name }}</span>
+                    <span style="display: block; line-height: 32px;" :title="`${$t(`m.approvalProcess['审批节点']`)}：${ optionMap(option) }`">{{ option.name }}</span>
                 </bk-option>
                 <div slot="extension" v-bk-tooltips="{ content: tips, extCls: 'iam-tooltips-cls' }" @click="handleOpenCreateLink" style="cursor: not-allowed;">
                     <Icon bk type="plus-circle" />
@@ -66,54 +66,54 @@
                 isToggle: false,
                 tips: this.$t(`m.common['暂未开放']`),
                 value: -1
-            }
+            };
         },
         computed: {
             curSelectName () {
                 if (this.list.length > 0 && this.value !== -1) {
-                    const data = this.list.find(item => item.id === this.value)
-                    return data ? data.name || '' : ''
+                    const data = this.list.find(item => item.id === this.value);
+                    return data ? data.name || '' : '';
                 }
-                return ''
+                return '';
             },
             curTitle () {
                 if (this.list.length > 0 && this.value !== -1) {
-                    const tempData = this.list.find(item => item.id === this.value)
+                    const tempData = this.list.find(item => item.id === this.value);
                     if (tempData && tempData.node_names) {
-                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${tempData.node_names.join(' -> ')}`
+                        return `${this.$t(`m.approvalProcess['审批节点']`)}：${tempData.node_names.join(' -> ')}`;
                     }
-                    return ''
+                    return '';
                 }
-                return ''
+                return '';
             }
         },
         watch: {
             isOpen: {
                 handler (value) {
-                    this.curOpenStatus = !!value
+                    this.curOpenStatus = !!value;
                 },
                 immediate: true
             },
             curValue: {
                 handler (val) {
-                    this.value = val
+                    this.value = val;
                 },
                 immediate: true
             }
         },
         methods: {
             handleToogleSelect () {
-                // if (!this.isToggle) {
-                //     this.isToggle = true
-                //     this.$refs.select.show()
-                //     return
-                // }
-                // this.isToggle = false
-                // this.$refs.select.close()
+                if (!this.isToggle) {
+                    this.isToggle = true;
+                    this.$refs.select.show();
+                    return;
+                }
+                this.isToggle = false;
+                this.$refs.select.close();
             },
 
             handleProcessSelect (value, option) {
-                this.$emit('selected', value)
+                this.$emit('selected', value);
             },
 
             handleOpenCreateLink () {
@@ -122,18 +122,23 @@
             },
 
             handleSelectToggle (payload) {
-                this.isToggle = payload
+                this.isToggle = payload;
             },
 
             setValue (payload) {
-                this.value = payload
+                this.value = payload;
             },
 
             handleStatusChange (payload) {
-                this.$emit('change', payload)
+                this.$emit('change', payload);
+            },
+            optionMap (option) {
+                if (option.node_names) {
+                    return option.node_names.join(' -> ');
+                }
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     .iam-approval-process-set-item {

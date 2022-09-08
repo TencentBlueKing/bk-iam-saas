@@ -120,10 +120,8 @@ class Department(TimestampMPTTModel):
         if self.ancestors:
             try:
                 return json.loads(self.ancestors)
-            except Exception as error:  # pylint: disable=broad-except
-                logger.error(
-                    "parse_ancestors ancestors: %s, department_id: %s, error: %s", self.ancestors, self.id, error
-                )
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("parse_ancestors ancestors: %s, department_id: %s fail", self.ancestors, self.id)
                 return []
         return []
 

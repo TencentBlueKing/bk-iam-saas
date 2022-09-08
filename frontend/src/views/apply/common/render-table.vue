@@ -52,33 +52,33 @@
             return {
                 isExpanded: this.expanded,
                 curType: ''
-            }
+            };
         },
         watch: {
             expanded (value) {
-                this.isExpanded = !!value
+                this.isExpanded = !!value;
             },
             type: {
                 handler (value) {
-                    this.curType = value
+                    this.curType = value;
                 },
                 immediate: true
             }
         },
         methods: {
             handlePackup () {
-                this.isExpanded = false
-                this.$emit('update:expanded', false)
-                this.$emit('on-expanded', false)
+                this.isExpanded = false;
+                this.$emit('update:expanded', false);
+                this.$emit('on-expanded', false);
             },
 
             handleExpanded () {
-                this.isExpanded = !this.isExpanded
-                this.$emit('update:expanded', true)
-                this.$emit('on-expanded', true)
+                this.isExpanded = !this.isExpanded;
+                this.$emit('update:expanded', true);
+                this.$emit('on-expanded', true);
             }
         }
-    }
+    };
 </script>
 <style lang="postcss" scoped>
     .iam-perm-item {

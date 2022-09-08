@@ -38,6 +38,10 @@ class GroupMemberSLZ(serializers.Serializer):
     id = serializers.CharField(label="成员id")
 
 
+class SearchMemberSLZ(serializers.Serializer):
+    keyword = serializers.CharField(label="搜索关键词", min_length=3, allow_null=False, required=False)
+
+
 class GroupIdSLZ(serializers.Serializer):
     """
     用户ID
@@ -62,6 +66,7 @@ class GroupSLZ(serializers.ModelSerializer):
             "created_time",
             "role",
             "attributes",
+            "readonly",
         )
 
     def __init__(self, *args, **kwargs):
@@ -106,7 +111,7 @@ class MemberSLZ(serializers.Serializer):
 
 
 class GroupAddMemberSLZ(serializers.Serializer):
-    members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), required=True, allow_empty=False)
+    members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), allow_empty=False)
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
 
     def validate_expired_at(self, value):
@@ -129,8 +134,12 @@ class GroupAddMemberSLZ(serializers.Serializer):
         return data
 
 
+class GroupsAddMemberSLZ(GroupAddMemberSLZ):
+    group_ids = serializers.ListField(label="用户组ID列表")
+
+
 class GroupUpdateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", min_length=5, max_length=128)
+    name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
     description = serializers.CharField(label="描述", min_length=10)
 
     def validate(self, data):
@@ -145,7 +154,7 @@ class GroupUpdateSLZ(serializers.Serializer):
 
 
 class GroupDeleteMemberSLZ(serializers.Serializer):
-    members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), required=True, allow_empty=False)
+    members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), allow_empty=False)
 
 
 class GroupTemplateSchemaSLZ(serializers.Serializer):
@@ -200,7 +209,13 @@ class GroupTemplateDetailSLZ(GroupTemplateSLZ):
         policy_list = PolicyBeanList(
             obj.system_id, parse_obj_as(List[PolicyBean], obj.data["actions"]), need_fill_empty_fields=True
         )
-        return [p.dict() for p in policy_list.policies]
+
+        # ResourceNameAutoUpdate
+        updated_policies = GroupBiz().update_template_due_to_renamed_resource(
+            int(obj.subject_id), obj.template_id, policy_list
+        )
+
+        return [p.dict() for p in updated_policies]
 
 
 class GroupTemplateDetailSchemaSLZ(GroupTemplateDetailSLZ):
@@ -237,21 +252,17 @@ class GroupMemberExpiredAtSLZ(GroupMemberSLZ, ExpiredAtSLZ):
 
 
 class GroupMemberUpdateExpiredAtSLZ(serializers.Serializer):
-    members = serializers.ListField(
-        label="成员列表", child=GroupMemberExpiredAtSLZ(label="成员"), required=True, allow_empty=False
-    )
+    members = serializers.ListField(label="成员列表", child=GroupMemberExpiredAtSLZ(label="成员"), allow_empty=False)
 
 
 class GroupPolicyUpdateSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=True)
+    system_id = serializers.CharField(label="系统ID")
     template_id = serializers.IntegerField(label="模板ID", required=False, default=0)
-    actions = serializers.ListField(
-        label="操作策略", child=BasePolicyActionSLZ(label="策略"), required=True, allow_empty=False
-    )
+    actions = serializers.ListField(label="操作策略", child=BasePolicyActionSLZ(label="策略"), allow_empty=False)
 
 
 class TemplateAuthorizationSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=True)
+    system_id = serializers.CharField(label="系统ID")
     template_id = serializers.IntegerField(label="模板ID", required=False, default=0)
     actions = serializers.ListField(label="操作策略", child=BasePolicyActionSLZ(label="策略"), required=False, default=list)
     aggregations = serializers.ListField(
@@ -268,9 +279,7 @@ class TemplateAuthorizationSLZ(serializers.Serializer):
 
 
 class GroupAuthorizationSLZ(serializers.Serializer):
-    templates = serializers.ListField(
-        label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), required=True, allow_empty=False
-    )
+    templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=False)
 
     def validate(self, data):
         # 单次授权限制
@@ -298,13 +307,11 @@ def validate_template_authorization(templates):
 
 
 class GroupCreateSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", min_length=5, max_length=128)
+    name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
     description = serializers.CharField(label="描述", min_length=10)
-    members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), required=True)
+    members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
-    templates = serializers.ListField(
-        label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), required=True, allow_empty=True
-    )
+    templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
 
     def validate(self, data):
         """
@@ -327,4 +334,5 @@ class GroupCreateSLZ(serializers.Serializer):
 
 class GroupAuthoriedConditionSLZ(serializers.Serializer):
     action_id = serializers.CharField(label="操作ID")
+    resource_group_id = serializers.CharField(label="资源条件组ID")
     related_resource_type = ResourceTypeSLZ(label="资源类型")

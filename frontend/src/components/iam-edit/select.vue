@@ -68,73 +68,73 @@
                 newVal: this.value,
                 isEditable: false,
                 isLoading: false
-            }
+            };
         },
         computed: {
             styles () {
                 return {
                     width: this.width
-                }
+                };
             },
             displayValue () {
-                return this.list.find(item => item.id === this.newVal).name
+                return this.list.find(item => item.id === this.newVal).name;
             }
         },
         watch: {
             value (val) {
-                this.newVal = val
+                this.newVal = val;
             }
         },
         methods: {
             handleClickoutside () {
                 // console.warn(arguments[0]['target']['className'])
-                const classList = ['bk-option-name', 'bk-option-content-default', 'bk-select-search-input', 'bk-option-content', 'bk-options bk-options-single']
+                const classList = ['bk-option-name', 'bk-option-content-default', 'bk-select-search-input', 'bk-option-content', 'bk-options bk-options-single'];
                 if (classList.includes(arguments[0]['target']['className'])) {
-                    return
+                    return;
                 }
-                this.isEditable = false
+                this.isEditable = false;
             },
             handleEdit () {
-                document.body.click()
-                this.isEditable = true
+                document.body.click();
+                this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.select.show()
-                })
+                    this.$refs.select.show();
+                });
             },
             handleSelected () {
-                if (!this.isEditable) return
-                this.triggerChange()
+                if (!this.isEditable) return;
+                this.triggerChange();
             },
             hideEdit (event) {
                 if (event.path && event.path.length > 0) {
                     for (let i = 0; i < event.path.length; i++) {
-                        const target = event.path[i]
+                        const target = event.path[i];
                         if (target.className === 'iam-edit-select') {
-                            return
+                            return;
                         }
                     }
                 }
-                this.isEditable = false
+                this.isEditable = false;
             },
             triggerChange () {
-                this.isEditable = false
+                this.isEditable = false;
                 if (this.newVal === this.value) {
-                    return
+                    return;
                 }
-                this.isLoading = true
+                this.isLoading = true;
                 this.remoteHander({
                     [this.field]: this.newVal
                 }).then(() => {
                     this.$emit('on-change', {
                         [this.field]: this.newVal
-                    })
-                    this.messageSuccess('编辑成功')
+                    });
+                    this.messageSuccess('编辑成功');
                 }).finally(() => {
-                    this.isLoading = false
-                })
+                    this.isLoading = false;
+                });
             }
         }
-    }
+    };
 </script>
 <style lang="postcss">
     @keyframes textarea-edit-loading {

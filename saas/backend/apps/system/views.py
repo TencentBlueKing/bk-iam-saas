@@ -13,23 +13,40 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.biz.resource_type import ResourceTypeBiz
 from backend.biz.role import RoleListQuery
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
-from . import serializers
+from .serializers import QueryResourceTypeSLZ, SystemResourceTypeSLZ, SystemSLZ
 
 
 class SystemViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     @swagger_auto_schema(
         operation_description="系统列表",
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: serializers.SystemSLZ(label="系统", many=True)},
+        responses={status.HTTP_200_OK: SystemSLZ(label="系统", many=True)},
         tags=["system"],
     )
     def list(self, request, *args, **kwargs):
         systems = RoleListQuery(request.role).list_system()
         data = [i.dict(include={"id", "name", "name_en"}) for i in systems]
+        return Response(data)
+
+
+class ResourceTypeViewSet(GenericViewSet):
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    biz = ResourceTypeBiz()
+
+    @swagger_auto_schema(
+        operation_description="资源类别列表",
+        query_serializer=QueryResourceTypeSLZ(label="系统ID"),
+        responses={status.HTTP_200_OK: SystemResourceTypeSLZ(label="资源类别", many=True)},
+        tags=["system"],
+    )
+    def list_resource_types(self, request, *args, **kwargs):
+        system_id = request.query_params["system_id"]
+        data = self.biz.list_resource_types_by_system_id(system_id=system_id)
         return Response(data)

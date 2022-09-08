@@ -19,7 +19,7 @@ from backend.component import usermgr
 from .base import BaseSyncDBService
 from .util import convert_list_for_mptt
 
-organization_logger = logging.getLogger("organization")
+logger = logging.getLogger("organization")
 
 
 class DBDepartmentSyncService(BaseSyncDBService):
@@ -63,7 +63,7 @@ class DBDepartmentSyncService(BaseSyncDBService):
                     parent_department = Department.objects.get(id=dept.parent_id)
                 except Exception:  # pylint: disable=broad-except
                     # 记录错误信息，然后将异常往上抛，因为Django QuerySet get异常并不会输出具体ID是什么，不利于问题排查
-                    organization_logger.error(f"parent department(id:{dept.parent_id}) not found")
+                    logger.exception(f"parent department(id:{dept.parent_id}) not found")
                     raise
             # 对于mptt，必须是parent实例对象，无法使用parent_id代替
             dept.parent = parent_department
@@ -100,15 +100,16 @@ class DBDepartmentSyncService(BaseSyncDBService):
             if dept.id not in new_department_id_set:
                 continue
             if dept.parent_id != new_department_parent_dict[dept.id]:
-                dept.parent_id = new_department_parent_dict[dept.id]
-                updated_parent_departments.append(dept)
+                updated_parent_departments.append({"id": dept.id, "parent_id": new_department_parent_dict[dept.id]})
 
         if not updated_parent_departments:
             return
 
         # SaaS使用mptt进行更新parent
-        for dept in updated_parent_departments:
-            dept.parent = Department.objects.get(id=dept.parent_id) if dept.parent_id else None
+        for d in updated_parent_departments:
+            # Note: 这里必须重新获取部门对象，否则会是旧的数据，这样会导致更新时lft\rght\level错误
+            dept = Department.objects.get(id=d["id"])
+            dept.parent = Department.objects.get(id=d["parent_id"]) if d["parent_id"] else None
             dept.save()
 
     def updated_handler(self):

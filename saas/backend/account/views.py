@@ -11,16 +11,14 @@ specific language governing permissions and limitations under the License.
 import time
 
 from django.utils.translation import gettext as _
-from drf_yasg.openapi import Response as yasg_response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.apps.role.models import RoleUser
 from backend.biz.role import RoleBiz
 from backend.common.error_codes import error_codes
-from backend.common.swagger import ResponseSwaggerAutoSchema
 
 from .role_auth import ROLE_SESSION_KEY
 from .serializers import AccountRoleSLZ, AccountRoleSwitchSLZ, AccountUserSLZ
@@ -29,7 +27,6 @@ from .serializers import AccountRoleSLZ, AccountRoleSwitchSLZ, AccountUserSLZ
 class UserViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户信息",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AccountUserSLZ(label="用户信息")},
         tags=["account"],
     )
@@ -42,19 +39,19 @@ class UserViewSet(GenericViewSet):
                 "timestamp": timestamp,
                 "username": user.username,
                 "role": {"type": role.type, "id": role.id, "name": role.name},
+                "timezone": user.get_property("time_zone"),
             }
         )
 
 
 class RoleViewSet(GenericViewSet):
 
-    paginator = None  # 去掉swagger中的limit offset参数
+    pagination_class = None  # 去掉swagger中的limit offset参数
 
     role_biz = RoleBiz()
 
     @swagger_auto_schema(
         operation_description="用户角色列表",
-        auto_schema=ResponseSwaggerAutoSchema,
         responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
         tags=["account"],
     )
@@ -65,8 +62,7 @@ class RoleViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户角色切换",
         request_body=AccountRoleSwitchSLZ(label="角色切换"),
-        auto_schema=ResponseSwaggerAutoSchema,
-        responses={status.HTTP_200_OK: yasg_response({})},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["account"],
     )
     def create(self, request, *args, **kwargs):
