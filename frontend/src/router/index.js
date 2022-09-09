@@ -157,16 +157,16 @@ export const beforeEach = async (to, from, next) => {
             window.localStorage.setItem('index', 0);
         }
 
-        if (to.name === 'gradingAdminEdit') {
-            await store.dispatch('role/updateCurrentRole', { id: 0 });
-            await store.dispatch('userInfo');
-            if (to.params.id) {
-                store.commit('updateNavId', to.params.id);
-            }
-            store.commit('updateIndex', 0);
-            window.localStorage.setItem('index', 0);
-            curRole = 'staff';
-        }
+        // if (to.name === 'gradingAdminEdit') {
+        //     await store.dispatch('role/updateCurrentRole', { id: 0 });
+        //     await store.dispatch('userInfo');
+        //     if (to.params.id) {
+        //         store.commit('updateNavId', to.params.id);
+        //     }
+        //     store.commit('updateIndex', 0);
+        //     window.localStorage.setItem('index', 0);
+        //     curRole = 'staff';
+        // }
 
         let difference = [];
         if (navIndex === 1) {
