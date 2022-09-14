@@ -453,9 +453,6 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
             "group %s update members %s expired_at by user %s", group.id, data["members"], request.user.username
         )
 
-        for m in data["members"]:
-            m["policy_expired_at"] = m.pop("expired_at")
-
         self.group_biz.update_members_expired_at(
             group.id, parse_obj_as(List[GroupMemberExpiredAtBean], data["members"])
         )

@@ -287,8 +287,8 @@ class GroupBiz:
                     id=group.id,
                     name=group.name,
                     description=group.description,
-                    expired_at=relation.policy_expired_at,
-                    expired_at_display=expired_at_display(relation.policy_expired_at),
+                    expired_at=relation.expired_at,
+                    expired_at_display=expired_at_display(relation.expired_at),
                     created_time=utc_string_to_local(relation.created_at),
                     department_id=relation.department_id,
                     department_name=relation.department_name,
@@ -376,8 +376,8 @@ class GroupBiz:
                 continue
 
             group_member_bean = GroupMemberBean(
-                expired_at=relation.policy_expired_at,
-                expired_at_display=expired_at_display(relation.policy_expired_at),
+                expired_at=relation.expired_at,
+                expired_at_display=expired_at_display(relation.expired_at),
                 created_time=utc_string_to_local(relation.created_at),
                 department_id=relation.department_id,
                 department_name=relation.department_name,

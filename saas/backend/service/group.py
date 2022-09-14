@@ -29,7 +29,7 @@ class SubjectGroup(BaseModel):
 
     type: str
     id: str
-    policy_expired_at: int
+    expired_at: int
     created_at: str  # 后端json返回的格式化时间
 
     # 从部门继承的信息
@@ -43,7 +43,7 @@ class GroupCreate(BaseModel):
 
 
 class GroupMemberExpiredAt(Subject):
-    policy_expired_at: int
+    expired_at: int
 
 
 class GroupService:
