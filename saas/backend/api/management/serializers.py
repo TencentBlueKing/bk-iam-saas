@@ -217,3 +217,10 @@ class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, R
 
 class ManagementApplicationIDSLZ(serializers.Serializer):
     ids = serializers.ListField(label="申请单据ID列表", child=serializers.CharField(label="申请单据ID"))
+
+
+class ManagementGradeManagerInitSLZ(ManagementSourceSystemSLZ):
+    biz_id = serializers.CharField(label="业务ID")
+    biz_name = serializers.CharField(label="业名称")
+    project_id = serializers.CharField(label="项目ID")
+    project_name = serializers.CharField(label="项目名称")

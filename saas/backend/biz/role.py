@@ -51,7 +51,7 @@ from backend.service.constants import (
     SubjectType,
 )
 from backend.service.models import Attribute, Subject, System
-from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleInfo, RoleService
+from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService
 from backend.service.system import SystemService
 
 logger = logging.getLogger("app")
@@ -334,6 +334,14 @@ class RoleBiz:
 
         # 变更可授权的权限范围
         self.svc.update_role_auth_scope(role_id, auth_scopes)
+
+    def get_common_action_by_name(self, system_id: str, name: str) -> Optional[CommonAction]:
+        common_actions = self.list_system_common_actions(system_id)
+        for common_action in common_actions:
+            if common_action.name == name:
+                return common_action
+
+        return None
 
 
 class RoleCheckBiz:
@@ -928,3 +936,13 @@ class ActionScopeDiffer:
                 return False  # 循环正常结束, tc不满足sc中的任意一条
 
         return True
+
+
+"""
+初始化分级管理员逻辑:
+
+1. api输入业务, 项目信息
+2. 查询各个系统的常用操作与操作, 拼装出需要授权授权范围
+3. 创建分级管理员, 创建用户组, 并授权
+
+"""

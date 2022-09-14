@@ -21,6 +21,7 @@ from backend.api.management.permissions import ManagementAPIPermission
 from backend.api.management.serializers import (
     ManagementGradeManagerBasicInfoSZL,
     ManagementGradeManagerCreateSLZ,
+    ManagementGradeManagerInitSLZ,
     ManagementGradeManagerMembersDeleteSLZ,
     ManagementGradeManagerMembersSLZ,
     ManagementGradeManagerUpdateSLZ,
@@ -35,9 +36,11 @@ from backend.apps.role.audit import (
 from backend.apps.role.models import Role, RoleSource, RoleUser
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.pagination import CustomPageNumberPagination
-from backend.service.constants import RoleSourceTypeEnum, RoleType
+from backend.service.constants import ADMIN_USER, RoleSourceTypeEnum, RoleType
+from backend.trans.constants import ManagementGroupNameSuffixEnum
 from backend.trans.open_management import GradeManagerTrans
 
 
@@ -238,3 +241,56 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         audit_context_setter(role=role, members=members)
 
         return Response({})
+
+
+class ManagementGradeManagerInitViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+    """初始化分级管理员"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+    management_api_permission = {
+        "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.GRADE_MANAGER_INIT.value),
+    }
+
+    biz = RoleBiz()
+    role_check_biz = RoleCheckBiz()
+    trans = GradeManagerTrans()
+    group_biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="初始化分级管理员",
+        request_body=ManagementGradeManagerInitSLZ(label="初始化分级管理员"),
+        responses={status.HTTP_201_CREATED: RoleIdSLZ(label="分级管理员ID")},
+        tags=["management.role"],
+    )
+    @view_audit_decorator(RoleCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        """
+        创建分级管理员
+        """
+        serializer = ManagementGradeManagerInitSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # 名称唯一性检查
+        self.role_check_biz.check_unique_name(data["biz_name"])
+
+        # 转换为RoleInfoBean，用于创建时使用
+        role_info = self.trans.init_role_info(data)
+
+        role = self.biz.create(role_info, request.user.username)
+
+        # 创建用户组并授权
+        authorization_scopes = role_info.dict()["authorization_scopes"]
+        for name_suffix in [ManagementGroupNameSuffixEnum.OPS.value, ManagementGroupNameSuffixEnum.READ.value]:
+            group = self.group_biz.create_and_add_members(
+                role.id, data["biz_name"] + name_suffix, description="", creator=ADMIN_USER, subjects=[], expired_at=0
+            )
+
+            templates = self.trans.init_group_auth_info(authorization_scopes, name_suffix)
+            self.group_biz.grant(role, group, templates)
+
+        # 审计
+        audit_context_setter(role=role)
+
+        return Response({"id": role.id})
