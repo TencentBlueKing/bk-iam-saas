@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 from typing import Any, Dict, List, Set
 
 from django.shortcuts import get_object_or_404
@@ -70,8 +69,6 @@ from .serializers import (
     TemplatePreUpdateSLZ,
     TemplateRetrieveSchemaSLZ,
 )
-
-permission_logger = logging.getLogger("permission")
 
 
 class TemplateQueryMixin:
@@ -226,8 +223,6 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         template = self.get_object()
         PermTemplatePreUpdateLock.objects.raise_if_exists(template.id)
 
-        permission_logger.info("template %s deleted by user %s", template.id, request.user.username)
-
         self.template_biz.delete(template.id)
 
         audit_context_setter(template=template)
@@ -316,8 +311,6 @@ class TemplateMemberViewSet(TemplatePermissionMixin, GenericViewSet):
         serializer = TemplateDeleteMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         members = serializer.validated_data["members"]
-
-        permission_logger.info("template %s delete members %s by user %s", template.id, members, request.user.username)
 
         self.template_biz.revoke_subjects(template.system_id, template.id, parse_obj_as(List[Subject], members))
 
