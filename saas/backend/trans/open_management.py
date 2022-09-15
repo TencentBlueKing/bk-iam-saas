@@ -193,7 +193,7 @@ class GradeManagerTrans(ManagementCommonTrans):
         """
         role_info = RoleInfoBean(
             name=data["biz_name"],
-            description="",
+            description="管理员可授予他人{}业务的权限".format(data["biz_name"]),
             members=[ADMIN_USER],
             subject_scopes=[Subject(type="*", id="*")],
             authorization_scopes=[],

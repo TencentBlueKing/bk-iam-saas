@@ -283,8 +283,17 @@ class ManagementGradeManagerInitViewSet(ManagementAPIPermissionCheckMixin, Gener
         # 创建用户组并授权
         authorization_scopes = role_info.dict()["authorization_scopes"]
         for name_suffix in [ManagementGroupNameSuffixEnum.OPS.value, ManagementGroupNameSuffixEnum.READ.value]:
+            description = "{}业务运维人员的权限".format(data["biz_name"])
+            if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
+                description = "仅包含{}各系统的查看权限".format(data["biz_name"])
+
             group = self.group_biz.create_and_add_members(
-                role.id, data["biz_name"] + name_suffix, description="", creator=ADMIN_USER, subjects=[], expired_at=0
+                role.id,
+                data["biz_name"] + name_suffix,
+                description=description,
+                creator=ADMIN_USER,
+                subjects=[],
+                expired_at=0,
             )
 
             templates = self.trans.init_group_auth_info(authorization_scopes, name_suffix)
