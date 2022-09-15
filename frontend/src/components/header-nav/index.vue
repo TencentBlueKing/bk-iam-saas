@@ -44,15 +44,15 @@
                     v-bk-clickoutside="handleClickOutSide">
                     <template>
                         <div class="operation auth-manager" v-if="roleList.length">
-                            <div class="user-dropdown-item " @click="handleManager">
+                            <div class="user-dropdown-item " :title="$t(`m.nav['切换分级管理员']`)" @click="handleManager">
                                 <Icon type="grade-admin" class="iam-manager-icon" />
                                 {{ $t(`m.nav['切换分级管理员']`) }}
                             </div>
                         </div>
                         <div class="operation">
-                            <div class="user-dropdown-item " @click="handleLogout">
+                            <div class="user-dropdown-item " :title="$t(`m.nav['退出登录']`)" @click="handleLogout">
                                 <Icon type="logout" />
-                                {{ $t(`m.nav['注销']`) }}
+                                {{ $t(`m.nav['退出登录']`) }}
                             </div>
                         </div>
                     </template>
