@@ -74,6 +74,15 @@ export const beforeEach = async (to, from, next) => {
     let curRole = store.state.user.role.type;
     const navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
     const currentRoleId = String(to.query.current_role_id || '').trim();
+    const curRoleId = store.state.curRoleId;
+    // if (curRole === 'staff') {
+    //     await store.dispatch('role/updateCurrentRole', { id: 0 });
+    // }
+    if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
+        await store.dispatch('role/updateCurrentRole', { id: curRoleId });
+        store.commit('updateIndex', 1);
+        window.localStorage.setItem('index', 1);
+    }
 
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
@@ -148,16 +157,16 @@ export const beforeEach = async (to, from, next) => {
             window.localStorage.setItem('index', 0);
         }
 
-        if (to.name === 'gradingAdminEdit') {
-            await store.dispatch('role/updateCurrentRole', { id: 0 });
-            await store.dispatch('userInfo');
-            if (to.params.id) {
-                store.commit('updateNavId', to.params.id);
-            }
-            store.commit('updateIndex', 0);
-            window.localStorage.setItem('index', 0);
-            curRole = 'staff';
-        }
+        // if (to.name === 'gradingAdminEdit') {
+        //     await store.dispatch('role/updateCurrentRole', { id: 0 });
+        //     await store.dispatch('userInfo');
+        //     if (to.params.id) {
+        //         store.commit('updateNavId', to.params.id);
+        //     }
+        //     store.commit('updateIndex', 0);
+        //     window.localStorage.setItem('index', 0);
+        //     curRole = 'staff';
+        // }
 
         let difference = [];
         if (navIndex === 1) {

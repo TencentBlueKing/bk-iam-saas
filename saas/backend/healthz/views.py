@@ -13,7 +13,7 @@ from logging import getLogger
 
 import requests
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from rest_framework import serializers
 
 from backend.component import usermgr
@@ -28,11 +28,16 @@ def pong(request):
 
 def healthz(request):
     checker = HealthChecker()
+
+    data = {}
     for name in ["mysql", "redis", "celery", "iam", "usermgr"]:
         ok, message = getattr(checker, name)()
         if not ok:
             return HttpResponseServerError(message)
-    return HttpResponse("ok")
+
+        data[name] = message
+
+    return JsonResponse(data)
 
 
 class HealthChecker:
@@ -107,7 +112,7 @@ class HealthChecker:
             # 这里仅仅是测试ping命令能否被发送的消息队列（上面代码已设置与消息队列通讯的相关配置），无法送达将raise exception
             # 不对ping命令的返回结果进行检查，因为worker可能存在满负载情况，无法及时消费
             # Limit=1表示只要有一个worker响应了就进行返回，没必要等待timeout再返回结果，Timeout表示最多等待多少秒返回结果
-            new_app.control.inspect(limit=1, timeout=0.05).ping()
+            new_app.control.inspect(limit=1, timeout=2).ping()
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("celery ping test fail")
             return False, f"celery ping test fail, error: {str(e)}"
@@ -142,18 +147,7 @@ class HealthChecker:
             categories = usermgr.list_category()
             for category in categories:
                 CategorySLZ(data=category).is_valid(raise_exception=True)
-
-            # 校验查询用户返回的字段是否完整
-            class UserFieldSLZ(serializers.Serializer):
-                id = serializers.IntegerField()
-                username = serializers.CharField()
-                display_name = serializers.CharField(allow_blank=True)
-                staff_status = serializers.ChoiceField(choices=(("IN", "IN"), ("OUT", "OUT")))
-                category_id = serializers.IntegerField()
-
-            userinfo = usermgr.retrieve_user("admin")
-            UserFieldSLZ(data=userinfo).is_valid(raise_exception=True)
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("usermgr request fail")
-            return False, f"usermgr request fail, error: {str(e)}"
+            return True, f"usermgr request fail, error: {str(e)}"
         return True, "ok"

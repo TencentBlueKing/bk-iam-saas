@@ -258,6 +258,14 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
+    "check_user_permission_clean_task": {
+        "task": "backend.apps.user.tasks.check_user_permission_clean_task",
+        "schedule": crontab(minute=0, hour="*"),  # 每小时执行
+    },
+    "clean_user_permission_clean_record": {
+        "task": "backend.apps.user.tasks.clean_user_permission_clean_record",
+        "schedule": crontab(minute=0, hour=5),  # 每天凌晨5时执行
+    },
 }
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
@@ -280,11 +288,11 @@ SENTRY_DSN = env.str("SENTRY_DSN", default="")
 # tracing: otel 相关配置
 # if enable, default false
 ENABLE_OTEL_TRACE = env.bool("BKAPP_ENABLE_OTEL_TRACE", default=False)
-BKAPP_OTEL_INSTRUMENT_DB_API = env.bool("BKAPP_OTEL_INSTRUMENT_DB_API", default=True)
-BKAPP_OTEL_SERVICE_NAME = env.str("BKAPP_OTEL_SERVICE_NAME", default="bk-iam")
-BKAPP_OTEL_SAMPLER = env.str("BKAPP_OTEL_SAMPLER", default="parentbased_always_off")
-BKAPP_OTEL_BK_DATA_ID = env.int("BKAPP_OTEL_BK_DATA_ID", default=-1)
+BKAPP_OTEL_SERVICE_NAME = env.str("BKAPP_OTEL_SERVICE_NAME", default="bk-iam-saas")
+BKAPP_OTEL_SAMPLER = env.str("BKAPP_OTEL_SAMPLER", default="always_on")
 BKAPP_OTEL_GRPC_HOST = env.str("BKAPP_OTEL_GRPC_HOST", default="")
+BKAPP_OTEL_DATA_TOKEN = env("BKAPP_OTEL_DATA_TOKEN", default="")
+BKAPP_OTEL_INSTRUMENT_DB_API = env.bool("BKAPP_OTEL_INSTRUMENT_DB_API", default=False)
 if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
 

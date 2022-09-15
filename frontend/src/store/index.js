@@ -30,7 +30,6 @@ import http from '@/api';
 import { unifyObjectStyle, json2Query } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
-import { bus } from '@/common/bus';
 
 // 系统模块
 import system from './modules/system';
@@ -311,7 +310,9 @@ const store = new Vuex.Store({
 
         navCurRoleId: 0,
 
-        showNoviceGuide: false
+        showNoviceGuide: false,
+
+        curRoleId: 0
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -335,7 +336,8 @@ const store = new Vuex.Store({
         navData: state => state.navData,
         index: state => state.index,
         navCurRoleId: state => state.navCurRoleId,
-        showNoviceGuide: state => state.showNoviceGuide
+        showNoviceGuide: state => state.showNoviceGuide,
+        curRoleId: state => state.curRoleId
     },
     mutations: {
         updateHost (state, params) {
@@ -487,7 +489,7 @@ const store = new Vuex.Store({
 
         updateRoleList (state, payload) {
             state.roleList.splice(0, state.roleList.length, ...payload);
-            bus.$emit('roleList-update', payload.length);
+            // bus.$emit('roleList-update', payload.length);
         },
 
         updateNavData (state, payload) {
@@ -500,6 +502,10 @@ const store = new Vuex.Store({
 
         updateSelectManager (state, payload) {
             state.showNoviceGuide = payload;
+        },
+
+        updateCurRoleId (state, id) {
+            state.curRoleId = id;
         }
     },
     actions: {

@@ -12,6 +12,7 @@ import json
 
 from django.db import models
 
+from backend.apps.user.constants import UserPermissionCleanupRecordStatusEnum
 from backend.apps.user.managers import UserProfileManager
 from backend.common.models import BaseModel
 from backend.util.json import json_dumps
@@ -38,3 +39,23 @@ class UserProfile(BaseModel):
     @newbie.setter
     def newbie(self, newbie):
         self._newbie = json_dumps(newbie)
+
+
+class UserPermissionCleanupRecord(BaseModel):
+    """
+    用户权限清理记录
+    """
+
+    username = models.CharField("用户名", max_length=255, unique=True, db_index=True)
+    status = models.CharField(
+        "单据状态",
+        max_length=32,
+        choices=UserPermissionCleanupRecordStatusEnum.get_choices(),
+        default=UserPermissionCleanupRecordStatusEnum.CREATED.value,
+    )
+    error_info = models.TextField("异常", default="")
+    retry_count = models.IntegerField("重试次数", default=0)
+
+    class Meta:
+        verbose_name = "用户权限清理记录"
+        verbose_name_plural = "用户权限清理记录"

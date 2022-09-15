@@ -14,6 +14,7 @@ import logging
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
 
 from backend.common.cache import cachedmethod
@@ -93,12 +94,16 @@ class ESBAuthentication(BaseAuthentication):
     def _get_app_code_from_jwt_payload(self, jwt_payload):
         """从jwt里获取app_code"""
         app = jwt_payload.get("app", {})
+
+        if not app.get("verified", False):
+            raise exceptions.AuthenticationFailed("app is not verified")
+
         # 兼容多版本(企业版/TE版/社区版) 以及兼容APIGW/ESB
         app_code = app.get("bk_app_code", "") or app.get("app_code", "")
 
         # 虽然app_code为空对于后续的鉴权一定是不通过的，但鉴权不通过有很多原因，这里提前log便于问题排查
         if not app_code:
-            logger.warning("could not get app_code from the payload of jwt(esb or apigateway): %s", jwt_payload)
+            raise exceptions.AuthenticationFailed("could not get app_code from esb/apigateway jwt payload! it's empty")
 
         return app_code
 

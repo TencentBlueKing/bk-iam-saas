@@ -18,14 +18,14 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import (
-    AdminSubjectGroupSLZ,
-    FreezeSubjectResponseSLZ,
-    FreezeSubjectSLZ,
-    SubjectRoleSLZ,
-)
+from backend.api.admin.serializers import AdminSubjectGroupSLZ, FreezeSubjectResponseSLZ, SubjectRoleSLZ, SubjectSLZ
 from backend.api.authentication import ESBAuthentication
-from backend.audit.audit import log_user_blacklist_event
+from backend.apps.policy.models import Policy
+from backend.apps.role.models import RoleUser
+from backend.apps.temporary_policy.models import TemporaryPolicy
+from backend.apps.user.models import UserPermissionCleanupRecord
+from backend.apps.user.tasks import user_permission_cleanup
+from backend.audit.audit import log_user_blacklist_event, log_user_permission_clean_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
@@ -118,7 +118,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
         tags=["admin.subject.freeze"],
     )
     def freeze(self, request, *args, **kwargs):
-        serializer = FreezeSubjectSLZ(data=request.data, many=True)
+        serializer = SubjectSLZ(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
         if not serializer.validated_data:
@@ -147,7 +147,7 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
         tags=["admin.subject.freeze"],
     )
     def unfreeze(self, request, *args, **kwargs):
-        serializer = FreezeSubjectSLZ(data=request.data, many=True)
+        serializer = SubjectSLZ(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
         if not serializer.validated_data:
@@ -164,3 +164,86 @@ class AdminSubjectFreezeViewSet(GenericViewSet):
         )
         logger.info("unfreeze users: %s", serializer.data)
         return Response({}, status=status.HTTP_200_OK)
+
+
+class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
+    """用户权限清理"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {
+        "cleanup": AdminAPIEnum.SUBJECT_PERMISSION_CLEANUP.value,
+    }
+
+    pagination_class = None
+
+    @swagger_auto_schema(
+        operation_description="清理用户权限",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["admin.subject.cleanup"],
+    )
+    def cleanup(self, request, *args, **kwargs):
+        serializer = SubjectSLZ(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        if not serializer.validated_data:
+            raise error_codes.INVALID_ARGS.format(_("至少传递一个用户"))
+
+        # 创建清理记录
+        records = [UserPermissionCleanupRecord(username=s["id"]) for s in serializer.data]
+        UserPermissionCleanupRecord.objects.bulk_create(records, ignore_conflicts=True)
+
+        # 触发清理任务
+        for r in records:
+            user_permission_cleanup.delay(r.username)
+
+        log_user_permission_clean_event(
+            Subject(type=SubjectType.USER.value, id=request.user.username),
+            serializer.data,
+            extra={},
+            source_type=AuditSourceType.OPENAPI.value,
+        )
+        logger.info("cleanup users permission: %s", serializer.data)
+        return Response({}, status=status.HTTP_200_OK)
+
+
+class AdminSubjectPermissionExistsViewSet(GenericViewSet):
+    """
+    Subject是否存在权限数据
+
+    1. 判断是否有自定义权限
+    2. 判断是否有临时权限
+    3. 判断是否有用户组
+    4. 判断是否有分级管理员
+    """
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"list": AdminAPIEnum.SUBJECT_PERMISSION_EXISTS.value}
+
+    group_biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="Subject是否存在权限",
+        responses={status.HTTP_200_OK: AdminSubjectGroupSLZ(label="用户组", many=True)},
+        tags=["admin.subject.permission.exists"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject(type=SubjectType.USER.value, id=kwargs["subject_id"])
+        if Policy.objects.filter(subject_type=subject.type, subject_id=subject.id).exists():
+            return Response(True)
+
+        if TemporaryPolicy.objects.filter(subject_type=subject.type, subject_id=subject.id).exists():
+            return Response(True)
+
+        if RoleUser.objects.filter(username=subject.id).exists():
+            return Response(True)
+
+        relations = self.group_biz.list_subject_group(subject, is_recursive=False)
+        if relations:
+            return Response(True)
+
+        return Response(False)

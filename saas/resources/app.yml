@@ -8,6 +8,7 @@ desktop:
   height: 720
   is_max: true
   width: 1280
+  open_mode: new_tab
 introduction: 权限中心是蓝鲸智云提供的集中权限管理服务，用于蓝鲸体系内各平台和SaaS的权限集中接入，以及提供细化到具体资源实例的资源访问权限控制。
 introduction_en: IAM（Identity and Access Management） is centralized authority management services  provided by Blueking，which is used for centralized access of various Platforms and SaaS within the BlueKing System, and provides access control for resources that are refined to specific resource instance.
 is_use_celery: true
