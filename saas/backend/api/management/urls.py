@@ -24,12 +24,6 @@ urlpatterns = [
         views.ManagementGradeManagerViewSet.as_view({"put": "update"}),
         name="open.management.grade_manager",
     ),
-    # 初始化分级管理员
-    path(
-        "grade_managers/init/",
-        views.ManagementGradeManagerInitViewSet.as_view({"post": "create"}),
-        name="open.management.grade_manager_init",
-    ),
     # 分级管理员成员
     path(
         "grade_managers/<int:id>/members/",

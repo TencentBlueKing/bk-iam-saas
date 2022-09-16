@@ -9,21 +9,31 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from typing import Set
 from urllib.parse import urlencode
 
-from celery import task
+from celery import Task, task
 from django.conf import settings
 from django.template.loader import render_to_string
 
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
-from backend.biz.group import GroupBiz
-from backend.biz.role import RoleBiz, RoleInfoBean
+from backend.biz.group import GroupBiz, GroupTemplateGrantBean
+from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
+from backend.common.error_codes import error_codes
 from backend.common.time import get_soon_expire_ts
 from backend.component import esb
-from backend.service.constants import RoleRelatedObjectType, RoleType
+from backend.component.sops import list_project
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
+from backend.service.models.policy import ResourceGroupList
+from backend.service.models.subject import Subject
+from backend.service.role import AuthScopeAction, AuthScopeSystem
 from backend.util.url import url_join
+from backend.util.uuid import gen_uuid
+
+from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffixEnum
 
 logger = logging.getLogger("celery")
 
@@ -95,3 +105,171 @@ def role_group_expire_remind():
             esb.send_mail(",".join(usernames), "蓝鲸权限中心用户组续期提醒", mail_content)
         except Exception:  # pylint: disable=broad-except
             logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
+
+
+class InitBizGradeManagerTask(Task):
+    biz = RoleBiz()
+    role_check_biz = RoleCheckBiz()
+    group_biz = GroupBiz()
+
+    _exist_names: Set[str] = set()
+
+    def run(self):
+        projects = list_project()
+        for project in projects:
+            self._create_grade_manager(project)
+
+    def _create_grade_manager(self, project):
+        biz_name = project["name"]
+        if biz_name in self._exist_names:
+            return
+
+        try:
+            self.role_check_biz.check_unique_name(biz_name)
+        except error_codes.CONFLICT_ERROR:
+            # 缓存结果
+            self._exist_names.add(biz_name)
+            return
+
+        role_info = self._init_role_info(project)
+
+        role = self.biz.create(role_info, ADMIN_USER)
+
+        # 创建用户组并授权
+        authorization_scopes = role_info.dict()["authorization_scopes"]
+        for name_suffix in [ManagementGroupNameSuffixEnum.OPS.value, ManagementGroupNameSuffixEnum.READ.value]:
+            description = "{}业务运维人员的权限".format(biz_name)
+            if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
+                description = "仅包含{}各系统的查看权限".format(biz_name)
+
+            group = self.group_biz.create_and_add_members(
+                role.id,
+                biz_name + name_suffix,
+                description=description,
+                creator=ADMIN_USER,
+                subjects=[],
+                expired_at=0,
+            )
+
+            templates = self._init_group_auth_info(authorization_scopes, name_suffix)
+            self.group_biz.grant(role, group, templates)
+
+    def _init_role_info(self, data):
+        """
+        创建初始化分级管理员数据
+
+        1. 遍历各个需要初始化的系统
+        2. 查询系统的常用操作与系统的操作信息, 拼装出授权范围
+        3. 返回role info
+        """
+        role_info = RoleInfoBean(
+            name=data["name"],
+            description="管理员可授予他人{}业务的权限".format(data["name"]),
+            members=[ADMIN_USER],
+            subject_scopes=[Subject(type="*", id="*")],
+            authorization_scopes=[],
+        )
+
+        # 默认需要初始化的系统列表
+        systems = ["bk_job", "bk_cmdb", "bk_monitorv3", "bk_log_search", "bk_sops", "bk_nodeman", "bk_gsekit"]
+        for system_id in systems:
+            resource_type = "biz" if system_id != "bk_sops" else "project"
+            resource_system = "bk_cmdb" if system_id != "bk_sops" else "bk_sops"
+            resource_id = data["bk_biz_id"] if system_id != "bk_sops" else data["project_id"]
+            resource_name = data["name"]
+
+            auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
+
+            # 1. 查询常用操作
+            common_action = self.role_biz.get_common_action_by_name(
+                system_id, ManagementCommonActionNameEnum.OPS.value
+            )
+            if not common_action:
+                continue
+
+            # 2. 查询操作信息
+            action_list = self.action_biz.list(system_id)
+
+            # 3. 生成授权范围
+            for action_id in common_action.action_ids:
+                action = action_list.get(action_id)
+                if not action:
+                    continue
+
+                # 不关联资源类型的操作
+                if len(action.related_resource_types) == 0:
+                    auth_scope_action = AuthScopeAction(id=action.id, resource_groups=ResourceGroupList(__root__=[]))
+                else:
+                    policy_data = {
+                        "id": action.id,
+                        "resource_groups": [
+                            {
+                                "related_resource_types": [
+                                    {
+                                        "system_id": rrt.system_id,
+                                        "type": rrt.id,
+                                        "condition": [
+                                            {
+                                                "id": gen_uuid(),
+                                                "instances": [
+                                                    {
+                                                        "type": resource_type,
+                                                        "path": [
+                                                            {
+                                                                "id": resource_id,
+                                                                "name": resource_name,
+                                                                "system_id": resource_system,
+                                                                "type": resource_type,
+                                                            }
+                                                        ],
+                                                    }
+                                                ],
+                                                "attributes": [],
+                                            }
+                                        ],
+                                    }
+                                    for rrt in action.related_resource_types
+                                ]
+                            }
+                        ],
+                    }
+                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
+
+                auth_scope.actions.append(auth_scope_action)
+
+            # 4. 组合授权范围
+            if auth_scope.actions:
+                role_info.authorization_scopes.append(auth_scope)
+
+        return role_info
+
+    def _init_group_auth_info(self, authorization_scopes, name_suffix: str):
+        templates = []
+        for auth_scope in authorization_scopes:
+            system_id = auth_scope["system_id"]
+            actions = auth_scope["actions"]
+            if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
+                common_action = self.role_biz.get_common_action_by_name(
+                    system_id, ManagementCommonActionNameEnum.READ.value
+                )
+                if not common_action:
+                    continue
+
+                actions = [a for a in actions if a["id"] in common_action.action_ids]
+
+            policies = [PolicyBean.parse_obj(action) for action in actions]
+            policy_list = PolicyBeanList(
+                system_id=system_id,
+                policies=policies,
+                need_fill_empty_fields=True,  # 填充相关字段
+            )
+
+            template = GroupTemplateGrantBean(
+                system_id=system_id,
+                template_id=0,  # 自定义权限template_id为0
+                policies=policy_list.policies,
+            )
+
+            templates.append(template)
+
+        return templates

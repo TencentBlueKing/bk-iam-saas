@@ -8,14 +8,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from enum import Enum
+from typing import Dict, List
+
+from .esb import _call_esb_api
+from .http import http_get
 
 
-class ManagementCommonActionNameEnum(Enum):
-    OPS = "业务运维"
-    READ = "业务只读"
-
-
-class ManagementGroupNameSuffixEnum(Enum):
-    OPS = "运维组"
-    READ = "查看组"
+def list_project() -> List[Dict]:
+    """查询所有的项目列表"""
+    url_path = "/api/c/compapi/v2/sops/get_user_project_list/"
+    return _call_esb_api(http_get, url_path, data={})
