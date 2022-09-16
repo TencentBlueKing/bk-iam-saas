@@ -175,11 +175,12 @@ class InitBizGradeManagerTask(Task):
         )
 
         # 默认需要初始化的系统列表
-        systems = ["bk_job", "bk_cmdb", "bk_monitorv3", "bk_log_search", "bk_sops", "bk_nodeman", "bk_gsekit"]
+        systems = settings.INIT_GRADE_MANAGER_SYSTEM_LIST
+        bk_sops_system = "bk_sops"
         for system_id in systems:
-            resource_type = "biz" if system_id != "bk_sops" else "project"
-            resource_system = "bk_cmdb" if system_id != "bk_sops" else "bk_sops"
-            resource_id = data["bk_biz_id"] if system_id != "bk_sops" else data["project_id"]
+            resource_type = "biz" if system_id != bk_sops_system else "project"
+            resource_system = "bk_cmdb" if system_id != bk_sops_system else bk_sops_system
+            resource_id = data["bk_biz_id"] if system_id != bk_sops_system else data["project_id"]
             resource_name = data["name"]
 
             auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
