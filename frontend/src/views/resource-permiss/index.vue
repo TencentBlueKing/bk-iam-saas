@@ -140,6 +140,7 @@
         <bk-table
             :data="tableList"
             size="small"
+            class="mb40"
             :class="{ 'set-border': tableLoading }"
             ext-cls="system-access-table"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">

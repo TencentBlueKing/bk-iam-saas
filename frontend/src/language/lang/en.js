@@ -157,7 +157,7 @@ export const m = {
         '的详情': 'Detail',
         '手动输入': 'Manual Input',
         '手动输入提示1': 'You can only add up to 100 people at a time',
-        '手动输入提示2': 'The above user does not exist or does not belong to the authorization scope of the administrator',
+        '手动输入提示2': 'Username entered incorrectly or does not exist',
         '请尝试': 'Please try ',
         '修改授权人员范围': 'to modify the authorized personnel range',
         '添加到已选列表': 'Add to selected list',
@@ -718,6 +718,8 @@ export const m = {
     },
     renewal: {
         '续期': 'Renewal',
+        '申请续期': 'Apply for renewal',
+        '权限续期': 'Permission renewal',
         '批量续期': 'Batch Renewal',
         '选择权限': 'Select permission',
         '续期时长': 'Renewal of time',
