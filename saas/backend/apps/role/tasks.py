@@ -18,6 +18,7 @@ from django.template.loader import render_to_string
 
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
+from backend.biz.action import ActionBiz
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
@@ -111,6 +112,7 @@ class InitBizGradeManagerTask(Task):
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()
+    action_biz = ActionBiz()
 
     _exist_names: Set[str] = set()
 
@@ -154,6 +156,8 @@ class InitBizGradeManagerTask(Task):
             templates = self._init_group_auth_info(authorization_scopes, name_suffix)
             self.group_biz.grant(role, group, templates)
 
+        self._exist_names.add(biz_name)
+
     def _init_role_info(self, data):
         """
         创建初始化分级管理员数据
@@ -181,9 +185,7 @@ class InitBizGradeManagerTask(Task):
             auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
 
             # 1. 查询常用操作
-            common_action = self.role_biz.get_common_action_by_name(
-                system_id, ManagementCommonActionNameEnum.OPS.value
-            )
+            common_action = self.biz.get_common_action_by_name(system_id, ManagementCommonActionNameEnum.OPS.value)
             if not common_action:
                 continue
 
@@ -249,7 +251,7 @@ class InitBizGradeManagerTask(Task):
             system_id = auth_scope["system_id"]
             actions = auth_scope["actions"]
             if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
-                common_action = self.role_biz.get_common_action_by_name(
+                common_action = self.biz.get_common_action_by_name(
                     system_id, ManagementCommonActionNameEnum.READ.value
                 )
                 if not common_action:
