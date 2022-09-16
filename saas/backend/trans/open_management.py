@@ -13,9 +13,8 @@ from typing import Dict, List
 
 from pydantic.tools import parse_obj_as
 
-from backend.biz.action import ActionBiz
 from backend.biz.policy import PolicyBeanList
-from backend.biz.role import RoleBiz, RoleInfoBean
+from backend.biz.role import RoleInfoBean
 
 from .open import OpenCommonTrans, OpenPolicy
 
@@ -61,9 +60,6 @@ class ManagementCommonTrans(OpenCommonTrans):
 
 class GradeManagerTrans(ManagementCommonTrans):
     """处理分级管理员数据转换"""
-
-    role_biz = RoleBiz()
-    action_biz = ActionBiz()
 
     def _preprocess_authorization_scopes(self, data_authorization_scopes):
         """
