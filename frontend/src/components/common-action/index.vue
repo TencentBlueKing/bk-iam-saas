@@ -14,7 +14,7 @@
                 v-if="item.id !== 0 && isEditMode"
                 @click.stop="handleDelete(item.id, item.$id, index)" />
         </section>
-        <template v-if="isEditMode">
+        <template v-if="isEditMode && !isDisabled">
             <bk-button
                 text
                 theme="primary"
@@ -205,7 +205,7 @@
         margin-top: 10px;
         display: flex;
         flex-wrap: wrap;
-        height: 40px;
+        /* height: 40px; */
         .title {
             line-height: 32px;
             font-size: 12px;

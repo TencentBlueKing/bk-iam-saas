@@ -37,6 +37,9 @@
                                     @change="handleRtxChange">
                                 </bk-user-selector>
                                 <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                                <p class="name-empty-error" v-if="isPermissionsPrompt">
+                                    {{ $t(`m.verify['目标交接人不能为本人']`) }}
+                                </p>
                             </iam-form-item>
                             <iam-form-item :label="$t(`m.common['理由']`)" required>
                                 <bk-input
@@ -73,6 +76,7 @@
     import Group from './group.vue';
     import Custom from './custom.vue';
     import Manager from './manager.vue';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -95,8 +99,12 @@
                 userApi: window.BK_USER_API,
                 pageContainer: null,
                 submitLoading: false,
-                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
+                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
+                isPermissionsPrompt: false
             };
+        },
+        computed: {
+            ...mapGetters(['user'])
         },
         created () {
             // this.fetchCategories()
@@ -182,6 +190,7 @@
             },
             handleRtxFocus () {
                 this.isShowMemberError = false;
+                this.isPermissionsPrompt = false;
             },
             handleRtxBlur () {
                 this.isShowMemberError = this.formData.members.length < 1;
@@ -192,6 +201,7 @@
             },
             handleRtxChange (payload) {
                 this.isShowMemberError = false;
+                this.isPermissionsPrompt = false;
                 this.formData.members = payload;
             },
 
@@ -243,6 +253,10 @@
                         theme: 'error',
                         message: this.$t(`m.permTransfer['还未选择权限']`)
                     });
+                    return;
+                }
+                if (this.formData.members.length && this.user.username === this.formData.members[0]) {
+                    this.isPermissionsPrompt = true;
                     return;
                 }
                 if (!this.handleValidator()) {
