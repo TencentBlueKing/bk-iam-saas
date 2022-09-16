@@ -24,7 +24,6 @@ class ManagementAPIEnum(BaseAPIEnum):
     GRADE_MANAGER_MEMBER_LIST = auto()
     GRADE_MANAGER_MEMBER_ADD = auto()
     GRADE_MANAGER_MEMBER_DELETE = auto()
-    GRADE_MANAGER_INIT = auto()
     # 用户组
     GROUP_LIST = auto()
     GROUP_BATCH_CREATE = auto()
