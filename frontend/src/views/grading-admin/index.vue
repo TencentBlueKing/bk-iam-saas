@@ -388,6 +388,9 @@
                     color: #699df4;
                 }
             }
+            .bk-table-pagination-wrapper {
+                background: #fff;
+            }
         }
     }
     .showImage {

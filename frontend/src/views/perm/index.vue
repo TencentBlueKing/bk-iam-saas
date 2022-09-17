@@ -14,7 +14,7 @@
                 style="margin: 0 6px 16px 6px;"
                 :disabled="isEmpty || isNoRenewal"
                 @click="handleBatchRenewal">
-                {{ $t(`m.renewal['批量续期']`) }}
+                {{ $t(`m.renewal['权限续期']`) }}
             </bk-button>
             <bk-button
                 v-if="enablePermissionHandover.toLowerCase() === 'true'"
