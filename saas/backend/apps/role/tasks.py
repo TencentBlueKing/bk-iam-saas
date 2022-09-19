@@ -218,12 +218,14 @@ class InitBizGradeManagerTask(Task):
                                                     {
                                                         "type": resource_type,
                                                         "path": [
-                                                            {
-                                                                "id": resource_id,
-                                                                "name": resource_name,
-                                                                "system_id": resource_system,
-                                                                "type": resource_type,
-                                                            }
+                                                            [
+                                                                {
+                                                                    "id": resource_id,
+                                                                    "name": resource_name,
+                                                                    "system_id": resource_system,
+                                                                    "type": resource_type,
+                                                                }
+                                                            ]
                                                         ],
                                                     }
                                                 ],
