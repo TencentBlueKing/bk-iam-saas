@@ -12,6 +12,7 @@ import logging
 from typing import Set
 from urllib.parse import urlencode
 
+from blue_krill.web.std_error import APIError
 from celery import Task, task
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -23,7 +24,6 @@ from backend.biz.group import GroupBiz, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
-from backend.common.error_codes import error_codes
 from backend.common.time import get_soon_expire_ts
 from backend.component import esb
 from backend.component.sops import list_project
@@ -128,7 +128,7 @@ class InitBizGradeManagerTask(Task):
 
         try:
             self.role_check_biz.check_unique_name(biz_name)
-        except error_codes.CONFLICT_ERROR:
+        except APIError:
             # 缓存结果
             self._exist_names.add(biz_name)
             return
