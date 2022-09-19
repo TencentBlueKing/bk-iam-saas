@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -23,8 +21,6 @@ from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.serializers import SystemQuerySLZ
 from backend.service.constants import SubjectType
 from backend.service.models import Subject
-
-permission_logger = logging.getLogger("permission")
 
 
 class TemporaryPolicyViewSet(GenericViewSet):
@@ -67,14 +63,6 @@ class TemporaryPolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
         subject = Subject(type=SubjectType.USER.value, id=request.user.username)
-
-        permission_logger.info(
-            "subject type=%s, id=%s temporary polices %s deleted by user %s",
-            subject.type,
-            subject.id,
-            ids,
-            request.user.username,
-        )
 
         policies = self.policy_query_biz.list_temporary_by_policy_ids(system_id, subject, ids)
 

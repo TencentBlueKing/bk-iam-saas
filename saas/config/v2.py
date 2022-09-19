@@ -244,12 +244,6 @@ LOGGING = {
             "level": LOG_LEVEL,
             "propagate": True,
         },
-        # 授权相关的日志
-        "permission": {
-            "handlers": ["root"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
     },
 }
 

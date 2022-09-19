@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -32,8 +30,6 @@ from .audit import (
     SubjectTemporaryPolicyDeleteAuditProvider,
 )
 from .serializers import QueryRoleSLZ, SubjectGroupSLZ, UserRelationSLZ
-
-permission_logger = logging.getLogger("permission")
 
 
 class SubjectGroupViewSet(GenericViewSet):
@@ -67,10 +63,6 @@ class SubjectGroupViewSet(GenericViewSet):
         serializer = UserRelationSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-
-        permission_logger.info(
-            "subject type=%s, id=%s group deleted by user %s", subject.type, subject.id, request.user.username
-        )
 
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:
@@ -149,10 +141,6 @@ class SubjectPolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
 
-        permission_logger.info(
-            "subject type=%s, id=%s policy deleted by user %s", subject.type, subject.id, request.user.username
-        )
-
         # 为了记录审计日志，需要在删除前查询
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
@@ -184,10 +172,6 @@ class SubjectPolicyViewSet(GenericViewSet):
         resource_type = data["type"]
         condition_ids = data["ids"]
         condition = data["condition"]
-
-        permission_logger.info(
-            "subject type=%s, id=%s policy deleted partial by user %s", subject.type, subject.id, request.user.username
-        )
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
@@ -223,14 +207,6 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
         policy_id = kwargs["pk"]
         resource_group_id = kwargs["resource_group_id"]
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-
-        permission_logger.info(
-            "subject type=%s, id=%s policy delete via resource group id %s by user %s",
-            subject.type,
-            subject.id,
-            resource_group_id,
-            request.user.username,
-        )
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
@@ -306,14 +282,6 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-
-        permission_logger.info(
-            "subject type=%s, id=%s temporary polices %s deleted by user %s",
-            subject.type,
-            subject.id,
-            ids,
-            request.user.username,
-        )
 
         policies = self.policy_query_biz.list_temporary_by_policy_ids(system_id, subject, ids)
 
