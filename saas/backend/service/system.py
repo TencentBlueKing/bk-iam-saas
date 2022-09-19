@@ -46,3 +46,9 @@ class SystemService:
 
     def new_system_list(self) -> SystemList:
         return SystemList(self.list())
+
+    def list_system_manger(self, system_id: str) -> List[str]:
+        """
+        查询系统的系统管理员配置
+        """
+        return iam.get_system_managers(system_id)
