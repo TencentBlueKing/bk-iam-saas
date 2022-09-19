@@ -26,6 +26,7 @@ from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
 from backend.common.time import get_soon_expire_ts
 from backend.component import esb
+from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
 from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
 from backend.service.models.policy import ResourceGroupList
@@ -117,9 +118,13 @@ class InitBizGradeManagerTask(Task):
     _exist_names: Set[str] = set()
 
     def run(self):
+        biz_info = list_biz()
+        biz_id_set = [one["bk_biz_id"] for one in biz_info["info"]]
+
         projects = list_project()
         for project in projects:
-            self._create_grade_manager(project)
+            if project["bk_biz_id"] in biz_id_set:
+                self._create_grade_manager(project)
 
     def _create_grade_manager(self, project):
         biz_name = project["name"]
