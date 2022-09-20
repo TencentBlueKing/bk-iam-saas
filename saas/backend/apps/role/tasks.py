@@ -119,14 +119,22 @@ class InitBizGradeManagerTask(Task):
 
     def run(self):
         biz_info = list_biz()
-        biz_id_set = [one["bk_biz_id"] for one in biz_info["info"]]
+        biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
 
         projects = list_project()
         for project in projects:
-            if project["bk_biz_id"] in biz_id_set:
-                self._create_grade_manager(project)
+            if project["bk_biz_id"] in biz_dict:
+                biz = biz_dict[project["bk_biz_id"]]
+                maintainers = biz["bk_biz_maintainer"].split(",")  # 业务的负责人
+                viewers = (
+                    biz["bk_biz_developer"].split(",")
+                    + biz["bk_biz_productor"].split(",")
+                    + biz["bk_biz_tester"].split(",")
+                )  # 业务的查看人
 
-    def _create_grade_manager(self, project):
+                self._create_grade_manager(project, maintainers, viewers)
+
+    def _create_grade_manager(self, project, maintainers, viewers):
         biz_name = project["name"]
         if biz_name in self._exist_names:
             return
@@ -138,7 +146,7 @@ class InitBizGradeManagerTask(Task):
             self._exist_names.add(biz_name)
             return
 
-        role_info = self._init_role_info(project)
+        role_info = self._init_role_info(project, maintainers)
 
         role = self.biz.create(role_info, ADMIN_USER)
 
@@ -154,7 +162,7 @@ class InitBizGradeManagerTask(Task):
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,
-                subjects=[],
+                subjects=maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers,
                 expired_at=0,
             )
 
@@ -163,7 +171,7 @@ class InitBizGradeManagerTask(Task):
 
         self._exist_names.add(biz_name)
 
-    def _init_role_info(self, data):
+    def _init_role_info(self, data, maintainers):
         """
         创建初始化分级管理员数据
 
@@ -174,7 +182,7 @@ class InitBizGradeManagerTask(Task):
         role_info = RoleInfoBean(
             name=data["name"],
             description="管理员可授予他人{}业务的权限".format(data["name"]),
-            members=[ADMIN_USER],
+            members=maintainers or [ADMIN_USER],
             subject_scopes=[Subject(type="*", id="*")],
             authorization_scopes=[],
         )
