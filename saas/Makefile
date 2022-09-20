@@ -13,3 +13,27 @@ i18n_mo:
 export_requirements:
 	poetry export -f requirements.txt --output requirements.txt --without-hashes
 	poetry export --dev -f requirements.txt --output requirements_dev.txt --without-hashes
+
+init:
+	pip install -U pip setuptools
+	pip install poetry
+	poetry install
+	pip install pre-commit
+	pre-commit install
+
+lint:
+	pflake8 --config=./pyproject.toml .
+	mypy --config-file=./pyproject.toml .
+
+fmt:
+	isort --settings-path=./pyproject.toml .
+	black --config=./pyproject.toml .
+
+test:
+	pytest -c ./pyproject.toml .
+
+cov:
+	pytest --cov-report html --cov=backend -c ./pyproject.toml .
+
+serve:
+	python manage.py runserver
