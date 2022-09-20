@@ -36,4 +36,4 @@ cov:
 	pytest --cov-report html --cov=backend -c ./pyproject.toml .
 
 serve:
-	python manage.py runserver
+	python manage.py runserver 8000
