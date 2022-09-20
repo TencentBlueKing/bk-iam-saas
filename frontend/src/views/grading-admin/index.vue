@@ -96,14 +96,14 @@
             ext-cls="showImage">
             <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是分级管理员"]') }}</h2>
             <p>{{ $t('m.common["分级管理员概念"]') }}</p>
-            <img src="../../images/boot-page/one2x2.jpg" alt="" style="width:714px;height:263px">
+            <img src="../../images/boot-page/one2x2.jpg" alt="" style="width:765px;height:263px">
             <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用分级管理员"]') }}</h2>
             <p>1. {{ $t('m.common["我的分级管理员 > 申请新建（已有分级管理员忽略）"]') }}</p>
-            <img src="@/images/boot-page/two2x2.png" alt="" style="width:515px;height:208px">
-            <p>2. {{ $t('m.common["点击右上角个人信息 > 切换管理员身份"]') }}</p>
-            <img src="@/images/boot-page/three2x2.png" alt="" style="width:402px;height:203px">
-            <p>3. {{ $t('m.common["点击左侧导航用户组 > 新建，创建用户组，设置权限和成员。"]') }}</p>
-            <img src="@/images/boot-page/four2x3.png" alt="" style="width:715px;height:208px">
+            <img src="@/images/boot-page/two2x2.png" alt="" style="width:765px; height:300px">
+            <p>2. {{ $t('m.common["切换顶部导航至 [权限管理] ，在左上角切换 [分级管理员空间]"]') }}</p>
+            <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px">
+            <p>3. {{ $t('m.common["在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员"]') }}</p>
+            <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px">
         </bk-dialog>
     </div>
 </template>
