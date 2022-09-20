@@ -285,7 +285,7 @@ def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str
     return _call_iam_api(http_delete, url_path, data=params)
 
 
-def add_subject_members(_type: str, id: str, policy_expired_at: int, members: List[dict]) -> Dict[str, int]:
+def add_subject_members(_type: str, id: str, expired_at: int, members: List[dict]) -> Dict[str, int]:
     """
     批量添加subject的成员
     """
@@ -294,7 +294,7 @@ def add_subject_members(_type: str, id: str, policy_expired_at: int, members: Li
         "type": _type,
         "id": id,
         "members": members,
-        "policy_expired_at": policy_expired_at,
+        "expired_at": expired_at,
     }
     permission_logger.info("iam subject add member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_post, url_path, data=params)

@@ -318,7 +318,7 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
         data = serializer.validated_data
 
         members = [
-            GroupMemberExpiredAtBean(type=m["type"], id=m["id"], policy_expired_at=data["expired_at"])
+            GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=data["expired_at"])
             for m in data["members"]
         ]
 

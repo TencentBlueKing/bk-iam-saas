@@ -205,7 +205,7 @@ class ApprovedPassApplicationBiz:
 
             self.group_biz.update_members_expired_at(
                 group["id"],
-                [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, policy_expired_at=group["expired_at"])],
+                [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, expired_at=group["expired_at"])],
             )
 
         log_group_event(
