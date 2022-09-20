@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Tuple
+from typing import Dict, Generator, List, Tuple
 
 from django.db import transaction
 from django.db.models import F
@@ -35,6 +35,17 @@ class SubjectGroup(BaseModel):
     # 从部门继承的信息
     department_id: int = 0
     department_name: str = ""
+
+
+class GroupSubject(BaseModel):
+    """
+    后端返回的GroupSubject关系
+    """
+
+    subject: Subject
+    Group: Subject
+    expired_at: int
+    created_at: str  # 后端json返回的格式化时间
 
 
 class GroupCreate(BaseModel):
@@ -255,3 +266,19 @@ class GroupService:
         """分页查询用户组成员"""
         data = iam.list_subject_member(SubjectType.GROUP.value, str(group_id), limit, offset)
         return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
+
+    def list_group_subject_before_expired_at(self, expired_at: int) -> Generator[GroupSubject, None, None]:
+        """
+        查询在指定过期时间之前的相关GroupSubject关系
+        """
+        limit, offset = 1000, 0
+        while True:
+            iam_data = iam.list_group_subject_before_expired_at(expired_at=expired_at, limit=limit, offset=offset)
+            if len(iam_data["results"]) == 0:
+                break
+
+            relations = parse_obj_as(List[GroupSubject], iam_data["results"])
+            for relation in relations:
+                yield relation
+
+            offset += limit

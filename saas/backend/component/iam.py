@@ -430,6 +430,15 @@ def list_exist_subjects_before_expired_at(subjects: List[Dict], expired_at: int)
     return _call_iam_api(http_post, url_path, data=data)
 
 
+def list_group_subject_before_expired_at(expired_at: int, limit: int = 10, offset: int = 0) -> List:
+    """
+    查询已过期的关系
+    """
+    url_path = "/api/v1/web/group-subject/before_expired_at"
+    data = {"before_expired_at": expired_at, "limit": limit, "offset": offset}
+    return _call_iam_api(http_get, url_path, data=data)
+
+
 def list_model_change_event(status: str = "pending", limit=1000):
     """查询模型变更事件
     status: pending/finished/空

@@ -140,6 +140,7 @@ class GroupBiz:
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
+    list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
     batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
 
     def create_and_add_members(
