@@ -29,7 +29,7 @@ class SubjectGroup(BaseModel):
 
     type: str
     id: str
-    policy_expired_at: int
+    expired_at: int
     created_at: str  # 后端json返回的格式化时间
 
     # 从部门继承的信息
@@ -43,7 +43,7 @@ class GroupCreate(BaseModel):
 
 
 class GroupMemberExpiredAt(Subject):
-    policy_expired_at: int
+    expired_at: int
 
 
 class GroupService:
@@ -129,6 +129,12 @@ class GroupService:
 
         # 将group_id从str转为int
         return {int(k): v for k, v in group_belongs.items()}
+
+    def check_subject_groups_quota(self, subject: Subject, group_ids: List[int]) -> None:
+        """
+        校验Subject与用户组是否数量超限
+        """
+        iam.check_subject_groups_quota(subject.type, subject.id, group_ids)
 
     def list_subject_group(self, subject: Subject, limit: int = 10, offset: int = 0) -> Tuple[int, List[SubjectGroup]]:
         """
