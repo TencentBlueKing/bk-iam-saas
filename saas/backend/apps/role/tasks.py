@@ -24,7 +24,7 @@ from backend.biz.group import GroupBiz, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
-from backend.common.time import PERMANENT_SECONDS, get_soon_expire_ts
+from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
@@ -163,7 +163,7 @@ class InitBizGradeManagerTask(Task):
                 description=description,
                 creator=ADMIN_USER,
                 subjects=maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers,
-                expired_at=PERMANENT_SECONDS,
+                expired_at=6 * 30 * DAY_SECONDS,  # 过期时间半年
             )
 
             templates = self._init_group_auth_info(authorization_scopes, name_suffix)
