@@ -141,7 +141,7 @@ class InitBizGradeManagerTask(Task):
                         + biz.get("bk_biz_productor", "").split(",")
                         + biz.get("bk_biz_tester", "").split(",")
                     )
-                )  # 业务的查看
+                )  # 业务的查看人
 
                 self._create_grade_manager(project, maintainers, viewers)
             else:
