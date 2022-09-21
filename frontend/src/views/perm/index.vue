@@ -81,9 +81,9 @@
                     {
                         name: 'GroupPerm', label: this.$t(`m.perm['用户组权限']`)
                     },
-                    {
-                        name: 'DepartmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`)
-                    },
+                    // {
+                    //     name: 'DepartmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`)
+                    // },
                     {
                         name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
                     },
@@ -123,7 +123,7 @@
             async fetchData () {
                 this.componentLoading = true;
                 try {
-                    const [res1, res2, res3, res4, res5, res6] = await Promise.all([
+                    const [res1, res2, res3, res4, res5] = await Promise.all([
                         this.$store.dispatch('perm/getPersonalGroups', {
                             page_size: 10,
                             page: 1
@@ -134,8 +134,8 @@
                             page: 1
                         }),
                         this.$store.dispatch('renewal/getExpireSoonPerm'),
-                        this.$store.dispatch('permApply/getTeporHasPermSystem'),
-                        this.$store.dispatch('perm/getDepartMentsPersonalGroups')
+                        this.$store.dispatch('permApply/getTeporHasPermSystem')
+                        // this.$store.dispatch('perm/getDepartMentsPersonalGroups')
                         // this.fetchPermGroups(),
                         // this.fetchSystems(),
                         // this.fetchSoonGroupWithUser(),
@@ -150,11 +150,11 @@
                     const teporarySystemList = res5.data || [];
                     this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
 
-                    const departmentGroupList = res6.data || [];
-                    this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
+                    // const departmentGroupList = res6.data || [];
+                    // this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
 
                     this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
-                        && teporarySystemList.length < 1 && departmentGroupList.length < 1;
+                        && teporarySystemList.length < 1; // && departmentGroupList.length < 1
                     this.soonGroupLength = res3.data.results.length;
                     this.soonPermLength = res4.data.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
