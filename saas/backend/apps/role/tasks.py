@@ -34,7 +34,8 @@ def sync_system_manager():
     创建系统管理员
     """
     # 查询后端所有的系统信息
-    systems = {system.id: system for system in SystemBiz().list()}
+    biz = SystemBiz()
+    systems = {system.id: system for system in biz.list()}
 
     # 查询已创建的系统管理员的系统id
     exists_system_ids = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value).values_list("code", flat=True)
@@ -44,13 +45,16 @@ def sync_system_manager():
         system = systems[system_id]
         logger.info("create system_manager for system_id: %s", system_id)
 
+        # 查询系统管理员配置
+        members = biz.list_system_manger(system_id)
+
         data = {
             "type": RoleType.SYSTEM_MANAGER.value,
             "code": system_id,
             "name": f"{system.name}",
             "name_en": f"{system.name_en}",
             "description": "",
-            "members": [],
+            "members": members,
             "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
             "subject_scopes": [{"type": "*", "id": "*"}],
         }
