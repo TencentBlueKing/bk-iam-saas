@@ -1,0 +1,65 @@
+.my-perm-group-perm {
+    height: 100%;
+    .iam-perm-ext-cls {
+        margin-top: 1px;
+    }
+    .bk-table {
+        border-right: none;
+        border-bottom: none;
+        .user-group-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
+            }
+        }
+    }
+    .my-perm-group-perm-empty-wrapper {
+        img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+        }
+    }
+    .can-view {
+        color: #3a84ff;
+        cursor: pointer;
+        &:hover {
+            color: #699df4;
+        }
+    }
+    .grade-memebers-content {
+        padding: 20px;
+        height: calc(100vh - 61px);
+        .member-item {
+            position: relative;
+            display: inline-block;
+            margin: 0 6px 6px 0;
+            padding: 0 10px;
+            line-height: 22px;
+            background: #f5f6fa;
+            border: 1px solid #dcdee5;
+            border-radius: 2px;
+            font-size: 12px;
+            .member-name {
+                display: inline-block;
+                max-width: 200px;
+                line-height: 17px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                vertical-align: text-top;
+                .count {
+                    color: #c4c6cc;
+                }
+            }
+        }
+    }
+    .info {
+        margin-top: 5px;
+        color: #c4c6cc;
+        font-size: 14px;
+    }
+}

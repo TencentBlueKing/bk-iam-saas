@@ -140,9 +140,13 @@
         <bk-table
             :data="tableList"
             size="small"
+            class="mb40"
             :class="{ 'set-border': tableLoading }"
             ext-cls="system-access-table"
-            v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
+            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+            :pagination="pagination"
+            @page-change="pageChange"
+            @page-limit-change="limitChange">
             <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
                 <template slot-scope="{ row }">
                     {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
@@ -237,7 +241,13 @@
                 systemIdError: false,
                 actionIdError: false,
                 searchTypeError: false,
-                resourceTypeError: false
+                resourceTypeError: false,
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                currentBackup: 1
             };
         },
         computed: {
@@ -268,6 +278,9 @@
             }
         },
         watch: {
+            'pagination.current' (value) {
+                this.currentBackup = value;
+            },
             searchValue (value) {
                 if (!value) {
                     this.tableList = _.cloneDeep(this.tableListClone);
@@ -366,7 +379,6 @@
                     this.actionIdError = true;
                     return;
                 }
-                console.log('resourceTypeData', this.resourceTypeData);
                 if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
                     && this.resourceTypeData.resource_groups[this.groupIndex]
                         .related_resource_types.some(e => e.empty)) {
@@ -414,7 +426,10 @@
                         }
                     } else {
                         this.tableList = res.data;
-                        this.tableListClone = res.data;
+                        this.tableListClone = _.cloneDeep(this.tableList);
+                        this.pagination.count = res.data.length;
+                        const data = this.getDataByPage();
+                        this.tableList.splice(0, this.tableList.length, ...data);
                     }
                 } catch (e) {
                     console.error(e);
@@ -583,6 +598,37 @@
                     .then(data => {
                         return data.results;
                     });
+            },
+
+            pageChange (page) {
+                if (this.currentBackup === page) {
+                    return;
+                }
+                this.pagination.current = page;
+                const data = this.getDataByPage(page);
+                this.tableList.splice(0, this.tableList.length, ...data);
+            },
+
+            limitChange (currentLimit, prevLimit) {
+                this.pagination.limit = currentLimit;
+                this.pagination.current = 1;
+                const data = this.getDataByPage(this.pagination.current);
+                this.tableList.splice(0, this.tableList.length, ...data);
+            },
+
+            getDataByPage (page) {
+                if (!page) {
+                    this.pagination.current = page = 1;
+                }
+                let startIndex = (page - 1) * this.pagination.limit;
+                let endIndex = page * this.pagination.limit;
+                if (startIndex < 0) {
+                    startIndex = 0;
+                }
+                if (endIndex > this.tableListClone.length) {
+                    endIndex = this.tableListClone.length;
+                }
+                return this.tableListClone.slice(startIndex, endIndex);
             }
             
         }

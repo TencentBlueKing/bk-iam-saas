@@ -193,6 +193,10 @@
                 this.isPermissionsPrompt = false;
             },
             handleRtxBlur () {
+                if (this.formData.members.length && this.user.username === this.formData.members[0]) {
+                    this.isPermissionsPrompt = true;
+                    return;
+                }
                 this.isShowMemberError = this.formData.members.length < 1;
             },
             handleReasonInput () {

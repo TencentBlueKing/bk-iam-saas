@@ -157,7 +157,7 @@ export const m = {
         '的详情': 'Detail',
         '手动输入': 'Manual Input',
         '手动输入提示1': 'You can only add up to 100 people at a time',
-        '手动输入提示2': 'The above user does not exist or does not belong to the authorization scope of the administrator',
+        '手动输入提示2': 'Username entered incorrectly or does not exist',
         '请尝试': 'Please try ',
         '修改授权人员范围': 'to modify the authorized personnel range',
         '添加到已选列表': 'Add to selected list',
@@ -212,8 +212,8 @@ export const m = {
         '二': 'two',
         '如何使用分级管理员': 'How do I use a hierarchical administrator',
         '我的分级管理员 > 申请新建（已有分级管理员忽略）': 'My grading administrator > applied for new (the existing grading administrator ignored)  ',
-        '点击右上角个人信息 > 切换管理员身份': 'Click on personal information > in the upper right corner to switch administrator identity',
-        '点击左侧导航用户组 > 新建，创建用户组，设置权限和成员。': 'Click the left navigation user group > new, create a user group, set permissions and members.',
+        '切换顶部导航至 [权限管理] ，在左上角切换 [分级管理员空间]': 'Toggle the top navigation to [Privilege Management], and switch to [Level Admin Space] in the upper left corner',
+        '在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员': 'In the left navigation, click User Groups >; New to create a user group, set permissions and members.',
         '退出将不在具备相应的管理权限': 'Quitting will no longer have the appropriate administrative rights',
         '确定退出分级管理员': 'Determine the exit level administrator',
         '用户组': 'user group',
@@ -256,6 +256,7 @@ export const m = {
         '请选择成员': 'Please select member',
         '目标交接人不能为本人': 'The target handover person cannot be himself',
         '操作和资源实例范围不可为空': 'Operation and resource instance scope cannot be empty',
+        '理由不可为空': 'reason cannot be empty',
         '用户组名可随时修改': 'The group name can be modified at any time',
         '可授权人员范围不可为空': 'The range of authorized personnel cannot be empty',
         '内容格式不正确': 'The content format is incorrect',
@@ -513,7 +514,8 @@ export const m = {
         '通过组织加入的组无法退出': 'Groups joined through the organization cannot drop out',
         '直接加入': 'Joined Directly',
         '通过组织加入': 'Joined By Organization',
-        '组权限': 'Permissions'
+        '组权限': 'Permissions',
+        '所属部门用户组权限': 'Department User Group Permissions'
     },
     permTemplate: {
         '模板名': 'Template Name',
@@ -717,6 +719,8 @@ export const m = {
     },
     renewal: {
         '续期': 'Renewal',
+        '申请续期': 'Apply for renewal',
+        '权限续期': 'Permission renewal',
         '批量续期': 'Batch Renewal',
         '选择权限': 'Select permission',
         '续期时长': 'Renewal of time',

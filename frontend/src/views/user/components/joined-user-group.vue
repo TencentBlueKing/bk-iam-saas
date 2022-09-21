@@ -170,6 +170,7 @@
                     current: 1,
                     count: 0,
                     limit: 10
+                    // limitList: [1, 5, 20, 50]
                 },
                 curPageData: [],
                 deleteDialogConf: {
@@ -249,11 +250,13 @@
                 try {
                     const res = await this.$store.dispatch('perm/getPermGroups', {
                         subjectType: type === 'user' ? type : 'department',
-                        subjectId: type === 'user' ? this.data.username : this.data.id
+                        subjectId: type === 'user' ? this.data.username : this.data.id,
+                        limit: this.pageConf.limit,
+                        offset: this.pageConf.current
                     });
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []));
-                    this.initPageConf();
-                    this.curPageData = this.getDataByPage(this.pageConf.current);
+                    this.pageConf.count = res.data.count || 0;
+                    this.dataList.splice(0, this.dataList.length, ...(res.data.results || []));
+                    this.curPageData = [...this.dataList];
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -283,28 +286,8 @@
              */
             handlePageChange (page = 1) {
                 this.pageConf.current = page;
-                const data = this.getDataByPage(page);
-                this.curPageData.splice(0, this.curPageData.length, ...data);
+                this.fetchPermGroups();
             },
-
-            /**
-             * getDataByPage
-             */
-            getDataByPage (page) {
-                if (!page) {
-                    this.pageConf.current = page = 1;
-                }
-                let startIndex = (page - 1) * this.pageConf.limit;
-                let endIndex = page * this.pageConf.limit;
-                if (startIndex < 0) {
-                    startIndex = 0;
-                }
-                if (endIndex > this.dataList.length) {
-                    endIndex = this.dataList.length;
-                }
-                return this.dataList.slice(startIndex, endIndex);
-            },
-
             /**
              * handlePageLimitChange
              */
