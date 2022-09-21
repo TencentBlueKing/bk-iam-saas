@@ -18,6 +18,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from backend.apps.group.models import Group
+from backend.apps.organization.models import User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.biz.action import ActionBiz
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
@@ -28,7 +29,7 @@ from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
 from backend.service.role import AuthScopeAction, AuthScopeSystem
@@ -170,12 +171,14 @@ class InitBizGradeManagerTask(Task):
             if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
                 description = "仅包含{}各系统的查看权限".format(biz_name)
 
+            members = maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers
+            users = User.objects.filter(username__in=members)  # 筛选出已同步存在的用户
             group = self.group_biz.create_and_add_members(
                 role.id,
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,
-                subjects=maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers,
+                subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
                 expired_at=6 * 30 * DAY_SECONDS,  # 过期时间半年
             )
 
