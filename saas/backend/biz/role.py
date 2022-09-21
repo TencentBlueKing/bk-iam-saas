@@ -51,7 +51,7 @@ from backend.service.constants import (
     SubjectType,
 )
 from backend.service.models import Attribute, Subject, System
-from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleInfo, RoleService
+from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService
 from backend.service.system import SystemService
 
 logger = logging.getLogger("app")
@@ -334,6 +334,14 @@ class RoleBiz:
 
         # 变更可授权的权限范围
         self.svc.update_role_auth_scope(role_id, auth_scopes)
+
+    def get_common_action_by_name(self, system_id: str, name: str) -> Optional[CommonAction]:
+        common_actions = self.list_system_common_actions(system_id)
+        for common_action in common_actions:
+            if common_action.name == name:
+                return common_action
+
+        return None
 
 
 class RoleCheckBiz:

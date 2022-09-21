@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from enum import Enum
+
 from aenum import LowerStrEnum, auto, skip
 from django.utils.translation import gettext as _
 
@@ -46,3 +48,13 @@ class PermissionTypeEnum(ChoicesEnum, LowerStrEnum):
     RESOURCE_INSTANCE = auto()
 
     _choices_labels = skip(((CUSTOM, _("自定义权限")), (TEMPLATE, _("模板权限")), (RESOURCE_INSTANCE, _("资源实例"))))
+
+
+class ManagementCommonActionNameEnum(Enum):
+    OPS = "业务运维"
+    READ = "业务只读"
+
+
+class ManagementGroupNameSuffixEnum(Enum):
+    OPS = "运维组"
+    READ = "查看组"
