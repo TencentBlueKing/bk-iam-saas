@@ -136,6 +136,12 @@ class InitBizGradeManagerTask(Task):
                 )  # 业务的查看人
 
                 self._create_grade_manager(project, maintainers, viewers)
+            else:
+                logger.debug(
+                    "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
+                    project["name"],
+                    project["bk_biz_id"],
+                )
 
     def _create_grade_manager(self, project, maintainers, viewers):
         biz_name = project["name"]
@@ -204,6 +210,11 @@ class InitBizGradeManagerTask(Task):
             # 1. 查询常用操作
             common_action = self.biz.get_common_action_by_name(system_id, ManagementCommonActionNameEnum.OPS.value)
             if not common_action:
+                logger.debug(
+                    "init grade manager: system [%s] is not configured common action [%s]",
+                    system_id,
+                    ManagementCommonActionNameEnum.OPS.value,
+                )
                 continue
 
             # 2. 查询操作信息
@@ -213,6 +224,12 @@ class InitBizGradeManagerTask(Task):
             for action_id in common_action.action_ids:
                 action = action_list.get(action_id)
                 if not action:
+                    logger.debug(
+                        "init grade manager: system [%s] action [%s] not exists in common action [%s]",
+                        system_id,
+                        action_id,
+                        ManagementCommonActionNameEnum.OPS.value,
+                    )
                     continue
 
                 # 不关联资源类型的操作
@@ -274,6 +291,11 @@ class InitBizGradeManagerTask(Task):
                     system_id, ManagementCommonActionNameEnum.READ.value
                 )
                 if not common_action:
+                    logger.debug(
+                        "init grade manager: system [%s] is not configured common action [%s]",
+                        system_id,
+                        ManagementCommonActionNameEnum.READ.value,
+                    )
                     continue
 
                 actions = [a for a in actions if a["id"] in common_action.action_ids]
