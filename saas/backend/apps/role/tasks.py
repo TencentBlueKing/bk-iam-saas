@@ -18,17 +18,18 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from backend.apps.group.models import Group
+from backend.apps.organization.models import User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.biz.action import ActionBiz
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
-from backend.common.time import get_soon_expire_ts
+from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
 from backend.service.role import AuthScopeAction, AuthScopeSystem
@@ -46,7 +47,8 @@ def sync_system_manager():
     创建系统管理员
     """
     # 查询后端所有的系统信息
-    systems = {system.id: system for system in SystemBiz().list()}
+    biz = SystemBiz()
+    systems = {system.id: system for system in biz.list()}
 
     # 查询已创建的系统管理员的系统id
     exists_system_ids = Role.objects.filter(type=RoleType.SYSTEM_MANAGER.value).values_list("code", flat=True)
@@ -56,13 +58,16 @@ def sync_system_manager():
         system = systems[system_id]
         logger.info("create system_manager for system_id: %s", system_id)
 
+        # 查询系统管理员配置
+        members = biz.list_system_manger(system_id)
+
         data = {
             "type": RoleType.SYSTEM_MANAGER.value,
             "code": system_id,
             "name": f"{system.name}",
             "name_en": f"{system.name_en}",
             "description": "",
-            "members": [],
+            "members": members,
             "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
             "subject_scopes": [{"type": "*", "id": "*"}],
         }
@@ -118,15 +123,35 @@ class InitBizGradeManagerTask(Task):
     _exist_names: Set[str] = set()
 
     def run(self):
+        if not settings.ENABLE_INIT_GRADE_MANAGER:
+            return
+
         biz_info = list_biz()
-        biz_id_set = [one["bk_biz_id"] for one in biz_info["info"]]
+        biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
 
         projects = list_project()
         for project in projects:
-            if project["bk_biz_id"] in biz_id_set:
-                self._create_grade_manager(project)
+            if project["bk_biz_id"] in biz_dict:
+                biz = biz_dict[project["bk_biz_id"]]
 
-    def _create_grade_manager(self, project):
+                maintainers = (biz.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
+                viewers = list(
+                    set(
+                        (biz.get("bk_biz_developer") or "").split(",")
+                        + (biz.get("bk_biz_productor") or "").split(",")
+                        + (biz.get("bk_biz_tester") or "").split(",")
+                    )
+                )  # 业务的查看人
+
+                self._create_grade_manager(project, maintainers, viewers)
+            else:
+                logger.debug(
+                    "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
+                    project["name"],
+                    project["bk_biz_id"],
+                )
+
+    def _create_grade_manager(self, project, maintainers, viewers):
         biz_name = project["name"]
         if biz_name in self._exist_names:
             return
@@ -138,7 +163,7 @@ class InitBizGradeManagerTask(Task):
             self._exist_names.add(biz_name)
             return
 
-        role_info = self._init_role_info(project)
+        role_info = self._init_role_info(project, maintainers)
 
         role = self.biz.create(role_info, ADMIN_USER)
 
@@ -149,13 +174,15 @@ class InitBizGradeManagerTask(Task):
             if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
                 description = "仅包含{}各系统的查看权限".format(biz_name)
 
+            members = maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers
+            users = User.objects.filter(username__in=members)  # 筛选出已同步存在的用户
             group = self.group_biz.create_and_add_members(
                 role.id,
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,
-                subjects=[],
-                expired_at=0,
+                subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
+                expired_at=6 * 30 * DAY_SECONDS,  # 过期时间半年
             )
 
             templates = self._init_group_auth_info(authorization_scopes, name_suffix)
@@ -163,7 +190,7 @@ class InitBizGradeManagerTask(Task):
 
         self._exist_names.add(biz_name)
 
-    def _init_role_info(self, data):
+    def _init_role_info(self, data, maintainers):
         """
         创建初始化分级管理员数据
 
@@ -174,7 +201,7 @@ class InitBizGradeManagerTask(Task):
         role_info = RoleInfoBean(
             name=data["name"],
             description="管理员可授予他人{}业务的权限".format(data["name"]),
-            members=[ADMIN_USER],
+            members=maintainers or [ADMIN_USER],
             subject_scopes=[Subject(type="*", id="*")],
             authorization_scopes=[],
         )
@@ -193,6 +220,11 @@ class InitBizGradeManagerTask(Task):
             # 1. 查询常用操作
             common_action = self.biz.get_common_action_by_name(system_id, ManagementCommonActionNameEnum.OPS.value)
             if not common_action:
+                logger.debug(
+                    "init grade manager: system [%s] is not configured common action [%s]",
+                    system_id,
+                    ManagementCommonActionNameEnum.OPS.value,
+                )
                 continue
 
             # 2. 查询操作信息
@@ -202,6 +234,12 @@ class InitBizGradeManagerTask(Task):
             for action_id in common_action.action_ids:
                 action = action_list.get(action_id)
                 if not action:
+                    logger.debug(
+                        "init grade manager: system [%s] action [%s] not exists in common action [%s]",
+                        system_id,
+                        action_id,
+                        ManagementCommonActionNameEnum.OPS.value,
+                    )
                     continue
 
                 # 不关联资源类型的操作
@@ -263,6 +301,11 @@ class InitBizGradeManagerTask(Task):
                     system_id, ManagementCommonActionNameEnum.READ.value
                 )
                 if not common_action:
+                    logger.debug(
+                        "init grade manager: system [%s] is not configured common action [%s]",
+                        system_id,
+                        ManagementCommonActionNameEnum.READ.value,
+                    )
                     continue
 
                 actions = [a for a in actions if a["id"] in common_action.action_ids]
