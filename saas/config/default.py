@@ -146,7 +146,7 @@ CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Creden
 # rest_framework
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "backend.common.exception_handler.exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CompatiblePagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
@@ -267,6 +267,15 @@ CELERYBEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour=5),  # 每天凌晨5时执行
     },
 }
+
+# 是否开启初始化分级管理员
+ENABLE_INIT_GRADE_MANAGER = env.bool("BKAPP_ENABLE_INIT_GRADE_MANAGER", default=False)
+if ENABLE_INIT_GRADE_MANAGER:
+    CELERYBEAT_SCHEDULE["init_biz_grade_manager"] = {
+        "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
+        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+    }
+
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
 # V2 Smart只有BK_BROKER_URL
@@ -396,3 +405,9 @@ BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/d
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
 REQUESTS_POOL_MAXSIZE = env.int("REQUESTS_POOL_MAXSIZE", default=20)
+
+# Init Grade Manger system list
+INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
+    "INIT_GRADE_MANAGER_SYSTEM_LIST",
+    default=["bk_job", "bk_cmdb", "bk_monitorv3", "bk_log_search", "bk_sops", "bk_nodeman", "bk_gsekit"],
+)

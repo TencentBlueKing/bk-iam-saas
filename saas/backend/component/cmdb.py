@@ -8,19 +8,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List
+from typing import Dict, List
 
-from backend.service.system import SystemService
+from .esb import _call_esb_api
+from .http import http_post
 
 
-class SystemBiz:
-    svc = SystemService()
-
-    get = SystemService.__dict__["get"]
-    list = SystemService.__dict__["list"]
-    new_system_list = SystemService.__dict__["new_system_list"]
-    list_system_manger = SystemService.__dict__["list_system_manger"]
-
-    def list_client(self, system_id: str) -> List[str]:
-        """查询可访问系统的clients"""
-        return self.svc.list_client(system_id)
+def list_biz() -> List[Dict]:
+    """查询所有的业务列表"""
+    url_path = "/api/c/compapi/v2/cc/search_business/"
+    return _call_esb_api(http_post, url_path, data={})

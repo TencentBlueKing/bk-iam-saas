@@ -77,6 +77,18 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)">
+            <section class="content-wrapper">
+                <bk-input
+                    type="textarea"
+                    :rows="5"
+                    v-model="reason"
+                    @input="checkReason"
+                    style="margin-bottom: 15px;">
+                </bk-input>
+            </section>
+        </render-horizontal-block>
+        <p class="reason-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
                 {{ $t(`m.common['确定']`) }}
@@ -200,7 +212,9 @@
                 reason: '',
                 dialogLoading: false,
                 isAll: false,
-                isShowTable: false
+                isShowTable: false,
+                reasonEmptyError: false
+                
             };
         },
         computed: {
@@ -823,13 +837,15 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
+                this.reasonEmptyError = this.isStaff && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
 
-                if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError) {
+                if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError
+                    || this.reasonEmptyError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -840,7 +856,9 @@
                     return;
                 }
                 if (this.isStaff) {
-                    this.isShowReasonDialog = true;
+                    this.submitLoading = true;
+                    this.handleSubmitWithReason();
+                    // this.isShowReasonDialog = true;
                     return;
                 }
                 const subjects = [];
@@ -914,6 +932,10 @@
                         }
                     });
                 }, _ => _);
+            },
+
+            checkReason () {
+                this.reasonEmptyError = this.reason === '';
             }
         }
     };
@@ -926,6 +948,13 @@
         .action-empty-error {
             position: relative;
             top: -8px;
+            font-size: 12px;
+            color: #ff4d4d;
+        }
+        .reason-empty-error{
+            position: relative;
+            top: -45px;
+            left: 160px;
             font-size: 12px;
             color: #ff4d4d;
         }

@@ -6,7 +6,7 @@
             :key="item.$id"
             :class="['tag-item', { 'is-active': active.includes(item.$id) && item.allCheck }]"
             :title="item.name"
-            @click.stop="handleSelectTag(item)">
+            @click.stop="handleSelectTag(item, index)">
             <span class="text">{{ item.name }}</span>
             <Icon
                 type="close-fill"
@@ -14,7 +14,7 @@
                 v-if="item.id !== 0 && isEditMode"
                 @click.stop="handleDelete(item.id, item.$id, index)" />
         </section>
-        <template v-if="isEditMode">
+        <template v-if="isEditMode && !isDisabled">
             <bk-button
                 text
                 theme="primary"
@@ -108,6 +108,7 @@
                     this.tagList.map(e => {
                         const allCheck = e.action_ids.every(id => value.includes(id));
                         this.$set(e, 'allCheck', allCheck);
+                        this.$set(e, 'isCheck', allCheck);
                         if (!e.allCheck) {
                             this.$set(e, 'active', []);
                         } else {
@@ -124,7 +125,7 @@
             }
         },
         methods: {
-            handleSelectTag ({ $id, allCheck, active }) { // allCheck
+            handleSelectTag ({ $id, allCheck, active }, index) { // allCheck
                 let flag = !allCheck;
                 this.active.push(...active);
                 if (this.active.includes($id)) {
@@ -132,6 +133,13 @@
                 } else {
                     this.active.push($id);
                     flag = true;
+                }
+                this.tagList[index].isCheck = !this.tagList[index].isCheck;
+                const isCheck = this.tagList[index].isCheck;
+                if (isCheck) {
+                    this.active.push($id);
+                } else {
+                    this.active = [...this.active.filter(_ => _ !== $id)];
                 }
                 let curActions = this.tagList.find(_ => _.$id === $id).action_ids;
                 const tempActions = [];
@@ -205,7 +213,7 @@
         margin-top: 10px;
         display: flex;
         flex-wrap: wrap;
-        height: 40px;
+        /* height: 40px; */
         .title {
             line-height: 32px;
             font-size: 12px;

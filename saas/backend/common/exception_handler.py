@@ -19,6 +19,7 @@ from rest_framework.exceptions import (
     AuthenticationFailed,
     MethodNotAllowed,
     NotAuthenticated,
+    NotFound,
     ParseError,
     PermissionDenied,
     ValidationError,
@@ -102,6 +103,9 @@ def _exception_to_error(request, exc) -> Optional[APIError]:
             return error_codes.VALIDATE_ERROR.format(message=json.dumps(exc.detail), replace=True)
 
         return error_codes.VALIDATE_ERROR.format(message=_one_line_error(exc))
+
+    if isinstance(exc, NotFound):
+        return error_codes.NOT_FOUND_ERROR
 
     if isinstance(exc, APIError):
         # 回滚事务
