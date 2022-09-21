@@ -133,11 +133,14 @@ class InitBizGradeManagerTask(Task):
         for project in projects:
             if project["bk_biz_id"] in biz_dict:
                 biz = biz_dict[project["bk_biz_id"]]
-                maintainers = biz["bk_biz_maintainer"].split(",")  # 业务的负责人
-                viewers = (
-                    biz["bk_biz_developer"].split(",")
-                    + biz["bk_biz_productor"].split(",")
-                    + biz["bk_biz_tester"].split(",")
+
+                maintainers = biz.get("bk_biz_maintainer", "").split(",")  # 业务的负责人
+                viewers = list(
+                    set(
+                        biz.get("bk_biz_developer", "").split(",")
+                        + biz.get("bk_biz_productor", "").split(",")
+                        + biz.get("bk_biz_tester", "").split(",")
+                    )
                 )  # 业务的查看人
 
                 self._create_grade_manager(project, maintainers, viewers)
