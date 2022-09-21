@@ -32,7 +32,17 @@
 ## 安装 python 和依赖库
 在本地安装 python3.6.7 和 pip，通过 git 拉取源代码到工程目录后，并进入saas目录下运行 pip 命令安装 python 包。
 ```bash
-pip install -r requirements_dev.txt
+
+# linux macos 下
+make init
+
+# windows 下
+pip install -U pip setuptools
+pip install -U pip setuptools
+pip install poetry
+poetry install
+pip install pre-commit
+pre-commit install
 ```
 
 
