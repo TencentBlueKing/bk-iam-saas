@@ -76,7 +76,8 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete',
-            'resourcePermiss'
+            'resourcePermiss',
+            'userGroupDetail'
         ];
     }
     if (payload === 'system_manager') {

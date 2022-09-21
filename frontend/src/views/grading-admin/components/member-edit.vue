@@ -10,9 +10,8 @@
                             class="member-item">
                             {{ item }}
                             <Icon v-if="!isShowRole" type="close-small"
-                                :class="newVal.length === 1 || userInfo.username !== item ? 'disabled' : '' "
                                 @click.stop="handleDelete(index)" />
-                            <Icon v-else type="close-small" :class="newVal.length === 1 ? 'disabled' : '' "
+                            <Icon v-else type="close-small"
                                 @click.stop="handleDelete(index)" />
                         </span>
                         <div class="edit-action-box">
@@ -162,10 +161,11 @@
                     this.newPayload = payload;
                 }
                 if (!this.isShowRole) {
-                    if (this.newVal.length !== 1 && this.userInfo.username === this.newVal[payload]) {
-                        this.isShowDialog = true;
+                    if (this.newVal.length !== 1) {
+                        this.newVal.splice(payload, 1);
+                        this.triggerChange();
                     }
-                    this.newPayload = payload;
+                    // this.newPayload = payload;
                 }
             },
             async deleteRole (newPayload) {
@@ -187,7 +187,7 @@
                     });
                 } else {
                     // 普通用户操作
-                    if (this.newVal.length === 1 || this.userInfo.username !== this.newVal[newPayload]) {
+                    if (this.newVal.length === 1) {
                         return;
                     }
                     this.newVal.splice(newPayload, 1);

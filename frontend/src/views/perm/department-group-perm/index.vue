@@ -1,5 +1,5 @@
 <template>
-    <div class="my-perm-group-perm" v-bkloading="{ isLoading, opacity: 1 }">
+    <div class="my-perm-group-perm">
         <bk-table
             data-test-id="myPerm_table_group"
             :data="curPageData"
@@ -107,7 +107,7 @@
             RenderGroupPermSideslider
         },
         props: {
-            personalGroupList: {
+            departmentGroupList: {
                 type: Array,
                 default: () => []
             }
@@ -119,7 +119,6 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                    // limitList: [5, 10, 20, 50]
                 },
                 curPageData: [],
                 deleteDialogConf: {
@@ -135,21 +134,19 @@
                 // 控制侧边弹出层显示
                 isShowGradeSlider: false,
                 sliderLoading: false,
-                gradeSliderTitle: '',
-                isLoading: false
+                gradeSliderTitle: ''
             };
         },
         computed: {
             ...mapGetters(['user'])
         },
         watch: {
-            personalGroupList: {
+            departmentGroupList: {
                 handler (v) {
                     if (v.length) {
-                        // this.dataList.splice(0, this.dataList.length, ...v);
-                        // this.initPageConf();
-                        // this.curPageData = this.getDataByPage(this.pageConf.current);
-                        this.getDataByPage();
+                        this.dataList.splice(0, this.dataList.length, ...v);
+                        this.initPageConf();
+                        this.curPageData = this.getDataByPage(this.pageConf.current);
                     }
                 },
                 immediate: true
@@ -198,7 +195,8 @@
              */
             handlePageChange (page = 1) {
                 this.pageConf.current = page;
-                this.getDataByPage(page);
+                const data = this.getDataByPage(page);
+                this.curPageData.splice(0, this.curPageData.length, ...data);
             },
 
             /**
@@ -208,39 +206,19 @@
              *
              * @return {Array} 当前页数据
              */
-            async getDataByPage () {
-                this.isLoading = true;
-                try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
-                        page_size: this.pageConf.limit,
-                        page: this.pageConf.current
-                    });
-                    this.pageConf.count = res.data.count;
-                    this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.isLoading = false;
+            getDataByPage (page) {
+                if (!page) {
+                    this.pageConf.current = page = 1;
                 }
-                // if (!page) {
-                //     this.pageConf.current = page = 1;
-                // }
-                // let startIndex = (page - 1) * this.pageConf.limit;
-                // let endIndex = page * this.pageConf.limit;
-                // if (startIndex < 0) {
-                //     startIndex = 0;
-                // }
-                // if (endIndex > this.dataList.length) {
-                //     endIndex = this.dataList.length;
-                // }
-                // return this.dataList.slice(startIndex, endIndex);
+                let startIndex = (page - 1) * this.pageConf.limit;
+                let endIndex = page * this.pageConf.limit;
+                if (startIndex < 0) {
+                    startIndex = 0;
+                }
+                if (endIndex > this.dataList.length) {
+                    endIndex = this.dataList.length;
+                }
+                return this.dataList.slice(startIndex, endIndex);
             },
 
             /**
