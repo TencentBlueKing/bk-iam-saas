@@ -127,7 +127,7 @@ def get_system_managers(system_id: str) -> Dict:
     """
     获取系统管理员
     """
-    url_path = f"/api/v1/web/systems/{system_id}/system-settings/system-manager"
+    url_path = f"/api/v1/web/systems/{system_id}/system-settings/system-managers"
     return _call_iam_api(http_get, url_path, data={})
 
 
