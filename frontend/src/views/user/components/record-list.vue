@@ -66,7 +66,7 @@
 
         <bk-sideslider
             :is-show.sync="isShowLogDetails"
-            title="日志详情"
+            :title="$t(`m.user['日志详情']`)"
             :width="725"
             :quick-close="true"
             @animation-end="handleAnimationEnd">
@@ -80,7 +80,7 @@
                             <div v-html="exceptionMsg"></div>
                             <div v-html="tracebackMsg"></div>
                         </div>
-                        <div v-else>暂无日志详情</div>
+                        <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div>
                     </div>
                 </section>
             </div>

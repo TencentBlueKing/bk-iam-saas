@@ -45,7 +45,7 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <!-- <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
+                        <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
                             <bk-dropdown-menu
                                 align="left"
                                 ref="dropdown"
@@ -78,7 +78,7 @@
                                 @keyup.up.native="handleKeyup"
                                 @keyup.down.native="handleKeydown">
                             </bk-input>
-                        </div> -->
+                        </div>
                         <div class="member-tree-wrapper"
                             v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
                             v-if="isOrganization">
@@ -543,15 +543,23 @@
                     this.hasSelectedUsers.push(...temps);
                     if (res.data.length > 0) {
                         const usernameList = res.data.map(item => item.username);
-                        const templateArr = [];
-                        this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
-                        this.manualValueBackup.forEach(item => {
-                            const name = getUsername(item);
-                            if (!usernameList.includes(name)) {
-                                templateArr.push(item);
-                            }
+                        // 分号拼接
+                        // const templateArr = [];
+                        // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
+                        // this.manualValueBackup.forEach(item => {
+                        //     const name = getUsername(item);
+                        //     if (!usernameList.includes(name)) {
+                        //         templateArr.push(item);
+                        //     }
+                        // });
+                        // this.manualValue = templateArr.join(';');
+
+                        // 保存原有格式
+                        let formatStr = this.manualValue;
+                        usernameList.forEach(item => {
+                            formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
                         });
-                        this.manualValue = templateArr.join(';');
+                        this.manualValue = formatStr;
                         if (this.manualValue !== '') {
                             this.manualInputError = true;
                         }
@@ -1173,6 +1181,11 @@
                 this.$emit('on-sumbit', params);
             },
 
+            evil (fn) {
+                const Fn = Function;
+                return new Fn('return ' + fn)();
+            },
+            
             handleSkip () {
                 this.$router.push({
                     name: 'gradingAdminEdit',

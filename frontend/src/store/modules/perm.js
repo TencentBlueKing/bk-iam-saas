@@ -318,10 +318,31 @@ export default {
          * @return {Promise} promise 对象
          */
         getPermGroups ({ commit, state, dispatch }, params = {}, config) {
+            const pageParas = {
+                page_size: params.limit,
+                page: params.offset
+            };
             return http.get(
                 // `/app/index?${json2Query(params)}&invoke=getPermGroups`,
-                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/groups/`,
-                {},
+                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/groups/?${json2Query(pageParas)}`,
+                config
+            );
+        },
+
+        /**
+         * 加入部门用户组的权限 用户组列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getDepartPermGroups ({ commit, state, dispatch }, params = {}, config) {
+            return http.get(
+                `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/groups/`,
                 config
             );
         },
@@ -531,9 +552,27 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getPersonalGroups ({ commit, state, dispatch }, config) {
+        getPersonalGroups ({ commit, state, dispatch }, params, config) {
             return http.get(
-                `${AJAX_URL_PREFIX}/users/groups/`,
+                `${AJAX_URL_PREFIX}/users/groups/?${json2Query(params)}`,
+                {},
+                config
+            );
+        },
+
+        /**
+         *  所属部门的的用户组列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getDepartMentsPersonalGroups ({ commit, state, dispatch }, config) {
+            return http.get(
+                `${AJAX_URL_PREFIX}/users/departments/-/groups/`,
                 {},
                 config
             );
