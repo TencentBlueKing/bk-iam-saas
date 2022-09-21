@@ -118,6 +118,9 @@ class InitBizGradeManagerTask(Task):
     _exist_names: Set[str] = set()
 
     def run(self):
+        if not settings.ENABLE_INIT_GRADE_MANAGER:
+            return
+
         biz_info = list_biz()
         biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
 
