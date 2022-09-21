@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from functools import wraps
 from typing import List
 
@@ -74,6 +75,8 @@ from .serializers import (
     MemberSLZ,
     SearchMemberSLZ,
 )
+
+permission_logger = logging.getLogger("permission")
 
 
 def check_readonly_group(operation):
@@ -319,6 +322,8 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         self.group_check_biz.check_role_subject_scope(request.role, members)
         self.group_check_biz.check_member_count(group.id, len(members))
 
+        permission_logger.info("group %s add members %s by user %s", group.id, members, request.user.username)
+
         # 添加成员
         self.biz.add_members(group.id, members, expired_at)
 
@@ -341,6 +346,10 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
         group = self.get_object()
         data = serializer.validated_data
+
+        permission_logger.info(
+            "group %s delete members %s by user %s", group.id, data["members"], request.user.username
+        )
 
         self.biz.remove_members(str(group.id), parse_obj_as(List[Subject], data["members"]))
 
@@ -402,6 +411,7 @@ class GroupsMemberViewSet(GenericViewSet):
                 GroupBiz().add_members(group.id, members, expired_at)
 
             except Exception as e:
+                permission_logger.info(e)
                 failed_info.update({group.name: "{}".format(e)})
 
             else:
@@ -438,6 +448,10 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
 
         group = self.get_object()
         data = serializer.validated_data
+
+        permission_logger.info(
+            "group %s update members %s expired_at by user %s", group.id, data["members"], request.user.username
+        )
 
         for m in data["members"]:
             m["policy_expired_at"] = m.pop("expired_at")
@@ -575,6 +589,10 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         ids = slz.validated_data["ids"]
         group = self.get_object()
         subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+
+        permission_logger.info(
+            "subject type=%s, id=%s policy deleted by user %s", subject.type, subject.id, request.user.username
+        )
 
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 

@@ -217,6 +217,14 @@ LOGGING = {
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
+        "permission": {
+            "class": _LOG_CLASS,
+            "formatter": "verbose",
+            "filename": os.path.join(_LOG_DIR, "%s-json.log" % _LOG_NAME_PREFIX),
+            "maxBytes": 1024 * 1024 * 10,
+            "backupCount": 5,
+            "filters": ["request_id_filter"],
+        },
     },
     "loggers": {
         "django": {
@@ -265,6 +273,12 @@ LOGGING = {
         # 组织架构同步日志
         "organization": {
             "handlers": ["root" if IS_LOCAL else "organization"],
+            "level": LOG_LEVEL,
+            "propagate": True,
+        },
+        # 授权相关的日志
+        "permission": {
+            "handlers": ["root" if IS_LOCAL else "permission"],
             "level": LOG_LEVEL,
             "propagate": True,
         },

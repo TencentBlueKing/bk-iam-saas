@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from itertools import chain, groupby
 from typing import List
 
@@ -52,6 +53,8 @@ from .serializers import (
     RecommendActionPolicy,
     RelatedPolicySLZ,
 )
+
+permission_logger = logging.getLogger("permission")
 
 
 class PolicyViewSet(GenericViewSet):
@@ -111,6 +114,14 @@ class PolicyViewSet(GenericViewSet):
         ids = slz.validated_data["ids"]
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
+        permission_logger.info(
+            "subject type=%s, id=%s polices %s deleted by user %s",
+            subject.type,
+            subject.id,
+            ids,
+            request.user.username,
+        )
+
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
         # 删除权限
@@ -142,6 +153,14 @@ class PolicyViewSet(GenericViewSet):
         condition = data["condition"]
 
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+
+        permission_logger.info(
+            "subject type=%s, id=%s policy %s deleted partial by user %s",
+            subject.type,
+            subject.id,
+            policy_id,
+            request.user.username,
+        )
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
@@ -177,6 +196,15 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
         policy_id = kwargs["pk"]
         resource_group_id = kwargs["resource_group_id"]
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+
+        permission_logger.info(
+            "subject type=%s, id=%s policy %s delete via resource_group_id, by user %s",
+            subject.type,
+            subject.id,
+            policy_id,
+            resource_group_id,
+            request.user.username,
+        )
 
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
         system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
