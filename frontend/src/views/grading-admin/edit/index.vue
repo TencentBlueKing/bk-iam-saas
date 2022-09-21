@@ -954,7 +954,8 @@
         .reason-empty-error{
             position: relative;
             top: -45px;
-            font-size: 160px;
+            left: 160px;
+            font-size: 12px;
             color: #ff4d4d;
         }
         .grade-admin-select-wrapper {
