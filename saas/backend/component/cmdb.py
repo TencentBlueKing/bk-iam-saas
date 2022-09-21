@@ -15,6 +15,6 @@ from .http import http_post
 
 
 def list_biz() -> List[Dict]:
-    """查询所有的项目列表"""
+    """查询所有的业务列表"""
     url_path = "/api/c/compapi/v2/cc/search_business/"
     return _call_esb_api(http_post, url_path, data={})
