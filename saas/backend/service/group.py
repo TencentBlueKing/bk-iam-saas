@@ -45,7 +45,6 @@ class GroupSubject(BaseModel):
     subject: Subject
     group: Subject
     expired_at: int
-    created_at: str  # 后端json返回的格式化时间
 
 
 class GroupCreate(BaseModel):
