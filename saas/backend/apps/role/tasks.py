@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import List, Set
+from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
@@ -134,10 +134,14 @@ class InitBizGradeManagerTask(Task):
             if project["bk_biz_id"] in biz_dict:
                 biz = biz_dict[project["bk_biz_id"]]
 
-                maintainers = self._get_biz_role_members(biz, ["bk_biz_maintainer"])  # 业务的负责人
-                viewers = self._get_biz_role_members(
-                    biz, ["bk_biz_developer", "bk_biz_productor", "bk_biz_tester"]
-                )  # 业务的查看人
+                maintainers = biz.get("bk_biz_maintainer", "").split(",")  # 业务的负责人
+                viewers = list(
+                    set(
+                        biz.get("bk_biz_developer", "").split(",")
+                        + biz.get("bk_biz_productor", "").split(",")
+                        + biz.get("bk_biz_tester", "").split(",")
+                    )
+                )  # 业务的查看
 
                 self._create_grade_manager(project, maintainers, viewers)
             else:
@@ -146,15 +150,6 @@ class InitBizGradeManagerTask(Task):
                     project["name"],
                     project["bk_biz_id"],
                 )
-
-    def _get_biz_role_members(self, biz_info, keys: List[str]) -> List[str]:
-        members: List[str] = []
-        for key in keys:
-            if key in biz_info and biz_info[key]:
-                for name in biz_info[key].split(","):
-                    if name not in members:
-                        members.append(name)
-        return members
 
     def _create_grade_manager(self, project, maintainers, viewers):
         biz_name = project["name"]
