@@ -124,6 +124,14 @@ def get_common_actions(system_id: str) -> Dict:
     return _call_iam_api(http_get, url_path, data={})
 
 
+def get_system_managers(system_id: str) -> Dict:
+    """
+    获取系统管理员
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/system-settings/system-managers"
+    return _call_iam_api(http_get, url_path, data={})
+
+
 def create_subjects(subjects: List[Dict[str, str]]) -> None:
     """
     创建subject
