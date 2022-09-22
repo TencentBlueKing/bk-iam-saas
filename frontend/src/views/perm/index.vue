@@ -86,9 +86,6 @@
                     },
                     {
                         name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
-                    },
-                    {
-                        name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
                     }
                     // {
                     //     name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
