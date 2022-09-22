@@ -149,21 +149,27 @@ class ApprovedPassApplicationBiz:
     group_biz = GroupBiz()
     role_biz = RoleBiz()
 
-    def _check_subject_exists(self, subject: Subject) -> bool:
+    def _check_subject_exists(self, subject: Subject) -> Tuple[bool, str]:
         """
         检查subject是否在职
         """
         assert subject.type == SubjectType.USER.value  # 只有用户类型的subject才需要检查
-        ok = User.objects.filter(username=subject.id, staff_status=StaffStatus.IN.value).exists()
-        if not ok:
-            logger.warn("application approved: user [%s] not exists", subject.id)
-        return ok
+        user = User.objects.filter(username=subject.id).first()
+        if not user:
+            return False, f"user [{subject.id}] not exists"
+
+        if user.staff_status != StaffStatus.IN.value:
+            return False, f"user [{subject.id}] staff status [{user.staff_status}]"
+
+        return True, ""
 
     def _grant_action(
         self, subject: Subject, application: Application, audit_type: str = AuditType.USER_POLICY_CREATE.value
     ):
         """用户自定义权限授权"""
-        if not self._check_subject_exists(subject):
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
             return
 
         system_id = application.data["system"]["id"]
@@ -177,14 +183,18 @@ class ApprovedPassApplicationBiz:
 
     def _renew_action(self, subject: Subject, application: Application):
         """用户自定义权限续期"""
-        if not self._check_subject_exists(subject):
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] renew action approve fail: %s", application.id, msg)
             return
 
         self._grant_action(subject, application, audit_type=AuditType.USER_POLICY_UPDATE.value)
 
     def _join_group(self, subject: Subject, application: Application):
         """加入用户组"""
-        if not self._check_subject_exists(subject):
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] join group approve fail: %s", application.id, msg)
             return
 
         # 兼容，新老数据在data都存在expired_at
@@ -268,7 +278,9 @@ class ApprovedPassApplicationBiz:
 
     def _grant_temporary_action(self, subject: Subject, application: Application):
         """临时权限授权"""
-        if not self._check_subject_exists(subject):
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] grant temporary action approve fail: %s", application.id, msg)
             return
 
         system_id = application.data["system"]["id"]
