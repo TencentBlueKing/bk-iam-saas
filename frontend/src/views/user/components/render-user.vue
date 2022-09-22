@@ -28,14 +28,14 @@
     import CustomPerm from './custom-perm';
     import GroupPerm from './group-perm';
     import TeporaryCustomPerm from './teporary-custom-perm';
-    import DepartmentGroupPerm from './department-group-perm';
+    // import DepartmentGroupPerm from './department-group-perm';
     export default {
         name: '',
         components: {
             CustomPerm,
             GroupPerm,
-            TeporaryCustomPerm,
-            DepartmentGroupPerm
+            TeporaryCustomPerm
+            // DepartmentGroupPerm
         },
         props: {
             params: {
@@ -50,9 +50,9 @@
                 curData: {},
                 panels: [
                     { name: 'groupPerm', label: this.$t(`m.perm['用户组权限']`) },
-                    { name: 'departmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`) },
-                    { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) },
-                    { name: 'teporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`) }
+                    // { name: 'departmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`) },
+                    { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) }
+                    // { name: 'teporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`) }
                 ],
                 active: 'groupPerm',
                 componentsKey: -1,
