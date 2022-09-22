@@ -437,9 +437,7 @@ class ApplicationBiz:
         # 按系统分组
         data_list = []
         for system_id, policies in groupby(db_policies, lambda p: p.system_id):
-            policy_list = self.policy_biz.query_policy_list_by_policy_ids(
-                system_id, subject, [p.policy_id for p in policies]
-            )
+            policy_list = self.policy_biz.query_policy_list_by_policy_ids(system_id, subject, [p.id for p in policies])
 
             # 由于是续期，所以需要修改续期时间
             for p in policy_list.policies:
