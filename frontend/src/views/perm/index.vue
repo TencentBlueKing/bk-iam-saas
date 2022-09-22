@@ -50,7 +50,6 @@
                         :personal-group-list="personalGroupList"
                         :system-list="systemList"
                         :tep-system-list="teporarySystemList"
-                        :department-group-list="departmentGroupList"
                         :ref="panel.name"
                         @refresh="fetchData"
                     ></component>
@@ -64,15 +63,13 @@
     import CustomPerm from './custom-perm/index.vue';
     import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
     import GroupPerm from './group-perm/index.vue';
-    import DepartmentGroupPerm from './department-group-perm/index.vue';
 
     export default {
         name: 'MyPerm',
         components: {
             CustomPerm,
             TeporaryCustomPerm,
-            GroupPerm,
-            DepartmentGroupPerm
+            GroupPerm
         },
         data () {
             return {
@@ -81,9 +78,6 @@
                     {
                         name: 'GroupPerm', label: this.$t(`m.perm['用户组权限']`)
                     },
-                    // {
-                    //     name: 'DepartmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`)
-                    // },
                     {
                         name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
                     },
@@ -99,7 +93,6 @@
                 personalGroupList: [],
                 systemList: [],
                 teporarySystemList: [],
-                departmentGroupList: [],
                 enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
             };
         },
@@ -124,24 +117,17 @@
                 this.componentLoading = true;
                 try {
                     const [res1, res2, res3, res4, res5] = await Promise.all([
-                        this.$store.dispatch('perm/getPersonalGroups', {
-                            page_size: 10,
-                            page: 1
-                        }),
+                        this.$store.dispatch('perm/getPersonalGroups'),
                         this.$store.dispatch('permApply/getHasPermSystem'),
-                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                            page_size: 10,
-                            page: 1
-                        }),
+                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser'),
                         this.$store.dispatch('renewal/getExpireSoonPerm'),
                         this.$store.dispatch('permApply/getTeporHasPermSystem')
-                        // this.$store.dispatch('perm/getDepartMentsPersonalGroups')
                         // this.fetchPermGroups(),
                         // this.fetchSystems(),
                         // this.fetchSoonGroupWithUser(),
                         // this.fetchSoonPerm()
                     ]);
-                    const personalGroupList = res1.data.results || [];
+                    const personalGroupList = res1.data || [];
                     this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
 
                     const systemList = res2.data || [];
@@ -150,12 +136,9 @@
                     const teporarySystemList = res5.data || [];
                     this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
 
-                    // const departmentGroupList = res6.data || [];
-                    // this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
-
                     this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
-                        && teporarySystemList.length < 1; // && departmentGroupList.length < 1
-                    this.soonGroupLength = res3.data.results.length;
+                        && teporarySystemList.length < 1;
+                    this.soonGroupLength = res3.data.length;
                     this.soonPermLength = res4.data.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
