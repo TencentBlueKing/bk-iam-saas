@@ -21,6 +21,7 @@ from rest_framework.request import Request
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
+from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
@@ -148,10 +149,23 @@ class ApprovedPassApplicationBiz:
     group_biz = GroupBiz()
     role_biz = RoleBiz()
 
+    def _check_subject_exists(self, subject: Subject) -> bool:
+        """
+        检查subject是否在职
+        """
+        assert subject.type == SubjectType.USER.value  # 只有用户类型的subject才需要检查
+        ok = User.objects.filter(username=subject.id, staff_status=StaffStatus.IN.value).exists()
+        if not ok:
+            logger.warn("application approved: user [%s] not exists", subject.id)
+        return ok
+
     def _grant_action(
         self, subject: Subject, application: Application, audit_type: str = AuditType.USER_POLICY_CREATE.value
     ):
         """用户自定义权限授权"""
+        if not self._check_subject_exists(subject):
+            return
+
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
 
@@ -163,10 +177,16 @@ class ApprovedPassApplicationBiz:
 
     def _renew_action(self, subject: Subject, application: Application):
         """用户自定义权限续期"""
+        if not self._check_subject_exists(subject):
+            return
+
         self._grant_action(subject, application, audit_type=AuditType.USER_POLICY_UPDATE.value)
 
     def _join_group(self, subject: Subject, application: Application):
         """加入用户组"""
+        if not self._check_subject_exists(subject):
+            return
+
         # 兼容，新老数据在data都存在expired_at
         default_expired_at = application.data["expired_at"]
         # 加入用户组
@@ -248,6 +268,9 @@ class ApprovedPassApplicationBiz:
 
     def _grant_temporary_action(self, subject: Subject, application: Application):
         """临时权限授权"""
+        if not self._check_subject_exists(subject):
+            return
+
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
 
