@@ -82,14 +82,14 @@
                         name: 'GroupPerm', label: this.$t(`m.perm['用户组权限']`)
                     },
                     {
-                        name: 'DepartmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`)
-                    },
-                    {
                         name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
                     },
                     {
                         name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
                     }
+                    // {
+                    //     name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
+                    // }
                 ],
                 active: 'GroupPerm',
                 isEmpty: false,

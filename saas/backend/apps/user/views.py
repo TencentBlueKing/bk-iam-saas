@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -30,8 +28,6 @@ from backend.service.constants import SubjectRelationType, SubjectType
 from backend.service.models import Subject
 
 from .serializers import GroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
-
-permission_logger = logging.getLogger("permission")
 
 
 class UserGroupViewSet(GenericViewSet):
@@ -65,14 +61,6 @@ class UserGroupViewSet(GenericViewSet):
         serializer = UserRelationSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-
-        permission_logger.info(
-            "subject type=%s, id=%s group %s deleted by user %s",
-            subject.type,
-            subject.id,
-            data["id"],
-            request.user.username,
-        )
 
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:

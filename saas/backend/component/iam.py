@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 from typing import Dict, List, Tuple
 
 from django.conf import settings
@@ -25,8 +24,6 @@ from .util import do_blueking_http_request, execute_all_data_by_paging, list_all
 DEFAULT_SYSTEM_FIELDS = "id,name,name_en,description,description_en"
 DEFAULT_ACTION_FIELDS = "id,name,name_en,description,description_en"
 DEFAULT_RESOURCE_TYPE_FIELDS = "id,name,name_en"
-
-permission_logger = logging.getLogger("permission")
 
 
 def _call_iam_api(http_func, url_path, data, timeout=30):
@@ -289,7 +286,6 @@ def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str
     """
     url_path = "/api/v1/web/group-members"
     params = {"type": _type, "id": id, "members": members}
-    permission_logger.info("iam subject delete member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_delete, url_path, data=params)
 
 
@@ -304,7 +300,6 @@ def add_subject_members(_type: str, id: str, expired_at: int, members: List[dict
         "members": members,
         "expired_at": expired_at,
     }
-    permission_logger.info("iam subject add member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_post, url_path, data=params)
 
 
@@ -356,7 +351,6 @@ def alter_policies(
         "update_policies": update_policies,
         "delete_policy_ids": delete_policy_ids,
     }
-    permission_logger.info("iam alter policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_post, url_path, data=data)
     return result
 
@@ -367,7 +361,6 @@ def delete_policies(system_id: str, subject_type: str, subject_id: str, policy_i
     """
     url_path = "/api/v1/web/policies"
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
-    permission_logger.info("iam delete policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_delete, url_path, data=data)
     return result
 
@@ -378,7 +371,6 @@ def create_subject_role(subjects: List[Dict[str, str]], role_type: str, system_i
     """
     url_path = "/api/v1/web/role-subjects"
     data = {"role_type": role_type, "system_id": system_id, "subjects": subjects}
-    permission_logger.info("iam create subject role url: %s, data: %s", url_path, data)
     return _call_iam_api(http_post, url_path, data=data)
 
 
@@ -388,7 +380,6 @@ def delete_subject_role(subjects: List[Dict[str, str]], role_type: str, system_i
     """
     url_path = "/api/v1/web/role-subjects"
     data = {"role_type": role_type, "system_id": system_id, "subjects": subjects}
-    permission_logger.info("iam delete subject role url: %s, data: %s", url_path, data)
     return _call_iam_api(http_delete, url_path, data=data)
 
 
@@ -506,7 +497,6 @@ def create_temporary_policies(
         "subject": {"type": subject_type, "id": subject_id},
         "policies": policies,
     }
-    permission_logger.info("iam create temporary policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_post, url_path, data=data)
     return result
 
@@ -517,7 +507,6 @@ def delete_temporary_policies(system_id: str, subject_type: str, subject_id: str
     """
     url_path = "/api/v1/web/temporary-policies"
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
-    permission_logger.info("iam delete temporary policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_delete, url_path, data=data)
     return result
 
@@ -527,9 +516,6 @@ def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
     删除指定过期时间前的临时权限策略
     """
     url_path = f"/api/v1/web/temporary-policies/before_expired_at?expired_at={expired_at}"
-    permission_logger.info(
-        "iam delete temporary policies before expired_at url: %s, expired_at: %s", url_path, expired_at
-    )
     return _call_iam_api(http_delete, url_path, data={})
 
 
@@ -638,6 +624,5 @@ def alter_group_policies_v2(
         "resource_actions": resource_actions,
         "group_auth_type": group_auth_type,
     }
-    permission_logger.info("iam alter policies v2 url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_post, url_path, data=data)
     return result
