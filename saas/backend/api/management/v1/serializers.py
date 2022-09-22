@@ -71,6 +71,11 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
     class Meta:
         ref_name = "V1ManagementRoleScopeAuthorizationSLZ"
 
+    def validate(self, data):
+        if len(data["actions"]) != len({a["id"] for a in data["actions"]}):
+            raise serializers.ValidationError({"actions": ["must not repeat"]})
+        return data
+
 
 class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
     authorization_scopes = serializers.ListField(
