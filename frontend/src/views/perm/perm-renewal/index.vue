@@ -128,7 +128,7 @@
                     this.tableLoading = false;
                 });
                 this.panels[0].total = resultList[0].data.count;
-                this.panels[0].data = resultList[0].data.results;
+                this.panels[0].data = resultList[0].data;
                 this.panels[1].total = resultList[1].data.length;
                 this.panels[1].data = resultList[1].data;
                 this.tabKey = +new Date();
