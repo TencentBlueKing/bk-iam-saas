@@ -68,7 +68,7 @@ def seconds_to_display_str(total_second: int) -> str:
         )
 
     if total_second < DAY_SECONDS:
-        total_hour = math.ceil(total_second / HOUR_SECONDS)
+        total_hour = int(total_second / HOUR_SECONDS)
         total_minute = math.ceil((total_second % HOUR_SECONDS) / MINUTE_SECONDS)
         if total_minute == 0:
             return ngettext("{total_hour} hour", "{total_hour} hours", total_hour).format(total_hour=total_hour)

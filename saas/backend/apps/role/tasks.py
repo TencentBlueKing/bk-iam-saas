@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+import time
 from typing import Set
 from urllib.parse import urlencode
 
@@ -168,6 +169,8 @@ class InitBizGradeManagerTask(Task):
         role = self.biz.create(role_info, ADMIN_USER)
 
         # 创建用户组并授权
+        expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
+
         authorization_scopes = role_info.dict()["authorization_scopes"]
         for name_suffix in [ManagementGroupNameSuffixEnum.OPS.value, ManagementGroupNameSuffixEnum.READ.value]:
             description = "{}业务运维人员的权限".format(biz_name)
@@ -182,7 +185,7 @@ class InitBizGradeManagerTask(Task):
                 description=description,
                 creator=ADMIN_USER,
                 subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
-                expired_at=6 * 30 * DAY_SECONDS,  # 过期时间半年
+                expired_at=expired_at,  # 过期时间半年
             )
 
             templates = self._init_group_auth_info(authorization_scopes, name_suffix)
