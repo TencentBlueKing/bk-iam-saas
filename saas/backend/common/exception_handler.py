@@ -14,6 +14,7 @@ import traceback
 from typing import Optional
 
 from blue_krill.web.std_error import APIError
+from django.http.response import Http404
 from rest_framework import status
 from rest_framework.exceptions import (
     AuthenticationFailed,
@@ -104,7 +105,7 @@ def _exception_to_error(request, exc) -> Optional[APIError]:
 
         return error_codes.VALIDATE_ERROR.format(message=_one_line_error(exc))
 
-    if isinstance(exc, NotFound):
+    if isinstance(exc, (NotFound, Http404)):
         return error_codes.NOT_FOUND_ERROR
 
     if isinstance(exc, APIError):
