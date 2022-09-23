@@ -436,6 +436,7 @@
                             e.name = e.name.split('，')[0];
                         });
                         this.emptyResourceGroupsList = []; // 重置变量
+                        value = _.uniqWith(value, _.isEqual); // 去重
                         this.tableList.splice(0, this.tableList.length, ...value);
                     }
                 },

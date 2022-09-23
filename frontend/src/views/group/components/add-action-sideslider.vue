@@ -1166,7 +1166,6 @@
                 margin: 0 10px 0 8px;
                 height: 32px;
                 padding: 0 6px;
-                border: 1px solid #c4c6cc;
                 border-radius: 2px;
                 cursor: pointer;
 
