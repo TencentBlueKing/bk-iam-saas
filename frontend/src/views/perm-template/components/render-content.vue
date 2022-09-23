@@ -856,9 +856,10 @@
                 }, _ => _);
             },
 
-            handleSkip () {
+            async handleSkip () {
                 // 跳转至我的分级管理员
                 bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
                 if (this.user.role.type === 'rating_manager') {
                     const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
                     window.open(routeData.href, '_blank');

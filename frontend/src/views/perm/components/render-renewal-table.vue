@@ -258,7 +258,7 @@
                         page_size: this.pagination.limit,
                         page: this.pagination.current
                     });
-                    this.tableList = res.data.results || [];
+                    this.tableList = res.data || [];
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
