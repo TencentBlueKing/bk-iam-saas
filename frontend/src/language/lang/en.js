@@ -301,6 +301,7 @@ export const m = {
         '解除与权限模板': 'Lift the permission template',
         '退出成功': 'Droped out',
         '将不再继承该组的权限': 'Will no longer inherit the permissions of the group',
+        '将不再拥有该用户组的权限': 'Will no longer inherit the permissions of the group',
         '新建用户组成功': 'Group Created',
         '新建分级管理员成功': 'Rating Manager Created',
         '编辑分级管理员成功': 'Rating Manager Edited',
