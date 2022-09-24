@@ -789,24 +789,10 @@
 
             // 设置正常粘贴InstancesDisplayData
             setNomalInstancesDisplayData (data, key) {
-                this.selectedIndex = data.aggregateResourceType.findIndex(e => e.id === key);
-                const defaultSelectList = this.getScopeActionResource(
-                    data.actions,
-                    key,
-                    data.system_id
-                ).map(e => e.id);
-                if (!defaultSelectList.length) return;
-                data.instancesDisplayData[key] = [];
-                data.instances.forEach(e => {
-                    if (defaultSelectList.includes(e.id)) {
-                        data.instancesDisplayData[key].push(
-                            {
-                                id: e.id,
-                                name: e.name
-                            }
-                        );
-                    }
-                });
+                data.instancesDisplayData[key] = data.instances.map(e => ({
+                    id: e.id,
+                    name: e.name
+                }));
             },
 
             showAggregateResourceInstance (data, index) {
