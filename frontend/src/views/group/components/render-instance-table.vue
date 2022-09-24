@@ -436,6 +436,7 @@
                             e.name = e.name.split('，')[0];
                         });
                         this.emptyResourceGroupsList = []; // 重置变量
+                        value = _.uniqWith(value, _.isEqual); // 去重
                         this.tableList.splice(0, this.tableList.length, ...value);
                     }
                 },
@@ -1066,6 +1067,14 @@
                     isTemplate: payload.isTemplate
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+                if (!this.previewResourceParams.id) {
+                    this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: '无资源ID，无法预览'
+                    });
+                    return;
+                }
                 this.isShowPreviewDialog = true;
             },
             handlerOnCopy (payload, index, subIndex, action) {

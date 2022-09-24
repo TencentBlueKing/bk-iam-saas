@@ -12,7 +12,7 @@
             v-bkloading="{ isLoading, opacity: 1 }">
             <template v-if="isShowContent">
                 <div class="left-wrapper">
-                    <div class="search-wrapper">
+                    <div class="search-wrappers">
                         <bk-input
                             clearable
                             right-icon="bk-icon icon-search"
@@ -1066,7 +1066,7 @@
                 }
             }
         }
-        .search-wrapper {
+        .search-wrappers {
             display: flex;
 
             .icon-iamcenter-wrapper {

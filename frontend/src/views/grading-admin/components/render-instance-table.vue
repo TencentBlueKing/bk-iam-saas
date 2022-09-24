@@ -69,7 +69,7 @@
                                             </div>
                                         </template>
                                     </div>
-                                    <div class="content">
+                                    <div class="contents">
                                         <!-- eslint-disable max-len -->
                                         <render-condition
                                             :ref="`condition_${$index}_${contentIndex}_ref`"
