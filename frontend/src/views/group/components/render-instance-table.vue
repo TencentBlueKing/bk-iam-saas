@@ -416,29 +416,43 @@
         watch: {
             list: {
                 handler (value) {
-                    if (this.isAllExpanded) {
-                        this.tableList = value.filter(e =>
-                            (e.resource_groups && e.resource_groups.length)
-                            || e.isAggregate);
-                        this.emptyResourceGroupsList = value.filter(e =>
-                            e.resource_groups && !e.resource_groups.length);
-                        this.emptyResourceGroupsName = (this.emptyResourceGroupsList || []).reduce((p, e) => {
-                            p.push(e.name);
-                            return p;
-                        }, []);
-                        if (this.emptyResourceGroupsName.length) {
-                            this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
-                            this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
-                            this.tableList.unshift(this.emptyResourceGroupsTableList);
-                        }
-                    } else {
-                        value.forEach(e => {
-                            e.name = e.name.split('，')[0];
-                        });
-                        this.emptyResourceGroupsList = []; // 重置变量
-                        value = _.uniqWith(value, _.isEqual); // 去重
-                        this.tableList.splice(0, this.tableList.length, ...value);
-                    }
+                    // if (this.isAllExpanded) {
+                    //     this.tableList = value.filter(e =>
+                    //         (e.resource_groups && e.resource_groups.length)
+                    //         || e.isAggregate);
+                    //     this.emptyResourceGroupsList = value.filter(e =>
+                    //         e.resource_groups && !e.resource_groups.length);
+                    //     let emptyGroupsIdList = this.emptyResourceGroupsList.map(e => e.judgeId) || [];
+                    //     emptyGroupsIdList = [...new Set(emptyGroupsIdList)];
+                    //     console.log('emptyGroupsIdList', emptyGroupsIdList);
+                    //     emptyGroupsIdList.forEach((item, index) => {
+                    //         console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList);
+                    //         this.emptyResourceGroupsName = (this.emptyResourceGroupsList || [])
+                    //             .filter(data => data.judgeId === item)
+                    //             .reduce((p, e) => {
+                    //                 p.push(e.name);
+                    //                 return p;
+                    //             }, []);
+                    //         console.log('this.emptyResourceGroupsName', this.emptyResourceGroupsName);
+                    //         if (this.emptyResourceGroupsName.length) {
+                    //             this.$nextTick(() => {
+                    //                 this.emptyResourceGroupsList[index].name = this.emptyResourceGroupsName.join('，');
+                    //                 this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[index];
+                    //                 this.tableList.unshift(this.emptyResourceGroupsTableList);
+                    //                 console.log('this.tableList', this.tableList);
+                    //             });
+                    //         }
+                    //     });
+                    // } else {
+                    //     value.forEach(e => {
+                    //         e.name = e.name.split('，')[0];
+                    //     });
+                    //     this.emptyResourceGroupsList = []; // 重置变量
+                    //     value = _.uniqWith(value, _.isEqual); // 去重
+                    //     this.tableList.splice(0, this.tableList.length, ...value);
+                    // }
+
+                    this.tableList.splice(0, this.tableList.length, ...value);
                 },
                 immediate: true
             },

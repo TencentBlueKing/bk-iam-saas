@@ -303,7 +303,8 @@
                         this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
                         if (this.groupSystemList[i].count > 0) {
                             await this.getGroupCustomPolicy(this.groupSystemList[i]);
-                        } else {
+                        }
+                        if (this.groupSystemList[i].template_count > 0) {
                             await this.getGroupTemplateList(this.groupSystemList[i]);
                         }
                     }
