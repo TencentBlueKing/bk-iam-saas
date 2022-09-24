@@ -13,7 +13,7 @@
             v-bkloading="{ isLoading, opacity: 1 }">
             <template v-if="isShowContent">
                 <div class="left-wrapper">
-                    <div class="search-wrapper">
+                    <div class="search-wrappers">
                         <bk-input
                             clearable
                             right-icon="bk-icon icon-search"
@@ -934,8 +934,9 @@
                 }, _ => _);
             },
 
-            handleSkip () {
+            async handleSkip () {
                 bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
                 if (this.user.role.type === 'rating_manager') {
                     const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
                     window.open(routeData.href, '_blank');
@@ -1159,14 +1160,13 @@
             }
         }
 
-        .search-wrapper {
+        .search-wrappers {
             display: flex;
 
             .icon-iamcenter-wrapper {
                 margin: 0 10px 0 8px;
                 height: 32px;
                 padding: 0 6px;
-                border: 1px solid #c4c6cc;
                 border-radius: 2px;
                 cursor: pointer;
 
