@@ -25,7 +25,7 @@
 */
 
 import http from '@/api';
-import { json2Query } from '@/common/util';
+// import { json2Query } from '@/common/util';
 import cookie from 'cookie';
 
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
