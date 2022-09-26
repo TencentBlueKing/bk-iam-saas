@@ -127,6 +127,12 @@
                     this.handleInit();
                 },
                 immediate: true
+            },
+            mode: {
+                handler (value) {
+                    console.log('value', value);
+                },
+                immediate: true
             }
         },
         // created () {
