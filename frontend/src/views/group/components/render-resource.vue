@@ -41,6 +41,7 @@
                             <div class="left-layout" :style="leftLayoutStyle">
                                 <choose-ip
                                     :ref="`${index}TreeRef`"
+                                    :cur-selection-condition="curSelectionCondition"
                                     :tree-value="condition.instance"
                                     :limit-value="getLimitInstance(conditionLimitData[index])"
                                     :select-list="curSelectList(index)"
@@ -185,6 +186,12 @@
                 type: Object,
                 default: () => {
                     return {};
+                }
+            },
+            curSelectionCondition: {
+                type: Array,
+                default: () => {
+                    return [];
                 }
             }
         },
