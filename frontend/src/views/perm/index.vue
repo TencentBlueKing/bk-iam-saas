@@ -17,7 +17,8 @@
                 {{ $t(`m.renewal['权限续期']`) }}
             </bk-button>
             <bk-button
-                v-if="enablePermissionHandover.toLowerCase() === 'true'"
+                v-if="enablePermissionHandover.toLowerCase() === 'true'
+                    && (systemList.length || teporarySystemList.length)"
                 data-test-id="myPerm_btn_transferPerm"
                 type="button"
                 style="margin-bottom: 16px;"
