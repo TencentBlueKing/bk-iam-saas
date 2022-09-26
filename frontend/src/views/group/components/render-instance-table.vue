@@ -148,6 +148,7 @@
                 <render-resource
                     ref="renderResourceRef"
                     :data="condition"
+                    :cur-selection-condition="curSelectionCondition"
                     :original-data="originalCondition"
                     :flag="curFlag"
                     :selection-mode="curSelectionMode"
@@ -412,6 +413,13 @@
             },
             isUserGroupDetail () {
                 return this.$route.name === 'userGroupDetail';
+            },
+            curSelectionCondition () {
+                if (this.curIndex === -1) {
+                    return false;
+                }
+                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+                return curSelectionCondition;
             }
         },
         watch: {
@@ -1361,15 +1369,15 @@
                 }
 
                 // 重新赋值
-                if (this.isAllExpanded) {
-                    this.tableList = this.tableList.filter(e =>
-                        (e.resource_groups && e.resource_groups.length)
-                        || e.isAggregate);
-                    if (this.emptyResourceGroupsList.length) {
-                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
-                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
-                    }
-                }
+                // if (this.isAllExpanded) {
+                //     this.tableList = this.tableList.filter(e =>
+                //         (e.resource_groups && e.resource_groups.length)
+                //         || e.isAggregate);
+                //     if (this.emptyResourceGroupsList.length) {
+                //         this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                //         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                //     }
+                // }
 
                 this.tableList.forEach(item => {
                     let actionParam = {};

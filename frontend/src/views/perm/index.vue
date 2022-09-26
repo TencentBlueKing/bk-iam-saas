@@ -16,9 +16,10 @@
                 @click="handleBatchRenewal">
                 {{ $t(`m.renewal['权限续期']`) }}
             </bk-button>
+            <Icon v-if="isEmpty || isNoRenewal" class="icon-info-renewal" type="info-new" v-bk-tooltips="'没有需要续期的权限'" />
             <bk-button
-                v-if="enablePermissionHandover.toLowerCase() === 'true'
-                    && (systemList.length || teporarySystemList.length)"
+                v-if="enablePermissionHandover.toLowerCase() === 'true'"
+                :disabled="!systemList.length && !teporarySystemList.length"
                 data-test-id="myPerm_btn_transferPerm"
                 type="button"
                 style="margin-bottom: 16px;"
@@ -247,5 +248,10 @@
     }
     .iam-my-perm-tab-cls {
         background: #fff;
+    }
+    .icon-info-renewal{
+        position: absolute;
+        top: -5px;
+        left: 176px;
     }
 </style>
