@@ -27,6 +27,8 @@
                 @click="handleGoPermTransfer">
                 {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
+            <div v-if="!systemList.length && !teporarySystemList.length" class="info-sys" style="background: #000"
+                v-bk-tooltips="'您还没有权限，无需交接'"></div>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
         <template v-if="isEmpty">
@@ -258,6 +260,15 @@
     .info-renewal{
         top: -5px;
         left: 100px;
+        position: absolute;
+        width: 90px;
+        height: 40px;
+        opacity: 0;
+        cursor:no-drop;
+    }
+    .info-sys{
+        top: -5px;
+        left: 198px;
         position: absolute;
         width: 90px;
         height: 40px;
