@@ -46,17 +46,17 @@
                                             :val="systemData[item.id].count" />
                                     </template>
                                 </div>
-                                <div
+                                <!-- <div
                                     v-if="isHierarchicalAdmin.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
                                     :title="$t(`m.grading['修改分级管理员授权范围']`)"
                                     @click="handleSkip">
                                     <i class="iam-icon iamcenter-edit-fill"></i>
                                     {{ $t(`m.grading['修改分级管理员授权范围']`) }}
-                                </div>
+                                </div> -->
                             </div>
                         </template>
-                        <template v-else>
+                        <!-- <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
                                 <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
                                     <bk-exception
@@ -67,7 +67,7 @@
                                 </template>
                                 <iam-svg v-else />
                             </div>
-                        </template>
+                        </template> -->
                     </div>
                 </div>
                 <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">

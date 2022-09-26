@@ -452,7 +452,7 @@
                     //     value = _.uniqWith(value, _.isEqual); // 去重
                     //     this.tableList.splice(0, this.tableList.length, ...value);
                     // }
-
+                    value = _.uniqWith(value, _.isEqual); // 去重
                     this.tableList.splice(0, this.tableList.length, ...value);
                 },
                 immediate: true
