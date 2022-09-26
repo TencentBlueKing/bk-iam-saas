@@ -97,7 +97,7 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
-        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)">
+        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
             <section class="content-wrapper">
                 <bk-input
                     type="textarea"
