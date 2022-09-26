@@ -16,7 +16,8 @@
                 @click="handleBatchRenewal">
                 {{ $t(`m.renewal['权限续期']`) }}
             </bk-button>
-            <Icon v-if="isEmpty || isNoRenewal" class="icon-info-renewal" type="info-new" v-bk-tooltips="'没有需要续期的权限'" />
+            <div v-if="isEmpty || isNoRenewal" class="info-renewal" style="background: #000"
+                v-bk-tooltips="'没有需要续期的权限'"></div>
             <bk-button
                 v-if="enablePermissionHandover.toLowerCase() === 'true'"
                 :disabled="!systemList.length && !teporarySystemList.length"
@@ -253,5 +254,14 @@
         position: absolute;
         top: -5px;
         left: 176px;
+    }
+    .info-renewal{
+        top: -5px;
+        left: 100px;
+        position: absolute;
+        width: 90px;
+        height: 40px;
+        opacity: 0;
+        cursor:no-drop;
     }
 </style>
