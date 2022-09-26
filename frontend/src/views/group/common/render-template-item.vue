@@ -11,14 +11,14 @@
                 </span>
                 <template v-if="(isExpanded || ShowEditFill) && !isUser">
                     <section class="edit-action" @click.stop="handleEdit">
-                        <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail ? false : true" />
+                        <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isDetail ? false : true" />
                     </section>
                 </template>
                 <bk-popconfirm
                     trigger="click"
                     :title="$t(`m.info['确定删除']`)"
                     @confirm="handleDelete"
-                    v-if="isStaff || isPermTemplateDetail || isUser ? false : true">
+                    v-if="isStaff || isPermTemplateDetail || isUser || isDetail ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
                         <section class="delete-action" @click.stop="toDeletePolicyCount">
                             <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />

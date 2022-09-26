@@ -267,8 +267,6 @@
                 if (this.curResIndex === -1 || this.groupIndex === -1) {
                     return 'all';
                 }
-                console.log('this.resourceTypeData.related_resource_types[this.curResIndex]', this.resourceTypeData.resource_groups[this.groupIndex]
-                    .related_resource_types[this.curResIndex]);
                 const curData = this.resourceTypeData.resource_groups[this.groupIndex]
                     .related_resource_types[this.curResIndex];
                 return curData.selectionMode;
@@ -331,7 +329,6 @@
                 const systemId = this.systemId;
                 try {
                     const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId });
-                    console.log('res', res);
                     this.recursionFunc(res.data);
                 } catch (e) {
                     console.error(e);
@@ -345,7 +342,6 @@
 
             // 查询类型选择
             handlSearchChange (value) {
-                console.log('this.searchType', this.searchType);
                 this.searchTypeError = false;
                 this.resourceTypeData = { isEmpty: true };
                 this.systemId = '';
@@ -362,7 +358,6 @@
                 this.resourceTypeError = false;
                 this.resourceInstances = [];
                 this.resourceTypeData = this.processesList.find(e => e.id === this.actionId);
-                console.log('resourceTypeData', this.resourceTypeData);
             },
 
             // 查询和导入
@@ -398,7 +393,6 @@
                     });
                     return prev;
                 }, []);
-                console.log('resourceInstances', resourceInstances);
                 const params = {
                     system_id: this.systemId || '',
                     action_id: this.actionId,
@@ -467,6 +461,7 @@
                     }, []);
                     return { id, resourceInstancesPath };
                 }
+                return { id: '*', resourceInstancesPath: [] };
             },
 
             // 重置
@@ -519,7 +514,6 @@
                 this.groupIndex = groupIndex;
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
-                console.log('1111', this.params);
                 this.isShowResourceInstanceSideslider = true;
             },
 
@@ -543,7 +537,6 @@
 
             async handleResourceSumit () {
                 const conditionData = this.$refs.renderResourceRef.handleGetValue();
-                console.log('conditionData', conditionData);
                 const { isEmpty, data } = conditionData;
                 if (isEmpty) {
                     return;
@@ -557,7 +550,6 @@
                     this.resourceInstances = [];
                 } else {
                     resItem.condition = data;
-                    console.log('data', data);
                     data.forEach(item => {
                         item.instance.forEach(e => {
                             resItem.resourceInstancesPath = e.path[0];
@@ -566,8 +558,6 @@
                     if (this.curResIndex !== -1) {
                         this.resourceInstances.splice(this.curResIndex, 1, resItem);
                     }
-                    console.log('this.resourceInstances', this.resourceInstances);
-                    console.log('resItem', resItem);
                 }
                 window.changeAlert = false;
                 this.resourceInstanceSidesliderTitle = '';
@@ -593,7 +583,6 @@
             },
 
             handleRemoteRtx (value) {
-                console.log('value', value);
                 return fuzzyRtxSearch(value)
                     .then(data => {
                         return data.results;

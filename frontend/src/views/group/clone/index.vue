@@ -305,7 +305,9 @@
                             await this.getGroupCustomPolicy(this.groupSystemList[i]);
                         }
                         if (this.groupSystemList[i].template_count > 0) {
-                            await this.getGroupTemplateList(this.groupSystemList[i]);
+                            setTimeout(async () => {
+                                await this.getGroupTemplateList(this.groupSystemList[i]);
+                            }, 500);
                         }
                     }
                     this.handleAggregateData();

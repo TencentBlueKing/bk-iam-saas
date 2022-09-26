@@ -327,7 +327,8 @@
                 role: '',
                 selectedIndex: 0,
                 instanceKey: '',
-                curCopyDataId: ''
+                curCopyDataId: '',
+                emptyResourceGroupsList: []
             };
         },
         computed: {
