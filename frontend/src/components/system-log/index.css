@@ -260,7 +260,7 @@
     }
     .log-close{
         position: absolute;
-        top: -2px;
+        top: 0;
         right: 0;
         padding: 10px;
         font-size: 22px;
