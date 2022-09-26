@@ -147,6 +147,10 @@
             mode: {
                 type: String,
                 default: 'template'
+            },
+            curSelectionCondition: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -773,6 +777,12 @@
                 };
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params);
+                    if (this.curSelectionCondition.length) {
+                        res.data.results = res.data.results.filter(item => {
+                            return this.curSelectionCondition.includes(item.id);
+                        });
+                        res.data.count = res.data.results.length;
+                    }
                     const totalPage = Math.ceil(res.data.count / this.limit);
                     const isAsync = this.curChain.length > 1;
                     this.treeData = res.data.results.map(item => {

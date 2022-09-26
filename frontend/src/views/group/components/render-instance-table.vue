@@ -148,6 +148,7 @@
                 <render-resource
                     ref="renderResourceRef"
                     :data="condition"
+                    :cur-selection-condition="curSelectionCondition"
                     :original-data="originalCondition"
                     :flag="curFlag"
                     :selection-mode="curSelectionMode"
@@ -412,6 +413,13 @@
             },
             isUserGroupDetail () {
                 return this.$route.name === 'userGroupDetail';
+            },
+            curSelectionCondition () {
+                if (this.curIndex === -1) {
+                    return false;
+                }
+                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+                return curSelectionCondition;
             }
         },
         watch: {
