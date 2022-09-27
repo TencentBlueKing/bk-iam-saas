@@ -24,12 +24,12 @@
             :label="$t(`m.grading['操作和资源范围']`)"
             v-show="isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
-                <!-- <div class="action">
+                <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm">
                         <Icon bk type="plus-circle-shape" />
                         <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
                     </section>
-                </div> -->
+                </div>
                 <div class="info-wrapper">
                     <section style="min-width: 108px; position: relative;">
                         <bk-switcher
@@ -302,7 +302,9 @@
                         this.fetchAggregationAction(this.groupSystemList[i].id);
                         this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
                         if (this.groupSystemList[i].count > 0) {
-                            await this.getGroupCustomPolicy(this.groupSystemList[i]);
+                            setTimeout(async () => {
+                                await this.getGroupCustomPolicy(this.groupSystemList[i]);
+                            }, 500);
                         }
                         if (this.groupSystemList[i].template_count > 0) {
                             setTimeout(async () => {
