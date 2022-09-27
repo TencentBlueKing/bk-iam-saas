@@ -24,12 +24,12 @@
             :label="$t(`m.grading['操作和资源范围']`)"
             v-show="isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
-                <div class="action">
+                <!-- <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm">
                         <Icon bk type="plus-circle-shape" />
                         <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
                     </section>
-                </div>
+                </div> -->
                 <div class="info-wrapper">
                     <section style="min-width: 108px; position: relative;">
                         <bk-switcher
