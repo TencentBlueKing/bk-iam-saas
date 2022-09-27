@@ -376,6 +376,7 @@
                 }
                 if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
                     && this.resourceTypeData.resource_groups[this.groupIndex]
+                    && this.resourceTypeData.resource_groups[this.groupIndex]
                         .related_resource_types.some(e => e.empty)) {
                     this.resourceTypeError = true;
                     return;
