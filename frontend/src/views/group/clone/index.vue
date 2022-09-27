@@ -302,9 +302,7 @@
                         this.fetchAggregationAction(this.groupSystemList[i].id);
                         this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
                         if (this.groupSystemList[i].count > 0) {
-                            setTimeout(async () => {
-                                await this.getGroupCustomPolicy(this.groupSystemList[i]);
-                            }, 500);
+                            await this.getGroupCustomPolicy(this.groupSystemList[i]);
                         }
                         if (this.groupSystemList[i].template_count > 0) {
                             setTimeout(async () => {
