@@ -461,7 +461,13 @@
                     //     this.tableList.splice(0, this.tableList.length, ...value);
                     // }
                     value = _.uniqWith(value, _.isEqual); // 去重
-                    this.tableList.splice(0, this.tableList.length, ...value);
+                    if (this.isAllExpanded) {
+                        this.tableList.splice(0, this.tableList.length, ...value);
+                    } else {
+                        const customData = value.filter(e => e.mode === 'custom');
+                        const templateData = value.filter(e => e.mode === 'template');
+                        this.tableList.splice(0, this.tableList.length, ...customData, ...templateData);
+                    }
                 },
                 immediate: true
             },
