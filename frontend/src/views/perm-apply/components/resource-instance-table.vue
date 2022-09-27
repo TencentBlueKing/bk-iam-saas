@@ -373,7 +373,7 @@
                 needEmitFlag: false,
                 isShowResourceInstanceEffectTime: false,
                 tipsContent: {
-                    content: '提示信息',
+                    content: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>',
                     html: '<p>添加多组实例可以实现分批鉴权的需求</p><p>比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1</p><p>这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现</p>'
                 },
                 selectedIndex: 0,
