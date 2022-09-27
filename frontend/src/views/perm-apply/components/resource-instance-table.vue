@@ -8,8 +8,7 @@
             :row-class-name="handleRowClass"
             :cell-class-name="getCellClass"
             @select="handlerChange"
-            @select-all="handlerAllChange"
-            :empty-text="$t(`m.verify['请选择操作']`)">
+            @select-all="handlerAllChange">
             <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
             <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :width="isRecommend ? '240' : '300'">
                 <template slot-scope="{ row }">
