@@ -34,6 +34,7 @@ export default class GroupPolicy extends Policy {
         super(payload, flag, instanceNotDisabled);
         this.detail = data;
         this.mode = mode;
+        this.conditionIds = payload.conditionIds;
         // 聚合id，相同aggregationId的数据聚合时会被聚合在一起
         this.aggregationId = '';
         this.aggregateResourceType = {};

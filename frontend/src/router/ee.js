@@ -250,7 +250,7 @@ export const routes = [
                 path: 'perm-renewal',
                 name: 'permRenewal',
                 meta: {
-                    headerTitle: il8n('renewal', '批量续期'),
+                    headerTitle: il8n('renewal', '申请续期'),
                     backRouter: 'myPerm'
                 },
                 component: PermRenewal

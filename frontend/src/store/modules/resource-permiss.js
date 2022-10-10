@@ -25,7 +25,7 @@
 */
 
 import http from '@/api';
-import { json2Query } from '@/common/util';
+// import { json2Query } from '@/common/util';
 import cookie from 'cookie';
 
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
@@ -48,7 +48,6 @@ export default {
          * @return {Promise} promise 对象
          */
         getResourceManager ({ commit, state, dispatch }, params, config) {
-            console.log('params11', json2Query(params));
             return http.post(`${AJAX_URL_PREFIX}/roles/query_authorized_subjects/`, params, config);
         },
 

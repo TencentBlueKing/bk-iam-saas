@@ -89,7 +89,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getExpireSoonGroupWithUser ({ commit, state, dispatch }, params = {}, config) {
-            return http.get(`${AJAX_URL_PREFIX}/users/groups_expire_soon/?${json2Query(params)}`, config);
+            return http.get(`${AJAX_URL_PREFIX}/users/groups_expire_soon/`, config);
         },
 
         /**

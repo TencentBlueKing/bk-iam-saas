@@ -13,7 +13,7 @@
             v-bkloading="{ isLoading, opacity: 1 }">
             <template v-if="isShowContent">
                 <div class="left-wrapper">
-                    <div class="search-wrapper">
+                    <div class="search-wrappers">
                         <bk-input
                             clearable
                             right-icon="bk-icon icon-search"
@@ -46,17 +46,17 @@
                                             :val="systemData[item.id].count" />
                                     </template>
                                 </div>
-                                <div
+                                <!-- <div
                                     v-if="user.role.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
                                     :title="$t(`m.grading['修改分级管理员授权范围']`)"
                                     @click="handleSkip">
                                     <i class="iam-icon iamcenter-edit-fill"></i>
                                     {{ $t(`m.grading['修改分级管理员授权范围']`) }}
-                                </div>
+                                </div> -->
                             </div>
                         </template>
-                        <template v-else>
+                        <!-- <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
                                 <template v-if="user.role.type === 'rating_manager'">
                                     <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
@@ -64,7 +64,7 @@
                                 </template>
                                 <iam-svg v-else />
                             </div>
-                        </template>
+                        </template> -->
                     </div>
                 </div>
                 <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">
@@ -934,8 +934,9 @@
                 }, _ => _);
             },
 
-            handleSkip () {
+            async handleSkip () {
                 bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
                 if (this.user.role.type === 'rating_manager') {
                     const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
                     window.open(routeData.href, '_blank');
@@ -1159,14 +1160,13 @@
             }
         }
 
-        .search-wrapper {
+        .search-wrappers {
             display: flex;
 
             .icon-iamcenter-wrapper {
                 margin: 0 10px 0 8px;
                 height: 32px;
                 padding: 0 6px;
-                border: 1px solid #c4c6cc;
                 border-radius: 2px;
                 cursor: pointer;
 
