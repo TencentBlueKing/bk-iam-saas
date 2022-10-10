@@ -51,7 +51,11 @@ class ApplicationDataTrans:
         # 3. 增量策略：校验新增的资源实例ID和Name是否匹配，检查逻辑不可放置于第4步后面，否则可能会出现将过期老策略进行校验
         diff_policy_list.check_resource_name()
 
-        # 4. 由于存在申请时，未修改权限，只是修改有效期的情况，所以需要单独判断，重新添加到申请单里，同时申请的策略需要使用已有策略的有效期
+        # 4. 检查每个操作新增的资源实例数量不超过限制
+        # NOTE: 只需要检查新增的部分，已有的以及申请续期的都不需要检查
+        self._check_application_policy_instance_count_limit(diff_policy_list)
+
+        # 5. 由于存在申请时，未修改权限，只是修改有效期的情况，所以需要单独判断，重新添加到申请单里，同时申请的策略需要使用已有策略的有效期
         application_policies = []
         for p in policy_list.policies:
             old_policy = old_policy_list.get(p.action_id)
@@ -70,7 +74,7 @@ class ApplicationDataTrans:
             diff_policy.set_expired_at(old_policy.expired_at)
             application_policies.append(diff_policy)
 
-        # 5. 数据完全没有变更
+        # 6. 数据完全没有变更
         if len(application_policies) == 0:
             raise error_codes.INVALID_ARGS.format(message=_("无权限变更申请，无需提交"), replace=True)
 
@@ -168,10 +172,7 @@ class ApplicationDataTrans:
         # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
         application_policy_list = self._gen_need_apply_policy_list(applicant, system_id, policy_list)
 
-        # 3. 检查每个操作新增的资源实例数量不超过限制
-        self._check_application_policy_instance_count_limit(application_policy_list)
-
-        # 4. 转换为ApplicationBiz创建申请单所需数据结构
+        # 3. 转换为ApplicationBiz创建申请单所需数据结构
         application_data = ActionApplicationDataBean(
             applicant=applicant, policy_list=application_policy_list, reason=data["reason"]
         )

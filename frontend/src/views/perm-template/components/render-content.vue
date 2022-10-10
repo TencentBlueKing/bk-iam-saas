@@ -49,14 +49,14 @@
                                 <span>{{ option.name }}</span>
                                 <span style="color: #c4c6cc;">({{ option.id }})</span>
                             </bk-option>
-                            <div slot="extension" class="select-extension-wrapper">
+                            <!-- <div slot="extension" class="select-extension-wrapper">
                                 <div class="left" @click.stop="handleSkip" v-if="user.role.type === 'rating_manager'">
                                     <i class="iam-icon iamcenter-edit-fill mr5"></i>{{ $t(`m.grading['修改分级管理员授权范围']`) }}
                                 </div>
                                 <div class="right" @click.stop="refreshList">
                                     <i class="iam-icon iamcenter-refresh mr5"></i>{{ $t(`m.grading['刷新列表']`) }}
                                 </div>
-                            </div>
+                            </div> -->
                         </bk-select>
                         <bk-input v-model="systemName" disabled style="width: 450px;" v-else></bk-input>
                     </div>
@@ -856,9 +856,10 @@
                 }, _ => _);
             },
 
-            handleSkip () {
+            async handleSkip () {
                 // 跳转至我的分级管理员
                 bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
                 if (this.user.role.type === 'rating_manager') {
                     const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
                     window.open(routeData.href, '_blank');

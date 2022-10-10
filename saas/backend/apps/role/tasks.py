@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+import time
 from typing import Set
 from urllib.parse import urlencode
 
@@ -23,6 +24,7 @@ from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.biz.action import ActionBiz
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
 from backend.common.time import DAY_SECONDS, get_soon_expire_ts
@@ -119,6 +121,7 @@ class InitBizGradeManagerTask(Task):
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()
     action_biz = ActionBiz()
+    resource_biz = ResourceBiz()
 
     _exist_names: Set[str] = set()
 
@@ -168,6 +171,8 @@ class InitBizGradeManagerTask(Task):
         role = self.biz.create(role_info, ADMIN_USER)
 
         # 创建用户组并授权
+        expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
+
         authorization_scopes = role_info.dict()["authorization_scopes"]
         for name_suffix in [ManagementGroupNameSuffixEnum.OPS.value, ManagementGroupNameSuffixEnum.READ.value]:
             description = "{}业务运维人员的权限".format(biz_name)
@@ -182,7 +187,7 @@ class InitBizGradeManagerTask(Task):
                 description=description,
                 creator=ADMIN_USER,
                 subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
-                expired_at=6 * 30 * DAY_SECONDS,  # 过期时间半年
+                expired_at=expired_at,  # 过期时间半年
             )
 
             templates = self._init_group_auth_info(authorization_scopes, name_suffix)
@@ -209,11 +214,22 @@ class InitBizGradeManagerTask(Task):
         # 默认需要初始化的系统列表
         systems = settings.INIT_GRADE_MANAGER_SYSTEM_LIST
         bk_sops_system = "bk_sops"
+        bk_cmdb_system = "bk_cmdb"
         for system_id in systems:
-            resource_type = "biz" if system_id != bk_sops_system else "project"
-            resource_system = "bk_cmdb" if system_id != bk_sops_system else bk_sops_system
+            resource_type = "biz"
+            if system_id == bk_sops_system:
+                resource_type = "project"
+            elif system_id in ["bk_log_search", "bk_monitorv3"]:
+                resource_type = "space"
+
+            resource_system = bk_cmdb_system
+            if system_id in [bk_sops_system, "bk_log_search", "bk_monitorv3"]:
+                resource_system = resource_system
+
             resource_id = data["bk_biz_id"] if system_id != bk_sops_system else data["project_id"]
             resource_name = data["name"]
+            if system_id in ["bk_log_search", "bk_monitorv3"]:
+                resource_name = "[业务] " + resource_name
 
             auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
 
@@ -245,42 +261,23 @@ class InitBizGradeManagerTask(Task):
                 # 不关联资源类型的操作
                 if len(action.related_resource_types) == 0:
                     auth_scope_action = AuthScopeAction(id=action.id, resource_groups=ResourceGroupList(__root__=[]))
+
+                elif system_id == bk_cmdb_system and action_id == "unassign_biz_host":
+                    # 配置管理 -- 主机归还主机池 主机池默认为空闲机
+                    policy_data = self._gen_cmdb_unassign_biz_host_policy(
+                        action, resource_type, resource_system, resource_id, resource_name
+                    )
+                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
+
+                elif system_id == "bk_nodeman" and action_id == "cloud_view":
+                    # 节点管理 -- 云区域查看 默认为任意权限
+                    policy_data = self._gen_nodeman_cloud_view_policy(action)
+                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
+
                 else:
-                    policy_data = {
-                        "id": action.id,
-                        "resource_groups": [
-                            {
-                                "related_resource_types": [
-                                    {
-                                        "system_id": rrt.system_id,
-                                        "type": rrt.id,
-                                        "condition": [
-                                            {
-                                                "id": gen_uuid(),
-                                                "instances": [
-                                                    {
-                                                        "type": resource_type,
-                                                        "path": [
-                                                            [
-                                                                {
-                                                                    "id": resource_id,
-                                                                    "name": resource_name,
-                                                                    "system_id": resource_system,
-                                                                    "type": resource_type,
-                                                                }
-                                                            ]
-                                                        ],
-                                                    }
-                                                ],
-                                                "attributes": [],
-                                            }
-                                        ],
-                                    }
-                                    for rrt in action.related_resource_types
-                                ]
-                            }
-                        ],
-                    }
+                    policy_data = self._action_policy(
+                        action, resource_type, resource_system, resource_id, resource_name
+                    )
                     auth_scope_action = AuthScopeAction.parse_obj(policy_data)
 
                 auth_scope.actions.append(auth_scope_action)
@@ -290,6 +287,130 @@ class InitBizGradeManagerTask(Task):
                 role_info.authorization_scopes.append(auth_scope)
 
         return role_info
+
+    def _action_policy(self, action, resource_type, resource_system, resource_id, resource_name):
+        return {
+            "id": action.id,
+            "resource_groups": [
+                {
+                    "related_resource_types": [
+                        {
+                            "system_id": rrt.system_id,
+                            "type": rrt.id,
+                            "condition": [
+                                {
+                                    "id": gen_uuid(),
+                                    "instances": [
+                                        {
+                                            "type": resource_type,
+                                            "path": [
+                                                [
+                                                    {
+                                                        "id": resource_id,
+                                                        "name": resource_name,
+                                                        "system_id": resource_system,
+                                                        "type": resource_type,
+                                                    }
+                                                ]
+                                            ],
+                                        }
+                                    ],
+                                    "attributes": [],
+                                }
+                            ],
+                        }
+                        for rrt in action.related_resource_types
+                    ]
+                }
+            ],
+        }
+
+    def _gen_nodeman_cloud_view_policy(self, action):
+        return {
+            "id": action.id,
+            "resource_groups": [
+                {
+                    "related_resource_types": [
+                        {
+                            "system_id": rrt.system_id,
+                            "type": rrt.id,
+                            "condition": [],
+                        }
+                        for rrt in action.related_resource_types
+                    ]
+                }
+            ],
+        }
+
+    def _gen_cmdb_unassign_biz_host_policy(self, action, resource_type, resource_system, resource_id, resource_name):
+        return {
+            "id": action.id,
+            "resource_groups": [
+                {
+                    "related_resource_types": [
+                        {
+                            "system_id": resource_system,
+                            "type": resource_type,
+                            "condition": [
+                                {
+                                    "id": gen_uuid(),
+                                    "instances": [
+                                        {
+                                            "type": resource_type,
+                                            "path": [
+                                                [
+                                                    {
+                                                        "id": resource_id,
+                                                        "name": resource_name,
+                                                        "system_id": resource_system,
+                                                        "type": resource_type,
+                                                    }
+                                                ]
+                                            ],
+                                        }
+                                    ],
+                                    "attributes": [],
+                                }
+                            ],
+                        },
+                        {
+                            "system_id": resource_system,
+                            "type": "sys_resource_pool_directory",
+                            "condition": [
+                                {
+                                    "id": gen_uuid(),
+                                    "instances": [
+                                        {
+                                            "type": "sys_resource_pool_directory",
+                                            "path": [
+                                                [
+                                                    {
+                                                        "id": self._query_cmdb_sys_resource_pool_directory_id("空闲机"),
+                                                        "name": "空闲机",
+                                                        "system_id": resource_system,
+                                                        "type": "sys_resource_pool_directory",
+                                                    }
+                                                ]
+                                            ],
+                                        }
+                                    ],
+                                    "attributes": [],
+                                }
+                            ],
+                        },
+                    ]
+                }
+            ],
+        }
+
+    def _query_cmdb_sys_resource_pool_directory_id(self, name: str) -> str:
+        # 查询cmdb主机池id
+        _, resources = self.resource_biz.search_instance_for_topology("bk_cmdb", "sys_resource_pool_directory", name)
+        for r in resources:
+            if r.display_name == name:
+                return r.id
+
+        return "*"  # NOTE: 不应该出现的场景
 
     def _init_group_auth_info(self, authorization_scopes, name_suffix: str):
         templates = []

@@ -163,7 +163,8 @@ export default class Policy {
     }
 
     get canView () {
-        return this.policy_id !== '';
+        return false;
+        // return this.policy_id !== '';
     }
 
     // 是否主操作

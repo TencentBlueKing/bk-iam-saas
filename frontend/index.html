@@ -50,7 +50,7 @@
                     CUR_LANGUAGE = 'en'
                 }
                 // 中文 兼容处理
-                if (['zh-cn', 'zh-CN'].includes(CUR_LANGUAGE)) {
+                if (['zh-cn', 'zh-CN', 'None', 'none', ''].includes(CUR_LANGUAGE)) {
                     CUR_LANGUAGE = 'zh-cn'
                 }
                 if (CUR_LANGUAGE === 'en') {

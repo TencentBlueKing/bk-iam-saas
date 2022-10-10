@@ -4,7 +4,8 @@
         ext-cls="iam-system-log-dialog"
         :show-footer="false"
         :width="1105"
-        :mask-close="false">
+        :mask-close="false"
+        @after-leave="handleClose">
         <div class="log-layout">
             <div class="layout-left">
                 <scroll-faker class="version-wraper">
@@ -24,7 +25,7 @@
                 <scroll-faker class="content-wraper">
                     <div v-html="logContent" class="markdowm-container" />
                 </scroll-faker>
-                <Icon bk type="close" class="log-close" @click="handleClose" />
+                <!-- <Icon bk type="close" class="log-close" @click="handleClose" /> -->
             </div>
         </div>
     </bk-dialog>

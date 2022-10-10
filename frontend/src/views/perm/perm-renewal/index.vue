@@ -25,7 +25,6 @@
             <render-table
                 :renewal-time="expiredAt"
                 :type="active"
-                :count="getTableCount"
                 :data="getTableList"
                 :loading="tableLoading"
                 @on-select="handleSelected" />
@@ -79,11 +78,6 @@
             getTableList () {
                 return this.panels.find(item => item.name === this.active).data || [];
             },
-
-            getTableCount () {
-                return this.panels.find(item => item.name === this.active).count || 0;
-            },
-
             curBadgeTheme () {
                 return payload => {
                     return payload === this.active ? '#e1ecff' : '#f0f1f5';
@@ -120,15 +114,12 @@
         methods: {
             async fetchData () {
                 this.tableLoading = true;
-                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                    page_size: 10,
-                    page: 1
-                }), this.$store.dispatch('renewal/getExpireSoonPerm')];
+                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser'), this.$store.dispatch('renewal/getExpireSoonPerm')];
                 const resultList = await Promise.all(promiseList).finally(() => {
                     this.tableLoading = false;
                 });
-                this.panels[0].total = resultList[0].data.count;
-                this.panels[0].data = resultList[0].data.results;
+                this.panels[0].total = resultList[0].data.length;
+                this.panels[0].data = resultList[0].data;
                 this.panels[1].total = resultList[1].data.length;
                 this.panels[1].data = resultList[1].data;
                 this.tabKey = +new Date();
@@ -170,7 +161,7 @@
 
             handleSelected (type, value) {
                 if (type === 'group') {
-                    this.panels[0].count = this.panels[0].total;
+                    this.panels[0].count = value.length;
                     this.curSelectedList = value;
                 } else {
                     this.panels[1].count = value.length;

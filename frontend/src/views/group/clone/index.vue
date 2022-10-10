@@ -303,8 +303,11 @@
                         this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
                         if (this.groupSystemList[i].count > 0) {
                             await this.getGroupCustomPolicy(this.groupSystemList[i]);
-                        } else {
-                            await this.getGroupTemplateList(this.groupSystemList[i]);
+                        }
+                        if (this.groupSystemList[i].template_count > 0) {
+                            setTimeout(async () => {
+                                await this.getGroupTemplateList(this.groupSystemList[i]);
+                            }, 500);
                         }
                     }
                     this.handleAggregateData();
@@ -330,10 +333,19 @@
                         systemId: item.id
                     });
                     const tableData = res.data.map(row => {
-                        console.log('row', row);
+                        row.conditionIds = [];
                         row.resource_groups.forEach(groupItem => {
                             groupItem.related_resource_types.forEach(resourceTypeItem => {
                                 resourceTypeItem.id = resourceTypeItem.type;
+                                resourceTypeItem.condition && resourceTypeItem.condition.forEach((conditionItem) => {
+                                    conditionItem.instances.forEach((instanceItem) => {
+                                        instanceItem.path.forEach((pathItem) => {
+                                            pathItem.forEach((v) => {
+                                                row.conditionIds.push(v.id);
+                                            });
+                                        });
+                                    });
+                                });
                                 resourceTypeItem.condition = '';
                             });
                         });
@@ -416,9 +428,19 @@
                         templateId: item.id
                     });
                     const tableData = res.data.actions.map(row => {
+                        row.conditionIds = [];
                         row.resource_groups.forEach(groupItem => {
                             groupItem.related_resource_types.forEach(resourceTypeItem => {
                                 resourceTypeItem.id = resourceTypeItem.type;
+                                resourceTypeItem.condition && resourceTypeItem.condition.forEach((conditionItem) => {
+                                    conditionItem.instances.forEach((instanceItem) => {
+                                        instanceItem.path.forEach((pathItem) => {
+                                            pathItem.forEach((v) => {
+                                                row.conditionIds.push(v.id);
+                                            });
+                                        });
+                                    });
+                                });
                                 resourceTypeItem.condition = '';
                             });
                         });
@@ -426,7 +448,7 @@
                         // eslint-disable-next-line max-len
                         // row.related_environments = this.linearActionList.find(sub => sub.id === row.id).related_environments;
                         return new GroupPolicy(
-                            { ...row, policy_id: 1 },
+                            { ...row, policy_id: row.policy_id },
                             'add',
                             'template',
                             { ...item }
