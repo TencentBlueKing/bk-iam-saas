@@ -219,17 +219,20 @@ class InitBizGradeManagerTask(Task):
             resource_type = "biz"
             if system_id == bk_sops_system:
                 resource_type = "project"
-            elif system_id in ["bk_log_search", "bk_monitorv3"]:
-                resource_type = "space"
+            # NOTE: 日志平台, 监控平台迁移完成后再处理
+            # elif system_id in ["bk_log_search", "bk_monitorv3"]:
+            #     resource_type = "space"
 
             resource_system = bk_cmdb_system
-            if system_id in [bk_sops_system, "bk_log_search", "bk_monitorv3"]:
-                resource_system = resource_system
+            if system_id == bk_sops_system:
+                resource_system = system_id
+            # if system_id in [bk_sops_system, "bk_log_search", "bk_monitorv3"]:
+            #     resource_system = system_id
 
             resource_id = data["bk_biz_id"] if system_id != bk_sops_system else data["project_id"]
             resource_name = data["name"]
-            if system_id in ["bk_log_search", "bk_monitorv3"]:
-                resource_name = "[业务] " + resource_name
+            # if system_id in ["bk_log_search", "bk_monitorv3"]:
+            #     resource_name = "[业务] " + resource_name
 
             auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
 
