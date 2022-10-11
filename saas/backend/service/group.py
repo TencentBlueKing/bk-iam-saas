@@ -40,6 +40,7 @@ class SubjectGroup(BaseModel):
 class GroupCreate(BaseModel):
     name: str
     description: str
+    readonly: bool = False
 
 
 class GroupMemberExpiredAt(Subject):
@@ -63,7 +64,9 @@ class GroupService:
         """
         批量创建用户组
         """
-        groups = [Group(name=one.name, description=one.description, creator=creator) for one in infos]
+        groups = [
+            Group(name=one.name, description=one.description, readonly=one.readonly, creator=creator) for one in infos
+        ]
         with transaction.atomic():
             # 为了获取返回的insert id, 不能使用bulk_create
             for group in groups:
