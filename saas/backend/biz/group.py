@@ -106,7 +106,7 @@ class GroupMemberExpiredAtBean(GroupMemberExpiredAt):
 
 
 class GroupCreateBean(GroupCreate):
-    readonly: bool = True
+    pass
 
 
 class GroupTemplateGrantBean(BaseModel):
@@ -164,8 +164,8 @@ class GroupBiz:
         """
         with transaction.atomic():
             groups = self.group_svc.batch_create(parse_obj_as(List[GroupCreate], infos), creator)
-            group_attrs = {group.id: {"readonly": info.readonly} for group, info in zip(groups, infos)}
-            self.group_attribute_svc.batch_set_attributes(group_attrs)
+            # group_attrs = {group.id: {"readonly": info.readonly} for group, info in zip(groups, infos)}
+            # self.group_attribute_svc.batch_set_attributes(group_attrs)
             RoleRelatedObject.objects.batch_create_group_relation(role_id, [group.id for group in groups])
 
         return groups

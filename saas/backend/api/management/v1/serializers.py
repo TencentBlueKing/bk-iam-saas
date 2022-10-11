@@ -164,7 +164,7 @@ class ManagementGroupBasicInfoSLZ(serializers.Serializer):
 
 
 class ManagementGroupBasicCreateSLZ(ManagementGroupBasicInfoSLZ):
-    readonly = serializers.BooleanField(label="是否只读", default=True, required=False)
+    readonly = serializers.BooleanField(label="是否只读", default=False, required=False)
 
     class Meta:
         ref_name = "V1ManagementGroupBasicCreateSLZ"
