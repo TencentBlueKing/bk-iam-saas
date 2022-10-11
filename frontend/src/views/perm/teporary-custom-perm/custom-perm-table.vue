@@ -553,7 +553,6 @@
                 this.deleteDialog.loading = true;
                 try {
                     console.log(11111, this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId);
-                    debugger;
                     if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
                         await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
                         this.fetchData(this.params);

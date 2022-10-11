@@ -43,6 +43,9 @@ class SuperManagerMemberSLZ(serializers.Serializer):
     username = serializers.CharField(label="用户名")
     has_system_permission = serializers.BooleanField(label="是否拥有系统所有权限")
 
+    class Meta:
+        ref_name = "AdminSuperManagerMemberSLZ"
+
 
 class SystemManagerWithMembersSLZ(RatingMangerListSLZ):
     has_system_permission = serializers.SerializerMethodField(label="是否拥有系统所有权限")
@@ -61,7 +64,7 @@ class SubjectRoleSLZ(serializers.Serializer):
     name = serializers.CharField()
 
 
-class FreezeSubjectSLZ(serializers.Serializer):
+class SubjectSLZ(serializers.Serializer):
     # 注意, 当前只支持冻结用户, 不支持其他类型
     type = serializers.ChoiceField(label="Subject类型", choices=[("user", "用户")])
     id = serializers.CharField(label="SubjectID")

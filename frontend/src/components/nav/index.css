@@ -13,7 +13,7 @@ $duration: 0.3s;
         position: relative;
         width: 100%;
         height: 100%;
-        background: #182132;
+        background: #293852;
         transition: width $duration $cubic-bezier;
         overflow: hidden;
         &.unfold {
@@ -54,7 +54,7 @@ $duration: 0.3s;
             left: 0;
             width: 60px;
             height: 60px;
-            background: rgb(24, 33, 50);
+            background: #293852;
             cursor: pointer;
             &:hover {
                 .nav-stick {
@@ -94,6 +94,71 @@ $duration: 0.3s;
             background: #ff0000;
             float: right;
         }
+
+        .iam-nav-select-cls{
+            background: #374357;
+            width: 240px;
+            margin: 10px auto;
+            color: #fff;
+            border: 0;
+            .bk-select-angle{
+                color: #fff;
+            }
+        }
+
+        .bk-select.is-default-trigger.is-unselected:before {
+            color: #fff;
+        }
+    }
+}
+.iam-nav-select-dropdown-content{
+    width: 274px !important;
+    background: #182233 !important;
+    border: 1px solid #2f3847 !important;
+    padding: 0 !important;
+    color: #fff !important;
+
+    .bk-options-wrapper ::-webkit-scrollbar-thumb {
+        background-color: #5f6e85;
+    }
+    .bk-select-search-wrapper{
+        input {
+            background: #182233 !important;
+            color: #c4c6cc !important;
+
+            &::placeholder {
+                color: #979ba5;
+            }
+        }
+        .bk-select-search-input {
+            border-color: #404a5c;
+        }
+    }
+    .bk-option{
+        &:hover {
+            background: #294066 !important;
+        }
+    }
+    .is-selected{
+        background-color: #2e384a !important;
+    }
+    .bk-option-content-default{
+        color: #fff !important;
+    }
+
+    .bk-select-extension{
+        background: #28354d;
+        color: #c4c6cc;
+        border-top: none;
+        padding: 0 10px;
+
+        &:hover {
+            background: #28354d;
+        }
+    }
+
+    .bk-select-empty {
+        color: #c4c6cc !important;
     }
 }
 .logo {

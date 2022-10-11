@@ -24,6 +24,7 @@
                     is-edit
                     mode="create"
                     ref="resInstanceTableRef"
+                    :is-all-expanded="isAllExpanded"
                     :list="tableList"
                     :authorization="curAuthorizationData"
                     :original-list="tableListBackup"
@@ -281,7 +282,7 @@
                 });
             },
 
-            handleResSelect (index, resIndex, condition, groupIndex) {
+            handleResSelect (index, resIndex, condition, groupIndex, resItem) {
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
@@ -289,8 +290,13 @@
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
                             if (actions[i].id === item.id) {
-                                actions[i].resource_groups[groupIndex]
-                                    .related_resource_types[resIndex].condition = _.cloneDeep(condition);
+                                // eslint-disable-next-line max-len
+                                if (!actions[i].resource_groups[groupIndex]) {
+                                    actions[i].resource_groups.push({ id: '', related_resource_types: resItem });
+                                } else {
+                                    // eslint-disable-next-line max-len
+                                    actions[i].resource_groups[groupIndex].related_resource_types[resIndex].condition = _.cloneDeep(condition);
+                                }
                                 break;
                             }
                         }
@@ -299,6 +305,7 @@
             },
 
             handleAttrValueSelected (payload) {
+                console.log('payload', payload);
                 window.changeDialog = true;
                 const instances = (function () {
                     const arr = [];
@@ -334,8 +341,10 @@
                 if (instances.length > 0) {
                     const actions = this.curMap.get(payload.aggregationId);
                     actions.forEach(item => {
-                        item.related_resource_types && item.related_resource_types.forEach(subItem => {
-                            subItem.condition = [new Condition({ instances }, '', 'add')];
+                        item.resource_groups.forEach(groupItem => {
+                            groupItem.related_resource_types.forEach(subItem => {
+                                subItem.condition = [new Condition({ instances }, '', 'add')];
+                            });
                         });
                     });
                 }
@@ -514,6 +523,7 @@
                                         curInstances.push(...instance);
                                     });
                                     instancesDisplayData = this.setInstancesDisplayData(curInstances);
+                                    console.log('instancesDisplayData', instancesDisplayData);
                                 } else {
                                     curInstances = [];
                                 }
@@ -615,7 +625,6 @@
                     }
                 };
                 console.log('params', params);
-                debugger;
                 try {
                     await this.$store.dispatch('userGroup/addUserGroupPolicy', params);
                     this.messageSuccess(this.$t(`m.info['用户组添加权限成功']`), 1000);

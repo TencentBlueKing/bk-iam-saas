@@ -32,6 +32,7 @@ export default class Policy {
     // tag: add updata unchanged create
     // instanceNotDisabled: instance 不允许 disabled
     constructor (payload, flag = '', instanceNotDisabled = false, isProv = false) {
+        this.isAggregate = false;
         this.type = payload.type;
         this.id = payload.id;
         this.policy_id = payload.policy_id || '';
@@ -162,7 +163,8 @@ export default class Policy {
     }
 
     get canView () {
-        return this.policy_id !== '';
+        return false;
+        // return this.policy_id !== '';
     }
 
     // 是否主操作

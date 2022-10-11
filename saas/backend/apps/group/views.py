@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 from functools import wraps
 from typing import List
 
@@ -64,6 +63,7 @@ from .serializers import (
     GroupIdSLZ,
     GroupMemberUpdateExpiredAtSLZ,
     GroupPolicyUpdateSLZ,
+    GroupsAddMemberSLZ,
     GroupSLZ,
     GroupTemplateDetailSchemaSLZ,
     GroupTemplateDetailSLZ,
@@ -74,8 +74,6 @@ from .serializers import (
     MemberSLZ,
     SearchMemberSLZ,
 )
-
-permission_logger = logging.getLogger("permission")
 
 
 def check_readonly_group(operation):
@@ -321,8 +319,6 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         self.group_check_biz.check_role_subject_scope(request.role, members)
         self.group_check_biz.check_member_count(group.id, len(members))
 
-        permission_logger.info("group %s add members %s by user %s", group.id, members, request.user.username)
-
         # 添加成员
         self.biz.add_members(group.id, members, expired_at)
 
@@ -346,16 +342,76 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         group = self.get_object()
         data = serializer.validated_data
 
-        permission_logger.info(
-            "group %s delete members %s by user %s", group.id, data["members"], request.user.username
-        )
-
         self.biz.remove_members(str(group.id), parse_obj_as(List[Subject], data["members"]))
 
         # 写入审计上下文
         audit_context_setter(group=group, members=data["members"])
 
         return Response({})
+
+
+class GroupsMemberViewSet(GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupsAddMemberSLZ
+
+    biz = GroupBiz()
+    group_check_biz = GroupCheckBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量用户组添加成员",
+        request_body=GroupsAddMemberSLZ(label="成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    @view_audit_decorator(GroupMemberCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        serializer = GroupsAddMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        members_data = data["members"]
+        expired_at = data["expired_at"]
+        group_ids = data["group_ids"]
+
+        # 添加成员 异常信息记录
+        failed_info = {}
+        # 成员Dict结构转换为Subject结构，并去重
+        members = list(set(parse_obj_as(List[Subject], members_data)))
+        # 检测成员是否满足管理的授权范围
+        GroupCheckBiz().check_role_subject_scope(request.role, members)
+
+        groups = self.queryset.filter(id__in=group_ids)
+        for group in groups:
+            try:
+                if not RoleObjectRelationChecker(request.role).check_group(group):
+                    self.permission_denied(
+                        request, message=f"{request.role.type} role can not access group {group.id}"
+                    )
+                # 校验用户组数量是否超限
+                GroupCheckBiz().check_member_count(group.id, len(members))
+                # 只读用户组检测
+                readonly = group.readonly
+                if readonly:
+                    raise error_codes.FORBIDDEN.format(
+                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        replace=True,
+                    )
+                # 添加成员
+                GroupBiz().add_members(group.id, members, expired_at)
+
+            except Exception as e:
+                failed_info.update({group.name: "{}".format(e)})
+
+            else:
+                # 写入审计上下文
+                audit_context_setter(group=group, members=[m.dict() for m in members])
+
+        if not failed_info:
+            return Response({}, status=status.HTTP_201_CREATED)
+
+        raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
@@ -382,13 +438,6 @@ class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
 
         group = self.get_object()
         data = serializer.validated_data
-
-        permission_logger.info(
-            "group %s update members %s expired_at by user %s", group.id, data["members"], request.user.username
-        )
-
-        for m in data["members"]:
-            m["policy_expired_at"] = m.pop("expired_at")
 
         self.group_biz.update_members_expired_at(
             group.id, parse_obj_as(List[GroupMemberExpiredAtBean], data["members"])
@@ -523,10 +572,6 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         ids = slz.validated_data["ids"]
         group = self.get_object()
         subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
-
-        permission_logger.info(
-            "subject type=%s, id=%s policy deleted by user %s", subject.type, subject.id, request.user.username
-        )
 
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 

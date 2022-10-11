@@ -393,8 +393,6 @@
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
-                    console.log('actions', actions);
-                    console.log('item', item);
                     const len = actions.length;
                     if (len > 0) {
                         for (let i = 0; i < len; i++) {
@@ -417,7 +415,7 @@
              * handleAttrValueSelected
              */
             handleAttrValueSelected (payload) {
-                // debugger
+                console.log('payload', payload);
                 window.changeDialog = true;
                 const instances = (function () {
                     const arr = [];
@@ -687,11 +685,9 @@
                     tempList.push(...list);
                 });
                 this.tableList = _.cloneDeep(tempList);
-                console.log('this.tableList', this.tableList);
             },
 
             setInstancesDisplayData (data) {
-                console.log('data', data);
                 const instancesDisplayData = data.reduce((p, v) => {
                     if (!p[v['type']]) {
                         p[v['type']] = [];
@@ -773,7 +769,6 @@
                         expired_at: this.expired_at,
                         templates
                     };
-                    // debugger;
                     try {
                         await this.$store.dispatch('userGroup/addUserGroup', params);
                         this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
@@ -880,6 +875,7 @@
 </script>
 <style lang="postcss" scoped>
     .iam-create-user-group-wrapper {
+        padding-bottom: 50px;
         .add-perm-action {
             margin: 16px 0 20px 0;
         }

@@ -20,10 +20,11 @@ from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
 from backend.audit.models import get_event_model
+from backend.common.base import is_open_api_request_path
 from backend.common.local import local
 from backend.service.models import Subject
 
-from .constants import AuditObjectType, AuditSourceType
+from .constants import AuditObjectType, AuditSourceType, AuditType
 
 logger = logging.getLogger("app")
 
@@ -124,7 +125,7 @@ def log_api_event(request, provider: DataProvider):
 
 
 def _parse_request_audit_type(request):
-    if "/api/v1/open/" in request.path:
+    if is_open_api_request_path(request.path):
         return AuditSourceType.OPENAPI.value, request.bk_app_code
 
     return AuditSourceType.WEB.value, ""
@@ -267,6 +268,59 @@ def log_role_event(
     extra = extra if extra else {}
     if sn:
         extra["sn"] = sn
+    event.extra = extra
+
+    event.save(force_insert=True)
+
+
+def log_user_blacklist_event(
+    _type: str,
+    subject: Subject,
+    data: List[str],
+    extra: Optional[Dict[str, Any]] = None,
+    source_type: str = AuditSourceType.OPENAPI.value,
+):
+    """
+    记录角色相关的审批事件
+    """
+    Event = get_event_model()
+    event = Event(
+        type=_type,
+        username=subject.id,
+        object_type=AuditObjectType.USER_BLACK_LIST.value,
+        object_id="0",
+        object_name="global_user_black_list",
+        source_type=source_type,
+    )
+    extra = extra if extra else {}
+    if data:
+        extra["members"] = data
+    event.extra = extra
+
+    event.save(force_insert=True)
+
+
+def log_user_permission_clean_event(
+    subject: Subject,
+    data: List[str],
+    extra: Optional[Dict[str, Any]] = None,
+    source_type: str = AuditSourceType.OPENAPI.value,
+):
+    """
+    记录角色相关的审批事件
+    """
+    Event = get_event_model()
+    event = Event(
+        type=AuditType.USER_PERMISSION_CLEANUP.value,
+        username=subject.id,
+        object_type=AuditObjectType.USER_PERMISSION_CLEANUP.value,
+        object_id="0",
+        object_name="user_permission_cleanup",
+        source_type=source_type,
+    )
+    extra = extra if extra else {}
+    if data:
+        extra["members"] = data
     event.extra = extra
 
     event.save(force_insert=True)

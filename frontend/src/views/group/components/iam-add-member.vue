@@ -11,11 +11,14 @@
         <!-- eslint-disable max-len -->
         <div slot="header" class="title">
             <template v-if="showExpiredAt">
-                <div v-if="isPrev">
-                    {{ $t(`m.common['添加成员至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
-                </div>
-                <div v-else :title="`${$t(`m.common['设置新用户加入']`)}【${name}】${$t(`m.common['用户组的有效期']`)}`">
-                    {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">【{{ name }}</span>】{{ $t(`m.common['用户组的有效期']`) }}
+                <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
+                <div v-else>
+                    <div v-if="isPrev">
+                        {{ $t(`m.common['添加成员至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
+                    </div>
+                    <div v-else :title="`${$t(`m.common['设置新用户加入']`)}【${name}】${$t(`m.common['用户组的有效期']`)}`">
+                        {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">【{{ name }}</span>】{{ $t(`m.common['用户组的有效期']`) }}
+                    </div>
                 </div>
             </template>
             <template v-else>
@@ -42,7 +45,7 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <!-- <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
+                        <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
                             <bk-dropdown-menu
                                 align="left"
                                 ref="dropdown"
@@ -75,7 +78,7 @@
                                 @keyup.up.native="handleKeyup"
                                 @keyup.down.native="handleKeydown">
                             </bk-input>
-                        </div> -->
+                        </div>
                         <div class="member-tree-wrapper"
                             v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
                             v-if="isOrganization">
@@ -134,10 +137,15 @@
                                 @input="handleManualInput">
                             </bk-input>
                             <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
-                            <p class="manual-error-text" v-if="manualInputError">{{ $t(`m.common['手动输入提示2']`) }}</p>
+                            <p class="manual-error-text pr10" v-if="manualInputError">
+                                {{ $t(`m.common['手动输入提示2']`) }}
+                                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                                    ，{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
+                                </template>
+                            </p>
                             <bk-button
                                 theme="primary"
-                                style="width: 100%; margin-top: 35px;"
+                                :style="{ width: '100%', marginTop: curLanguageIsCn ? '35px' : '50px' }"
                                 :loading="manualAddLoading"
                                 :disabled="isManualDisabled || isAll"
                                 data-test-id="group_addGroupMemberDialog_btn_addManualUser"
@@ -232,6 +240,7 @@
     import dialogInfiniteList from '@/components/dialog-infinite-list';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import { guid } from '@/common/util';
+    import { bus } from '@/common/bus';
 
     // 去除()以及之间的字符
     const getUsername = (str) => {
@@ -297,6 +306,10 @@
                 default: false
             },
             allChecked: {
+                type: Boolean,
+                default: false
+            },
+            isBatch: {
                 type: Boolean,
                 default: false
             }
@@ -391,7 +404,7 @@
                 if (this.showExpiredAt) {
                     if (this.isPrev) {
                         return {
-                            height: '383px'
+                            height: this.curLanguageIsCn ? '383px' : '400px'
                         };
                     }
                     return {
@@ -423,6 +436,9 @@
                     return false;
                 }
                 return this.isRatingManager;
+            },
+            isHierarchicalAdmin () {
+                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
             }
         },
         watch: {
@@ -434,7 +450,11 @@
                         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
                         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
                         if (this.showExpiredAt) {
-                            this.fetchMemberList();
+                            if (this.isBatch) {
+                                this.fetchCategoriesList();
+                            } else {
+                                this.fetchMemberList();
+                            }
                         } else {
                             this.requestQueue = ['categories'];
                             if (this.isRatingManager) {
@@ -524,15 +544,23 @@
                     this.hasSelectedUsers.push(...temps);
                     if (res.data.length > 0) {
                         const usernameList = res.data.map(item => item.username);
-                        const templateArr = [];
-                        this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
-                        this.manualValueBackup.forEach(item => {
-                            const name = getUsername(item);
-                            if (!usernameList.includes(name)) {
-                                templateArr.push(item);
-                            }
+                        // 分号拼接
+                        // const templateArr = [];
+                        // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
+                        // this.manualValueBackup.forEach(item => {
+                        //     const name = getUsername(item);
+                        //     if (!usernameList.includes(name)) {
+                        //         templateArr.push(item);
+                        //     }
+                        // });
+                        // this.manualValue = templateArr.join(';');
+
+                        // 保存原有格式
+                        let formatStr = this.manualValue;
+                        usernameList.forEach(item => {
+                            formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
                         });
-                        this.manualValue = templateArr.join(';');
+                        this.manualValue = formatStr;
                         if (this.manualValue !== '') {
                             this.manualInputError = true;
                         }
@@ -594,6 +622,27 @@
 
                     this.defaultDepartments = res.data.results.filter(item => item.type === 'department');
                     this.defaultUsers = res.data.results.filter(item => item.type === 'user');
+                    if (this.isRatingManager) {
+                        this.fetchRoleSubjectScope(false, true);
+                    } else {
+                        this.fetchCategories(false, true);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.requestQueue.shift();
+                }
+            },
+
+            fetchCategoriesList () {
+                try {
                     if (this.isRatingManager) {
                         this.fetchRoleSubjectScope(false, true);
                     } else {
@@ -1131,6 +1180,24 @@
                     }
                 }
                 this.$emit('on-sumbit', params);
+            },
+
+            evil (fn) {
+                const Fn = Function;
+                return new Fn('return ' + fn)();
+            },
+            
+            async handleSkip () {
+                bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+                const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+                window.open(routeData.href, '_blank');
+                // this.$router.push({
+                //     name: 'gradingAdminEdit',
+                //     params: {
+                //         id: this.$store.getters.navCurRoleId
+                //     }
+                // });
             }
         }
     };
@@ -1304,6 +1371,7 @@
                         margin-top: 4px;
                         font-size: 12px;
                         color: #ff4d4d;
+                        line-height: 14px;
                     }
                 }
             }
@@ -1409,6 +1477,12 @@
                     }
                 }
             }
+        }
+
+        .highlight {
+            color: #3a84ff;
+            cursor: pointer;
+            user-select: none;
         }
     }
 </style>

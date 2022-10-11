@@ -171,7 +171,7 @@
     .iam-apply-create-rate-manager-detail-wrapper {
         height: calc(100vh - 121px);
         .action {
-            padding-bottom: 20px;
+            padding-bottom: 50px;
         }
         .rate-manager-info {
             line-height: 50px;

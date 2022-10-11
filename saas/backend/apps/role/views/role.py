@@ -213,6 +213,14 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 检查成员数量是否满足限制
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
+        # 检查新增成员是否已超所有加入分级管理员的限制
+        old_members = set(RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True))
+        for username in data["members"]:
+            if username in old_members:
+                continue
+            # subject加入的分级管理员数量不能超过最大值
+            self.role_check_biz.check_subject_grade_manager_limit(Subject(type=SubjectType.USER.value, id=username))
+
         # 非超级管理员 且 并非分级管理员成员，则无法更新基本信息
         if (
             request.role.type != RoleType.SUPER_MANAGER.value
@@ -622,7 +630,7 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
             self.group_biz.update_members_expired_at(
                 int(group_id),
                 [
-                    GroupMemberExpiredAtBean(type=m["type"], id=m["id"], policy_expired_at=m["expired_at"])
+                    GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=m["expired_at"])
                     for m in per_members
                 ],
             )

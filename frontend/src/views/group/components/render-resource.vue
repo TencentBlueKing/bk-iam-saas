@@ -1,7 +1,7 @@
 <template>
     <div class="iam-slider-resource-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
         <div class="no-limit-wrapper" v-if="!isLoading">
-            <div class="no-limit" :title="$t(`m.resource['无限制总文案']`)">
+            <div v-if="!curSelectionCondition.length" class="no-limit" :title="$t(`m.resource['无限制总文案']`)">
                 <span>
                     <Icon type="info-new" />
                     <span class="text">{{ $t(`m.resource['无限制文案']`) }}</span>
@@ -41,6 +41,7 @@
                             <div class="left-layout" :style="leftLayoutStyle">
                                 <choose-ip
                                     :ref="`${index}TreeRef`"
+                                    :cur-selection-condition="curSelectionCondition"
                                     :tree-value="condition.instance"
                                     :limit-value="getLimitInstance(conditionLimitData[index])"
                                     :select-list="curSelectList(index)"
@@ -185,6 +186,12 @@
                 type: Object,
                 default: () => {
                     return {};
+                }
+            },
+            curSelectionCondition: {
+                type: Array,
+                default: () => {
+                    return [];
                 }
             }
         },

@@ -28,7 +28,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
 import { unifyObjectStyle, json2Query } from '@/common/util';
-import { getRouterDiff } from '@/common/router-handle';
+import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
 // 系统模块
@@ -96,15 +96,15 @@ const currentNav = [
                 rkey: 'applyJoinUserGroup',
                 path: `${SITE_URL}apply-join-user-group`,
                 disabled: false
-            },
-            {
-                icon: 'perm-apply',
-                name: il8n('nav', '临时权限申请'),
-                id: 'provisionPermApplyNav',
-                rkey: 'applyProvisionPerm',
-                path: `${SITE_URL}apply-provision-perm`,
-                disabled: false
             }
+            // {
+            //     icon: 'perm-apply',
+            //     name: il8n('nav', '临时权限申请'),
+            //     id: 'provisionPermApplyNav',
+            //     rkey: 'applyProvisionPerm',
+            //     path: `${SITE_URL}apply-provision-perm`,
+            //     disabled: false
+            // }
         ]
     },
 
@@ -301,7 +301,18 @@ const store = new Vuex.Store({
         // 系统回调地址
         host: '',
         // 前置路由
-        fromRouteName: ''
+        fromRouteName: '',
+
+        // nav导航
+        navData: [],
+
+        index: 0,
+
+        navCurRoleId: 0,
+
+        showNoviceGuide: false,
+
+        curRoleId: 0
     },
     getters: {
         mainContentLoading: state => state.mainContentLoading,
@@ -321,7 +332,12 @@ const store = new Vuex.Store({
         noviceGuide: state => state.noviceGuide,
         loadingConf: state => state.loadingConf,
         host: state => state.host,
-        fromRouteName: state => state.fromRouteName
+        fromRouteName: state => state.fromRouteName,
+        navData: state => state.navData,
+        index: state => state.index,
+        navCurRoleId: state => state.navCurRoleId,
+        showNoviceGuide: state => state.showNoviceGuide,
+        curRoleId: state => state.curRoleId
     },
     mutations: {
         updateHost (state, params) {
@@ -429,6 +445,16 @@ const store = new Vuex.Store({
         },
 
         /**
+         * 记录当前下拉框身份
+         *
+         * @param {Object} state store state
+         * @param {Object} data
+         */
+        updateNavId (state, id) {
+            state.navCurRoleId = id;
+        },
+
+        /**
          * 更新版本日志
          *
          * @param {Object} state store state
@@ -457,8 +483,29 @@ const store = new Vuex.Store({
             state.routerDiff = [...getRouterDiff(role)];
         },
 
+        updataNavRouterDiff (state, index) {
+            state.routerDiff = [...getNavRouterDiff(index)];
+        },
+
         updateRoleList (state, payload) {
             state.roleList.splice(0, state.roleList.length, ...payload);
+            // bus.$emit('roleList-update', payload.length);
+        },
+
+        updateNavData (state, payload) {
+            state.navData.splice(0, state.navData.length, ...payload);
+        },
+
+        updateIndex (state, payload) {
+            state.index = payload;
+        },
+
+        updateSelectManager (state, payload) {
+            state.showNoviceGuide = payload;
+        },
+
+        updateCurRoleId (state, id) {
+            state.curRoleId = id;
         }
     },
     actions: {
@@ -502,7 +549,15 @@ const store = new Vuex.Store({
 
                 if (Object.keys(data).length > 0) {
                     const role = data.role.type;
-                    commit('updataRouterDiff', role);
+                    if (role === 'staff') {
+                        commit('updateIndex', 0);
+                    }
+                    state.index = state.index || Number(window.localStorage.getItem('index'));
+                    if (state.index && state.index > 1) {
+                        commit('updataNavRouterDiff', state.index);
+                    } else {
+                        commit('updataRouterDiff', role);
+                    }
                 }
                 return data;
             });

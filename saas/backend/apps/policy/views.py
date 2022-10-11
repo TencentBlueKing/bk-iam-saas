@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 from itertools import chain, groupby
 from typing import List
 
@@ -29,6 +28,7 @@ from backend.biz.policy import (
     ConditionBean,
     PolicyBean,
     PolicyBeanList,
+    PolicyEmptyException,
     PolicyOperationBiz,
     PolicyQueryBiz,
     RelatedResourceBean,
@@ -52,8 +52,6 @@ from .serializers import (
     RecommendActionPolicy,
     RelatedPolicySLZ,
 )
-
-permission_logger = logging.getLogger("permission")
 
 
 class PolicyViewSet(GenericViewSet):
@@ -113,14 +111,6 @@ class PolicyViewSet(GenericViewSet):
         ids = slz.validated_data["ids"]
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        permission_logger.info(
-            "subject type=%s, id=%s polices %s deleted by user %s",
-            subject.type,
-            subject.id,
-            ids,
-            request.user.username,
-        )
-
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
         # 删除权限
@@ -153,16 +143,7 @@ class PolicyViewSet(GenericViewSet):
 
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        permission_logger.info(
-            "subject type=%s, id=%s policy %s deleted partial by user %s",
-            subject.type,
-            subject.id,
-            policy_id,
-            request.user.username,
-        )
-
-        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
-        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         update_policy = self.policy_operation_biz.delete_partial(
             system_id,
             subject,
@@ -196,17 +177,7 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
         resource_group_id = kwargs["resource_group_id"]
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        permission_logger.info(
-            "subject type=%s, id=%s policy %s delete via resource_group_id, by user %s",
-            subject.type,
-            subject.id,
-            policy_id,
-            resource_group_id,
-            request.user.username,
-        )
-
-        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
-        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         # 删除权限
         update_policy = self.policy_operation_biz.delete_by_resource_group_id(
             system_id, subject, policy_id, resource_group_id
@@ -261,6 +232,7 @@ class RelatedPolicyViewSet(GenericViewSet):
     生成依赖操作
     """
 
+    policy_query_biz = PolicyQueryBiz()
     related_policy_biz = RelatedPolicyBiz()
 
     @swagger_auto_schema(
@@ -276,6 +248,18 @@ class RelatedPolicyViewSet(GenericViewSet):
         data = slz.validated_data
         system_id = data["system_id"]
         source_policy = PolicyBean.parse_obj(data["source_policy"])
+
+        # 移除用户已有的权限, 只需要生成新增数据的依赖操作权限
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        old_policy_list = self.policy_query_biz.new_policy_list(system_id, subject)
+        old_policy = old_policy_list.get(source_policy.action_id)
+        if old_policy:
+            try:
+                # 移除用户已有的资源实例
+                source_policy = source_policy.remove_resource_group_list(old_policy.resource_groups)
+            except PolicyEmptyException:
+                # 如果来源policy与用户已有的策略完全一致, 不需要生成依赖操作
+                return Response([])
 
         # 关联操作
         related_policies = self.related_policy_biz.create_related_policies(system_id, source_policy)
@@ -372,6 +356,7 @@ class RecommendPolicyViewSet(GenericViewSet):
 
     action_biz = ActionBiz()
     action_group_biz = ActionGroupBiz()
+    policy_query_biz = PolicyQueryBiz()
     related_policy_biz = RelatedPolicyBiz()
 
     application_policy_list_cache = ApplicationPolicyListCache()
@@ -413,6 +398,15 @@ class RecommendPolicyViewSet(GenericViewSet):
 
             policy_list.add(PolicyBeanList(system_id, recommend_policies))  # 合并去重
 
+        # 移除用户已有的操作
+        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        own_policies = self.policy_query_biz.list_by_subject(system_id, subject)
+
+        own_action_id_set = {p.action_id for p in own_policies}
+        policy_list = PolicyBeanList(
+            system_id, [p for p in policy_list.policies if p.action_id not in own_action_id_set]
+        )
+
         policy_list.fill_empty_fields()
 
         # 生成推荐的操作, 排除已生成推荐策略的操作
@@ -421,6 +415,10 @@ class RecommendPolicyViewSet(GenericViewSet):
             if action_id in action_id_set:  # 去重
                 continue
             action_id_set.add(action_id)
+
+            # 用户已有的操作不需要推荐
+            if action_id in own_action_id_set:
+                continue
 
             action = action_list.get(action_id)
             if not action:

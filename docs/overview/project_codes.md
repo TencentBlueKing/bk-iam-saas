@@ -34,7 +34,6 @@ iam_app
 │   │   ├── healthz                healthz模块
 │   │   ├── long_task              long_task模块
 │   │   ├── plugins                plugins模块
-│   │   ├── publisher              publisher模块
 │   │   ├── service                Service层
 │   │   ├── util                   util模块
 │   │   └── version_log            版本日志模块

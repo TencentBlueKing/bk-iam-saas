@@ -31,7 +31,7 @@ import { bus } from '@/common/bus';
 import store from '@/store';
 import http from '@/api';
 import preload from '@/common/preload';
-import { getRouterDiff } from '@/common/router-handle';
+import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 
 const SITE_URL = window.SITE_URL;
 
@@ -72,7 +72,17 @@ export const beforeEach = async (to, from, next) => {
     canceling = false;
 
     let curRole = store.state.user.role.type;
+    const navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
     const currentRoleId = String(to.query.current_role_id || '').trim();
+    const curRoleId = store.state.curRoleId;
+    // if (curRole === 'staff') {
+    //     await store.dispatch('role/updateCurrentRole', { id: 0 });
+    // }
+    if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
+        await store.dispatch('role/updateCurrentRole', { id: curRoleId });
+        store.commit('updateIndex', 1);
+        window.localStorage.setItem('index', 1);
+    }
 
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
@@ -116,7 +126,11 @@ export const beforeEach = async (to, from, next) => {
                 next({ path: `${SITE_URL}user-group` });
             }
         } else {
-            next();
+            if (curRole === 'staff') {
+                next({ path: `${SITE_URL}my-perm` });
+            } else {
+                next();
+            }
         }
     } else {
         // 邮件点击续期跳转过来的链接需要做身份的前置判断
@@ -138,9 +152,31 @@ export const beforeEach = async (to, from, next) => {
             curRole = 'staff';
         }
 
-        const difference = getRouterDiff(curRole);
+        if (curRole === 'staff') {
+            store.commit('updateIndex', 0);
+            window.localStorage.setItem('index', 0);
+        }
 
+        // if (to.name === 'gradingAdminEdit') {
+        //     await store.dispatch('role/updateCurrentRole', { id: 0 });
+        //     await store.dispatch('userInfo');
+        //     if (to.params.id) {
+        //         store.commit('updateNavId', to.params.id);
+        //     }
+        //     store.commit('updateIndex', 0);
+        //     window.localStorage.setItem('index', 0);
+        //     curRole = 'staff';
+        // }
+
+        let difference = [];
+        if (navIndex === 1) {
+            difference = getRouterDiff(curRole);
+        } else {
+            difference = getNavRouterDiff(navIndex);
+        }
+        
         if (difference.length) {
+            console.log('to', to);
             store.dispatch('versionLogInfo');
             if (difference.includes(to.name)) {
                 store.commit('setHeaderTitle', '');
@@ -149,8 +185,15 @@ export const beforeEach = async (to, from, next) => {
                 if (curRole === 'staff' || curRole === '') {
                     next({ path: `${SITE_URL}my-perm` });
                 } else {
-                    next({ path: `${SITE_URL}user-group` });
+                    if (to.name === 'groupPermRenewal') {
+                        store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                        next();
+                    } else {
+                        next({ path: `${SITE_URL}user-group` });
+                    }
                 }
+                // next();
             } else {
                 const noFrom = !from.name;
                 // permTemplateCreate
@@ -160,9 +203,11 @@ export const beforeEach = async (to, from, next) => {
                 } else if (['createUserGroup'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}user-group` });
                 } else if (
-                    ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(to.name) && noFrom
+                    ['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom
                 ) {
                     next({ path: `${SITE_URL}rating-manager` });
+                } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
+                    next();
                 } else {
                     next();
                 }

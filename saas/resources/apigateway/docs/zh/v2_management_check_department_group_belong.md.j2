@@ -1,0 +1,34 @@
+### 校验部门是否某个用户组的有效成员
+
+* 支持批量用户组，批量数有限制
+* 有效成员是指 用户组与成员的关系未过期
+
+#### Parameters
+
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| system_id | string | path | 是 | 接入系统唯一标识 |
+| department_id | string | 部门 ID |
+| group_ids | string | body | 是 | 用户组ID 列表，多个以英文逗号分隔 |
+
+
+#### Request
+
+```json
+GET GET /api/v2/open/management/systems/demo/departments/1/groups/belong/?groups=1,2,3,4
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    1: true,
+    2: false,
+    3: false,
+    4: true
+  }
+}
+```

@@ -71,20 +71,22 @@
                                     <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
                                 </bk-button>
                             </div>
-                            <render-condition
-                                :ref="`condition_${$index}_aggregateRef`"
-                                :value="row.value"
-                                :is-empty="row.empty"
-                                :can-view="false"
-                                :can-paste="row.canPaste"
-                                :is-error="row.isError"
-                                @on-mouseover="handlerAggregateConditionMouseover(row)"
-                                @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                                @on-copy="handlerAggregateOnCopy(row, $index)"
-                                @on-paste="handlerAggregateOnPaste(row)"
-                                @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                                @on-click="showAggregateResourceInstance(row, $index)" />
-                            <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                            <div class="content">
+                                <render-condition
+                                    :ref="`condition_${$index}_aggregateRef`"
+                                    :value="row.value"
+                                    :is-empty="row.empty"
+                                    :can-view="false"
+                                    :can-paste="row.canPaste"
+                                    :is-error="row.isError"
+                                    @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                    @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                    @on-copy="handlerAggregateOnCopy(row, $index)"
+                                    @on-paste="handlerAggregateOnPaste(row)"
+                                    @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                    @on-click="showAggregateResourceInstance(row, $index)" />
+                                <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                            </div>
                         </div>
                         <div class="relation-content-wrapper" v-else>
                             <template v-if="!row.isEmpty">
@@ -146,6 +148,7 @@
                 <render-resource
                     ref="renderResourceRef"
                     :data="condition"
+                    :cur-selection-condition="curSelectionCondition"
                     :original-data="originalCondition"
                     :flag="curFlag"
                     :selection-mode="curSelectionMode"
@@ -325,7 +328,8 @@
                 role: '',
                 selectedIndex: 0,
                 instanceKey: '',
-                curCopyDataId: ''
+                curCopyDataId: '',
+                emptyResourceGroupsList: []
             };
         },
         computed: {
@@ -409,12 +413,61 @@
             },
             isUserGroupDetail () {
                 return this.$route.name === 'userGroupDetail';
+            },
+            curSelectionCondition () {
+                if (this.curIndex === -1) {
+                    return false;
+                }
+                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+                return curSelectionCondition;
             }
         },
         watch: {
             list: {
                 handler (value) {
-                    this.tableList.splice(0, this.tableList.length, ...value);
+                    // if (this.isAllExpanded) {
+                    //     this.tableList = value.filter(e =>
+                    //         (e.resource_groups && e.resource_groups.length)
+                    //         || e.isAggregate);
+                    //     this.emptyResourceGroupsList = value.filter(e =>
+                    //         e.resource_groups && !e.resource_groups.length);
+                    //     let emptyGroupsIdList = this.emptyResourceGroupsList.map(e => e.judgeId) || [];
+                    //     emptyGroupsIdList = [...new Set(emptyGroupsIdList)];
+                    //     console.log('emptyGroupsIdList', emptyGroupsIdList);
+                    //     emptyGroupsIdList.forEach((item, index) => {
+                    //         console.log('this.emptyResourceGroupsList', this.emptyResourceGroupsList);
+                    //         this.emptyResourceGroupsName = (this.emptyResourceGroupsList || [])
+                    //             .filter(data => data.judgeId === item)
+                    //             .reduce((p, e) => {
+                    //                 p.push(e.name);
+                    //                 return p;
+                    //             }, []);
+                    //         console.log('this.emptyResourceGroupsName', this.emptyResourceGroupsName);
+                    //         if (this.emptyResourceGroupsName.length) {
+                    //             this.$nextTick(() => {
+                    //                 this.emptyResourceGroupsList[index].name = this.emptyResourceGroupsName.join('，');
+                    //                 this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[index];
+                    //                 this.tableList.unshift(this.emptyResourceGroupsTableList);
+                    //                 console.log('this.tableList', this.tableList);
+                    //             });
+                    //         }
+                    //     });
+                    // } else {
+                    //     value.forEach(e => {
+                    //         e.name = e.name.split('，')[0];
+                    //     });
+                    //     this.emptyResourceGroupsList = []; // 重置变量
+                    //     value = _.uniqWith(value, _.isEqual); // 去重
+                    //     this.tableList.splice(0, this.tableList.length, ...value);
+                    // }
+                    value = _.uniqWith(value, _.isEqual); // 去重
+                    if (this.isAllExpanded) {
+                        this.tableList.splice(0, this.tableList.length, ...value);
+                    } else {
+                        const customData = value.filter(e => e.mode === 'custom');
+                        const templateData = value.filter(e => e.mode === 'template');
+                        this.tableList.splice(0, this.tableList.length, ...customData, ...templateData);
+                    }
                 },
                 immediate: true
             },
@@ -550,7 +603,8 @@
             },
             getScopeActionResource (payload, id, systemId) {
                 const scopeAction = this.authorization[systemId];
-                const actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id));
+                // eslint-disable-next-line max-len
+                const actions = (scopeAction && scopeAction.filter(item => payload.map(_ => _.id).includes(item.id))) || [];
                 const conditions = actions.map(
                     item => item.resource_groups[0].related_resource_types[0].condition
                 ).filter(_ => _.length > 0);
@@ -750,24 +804,10 @@
 
             // 设置正常粘贴InstancesDisplayData
             setNomalInstancesDisplayData (data, key) {
-                this.selectedIndex = data.aggregateResourceType.findIndex(e => e.id === key);
-                const defaultSelectList = this.getScopeActionResource(
-                    data.actions,
-                    key,
-                    data.system_id
-                ).map(e => e.id);
-                if (!defaultSelectList.length) return;
-                data.instancesDisplayData[key] = [];
-                data.instances.forEach(e => {
-                    if (defaultSelectList.includes(e.id)) {
-                        data.instancesDisplayData[key].push(
-                            {
-                                id: e.id,
-                                name: e.name
-                            }
-                        );
-                    }
-                });
+                data.instancesDisplayData[key] = data.instances.map(e => ({
+                    id: e.id,
+                    name: e.name
+                }));
             },
 
             showAggregateResourceInstance (data, index) {
@@ -1042,6 +1082,14 @@
                     isTemplate: payload.isTemplate
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+                if (!this.previewResourceParams.id) {
+                    this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: '无资源ID，无法预览'
+                    });
+                    return;
+                }
                 this.isShowPreviewDialog = true;
             },
             handlerOnCopy (payload, index, subIndex, action) {
@@ -1325,6 +1373,18 @@
                         templates
                     };
                 }
+
+                // 重新赋值
+                // if (this.isAllExpanded) {
+                //     this.tableList = this.tableList.filter(e =>
+                //         (e.resource_groups && e.resource_groups.length)
+                //         || e.isAggregate);
+                //     if (this.emptyResourceGroupsList.length) {
+                //         this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                //         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                //     }
+                // }
+
                 this.tableList.forEach(item => {
                     let actionParam = {};
                     let aggregationParam = {};
@@ -1698,6 +1758,6 @@
     }
 
     .tab-button{
-        margin-bottom: 10px;
+        margin: 10px 0;
     }
 </style>

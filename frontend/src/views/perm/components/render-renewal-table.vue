@@ -1,5 +1,5 @@
 <template>
-    <div class="iam-perm-renewal-table-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
+    <div class="iam-perm-renewal-table-wrapper" v-bkloading="{ isLoading: loading || isLoading, opacity: 1 }">
         <bk-table
             v-show="!loading"
             :data="tableList"
@@ -77,12 +77,16 @@
                 default: 15552000
             },
             data: {
-                type: Number,
+                type: Array,
                 default: () => []
             },
             loading: {
                 type: Boolean,
                 default: false
+            },
+            count: {
+                type: Number,
+                default: () => 0
             }
         },
         data () {
@@ -97,7 +101,8 @@
                 },
                 currentBackup: 1,
                 tableProps: [],
-                systemFilter: []
+                systemFilter: [],
+                isLoading: false
             };
         },
         computed: {
@@ -156,7 +161,6 @@
             data: {
                 handler (value) {
                     this.allData = value;
-                    this.pagination.count = this.allData.length;
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
                     const getDays = payload => {
@@ -185,6 +189,11 @@
                         });
                     });
                 }
+            },
+            count: {
+                handler (value) {
+                    this.pagination.count = value;
+                }
             }
         },
         methods: {
@@ -211,13 +220,9 @@
                 return row[property].id === value;
             },
 
-            pageChange (page) {
-                if (this.currentBackup === page) {
-                    return;
-                }
+            pageChange (page = 1) {
                 this.pagination.current = page;
-                const data = this.getCurPageData(page);
-                this.tableList.splice(0, this.tableList.length, ...data);
+                this.fetchTableData();
             },
 
             limitChange (currentLimit, prevLimit) {
@@ -244,7 +249,30 @@
                     endIndex = this.allData.length;
                 }
                 return this.allData.slice(startIndex, endIndex);
+            },
+
+            async fetchTableData () {
+                this.isLoading = true;
+                try {
+                    const res = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                        page_size: this.pagination.limit,
+                        page: this.pagination.current
+                    });
+                    this.tableList = res.data || [];
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
             }
+
         }
     };
 </script>

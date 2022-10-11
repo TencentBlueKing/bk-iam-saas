@@ -51,7 +51,7 @@ from backend.service.constants import (
     SubjectType,
 )
 from backend.service.models import Attribute, Subject, System
-from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleInfo, RoleService
+from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService
 from backend.service.system import SystemService
 
 logger = logging.getLogger("app")
@@ -335,6 +335,14 @@ class RoleBiz:
         # 变更可授权的权限范围
         self.svc.update_role_auth_scope(role_id, auth_scopes)
 
+    def get_common_action_by_name(self, system_id: str, name: str) -> Optional[CommonAction]:
+        common_actions = self.list_system_common_actions(system_id)
+        for common_action in common_actions:
+            if common_action.name == name:
+                return common_action
+
+        return None
+
 
 class RoleCheckBiz:
     def check_unique_name(self, new_name: str, old_name: str = ""):
@@ -533,14 +541,12 @@ class RoleListQuery:
         # 作为超级管理员时，可以管理所有分级管理员
         if self.role.type == RoleType.SUPER_MANAGER.value:
             return Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+
         # 作为个人时，只能管理加入的的分级管理员
-        if self.role.type == RoleType.STAFF.value:
-            assert self.user
+        assert self.user
 
-            role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
-            return Role.objects.filter(type=RoleType.RATING_MANAGER.value, id__in=role_ids).order_by("-updated_time")
-
-        return Role.objects.none()
+        role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
+        return Role.objects.filter(type=RoleType.RATING_MANAGER.value, id__in=role_ids).order_by("-updated_time")
 
 
 class RoleObjectRelationChecker:

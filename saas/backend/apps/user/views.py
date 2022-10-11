@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -23,6 +21,7 @@ from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
+from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.service.constants import SubjectRelationType, SubjectType
@@ -30,12 +29,10 @@ from backend.service.models import Subject
 
 from .serializers import GroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
 
-permission_logger = logging.getLogger("permission")
-
 
 class UserGroupViewSet(GenericViewSet):
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = CustomPageNumberPagination
 
     biz = GroupBiz()
 
@@ -46,9 +43,10 @@ class UserGroupViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         subject = Subject(type=SubjectType.USER.value, id=request.user.username)
-        relations = self.biz.list_subject_group(subject, is_recursive=True)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
         slz = GroupSLZ(instance=relations, many=True)
-        return Response(slz.data)
+        return Response({"count": count, "results": slz.data})
 
     @swagger_auto_schema(
         operation_description="我的权限-退出用户组",
@@ -64,14 +62,6 @@ class UserGroupViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        permission_logger.info(
-            "subject type=%s, id=%s group %s deleted by user %s",
-            subject.type,
-            subject.id,
-            data["id"],
-            request.user.username,
-        )
-
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:
             self.biz.remove_members(data["id"], [subject])
@@ -82,9 +72,28 @@ class UserGroupViewSet(GenericViewSet):
         return Response({})
 
 
+class UserDepartmentGroupViewSet(GenericViewSet):
+
+    pagination_class = None
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-继承自部门的用户组列表",
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
+        relations = self.biz.list_all_user_department_group(subject)
+        slz = GroupSLZ(instance=relations, many=True)
+        return Response(slz.data)
+
+
 class UserGroupRenewViewSet(GenericViewSet):
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = CustomPageNumberPagination
 
     # service
     group_biz = GroupBiz()
@@ -96,9 +105,12 @@ class UserGroupRenewViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         expired_at = get_soon_expire_ts()
-        relations = self.group_biz.list_subject_group_before_expired_at(subject, expired_at)
-        return Response([one.dict() for one in relations])
+        count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
+            subject, expired_at=expired_at, limit=limit, offset=offset
+        )
+        return Response({"count": count, "results": [one.dict() for one in relations]})
 
 
 class UserProfileNewbieViewSet(GenericViewSet):

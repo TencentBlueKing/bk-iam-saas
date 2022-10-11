@@ -14,11 +14,14 @@ import traceback
 from typing import Optional
 
 from blue_krill.web.std_error import APIError
+from django.conf import settings
+from django.http.response import Http404
 from rest_framework import status
 from rest_framework.exceptions import (
     AuthenticationFailed,
     MethodNotAllowed,
     NotAuthenticated,
+    NotFound,
     ParseError,
     PermissionDenied,
     ValidationError,
@@ -32,6 +35,8 @@ from sentry_sdk import capture_exception
 
 from backend.common.debug import log_api_error_trace
 from backend.common.error_codes import error_codes
+
+from .base import is_open_api_request_path, is_v1_open_api_request_path
 
 logger = logging.getLogger("app")
 
@@ -79,10 +84,6 @@ def _one_line_error(exc):
     return f"{key}: {error}"
 
 
-def is_open_api_request(request) -> bool:
-    return "/api/v1/open/" in request.path
-
-
 def _exception_to_error(request, exc) -> Optional[APIError]:
     """把预期中的异常转换成error"""
     if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
@@ -98,10 +99,13 @@ def _exception_to_error(request, exc) -> Optional[APIError]:
         return error_codes.JSON_FORMAT_ERROR.format(message=exc.detail)
 
     if isinstance(exc, ValidationError):
-        if is_open_api_request(request):
+        if is_open_api_request_path(request.path):
             return error_codes.VALIDATE_ERROR.format(message=json.dumps(exc.detail), replace=True)
 
         return error_codes.VALIDATE_ERROR.format(message=_one_line_error(exc))
+
+    if isinstance(exc, (NotFound, Http404)):
+        return error_codes.NOT_FOUND_ERROR
 
     if isinstance(exc, APIError):
         # 回滚事务
@@ -140,7 +144,11 @@ def exception_handler(exc, context):
         # notify sentry
         capture_exception(exc)
 
-    # NOTE: openapi 为了兼容调用方使用习惯, 除以下error外，其他error的status code 默认返回 200
+        # 如果是调试，异常交给Django 默认处理
+        if settings.DEBUG:
+            return
+
+    # NOTE: v1 openapi 为了兼容调用方使用习惯, 除以下error外，其他error的status code 默认返回 200
     ignore_error_codes = {
         error_codes.UNAUTHORIZED.code_num,
         error_codes.FORBIDDEN.code_num,
@@ -149,7 +157,11 @@ def exception_handler(exc, context):
     }
 
     status_code = error.status_code
-    if is_open_api_request(request) and isinstance(error, APIError) and error.code_num not in ignore_error_codes:
+    if (
+        is_v1_open_api_request_path(request.path)
+        and isinstance(error, APIError)
+        and error.code_num not in ignore_error_codes
+    ):
         status_code = status.HTTP_200_OK
 
     return Response(

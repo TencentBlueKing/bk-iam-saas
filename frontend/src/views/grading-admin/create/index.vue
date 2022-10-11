@@ -62,6 +62,7 @@
                         v-bkloading="{ isLoading, opacity: 1, zIndex: 1000, extCls: 'loading-resource-instance-cls' }">
                         <render-instance-table
                             ref="resourceInstanceRef"
+                            :is-all-expanded="isAllExpanded"
                             :data="policyList"
                             :list="policyList"
                             :backup-list="aggregationsTableData"
@@ -96,6 +97,18 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
+            <section class="content-wrapper">
+                <bk-input
+                    type="textarea"
+                    :rows="5"
+                    v-model="reason"
+                    @input="checkReason"
+                    style="margin-bottom: 15px;">
+                </bk-input>
+            </section>
+        </render-horizontal-block>
+        <p class="action-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit"
                 data-test-id="grading_btn_createSubmit"
@@ -205,6 +218,7 @@
                 isShowMemberAdd: true,
                 isShowAddActionSideslider: false,
                 isShowActionEmptyError: false,
+                reasonEmptyError: false,
                 isExpanded: false,
                 curActionValue: [],
                 addMemberTitle: this.$t(`m.grading['最大可授权人员范围']`),
@@ -806,6 +820,7 @@
                         ellipsisCopy: true
                     });
                 } finally {
+                    this.submitLoading = false;
                     this.dialogLoading = false;
                 }
             },
@@ -820,12 +835,14 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
+                this.reasonEmptyError = this.isStaff && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
-                if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError) {
+                if (validatorFlag || flag || this.isShowActionEmptyError
+                    || this.isShowMemberEmptyError || this.reasonEmptyError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -836,7 +853,9 @@
                     return;
                 }
                 if (this.isStaff) {
-                    this.isShowReasonDialog = true;
+                    this.submitLoading = true;
+                    this.handleSubmitWithReason();
+                    // this.isShowReasonDialog = true;
                     return;
                 }
                 const subjects = [];
@@ -900,6 +919,10 @@
                         name: 'ratingManager'
                     });
                 }, _ => _);
+            },
+
+            checkReason () {
+                this.reasonEmptyError = this.reason === '';
             }
         }
     };
@@ -911,7 +934,8 @@
         }
         .action-empty-error {
             position: relative;
-            top: -8px;
+            top: -50px;
+            left: 150px;
             font-size: 12px;
             color: #ff4d4d;
         }

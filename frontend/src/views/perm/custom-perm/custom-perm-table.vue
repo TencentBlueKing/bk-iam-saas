@@ -32,7 +32,7 @@
                                 :title="$t(`m.common['详情']`)"
                                 v-if="isShowPreview(row)"
                                 @click.stop="handleViewResource(_, row)" />
-                            <Icon v-if="isShowPreview(row)"
+                            <Icon v-if="isShowPreview(row) && row.resource_groups.length > 2"
                                 :title="$t(`m.common['删除']`)" type="reduce-hollow"
                                 :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
                                 @click.stop="handlerReduceInstance(_, row)" />

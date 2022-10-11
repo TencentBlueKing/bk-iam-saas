@@ -146,7 +146,7 @@ CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Creden
 # rest_framework
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "backend.common.exception_handler.exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CustomLimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "backend.common.pagination.CompatiblePagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
@@ -193,7 +193,6 @@ CELERY_IMPORTS = (
     "backend.apps.action.tasks",
     "backend.apps.policy.tasks",
     "backend.audit.tasks",
-    "backend.publisher.tasks",
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
 )
@@ -258,7 +257,28 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
+    "check_user_permission_clean_task": {
+        "task": "backend.apps.user.tasks.check_user_permission_clean_task",
+        "schedule": crontab(minute=0, hour="*"),  # 每小时执行
+    },
+    "clean_user_permission_clean_record": {
+        "task": "backend.apps.user.tasks.clean_user_permission_clean_record",
+        "schedule": crontab(minute=0, hour=5),  # 每天凌晨5时执行
+    },
+    "init_biz_grade_manager": {
+        "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
+        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+    },
 }
+
+# 是否开启初始化分级管理员
+ENABLE_INIT_GRADE_MANAGER = env.bool("BKAPP_ENABLE_INIT_GRADE_MANAGER", default=False)
+if ENABLE_INIT_GRADE_MANAGER:
+    CELERYBEAT_SCHEDULE["init_biz_grade_manager"] = {
+        "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
+        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+    }
+
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
 # V2 Smart只有BK_BROKER_URL
@@ -280,11 +300,11 @@ SENTRY_DSN = env.str("SENTRY_DSN", default="")
 # tracing: otel 相关配置
 # if enable, default false
 ENABLE_OTEL_TRACE = env.bool("BKAPP_ENABLE_OTEL_TRACE", default=False)
-BKAPP_OTEL_INSTRUMENT_DB_API = env.bool("BKAPP_OTEL_INSTRUMENT_DB_API", default=True)
-BKAPP_OTEL_SERVICE_NAME = env.str("BKAPP_OTEL_SERVICE_NAME", default="bk-iam")
-BKAPP_OTEL_SAMPLER = env.str("BKAPP_OTEL_SAMPLER", default="parentbased_always_off")
-BKAPP_OTEL_BK_DATA_ID = env.int("BKAPP_OTEL_BK_DATA_ID", default=-1)
+BKAPP_OTEL_SERVICE_NAME = env.str("BKAPP_OTEL_SERVICE_NAME", default="bk-iam-saas")
+BKAPP_OTEL_SAMPLER = env.str("BKAPP_OTEL_SAMPLER", default="always_on")
 BKAPP_OTEL_GRPC_HOST = env.str("BKAPP_OTEL_GRPC_HOST", default="")
+BKAPP_OTEL_DATA_TOKEN = env("BKAPP_OTEL_DATA_TOKEN", default="")
+BKAPP_OTEL_INSTRUMENT_DB_API = env.bool("BKAPP_OTEL_INSTRUMENT_DB_API", default=False)
 if ENABLE_OTEL_TRACE or SENTRY_DSN:
     INSTALLED_APPS += ("backend.tracing",)
 
@@ -320,8 +340,6 @@ BK_IAM_ENGINE_HOST_TYPE = env.str("BKAPP_IAM_ENGINE_HOST_TYPE", default="direct"
 # 授权对象授权用户组, 模板的最大限制
 SUBJECT_AUTHORIZATION_LIMIT = {
     # -------- 用户 ---------
-    # 用户能加入的用户组的最大数量
-    "default_subject_group_limit": env.int("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", default=100),
     # 用户能加入的分级管理员的最大数量
     "subject_grade_manager_limit": env.int("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", default=100),
     # -------- 用户组 ---------
@@ -361,12 +379,6 @@ MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
 MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
 
-# 用于发布订阅的Redis
-PUB_SUB_REDIS_HOST = env.str("BKAPP_PUB_SUB_REDIS_HOST", default="")
-PUB_SUB_REDIS_PORT = env.str("BKAPP_PUB_SUB_REDIS_PORT", default="")
-PUB_SUB_REDIS_PASSWORD = env.str("BKAPP_PUB_SUB_REDIS_PASSWORD", default="")
-PUB_SUB_REDIS_DB = env.int("BKAPP_PUB_SUB_REDIS_DB", default=0)
-
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
@@ -388,3 +400,9 @@ BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/d
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
 REQUESTS_POOL_MAXSIZE = env.int("REQUESTS_POOL_MAXSIZE", default=20)
+
+# Init Grade Manger system list
+INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
+    "INIT_GRADE_MANAGER_SYSTEM_LIST",
+    default=["bk_job", "bk_cmdb", "bk_monitorv3", "bk_log_search", "bk_sops", "bk_nodeman", "bk_gsekit"],
+)

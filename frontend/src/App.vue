@@ -14,6 +14,10 @@
             :style="processGuideStyle"
             :flag="processGuideShow"
             :content="$t(`m.guide['创建审批流程']`)" />
+        <header-nav @reload-page="handleRefreshPage"
+            :route-name="routeName"
+            :user-group-id="userGroupId">
+        </header-nav>
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
@@ -30,6 +34,7 @@
     </div>
 </template>
 <script>
+    import HeaderNav from '@/components/header-nav/index.vue';
     import theHeader from '@/components/header/index.vue';
     import theNav from '@/components/nav/index.vue';
     import IamGuide from '@/components/iam-guide/index.vue';
@@ -47,7 +52,8 @@
         components: {
             IamGuide,
             theHeader,
-            theNav
+            theNav,
+            HeaderNav
         },
         data () {
             return {
@@ -84,10 +90,10 @@
             user: {
                 handler (value) {
                     if (['rating_manager', 'system_manager'].includes(value.role.type)) {
-                        this.processGuideStyle.top = '220px';
+                        this.processGuideStyle.top = '305px';
                     }
                     if (value.role.type === 'super_manager') {
-                        this.processGuideStyle.top = '342px';
+                        this.processGuideStyle.top = '255px';
                     }
                 },
                 immediate: true,
@@ -246,19 +252,19 @@
     .nav-layout {
         position: relative;
         float: left;
-        height: 100%;
-        margin: -61px 0 0 0;
+        height: calc(100% + 10px);
+        margin: -51px 0 0 0;
     }
 
     .main-layout {
         position: relative;
-        height: calc(100% - 61px);
+        height: calc(100% - 41px);
         background-color: #f5f6fa;
         overflow: hidden;
     }
 
     .main-scroller {
-        height: 100%;
+        height: calc(100% + 51px);
         overflow: auto;
     }
 

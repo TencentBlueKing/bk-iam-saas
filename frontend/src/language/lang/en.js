@@ -157,7 +157,9 @@ export const m = {
         '的详情': 'Detail',
         '手动输入': 'Manual Input',
         '手动输入提示1': 'You can only add up to 100 people at a time',
-        '手动输入提示2': 'The above user does not exist or does not belong to the authorization scope of the administrator',
+        '手动输入提示2': 'Username entered incorrectly or does not exist',
+        '请尝试': 'Please try ',
+        '修改授权人员范围': 'to modify the authorized personnel range',
         '添加到已选列表': 'Add to selected list',
         '手动输入提示': 'Please enter the username, separated by Enter/semicolon/space',
         '重置': 'Reset',
@@ -210,8 +212,8 @@ export const m = {
         '二': 'two',
         '如何使用分级管理员': 'How do I use a hierarchical administrator',
         '我的分级管理员 > 申请新建（已有分级管理员忽略）': 'My grading administrator > applied for new (the existing grading administrator ignored)  ',
-        '点击右上角个人信息 > 切换管理员身份': 'Click on personal information > in the upper right corner to switch administrator identity',
-        '点击左侧导航用户组 > 新建，创建用户组，设置权限和成员。': 'Click the left navigation user group > new, create a user group, set permissions and members.',
+        '切换顶部导航至“权限管理” ，在左上角切换“分级管理员空间”': 'Toggle the top navigation to "Privilege Management", and switch to "Level Admin Space" in the upper left corner',
+        '在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员': 'In the left navigation, click User Groups >; New to create a user group, set permissions and members.',
         '退出将不在具备相应的管理权限': 'Quitting will no longer have the appropriate administrative rights',
         '确定退出分级管理员': 'Determine the exit level administrator',
         '用户组': 'user group',
@@ -223,7 +225,8 @@ export const m = {
         '新增模板': 'Add a template',
         '导出': 'export',
         '查询': 'Search',
-        '生效条件': 'Effective condition'
+        '生效条件': 'Effective condition',
+        '批量添加成员': 'Add members in bulk'
     },
     // 校验
     verify: {
@@ -251,7 +254,9 @@ export const m = {
         '分级管理员名称不允许空格': 'Rating manager name does not allow spaces',
         '分级管理员名称最长不超过32个字符': 'The rating manager name can be no longer than 32 characters',
         '请选择成员': 'Please select member',
+        '目标交接人不能为本人': 'The target handover person cannot be himself',
         '操作和资源实例范围不可为空': 'Operation and resource instance scope cannot be empty',
+        '理由不可为空': 'reason cannot be empty',
         '用户组名可随时修改': 'The group name can be modified at any time',
         '可授权人员范围不可为空': 'The range of authorized personnel cannot be empty',
         '内容格式不正确': 'The content format is incorrect',
@@ -296,6 +301,7 @@ export const m = {
         '解除与权限模板': 'Lift the permission template',
         '退出成功': 'Droped out',
         '将不再继承该组的权限': 'Will no longer inherit the permissions of the group',
+        '将不再拥有该用户组的权限': 'Will no longer inherit the permissions of the group',
         '新建用户组成功': 'Group Created',
         '新建分级管理员成功': 'Rating Manager Created',
         '编辑分级管理员成功': 'Rating Manager Edited',
@@ -391,7 +397,13 @@ export const m = {
         '资源权限管理': 'Resource rights management',
         '发起需求': 'Initiate demand',
         '工作台': 'Workbench',
-        '开发者': 'Developers'
+        '开发者': 'Developers',
+        '切换分级管理员': 'switch rating manager',
+        '【分级管理员】 功能，全面升级为【权限管理空间】啦！': 'The function of [Grading Administrator] has been fully upgraded to [Permission Management Space]!',
+        '个人工作台': 'Personal workbench',
+        '权限管理': 'Permission management',
+        '统计分析': 'Statistical analysis',
+        '平台管理': 'Platform management',
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -408,7 +420,8 @@ export const m = {
         '申请自定义权限标题': 'If the previous permission package does not meet your needs, please apply for the permission through customization',
         '申请自定义权限场景1': 'Certain permissions for a single system',
         '申请自定义权限场景2': 'More flexible permission requirements',
-        '申请加入用户组搜索提示': 'Enter group name, description, belonging system, hierarchical administrator, etc. to search'
+        '申请加入用户组搜索提示': 'Enter group name, description, belonging system, hierarchical administrator, etc. to search',
+        '超级管理员申请加入用户组搜索提示': 'Search Tips for Super Administrators Applying to Join User Groups'
     },
     permApply: {
         '选择系统': 'Select System',
@@ -428,14 +441,19 @@ export const m = {
         '保存为常用操作提示': 'You can save a batch of frequently selected operations as common operations',
         '请先勾选一些操作': 'Please check some operations first',
         '取消续期': 'Cancel renewal',
-        '根据你的需求，自动匹配到以下的用户组（包含更多可申请权限）': 'According to your requirements, automatically matched to the following user groups (including more applicable permissions)',
+        '根据你的需求，自动匹配到以下的用户组': 'According to your requirements, automatically matched to the following user groups (including more applicable permissions)',
         '你也可以继续申请独立权限': 'You can also continue to apply for independent access',
         '你可以申请独立权限': 'You can apply for independent access',
         '以下相关权限，你可以按需申请': 'The following permissions are associated permissions, you can apply for them as needed',
         '以下是你必须申请的权限': 'Here are the permissions you must apply for',
         '你已获得该组权限，但是已过期': 'You have been granted permission for this group, but it has expired',
         '去续期': 'Go to renew',
-        '请选择生效条件，默认无限制': 'Please select the effective conditions, the default is unlimited'
+        '请选择生效条件，默认无限制': 'Please select the effective conditions, the default is unlimited',
+        '用户组推荐': 'User group recommendation',
+        '细粒度权限': 'Fine grained permissions',
+        '包含更大范围的权限（运维\开发\测试等角色类权限）': 'Include a wider range of permissions (role permissions such as operation and maintenance development and testing)',
+        '只包含当前需要的最小范围权限': 'Only the minimum range permission currently required is included',
+        '推荐': 'recommend'
     },
     myApply: {
         '申请列表': 'Apply List',
@@ -497,7 +515,8 @@ export const m = {
         '通过组织加入的组无法退出': 'Groups joined through the organization cannot drop out',
         '直接加入': 'Joined Directly',
         '通过组织加入': 'Joined By Organization',
-        '组权限': 'Permissions'
+        '组权限': 'Permissions',
+        '所属部门用户组权限': 'Department User Group Permissions'
     },
     permTemplate: {
         '模板名': 'Template Name',
@@ -600,6 +619,7 @@ export const m = {
         '操作人': 'Operator',
         '触发类型': 'Trigger type',
         '日志详情': 'Log details',
+        '暂无日志详情': 'No log details are available',
         '成功': 'Succeed',
         '失败': 'Failed',
         '同步记录': 'Synchronized records',
@@ -622,6 +642,8 @@ export const m = {
         '选择可授权人员范围': 'Select scope of authorized personnel',
         '被授权范围': 'Authorized scope',
         '添加系统和操作': 'Add systems and actions',
+        '修改分级管理员授权范围': 'Modify the authorization scope of hierarchical administrator',
+        '刷新列表': 'Refresh List',
         '如需编辑分级管理员的内容请点击': 'Click to edit',
         '操作和资源范围': 'Actions and resources',
         '资源实例范围': 'Resource instance scope',
@@ -657,6 +679,7 @@ export const m = {
         '拥有该系统的所有操作权限': 'Have all operation permissions of the corresponding system',
         '系统名称': 'System Name',
         '成员列表': 'Member List',
+        '管理员列表': 'administrators List',
         '设置成功': 'Set successfully',
         '取消设置成功': 'Unset successfully',
         '确定删除该超级管理员': 'Is sure to delete the super administrator？'
@@ -687,6 +710,7 @@ export const m = {
         '授权人员范围': 'This range indicates who you can assign permissions to, and only they can apply for the user group you created',
         '聚合操作': 'You can select instances in batches by combining selections',
         '切换分级管理员': 'Congratulations on becoming a hierarchical administrator! You can switch identities here',
+        '分级管理员导航': 'The original [Classification Manager] function has been adjusted here!',
         '创建模板': `Let's create a permission template first`,
         '创建用户组': `Let's create a group first`,
         '创建审批流程': 'You can also bind the required approval process to the user group',
@@ -696,6 +720,8 @@ export const m = {
     },
     renewal: {
         '续期': 'Renewal',
+        '申请续期': 'Apply for renewal',
+        '权限续期': 'Permission renewal',
         '批量续期': 'Batch Renewal',
         '选择权限': 'Select permission',
         '续期时长': 'Renewal of time',

@@ -1,12 +1,12 @@
 $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
 .header-layout {
     position: relative;
-    height: 61px;
+    height: 51px;
     padding: 0 0 0 60px;
     border-bottom: 1px solid #dde4eb;
     background-color: #fff;
     transition: padding .3s $cubic-bezier;
-    z-index: 1002;
+    z-index: 1000;
     &::after {
         content: '';
         display: block;
@@ -36,8 +36,8 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .breadcrumbs {
-        line-height: 60px;
-        position: relative;
+        line-height: 48px;
+        position: absolute;
         margin: 0 0 0 20px;
         font-size: 0;
         &.has-cursor {

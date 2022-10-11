@@ -8,14 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
 from typing import Dict, List, Tuple
 
 from django.conf import settings
 
 from backend.common.cache import cached
 from backend.common.local import local
-from backend.publisher import shortcut as publisher_shortcut
 from backend.util.json import json_dumps
 from backend.util.url import url_join
 
@@ -26,8 +24,6 @@ from .util import do_blueking_http_request, execute_all_data_by_paging, list_all
 DEFAULT_SYSTEM_FIELDS = "id,name,name_en,description,description_en"
 DEFAULT_ACTION_FIELDS = "id,name,name_en,description,description_en"
 DEFAULT_RESOURCE_TYPE_FIELDS = "id,name,name_en"
-
-permission_logger = logging.getLogger("permission")
 
 
 def _call_iam_api(http_func, url_path, data, timeout=30):
@@ -124,6 +120,14 @@ def get_common_actions(system_id: str) -> Dict:
     return _call_iam_api(http_get, url_path, data={})
 
 
+def get_system_managers(system_id: str) -> Dict:
+    """
+    获取系统管理员
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/system-settings/system-managers"
+    return _call_iam_api(http_get, url_path, data={})
+
+
 def create_subjects(subjects: List[Dict[str, str]]) -> None:
     """
     创建subject
@@ -157,22 +161,20 @@ def delete_subjects(subjects: List[dict]) -> None:
     """
     url_path = "/api/v1/web/subjects"
     result = _call_iam_api(http_delete, url_path, data=subjects)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_subject(subjects)
     return result
 
 
-def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
-    """通过自动分页批量删除Subject"""
+# Note: 对于SaaS已删除部门，由于不确定是用户管理本身有bug导致的还是部门真实不存在了，所以为了避免影响部门权限，这里将不删除后端部门
+# 后续将会通过SaaS标记已删除部门，然后发起审批流程等方式再进行后端用户权限的删除
+# def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
+#     """通过自动分页批量删除Subject"""
 
-    def delete_paging_subjects(paging_data):
-        """[分页]删除Subject"""
-        url_path = "/api/v1/web/subjects"
-        _call_iam_api(http_delete, url_path, data=paging_data)
-        # 发布订阅-删除策略
-        publisher_shortcut.publish_delete_policies_by_subject(paging_data)
+#     def delete_paging_subjects(paging_data):
+#         """[分页]删除Subject"""
+#         url_path = "/api/v1/web/subjects"
+#         _call_iam_api(http_delete, url_path, data=paging_data)
 
-    return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
+#     return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
 
 
 def list_all_subject(_type: str) -> List[Dict]:
@@ -249,42 +251,55 @@ def list_subject_member(_type: str, id: str, limit: int = 10, offset: int = 0) -
     """
     获取subject的成员列表
     """
-    url_path = "/api/v1/web/subject-members"
+    url_path = "/api/v1/web/group-members"
     params = {"type": _type, "id": id, "limit": limit, "offset": offset}
     return _call_iam_api(http_get, url_path, data=params)
 
 
-def get_subject_relation(_type: str, id: str, expired_at: int = 0) -> List[Dict]:
+def get_subject_groups(_type: str, id: str, expired_at: int = 0, limit: int = 10, offset: int = 0) -> Dict:
     """
     获取subject的关系列表
     """
-    url_path = "/api/v1/web/subject-relations"
-    params = {"type": _type, "id": id, "before_expired_at": expired_at}
+    url_path = "/api/v1/web/subject-groups"
+    params = {"type": _type, "id": id, "before_expired_at": expired_at, "limit": limit, "offset": offset}
     return _call_iam_api(http_get, url_path, data=params)
+
+
+def list_all_subject_groups(_type: str, id: str, expired_at: int = 0) -> List[Dict]:
+    """
+    分页查询subject的所有关系列表
+    """
+
+    def list_paging_subject_groups(page: int, page_size: int) -> Tuple[int, List[Dict]]:
+        """[分页]获取subject-group"""
+        limit = page_size
+        offset = (page - 1) * page_size
+        data = get_subject_groups(_type, id, expired_at, limit, offset)
+        return data["count"], data["results"]
+
+    return list_all_data_by_paging(list_paging_subject_groups, 1000)
 
 
 def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str, int]:
     """
     批量删除subject的成员
     """
-    url_path = "/api/v1/web/subject-members"
+    url_path = "/api/v1/web/group-members"
     params = {"type": _type, "id": id, "members": members}
-    permission_logger.info("iam subject delete member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_delete, url_path, data=params)
 
 
-def add_subject_members(_type: str, id: str, policy_expired_at: int, members: List[dict]) -> Dict[str, int]:
+def add_subject_members(_type: str, id: str, expired_at: int, members: List[dict]) -> Dict[str, int]:
     """
     批量添加subject的成员
     """
-    url_path = "/api/v1/web/subject-members"
+    url_path = "/api/v1/web/group-members"
     params = {
         "type": _type,
         "id": id,
         "members": members,
-        "policy_expired_at": policy_expired_at,
+        "expired_at": expired_at,
     }
-    permission_logger.info("iam subject add member url: %s, data: %s", url_path, params)
     return _call_iam_api(http_post, url_path, data=params)
 
 
@@ -336,10 +351,7 @@ def alter_policies(
         "update_policies": update_policies,
         "delete_policy_ids": delete_policy_ids,
     }
-    permission_logger.info("iam alter policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_post, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_id(delete_policy_ids)
     return result
 
 
@@ -349,66 +361,7 @@ def delete_policies(system_id: str, subject_type: str, subject_id: str, policy_i
     """
     url_path = "/api/v1/web/policies"
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
-    permission_logger.info("iam delete policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_delete, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_id(policy_ids)
-    return result
-
-
-def create_and_delete_template_policies(
-    system_id: str,
-    subject_type: str,
-    subject_id: str,
-    template_id: int,
-    create_policies: List[Dict],
-    delete_policy_ids: List[int],
-) -> None:
-    """
-    创建/删除权限模板授权信息
-    """
-    url_path = "/api/v1/web/perm-templates/policies"
-    data = {
-        "subject": {"type": subject_type, "id": subject_id},
-        "system_id": system_id,
-        "template_id": template_id,
-        "create_policies": create_policies,
-        "delete_policy_ids": delete_policy_ids,
-    }
-    permission_logger.info("iam create and delete template policies url: %s, data: %s", url_path, data)
-    result = _call_iam_api(http_post, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_id(delete_policy_ids)
-    return result
-
-
-def update_template_policies(
-    system_id: str, subject_type: str, subject_id: str, template_id: int, update_policies: List[Dict]
-) -> None:
-    """
-    更新权限模板授权信息
-    """
-    url_path = "/api/v1/web/perm-templates/policies"
-    data = {
-        "subject": {"type": subject_type, "id": subject_id},
-        "system_id": system_id,
-        "template_id": template_id,
-        "update_policies": update_policies,
-    }
-    permission_logger.info("iam update template policies url: %s, data: %s", url_path, data)
-    return _call_iam_api(http_put, url_path, data=data)
-
-
-def delete_template_policies(system_id: str, subject_type: str, subject_id: str, template_id: int) -> None:
-    """
-    删除权限模板授权信息
-    """
-    url_path = "/api/v1/web/perm-templates/policies"
-    data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "template_id": template_id}
-    permission_logger.info("iam delete template policies url: %s, data: %s", url_path, data)
-    result = _call_iam_api(http_delete, url_path, data=data)
-    # 发布订阅-删除策略
-    publisher_shortcut.publish_delete_policies_by_template_subject(template_id, subject_type, subject_id)
     return result
 
 
@@ -416,9 +369,8 @@ def create_subject_role(subjects: List[Dict[str, str]], role_type: str, system_i
     """
     创建后台的subject角色信息
     """
-    url_path = "/api/v1/web/subject-roles"
+    url_path = "/api/v1/web/role-subjects"
     data = {"role_type": role_type, "system_id": system_id, "subjects": subjects}
-    permission_logger.info("iam create subject role url: %s, data: %s", url_path, data)
     return _call_iam_api(http_post, url_path, data=data)
 
 
@@ -426,9 +378,8 @@ def delete_subject_role(subjects: List[Dict[str, str]], role_type: str, system_i
     """
     删除后台的subject角色信息
     """
-    url_path = "/api/v1/web/subject-roles"
+    url_path = "/api/v1/web/role-subjects"
     data = {"role_type": role_type, "system_id": system_id, "subjects": subjects}
-    permission_logger.info("iam delete subject role url: %s, data: %s", url_path, data)
     return _call_iam_api(http_delete, url_path, data=data)
 
 
@@ -445,24 +396,11 @@ def list_policy(subject_type: str, subject_id: str, expired_at: int) -> List[Dic
     return _call_iam_api(http_get, url_path, data=params)
 
 
-def update_policy_expired_at(subject_type: str, subject_id: str, policies: List[Dict]) -> List[Dict]:
-    """
-    更新策略的过期时间
-    """
-    url_path = "/api/v1/web/policies/expired_at"
-    data = {
-        "subject_type": subject_type,
-        "subject_id": subject_id,
-        "policies": policies,
-    }
-    return _call_iam_api(http_put, url_path, data=data)
-
-
 def update_subject_members_expired_at(_type: str, id: str, members: List[dict]) -> List[Dict]:
     """
     subject成员更新过期时间
     """
-    url_path = "/api/v1/web/subject-members/expired_at"
+    url_path = "/api/v1/web/group-members/expired_at"
     data = {
         "type": _type,
         "id": id,
@@ -477,7 +415,7 @@ def list_subject_member_before_expired_at(
     """
     获取subject的成员列表
     """
-    url_path = "/api/v1/web/subject-members/query"
+    url_path = "/api/v1/web/group-members/query"
     data = {"type": subject_type, "id": subject_id, "before_expired_at": expired_at, "limit": limit, "offset": offset}
     return _call_iam_api(http_get, url_path, data=data)
 
@@ -489,6 +427,15 @@ def list_exist_subjects_before_expired_at(subjects: List[Dict], expired_at: int)
     url_path = "/api/v1/web/subjects/before_expired_at"
     data = {"subjects": subjects, "before_expired_at": expired_at}
     return _call_iam_api(http_post, url_path, data=data)
+
+
+def list_group_subject_before_expired_at(expired_at: int, limit: int = 10, offset: int = 0) -> List:
+    """
+    查询已过期的关系
+    """
+    url_path = "/api/v1/web/group-subject/before_expired_at"
+    data = {"before_expired_at": expired_at, "limit": limit, "offset": offset}
+    return _call_iam_api(http_get, url_path, data=data)
 
 
 def list_model_change_event(status: str = "pending", limit=1000):
@@ -559,7 +506,6 @@ def create_temporary_policies(
         "subject": {"type": subject_type, "id": subject_id},
         "policies": policies,
     }
-    permission_logger.info("iam create temporary policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_post, url_path, data=data)
     return result
 
@@ -570,7 +516,6 @@ def delete_temporary_policies(system_id: str, subject_type: str, subject_id: str
     """
     url_path = "/api/v1/web/temporary-policies"
     data = {"system_id": system_id, "subject_type": subject_type, "subject_id": subject_id, "ids": policy_ids}
-    permission_logger.info("iam delete temporary policies url: %s, data: %s", url_path, data)
     result = _call_iam_api(http_delete, url_path, data=data)
     return result
 
@@ -580,9 +525,6 @@ def delete_temporary_policies_before_expired_at(expired_at: int) -> None:
     删除指定过期时间前的临时权限策略
     """
     url_path = f"/api/v1/web/temporary-policies/before_expired_at?expired_at={expired_at}"
-    permission_logger.info(
-        "iam delete temporary policies before expired_at url: %s, expired_at: %s", url_path, expired_at
-    )
     return _call_iam_api(http_delete, url_path, data={})
 
 
@@ -608,3 +550,88 @@ def unfreeze_subjects(subjects: List[Dict]) -> None:
     """
     url_path = "/api/v1/web/freeze/subjects"
     return _call_iam_api(http_delete, url_path, data=subjects)
+
+
+def check_subject_groups_belong(
+    subject_type: str, subject_id: str, group_ids: List[int], inherit: bool = False
+) -> Dict[str, bool]:
+    """
+    校验Subject与用户组是否存在关系
+    """
+    url_path = "/api/v1/web/subjects-groups/belong"
+    data = {
+        "type": subject_type,
+        "id": subject_id,
+        "group_ids": ",".join(map(str, group_ids)),
+        "inherit": inherit,
+    }
+    return _call_iam_api(http_get, url_path, data=data)
+
+
+def check_subject_groups_quota(subject_type: str, subject_id: str, group_ids: List[int]) -> Dict[str, bool]:
+    """
+    校验Subject与用户组是否数量超限
+    """
+    url_path = "/api/v1/web/subjects-groups/quota"
+    data = {
+        "type": subject_type,
+        "id": subject_id,
+        "group_ids": ",".join(map(str, group_ids)),
+    }
+    return _call_iam_api(http_get, url_path, data=data)
+
+
+# --------------------------------- V2 API ---------------------------------
+def alter_group_policies_v2(
+    subject_type: str,
+    subject_id: str,
+    template_id: int,
+    system_id: str,
+    create_policies: List[Dict],
+    update_policies: List[Dict],
+    delete_policy_ids: List[int],
+    resource_actions: List[Dict],
+    group_auth_type: str,
+) -> Dict:
+    """
+    变更权限
+
+    create_policies: [{
+        "action_id": "view_host",
+        "resource_expression": "",
+        "environment": "",
+        "expired_at": 4102444800
+    }]
+
+    update_policies: [{
+        "id": 1,
+        "action_id": "edit_host",
+        "resource_expression": "",
+        "environment": "",
+        "expired_at": 4102444800
+    }]
+
+    delete_policy_ids: [2, 3, 4]
+
+    resource_actions: [{
+        "resource": {
+            "system_id": "bk_cmdb",
+            "type": "host",
+            "id": "host1"
+        },
+        "created_action_ids": ["view_host"],
+        "deleted_action_ids": ["edit_host"]
+    }]
+    """
+    url_path = f"/api/v2/web/systems/{system_id}/policies"
+    data = {
+        "subject": {"type": subject_type, "id": subject_id},
+        "template_id": template_id,
+        "create_policies": create_policies,
+        "update_policies": update_policies,
+        "delete_policy_ids": delete_policy_ids,
+        "resource_actions": resource_actions,
+        "group_auth_type": group_auth_type,
+    }
+    result = _call_iam_api(http_post, url_path, data=data)
+    return result

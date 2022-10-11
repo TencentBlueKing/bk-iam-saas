@@ -1,0 +1,40 @@
+### 用户组成员续期
+
+#### Parameters
+
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| system_id | string | path | 是 | 接入系统唯一标识 |
+| group_id | int | path | 是 | 用户组ID |
+| members | array[object] | 是 | body | 成员列表 |
+| expired_at | int | 是 | body | 过期时间戳(单位秒)，即用户或部门在 expired_at 后将不具有该用户组的相关权限 |
+
+#### Request
+
+```json
+{
+  "members": [
+    {
+      "type": "user",
+      "id": "admin"
+    },
+    {
+      "type": "department",
+      "id": "1"
+    }
+  ],
+  "expired_at": 1619587562
+}
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

@@ -8,8 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -22,6 +20,7 @@ from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
+from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.service.constants import PermissionCodeEnum, SubjectRelationType
 from backend.service.models import Subject
@@ -33,14 +32,12 @@ from .audit import (
 )
 from .serializers import QueryRoleSLZ, SubjectGroupSLZ, UserRelationSLZ
 
-permission_logger = logging.getLogger("permission")
-
 
 class SubjectGroupViewSet(GenericViewSet):
 
     permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
 
-    pagination_class = None  # 去掉swagger中的limit offset参数
+    pagination_class = CustomPageNumberPagination
 
     biz = GroupBiz()
 
@@ -51,8 +48,10 @@ class SubjectGroupViewSet(GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-        relations = self.biz.list_subject_group(subject, is_recursive=True)
-        return Response([one.dict() for one in relations])
+        # 分页参数
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
+        return Response({"count": count, "results": [one.dict() for one in relations]})
 
     @swagger_auto_schema(
         operation_description="我的权限-退出用户组",
@@ -68,10 +67,6 @@ class SubjectGroupViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        permission_logger.info(
-            "subject type=%s, id=%s group deleted by user %s", subject.type, subject.id, request.user.username
-        )
-
         # 目前只支持移除用户的直接加入的用户组，不支持其通过部门关系加入的用户组
         if data["type"] == SubjectRelationType.GROUP.value:
             self.biz.remove_members(data["id"], [subject])
@@ -80,6 +75,26 @@ class SubjectGroupViewSet(GenericViewSet):
             audit_context_setter(subject=subject, group=Subject.parse_obj(data))
 
         return Response({})
+
+
+class SubjectDepartmentGroupViewSet(GenericViewSet):
+
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_ORGANIZATION.value)]
+
+    pagination_class = None
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-继承自部门的用户组列表",
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["subject"],
+    )
+    def list(self, request, *args, **kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
+        relations = self.biz.list_all_user_department_group(subject)
+        return Response([one.dict() for one in relations])
 
 
 class SubjectSystemViewSet(GenericViewSet):
@@ -149,10 +164,6 @@ class SubjectPolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
 
-        permission_logger.info(
-            "subject type=%s, id=%s policy deleted by user %s", subject.type, subject.id, request.user.username
-        )
-
         # 为了记录审计日志，需要在删除前查询
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
@@ -185,12 +196,8 @@ class SubjectPolicyViewSet(GenericViewSet):
         condition_ids = data["ids"]
         condition = data["condition"]
 
-        permission_logger.info(
-            "subject type=%s, id=%s policy deleted partial by user %s", subject.type, subject.id, request.user.username
-        )
-
         # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
-        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         update_policy = self.policy_operation_biz.delete_partial(
             system_id,
             subject,
@@ -224,16 +231,7 @@ class SubjectPolicyResourceGroupDeleteViewSet(GenericViewSet):
         resource_group_id = kwargs["resource_group_id"]
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
 
-        permission_logger.info(
-            "subject type=%s, id=%s policy delete via resource group id %s by user %s",
-            subject.type,
-            subject.id,
-            resource_group_id,
-            request.user.username,
-        )
-
-        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
-        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         # 删除权限
         update_policy = self.policy_operation_biz.delete_by_resource_group_id(
             system_id, subject, policy_id, resource_group_id
@@ -306,14 +304,6 @@ class SubjectTemporaryPolicyViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
-
-        permission_logger.info(
-            "subject type=%s, id=%s temporary polices %s deleted by user %s",
-            subject.type,
-            subject.id,
-            ids,
-            request.user.username,
-        )
 
         policies = self.policy_query_biz.list_temporary_by_policy_ids(system_id, subject, ids)
 

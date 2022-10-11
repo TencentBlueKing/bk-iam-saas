@@ -19,6 +19,7 @@ class SystemBiz:
     get = SystemService.__dict__["get"]
     list = SystemService.__dict__["list"]
     new_system_list = SystemService.__dict__["new_system_list"]
+    list_system_manger = SystemService.__dict__["list_system_manger"]
 
     def list_client(self, system_id: str) -> List[str]:
         """查询可访问系统的clients"""

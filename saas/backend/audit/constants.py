@@ -33,6 +33,12 @@ class AuditObjectType(ChoicesEnum, LowerStrEnum):
     ACTION = auto()
     WHITE_LIST = auto()
 
+    # 用户黑名单, 用于冻结/解冻用户使用
+    USER_BLACK_LIST = auto()
+
+    # 用户权限清理
+    USER_PERMISSION_CLEANUP = auto()
+
 
 class AuditStatus(ChoicesEnum):
     SUCCEED = 0
@@ -105,3 +111,7 @@ class AuditType(ChoicesEnum, StrEnum):
 
     MANAGEMENT_API_ALLOW_LIST_CONFIG_CREATE = auto()
     MANAGEMENT_API_ALLOW_LIST_CONFIG_DELETE = auto()
+
+    USER_BLACKLIST_MEMBER_CREATE = auto()
+    USER_BLACKLIST_MEMBER_DELETE = auto()
+    USER_PERMISSION_CLEANUP = auto()
