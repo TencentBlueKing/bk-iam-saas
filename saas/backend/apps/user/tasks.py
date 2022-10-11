@@ -13,7 +13,7 @@ from datetime import timedelta
 from itertools import groupby
 from urllib.parse import urlencode
 
-from celery import Task, task
+from celery import Task, current_app, task
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import F, Q
@@ -79,6 +79,9 @@ class SendUserExpireRemindMailTask(Task):
             logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
 
 
+current_app.tasks.register(SendUserExpireRemindMailTask())
+
+
 @task(ignore_result=True)
 def user_group_policy_expire_remind():
     """
@@ -99,7 +102,7 @@ def user_group_policy_expire_remind():
                 continue
 
             username_set.add(username)
-            SendUserExpireRemindMailTask.delay(username, expired_at)
+            SendUserExpireRemindMailTask().delay(username, expired_at)
 
     # 2. 查询用户组成员过期
     group_biz = GroupBiz()
@@ -113,7 +116,7 @@ def user_group_policy_expire_remind():
             continue
 
         username_set.add(username)
-        SendUserExpireRemindMailTask.delay(username, expired_at)
+        SendUserExpireRemindMailTask().delay(username, expired_at)
 
 
 @task(ignore_result=True)

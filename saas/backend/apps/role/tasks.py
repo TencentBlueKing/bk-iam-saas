@@ -14,7 +14,7 @@ from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, task
+from celery import Task, current_app, task
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -111,6 +111,9 @@ class SendRoleGroupExpireRemindMailTask(Task):
             logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
 
 
+current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
+
+
 @task(ignore_result=True)
 def role_group_expire_remind():
     """
@@ -143,7 +146,7 @@ def role_group_expire_remind():
             continue
 
         role_id_set.add(role_id)
-        SendRoleGroupExpireRemindMailTask.delay(role_id, expired_at)
+        SendRoleGroupExpireRemindMailTask().delay(role_id, expired_at)
 
 
 class InitBizGradeManagerTask(Task):
