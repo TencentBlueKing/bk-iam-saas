@@ -76,34 +76,29 @@ def sync_system_manager():
         RoleBiz().create(RoleInfoBean.parse_obj(data), "admin")
 
 
-@task(ignore_result=True)
-def role_group_expire_remind():
-    """
-    角色管理的用户组过期提醒
-    """
+class SendRoleGroupExpireRemindMailTask(Task):
     group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
 
-    expired_at = get_soon_expire_ts()
-    qs = Role.objects.all()
-    for role in qs:
+    def run(self, role_id: int, expired_at: int):
+        role = Role.objects.get(id=role_id)
         group_ids = list(
             RoleRelatedObject.objects.filter(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value
             ).values_list("object_id", flat=True)
         )
         if not group_ids:
-            continue
+            return
 
-        exist_group_ids = group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
+        exist_group_ids = self.group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
         if not exist_group_ids:
-            continue
+            return
 
         groups = Group.objects.filter(id__in=exist_group_ids)
 
         params = {"source": "email", "current_role_id": role.id, "role_type": role.type}
-        url = base_url + "?" + urlencode(params)
+        url = self.base_url + "?" + urlencode(params)
 
         mail_content = render_to_string(
             "group_expired_mail.html", {"groups": groups, "role": role, "url": url, "index_url": settings.APP_URL}
@@ -114,6 +109,41 @@ def role_group_expire_remind():
             esb.send_mail(",".join(usernames), "蓝鲸权限中心用户组续期提醒", mail_content)
         except Exception:  # pylint: disable=broad-except
             logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
+
+
+@task(ignore_result=True)
+def role_group_expire_remind():
+    """
+    角色管理的用户组过期提醒
+    """
+    group_biz = GroupBiz()
+    expired_at = get_soon_expire_ts()
+
+    group_id_set, role_id_set = set(), set()  # 去重用
+
+    # 查询有过期成员的用户组关系
+    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at)
+    for gs in group_subjects:
+        group_id = gs.group.id
+        if group_id in group_id_set:
+            continue
+
+        group_id_set.add(group_id)
+
+        # 查询用户组对应的分级管理员
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=int(group_id)
+        ).first()
+
+        if not relation:
+            continue
+
+        role_id = relation.role_id
+        if role_id in role_id_set:
+            continue
+
+        role_id_set.add(role_id)
+        SendRoleGroupExpireRemindMailTask.delay(role_id, expired_at)
 
 
 class InitBizGradeManagerTask(Task):
