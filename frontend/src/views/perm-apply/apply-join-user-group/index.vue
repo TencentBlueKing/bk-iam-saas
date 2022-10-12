@@ -66,20 +66,22 @@
                 <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.permApply['请选择申请期限']`) }}</p>
             </section>
         </render-horizontal-block>
-        <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
-            <section ref="reasonRef">
-                <bk-input
-                    type="textarea"
-                    v-model="reason"
-                    :maxlength="255"
-                    :placeholder="$t(`m.verify['请输入']`)"
-                    :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
-                    @input="handleReasonInput"
-                    @blur="handleReasonBlur">
-                </bk-input>
-                <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
-            </section>
-        </render-horizontal-block>
+        <div style="margin-bottom: 50px">
+            <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
+                <section ref="reasonRef">
+                    <bk-input
+                        type="textarea"
+                        v-model="reason"
+                        :maxlength="255"
+                        :placeholder="$t(`m.verify['请输入']`)"
+                        :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
+                        @input="handleReasonInput"
+                        @blur="handleReasonBlur">
+                    </bk-input>
+                    <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
+                </section>
+            </render-horizontal-block>
+        </div>
         <div slot="action">
             <bk-button theme="primary" :loading="submitLoading" @click="handleSubmit">
                 {{ $t(`m.common['提交']`) }}
