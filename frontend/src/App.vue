@@ -14,16 +14,21 @@
             :style="processGuideStyle"
             :flag="processGuideShow"
             :content="$t(`m.guide['创建审批流程']`)" />
-        <header-nav @reload-page="handleRefreshPage"
+        <header-nav
+            v-if="!externalSystemsLayout.hideIamHeader"
+            @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId">
         </header-nav>
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
-            v-if="isRouterAlive">
+            v-if="isRouterAlive && !externalSystemsLayout.hideIamBreadCrumbs">
         </the-header>
-        <the-nav class="nav-layout" @reload-page="reloadCurPage"></the-nav>
+        <the-nav class="nav-layout"
+            @reload-page="reloadCurPage"
+            v-if="!externalSystemsLayout.hideIamSlider">
+        </the-nav>
         <main class="main-layout" :class="layoutCls"
             v-bkloading="{ isLoading: mainContentLoading, opacity: 1, zIndex: 1000 }">
             <div ref="mainScroller" class="main-scroller" v-if="isShowPage">
@@ -78,7 +83,7 @@
             };
         },
         computed: {
-            ...mapGetters(['mainContentLoading', 'user'])
+            ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout'])
         },
         watch: {
             '$route' (to, from) {
