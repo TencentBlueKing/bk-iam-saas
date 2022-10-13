@@ -1,5 +1,5 @@
 <template functional>
-    <div :class="['horizontal-item', props.extCls || '']">
+    <div :class="['horizontal-item', props.extCls || '']" :style="props.styles">
         <div class="label" :class="props.required ? 'is-required' : ''">
             {{ props.label ? `${props.label}` : ''}}
         </div>
@@ -9,6 +9,28 @@
         </div>
     </div>
 </template>
+<script>
+    export default {
+        props: {
+            styles: {
+                type: Object,
+                default: () => {}
+            },
+            required: {
+                type: Boolean,
+                required: false
+            },
+            extCls: {
+                type: String,
+                default: ''
+            },
+            label: {
+                type: String,
+                default: ''
+            }
+        }
+    };
+</script>
 <style lang="postcss">
     .horizontal-item {
         position: relative;
