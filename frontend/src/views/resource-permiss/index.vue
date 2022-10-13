@@ -141,6 +141,7 @@
             :data="tableList"
             size="small"
             class="mb40"
+            :max-height="tableHeight"
             :class="{ 'set-border': tableLoading }"
             ext-cls="system-access-table"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -158,7 +159,7 @@
                 </template>
             </bk-table-column>
         </bk-table>
-
+        
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
             :title="resourceInstanceSidesliderTitle"
@@ -193,6 +194,7 @@
     import RenderResource from './components/render-resource.vue';
     import { leaveConfirm } from '@/common/leave-confirm';
     import { fuzzyRtxSearch } from '@/common/rtx';
+    import { getWindowHeight } from '@/common/util';
     // import iamCascade from '@/components/cascade'
 
     // 单次申请的最大实例数
@@ -251,6 +253,9 @@
             };
         },
         computed: {
+            tableHeight () {
+                return getWindowHeight() - 407;
+            },
             condition () {
                 if (this.curResIndex === -1 || this.groupIndex === -1) {
                     return [];
