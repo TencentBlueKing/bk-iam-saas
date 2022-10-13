@@ -1,14 +1,14 @@
 <template>
     <div class="iam-my-perm-wrapper">
         <div class="header">
-            <bk-button
+            <!-- <bk-button
                 data-test-id="myPerm_btn_applyPerm"
                 type="button"
                 theme="primary"
                 style="margin-bottom: 16px;"
                 @click="handleGoApply">
                 {{ $t(`m.common['申请权限']`) }}
-            </bk-button>
+            </bk-button> -->
             <bk-button
                 data-test-id="myPerm_btn_batchRenewal"
                 style="margin: 0 6px 16px 6px;"

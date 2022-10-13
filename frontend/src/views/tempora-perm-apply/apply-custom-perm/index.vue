@@ -1786,9 +1786,9 @@
                 try {
                     await this.$store.dispatch('applyProvisionPerm/permTemporaryApply', params);
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
-                    this.$router.push({
-                        name: 'apply'
-                    });
+                    // this.$router.push({
+                    //     name: 'apply'
+                    // });
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
