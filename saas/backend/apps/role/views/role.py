@@ -630,7 +630,7 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
             self.group_biz.update_members_expired_at(
                 int(group_id),
                 [
-                    GroupMemberExpiredAtBean(type=m["type"], id=m["id"], policy_expired_at=m["expired_at"])
+                    GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=m["expired_at"])
                     for m in per_members
                 ],
             )

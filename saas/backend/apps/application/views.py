@@ -27,7 +27,7 @@ from backend.biz.application import (
     GradeManagerApplicationDataBean,
     GroupApplicationDataBean,
 )
-from backend.biz.group import GroupCheckBiz
+from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
@@ -202,7 +202,7 @@ class ApplicationByGroupView(views.APIView):
     """
 
     biz = ApplicationBiz()
-    group_check_biz = GroupCheckBiz()
+    group_biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="加入用户组申请",
@@ -218,8 +218,10 @@ class ApplicationByGroupView(views.APIView):
         data = serializer.validated_data
         user_id = request.user.username
 
-        # 判断用户加入的用户组数与申请的数是否超过最大限制
-        self.group_check_biz.check_subject_group_limit(Subject(type=SubjectType.USER.value, id=user_id))
+        # 检查用户组数量是否超限
+        self.group_biz.check_subject_groups_quota(
+            Subject(type=SubjectType.USER.value, id=user_id), [g["id"] for g in data["groups"]]
+        )
 
         # 创建申请
         self.biz.create_for_group(

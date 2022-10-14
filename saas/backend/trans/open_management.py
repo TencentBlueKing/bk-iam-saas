@@ -15,6 +15,7 @@ from pydantic.tools import parse_obj_as
 
 from backend.biz.policy import PolicyBeanList
 from backend.biz.role import RoleInfoBean
+from backend.common.time import PERMANENT_SECONDS
 
 from .open import OpenCommonTrans, OpenPolicy
 
@@ -55,7 +56,7 @@ class ManagementCommonTrans(OpenCommonTrans):
         open_policies = parse_obj_as(List[OpenPolicy], actions)
 
         # 转换为策略列表(转换时会对action、实例视图等进行校验)
-        return self._to_policy_list(system_id, open_policies)
+        return self._to_policy_list(system_id, open_policies, expired_at=PERMANENT_SECONDS)  # 用户组授权默认过期时间为永久
 
 
 class GradeManagerTrans(ManagementCommonTrans):

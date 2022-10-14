@@ -61,7 +61,8 @@ class GroupFilter(filters.FilterSet):
         return self._subject_filter(queryset, SubjectType.DEPARTMENT.value, value)
 
     def _subject_filter(self, queryset, _type, _id):
-        data = iam.get_subject_relation(_type, _id)
+        # NOTE: 可能会有性能问题, 分页查询用户的所有组列表
+        data = iam.list_all_subject_groups(_type, _id)
         group_ids = [int(g["id"]) for g in data]
         return queryset.filter(id__in=group_ids)
 
