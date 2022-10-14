@@ -27,6 +27,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
+from backend.common.lock import gen_init_grade_manager_lock
 from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
@@ -162,30 +163,31 @@ class InitBizGradeManagerTask(Task):
         if not settings.ENABLE_INIT_GRADE_MANAGER:
             return
 
-        biz_info = list_biz()
-        biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
+        with gen_init_grade_manager_lock():
+            biz_info = list_biz()
+            biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
 
-        projects = list_project()
-        for project in projects:
-            if project["bk_biz_id"] in biz_dict:
-                biz = biz_dict[project["bk_biz_id"]]
+            projects = list_project()
+            for project in projects:
+                if project["bk_biz_id"] in biz_dict:
+                    biz = biz_dict[project["bk_biz_id"]]
 
-                maintainers = (biz.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
-                viewers = list(
-                    set(
-                        (biz.get("bk_biz_developer") or "").split(",")
-                        + (biz.get("bk_biz_productor") or "").split(",")
-                        + (biz.get("bk_biz_tester") or "").split(",")
+                    maintainers = (biz.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
+                    viewers = list(
+                        set(
+                            (biz.get("bk_biz_developer") or "").split(",")
+                            + (biz.get("bk_biz_productor") or "").split(",")
+                            + (biz.get("bk_biz_tester") or "").split(",")
+                        )
+                    )  # 业务的查看人
+
+                    self._create_grade_manager(project, maintainers, viewers)
+                else:
+                    logger.debug(
+                        "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
+                        project["name"],
+                        project["bk_biz_id"],
                     )
-                )  # 业务的查看人
-
-                self._create_grade_manager(project, maintainers, viewers)
-            else:
-                logger.debug(
-                    "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
-                    project["name"],
-                    project["bk_biz_id"],
-                )
 
     def _create_grade_manager(self, project, maintainers, viewers):
         biz_name = project["name"]
