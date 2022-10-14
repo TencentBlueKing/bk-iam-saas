@@ -44,12 +44,17 @@
     </div>
 </template>
 <script>
+
     export default {
         name: '',
         props: {
             value: {
                 type: String,
                 default: ''
+            },
+            isActiveSource: {
+                type: Boolean,
+                default: false
             },
             isEmpty: {
                 type: Boolean,
@@ -148,7 +153,7 @@
             },
 
             handleMouseleave () {
-                this.isActive = false;
+                this.isActive = this.isActiveSource;
                 this.immediatelyShow = false;
                 this.$emit('on-mouseleave');
             },
@@ -243,6 +248,9 @@
 
             setImmediatelyShow (payload) {
                 this.immediatelyShow = !!payload;
+            },
+            setActiveBorder (playload) {
+                this.isActive = playload;
             }
         }
     };

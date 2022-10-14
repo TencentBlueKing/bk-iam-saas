@@ -76,6 +76,7 @@
                                             :can-view="row.canView && !!_.id"
                                             :params="curCopyParams"
                                             :can-paste="content.canPaste"
+                                            :is-active-source="$index === curIndex && contentIndex === curGroupIndex"
                                             :is-error="content.isLimitExceeded || content.isError"
                                             @on-mouseover="handlerConditionMouseover(content)"
                                             @on-mouseleave="handlerConditionMouseleave(content)"
@@ -805,14 +806,14 @@
                 console.log('this.params', this.params);
                 const index = this.tableList.findIndex(item => item.id === data.id);
                 console.log('index', index);
-                console.log('resIndex', resIndex);
+                console.log('resIndex', resIndex, this.$refs[`condition_${index}_${groupIndex}_ref`][0]);
                 this.curIndex = index;
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
-
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideslider = true;
+                this.handlerSetActive(index, groupIndex, true);
             },
 
             async handleMainActionSubmit (payload, relatedActions) {
@@ -959,7 +960,6 @@
                 }
 
                 console.log('data', data);
-
                 const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                     .related_resource_types[this.curResIndex];
                 const isConditionEmpty = data.length === 1 && data[0] === 'none';
@@ -1001,7 +1001,7 @@
                         resItem.isLimitExceeded = false;
                     }
                 }
-
+                this.handlerSetActive(this.curIndex, this.curGroupIndex, false);
                 this.curIndex = -1;
                 this.curResIndex = -1;
                 this.curGroupIndex = -1;
@@ -1346,6 +1346,7 @@
                     this.isShowResourceInstanceSideslider = false;
                     this.resetDataAfterClose();
                 }, _ => _);
+                this.handlerSetActive(this.curIndex, this.curGroupIndex, false);
             },
 
             handleExpiredToggle (value, row) {
@@ -1618,7 +1619,7 @@
                 console.log(resItem);
                 console.log(environments);
                 console.log(this.tableList);
-
+                this.handlerSetActive(this.curIndex, this.curGroupIndex, false);
                 window.changeAlert = false;
                 this.resourceInstanceEffectTimeTitle = '';
                 this.isShowResourceInstanceEffectTime = false;
@@ -1677,6 +1678,12 @@
                         });
                     }
                 });
+            },
+
+            handlerSetActive (index, groupIndex, isActive) {
+                const conditionRef = this.$refs[`condition_${index}_${groupIndex}_ref`];
+                conditionRef && conditionRef[0].setActiveBorder(isActive);
+                this.isActive = isActive;
             }
 
         }
