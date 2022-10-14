@@ -279,6 +279,7 @@
     import Policy from '@/model/policy';
     import { leaveConfirm } from '@/common/leave-confirm';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { sleep } from '../../../../mock/ajax/util';
     import RenderResource from './render-resource';
     import RenderCondition from './render-condition';
     import EffectTime from './effect-time';
@@ -751,6 +752,9 @@
             },
 
             getCellClass ({ row, column, rowIndex, columnIndex }) {
+                if (columnIndex === 1 && rowIndex === this.activeIndex) {
+                    return 'is-active-bgcolor';
+                }
                 if (columnIndex === 1 || columnIndex === 2) {
                     return 'iam-perm-table-cell-cls';
                 }
@@ -1001,15 +1005,23 @@
                         resItem.isLimitExceeded = false;
                     }
                 }
-                this.handlerSetActive(this.curIndex, this.curGroupIndex, false);
-                this.curIndex = -1;
+                // 存储变量值用于激活背景色
+                this.activeIndex = this.curIndex;
+                this.handlerSetActive(this.curIndex, this.curGroupIndex, true);
+                // this.curIndex = -1;
                 this.curResIndex = -1;
-                this.curGroupIndex = -1;
+                // this.curGroupIndex = -1;
 
                 // 主操作的实例映射到了具体的依赖操作上，需更新到父级的缓存数据中
                 if (this.needEmitFlag) {
                     this.$emit('on-realted-change', this.tableList);
                 }
+                sleep(3000).then(() => {
+                    this.handlerSetActive(this.curIndex, this.curGroupIndex, false);
+                    this.activeIndex = -1;
+                    this.curIndex = -1;
+                    this.curGroupIndex = -1;
+                });
             },
 
             handleResourcePreview () {

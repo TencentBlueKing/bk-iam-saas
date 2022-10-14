@@ -69,6 +69,9 @@
                     font-size: 14px;
                 }
             } */
+            .is-active-bgcolor {
+                background-color: #F2FCF6;
+            }
             .iam-perm-table-cell-cls {
                 .cell {
                     height: 100%;
