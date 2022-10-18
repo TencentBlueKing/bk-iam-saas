@@ -1256,14 +1256,46 @@
                             if (!item.isAggregate) {
                                 const curPasteData = (payload.data || []).find(_ => _.id === item.id);
                                 if (curPasteData) {
-                                    item.resource_groups.forEach(groupItem => {
-                                        groupItem.related_resource_types.forEach(resItem => {
-                                            if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
-                                                resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
-                                                resItem.isError = false;
-                                            }
+                                    // eslint-disable-next-line max-len
+                                    const curPasteDataInstanceName = curPasteData.resource_type.condition[0].instances[0].path[0][0].name;
+                                    const systemId = this.isCreateMode ? item.detail.system.id : this.systemId;
+                                    const scopeAction = this.authorization[systemId] || [];
+                                    // eslint-disable-next-line max-len
+                                    const curScopeAction = _.cloneDeep(scopeAction.find(scopeItem => scopeItem.id === item.id));
+                                    // eslint-disable-next-line max-len
+                                    if (curScopeAction && curScopeAction.resource_groups && curScopeAction.resource_groups.length) {
+                                        curScopeAction.resource_groups.forEach(curScopeActionItem => {
+                                            curScopeActionItem.related_resource_types.forEach(curResItem => {
+                                                if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                                    // eslint-disable-next-line max-len
+                                                    const nameArr = curResItem.condition[0].instances[0].path.reduce((p, v) => {
+                                                        p.push(v[0].name);
+                                                        return p;
+                                                    }, []);
+                                                    // eslint-disable-next-line max-len
+                                                    if (nameArr.includes(curPasteDataInstanceName)) {
+                                                        item.resource_groups.forEach(groupItem => {
+                                                            groupItem.related_resource_types.forEach(resItem => {
+                                                                if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                                                    resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                                                                    resItem.isError = false;
+                                                                }
+                                                            });
+                                                        });
+                                                    }
+                                                }
+                                            });
                                         });
-                                    });
+                                    } else {
+                                        item.resource_groups.forEach(groupItem => {
+                                            groupItem.related_resource_types.forEach(resItem => {
+                                                if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                                    resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                                                    resItem.isError = false;
+                                                }
+                                            });
+                                        });
+                                    }
                                 }
                             } else {
                                 item.aggregateResourceType.forEach(aggregateResourceItem => {
