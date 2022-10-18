@@ -99,9 +99,16 @@ class RoleType(ChoicesEnum, LowerStrEnum):
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
     RATING_MANAGER = auto()
+    SUBSET_MANAGER = auto()
 
     _choices_labels = skip(
-        ((STAFF, "个人用户"), (SUPER_MANAGER, "超级管理员"), (SYSTEM_MANAGER, "系统管理员"), (RATING_MANAGER, "分级管理员"))
+        (
+            (STAFF, "个人用户"),
+            (SUPER_MANAGER, "超级管理员"),
+            (SYSTEM_MANAGER, "系统管理员"),
+            (RATING_MANAGER, "分级管理员"),
+            (SUBSET_MANAGER, "子集管理员"),
+        )
     )
 
 
@@ -140,7 +147,6 @@ class RoleSourceTypeEnum(ChoicesEnum, LowerStrEnum):
 class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_GROUP = auto()
     MANAGE_TEMPLATE = auto()
-    MANAGE_RATING_MANAGER_MEMBER = auto()
     MANAGE_SUPER_MANAGER_MEMBER = auto()
     MANAGE_SYSTEM_MANAGER_MEMBER = auto()
     CREATE_RATING_MANAGER = auto()
@@ -156,6 +162,9 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     VIEW_AUTHORIZED_SUBJECTS = auto()
     MANAGE_API_WHITE_LIST = auto()
     MANAGE_LONG_TASK = auto()
+    CREATE_SUBSET_MANAGER = auto()
+    MANAGE_SUBSET_MANAGER = auto()
+    TRANSFER_GROUP_BY_RATING_MANAGER = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #

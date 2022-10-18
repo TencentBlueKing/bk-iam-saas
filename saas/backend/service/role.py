@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, parse_obj_as
 from backend.apps.role.models import (
     Role,
     RoleRelatedObject,
+    RoleRelation,
     RoleScope,
     RoleSource,
     RoleUser,
@@ -168,7 +169,12 @@ class RoleService:
         data = [UserRole.convert_from_role(role) for role in roles]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
-        sort_index = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]
+        sort_index = [
+            RoleType.SUPER_MANAGER.value,
+            RoleType.SYSTEM_MANAGER.value,
+            RoleType.RATING_MANAGER.value,
+            RoleType.SUBSET_MANAGER.value,
+        ]
         sorted_data = sorted(data, key=lambda r: sort_index.index(r.type))
         return sorted_data
 
@@ -188,6 +194,16 @@ class RoleService:
 
             self._add_members(role.id, info.members)
             self._create_role_scope(role.id, info.subject_scopes, info.authorization_scopes)
+
+        return role
+
+    def create_subset_manager(self, grade_manager: Role, info: RoleInfo, creator: str) -> Role:
+        """
+        创建子集管理员
+        """
+        with transaction.atomic():
+            role = self.create(info, creator)
+            RoleRelation.objects.create(role_id=grade_manager.id, sub_id=role.id)
 
         return role
 

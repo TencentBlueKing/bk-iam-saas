@@ -259,7 +259,7 @@ class ApplicationByGradeManagerView(views.APIView):
         user_id = request.user.username
 
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"])
+        self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
         # 结构转换
         info = self.role_trans.from_role_data(data)
@@ -296,7 +296,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
 
         role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=data["id"])
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"], role.name)
+        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
         # 必须是分级管理员的成员才可以申请修改
         if not RoleUser.objects.user_role_exists(user_id=user_id, role_id=role.id):

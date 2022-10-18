@@ -56,7 +56,7 @@ class RoleViewSet(GenericViewSet):
         tags=["account"],
     )
     def list(self, request, *args, **kwargs):
-        data = self.role_biz.list_user_role(request.user.username)
+        data = self.role_biz.list_role_tree_by_user(request.user.username)
         return Response([one.dict() for one in data])
 
     @swagger_auto_schema(

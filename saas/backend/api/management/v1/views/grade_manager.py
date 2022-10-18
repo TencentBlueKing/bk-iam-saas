@@ -81,7 +81,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         self.verify_system_scope(source_system_id, auth_system_ids)
 
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"])
+        self.role_check_biz.check_grade_manager_unique_name(data["name"])
         # 检查该系统可创建的分级管理员数量是否超限
         self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
 
@@ -90,7 +90,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 
         with transaction.atomic():
             # 创建角色
-            role = self.biz.create(role_info, request.user.username)
+            role = self.biz.create_grade_manager(role_info, request.user.username)
 
             # 记录role创建来源信息
             RoleSource.objects.create(
@@ -123,7 +123,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         # 数据校验
         if "name" in data:
             # 名称唯一性检查
-            self.role_check_biz.check_unique_name(data["name"], role.name)
+            self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
         if "authorization_scopes" in data:
             # API里数据鉴权: 不可超过接入系统可管控的授权系统范围

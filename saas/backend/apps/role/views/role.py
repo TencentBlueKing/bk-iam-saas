@@ -126,11 +126,11 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         data = serializer.validated_data
 
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"])
+        self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
         # 结构转换
         info = self.role_trans.from_role_data(data)
-        role = self.biz.create(info, user_id)
+        role = self.biz.create_grade_manager(info, user_id)
 
         audit_context_setter(role=role)
 
@@ -173,7 +173,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         data = serializer.validated_data
 
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"], role.name)
+        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
         # 检查成员数量是否满足限制
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
@@ -209,7 +209,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         data = serializer.validated_data
 
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"], role.name)
+        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
         # 检查成员数量是否满足限制
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
@@ -623,7 +623,7 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
 
         checker = RoleObjectRelationChecker(role)
         if not checker.check_group_ids(group_ids):
-            raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的用户组，无权限续期").format(role.name), replace=True)
+            raise error_codes.FORBIDDEN.format(message=_("非管理员({})的用户组，无权限续期").format(role.name), replace=True)
 
         sorted_members = sorted(members, key=lambda m: m["parent_id"])
         for group_id, per_members in groupby(sorted_members, key=lambda m: m["parent_id"]):
@@ -680,3 +680,163 @@ class AuthScopeIncludeUserRoleView(views.APIView):
         q = RoleListQuery(request.role, request.user)
         roles = q.list_role_scope_include_user()
         return Response([one.dict() for one in roles])
+
+
+class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
+    """
+    子集管理员
+    """
+
+    permission_classes = [RolePermission]
+    action_permission = {
+        "create": PermissionCodeEnum.CREATE_SUBSET_MANAGER.value,
+        "update": PermissionCodeEnum.MANAGE_SUBSET_MANAGER.value,
+    }
+
+    lookup_field = "id"
+    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
+    serializer_class = RatingMangerListSLZ
+
+    biz = RoleBiz()
+    role_check_biz = RoleCheckBiz()
+
+    role_trans = RoleTrans()
+
+    def get_queryset(self):
+        request = self.request
+        return RoleListQuery(request.role, request.user).query_subset_manager()
+
+    @swagger_auto_schema(
+        operation_description="子集管理员列表",
+        responses={status.HTTP_200_OK: RatingMangerListSchemaSLZ(label="子集管理员列表", many=True)},
+        tags=["role"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="子集管理员详情",
+        responses={status.HTTP_200_OK: RatingMangerDetailSchemaSLZ(label="子集管理员详情")},
+        filter_inspectors=[],
+        paginator_inspectors=[],
+        tags=["role"],
+    )
+    def retrieve(self, request, *args, **kwargs):
+        role = self.get_object()
+        serializer = RatingMangerDetailSLZ(instance=role)
+        data = serializer.data
+        return Response(data)
+
+    @swagger_auto_schema(
+        operation_description="创建子集管理员",
+        request_body=RatingMangerCreateSLZ(label="创建子集管理员"),
+        responses={status.HTTP_201_CREATED: RoleIdSLZ(label="子集管理员ID")},
+        tags=["role"],
+    )
+    @view_audit_decorator(RoleCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        """
+        创建子集管理员
+        """
+        serializer = RatingMangerCreateSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_id = request.user.username
+        data = serializer.validated_data
+        grade_manager = request.role
+
+        # 名称唯一性检查, 检查在分级管理员下唯一
+        self.role_check_biz.check_subset_manager_unique_name(grade_manager, data["name"])
+
+        # 结构转换
+        info = self.role_trans.from_role_data(data, _type=RoleType.SUBSET_MANAGER.value)
+
+        # 检查授权范围
+        self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
+
+        # 检查人员范围
+        self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
+
+        # 创建子集管理员, 并创建分级管理员与子集管理员的关系
+        role = self.biz.create_subset_manager(grade_manager, info, user_id)
+
+        audit_context_setter(role=role)
+
+        return Response({"id": role.id}, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        operation_description="子集管理员更新",
+        request_body=RatingMangerCreateSLZ(label="子集分级管理员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["role"],
+    )
+    @view_audit_decorator(RoleUpdateAuditProvider)
+    def update(self, request, *args, **kwargs):
+        role = self.get_object()
+        serializer = RatingMangerCreateSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_id = request.user.username
+        data = serializer.validated_data
+        grade_manager = request.role
+
+        # 名称唯一性检查
+        self.role_check_biz.check_subset_manager_unique_name(grade_manager, data["name"], role.name)
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(data["members"]))
+
+        # 查询已有的策略范围
+        old_scopes = self.biz.list_auth_scope(role.id)
+        # 查询旧的数据
+        old_system_policy_list = {
+            one.system_id: PolicyBeanList(one.system_id, parse_obj_as(List[PolicyBean], one.actions))
+            for one in old_scopes
+        }
+
+        info = self.role_trans.from_role_data(
+            data, old_system_policy_list=old_system_policy_list, _type=RoleType.SUBSET_MANAGER.value
+        )
+
+        # 检查授权范围
+        self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
+
+        # 检查人员范围
+        self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
+
+        self.biz.update(role, info, user_id)
+
+        audit_context_setter(role=role)
+
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="子集管理员基本信息更新",
+        request_body=RatingMangerBaseInfoSZL(label="更新子集管理员基本信息"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["role"],
+    )
+    @view_audit_decorator(RoleUpdateAuditProvider)
+    def partial_update(self, request, *args, **kwargs):
+        """仅仅做基本信息更新"""
+        role = self.get_object()
+        serializer = RatingMangerBaseInfoSZL(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_id = request.user.username
+        data = serializer.validated_data
+        grade_manager = request.role
+
+        # 名称唯一性检查
+        self.role_check_biz.check_subset_manager_unique_name(grade_manager, data["name"], role.name)
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(data["members"]))
+
+        # 非分级管理员/子集管理员成员，则无法更新基本信息
+        if RoleUser.objects.filter(role_id__in=[role.id, grade_manager.id], username=user_id).exists():
+            raise error_codes.FORBIDDEN.format(message=_("非管理员({})的成员，无权限修改").format(role.name), replace=True)
+
+        self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
+
+        audit_context_setter(role=role)
+
+        return Response({})

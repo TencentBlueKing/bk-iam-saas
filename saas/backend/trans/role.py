@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 
 from backend.biz.policy import PolicyBeanList
 from backend.biz.role import RoleInfoBean
+from backend.service.constants import RoleType
 
 from .policy import PolicyTrans
 
@@ -24,7 +25,10 @@ class RoleTrans:
     policy_trans = PolicyTrans()
 
     def from_role_data(
-        self, data: Dict[str, Any], old_system_policy_list: Optional[Dict[str, PolicyBeanList]] = None
+        self,
+        data: Dict[str, Any],
+        old_system_policy_list: Optional[Dict[str, PolicyBeanList]] = None,
+        _type: str = RoleType.RATING_MANAGER.value,
     ) -> RoleInfoBean:
         """
         data: {
@@ -48,6 +52,8 @@ class RoleTrans:
 
         old_system_policy_list: 更新的数据提供
         """
+        data["type"] = _type
+
         for system in data["authorization_scopes"]:
             system_id = system["system_id"]
 

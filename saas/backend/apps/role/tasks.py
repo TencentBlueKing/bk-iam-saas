@@ -74,7 +74,7 @@ def sync_system_manager():
             "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
             "subject_scopes": [{"type": "*", "id": "*"}],
         }
-        RoleBiz().create(RoleInfoBean.parse_obj(data), "admin")
+        RoleBiz().create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
@@ -195,7 +195,7 @@ class InitBizGradeManagerTask(Task):
             return
 
         try:
-            self.role_check_biz.check_unique_name(biz_name)
+            self.role_check_biz.check_grade_manager_unique_name(biz_name)
         except APIError:
             # 缓存结果
             self._exist_names.add(biz_name)
@@ -203,7 +203,7 @@ class InitBizGradeManagerTask(Task):
 
         role_info = self._init_role_info(project, maintainers)
 
-        role = self.biz.create(role_info, ADMIN_USER)
+        role = self.biz.create_grade_manager(role_info, ADMIN_USER)
 
         # 创建用户组并授权
         expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年

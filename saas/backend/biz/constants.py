@@ -34,3 +34,8 @@ class ActionTag(LowerStrEnum):
     CHECKED = auto()
     UNCHECKED = auto()
     DELETE = auto()
+
+
+class UserRoleStatus(LowerStrEnum):
+    IN = auto()
+    OUT = auto()

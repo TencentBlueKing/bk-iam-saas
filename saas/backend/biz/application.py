@@ -258,7 +258,7 @@ class ApprovedPassApplicationBiz:
     def _create_rating_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
         info = self._gen_role_info_bean(application.data)
-        role = self.role_biz.create(info, subject.id)
+        role = self.role_biz.create_grade_manager(info, subject.id)
 
         log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
 

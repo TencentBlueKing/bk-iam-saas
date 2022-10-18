@@ -78,3 +78,11 @@ class RoleRelatedObjectManager(models.Manager):
         移除角色与角色创建的用户组关系
         """
         self.delete_object_relation(group_id, RoleRelatedObjectType.GROUP.value)
+
+
+class RoleRelationManager(models.Manager):
+    def list_subset_id(self, role_id: int) -> List[int]:
+        """
+        查询分级管理员的子集管理的id
+        """
+        return list(self.filter(role_id=role_id).values_list("sub_id", flat=True))

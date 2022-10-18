@@ -23,7 +23,7 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleSource, RoleUser, ScopeSubject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleSource, RoleUser, ScopeSubject
 from backend.apps.template.models import PermTemplate
 from backend.biz.policy import (
     ConditionBean,
@@ -51,14 +51,21 @@ from backend.service.constants import (
     SubjectType,
 )
 from backend.service.models import Attribute, Subject, System
-from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService
+from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService, UserRole
 from backend.service.system import SystemService
+
+from .constants import UserRoleStatus
 
 logger = logging.getLogger("app")
 
 
 class RoleInfoBean(RoleInfo):
     pass
+
+
+class UserRoleNode(UserRole):
+    status: str = UserRoleStatus.IN.value
+    sub_roles: List["UserRoleNode"] = []
 
 
 class AuthScopeSystemBean(BaseModel):
@@ -124,6 +131,52 @@ class RoleBiz:
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]
 
+    def list_role_tree_by_user(self, user_id: str) -> List[UserRoleNode]:
+        """
+        查询用户的角色关系树
+        """
+        tree: List[UserRoleNode] = []
+        grade_manager_dict: Dict[int, UserRoleNode] = {}
+        subset_manager_dict: Dict[int, UserRoleNode] = {}
+
+        # 查询用户直接加入的role
+        roles = self.list_user_role(user_id)
+        for role in roles:
+            node = UserRoleNode.parse_obj(role)
+
+            if node.type != RoleType.SUBSET_MANAGER.value:
+                tree.append(node)
+                if node.type == RoleType.RATING_MANAGER.value:
+                    grade_manager_dict[node.id] = node
+            else:
+                subset_manager_dict[node.id] = node
+
+        if not subset_manager_dict:
+            return tree
+
+        relations = RoleRelation.objects.filter(sub_id__in=list(subset_manager_dict.keys()))
+        relation_dict = {r.sub_id: r.role_id for r in relations}
+
+        # 查询子集管理员所属的分级管理员, 不包含用户已加入的分级管理员
+        out_roles = Role.objects.filter(id__in=[id for id in relation_dict.values() if id not in grade_manager_dict])
+        for role in out_roles:
+            node = UserRoleNode(
+                id=role.id,
+                type=role.type,
+                name=role.name,
+                name_en=role.name_en,
+                description=role.description,
+                status=UserRoleStatus.OUT.value,
+            )
+
+            tree.append(node)
+            grade_manager_dict[node.id] = node
+
+        for sub_id, role_id in relation_dict.items():
+            grade_manager_dict[role_id].sub_roles.append(subset_manager_dict[sub_id])
+
+        return tree
+
     def get_role_scope_include_user(self, role_id: int, username: str) -> Optional[Role]:
         """
         查询授权范围包含用户的角色
@@ -139,7 +192,7 @@ class RoleBiz:
         except APIError:
             return None
 
-    def create(self, info: RoleInfoBean, creator: str) -> Role:
+    def create_grade_manager(self, info: RoleInfoBean, creator: str) -> Role:
         """
         创建分级管理员
         """
@@ -150,6 +203,12 @@ class RoleBiz:
         更新分级管理员
         """
         return self.svc.update(role, info, updater)
+
+    def create_subset_manager(self, grade_manager: Role, info: RoleInfoBean, creator: str) -> Role:
+        """
+        创建子集管理员
+        """
+        return self.svc.create_subset_manager(grade_manager, info, creator)
 
     def modify_system_manager_members(self, role_id: int, members: List[str]):
         """修改系统管理员的成员"""
@@ -345,7 +404,7 @@ class RoleBiz:
 
 
 class RoleCheckBiz:
-    def check_unique_name(self, new_name: str, old_name: str = ""):
+    def check_grade_manager_unique_name(self, new_name: str, old_name: str = ""):
         """
         检查分级管理员名称唯一性
         仅仅检查分级管理员，若分级管理员类型是系统管理员和超级管理员则不检查
@@ -356,7 +415,10 @@ class RoleCheckBiz:
             return
 
         # 新名称已经有对应的分级管理员，则不可以
-        if Role.objects.filter(name=new_name).exists():
+        if Role.objects.filter(
+            name=new_name,
+            type__in=[RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value],
+        ).exists():
             raise error_codes.CONFLICT_ERROR.format(_("名称[{}]已存在，请修改为其他名称").format(new_name), True)
 
         # 检测是否已经有正在申请中的
@@ -371,6 +433,48 @@ class RoleCheckBiz:
         if new_name in names:
             raise error_codes.CONFLICT_ERROR.format(_("正在申请的单据中名称[{}]已存在，请修改为其他名称，或等单据被处理后再提交").format(new_name), True)
 
+    def check_subset_manager_unique_name(self, grade_manager: Role, new_name: str, old_name: str = ""):
+        """
+        检查子集管理员的唯一性
+        每个分级管理员里面的子集管理员名字必须唯一
+        """
+        # 如果新名称与旧名称一致，说明名称没改变
+        if new_name == old_name:
+            return
+
+        # 查询分级管理员已有的子集管理员id
+        sub_ids = RoleRelation.objects.list_subset_id(grade_manager.id)
+
+        # 检查对应的子集管理员名字是否冲突
+        if Role.objects.filter(name=new_name, id__in=sub_ids).exists():
+            raise error_codes.CONFLICT_ERROR.format(_("名称[{}]已存在，请修改为其他名称").format(new_name), True)
+
+    def check_subset_manager_auth_scope(self, grade_manager: Role, auth_scopes: List[AuthScopeSystem]):
+        """
+        检查子集管理员的授权范围
+        子集管理员的授权范围必须是分级管理员的子集
+        """
+        scope_checker = RoleAuthorizationScopeChecker(grade_manager)
+
+        for system_scope in auth_scopes:
+            try:
+                scope_checker.check_policies(
+                    system_scope.system_id, [PolicyBean.parse_obj(action) for action in system_scope.actions]
+                )
+            except APIError as e:
+                raise error_codes.VALIDATE_ERROR.format(
+                    _("系统: {} 授权范围校验错误: {}").format(system_scope.system_id, e.message),
+                    replace=True,
+                )
+
+    def check_subset_manager_subject_scope(self, grade_manager: Role, subject_scopes: List[Subject]):
+        """
+        检查子集管理员的人员范围
+        子集管理员的人员范围必须是否分级管理员的子集
+        """
+        scope_checker = RoleSubjectScopeChecker(grade_manager)
+        scope_checker.check(subject_scopes)
+
     def check_member_count(self, role_id: int, new_member_count: int):
         """
         检查分级管理员成员数据
@@ -379,7 +483,7 @@ class RoleCheckBiz:
         member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"]
         if exists_count + new_member_count > member_limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("分级管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
+                _("管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
                     role_id, exists_count, new_member_count, member_limit
                 ),
                 True,
@@ -391,7 +495,7 @@ class RoleCheckBiz:
         Note: 目前subject仅仅支持User
         """
         limit = settings.SUBJECT_AUTHORIZATION_LIMIT["subject_grade_manager_limit"]
-        exists_count = RoleUser.objects.filter(username=subject.id).count()
+        exists_count = RoleUser.objects.filter(username=subject.id, type=RoleType.RATING_MANAGER.value).count()
         if exists_count >= limit:
             raise serializers.ValidationError(_("成员({}): 加入的分级管理员数量已超过最大值 {}").format(subject.id, limit))
 
@@ -547,6 +651,16 @@ class RoleListQuery:
 
         role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
         return Role.objects.filter(type=RoleType.RATING_MANAGER.value, id__in=role_ids).order_by("-updated_time")
+
+    def query_subset_manager(self):
+        """
+        查询子集管理员
+        """
+        if self.role.type == RoleType.RATING_MANAGER.value:
+            sub_ids = RoleRelation.objects.list_subset_id(self.role.id)
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
+
+        return Role.objects.none()
 
 
 class RoleObjectRelationChecker:

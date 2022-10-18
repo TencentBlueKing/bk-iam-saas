@@ -17,13 +17,21 @@ from backend.service.constants import PermissionCodeEnum, RoleType
 from backend.util.enum import ChoicesEnum
 
 # 角色默认权限
-DEFAULT_ROLE_PERMISSIONS = {
-    RoleType.SUPER_MANAGER.value: [p.value for p in PermissionCodeEnum],
+DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
+    RoleType.SUPER_MANAGER.value: [
+        p.value
+        for p in PermissionCodeEnum
+        if p.value
+        not in (
+            PermissionCodeEnum.CREATE_SUBSET_MANAGER.value,
+            PermissionCodeEnum.MANAGE_SUBSET_MANAGER.value,
+            PermissionCodeEnum.TRANSFER_GROUP_BY_RATING_MANAGER.value,
+        )
+    ],
     RoleType.SYSTEM_MANAGER.value: [
         PermissionCodeEnum.MANAGE_GROUP.value,
         PermissionCodeEnum.MANAGE_TEMPLATE.value,
         PermissionCodeEnum.CREATE_RATING_MANAGER.value,
-        PermissionCodeEnum.MANAGE_RATING_MANAGER_MEMBER.value,
         PermissionCodeEnum.AUDIT.value,
         PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value,
         PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value,
@@ -33,7 +41,15 @@ DEFAULT_ROLE_PERMISSIONS = {
     RoleType.RATING_MANAGER.value: [
         PermissionCodeEnum.MANAGE_GROUP.value,
         PermissionCodeEnum.MANAGE_TEMPLATE.value,
-        PermissionCodeEnum.MANAGE_RATING_MANAGER_MEMBER.value,
+        PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value,
+        PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
+        PermissionCodeEnum.CREATE_SUBSET_MANAGER.value,
+        PermissionCodeEnum.MANAGE_SUBSET_MANAGER.value,
+        PermissionCodeEnum.TRANSFER_GROUP_BY_RATING_MANAGER.value,
+    ],
+    RoleType.SUBSET_MANAGER.value: [
+        PermissionCodeEnum.MANAGE_GROUP.value,
+        PermissionCodeEnum.MANAGE_TEMPLATE.value,
         PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value,
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
     ],

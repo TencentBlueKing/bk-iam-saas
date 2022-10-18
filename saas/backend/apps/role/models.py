@@ -19,7 +19,7 @@ from backend.service.constants import RoleRelatedObjectType, RoleScopeType, Role
 from backend.util.json import json_dumps
 
 from .constants import DEFAULT_ROLE_PERMISSIONS
-from .managers import RoleRelatedObjectManager, RoleUserManager
+from .managers import RoleRelatedObjectManager, RoleRelationManager, RoleUserManager
 
 
 class Role(BaseModel):
@@ -220,6 +220,24 @@ class RoleRelatedObject(BaseModel):
         indexes = [
             models.Index(fields=["object_id", "object_type"]),
         ]
+
+
+class RoleRelation(BaseModel):
+    """
+    角色关系
+
+    当前只有 分级管理员 -- 子集管理员 的1对多关系
+    """
+
+    role_id = models.IntegerField("角色ID")
+    sub_id = models.IntegerField("子集管理员ID")
+
+    objects = RoleRelationManager()
+
+    class Meta:
+        verbose_name = "角色关系"
+        verbose_name_plural = "角色关系"
+        unique_together = ["role_id", "sub_id"]
 
 
 class RoleCommonAction(BaseModel):
