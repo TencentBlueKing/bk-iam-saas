@@ -136,4 +136,9 @@ export default class Instance {
         });
         return tempList;
     }
+
+    set displayPath (payload) {
+        console.log(payload, '返回最新的display数据');
+        return payload;
+    }
 }

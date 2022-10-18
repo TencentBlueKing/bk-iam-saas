@@ -17,16 +17,22 @@
         </div>
 
         <template v-if="!isHide && !isLoading">
-            <div v-for="(condition, index) in conditionData"
+            <div
+                v-for="(condition, index) in conditionData"
                 :key="index"
-                :class="conditionData.length === 1 ? 'is-one-resource-instance' : ''">
-                <render-order-number v-if="conditionData.length > 1" :number="`${index + 1 }`" />
+                :class="conditionData.length === 1 ? 'is-one-resource-instance' : ''"
+            >
+                <render-order-number v-if="conditionData.length > 1" :number="`${index + 1}`" />
                 <div class="resource-instance-wrapper" :class="conditionData.length > 1 ? 'set-padding' : ''">
                     <render-resource-instance
                         v-if="condition.hasOwnProperty('instance')"
                         :expanded.sync="condition.instanceExpanded"
                         :is-group="handleComputedIsGroup(condition)"
-                        :sub-title="condition.instanceTitle"
+                        :sub-title="
+                            $route.name === 'createUserGroup'
+                                ? getSubTitle(conditionLimitData[index], condition.instance)
+                                : condition.instanceTitle
+                        "
                         :disabled="notLimitValue"
                         mode="edit"
                         :can-delete="condition.instanceCanDelete"
@@ -46,23 +52,27 @@
                                     :limit-value="getLimitInstance(conditionLimitData[index])"
                                     :select-list="curSelectList(index)"
                                     :select-value="curSelectValue(index)"
-                                    @on-tree-select="handlePathSelect(...arguments, index)" />
+                                    @on-tree-select="handlePathSelect(...arguments, index)"
+                                />
                                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
-                                <div class="drag-line"
-                                    :style="dragStyle">
+                                <div class="drag-line" :style="dragStyle">
                                     <img
                                         class="drag-bar"
-                                        src="@/images/drag-icon.svg" alt=""
+                                        src="@/images/drag-icon.svg"
+                                        alt=""
                                         :draggable="false"
-                                        @mousedown="handleDragMouseenter($event)">
+                                        @mousedown="handleDragMouseenter($event)"
+                                    />
                                 </div>
                             </div>
                             <div class="right-layout">
                                 <template v-if="condition.instance && condition.instance.length > 0">
                                     <instance-view
                                         :data="condition.instance"
-                                        @on-delete="handleIntanceDelete(...arguments, index)"
-                                        @on-clear="handleInstanceClearAll(...arguments, index)" />
+                                        :limit-value="getLimitInstance(conditionLimitData[index])"
+                                        @on-delete="handleInstanceDelete(...arguments, index)"
+                                        @on-clear="handleInstanceClearAll(...arguments, index)"
+                                    />
                                 </template>
                                 <template v-else>
                                     <div class="empty-wrapper">
@@ -212,7 +222,9 @@
                 conditionLimitData: [],
                 selectListMap: {},
                 selectValueMap: {},
-                selectionModeMap: {}
+                selectionModeMap: {},
+                isCn: language === 'zh-cn',
+                instanceTitle: ''
             };
         },
         computed: {
@@ -347,13 +359,14 @@
                         this.isHide = true;
                         this.conditionData = [];
                     }
+                    console.log(this.conditionLimitData, this.conditionData, '数据');
                 },
                 deep: true,
                 immediate: true
             },
             notLimitValue (value) {
                 if (value) {
-                    this.conditionData.forEach(item => {
+                    this.conditionData.forEach((item) => {
                         item.isInstanceEmpty = false;
                         item.isAttributeEmpty = false;
                     });
@@ -375,7 +388,34 @@
             };
         },
         methods: {
-            getLimitInstance (payload) {
+            getSubTitle (payload, list) {
+                if (this.$route.name === 'createUserGroup' && list) {
+                    let parentIds = [];
+                    const strList = [];
+                    let displayPathList = [];
+                    payload.instance.forEach((item) => {
+                        parentIds = item.path.map((subItem) => subItem[0].id);
+                    });
+                    list.forEach((item) => {
+                        if (item.displayPath && item.displayPath.length) {
+                            displayPathList = item.displayPath.filter((subItem) => {
+                                if (subItem.parentChain.length) {
+                                    return parentIds.includes(subItem.parentChain[0].id);
+                                }
+                            });
+                            const titles = this.isCn
+                                ? ` ${item.type === 'host' ? displayPathList.length : item.displayPath.length} 个${item.name}`
+                                : ` ${item.type === 'host' ? displayPathList.length : item.displayPath.length} ${item.name}(s)`;
+                            strList.push(titles);
+                        }
+                    });
+                    console.log(strList, displayPathList, parentIds, this.instanceTitle, '标题');
+                    if (strList.length) {
+                        return `${il8n('common', '已选择')} ${strList.join('、')}`;
+                    }
+                }
+            },
+            getLimitInstance (payload, list) {
                 if (payload && payload.instance) {
                     return payload.instance;
                 }
@@ -787,6 +827,10 @@
                 }
                 curPath.splice(childIndex, 1);
                 curPaths.splice(childIndex, 1);
+                this.$set(this.conditionData[index].instance[payloadIndex], childIndex, curPath);
+                this.$set(this.conditionData[index].instance[payloadIndex], childIndex, curPaths);
+                console.log(curPath, 525665);
+                // curPaths.splice(childIndex, 1);
                 if (curInstance.every(item => item.path.length < 1)) {
                     const len = curInstance.length;
                     curInstance.splice(0, len, ...[]);
