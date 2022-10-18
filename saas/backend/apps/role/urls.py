@@ -90,11 +90,11 @@ urlpatterns = [
     path(
         "subset_managers/",
         views.SubsetManagerViewSet.as_view({"get": "list", "post": "create"}),
-        name="role.grade_manager",
+        name="role.subset_manager",
     ),
     path(
         "subset_managers/<int:id>/",
         views.SubsetManagerViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update"}),
-        name="role.grade_manager_detail",
+        name="role.subset_manager_detail",
     ),
 ]
