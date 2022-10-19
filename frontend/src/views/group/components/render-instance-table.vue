@@ -1319,7 +1319,7 @@
                                 }
                             } else {
                                 item.aggregateResourceType.forEach(aggregateResourceItem => {
-                                    if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
+                                    if (`${item.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
                                         item.instances = _.cloneDeep(tempArrgegateData);
                                         this.instanceKey = aggregateResourceItem.id;
                                         this.setNomalInstancesDisplayData(item, this.instanceKey);
