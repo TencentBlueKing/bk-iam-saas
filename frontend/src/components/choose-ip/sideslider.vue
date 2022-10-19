@@ -93,6 +93,10 @@
             defaultList: {
                 type: Array,
                 default: () => []
+            },
+            isSuperManager: {
+                type: Boolean,
+                default: () => true
             }
         },
         data () {
@@ -135,10 +139,10 @@
                     if (value) {
                         this.pageChangeAlertMemo = window.changeAlert;
                         window.changeAlert = 'iamSidesider';
-                        if (this.isHasDefaultData) {
-                            this.setSelectList(this.defaultList);
-                        } else {
+                        if (this.isSuperManager && !this.isHasDefaultData) {
                             this.fetchData(true);
+                        } else {
+                            this.setSelectList(this.defaultList);
                         }
                     } else {
                         window.changeAlert = this.pageChangeAlertMemo;
