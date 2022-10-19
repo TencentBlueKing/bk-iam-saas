@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from functools import wraps
 from typing import List, Set
 
@@ -28,7 +29,7 @@ from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySy
 from backend.apps.template.filters import TemplateFilter
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
-from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.audit.audit import audit_context_setter, log_api_event, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupMemberExpiredAtBean
 from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
@@ -76,6 +77,8 @@ from .serializers import (
     MemberSLZ,
     SearchMemberSLZ,
 )
+
+logger = logging.getLogger("app")
 
 
 def check_readonly_group(operation):
@@ -363,7 +366,8 @@ class GroupsMemberViewSet(GenericViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupsAddMemberSLZ
 
-    biz = GroupBiz()
+    group_biz = GroupBiz()
+    role_biz = RoleBiz()
     group_check_biz = GroupCheckBiz()
 
     @swagger_auto_schema(
@@ -372,7 +376,6 @@ class GroupsMemberViewSet(GenericViewSet):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
     )
-    @view_audit_decorator(GroupMemberCreateAuditProvider)
     def create(self, request, *args, **kwargs):
         serializer = GroupsAddMemberSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -388,17 +391,19 @@ class GroupsMemberViewSet(GenericViewSet):
         # 成员Dict结构转换为Subject结构，并去重
         members = list(set(parse_obj_as(List[Subject], members_data)))
         # 检测成员是否满足管理的授权范围
-        GroupCheckBiz().check_role_subject_scope(request.role, members)
+        self.group_check_biz.check_role_subject_scope(request.role, members)
 
+        role_checker = RoleObjectRelationChecker(request.role)
         groups = self.queryset.filter(id__in=group_ids)
+        exists_role_ids = set()
         for group in groups:
             try:
-                if not RoleObjectRelationChecker(request.role).check_group(group):
+                if not role_checker.check_group(group):
                     self.permission_denied(
                         request, message=f"{request.role.type} role can not access group {group.id}"
                     )
                 # 校验用户组数量是否超限
-                GroupCheckBiz().check_member_count(group.id, len(members))
+                self.group_check_biz.check_member_count(group.id, len(members))
                 # 只读用户组检测
                 readonly = group.readonly
                 if readonly:
@@ -407,14 +412,25 @@ class GroupsMemberViewSet(GenericViewSet):
                         replace=True,
                     )
                 # 添加成员
-                GroupBiz().add_members(group.id, members, expired_at)
+                self.group_biz.add_members(group.id, members, expired_at)
+
+                # 如果是分级管理员在操作, 自动扩张子集管理员的人员授权范围
+                group_role = self.role_biz.get_role_by_group_id(group.id)
+                if group_role.id != request.role.id and group_role.id not in exists_role_ids:
+                    exists_role_ids.add(group_role.id)
+                    self.role_biz.incr_update_subject_scope(group_role, members)
 
             except Exception as e:
                 failed_info.update({group.name: "{}".format(e)})
 
             else:
-                # 写入审计上下文
-                audit_context_setter(group=group, members=[m.dict() for m in members])
+                try:
+                    # 写入审计上下文
+                    audit_context_setter(group=group, members=[m.dict() for m in members])
+                    provider = GroupMemberCreateAuditProvider(request)
+                    log_api_event(request, provider)
+                except Exception:  # pylint: disable=broad-except
+                    logger.exception("save audit event fail")
 
         if not failed_info:
             return Response({}, status=status.HTTP_201_CREATED)
