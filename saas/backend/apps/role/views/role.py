@@ -384,6 +384,7 @@ class SystemManagerMemberView(views.APIView):
         members = serializer.validated_data["members"]
         self.biz.modify_system_manager_members(role_id, members)
 
+        role = Role.objects.filter(id=role_id).first()
         audit_context_setter(role=role)
 
         return Response({})
