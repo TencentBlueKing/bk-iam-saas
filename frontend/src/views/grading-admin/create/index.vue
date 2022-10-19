@@ -142,7 +142,7 @@
             :mask-close="false"
             ext-cls="iam-create-rate-manager-reason-dialog"
             @after-leave="reason = ''">
-            <section class="content-wrapper" style="margin-bottom: 50px">
+            <section class="content-wrapper">
                 <label>
                     {{ $t(`m.common['理由']`) }}
                     <span>*</span>

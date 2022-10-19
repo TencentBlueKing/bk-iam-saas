@@ -28,11 +28,7 @@
                         v-if="condition.hasOwnProperty('instance')"
                         :expanded.sync="condition.instanceExpanded"
                         :is-group="handleComputedIsGroup(condition)"
-                        :sub-title="
-                            $route.name === 'createUserGroup'
-                                ? getSubTitle(conditionLimitData[index], condition.instance)
-                                : condition.instanceTitle
-                        "
+                        :sub-title="condition.instanceTitle"
                         :disabled="notLimitValue"
                         mode="edit"
                         :can-delete="condition.instanceCanDelete"
@@ -69,8 +65,7 @@
                                 <template v-if="condition.instance && condition.instance.length > 0">
                                     <instance-view
                                         :data="condition.instance"
-                                        :limit-value="getLimitInstance(conditionLimitData[index])"
-                                        @on-delete="handleInstanceDelete(...arguments, index)"
+                                        @on-delete="handleIntanceDelete(...arguments, index)"
                                         @on-clear="handleInstanceClearAll(...arguments, index)"
                                     />
                                 </template>
@@ -223,7 +218,6 @@
                 selectListMap: {},
                 selectValueMap: {},
                 selectionModeMap: {},
-                isCn: language === 'zh-cn',
                 instanceTitle: ''
             };
         },
@@ -388,33 +382,6 @@
             };
         },
         methods: {
-            getSubTitle (payload, list) {
-                if (this.$route.name === 'createUserGroup' && list) {
-                    let parentIds = [];
-                    const strList = [];
-                    let displayPathList = [];
-                    payload.instance.forEach((item) => {
-                        parentIds = item.path.map((subItem) => subItem[0].id);
-                    });
-                    list.forEach((item) => {
-                        if (item.displayPath && item.displayPath.length) {
-                            displayPathList = item.displayPath.filter((subItem) => {
-                                if (subItem.parentChain.length) {
-                                    return parentIds.includes(subItem.parentChain[0].id);
-                                }
-                            });
-                            const titles = this.isCn
-                                ? ` ${item.type === 'host' ? displayPathList.length : item.displayPath.length} 个${item.name}`
-                                : ` ${item.type === 'host' ? displayPathList.length : item.displayPath.length} ${item.name}(s)`;
-                            strList.push(titles);
-                        }
-                    });
-                    console.log(strList, displayPathList, parentIds, this.instanceTitle, '标题');
-                    if (strList.length) {
-                        return `${il8n('common', '已选择')} ${strList.join('、')}`;
-                    }
-                }
-            },
             getLimitInstance (payload, list) {
                 if (payload && payload.instance) {
                     return payload.instance;
@@ -827,10 +794,6 @@
                 }
                 curPath.splice(childIndex, 1);
                 curPaths.splice(childIndex, 1);
-                this.$set(this.conditionData[index].instance[payloadIndex], childIndex, curPath);
-                this.$set(this.conditionData[index].instance[payloadIndex], childIndex, curPaths);
-                console.log(curPath, 525665);
-                // curPaths.splice(childIndex, 1);
                 if (curInstance.every(item => item.path.length < 1)) {
                     const len = curInstance.length;
                     curInstance.splice(0, len, ...[]);
