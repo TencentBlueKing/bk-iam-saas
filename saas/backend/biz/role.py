@@ -354,19 +354,56 @@ class RoleBiz:
 
         return auth_system_bean
 
-    def inc_update_auth_scope(self, role_id: int, system_id: str, incr_policies: List[PolicyBean]):
-        """增量更新分级管理员的授权范围
-        Note: 这里没有判断是否已经包含了，而是直接合并添加，比如已有父资源，则增量里有子资源也会添加
-        需要去除包含的，则单独在外层调用RoleAuthorizationScopeChecker进行判断去除，然后提取增量数据后再调用
+    def incr_update_subject_scope(self, role: Role, subjects: List[Subject]):
         """
-        # 增量数据为空，无需更新
-        if len(incr_policies) == 0:
-            return
-        # 转为PolicyList，便于进行数据合并操作
-        incr_policy_list = PolicyBeanList(system_id=system_id, policies=incr_policies, need_fill_empty_fields=True)
+        增量更新管理员的人员授权范围
+        """
 
+        # 1. 对比超出管理员范围的部分subjects
+        checker = RoleSubjectScopeChecker(role)
+        incr_subjects = checker.check(subjects, raise_exception=False)
+        if not incr_subjects:
+            return
+
+        # 2. 把这部分subjects添加到管理员的管理范围
+        subjects = self.list_subject_scope(role.id)
+        subjects.extend(incr_subjects)
+        self.svc.update_role_subject_scope(role.id, subjects)
+
+    def incr_update_auth_scope(self, role: Role, incr_scopes: List[AuthScopeSystem]):
+        """
+        增量更新管理员的授权范围
+        """
         # 查询已有的可授权范围
-        auth_scopes = self.svc.list_auth_scope(role_id)
+        auth_scopes = self.svc.list_auth_scope(role.id)
+        need_update = False  # 是否需要更新
+
+        checker = RoleAuthorizationScopeChecker(role)
+        for scope in incr_scopes:
+            # 比对出需要扩大的授权范围
+            need_added_policies = checker.list_not_match_policy(
+                scope.system_id, parse_obj_as(List[PolicyBean], scope.actions)
+            )
+            if not need_added_policies:
+                continue
+
+            need_update = True
+            # 合并需要扩大的授权范围
+            self._merge_auth_scope(auth_scopes, scope.system_id, need_added_policies)
+
+        # 不需要变更
+        if not need_update:
+            return
+
+        # 变更可授权的权限范围
+        self.svc.update_role_auth_scope(role.id, auth_scopes)
+
+    def _merge_auth_scope(self, auth_scopes: List[AuthScopeSystem], system_id: str, policies: List[PolicyBean]):
+        """
+        合并授权范围
+        """
+        # 转为PolicyList，便于进行数据合并操作
+        policy_list = PolicyBeanList(system_id=system_id, policies=policies, need_fill_empty_fields=True)
 
         # 遍历，查找需要修改的数据和对应位置
         need_modified_policy_list = PolicyBeanList(system_id=system_id, policies=[])
@@ -380,7 +417,7 @@ class RoleBiz:
                 break
 
         # 合并增量数据
-        need_modified_policy_list.add(incr_policy_list)
+        need_modified_policy_list.add(policy_list)
 
         # 修改已有的可授权范围
         new_auth_scope = AuthScopeSystem(
@@ -390,9 +427,6 @@ class RoleBiz:
             auth_scopes.append(new_auth_scope)
         else:
             auth_scopes[index] = new_auth_scope
-
-        # 变更可授权的权限范围
-        self.svc.update_role_auth_scope(role_id, auth_scopes)
 
     def get_common_action_by_name(self, system_id: str, name: str) -> Optional[CommonAction]:
         common_actions = self.list_system_common_actions(system_id)
@@ -592,6 +626,16 @@ class RoleListQuery:
         return Group.objects.filter(id__in=group_ids)
 
     def _get_role_related_object_ids(self, object_type: str) -> List[int]:
+        # 分级管理员可以管理子集管理员的所有用户组
+        if self.role.type == RoleType.RATING_MANAGER.value and object_type == RoleRelatedObjectType.GROUP.value:
+            role_ids = RoleRelation.objects.list_subset_id(self.role.id)
+            role_ids.append(self.role.id)
+            return list(
+                RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type=object_type).values_list(
+                    "object_id", flat=True
+                )
+            )
+
         if self.role.type != RoleType.STAFF.value:
             return list(
                 RoleRelatedObject.objects.filter(role_id=self.role.id, object_type=object_type).values_list(

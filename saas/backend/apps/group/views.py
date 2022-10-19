@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from functools import wraps
-from typing import List
+from typing import List, Set
 
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
@@ -25,12 +25,14 @@ from backend.apps.application.serializers import ConditionCompareSLZ, ConditionT
 from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
-from backend.apps.template.models import PermTemplatePolicyAuthorized
+from backend.apps.template.filters import TemplateFilter
+from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
+from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupMemberExpiredAtBean
 from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
-from backend.biz.role import RoleBiz, RoleListQuery, RoleObjectRelationChecker
+from backend.biz.role import AuthScopeAction, AuthScopeSystem, RoleBiz, RoleListQuery, RoleObjectRelationChecker
 from backend.biz.template import TemplateBiz
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
@@ -262,7 +264,8 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
     queryset = Group.objects.all()
     lookup_field = "id"
 
-    biz = GroupBiz()
+    group_biz = GroupBiz()
+    role_biz = RoleBiz()
     group_check_biz = GroupCheckBiz()
 
     @swagger_auto_schema(
@@ -284,7 +287,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
             slz.is_valid(raise_exception=True)
             keyword = slz.validated_data["keyword"].lower()
 
-            group_members = self.biz.search_member_by_keyword(group.id, keyword)
+            group_members = self.group_biz.search_member_by_keyword(group.id, keyword)
 
             return Response({"results": [one.dict() for one in group_members]})
 
@@ -292,7 +295,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         limit = pagination.get_limit(request)
         offset = pagination.get_offset(request)
 
-        count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
+        count, group_members = self.group_biz.list_paging_group_member(group.id, limit, offset)
         return Response({"count": count, "results": [one.dict() for one in group_members]})
 
     @swagger_auto_schema(
@@ -319,8 +322,13 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         self.group_check_biz.check_role_subject_scope(request.role, members)
         self.group_check_biz.check_member_count(group.id, len(members))
 
+        # 如果是分级管理员在操作子集管理员的成员, 需要同步更新子集管理员的授权范围
+        group_role = self.role_biz.get_role_by_group_id(group.id)
+        if group_role.id != request.role.id:
+            self.role_biz.incr_update_subject_scope(group_role, members)
+
         # 添加成员
-        self.biz.add_members(group.id, members, expired_at)
+        self.group_biz.add_members(group.id, members, expired_at)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=[m.dict() for m in members])
@@ -342,7 +350,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         group = self.get_object()
         data = serializer.validated_data
 
-        self.biz.remove_members(str(group.id), parse_obj_as(List[Subject], data["members"]))
+        self.group_biz.remove_members(str(group.id), parse_obj_as(List[Subject], data["members"]))
 
         # 写入审计上下文
         audit_context_setter(group=group, members=data["members"])
@@ -505,6 +513,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
     group_biz = GroupBiz()
+    role_biz = RoleBiz()
 
     group_trans = GroupTrans()
 
@@ -525,6 +534,19 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
 
         templates = self.group_trans.from_group_grant_data(data["templates"])
         self.group_biz.grant(request.role, group, templates)
+
+        # 如果是分级管理员在操作子集管理员的用户组授权, 需要同步更新子集管理员的授权范围
+        group_role = self.role_biz.get_role_by_group_id(group.id)
+        if group_role.id != request.role.id:
+            self.role_biz.incr_update_auth_scope(
+                group_role,
+                [
+                    AuthScopeSystem(
+                        system_id=template.system_id, actions=parse_obj_as(List[AuthScopeAction], template.policies)
+                    )
+                    for template in templates
+                ],
+            )
 
         # 写入审计上下文
         audit_context_setter(
@@ -749,3 +771,59 @@ class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet
         )
 
         return Response([c.dict() for c in conditions])
+
+
+class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
+    """
+    用户组对应的角色的模板列表
+    """
+
+    lookup_field = "id"
+    queryset = PermTemplate.objects.all()
+    serializer_class = TemplateListSLZ
+    filterset_class = TemplateFilter
+
+    role_biz = RoleBiz()
+
+    @swagger_auto_schema(
+        operation_description="用户组对应的角色的模板列表",
+        responses={status.HTTP_200_OK: TemplateListSchemaSLZ(label="模板", many=True)},
+        tags=["group"],
+    )
+    def list(self, request, *args, **kwargs):
+        group = self.get_object()  # 查询一下判断当前登录的角色是否能查询该用户组的模板信息
+        group_id = group.id
+
+        # 查询用户组对应的role
+        role = self.role_biz.get_role_by_group_id(group_id)
+
+        # 查询筛选角色对应的模板列表
+        queryset = self.filter_queryset(RoleListQuery(role, request.user).query_template())
+
+        # 查询role的system-actions set
+        role_system_actions = RoleListQuery(role).get_scope_system_actions()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            # 查询模板中对group_id中有授权的
+            exists_template_set = self._query_group_exists_template_set(group_id, page)
+            serializer = TemplateListSLZ(
+                page, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
+            )
+            return self.get_paginated_response(serializer.data)
+
+        # 查询模板中对group_id中有授权的
+        exists_template_set = self._query_group_exists_template_set(group_id, queryset)
+        serializer = TemplateListSLZ(
+            queryset, many=True, authorized_template=exists_template_set, role_system_actions=role_system_actions
+        )
+        return Response(serializer.data)
+
+    def _query_group_exists_template_set(self, group_id: str, queryset) -> Set[int]:
+        """
+        查询group已授权的模板集合
+        """
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        exists_template_ids = PermTemplatePolicyAuthorized.objects.query_exists_template_auth(
+            subject, [one.id for one in queryset]
+        )
+        return set(exists_template_ids)

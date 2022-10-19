@@ -268,7 +268,7 @@ class RoleService:
 
             # 可授权的人员范围
             if "subject_scopes" in update_fields:
-                self._update_role_subject_scope(role.id, info.subject_scopes)
+                self.update_role_subject_scope(role.id, info.subject_scopes)
 
     def _update_members(self, role: Role, members: List[str], need_sync_backend_role: bool = False):
         """更新Role成员"""
@@ -316,7 +316,7 @@ class RoleService:
             content=json_dumps([system.dict() for system in systems])
         )
 
-    def _update_role_subject_scope(self, role_id: int, subjects: List[Subject]):
+    def update_role_subject_scope(self, role_id: int, subjects: List[Subject]):
         """更新Role可授权的人员范围"""
         # 1. 修改授权对象的限制范围
         RoleScope.objects.filter(role_id=role_id, type=RoleScopeType.SUBJECT.value).update(
