@@ -203,7 +203,7 @@ class RoleService:
         """
         with transaction.atomic():
             role = self.create(info, creator)
-            RoleRelation.objects.create(role_id=grade_manager.id, sub_id=role.id)
+            RoleRelation.objects.create(parent_id=grade_manager.id, role_id=role.id)
 
         return role
 

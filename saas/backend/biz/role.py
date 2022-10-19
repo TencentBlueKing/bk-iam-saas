@@ -54,8 +54,6 @@ from backend.service.models import Attribute, Subject, System
 from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService, UserRole
 from backend.service.system import SystemService
 
-from .constants import UserRoleStatus
-
 logger = logging.getLogger("app")
 
 
@@ -64,7 +62,7 @@ class RoleInfoBean(RoleInfo):
 
 
 class UserRoleNode(UserRole):
-    status: str = UserRoleStatus.IN.value
+    is_member: bool = True
     sub_roles: List["UserRoleNode"] = []
 
 
@@ -154,8 +152,8 @@ class RoleBiz:
         if not subset_manager_dict:
             return tree
 
-        relations = RoleRelation.objects.filter(sub_id__in=list(subset_manager_dict.keys()))
-        relation_dict = {r.sub_id: r.role_id for r in relations}
+        relations = RoleRelation.objects.filter(role_id__in=list(subset_manager_dict.keys()))
+        relation_dict = {r.role_id: r.parent_id for r in relations}
 
         # 查询子集管理员所属的分级管理员, 不包含用户已加入的分级管理员
         out_roles = Role.objects.filter(id__in=[id for id in relation_dict.values() if id not in grade_manager_dict])
@@ -166,14 +164,14 @@ class RoleBiz:
                 name=role.name,
                 name_en=role.name_en,
                 description=role.description,
-                status=UserRoleStatus.OUT.value,
+                is_member=False,
             )
 
             tree.append(node)
             grade_manager_dict[node.id] = node
 
-        for sub_id, role_id in relation_dict.items():
-            grade_manager_dict[role_id].sub_roles.append(subset_manager_dict[sub_id])
+        for role_id, parent_id in relation_dict.items():
+            grade_manager_dict[parent_id].sub_roles.append(subset_manager_dict[role_id])
 
         return tree
 
@@ -443,7 +441,7 @@ class RoleCheckBiz:
             return
 
         # 查询分级管理员已有的子集管理员id
-        sub_ids = RoleRelation.objects.list_subset_id(grade_manager.id)
+        sub_ids = RoleRelation.objects.list_sub_id(grade_manager.id)
 
         # 检查对应的子集管理员名字是否冲突
         if Role.objects.filter(name=new_name, id__in=sub_ids).exists():
@@ -483,7 +481,7 @@ class RoleCheckBiz:
         member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"]
         if exists_count + new_member_count > member_limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
+                _("分级管理员或子集管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
                     role_id, exists_count, new_member_count, member_limit
                 ),
                 True,
@@ -657,7 +655,7 @@ class RoleListQuery:
         查询子集管理员
         """
         if self.role.type == RoleType.RATING_MANAGER.value:
-            sub_ids = RoleRelation.objects.list_subset_id(self.role.id)
+            sub_ids = RoleRelation.objects.list_sub_id(self.role.id)
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
 
         return Role.objects.none()
