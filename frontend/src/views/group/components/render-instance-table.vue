@@ -178,6 +178,7 @@
         <render-aggregate-sideslider
             :show.sync="isShowAggregateSideslider"
             :params="aggregateResourceParams"
+            :is-super-manager="isSuperManager"
             :value="aggregateValue"
             :default-list="defaultSelectList"
             @on-selected="handlerSelectAggregateRes" />
@@ -334,6 +335,9 @@
         },
         computed: {
             ...mapGetters(['user']),
+            isSuperManager () {
+                return this.user.role.type === 'super_manager';
+            },
             sliderWidth () {
                 return this.mode === 'detail' ? 890 : 725;
             },
