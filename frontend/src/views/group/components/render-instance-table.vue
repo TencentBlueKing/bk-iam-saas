@@ -759,7 +759,9 @@
                         });
                     } else {
                         item.aggregateResourceType.forEach(aggregateResourceItem => {
-                            if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey && this.curCopyDataId !== item.aggregationId) {
+                            const systemId = this.isSuperManager
+                                ? aggregateResourceItem.system_id : item.system_id;
+                            if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey && this.curCopyDataId !== item.aggregationId) {
                                 if (Object.keys(item.instancesDisplayData).length) {
                                     item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempArrgegateData);
                                     item.instances = this.setInstanceData(item.instancesDisplayData);
@@ -1319,7 +1321,9 @@
                                 }
                             } else {
                                 item.aggregateResourceType.forEach(aggregateResourceItem => {
-                                    if (`${item.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
+                                    const systemId = this.isSuperManager
+                                        ? aggregateResourceItem.system_id : item.system_id;
+                                    if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {
                                         item.instances = _.cloneDeep(tempArrgegateData);
                                         this.instanceKey = aggregateResourceItem.id;
                                         this.setNomalInstancesDisplayData(item, this.instanceKey);
