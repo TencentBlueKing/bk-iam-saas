@@ -17,63 +17,63 @@ urlpatterns = [
     path(
         "grade_managers/",
         views.ManagementGradeManagerViewSet.as_view({"get": "list", "post": "create"}),
-        name="open.management.grade_manager",
+        name="open.management.v1.grade_manager",
     ),
     path(
         "grade_managers/<int:id>/",
         views.ManagementGradeManagerViewSet.as_view({"put": "update"}),
-        name="open.management.grade_manager",
+        name="open.management.v1.grade_manager",
     ),
     # 分级管理员成员
     path(
         "grade_managers/<int:id>/members/",
         views.ManagementGradeManagerMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
-        name="open.management.grade_manager_member",
+        name="open.management.v1.grade_manager_member",
     ),
     # 用户组
     path(
         "grade_managers/<int:id>/groups/",
         views.ManagementGradeManagerGroupViewSet.as_view({"get": "list", "post": "create"}),
-        name="open.management.grade_manager_group",
+        name="open.management.v1.grade_manager_group",
     ),
     path(
         "groups/<int:id>/",
         views.ManagementGroupViewSet.as_view({"put": "update", "delete": "destroy"}),
-        name="open.management.group",
+        name="open.management.v1.group",
     ),
     # 用户组成员
     path(
         "groups/<int:id>/members/",
         views.ManagementGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
-        name="open.management.group_member",
+        name="open.management.v1.group_member",
     ),
     # 用户组自定义权限
     path(
         "groups/<int:id>/policies/",
         views.ManagementGroupPolicyViewSet.as_view({"post": "create", "delete": "destroy"}),
-        name="open.management.group_policy",
+        name="open.management.v1.group_policy",
     ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
     path(
         "groups/<int:id>/actions/policies/",
         views.ManagementGroupActionPolicyViewSet.as_view({"delete": "destroy"}),
-        name="open.management.group_action",
+        name="open.management.v1.group_action",
     ),
     # 用户
     path(
         "users/grade_managers/",
         views.ManagementUserGradeManagerViewSet.as_view({"get": "list"}),
-        name="open.management.user_grade_manager",
+        name="open.management.v1.user_grade_manager",
     ),
     path(
         "users/grade_managers/<int:id>/groups/",
         views.ManagementUserGradeManagerGroupViewSet.as_view({"get": "list"}),
-        name="open.management.user_grade_manager_group",
+        name="open.management.v1.user_grade_manager_group",
     ),
     # 用户组申请单
     path(
         "groups/applications/",
         views.ManagementGroupApplicationViewSet.as_view({"post": "create"}),
-        name="open.management.group_application",
+        name="open.management.v1.group_application",
     ),
 ]

@@ -176,6 +176,9 @@ class RelatedPolicyBiz:
 
             rrt_conditions.append(conditions)
 
+        if len(rrt_conditions) == 0:
+            return None
+
         # policy只关联了一个资源类型
         if len(rrt_conditions) == 1:
             return RelatedResourceBean(system_id=action_rrt.system_id, type=action_rrt.id, condition=rrt_conditions[0])

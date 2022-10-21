@@ -8,17 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import LowerStrEnum, auto
+from django.conf.urls import include, url
 
-DELETE_POLICY_PUB_SUB_KEY = "bk_iam:deleted_policy"
-DELETE_POLICY_REDIS_LIST_MAX_LENGTH = 10000
-
-
-# 枚举策略删除时的方式：用策略ID删除、直接删除Subject导致策略删除
-class DeletePolicyTypeEnum(LowerStrEnum):
-    # 删除策略
-    POLICY = auto()
-    # 删除Subject
-    SUBJECT = auto()
-    # 删除Subject的权限模板
-    SUBJECT_TEMPLATE = auto()
+urlpatterns = [
+    # 管理类API - 对于V2 API，所有管理类API都默认在系统下
+    url(r"^management/systems/(?P<system_id>\w+)/", include("backend.api.management.v2.urls")),
+]

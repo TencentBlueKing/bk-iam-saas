@@ -9,13 +9,14 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import namedtuple
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from pydantic import BaseModel, Field
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.temporary_policy.models import TemporaryPolicy
-from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID
+from backend.common.time import PERMANENT_SECONDS
+from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, AbacPolicyChangeType, AuthTypeEnum
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
@@ -75,6 +76,23 @@ class PathNodeList(ListModel):
             return PathNodeList(__root__=[self.__root__[-1]])
 
         return self
+
+    def get_last_node_without_any(self):
+        """获取路径里最后一个非任意的节点"""
+        if len(self.__root__) >= 2 and self.__root__[-1].id == ANY_ID:
+            return self.__root__[-2]
+
+        assert len(self.__root__) >= 1
+        assert self.__root__[-1].id != ANY_ID
+
+        return self.__root__[-1]
+
+    def is_all_ignore_path_of_matched_selection(self) -> bool:
+        """所有匹配到的实例视图是否都为忽略路径"""
+        # FIXME: 对每条路径都进行实例视图匹配，只有所有匹配到的实例视图都是忽略路径的，则可转换为ABAC策略
+        # NOTE: 第一期由于限制了当Action的AuthType为rbac时，其所有实例视图只能是ignore_path=True，
+        # 所以这里可以直接认为只能是RBAC策略，暂时不进行实例视图匹配的分析
+        return True
 
 
 class Instance(BaseModel):
@@ -211,9 +229,15 @@ class ResourceGroupList(ListModel):
 
 class Policy(BaseModel):
     action_id: str = Field(alias="id")
+    # Note: 这里的PolicyID指的是SaaS的PolicyID，并非Backend PolicyID
     policy_id: int
+    # Backend Policy只会在调用后台时使用到，Service层以上不应该使用
+    # 对于纯RBAC策略，不存在Backend PolicyID，则默认为0
+    backend_policy_id: int = 0
     expired_at: int
     resource_groups: ResourceGroupList
+
+    auth_type: str = AuthTypeEnum.ABAC.value
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
@@ -252,12 +276,21 @@ class Policy(BaseModel):
             # NOTE: 固定resource_group_id, 方便删除逻辑
             resource_groups = [ResourceGroup(id=DEAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
 
-        return cls(
+        obj = cls(
             action_id=policy.action_id,
-            policy_id=policy.policy_id,
+            policy_id=policy.id,
             expired_at=expired_at,
             resource_groups=ResourceGroupList.parse_obj(resource_groups),
         )
+
+        if isinstance(policy, PolicyModel):
+            obj.auth_type = policy.auth_type
+
+        if isinstance(policy, TemporaryPolicy):
+            # 对于临时权限，其与后台策略是一一对应的，可直接使用SaaS上保存的后台PolicyID
+            obj.backend_policy_id = policy.policy_id
+
+        return obj
 
     def to_db_model(
         self, system_id: str, subject: Subject, model: Union[Type[PolicyModel], Type[TemporaryPolicy]] = PolicyModel
@@ -271,6 +304,9 @@ class Policy(BaseModel):
         )
         p.resources = self.resource_groups.dict()
 
+        if isinstance(p, PolicyModel):
+            p.auth_type = self.auth_type
+
         if isinstance(p, TemporaryPolicy):
             p.expired_at = self.expired_at
 
@@ -283,7 +319,7 @@ class Policy(BaseModel):
             "resource_expression": translator.translate(system_id, self.resource_groups.dict()),
             "environment": "{}",
             "expired_at": self.expired_at,
-            "id": self.policy_id,
+            "id": self.backend_policy_id,
         }
 
     def list_thin_resource_type(self) -> List[ThinResourceType]:
@@ -312,6 +348,226 @@ class SystemCounter(BaseModel):
     count: int
 
 
-class PolicyIDExpiredAt(BaseModel):
-    id: int
-    expired_at: int
+class AbacPolicyChangeContent(BaseModel):
+    change_type: AbacPolicyChangeType = AbacPolicyChangeType.NONE.value
+    id: int = 0
+    resource_expression: str = ""
+    environment: str = ""
+    expired_at = PERMANENT_SECONDS
+
+
+class RbacPolicyChangeContent(BaseModel):
+    created: List[PathNode] = []
+    deleted: List[PathNode] = []
+
+
+class UniversalPolicyChangedContent(BaseModel):
+    action_id: str
+    # 策略变更后的策略类型
+    auth_type: str = AuthTypeEnum.ABAC.value
+    # ABAC策略变更
+    abac: Optional[AbacPolicyChangeContent]
+    # RBAC策略变更
+    rbac: Optional[RbacPolicyChangeContent]
+
+
+class UniversalPolicy(Policy):
+    """
+    通用Policy，支持处理RBAC和ABAC策略，原Policy只支持处理ABAC
+    """
+
+    expression_resource_groups: ResourceGroupList = ResourceGroupList(__root__=[])
+    instances: List[PathNode] = []
+
+    @classmethod
+    def from_policy(cls, policy: Policy, action_auth_type: str) -> "UniversalPolicy":
+        p = cls(
+            action_id=policy.action_id,
+            policy_id=policy.policy_id,
+            backend_policy_id=policy.backend_policy_id,
+            expired_at=policy.expired_at,
+            resource_groups=policy.resource_groups,
+        )
+        # 主要是初始化expression_resource_groups、instances、auth_type 这3个与RBAC和ABAC相关的数据
+        p._init_abac_and_rbac_data(policy.resource_groups, action_auth_type)
+        return p
+
+    @staticmethod
+    def _is_absolute_abac(resource_groups: ResourceGroupList, action_auth_type: str) -> bool:
+        """
+        对于策略，某些情况下可以立马判断为ABAC策略
+        """
+        # 0. Action在模型注册时是否表示支持RBAC，如果不支持则保持原有ABAC
+        if action_auth_type == AuthTypeEnum.ABAC.value:
+            return True
+
+        # TODO: 写单元测试时，顺便添加一些debug日志, 排查问题时能精确知道在哪个分支被return, 降低成本
+        resource_group_count = len(resource_groups)
+        # 1. 与资源实例无关
+        # Note: 对于有关联资源实例的权限，resource_groups有数据，即使是任意，其也是有一个resource_group，且resource_group里Condition为空列表
+        if resource_group_count == 0:
+            return True
+
+        # 2. 关联多种资源类型
+        # Note: 对于只关联一种资源类型的情况，多个resource_group一定会被合并为一个resource_group
+        #  所以这里多个resource_group，则一定是关联了多种资源类型
+        if resource_group_count > 1:
+            return True
+
+        # 3. 只有一组的情况，进一步判断
+        resource_group = resource_groups[0]
+        # 3.1 关联多个资源类型
+        related_resource_type_count = len(resource_group.related_resource_types)
+        if related_resource_type_count != 1:
+            return True
+
+        # 只有一组，且只关联一种资源类型，进一步判断
+        # 3.2 包含环境属性
+        if resource_group.environments:
+            return True
+
+        # 3.3 Any策略
+        rrt = resource_group.related_resource_types[0]
+        if len(rrt.condition) == 0:
+            return True
+
+        return False
+
+    @staticmethod
+    def _parse_abac_and_rbac(rrt: RelatedResource) -> Tuple[ResourceGroupList, List[PathNode]]:
+        """将关联的资源类型的权限进行拆分，并设置在对应rbac和abac数据里"""
+
+        abac_conditions = []  # 存储ABAC策略数据
+        rbac_instances = []  # 存储RBAC策略数据
+
+        # 遍历原始策略的每个Condition，将ABAC策略和RBAC策略数据拆分出来
+        for c in rrt.condition:
+            # 包含属性，则只能是ABAC策略
+            if not c.has_no_attributes():
+                abac_conditions.append(c)
+                continue
+
+            # 接下来分析只包含资源实例范围的情况
+            abac_instances: List[Instance] = []
+            for inst in c.instances:
+                # 无法命中RBAC策略规则的路径
+                abac_paths = []
+                for path in inst.path:
+                    if not path.is_all_ignore_path_of_matched_selection():
+                        abac_paths.append(path)
+                        continue
+                    # 只添加最后一个节点，其他忽略
+                    rbac_instances.append(path.get_last_node_without_any())
+
+                # 存在abac路径，则需要对应实例
+                if len(abac_paths) > 0:
+                    abac_instances.append(Instance(type=inst.type, path=abac_paths))
+
+            # 存在abac实例，则构造对应Condition
+            if len(abac_instances) > 0:
+                abac_conditions.append(Condition(instances=abac_instances, attributes=[]))
+
+        # 如果拆分后，存储ABAC策略的Condition有数据，则构造ABAC策略数据结构
+        expression_resource_groups = ResourceGroupList(__root__=[])
+        if len(abac_conditions) > 0:
+            expression_resource_groups = ResourceGroupList(
+                __root__=[
+                    ResourceGroup(
+                        related_resource_types=[
+                            RelatedResource(system_id=rrt.system_id, type=rrt.type, condition=abac_conditions)
+                        ]
+                    )
+                ]
+            )
+
+        return expression_resource_groups, list(set(rbac_instances))
+
+    @staticmethod
+    def _calculate_auth_type(has_abac: bool, has_rbac: bool) -> str:
+        """计算auth_type"""
+        # 1 abac和rbac都有
+        if has_abac and has_rbac:
+            return AuthTypeEnum.ALL.value
+
+        # 2 有abac，无rbac
+        if has_abac and not has_rbac:
+            return AuthTypeEnum.ABAC.value
+
+        # 3 无abac，有rbac
+        if not has_abac and has_rbac:
+            return AuthTypeEnum.RBAC.value
+
+        return AuthTypeEnum.NONE.value
+
+    def _init_abac_and_rbac_data(self, resource_groups: ResourceGroupList, action_auth_type: str):
+        """
+        拆分出RBAC和ABAC权限
+        并填充到expression_resource_groups和instances_resource_groups字段里
+        同时计算出策略类型auth_type
+        """
+        # 1. 绝对是ABAC策略的情况，则无需进行策略的分析拆分
+        if self._is_absolute_abac(resource_groups, action_auth_type):
+            self.expression_resource_groups = resource_groups
+            return
+
+        # 2. 分析拆分出RBAC和ABAC策略并设置
+        # Note: 由于_is_absolute_abac方法里已经判断了多组和空组的情况为abac策略，提前返回了，所以下面只分析一组且只关联一种资源类型的情况
+        rrt = resource_groups[0].related_resource_types[0]
+        expression_resource_groups, instances = self._parse_abac_and_rbac(rrt)
+        # 根据解析出的rabc和abac策略数据进行设置
+        self.expression_resource_groups = expression_resource_groups
+        self.instances = instances
+
+        # 3. 计算出策略类型auth_type并设置
+        has_abac = len(expression_resource_groups) > 0
+        has_rbac = len(instances) > 0
+        auth_type = self._calculate_auth_type(has_abac, has_rbac)
+        self.auth_type = auth_type
+
+    def calculate_pre_changed_content(self, system_id: str, old: "UniversalPolicy") -> UniversalPolicyChangedContent:
+        """
+        用于策略变化时，预先计算出策略要变化的abac和rbac内容
+        """
+        policy_changed_content = UniversalPolicyChangedContent(action_id=self.action_id, auth_type=self.auth_type)
+
+        # ABAC
+        # 新老策略都有ABAC策略，则最终是使用新策略直接覆盖
+        if self.has_abac() and old.has_abac():
+            policy_changed_content.abac = AbacPolicyChangeContent(
+                change_type=AbacPolicyChangeType.UPDATED.value,
+                id=old.backend_policy_id,
+                resource_expression=self.to_resource_expression(system_id),
+            )
+        # 新策略无ABAC策略，但老策略有ABAC策略，则需要将老的ABAC策略删除
+        elif not self.has_abac() and old.has_abac():
+            policy_changed_content.abac = AbacPolicyChangeContent(
+                change_type=AbacPolicyChangeType.DELETED.value,
+                id=old.backend_policy_id,
+            )
+        # 新策略有ABAC策略，但老策略无ABAC策略，则需要创建ABAC策略
+        elif self.has_abac() and not old.has_abac():
+            policy_changed_content.abac = AbacPolicyChangeContent(
+                change_type=AbacPolicyChangeType.CREATED.value,
+                resource_expression=self.to_resource_expression(system_id),
+            )
+
+        # RBAC
+        # TODO：需要策略1万个实例的情况下的性能
+        created_instances = list(set(self.instances) - set(old.instances))
+        deleted_instances = list(set(old.instances) - set(self.instances))
+        if created_instances or deleted_instances:
+            policy_changed_content.rbac = RbacPolicyChangeContent(created=created_instances, deleted=deleted_instances)
+
+        return policy_changed_content
+
+    def to_resource_expression(self, system_id: str) -> str:
+        """将ABAC权限翻译为后台所需表达式"""
+        assert len(self.expression_resource_groups) > 0
+        translator = ResourceExpressionTranslator()
+        return translator.translate(system_id, self.expression_resource_groups.dict())
+
+    def has_abac(self) -> bool:
+        return len(self.expression_resource_groups) > 0
+
+    def has_rbac(self) -> bool:
+        return len(self.instances) > 0

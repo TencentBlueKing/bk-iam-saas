@@ -384,6 +384,7 @@ class SystemManagerMemberView(views.APIView):
         members = serializer.validated_data["members"]
         self.biz.modify_system_manager_members(role_id, members)
 
+        role = Role.objects.filter(id=role_id).first()
         audit_context_setter(role=role)
 
         return Response({})
@@ -630,7 +631,7 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
             self.group_biz.update_members_expired_at(
                 int(group_id),
                 [
-                    GroupMemberExpiredAtBean(type=m["type"], id=m["id"], policy_expired_at=m["expired_at"])
+                    GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=m["expired_at"])
                     for m in per_members
                 ],
             )

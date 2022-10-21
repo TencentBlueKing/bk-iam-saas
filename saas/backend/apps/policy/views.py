@@ -143,8 +143,7 @@ class PolicyViewSet(GenericViewSet):
 
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
-        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         update_policy = self.policy_operation_biz.delete_partial(
             system_id,
             subject,
@@ -178,8 +177,7 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
         resource_group_id = kwargs["resource_group_id"]
         subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
 
-        # 为避免需要忽略的变量与国际化翻译变量"_"冲突，所以使用"__"
-        system_id, __ = self.policy_query_biz.get_system_policy(subject, policy_id)
+        system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         # 删除权限
         update_policy = self.policy_operation_biz.delete_by_resource_group_id(
             system_id, subject, policy_id, resource_group_id

@@ -18,8 +18,9 @@ from .cache import Cache, CacheEnum, CacheKeyPrefixEnum
 class LockTypeEnum(LowerStrEnum):
     PERMISSION_HANDOVER = auto()  # 权限交接
     ORGANIZATION_SYNC = auto()  # 组织同步
-    POLICY_ALETER = auto()  # 权限变更
+    POLICY_ALTER = auto()  # 权限变更
     LONG_TASK_CREATE = auto()  # 长时任务创建
+    INIT_GRADE_MANAGER = auto()
 
 
 class RedisLock:
@@ -66,9 +67,14 @@ def gen_organization_sync_lock() -> RedisLock:
     return RedisLock(LockTypeEnum.ORGANIZATION_SYNC.value, timeout=10)
 
 
-def gen_policy_alert_lock(key: str) -> RedisLock:
-    return RedisLock(LockTypeEnum.POLICY_ALETER.value, suffix=key, timeout=10)
+def gen_policy_alter_lock(template_id: int, system_id: str, subject_type: str, subject_id: str) -> RedisLock:
+    key = f"{template_id}:{system_id}:{subject_type}:{subject_id}"
+    return RedisLock(LockTypeEnum.POLICY_ALTER.value, suffix=key, timeout=10)
 
 
 def gen_long_task_create_lock(key: str) -> RedisLock:
     return RedisLock(LockTypeEnum.LONG_TASK_CREATE.value, suffix=key, timeout=10)
+
+
+def gen_init_grade_manager_lock() -> RedisLock:
+    return RedisLock(LockTypeEnum.INIT_GRADE_MANAGER.value, timeout=120)  # 执行周期是2分钟

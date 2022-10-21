@@ -17,9 +17,9 @@ from rest_framework.viewsets import GenericViewSet
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
-from backend.api.management.permissions import ManagementAPIPermission
-from backend.api.management.serializers import (
-    ManagementGradeManagerBasicInfoSZL,
+from backend.api.management.v1.permissions import ManagementAPIPermission
+from backend.api.management.v1.serializers import (
+    ManagementGradeManagerBasicInfoSLZ,
     ManagementGradeManagerCreateSLZ,
     ManagementGradeManagerMembersDeleteSLZ,
     ManagementGradeManagerMembersSLZ,
@@ -145,7 +145,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     @swagger_auto_schema(
         operation_description="分级管理员列表",
         query_serializer=ManagementSourceSystemSLZ(),
-        responses={status.HTTP_200_OK: ManagementGradeManagerBasicInfoSZL(many=True)},
+        responses={status.HTTP_200_OK: ManagementGradeManagerBasicInfoSLZ(many=True)},
         tags=["management.role.member"],
     )
     def list(self, request, *args, **kwargs):
@@ -157,7 +157,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
 
         count, roles = self.biz.list_paging_role_for_system(data["system"], limit, offset)
-        results = ManagementGradeManagerBasicInfoSZL(roles, many=True).data
+        results = ManagementGradeManagerBasicInfoSLZ(roles, many=True).data
         return Response({"count": count, "results": results})
 
 
