@@ -81,8 +81,8 @@ class RoleRelatedObjectManager(models.Manager):
 
 
 class RoleRelationManager(models.Manager):
-    def list_subset_id(self, role_id: int) -> List[int]:
+    def list_sub_id(self, role_id: int) -> List[int]:
         """
         查询分级管理员的子集管理的id
         """
-        return list(self.filter(role_id=role_id).values_list("sub_id", flat=True))
+        return list(self.filter(parent_id=role_id).values_list("role_id", flat=True))

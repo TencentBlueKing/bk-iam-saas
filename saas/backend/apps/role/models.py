@@ -229,15 +229,15 @@ class RoleRelation(BaseModel):
     当前只有 分级管理员 -- 子集管理员 的1对多关系
     """
 
+    parent_id = models.IntegerField("父级角色ID")
     role_id = models.IntegerField("角色ID")
-    sub_id = models.IntegerField("子集管理员ID")
 
     objects = RoleRelationManager()
 
     class Meta:
         verbose_name = "角色关系"
         verbose_name_plural = "角色关系"
-        unique_together = ["role_id", "sub_id"]
+        unique_together = ["parent_id", "role_id"]
 
 
 class RoleCommonAction(BaseModel):
