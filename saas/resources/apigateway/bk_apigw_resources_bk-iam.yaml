@@ -36,6 +36,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/engine/healthz:
     get:
       operationId: engine_healthz
@@ -66,6 +67,7 @@ paths:
           appVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/engine/ping:
     get:
       operationId: engine_ping
@@ -96,6 +98,7 @@ paths:
           appVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/engine/search:
     post:
       operationId: engine_search
@@ -125,6 +128,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/engine/version:
     get:
       operationId: engine_version
@@ -184,6 +188,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}:
     get:
       operationId: system_get
@@ -213,6 +218,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     put:
       operationId: system_update
       description: 更新 system
@@ -241,6 +247,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/actions:
     delete:
       operationId: system_batch_delete_actions
@@ -270,6 +277,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     post:
       operationId: system_add_actions
       description: 新增actions
@@ -298,6 +306,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/actions/{action_id}:
     delete:
       operationId: system_delete_action
@@ -327,6 +336,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     put:
       operationId: system_update_action
       description: 更新action
@@ -355,6 +365,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/actions/{action_id}/policies:
     delete:
       operationId: system_delete_action_policies
@@ -384,6 +395,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/clients:
     get:
       operationId: system_get_clients
@@ -413,6 +425,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/configs/{name}:
     post:
       operationId: system_add_configs
@@ -442,6 +455,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     put:
       operationId: system_update_configs
       description: 配置更新name=common_actions/feature_shield_rules/resource_creator_actions
@@ -470,6 +484,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/instance-selections:
     delete:
       operationId: system_batch_delete_instance_selections
@@ -499,6 +514,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     post:
       operationId: system_add_instance_selections
       description: 新增instance_selections
@@ -527,6 +543,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/instance-selections/{instance_selection_id}:
     delete:
       operationId: system_delete_instance_selection
@@ -556,6 +573,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     put:
       operationId: system_update_instance_selection
       description: 更新 instance_selection
@@ -584,6 +602,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/query:
     get:
       operationId: system_query
@@ -613,6 +632,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/resource-types:
     delete:
       operationId: system_batch_delete_resource_types
@@ -642,6 +662,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     post:
       operationId: system_add_resource_types
       description: 新增resource_type
@@ -670,6 +691,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/resource-types/{resource_type_id}:
     delete:
       operationId: system_delete_resource_types
@@ -699,6 +721,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     put:
       operationId: system_update_resource_types
       description: 更新 resource_type
@@ -727,6 +750,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/model/systems/{system_id}/token:
     get:
       operationId: system_get_token
@@ -781,6 +805,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/batch_instance/:
     post:
       operationId: authorization_batch_instance
@@ -806,6 +831,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/batch_path/:
     post:
       operationId: authorization_batch_path
@@ -831,6 +857,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/batch_resource_creator_action/:
     post:
       operationId: authorization_batch_resource_creator_action
@@ -856,6 +883,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/instance/:
     post:
       operationId: authorization_instance
@@ -881,6 +909,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/path/:
     post:
       operationId: authorization_path
@@ -906,6 +935,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/resource_creator_action/:
     post:
       operationId: authorization_resource_creator_action
@@ -931,6 +961,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/resource_creator_action_attribute/:
     post:
       operationId: authorization_resource_creator_action_attribute
@@ -956,6 +987,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/departments/{department_id}/groups:
     get:
       operationId: open_departments_groups
@@ -985,7 +1017,33 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/management/grade_managers/:
+    get:
+      operationId: management_grade_managers_list
+      description: 查询分级管理员列表
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/open/management/grade_managers/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
     post:
       operationId: management_grade_managers
       description: 创建分级管理员
@@ -1010,6 +1068,33 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
+  /api/v1/open/management/grade_managers/{id}/:
+    put:
+      operationId: management_grade_managers_update
+      description: 修改分级管理员
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/open/management/grade_managers/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/management/grade_managers/{id}/groups/:
     get:
       operationId: management_grade_manager_groups
@@ -1035,6 +1120,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     post:
       operationId: management_grade_manager_create_groups
       description: 分级管理员批量创建用户组
@@ -1059,6 +1145,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/management/grade_managers/{id}/members/:
     delete:
       operationId: management_delete_grade_manager_members
@@ -1084,6 +1171,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     get:
       operationId: management_grade_manager_members
       description: 分级管理员成员列表
@@ -1108,6 +1196,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     post:
       operationId: management_add_grade_manager_members
       description: 批量添加分级管理员成员
@@ -1132,6 +1221,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/management/groups/applications/:
     post:
       operationId: management_groups_applications
@@ -1157,6 +1247,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/management/groups/{id}/:
     delete:
       operationId: management_grade_manager_delete_group
@@ -1182,6 +1273,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     put:
       operationId: management_grade_manager_update_group
       description: 分级管理员更新用户组
@@ -1206,6 +1298,33 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
+  /api/v1/open/management/groups/{id}/actions/policies/:
+    delete:
+      operationId: management_groups_policies_revoke_by_action
+      description: 用户组按整个操作权限回收
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/management/groups/{id}/actions/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/management/groups/{id}/members/:
     delete:
       operationId: management_delete_group_members
@@ -1231,6 +1350,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     get:
       operationId: management_group_members
       description: 用户组成员列表
@@ -1255,6 +1375,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
     post:
       operationId: management_add_group_members
       description: 用户组添加成员
@@ -1279,7 +1400,33 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/management/groups/{id}/policies/:
+    delete:
+      operationId: management_groups_policies_delete
+      description: 用户组权限回收
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/open/management/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
     post:
       operationId: management_groups_policies
       description: 用户组授权
@@ -1304,6 +1451,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/management/users/grade_managers/:
     get:
       operationId: management_users_grade_managers
@@ -1329,6 +1477,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/management/users/grade_managers/{id}/groups/:
     get:
       operationId: management_users_grade_managers_groups
@@ -1354,6 +1503,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/systems/{system_id}/policies:
     get:
       operationId: open_system_policies
@@ -1383,6 +1533,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/systems/{system_id}/policies/-/subjects:
     get:
       operationId: open_system_policies_subjects
@@ -1412,6 +1563,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/systems/{system_id}/policies/{policy_id}:
     get:
       operationId: open_system_get_policy
@@ -1441,6 +1593,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/open/users/{user_id}/groups:
     get:
       operationId: open_user_groups
@@ -1470,6 +1623,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/policy/auth:
     post:
       operationId: policy_auth
@@ -1499,6 +1653,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/policy/auth_by_actions:
     post:
       operationId: policy_auth_by_actions
@@ -1528,6 +1683,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/policy/auth_by_resources:
     post:
       operationId: policy_auth_by_resources
@@ -1557,6 +1713,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/policy/query:
     post:
       operationId: policy_query
@@ -1586,6 +1743,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/policy/query_by_actions:
     post:
       operationId: policy_query_by_actions
@@ -1615,6 +1773,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/policy/query_by_ext_resources:
     post:
       operationId: policy_query_by_ext_resources
@@ -1644,6 +1803,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/systems/{system_id}/policies:
     get:
       operationId: system_policies
@@ -1673,6 +1833,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/systems/{system_id}/policies/-/subjects:
     get:
       operationId: system_policies_subjects
@@ -1702,6 +1863,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/systems/{system_id}/policies/{policy_id}:
     get:
       operationId: system_get_policy
@@ -1731,6 +1893,7 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /api/v1/web/:
     x-bk-apigateway-method-any:
       operationId: api_v1_web_any
@@ -1760,6 +1923,443 @@ paths:
           userVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/departments/{department_id}/groups/belong/:
+    get:
+      operationId: v2_management_check_department_group_belong
+      description: 批量校验部门是否归属用户组
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/departments/{department_id}/groups/belong/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/:
+    post:
+      operationId: v2_management_grade_manager_create_groups
+      description: 分级管理员批量创建用户组
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/-/applications/:
+    post:
+      operationId: v2_management_groups_applications
+      description: 创建用户组申请单
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/groups/-/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/:
+    delete:
+      operationId: v2_management_grade_manager_delete_group
+      description: 分级管理员删除用户组
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    put:
+      operationId: v2_management_grade_manager_update_group
+      description: 分级管理员更新用户组
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/actions/-/policies/:
+    delete:
+      operationId: v2_management_groups_policies_revoke_by_action
+      description: 用户组按整个操作权限回收
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/actions/-/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/members/:
+    delete:
+      operationId: v2_management_delete_group_members
+      description: 用户组删除成员
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    get:
+      operationId: v2_management_group_members
+      description: 用户组成员列表
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: v2_management_add_group_members
+      description: 用户组添加成员
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/expired_at/:
+    put:
+      operationId: v2_management_update_group_members_expired_at
+      description: 更新用户组成员有效期
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/members/-/expired_at/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/policies/:
+    delete:
+      operationId: v2_management_groups_policies_revoke
+      description: 用户组权限回收
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: v2_management_groups_policies_grant
+      description: 用户组授权
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/:
+    get:
+      operationId: v2_management_groups_policies_action_list
+      description: 查询用户组有权限的操作
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/users/{user_id}/groups/belong/:
+    get:
+      operationId: v2_management_check_user_group_belong
+      description: 批量校验用户是否归属用户组
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/users/{user_id}/groups/belong/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/policy/systems/{system_id}/auth/:
+    post:
+      operationId: v2_policy_auth
+      description: v2直接鉴权
+      tags:
+      - policy
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/policy/systems/{system_id}/auth/
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/policy/systems/{system_id}/query/:
+    post:
+      operationId: v2_policy_query
+      description: 策略查询
+      tags:
+      - policy
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/policy/systems/{system_id}/query/
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /healthz:
     get:
       operationId: healthz
@@ -1790,6 +2390,7 @@ paths:
           appVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /metrics:
     get:
       operationId: metrics
@@ -1820,6 +2421,7 @@ paths:
           appVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /ping:
     get:
       operationId: ping
@@ -1850,6 +2452,7 @@ paths:
           appVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:
   /version:
     get:
       operationId: version
@@ -1880,3 +2483,4 @@ paths:
           appVerifiedRequired: false
           resourcePermissionRequired: false
         disabledStages: []
+        descriptionEn:

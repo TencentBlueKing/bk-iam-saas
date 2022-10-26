@@ -14,7 +14,7 @@ from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, task
+from celery import Task, current_app, task
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -27,6 +27,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
+from backend.common.lock import gen_init_grade_manager_lock
 from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
@@ -76,34 +77,29 @@ def sync_system_manager():
         RoleBiz().create(RoleInfoBean.parse_obj(data), "admin")
 
 
-@task(ignore_result=True)
-def role_group_expire_remind():
-    """
-    角色管理的用户组过期提醒
-    """
+class SendRoleGroupExpireRemindMailTask(Task):
     group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
 
-    expired_at = get_soon_expire_ts()
-    qs = Role.objects.all()
-    for role in qs:
+    def run(self, role_id: int, expired_at: int):
+        role = Role.objects.get(id=role_id)
         group_ids = list(
             RoleRelatedObject.objects.filter(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value
             ).values_list("object_id", flat=True)
         )
         if not group_ids:
-            continue
+            return
 
-        exist_group_ids = group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
+        exist_group_ids = self.group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
         if not exist_group_ids:
-            continue
+            return
 
         groups = Group.objects.filter(id__in=exist_group_ids)
 
         params = {"source": "email", "current_role_id": role.id, "role_type": role.type}
-        url = base_url + "?" + urlencode(params)
+        url = self.base_url + "?" + urlencode(params)
 
         mail_content = render_to_string(
             "group_expired_mail.html", {"groups": groups, "role": role, "url": url, "index_url": settings.APP_URL}
@@ -114,6 +110,44 @@ def role_group_expire_remind():
             esb.send_mail(",".join(usernames), "蓝鲸权限中心用户组续期提醒", mail_content)
         except Exception:  # pylint: disable=broad-except
             logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
+
+
+current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
+
+
+@task(ignore_result=True)
+def role_group_expire_remind():
+    """
+    角色管理的用户组过期提醒
+    """
+    group_biz = GroupBiz()
+    expired_at = get_soon_expire_ts()
+
+    group_id_set, role_id_set = set(), set()  # 去重用
+
+    # 查询有过期成员的用户组关系
+    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at)
+    for gs in group_subjects:
+        group_id = gs.group.id
+        if group_id in group_id_set:
+            continue
+
+        group_id_set.add(group_id)
+
+        # 查询用户组对应的分级管理员
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=int(group_id)
+        ).first()
+
+        if not relation:
+            continue
+
+        role_id = relation.role_id
+        if role_id in role_id_set:
+            continue
+
+        role_id_set.add(role_id)
+        SendRoleGroupExpireRemindMailTask().delay(role_id, expired_at)
 
 
 class InitBizGradeManagerTask(Task):
@@ -129,30 +163,31 @@ class InitBizGradeManagerTask(Task):
         if not settings.ENABLE_INIT_GRADE_MANAGER:
             return
 
-        biz_info = list_biz()
-        biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
+        with gen_init_grade_manager_lock():
+            biz_info = list_biz()
+            biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
 
-        projects = list_project()
-        for project in projects:
-            if project["bk_biz_id"] in biz_dict:
-                biz = biz_dict[project["bk_biz_id"]]
+            projects = list_project()
+            for project in projects:
+                if project["bk_biz_id"] in biz_dict:
+                    biz = biz_dict[project["bk_biz_id"]]
 
-                maintainers = (biz.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
-                viewers = list(
-                    set(
-                        (biz.get("bk_biz_developer") or "").split(",")
-                        + (biz.get("bk_biz_productor") or "").split(",")
-                        + (biz.get("bk_biz_tester") or "").split(",")
+                    maintainers = (biz.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
+                    viewers = list(
+                        set(
+                            (biz.get("bk_biz_developer") or "").split(",")
+                            + (biz.get("bk_biz_productor") or "").split(",")
+                            + (biz.get("bk_biz_tester") or "").split(",")
+                        )
+                    )  # 业务的查看人
+
+                    self._create_grade_manager(project, maintainers, viewers)
+                else:
+                    logger.debug(
+                        "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
+                        project["name"],
+                        project["bk_biz_id"],
                     )
-                )  # 业务的查看人
-
-                self._create_grade_manager(project, maintainers, viewers)
-            else:
-                logger.debug(
-                    "init grade manager: bk_sops project [%s] biz_id [%d] not exists in bk_cmdb",
-                    project["name"],
-                    project["bk_biz_id"],
-                )
 
     def _create_grade_manager(self, project, maintainers, viewers):
         biz_name = project["name"]

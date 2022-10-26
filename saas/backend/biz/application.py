@@ -21,6 +21,7 @@ from rest_framework.request import Request
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
+from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
@@ -148,10 +149,29 @@ class ApprovedPassApplicationBiz:
     group_biz = GroupBiz()
     role_biz = RoleBiz()
 
+    def _check_subject_exists(self, subject: Subject) -> Tuple[bool, str]:
+        """
+        检查subject是否在职
+        """
+        assert subject.type == SubjectType.USER.value  # 只有用户类型的subject才需要检查
+        user = User.objects.filter(username=subject.id).first()
+        if not user:
+            return False, f"user [{subject.id}] not exists"
+
+        if user.staff_status != StaffStatus.IN.value:
+            return False, f"user [{subject.id}] staff status [{user.staff_status}]"
+
+        return True, ""
+
     def _grant_action(
         self, subject: Subject, application: Application, audit_type: str = AuditType.USER_POLICY_CREATE.value
     ):
         """用户自定义权限授权"""
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
+            return
+
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
 
@@ -163,10 +183,20 @@ class ApprovedPassApplicationBiz:
 
     def _renew_action(self, subject: Subject, application: Application):
         """用户自定义权限续期"""
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] renew action approve fail: %s", application.id, msg)
+            return
+
         self._grant_action(subject, application, audit_type=AuditType.USER_POLICY_UPDATE.value)
 
     def _join_group(self, subject: Subject, application: Application):
         """加入用户组"""
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] join group approve fail: %s", application.id, msg)
+            return
+
         # 兼容，新老数据在data都存在expired_at
         default_expired_at = application.data["expired_at"]
         # 加入用户组
@@ -205,7 +235,7 @@ class ApprovedPassApplicationBiz:
 
             self.group_biz.update_members_expired_at(
                 group["id"],
-                [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, policy_expired_at=group["expired_at"])],
+                [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, expired_at=group["expired_at"])],
             )
 
         log_group_event(
@@ -248,6 +278,11 @@ class ApprovedPassApplicationBiz:
 
     def _grant_temporary_action(self, subject: Subject, application: Application):
         """临时权限授权"""
+        ok, msg = self._check_subject_exists(subject)
+        if not ok:
+            logger.warn("application [%d] grant temporary action approve fail: %s", application.id, msg)
+            return
+
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
 
@@ -426,8 +461,9 @@ class ApplicationBiz:
 
         # 查询策略所属系统
         db_policies = (
+            # TODO: 已存在的申请单数据如何处理？policy_id的含义已经变化了
             Policy.objects.filter(
-                subject_type=subject.type, subject_id=subject.id, policy_id__in=[p.id for p in policy_infos]
+                subject_type=subject.type, subject_id=subject.id, id__in=[p.id for p in policy_infos]
             )
             .defer("_resources")
             .order_by("system_id")
@@ -436,9 +472,7 @@ class ApplicationBiz:
         # 按系统分组
         data_list = []
         for system_id, policies in groupby(db_policies, lambda p: p.system_id):
-            policy_list = self.policy_biz.query_policy_list_by_policy_ids(
-                system_id, subject, [p.policy_id for p in policies]
-            )
+            policy_list = self.policy_biz.query_policy_list_by_policy_ids(system_id, subject, [p.id for p in policies])
 
             # 由于是续期，所以需要修改续期时间
             for p in policy_list.policies:

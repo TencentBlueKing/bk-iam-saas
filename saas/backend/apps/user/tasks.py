@@ -13,7 +13,7 @@ from datetime import timedelta
 from itertools import groupby
 from urllib.parse import urlencode
 
-from celery import task
+from celery import Task, current_app, task
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import F, Q
@@ -22,6 +22,7 @@ from django.utils import timezone
 
 from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
+from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.biz.group import GroupBiz
@@ -42,48 +43,80 @@ logger = logging.getLogger("celery")
 MAX_USER_PERMISSION_CLEANUP_RETRY_COUNT = 3
 
 
+class SendUserExpireRemindMailTask(Task):
+    policy_biz = PolicyQueryBiz()
+    group_biz = GroupBiz()
+
+    base_url = url_join(settings.APP_URL, "/perm-renewal")
+
+    def run(self, username: str, expired_at: int):
+        user = User.objects.filter(username=username).first()
+        if not user:
+            return
+
+        subject = Subject(type=SubjectType.USER.value, id=username)
+
+        # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
+        groups = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
+
+        policies = self.policy_biz.list_expired(subject, expired_at)
+
+        if not groups and not policies:
+            return
+
+        params = {"tab": "group", "source": "email"}
+        if not groups:
+            params["tab"] = "custom"
+        url = self.base_url + "?" + urlencode(params)
+
+        mail_content = render_to_string(
+            "user_expired_mail.html",
+            {"groups": groups, "policies": policies, "url": url, "user": user, "index_url": settings.APP_URL},
+        )
+        try:
+            esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
+
+
+current_app.tasks.register(SendUserExpireRemindMailTask())
+
+
 @task(ignore_result=True)
 def user_group_policy_expire_remind():
     """
     用户的用户组, 自定义权限过期检查
     """
-    policy_biz = PolicyQueryBiz()
-    group_biz = GroupBiz()
+    username_set = set()  # 用于去重
+    expired_at = get_soon_expire_ts()
 
-    # 分页遍历所有的用户
-    qs = User.objects.filter(staff_status=StaffStatus.IN.value)
+    # 1. 查询有自定义授权的用户
+    qs = Policy.objects.filter(subject_type=SubjectType.USER.value).only("subject_id")
     paginator = Paginator(qs, 100)
 
-    base_url = url_join(settings.APP_URL, "/perm-renewal")
-
-    if not paginator.count:
-        return
-
-    expired_at = get_soon_expire_ts()
     for i in paginator.page_range:
-        for user in paginator.page(i):
-            subject = Subject(type=SubjectType.USER.value, id=user.username)
+        for p in paginator.page(i):
+            username = p.subject_id
 
-            groups = group_biz.list_subject_group_before_expired_at(subject, expired_at)
-
-            policies = policy_biz.list_expired(subject, expired_at)
-
-            if not groups and not policies:
+            if username in username_set:
                 continue
 
-            params = {"tab": "group", "source": "email"}
-            if not groups:
-                params["tab"] = "custom"
-            url = base_url + "?" + urlencode(params)
+            username_set.add(username)
+            SendUserExpireRemindMailTask().delay(username, expired_at)
 
-            mail_content = render_to_string(
-                "user_expired_mail.html",
-                {"groups": groups, "policies": policies, "url": url, "user": user, "index_url": settings.APP_URL},
-            )
-            try:
-                esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)
-            except Exception:  # pylint: disable=broad-except
-                logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
+    # 2. 查询用户组成员过期
+    group_biz = GroupBiz()
+    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at)
+    for gs in group_subjects:
+        if gs.subject.type != SubjectType.USER.value:
+            continue
+
+        username = gs.subject.id
+        if username in username_set:
+            continue
+
+        username_set.add(username)
+        SendUserExpireRemindMailTask().delay(username, expired_at)
 
 
 @task(ignore_result=True)
@@ -97,16 +130,29 @@ def user_cleanup_expired_policy():
     expired_at = int(db_time()) - settings.MAX_EXPIRED_POLICY_DELETE_TIME
     task_id = user_cleanup_expired_policy.request.id
 
-    # 分页遍历所有的用户
-    qs = User.objects.filter(staff_status=StaffStatus.IN.value)
+    # 分页遍历有授权的用户
+    qs = Policy.objects.filter(subject_type=SubjectType.USER.value).only("subject_id")
     paginator = Paginator(qs, 100)
 
     if not paginator.count:
         return
 
+    username_set = set()  # 用于去重
     for i in paginator.page_range:
-        for user in paginator.page(i):
-            subject = Subject(type=SubjectType.USER.value, id=user.username)
+        for p in paginator.page(i):
+            username = p.subject_id
+
+            # 去重
+            if username in username_set:
+                continue
+
+            username_set.add(username)
+
+            user = User.objects.filter(staff_status=StaffStatus.IN.value, username=username).first()
+            if not user:
+                continue
+
+            subject = Subject(type=SubjectType.USER.value, id=username)
 
             # 查询用户指定过期时间之前的所有策略
             policies = policy_query_biz.list_expired(subject, expired_at)
@@ -192,9 +238,13 @@ class UserPermissionCleaner:
         """
 
         # 查询所有的用户组id, 删除
-        groups = self.group_biz.list_subject_group(self._subject)
-        for group in groups:
-            self.group_biz.remove_members(str(group.id), [self._subject])
+        while True:
+            _, groups = self.group_biz.list_paging_subject_group(self._subject, limit=1000)
+            for group in groups:
+                self.group_biz.remove_members(str(group.id), [self._subject])
+
+            if len(groups) < 1000:
+                break
 
     def _cleanup_role(self):
         """

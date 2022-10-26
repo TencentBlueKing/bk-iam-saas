@@ -15,8 +15,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
-from backend.api.management.permissions import ManagementAPIPermission
-from backend.api.management.serializers import (
+from backend.api.management.v1.permissions import ManagementAPIPermission
+from backend.api.management.v1.serializers import (
     ManagementGradeManagerBasicSLZ,
     ManagementGroupBasicSLZ,
     ManagementUserGradeManagerQuerySLZ,
@@ -90,7 +90,9 @@ class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
         role = self.get_object()
 
         # 查询用户加入的用户组
-        relations = self.group_biz.list_subject_group(Subject(type=SubjectType.USER.value, id=data["user_id"]))
+        # NOTE: 可能会有性能问题, 用户的组过多
+        relations = self.group_biz.list_all_subject_group(Subject(type=SubjectType.USER.value, id=data["user_id"]))
+
         user_group_ids = [one.id for one in relations]
         # 查询分级管理员下的用户组列表
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role.id, RoleRelatedObjectType.GROUP.value)

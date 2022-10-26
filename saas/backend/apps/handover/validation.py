@@ -59,7 +59,8 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
     @cached_property
     def subject_groups(self) -> List[SubjectGroupBean]:
         subject = Subject(type=SubjectType.USER.value, id=self.handover_from)
-        return self.biz.list_subject_group(subject)
+        # NOTE: 可能会有性能问题, 这里需要查询用户的所有组列表
+        return self.biz.list_all_subject_group(subject)
 
 
 class GustomPolicyProcessor(BaseHandoverDataProcessor):
