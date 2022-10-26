@@ -312,7 +312,8 @@ export const routes = [
                 path: 'manage-spaces/secondary-manage-space/create',
                 name: 'secondaryManageSpaceCreate',
                 meta: {
-                    headerTitle: il8n('levelSpace', '新建二级管理空间')
+                    headerTitle: il8n('levelSpace', '新建二级管理空间'),
+                    backRouter: 'secondaryManageSpace'
                 },
                 component: SecondaryManageSpaceCreate
             },

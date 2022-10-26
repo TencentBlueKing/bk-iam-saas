@@ -153,6 +153,15 @@
                 });
             },
 
+            handleClone (value) {
+                this.$router.push({
+                    name: 'firstManageSpaceCreate',
+                    params: {
+                        id: value.id
+                    }
+                });
+            },
+
             handleNavAuthBoundary (payload) {
                 window.localStorage.setItem('iam-header-name-cache', payload.name);
                 this.$store.commit('updateIndex', 1);

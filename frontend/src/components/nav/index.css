@@ -95,7 +95,7 @@ $duration: 0.3s;
             float: right;
         }
 
-        .iam-nav-select-cls{
+        .iam-nav-select-cls {
             /* background: #374357; */
             background-color: #182132;
             width: 240px;
@@ -117,6 +117,9 @@ $duration: 0.3s;
         }
     }
 }
+.hide-iam-nav-select-cls {
+    display: none;
+}
 .iam-nav-select-dropdown-content {
     width: 274px !important;
     /* background: #182233 !important; */
@@ -128,7 +131,7 @@ $duration: 0.3s;
     /* border: 1px solid #2f3847 !important; */
     padding: 0 !important;
     /* color: #fff !important; */
-
+    
     .bk-options-wrapper ::-webkit-scrollbar-thumb {
         /* background-color: #5f6e85; */
         background: rgba(0,0,0,0.30);
