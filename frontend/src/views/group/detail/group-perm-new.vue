@@ -1,7 +1,7 @@
 <template>
     <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
         <bk-button
-            v-if="!isLoading && isEditMode"
+            v-if="!isLoading && isEditMode && !externalSystemsLayout.userGroup.groupDetail.hideAddBtn"
             theme="primary"
             style="margin-bottom: 16px"
             @click="handleAddPerm">
@@ -29,6 +29,8 @@
                             :key="subIndex"
                             :title="subItem.name"
                             :count="subItem.count"
+                            :external-edit="externalSystemsLayout.userGroup.groupDetail.hideAddBtn"
+                            :external-delete="externalSystemsLayout.userGroup.groupDetail.hideDeleteBtn"
                             :is-edit="subItem.isEdit"
                             :loading="subItem.editLoading"
                             :expanded.sync="subItem.expanded"
@@ -109,7 +111,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemsLayout']),
             isEmpty () {
                 return this.groupSystemList.length < 1;
             },
