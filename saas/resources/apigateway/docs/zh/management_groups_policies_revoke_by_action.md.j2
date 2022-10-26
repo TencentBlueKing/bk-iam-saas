@@ -1,0 +1,39 @@
+### 用户组移除Action权限
+
+#### Parameters
+
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| group_id | int | path | 是 | 用户组ID |
+| system | string | body | 是 | 接入系统唯一标识 |
+| actions |  array[object]   | 是   | body | 操作 |
+
+actions
+
+| 字段 | 类型 | 位置| 必选 | 描述 |
+|---|---|---|---|---|
+| id | string | body | 是 | 操作 ID |
+
+
+#### Request
+
+```json
+{
+  "system": "bk_cmdb",
+  "actions": [
+    {
+      "id": "edit_host"
+    }
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

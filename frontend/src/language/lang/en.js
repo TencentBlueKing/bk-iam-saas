@@ -242,7 +242,7 @@ export const m = {
         '描述必填': 'Description is required',
         '输入审批意见': 'Input approval comments',
         '请输入审批意见': 'Please give your approval comments',
-        '模板名称最长不超过32个字符': 'The template name can be no longer than 32 characters',
+        '模板名称最长不超过128个字符': 'The template name can be no longer than 128 characters',
         '请添加授权成员': 'Please add authorized members',
         '用户组名不允许空格': 'Group name does not allow spaces',
         '用户组描述提示': 'The description must be at least 10 characters',

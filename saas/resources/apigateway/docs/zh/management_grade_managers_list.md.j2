@@ -1,0 +1,36 @@
+### 查询分级管理员列表
+
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 位置 |描述  |
+|--------|--------|--------|--------|--------|
+| system | int | 是 | path | 接入系统唯一标识 |
+
+#### Request
+
+```json
+GET /api/v1/open/management/grade_managers/?system=bk_cmdb
+```
+
+#### Response
+
+| 字段      | 类型      | 描述      |
+|-----------|-----------|-----------|
+| count   | int     |  总数量 |
+| results   |  array[object]   |  分页查询到结果 |
+
+results
+| 字段      | 类型      | 描述      |
+|-----------|-----------|-----------|
+| id   | int     | 分级管理员id |
+| name | string | 分级管理员名称 |
+| description | string | 分级管理员描述 |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```
+

@@ -415,7 +415,6 @@
              * handleAttrValueSelected
              */
             handleAttrValueSelected (payload) {
-                console.log('payload', payload);
                 window.changeDialog = true;
                 const instances = (function () {
                     const arr = [];

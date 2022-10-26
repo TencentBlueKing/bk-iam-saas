@@ -66,7 +66,11 @@
                 <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.permApply['请选择申请期限']`) }}</p>
             </section>
         </render-horizontal-block>
-        <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
+        <render-horizontal-block
+            ext-cls="reason-wrapper"
+            :styles="{ marginBottom: '50px' }"
+            :label="$t(`m.common['理由']`)"
+            :required="true">
             <section ref="reasonRef">
                 <bk-input
                     type="textarea"
@@ -459,8 +463,11 @@
 
             async fetchCurUserGroup () {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups');
-                    this.curUserGroup = res.data.filter(item => item.department_id === 0).map(item => item.id);
+                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                        page_size: 100,
+                        page: 1
+                    });
+                    this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);
                 } catch (e) {
                     this.$emit('toggle-loading', false);
                     console.error(e);
@@ -539,9 +546,9 @@
                 try {
                     await this.$store.dispatch('permApply/applyJoinGroup', params);
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
-                    this.$router.push({
-                        name: 'apply'
-                    });
+                    // this.$router.push({
+                    //     name: 'apply'
+                    // });
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({

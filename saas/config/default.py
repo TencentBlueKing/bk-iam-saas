@@ -193,7 +193,6 @@ CELERY_IMPORTS = (
     "backend.apps.action.tasks",
     "backend.apps.policy.tasks",
     "backend.audit.tasks",
-    "backend.publisher.tasks",
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
 )
@@ -266,6 +265,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.user.tasks.clean_user_permission_clean_record",
         "schedule": crontab(minute=0, hour=5),  # 每天凌晨5时执行
     },
+    "init_biz_grade_manager": {
+        "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
+        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+    },
 }
 
 # 是否开启初始化分级管理员
@@ -337,8 +340,6 @@ BK_IAM_ENGINE_HOST_TYPE = env.str("BKAPP_IAM_ENGINE_HOST_TYPE", default="direct"
 # 授权对象授权用户组, 模板的最大限制
 SUBJECT_AUTHORIZATION_LIMIT = {
     # -------- 用户 ---------
-    # 用户能加入的用户组的最大数量
-    "default_subject_group_limit": env.int("BKAPP_DEFAULT_SUBJECT_GROUP_LIMIT", default=100),
     # 用户能加入的分级管理员的最大数量
     "subject_grade_manager_limit": env.int("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", default=100),
     # -------- 用户组 ---------
@@ -377,12 +378,6 @@ MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
 MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
-
-# 用于发布订阅的Redis
-PUB_SUB_REDIS_HOST = env.str("BKAPP_PUB_SUB_REDIS_HOST", default="")
-PUB_SUB_REDIS_PORT = env.str("BKAPP_PUB_SUB_REDIS_PORT", default="")
-PUB_SUB_REDIS_PASSWORD = env.str("BKAPP_PUB_SUB_REDIS_PASSWORD", default="")
-PUB_SUB_REDIS_DB = env.int("BKAPP_PUB_SUB_REDIS_DB", default=0)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {

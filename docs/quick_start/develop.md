@@ -32,7 +32,17 @@
 ## 安装 python 和依赖库
 在本地安装 python3.6.7 和 pip，通过 git 拉取源代码到工程目录后，并进入saas目录下运行 pip 命令安装 python 包。
 ```bash
-pip install -r requirements_dev.txt
+
+# linux macos 下
+make init
+
+# windows 下
+pip install -U pip setuptools
+pip install -U pip setuptools
+pip install poetry
+poetry install
+pip install pre-commit
+pre-commit install
 ```
 
 
@@ -83,7 +93,7 @@ BK_IAM_V3_INNER_HOST="http://127.0.0.1:9000"  # 权限中心后台地址
 
 ## 创建并初始化数据库  
 
-1) 在 mysql 中创建名为 bk_sops 的数据库
+1) 在 mysql 中创建名为 bk_iam 的数据库
 ```sql
 CREATE DATABASE `bk_iam` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 ```
