@@ -22,7 +22,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 /**
  * 获取不同身份的router差异
@@ -48,7 +48,10 @@ export const getRouterDiff = (payload) => {
             'permTemplateEdit',
             'permTemplateDiff',
             'addGroupPerm',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'secondaryManageSpace',
+            'authorBoundary'
         ];
     }
     if (payload === 'super_manager') {
@@ -77,7 +80,9 @@ export const getRouterDiff = (payload) => {
             'systemAccessOptimize',
             'systemAccessComplete',
             'resourcePermiss',
-            'userGroupDetail'
+            'userGroupDetail',
+            'firstManageSpace',
+            'myManageSpace'
         ];
     }
     if (payload === 'system_manager') {
@@ -104,7 +109,11 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'secondaryManageSpace',
+            'authorBoundary',
+            'myManageSpace'
         ];
     }
     if (payload === 'rating_manager') {
@@ -132,7 +141,7 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete',
-            'resourcePermiss'
+            'myManageSpace'
         ];
     }
     // payload其它取值默认返回全部菜单
@@ -172,7 +181,10 @@ export const getRouterDiff = (payload) => {
         'audit',
         'permTemplateEdit',
         'permTemplateDiff',
-        'addGroupPerm'
+        'addGroupPerm',
+        'authorBoundary',
+        'secondaryManageSpace',
+        'myManageSpace'
     ];
 };
 
@@ -194,7 +206,10 @@ export const getNavRouterDiff = (navIndex) => {
             'permTemplateEdit',
             'permTemplateDiff',
             'addGroupPerm',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'authorBoundary',
+            'secondaryManageSpace'
         ];
     }
 
@@ -235,7 +250,11 @@ export const getNavRouterDiff = (navIndex) => {
             'permTemplateEdit',
             'permTemplateDiff',
             'addGroupPerm',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'authorBoundary',
+            'secondaryManageSpace',
+            'myManageSpace'
         ];
     }
 
@@ -265,7 +284,10 @@ export const getNavRouterDiff = (navIndex) => {
             'permTemplate',
             'permTemplateDetail',
             'permTemplateCreate',
-            'approvalProcess'
+            'approvalProcess',
+            'authorBoundary',
+            'secondaryManageSpace',
+            'myManageSpace'
         ];
     }
 };

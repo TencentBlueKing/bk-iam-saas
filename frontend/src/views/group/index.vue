@@ -7,13 +7,27 @@
             <bk-button
                 v-if="isSuperManager"
                 :disabled="currentSelectList.length < 1"
-                style="margin-left: 6px;"
+                style="margin-left: 6px"
                 data-test-id="group_btn_transferOut"
-                @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
-            <bk-button :disabled="currentSelectList.length < 1"
-                theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
+                @click="handleTransferOut"
+            >{{ $t(`m.userGroup['转出']`) }}</bk-button
+            >
+            <bk-button
+                :disabled="currentSelectList.length < 1"
+                theme="primary"
+                @click="handleBatchAddMember"
+                data-test-id="group_btn_create"
+            >
                 {{ $t(`m.common['批量添加成员']`) }}
             </bk-button>
+            <bk-button
+                v-if="isRatingManager"
+                :disabled="currentSelectList.length < 1"
+                style="margin-left: 6px"
+                data-test-id="group_btn_distribute"
+                @click="handleDistribute"
+            >{{ $t(`m.userGroup['分配']`) }}</bk-button
+            >
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -21,7 +35,8 @@
                     :data="searchData"
                     :value="searchValue"
                     :quick-search-method="quickSearchMethod"
-                    style="width: 420px;" />
+                    style="width: 420px"
+                />
             </div>
         </render-search>
         <bk-table
@@ -36,9 +51,9 @@
             @page-limit-change="limitChange"
             @select="handlerChange"
             @select-all="handlerAllChange"
-            v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column type="selection" align="center" :selectable="getIsSelect"
-                reserve-selection></bk-table-column>
+            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
+            <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection />
             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                 <template slot-scope="{ row }">
                     <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
@@ -58,6 +73,21 @@
                     </div>
                 </template>
             </bk-table-column>
+            <template v-if="['rating_manager'].includes(curRole)">
+                <bk-table-column
+                    :label="$t(`m.nav['管理空间']`)"
+                    :filters="spaceFiltersList"
+                    :filter-method="handleSpaceFilter"
+                    :filter-multiple="true"
+                >
+                    <template slot-scope="{ row }">
+                        <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
+                            {{ row.role.name || '--' }}
+                        </span>
+                        <span>{{ user.role.name === row.role.name ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
+                    </template>
+                </bk-table-column>
+            </template>
             <bk-table-column :label="$t(`m.userGroup['创建人']`)">
                 <template slot-scope="{ row }">
                     <span>{{ row.creator || '--' }}</span>
@@ -87,13 +117,13 @@
                         <bk-button theme="primary" text @click="handleAddMember(row)">
                             {{ $t(`m.common['添加成员']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleAddPerm(row)">
+                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleAddPerm(row)">
                             {{ $t(`m.common['添加权限']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleClone(row)">
+                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleClone(row)">
                             {{ $t(`m.grading['克隆']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleDelete(row)">
+                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleDelete(row)">
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
                     </div>
@@ -107,14 +137,16 @@
             :name="currentUserGroup.name"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSumbitDelete" />
+            @on-sumbit="handleSumbitDelete"
+        />
 
         <edit-process-dialog
             :show.sync="isShowEditProcessDialog"
             :loading="editLoading"
             @on-after-leave="handleAfterEditLeave"
             @on-cancel="hideCancelEdit"
-            @on-sumbit="handleSumbitEdit" />
+            @on-sumbit="handleSumbitEdit"
+        />
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
@@ -126,19 +158,30 @@
             show-expired-at
             @on-cancel="handleCancelAdd"
             @on-sumbit="handleSumbitAdd"
-            @on-after-leave="handleAddAfterClose" />
+            @on-after-leave="handleAddAfterClose"
+        />
 
         <transfer-out-dialog
             :show.sync="isShowRolloutGroupDialog"
             :group-ids="curSelectIds"
             @on-success="handleTransferOutSuccess"
-            @on-cancel="handleTransferOutCancel" />
+            @on-cancel="handleTransferOutCancel"
+        />
+
+        <DistributeToDialog
+            :show.sync="isShowSpaceDialog"
+            :group-ids="curSelectIds"
+            @on-success="handleDistributeSuccess"
+            @on-cancel="handleDistributeCancel"
+        />
+
         <novice-guide :flag="showNoviceGuide" :content="content" />
     </div>
 </template>
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
+    import { il8n } from '@/language';
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
@@ -146,6 +189,7 @@
     import AddMemberDialog from './components/iam-add-member';
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
+    import DistributeToDialog from './components/distribute-to-dialog.vue';
     import NoviceGuide from '@/components/iam-novice-guide';
     export default {
         name: '',
@@ -153,8 +197,9 @@
             DeleteDialog,
             AddMemberDialog,
             EditProcessDialog,
-            IamSearchSelect,
             TransferOutDialog,
+            DistributeToDialog,
+            IamSearchSelect,
             NoviceGuide
         },
         data () {
@@ -183,29 +228,28 @@
                 users: [],
                 curName: '',
                 curId: 0,
-
                 curRole: 'staff',
-
                 isShowRolloutGroupDialog: false,
-
                 isBatch: false,
-
-                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]')
+                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]'),
+                il8n,
+                spaceFiltersList: [],
+                isShowSpaceDialog: false
             };
         },
         computed: {
             ...mapGetters(['user', 'showNoviceGuide']),
             isCanEditProcess () {
-                return this.currentSelectList.length > 0;
+            return this.currentSelectList.length > 0;
             },
             isRatingManager () {
-                return this.curRole === 'rating_manager';
+            return this.curRole === 'rating_manager';
             },
             isSuperManager () {
-                return this.curRole === 'super_manager';
+            return this.curRole === 'super_manager';
             },
             curSelectIds () {
-                return this.currentSelectList.map(item => item.id);
+            return this.currentSelectList.map((item) => item.id);
             }
         },
         watch: {
@@ -262,7 +306,7 @@
                     disabled: true
                 }
             ];
-            const isObject = payload => {
+            const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
 
@@ -275,7 +319,7 @@
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
                         const curData = currentQueryCache[key];
-                        const tempData = this.searchData.find(item => item.id === key);
+                        const tempData = this.searchData.find((item) => item.id === key);
                         if (isObject(curData)) {
                             if (tempData) {
                                 this.searchValue.push({
@@ -290,10 +334,12 @@
                             this.searchValue.push({
                                 id: key,
                                 name: tempData.name,
-                                values: [{
-                                    id: curData,
-                                    name: curData
-                                }]
+                                values: [
+                                    {
+                                        id: curData,
+                                        name: curData
+                                    }
+                                ]
                             });
                             this.searchList.push(..._.cloneDeep(this.searchValue));
                             this.searchParams[key] = curData;
@@ -322,15 +368,15 @@
                 const queryParams = {
                     limit,
                     current,
-                    ...this.searchParams,
-                    ...this.$route.query
+        ...this.searchParams,
+        ...this.$route.query
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
-                    const tempObj = this.searchData.find(item => key === item.id);
+                    const tempObj = this.searchData.find((item) => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
-                            const tempData = this.searchList.find(item => item.id === key);
+                            const tempData = this.searchList.find((item) => item.id === key);
                             params[key] = tempData.values[0];
                         }
                     } else {
@@ -338,9 +384,9 @@
                     }
                 }
                 return {
-                    ...params,
-                    limit,
-                    current
+        ...params,
+        limit,
+        current
                 };
             },
 
@@ -372,8 +418,8 @@
                     const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
                     this.pagination.count = res.data.count || 0;
                     this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
-                    this.currentSelectList = this.currentSelectList.filter(item => {
-                        return this.tableList.map(_ => _.id).includes(item.id);
+                    this.currentSelectList = this.currentSelectList.filter((item) => {
+                        return this.tableList.map((_) => _.id).includes(item.id);
                     });
                     if (this.currentSelectList.length < 1) {
                         this.$refs.tableRef && this.$refs.tableRef.clearSelection();
@@ -392,19 +438,22 @@
                 }
             },
 
+            handleSpaceFilter (value, row, column) {
+                const property = column.property;
+                return row[property] === value;
+            },
+
             handleRemoteRtx (value) {
                 console.log('value', value);
-                return fuzzyRtxSearch(value)
-                    .then(data => {
-                        return data.results;
-                    });
+                return fuzzyRtxSearch(value).then((data) => {
+                    return data.results;
+                });
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
-                    .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
-                    });
+                return this.$store.dispatch('system/getSystems').then(({ data }) => {
+                    return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
+                });
             },
 
             handleCreate () {
@@ -439,16 +488,34 @@
                 this.isShowRolloutGroupDialog = false;
             },
 
+            handleDistribute () {
+                this.isShowSpaceDialog = true;
+            },
+
+            handleDistributeSuccess () {
+                this.currentSelectList = [];
+                this.handleTransferOutCancel();
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleDistributeCancel () {
+                this.isShowRolloutGroupDialog = false;
+            },
+
             handleEditApprovalProcess () {
-                this.isShowEditProcessDialog = true;
+                this.isShowSpaceDialog = true;
             },
 
             resetPagination () {
-                this.pagination = Object.assign({}, {
-                    limit: 10,
-                    current: 1,
-                    count: 0
-                });
+                this.pagination = Object.assign(
+                    {},
+                    {
+                        limit: 10,
+                        current: 1,
+                        count: 0
+                    }
+                );
             },
 
             handleSearch (payload, result) {
@@ -486,26 +553,30 @@
                 if (expiredAt !== 4102444800) {
                     const nowTimestamp = +new Date() / 1000;
                     const tempArr = String(nowTimestamp).split('');
-                    const dotIndex = tempArr.findIndex(item => item === '.');
+                    const dotIndex = tempArr.findIndex((item) => item === '.');
                     const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
                     expired = expired + nowSecond;
                 }
                 const arr = [];
                 if (departments.length > 0) {
-                    arr.push(...departments.map(item => {
-                        return {
-                            id: item.id,
-                            type: 'department'
-                        };
-                    }));
+                    arr.push(
+                        ...departments.map((item) => {
+                            return {
+                                id: item.id,
+                                type: 'department'
+                            };
+                        })
+                    );
                 }
                 if (users.length > 0) {
-                    arr.push(...users.map(item => {
-                        return {
-                            id: item.username,
-                            type: 'user'
-                        };
-                    }));
+                    arr.push(
+                        ...users.map((item) => {
+                            return {
+                                id: item.username,
+                                type: 'user'
+                            };
+                        })
+                    );
                 }
                 const params = {
                     members: arr,
@@ -538,7 +609,7 @@
                 }
             },
 
-            handleAddAfterClose  () {
+            handleAddAfterClose () {
                 this.curName = '';
                 this.curId = 0;
             },
@@ -632,62 +703,62 @@
     };
 </script>
 <style lang="postcss">
-    .iam-user-group-wrapper {
-        .user-group-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            tr:hover {
-                .user-group-process {
-                    background: #fff;
-                }
-                .member-wrapper {
-                    .user,
-                    .depart {
-                        background: #fff;
-                    }
-                }
-            }
-            .user-group-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-            .member-wrapper {
-                display: flex;
-                justify-content: flex-start;
-                .user,
-                .depart {
-                    display: inline-block;
-                    min-width: 54px;
-                    padding: 4px 6px;
-                    background: #f0f1f5;
-                    border-radius: 2px;
-                    i {
-                        font-size: 14px;
-                        color: #c4c6cc;
-                    }
-                }
-                .depart {
-                    margin-left: 2px;
-                }
-            }
-            .user-group-process {
-                display: inline-block;
-                padding: 4px 10px;
-                max-width: 200px;
-                background: #f0f1f5;
-                border-radius: 2px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-        }
+.iam-user-group-wrapper {
+  .user-group-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    &.set-border {
+      border-right: 1px solid #dfe0e5;
+      border-bottom: 1px solid #dfe0e5;
     }
+    tr:hover {
+      .user-group-process {
+        background: #fff;
+      }
+      .member-wrapper {
+        .user,
+        .depart {
+          background: #fff;
+        }
+      }
+    }
+    .user-group-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+    .member-wrapper {
+      display: flex;
+      justify-content: flex-start;
+      .user,
+      .depart {
+        display: inline-block;
+        min-width: 54px;
+        padding: 4px 6px;
+        background: #f0f1f5;
+        border-radius: 2px;
+        i {
+          font-size: 14px;
+          color: #c4c6cc;
+        }
+      }
+      .depart {
+        margin-left: 2px;
+      }
+    }
+    .user-group-process {
+      display: inline-block;
+      padding: 4px 10px;
+      max-width: 200px;
+      background: #f0f1f5;
+      border-radius: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
 </style>

@@ -316,4 +316,11 @@
         min-width: 1120px;
         padding: 24px;
     }
+
+    .single-hide {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
 </style>
