@@ -125,6 +125,9 @@ const AuthorizationBoundary = () =>
 const SecondaryManageSpace = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space');
 
+const SecondaryManageSpaceCreate = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
+
 // 资源权限管理
 const ResourcePermiss = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
 
@@ -281,7 +284,7 @@ export const routes = [
                 component: GroupPermDetail
             },
             {
-                path: 'my-perm/organization-perm',
+                path: 'my-perm/organization-perm/:id',
                 name: 'orgPermDetail',
                 meta: {
                     headerTitle: ''
@@ -289,7 +292,7 @@ export const routes = [
                 component: OrgPermDetail
             },
             {
-                path: 'manage-spaces/authorization-boundary/:id',
+                path: 'manage-spaces/authorization-boundary',
                 name: 'authorBoundary',
                 meta: {
                     headerTitle: il8n('nav', '授权边界')
@@ -303,6 +306,14 @@ export const routes = [
                     headerTitle: il8n('nav', '二级管理空间')
                 },
                 component: SecondaryManageSpace
+            },
+            {
+                path: 'manage-spaces/secondary-manage-space/create',
+                name: 'secondaryManageSpaceCreate',
+                meta: {
+                    headerTitle: il8n('levelSpace', '新建二级管理空间')
+                },
+                component: SecondaryManageSpaceCreate
             },
             {
                 path: 'user-group',

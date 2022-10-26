@@ -149,7 +149,7 @@
 
             handleCreate () {
                 this.$router.push({
-                    name: 'firstManageSpaceCreate',
+                    name: 'secondaryManageSpaceCreate',
                     params: {
                         id: 0
                     }
