@@ -27,7 +27,7 @@
             <bk-select v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
                 :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
-                :prefix-icon="selectNode && selectNode.level > 0 ? 'bk-icon icon-cog-shape' : 'bk-icon icon-text-file'"
+                :prefix-icon="selectNode && selectNode.level > 0 ? 'bk-icon icon-cog-shape' : 'icon iam-icon iamcenter-level-one'"
                 :remote-method="handleRemoteTree"
                 ext-popover-cls="iam-nav-select-dropdown-content" @change="handleSwitchRole">
                 <bk-big-tree ref="selectTree" size="small" :data="curRoleList" :selectable="true" :show-checkbox="false"
@@ -36,9 +36,10 @@
                     <div slot-scope="{ node,data }">
                         <div class="iam-select-collection">
                             <div>
-                                <i
-                                    :class="[node.level === 0 ? 'bk-icon icon-text-file' : ' bk-icon icon-cog-shape']"></i>
+                                <!-- <i
+                                    :class="[node.level === 0 ? 'bk-icon icon-text-file' : ' bk-icon icon-cog-shape']"></i> -->
                                 <!-- <span>层级：{{node.level + 1}}，名称： {{data.name}}</span> -->
+                                <Icon type="level-one" />
                                 <span>{{data.name}}</span>
                             </div>
                             <bk-star

@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./iconcool.js"></script>
+  <style>
+    html,
+    body,
+    ul,
+    li {
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      margin: 0 auto;
+      padding: 50px;
+      width: 980px;
+    }
+    .container .page-title {
+      margin: 0;
+      padding: 0;
+    }
+    .container .page-title .logo {
+      height: 50px;
+    }
+    .tab-wrapper {
+      padding-top: 26px;
+      border-bottom: 1px solid #dcdee5;
+      overflow: hidden;
+    }
+    .tab-wrapper .tab-panel {
+      float: left;
+      padding: 9px;
+      min-width: 124px;
+      font-size: 16px;
+      color: #979ba5;
+      text-align: center;
+      cursor: pointer;
+    }
+    .tab-wrapper .tab-panel.active {
+      color: #313238;
+      border-bottom: 3px solid #361ec6;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .icon-list .icon-item {
+      display: inline-block;
+      margin-top: 20px;
+      width: 116px;
+      color: #313238;
+      text-align: center;
+      vertical-align: top;
+      overflow: hidden;
+      list-style: none;
+    }
+    .icon-list .icon-item .icon {
+      display: inline-block;
+      height: 92px;
+      line-height: 92px;
+      font-size: 44px;
+    }
+    .icon-list .icon-text {
+      margin: 0;
+      font-size: 14px;
+      word-break: break-all;
+    }
+    .icon-list .colorful-icon {
+      display: inline-block;
+      margin-top: 20px;
+      width: 116px;
+      text-align: center;
+      vertical-align: top;
+      overflow: hidden;
+      list-style: none;
+    }
+    .icon-list .colorful-icon .icon {
+      display: block;
+      margin: 0 auto;
+      width: 1em;
+      height: 92px;
+      font-size: 44px;
+    }
+    .describe-title {
+      margin: 60px 0 0;
+      padding-bottom: 10px;
+      font-size: 20px;
+      font-weight: normal;
+      color: #313238;
+      border-bottom: 1px solid #dcdee5;
+    }
+    .use-describe {
+      padding-left: 20px;
+    }
+    .use-describe li {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #313238;
+      line-height: 20px;
+    }
+  </style>
+  <title>Icon Cool</title>
+</head>
+<body>
+  <div class="container">
+    <h2 class="page-title">
+      <img class="logo" src="data:image/svg+xml;base64,PHN2ZyBpZD0i5Zu+5bGCXzEiIGRhdGEtbmFtZT0i5Zu+5bGCIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDMzMSA2NCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNlNWVlZmY7fS5jbHMtMntmaWxsOiMzNjFlYzY7fS5jbHMtM3tmaWxsOiNiNWNiZmY7fS5jbHMtNHtmaWxsOiNkY2U5ZmY7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5pY29uIGNvb2wgbG9nbzwvdGl0bGU+PHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI2LjkgNjIuOTQgMC42OCA0Ny4yMSAwLjY4IDE1LjczIDI2LjkgMzEuNDcgMjYuOSA2Mi45NCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIyMC4zNCA1MS4xNCA3LjIzIDQzLjI3IDcuMjMgMjcuNTQgMjAuMzQgMzUuNCAyMC4zNCA1MS4xNCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIyNi45IDYyLjk0IDUzLjEzIDQ3LjIxIDUzLjEzIDE1LjczIDI2LjkgMzEuNDcgMjYuOSA2Mi45NCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSIyNi45IDAgMC42OCAxNS43MyAyNi45IDMxLjQ3IDUzLjEzIDE1LjczIDI2LjkgMCIvPjxlbGxpcHNlIGNsYXNzPSJjbHMtMiIgY3g9IjI2LjkiIGN5PSIxNS43NCIgcng9IjEwLjQ5IiByeT0iNS44MyIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIzNC4yMyA1MS4xNCA0OC4xOCA0Mi43NyA0MS4zMSAzOS4zNCAzNC4yMyA1MS4xNCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSI0OC4xOCAyNy41NCAzNC4yMyAzNS45MSA0MS4xIDM5LjM0IDQ4LjE4IDI3LjU0Ii8+PHBhdGggZD0iTTcxLjIzLDE4LjU0aDkuOTRWMTUuOGgzLjg5djIuNzRoOC42N1YxNS44aDMuOXYyLjc0aDkuNjd2My4zMUg5Ny42M3YyaC0zLjl2LTJIODUuMDZ2MS45M0g4MS4xN1YyMS44NUg3MS4yM1ptMCwyOS4xSDc1VjM4LjI3aDI4LjY0djkuMzdoMy43VjUxSDcxLjIzWm0yLjg1LTIyaDMuN1YzNi4zNWgtMy43Wm01LDIyaDQuNDNWNDEuNDdINzkuMDlabTIuODUtMjNIODUuOHYxMkg4MS45NFptNC41OSw5LjgzYTI3LjI2LDI3LjI2LDAsMCwwLDUuMzktMTBsMy45LjU3TDk1LDI3LjI1aDExLjY3djMuMjhIOTMuNThhMzcuMjIsMzcuMjIsMCwwLDEtMy44NSw2LjEyQzg4LjgsMzYsODcuNjUsMzUuMTksODYuNTMsMzQuNVptLjU4LDEzLjE0aDQuNDNWNDEuNDdIODcuMTFabTcuMzYtMTQuNDksMi4yNy0yLjI4YzIuMzEsMS40Nyw0LjE2LDIuNyw2LjQsNC4yOGwtMi40MywyLjU0Qzk4LjY3LDM2LjExLDk2Ljc4LDM0LjczLDk0LjQ3LDMzLjE1Wm0uNjEsOC4zMnY2LjE3aDQuNDdWNDEuNDdaIi8+PHBhdGggZD0iTTEwOS4zNCwyNS40YTM2LjgzLDM2LjgzLDAsMCwwLDUuMzYtOS42M2wzLjUxLjVjLS40MywxLS44MSwxLjkyLTEuMjQsMi44MWg2djNsLTIuMiw0LjA5aDMuNTFWNDMuNTlIMTExLjEyVjI4LjUybC0uMzEuMzlBMzcuMTQsMzcuMTQsMCwwLDAsMTA5LjM0LDI1LjRaTTEyNCw0OC4xNGMwLC4zNSwwLC42OSwwLDEuMDgtNS4xMi40Mi05LjgyLjg1LTE0LDEuMzVsLS40Ny0zLjUxYzQuMDUtLjI3LDkuMjEtLjY5LDE0LjQ5LTEuMjMsMCwuNzMsMCwxLjM1LDAsMmE1NSw1NSwwLDAsMCw0Ljc0LTcuNTFsMywxLjYyYy0xLjc3LDMtMy4zMSw1LjQ3LTUuMiw4LjE3QzEyNS43Miw0OS4zNywxMjUsNDguNzksMTI0LDQ4LjE0Wm0tOC42OC0yNS44NmEzOS44MSwzOS44MSwwLDAsMS0yLjUsMy45M2g0LjU1bDIuMTktMy45M1ptLTEuNDIsMTEuMjFoMi41OFYyOS4xOGgtMi41OFptMCw3LjFoMi41OFYzNi4yN2gtMi41OFpNMTE5LDI5LjE4djQuMzFoMi41OFYyOS4xOFptMCwxMS40MWgyLjU4VjM2LjI3SDExOVpNMTI1LjQ1LDIwaDguMzdjLS40My0xLjI3LS44OS0yLjYyLTEuMzItMy43N2w0LjA5LS41Yy40NiwxLjM4LjkyLDIuODUsMS4zNSw0LjI3SDE0NlYyMy40SDEyNS40NVpNMTI5LDQ4LjFjMSwuMDgsMi4xMi4xMiwzLjEyLjEyLDEuMzUsMCwxLjg1LS41NCwxLjg1LTEuODV2LThoLTYuNzVWMjYuNTZoMTYuNjFWMzguMzVoLTYuMjR2OS4yMWMwLDIuNjYtMSw0LTMuNjYsNC4xMi0xLjE2LDAtMi43OC4wOC00LjE2LjA4QzEyOS41OCw1MC41MywxMjkuMzEsNDkuMjYsMTI5LDQ4LjFabTEuNzMtMTNoOS42VjI5LjgzaC05LjZaTTEzOSw0MS43OCwxNDIsNDAuMzVjMS42OSwyLjc4LDIuOTMsNSw0LjQ3LDcuNzlMMTQzLjMsNDkuOEMxNDIsNDcuMSwxNDAuNjgsNDQuNzEsMTM5LDQxLjc4WiIvPjxwYXRoIGQ9Ik0xNjAuNDUsMTcuNDR2NC43N2gtNVYxNy40NFptMCw5LjIyVjUyLjNoLTVWMjYuNjZaIi8+PHBhdGggZD0iTTE4MS41Miw0Mi43NWg1cTAsNC44OS0xLjMyLDYuODJhNi4xNiw2LjE2LDAsMCwxLTMuMzIsMi4zNywyMywyMywwLDAsMS02LjQxLjY4LDI0Ljc1LDI0Ljc1LDAsMCwxLTUuNDUtLjQ4LDguMjgsOC4yOCwwLDAsMS0zLjM4LTEuNTgsNy4yMiw3LjIyLDAsMCwxLTIuMjYtMy44OCwzMS4yMiwzMS4yMiwwLDAsMS0uNjYtNy4zOSwyNCwyNCwwLDAsMSwuODgtNy42Nyw3LjE2LDcuMTYsMCwwLDEsMy42My00LjEzcTIuMy0xLjE1LDcuMDgtMS4xNWExOSwxOSwwLDAsMSw2LjcxLjk0LDUuNzIsNS43MiwwLDAsMSwzLjMyLDMsMTMsMTMsMCwwLDEsLjc3LDUuMWgtNWE3LDcsMCwwLDAtLjUzLTMuMjcsMi44MywyLjgzLDAsMCwwLTEuNzQtMS4zLDEzLjIsMTMuMiwwLDAsMC0zLjcxLS4zOWMtMi41MywwLTQuMjEuNDMtNSwxLjMxcy0xLjIzLDMuNTEtMS4yMyw3LjgzcTAsNS44MiwxLjI2LDcuNTksMSwxLjQsNS42OCwxLjRjMi40MywwLDQtLjM1LDQuNjUtMVMxODEuNTIsNDUuMjQsMTgxLjUyLDQyLjc1WiIvPjxwYXRoIGQ9Ik0yMDAuMjUsMjYuMzRhMjQuMTMsMjQuMTMsMCwwLDEsNi40OS42Miw2LjY5LDYuNjksMCwwLDEsNC43OCw1LjEyLDI5Ljc1LDI5Ljc1LDAsMCwxLC41OSw2Ljg3cTAsNi0uODYsOC41NWE2LjQ2LDYuNDYsMCwwLDEtMy4zMSw0cS0yLjMzLDEuMDgtNy42MywxLjA4YTE5LjY5LDE5LjY5LDAsMCwxLTcuMTEtLjk0LDYuMzEsNi4zMSwwLDAsMS0yLjM5LTEuNjIsNy42NCw3LjY0LDAsMCwxLTEuNDQtMi43NSwzMC41LDMwLjUsMCwwLDEtLjc2LTguMjMsMzMuMjIsMzMuMjIsMCwwLDEsLjQ5LTYuNDEsOC4zOCw4LjM4LDAsMCwxLDEuNjEtMy43LDYuNDQsNi40NCwwLDAsMSwzLjM2LTJBMjQuNjEsMjQuNjEsMCwwLDEsMjAwLjI1LDI2LjM0Wm0uMDgsNC4wNXEtNC41LDAtNS40NywxLjUzdC0xLDcuMzJhNDIuNTQsNDIuNTQsMCwwLDAsLjI0LDUuMjYsNS45LDUuOSwwLDAsMCwuODYsMi42MnExLDEuNDYsNS41MiwxLjQ1LDMuOTIsMCw1LjA3LTEuMTVhNC44MSw0LjgxLDAsMCwwLDEuMDktMi42LDM3LjQzLDM3LjQzLDAsMCwwLC4zLTUuNTVxMC02LTEuMTItNy41MVEyMDQuNzYsMzAuNCwyMDAuMzMsMzAuMzlaIi8+PHBhdGggZD0iTTIxNS4zOSwyNi42Nmg1LjA1bC0uMTYsMi4xNmMxLjMxLTIuMTksNC0yLjQ4LDguMzEtMi40OHM3LDEuMSw4LjI5LDMuM3EuODgsMS41Ljg4LDUuNThWNTIuM2gtNVYzNi40MmExMC4zOSwxMC4zOSwwLDAsMC0uNTQtNC4xMywyLjc0LDIuNzQsMCwwLDAtMS42MS0xLjQsOS40OCw5LjQ4LDAsMCwwLTMuMTktLjQycS0zLjY3LDAtNS4zMSwxLjUzdC0xLjYzLDVWNTIuM2gtNS4wNVoiLz48cGF0aCBkPSJNMjY0LjQ4LDQyLjc1aDVjMCwzLjI2LS40Miw1LjUzLTEuMzIsNi44MmE2LjE2LDYuMTYsMCwwLDEtMy4zMiwyLjM3LDIzLDIzLDAsMCwxLTYuNDEuNjgsMjQuNzUsMjQuNzUsMCwwLDEtNS40NS0uNDgsOC4yOCw4LjI4LDAsMCwxLTMuMzgtMS41OCw3LjI5LDcuMjksMCwwLDEtMi4yNi0zLjg4LDMxLjIyLDMxLjIyLDAsMCwxLS42Ni03LjM5LDI0LDI0LDAsMCwxLC44OS03LjY3LDcuMTEsNy4xMSwwLDAsMSwzLjYyLTQuMTNxMi4yOS0xLjE1LDcuMDgtMS4xNWExOSwxOSwwLDAsMSw2LjcxLjk0LDUuNzIsNS43MiwwLDAsMSwzLjMyLDMsMTMsMTMsMCwwLDEsLjc3LDUuMWgtNWE3LjEsNy4xLDAsMCwwLS41NC0zLjI3LDIuODMsMi44MywwLDAsMC0xLjc0LTEuMywxMy4yLDEzLjIsMCwwLDAtMy43MS0uMzljLTIuNTMsMC00LjIxLjQzLTUsMS4zMXMtMS4yMywzLjUxLTEuMjMsNy44M3EwLDUuODIsMS4yNiw3LjU5Yy42NC45MywyLjU0LDEuNCw1LjY4LDEuNCwyLjQzLDAsNC0uMzUsNC42Ni0xUzI2NC40OCw0NS4yNCwyNjQuNDgsNDIuNzVaIi8+PHBhdGggZD0iTTI4My4yMSwyNi4zNGEyNC4xMywyNC4xMywwLDAsMSw2LjQ5LjYyLDYuNjksNi42OSwwLDAsMSw0Ljc4LDUuMTIsMjkuNzUsMjkuNzUsMCwwLDEsLjU5LDYuODdxMCw2LS44Niw4LjU1YTYuNDYsNi40NiwwLDAsMS0zLjMxLDRxLTIuMzIsMS4wOC03LjYzLDEuMDhhMTkuNjksMTkuNjksMCwwLDEtNy4xMS0uOTQsNi4zMSw2LjMxLDAsMCwxLTIuMzktMS42Miw3LjY0LDcuNjQsMCwwLDEtMS40NC0yLjc1LDMwLjYxLDMwLjYxLDAsMCwxLS43NS04LjIzLDMzLjM2LDMzLjM2LDAsMCwxLC40OC02LjQxLDguMzgsOC4zOCwwLDAsMSwxLjYxLTMuNyw2LjQ4LDYuNDgsMCwwLDEsMy4zNi0yQTI0LjYxLDI0LjYxLDAsMCwxLDI4My4yMSwyNi4zNFptLjA5LDQuMDVjLTMsMC00LjgzLjUxLTUuNDgsMS41M3MtMSwzLjUzLTEsNy4zMkE0Mi41NCw0Mi41NCwwLDAsMCwyNzcsNDQuNWE1LjksNS45LDAsMCwwLC44NiwyLjYycTEsMS40Niw1LjUyLDEuNDUsMy45MiwwLDUuMDctMS4xNWE0LjgxLDQuODEsMCwwLDAsMS4wOS0yLjYsMzcuMTMsMzcuMTMsMCwwLDAsLjMxLTUuNTVxMC02LTEuMTMtNy41MVEyODcuNzIsMzAuNCwyODMuMywzMC4zOVoiLz48cGF0aCBkPSJNMzA5LjE2LDI2LjM0YTI0LjEzLDI0LjEzLDAsMCwxLDYuNDkuNjIsNi42OSw2LjY5LDAsMCwxLDQuNzgsNS4xMkEyOS43NSwyOS43NSwwLDAsMSwzMjEsMzlxMCw2LS44Niw4LjU1YTYuNDYsNi40NiwwLDAsMS0zLjMxLDRxLTIuMzMsMS4wOC03LjYzLDEuMDhhMTkuNjksMTkuNjksMCwwLDEtNy4xMS0uOTQsNi4zMSw2LjMxLDAsMCwxLTIuMzktMS42Miw3LjgsNy44LDAsMCwxLTEuNDUtMi43NSwzMC42MSwzMC42MSwwLDAsMS0uNzUtOC4yMywzMi40NCwzMi40NCwwLDAsMSwuNDktNi40MSw4LjI2LDguMjYsMCwwLDEsMS42MS0zLjcsNi40NCw2LjQ0LDAsMCwxLDMuMzYtMkEyNC42MSwyNC42MSwwLDAsMSwzMDkuMTYsMjYuMzRabS4wOCw0LjA1cS00LjUsMC01LjQ3LDEuNTNjLS43LDEuMDktMSwzLjUzLTEsNy4zMkE0Mi41NCw0Mi41NCwwLDAsMCwzMDMsNDQuNWE1Ljc3LDUuNzcsMCwwLDAsLjg2LDIuNjJxMSwxLjQ2LDUuNTIsMS40NSwzLjkxLDAsNS4wNy0xLjE1YTQuODEsNC44MSwwLDAsMCwxLjA5LTIuNiwzNy40MywzNy40MywwLDAsMCwuMy01LjU1cTAtNi0xLjEyLTcuNTFRMzEzLjY3LDMwLjQsMzA5LjI0LDMwLjM5WiIvPjxwYXRoIGQ9Ik0zMjkuMzQsMTUuNjlWNTIuM2gtNVYxNS42OVoiLz48L3N2Zz4=">
+    </h2>
+    <div class="tab-wrapper">
+      <div class="tab-panel active" data-type="singleColor">单色图标</div>
+      <div class="tab-panel"  data-type="multipleColor">彩色图标</div>
+    </div>
+    <section class="tab-content single-color active" data-type="singleColor">
+      <ul class="icon-list">
+        <li class="icon-item" title="time-circle-fill">
+          <span class="icon iam-icon iamcenter-time-circle-fill"></span>
+          <p class="icon-text">time-circle-fill</p>
+        </li>
+        <li class="icon-item" title="check">
+          <span class="icon iam-icon iamcenter-check"></span>
+          <p class="icon-text">check</p>
+        </li>
+        <li class="icon-item" title="circle-close">
+          <span class="icon iam-icon iamcenter-circle-close"></span>
+          <p class="icon-text">circle-close</p>
+        </li>
+        <li class="icon-item" title="details">
+          <span class="icon iam-icon iamcenter-details"></span>
+          <p class="icon-text">details</p>
+        </li>
+        <li class="icon-item" title="file">
+          <span class="icon iam-icon iamcenter-file"></span>
+          <p class="icon-text">file</p>
+        </li>
+        <li class="icon-item" title="help">
+          <span class="icon iam-icon iamcenter-help"></span>
+          <p class="icon-text">help</p>
+        </li>
+        <li class="icon-item" title="home">
+          <span class="icon iam-icon iamcenter-home"></span>
+          <p class="icon-text">home</p>
+        </li>
+        <li class="icon-item" title="info-new">
+          <span class="icon iam-icon iamcenter-info-new"></span>
+          <p class="icon-text">info-new</p>
+        </li>
+        <li class="icon-item" title="internet">
+          <span class="icon iam-icon iamcenter-internet"></span>
+          <p class="icon-text">internet</p>
+        </li>
+        <li class="icon-item" title="notice">
+          <span class="icon iam-icon iamcenter-notice"></span>
+          <p class="icon-text">notice</p>
+        </li>
+        <li class="icon-item" title="refresh">
+          <span class="icon iam-icon iamcenter-refresh"></span>
+          <p class="icon-text">refresh</p>
+        </li>
+        <li class="icon-item" title="termination">
+          <span class="icon iam-icon iamcenter-termination"></span>
+          <p class="icon-text">termination</p>
+        </li>
+        <li class="icon-item" title="warning">
+          <span class="icon iam-icon iamcenter-warning"></span>
+          <p class="icon-text">warning</p>
+        </li>
+        <li class="icon-item" title="withdraw">
+          <span class="icon iam-icon iamcenter-withdraw"></span>
+          <p class="icon-text">withdraw</p>
+        </li>
+        <li class="icon-item" title="check-fill">
+          <span class="icon iam-icon iamcenter-check-fill"></span>
+          <p class="icon-text">check-fill</p>
+        </li>
+        <li class="icon-item" title="close-fill">
+          <span class="icon iam-icon iamcenter-close-fill"></span>
+          <p class="icon-text">close-fill</p>
+        </li>
+        <li class="icon-item" title="error-fill">
+          <span class="icon iam-icon iamcenter-error-fill"></span>
+          <p class="icon-text">error-fill</p>
+        </li>
+        <li class="icon-item" title="help-fill">
+          <span class="icon iam-icon iamcenter-help-fill"></span>
+          <p class="icon-text">help-fill</p>
+        </li>
+        <li class="icon-item" title="warning-fill">
+          <span class="icon iam-icon iamcenter-warning-fill"></span>
+          <p class="icon-text">warning-fill</p>
+        </li>
+        <li class="icon-item" title="application">
+          <span class="icon iam-icon iamcenter-application"></span>
+          <p class="icon-text">application</p>
+        </li>
+        <li class="icon-item" title="permission-query">
+          <span class="icon iam-icon iamcenter-permission-query"></span>
+          <p class="icon-text">permission-query</p>
+        </li>
+        <li class="icon-item" title="has-approve">
+          <span class="icon iam-icon iamcenter-has-approve"></span>
+          <p class="icon-text">has-approve</p>
+        </li>
+        <li class="icon-item" title="has-pass">
+          <span class="icon iam-icon iamcenter-has-pass"></span>
+          <p class="icon-text">has-pass</p>
+        </li>
+        <li class="icon-item" title="has-pending">
+          <span class="icon iam-icon iamcenter-has-pending"></span>
+          <p class="icon-text">has-pending</p>
+        </li>
+        <li class="icon-item" title="has-reject">
+          <span class="icon iam-icon iamcenter-has-reject"></span>
+          <p class="icon-text">has-reject</p>
+        </li>
+        <li class="icon-item" title="has-wait">
+          <span class="icon iam-icon iamcenter-has-wait"></span>
+          <p class="icon-text">has-wait</p>
+        </li>
+        <li class="icon-item" title="left-arrow">
+          <span class="icon iam-icon iamcenter-left-arrow"></span>
+          <p class="icon-text">left-arrow</p>
+        </li>
+        <li class="icon-item" title="expand">
+          <span class="icon iam-icon iamcenter-expand"></span>
+          <p class="icon-text">expand</p>
+        </li>
+        <li class="icon-item" title="user-group-fill">
+          <span class="icon iam-icon iamcenter-user-group-fill"></span>
+          <p class="icon-text">user-group-fill</p>
+        </li>
+        <li class="icon-item" title="user-fill">
+          <span class="icon iam-icon iamcenter-user-fill"></span>
+          <p class="icon-text">user-fill</p>
+        </li>
+        <li class="icon-item" title="user">
+          <span class="icon iam-icon iamcenter-user"></span>
+          <p class="icon-text">user</p>
+        </li>
+        <li class="icon-item" title="perm-manage">
+          <span class="icon iam-icon iamcenter-perm-manage"></span>
+          <p class="icon-text">perm-manage</p>
+        </li>
+        <li class="icon-item" title="perm-apply">
+          <span class="icon iam-icon iamcenter-perm-apply"></span>
+          <p class="icon-text">perm-apply</p>
+        </li>
+        <li class="icon-item" title="approval-process-manage">
+          <span class="icon iam-icon iamcenter-approval-process-manage"></span>
+          <p class="icon-text">approval-process-manage</p>
+        </li>
+        <li class="icon-item" title="my-perm">
+          <span class="icon iam-icon iamcenter-my-perm"></span>
+          <p class="icon-text">my-perm</p>
+        </li>
+        <li class="icon-item" title="my-apply">
+          <span class="icon iam-icon iamcenter-my-apply"></span>
+          <p class="icon-text">my-apply</p>
+        </li>
+        <li class="icon-item" title="my-approval">
+          <span class="icon iam-icon iamcenter-my-approval"></span>
+          <p class="icon-text">my-approval</p>
+        </li>
+        <li class="icon-item" title="system-access">
+          <span class="icon iam-icon iamcenter-system-access"></span>
+          <p class="icon-text">system-access</p>
+        </li>
+        <li class="icon-item" title="my-approval-resource">
+          <span class="icon iam-icon iamcenter-my-approval-resource"></span>
+          <p class="icon-text">my-approval-resource</p>
+        </li>
+        <li class="icon-item" title="resource-approver-manage">
+          <span class="icon iam-icon iamcenter-resource-approver-manage"></span>
+          <p class="icon-text">resource-approver-manage</p>
+        </li>
+        <li class="icon-item" title="check-small">
+          <span class="icon iam-icon iamcenter-check-small"></span>
+          <p class="icon-text">check-small</p>
+        </li>
+        <li class="icon-item" title="reource">
+          <span class="icon iam-icon iamcenter-reource"></span>
+          <p class="icon-text">reource</p>
+        </li>
+        <li class="icon-item" title="detail">
+          <span class="icon iam-icon iamcenter-detail"></span>
+          <p class="icon-text">detail</p>
+        </li>
+        <li class="icon-item" title="status-current">
+          <span class="icon iam-icon iamcenter-status-current"></span>
+          <p class="icon-text">status-current</p>
+        </li>
+        <li class="icon-item" title="status-wait">
+          <span class="icon iam-icon iamcenter-status-wait"></span>
+          <p class="icon-text">status-wait</p>
+        </li>
+        <li class="icon-item" title="apply-current">
+          <span class="icon iam-icon iamcenter-apply-current"></span>
+          <p class="icon-text">apply-current</p>
+        </li>
+        <li class="icon-item" title="apply-revoke">
+          <span class="icon iam-icon iamcenter-apply-revoke"></span>
+          <p class="icon-text">apply-revoke</p>
+        </li>
+        <li class="icon-item" title="apply-pass">
+          <span class="icon iam-icon iamcenter-apply-pass"></span>
+          <p class="icon-text">apply-pass</p>
+        </li>
+        <li class="icon-item" title="approve-wait">
+          <span class="icon iam-icon iamcenter-approve-wait"></span>
+          <p class="icon-text">approve-wait</p>
+        </li>
+        <li class="icon-item" title="approve-reject">
+          <span class="icon iam-icon iamcenter-approve-reject"></span>
+          <p class="icon-text">approve-reject</p>
+        </li>
+        <li class="icon-item" title="apply-reject">
+          <span class="icon iam-icon iamcenter-apply-reject"></span>
+          <p class="icon-text">apply-reject</p>
+        </li>
+        <li class="icon-item" title="close-small">
+          <span class="icon iam-icon iamcenter-close-small"></span>
+          <p class="icon-text">close-small</p>
+        </li>
+        <li class="icon-item" title="reduce-hollow">
+          <span class="icon iam-icon iamcenter-reduce-hollow"></span>
+          <p class="icon-text">reduce-hollow</p>
+        </li>
+        <li class="icon-item" title="add-hollow">
+          <span class="icon iam-icon iamcenter-add-hollow"></span>
+          <p class="icon-text">add-hollow</p>
+        </li>
+        <li class="icon-item" title="resources">
+          <span class="icon iam-icon iamcenter-resources"></span>
+          <p class="icon-text">resources</p>
+        </li>
+        <li class="icon-item" title="see-details">
+          <span class="icon iam-icon iamcenter-see-details"></span>
+          <p class="icon-text">see-details</p>
+        </li>
+        <li class="icon-item" title="copy">
+          <span class="icon iam-icon iamcenter-copy"></span>
+          <p class="icon-text">copy</p>
+        </li>
+        <li class="icon-item" title="paste">
+          <span class="icon iam-icon iamcenter-paste"></span>
+          <p class="icon-text">paste</p>
+        </li>
+        <li class="icon-item" title="changed">
+          <span class="icon iam-icon iamcenter-changed"></span>
+          <p class="icon-text">changed</p>
+        </li>
+        <li class="icon-item" title="expired">
+          <span class="icon iam-icon iamcenter-expired"></span>
+          <p class="icon-text">expired</p>
+        </li>
+        <li class="icon-item" title="new">
+          <span class="icon iam-icon iamcenter-new"></span>
+          <p class="icon-text">new</p>
+        </li>
+        <li class="icon-item" title="edit-fill">
+          <span class="icon iam-icon iamcenter-edit-fill"></span>
+          <p class="icon-text">edit-fill</p>
+        </li>
+        <li class="icon-item" title="loading-circle">
+          <span class="icon iam-icon iamcenter-loading-circle"></span>
+          <p class="icon-text">loading-circle</p>
+        </li>
+        <li class="icon-item" title="organization-fill">
+          <span class="icon iam-icon iamcenter-organization-fill"></span>
+          <p class="icon-text">organization-fill</p>
+        </li>
+        <li class="icon-item" title="user-group">
+          <span class="icon iam-icon iamcenter-user-group"></span>
+          <p class="icon-text">user-group</p>
+        </li>
+        <li class="icon-item" title="personal-user">
+          <span class="icon iam-icon iamcenter-personal-user"></span>
+          <p class="icon-text">personal-user</p>
+        </li>
+        <li class="icon-item" title="revoke">
+          <span class="icon iam-icon iamcenter-revoke"></span>
+          <p class="icon-text">revoke</p>
+        </li>
+        <li class="icon-item" title="user-directory">
+          <span class="icon iam-icon iamcenter-user-directory"></span>
+          <p class="icon-text">user-directory</p>
+        </li>
+        <li class="icon-item" title="version-log">
+          <span class="icon iam-icon iamcenter-version-log"></span>
+          <p class="icon-text">version-log</p>
+        </li>
+        <li class="icon-item" title="done-en">
+          <span class="icon iam-icon iamcenter-done-en"></span>
+          <p class="icon-text">done-en</p>
+        </li>
+        <li class="icon-item" title="apply-current-en">
+          <span class="icon iam-icon iamcenter-apply-current-en"></span>
+          <p class="icon-text">apply-current-en</p>
+        </li>
+        <li class="icon-item" title="approve-wait-en">
+          <span class="icon iam-icon iamcenter-approve-wait-en"></span>
+          <p class="icon-text">approve-wait-en</p>
+        </li>
+        <li class="icon-item" title="apply-pass-en">
+          <span class="icon iam-icon iamcenter-apply-pass-en"></span>
+          <p class="icon-text">apply-pass-en</p>
+        </li>
+        <li class="icon-item" title="delete-light-en">
+          <span class="icon iam-icon iamcenter-delete-light-en"></span>
+          <p class="icon-text">delete-light-en</p>
+        </li>
+        <li class="icon-item" title="apply-revoke-en">
+          <span class="icon iam-icon iamcenter-apply-revoke-en"></span>
+          <p class="icon-text">apply-revoke-en</p>
+        </li>
+        <li class="icon-item" title="approve-reject-en">
+          <span class="icon iam-icon iamcenter-approve-reject-en"></span>
+          <p class="icon-text">approve-reject-en</p>
+        </li>
+        <li class="icon-item" title="new-en">
+          <span class="icon iam-icon iamcenter-new-en"></span>
+          <p class="icon-text">new-en</p>
+        </li>
+        <li class="icon-item" title="expire-en">
+          <span class="icon iam-icon iamcenter-expire-en"></span>
+          <p class="icon-text">expire-en</p>
+        </li>
+        <li class="icon-item" title="change-en">
+          <span class="icon iam-icon iamcenter-change-en"></span>
+          <p class="icon-text">change-en</p>
+        </li>
+        <li class="icon-item" title="delete-en">
+          <span class="icon iam-icon iamcenter-delete-en"></span>
+          <p class="icon-text">delete-en</p>
+        </li>
+        <li class="icon-item" title="info-fill">
+          <span class="icon iam-icon iamcenter-info-fill"></span>
+          <p class="icon-text">info-fill</p>
+        </li>
+        <li class="icon-item" title="switch-identity">
+          <span class="icon iam-icon iamcenter-switch-identity"></span>
+          <p class="icon-text">switch-identity</p>
+        </li>
+        <li class="icon-item" title="nav-stick">
+          <span class="icon iam-icon iamcenter-nav-stick"></span>
+          <p class="icon-text">nav-stick</p>
+        </li>
+        <li class="icon-item" title="grade-admin">
+          <span class="icon iam-icon iamcenter-grade-admin"></span>
+          <p class="icon-text">grade-admin</p>
+        </li>
+        <li class="icon-item" title="logout">
+          <span class="icon iam-icon iamcenter-logout"></span>
+          <p class="icon-text">logout</p>
+        </li>
+        <li class="icon-item" title="system-admin">
+          <span class="icon iam-icon iamcenter-system-admin"></span>
+          <p class="icon-text">system-admin</p>
+        </li>
+        <li class="icon-item" title="super-admin">
+          <span class="icon iam-icon iamcenter-super-admin"></span>
+          <p class="icon-text">super-admin</p>
+        </li>
+        <li class="icon-item" title="up-angle">
+          <span class="icon iam-icon iamcenter-up-angle"></span>
+          <p class="icon-text">up-angle</p>
+        </li>
+        <li class="icon-item" title="down-angle">
+          <span class="icon iam-icon iamcenter-down-angle"></span>
+          <p class="icon-text">down-angle</p>
+        </li>
+        <li class="icon-item" title="right-angle">
+          <span class="icon iam-icon iamcenter-right-angle"></span>
+          <p class="icon-text">right-angle</p>
+        </li>
+        <li class="icon-item" title="left-angle">
+          <span class="icon iam-icon iamcenter-left-angle"></span>
+          <p class="icon-text">left-angle</p>
+        </li>
+        <li class="icon-item" title="dustbin">
+          <span class="icon iam-icon iamcenter-dustbin"></span>
+          <p class="icon-text">dustbin</p>
+        </li>
+        <li class="icon-item" title="perm-template">
+          <span class="icon iam-icon iamcenter-perm-template"></span>
+          <p class="icon-text">perm-template</p>
+        </li>
+        <li class="icon-item" title="pin">
+          <span class="icon iam-icon iamcenter-pin"></span>
+          <p class="icon-text">pin</p>
+        </li>
+        <li class="icon-item" title="delete-line">
+          <span class="icon iam-icon iamcenter-delete-line"></span>
+          <p class="icon-text">delete-line</p>
+        </li>
+        <li class="icon-item" title="detail-new">
+          <span class="icon iam-icon iamcenter-detail-new"></span>
+          <p class="icon-text">detail-new</p>
+        </li>
+        <li class="icon-item" title="shrink-line">
+          <span class="icon iam-icon iamcenter-shrink-line"></span>
+          <p class="icon-text">shrink-line</p>
+        </li>
+        <li class="icon-item" title="undo-line">
+          <span class="icon iam-icon iamcenter-undo-line"></span>
+          <p class="icon-text">undo-line</p>
+        </li>
+        <li class="icon-item" title="file-close">
+          <span class="icon iam-icon iamcenter-file-close"></span>
+          <p class="icon-text">file-close</p>
+        </li>
+        <li class="icon-item" title="exact-search-allow">
+          <span class="icon iam-icon iamcenter-exact-search-allow"></span>
+          <p class="icon-text">exact-search-allow</p>
+        </li>
+        <li class="icon-item" title="fuzzy-search">
+          <span class="icon iam-icon iamcenter-fuzzy-search"></span>
+          <p class="icon-text">fuzzy-search</p>
+        </li>
+        <li class="icon-item" title="fuzzy-search-allow">
+          <span class="icon iam-icon iamcenter-fuzzy-search-allow"></span>
+          <p class="icon-text">fuzzy-search-allow</p>
+        </li>
+        <li class="icon-item" title="exact-search">
+          <span class="icon iam-icon iamcenter-exact-search"></span>
+          <p class="icon-text">exact-search</p>
+        </li>
+        <li class="icon-item" title="drag-fill">
+          <span class="icon iam-icon iamcenter-drag-fill"></span>
+          <p class="icon-text">drag-fill</p>
+        </li>
+        <li class="icon-item" title="add-small">
+          <span class="icon iam-icon iamcenter-add-small"></span>
+          <p class="icon-text">add-small</p>
+        </li>
+        <li class="icon-item" title="url">
+          <span class="icon iam-icon iamcenter-url"></span>
+          <p class="icon-text">url</p>
+        </li>
+        <li class="icon-item" title="super-admin-new">
+          <span class="icon iam-icon iamcenter-super-admin-new"></span>
+          <p class="icon-text">super-admin-new</p>
+        </li>
+        <li class="icon-item" title="super-admin-new-en">
+          <span class="icon iam-icon iamcenter-super-admin-new-en"></span>
+          <p class="icon-text">super-admin-new-en</p>
+        </li>
+        <li class="icon-item" title="system-admin-new">
+          <span class="icon iam-icon iamcenter-system-admin-new"></span>
+          <p class="icon-text">system-admin-new</p>
+        </li>
+        <li class="icon-item" title="grade-admin-new-en">
+          <span class="icon iam-icon iamcenter-grade-admin-new-en"></span>
+          <p class="icon-text">grade-admin-new-en</p>
+        </li>
+        <li class="icon-item" title="system-admin-new-en">
+          <span class="icon iam-icon iamcenter-system-admin-new-en"></span>
+          <p class="icon-text">system-admin-new-en</p>
+        </li>
+        <li class="icon-item" title="grade-admin-new">
+          <span class="icon iam-icon iamcenter-grade-admin-new"></span>
+          <p class="icon-text">grade-admin-new</p>
+        </li>
+        <li class="icon-item" title="arrows-left">
+          <span class="icon iam-icon iamcenter-arrows-left"></span>
+          <p class="icon-text">arrows-left</p>
+        </li>
+        <li class="icon-item" title="help-fill-2">
+          <span class="icon iam-icon iamcenter-help-fill-2"></span>
+          <p class="icon-text">help-fill-2</p>
+        </li>
+        <li class="icon-item" title="sync-new">
+          <span class="icon iam-icon iamcenter-sync-new"></span>
+          <p class="icon-text">sync-new</p>
+        </li>
+        <li class="icon-item" title="operate-audit">
+          <span class="icon iam-icon iamcenter-operate-audit"></span>
+          <p class="icon-text">operate-audit</p>
+        </li>
+        <li class="icon-item" title="resource-admin">
+          <span class="icon iam-icon iamcenter-resource-admin"></span>
+          <p class="icon-text">resource-admin</p>
+        </li>
+        <li class="icon-item" title="system-api">
+          <span class="icon iam-icon iamcenter-system-api"></span>
+          <p class="icon-text">system-api</p>
+        </li>
+        <li class="icon-item" title="auth-api">
+          <span class="icon iam-icon iamcenter-auth-api"></span>
+          <p class="icon-text">auth-api</p>
+        </li>
+        <li class="icon-item" title="linshishenqingquanxian">
+          <span class="icon iam-icon iamcenter-linshishenqingquanxian"></span>
+          <p class="icon-text">linshishenqingquanxian</p>
+        </li>
+        <li class="icon-item" title="admin-api">
+          <span class="icon iam-icon iamcenter-admin-api"></span>
+          <p class="icon-text">admin-api</p>
+        </li>
+        <li class="icon-item" title="brush-fill">
+          <span class="icon iam-icon iamcenter-brush-fill"></span>
+          <p class="icon-text">brush-fill</p>
+        </li>
+        <li class="icon-item" title="refresh-2">
+          <span class="icon iam-icon iamcenter-refresh-2"></span>
+          <p class="icon-text">refresh-2</p>
+        </li>
+        <li class="icon-item" title="level-two">
+          <span class="icon iam-icon iamcenter-level-two"></span>
+          <p class="icon-text">level-two</p>
+        </li>
+        <li class="icon-item" title="level-one">
+          <span class="icon iam-icon iamcenter-level-one"></span>
+          <p class="icon-text">level-one</p>
+        </li>
+      </ul>
+      <h3 class="describe-title">为什么使用</h3>
+      <ul class="use-describe">
+        <li>弹性，在网页或者 app 上，展示字体是很便捷的。用字体图标可以很方便的改变 icon 的颜色，或者加入一些其他的效果</li>
+        <li>可缩放，可以很方便的改变图标的大小</li>
+        <li>矢量，字体图标是矢量的并且具有独立的分辨率，不管在高分辨率还是低分辨率，不管是在网页还是手机端，都具有很好的展示效果，不会出现锯齿或者马赛克模糊</li>
+        <li>节省加载时间，字体图标很小，每个小图标只有几 kb，大大节省了加载时间</li>
+      </ul>
+      <h3 class="describe-title">如何使用</h3>
+      <ul class="use-describe">
+        <li>将整个目录复制到您的项目里</li>
+        <li>引入 style.css</li>
+        <li>挑选相应图标并获取类名，如 .bk-icon .icon-demo</li>
+      </ul>
+    </section>
+    <section class="tab-content multiple-color"  data-type="multipleColor">
+      <ul class="icon-list">
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-time-circle-fill"></use>
+          </svg>
+          <p class="icon-text">time-circle-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-check"></use>
+          </svg>
+          <p class="icon-text">check</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-circle-close"></use>
+          </svg>
+          <p class="icon-text">circle-close</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-details"></use>
+          </svg>
+          <p class="icon-text">details</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-file"></use>
+          </svg>
+          <p class="icon-text">file</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-help"></use>
+          </svg>
+          <p class="icon-text">help</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-home"></use>
+          </svg>
+          <p class="icon-text">home</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-info-new"></use>
+          </svg>
+          <p class="icon-text">info-new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-internet"></use>
+          </svg>
+          <p class="icon-text">internet</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-notice"></use>
+          </svg>
+          <p class="icon-text">notice</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-refresh"></use>
+          </svg>
+          <p class="icon-text">refresh</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-termination"></use>
+          </svg>
+          <p class="icon-text">termination</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-warning"></use>
+          </svg>
+          <p class="icon-text">warning</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-withdraw"></use>
+          </svg>
+          <p class="icon-text">withdraw</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-check-fill"></use>
+          </svg>
+          <p class="icon-text">check-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-close-fill"></use>
+          </svg>
+          <p class="icon-text">close-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-error-fill"></use>
+          </svg>
+          <p class="icon-text">error-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-help-fill"></use>
+          </svg>
+          <p class="icon-text">help-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-warning-fill"></use>
+          </svg>
+          <p class="icon-text">warning-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-application"></use>
+          </svg>
+          <p class="icon-text">application</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-permission-query"></use>
+          </svg>
+          <p class="icon-text">permission-query</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-has-approve"></use>
+          </svg>
+          <p class="icon-text">has-approve</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-has-pass"></use>
+          </svg>
+          <p class="icon-text">has-pass</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-has-pending"></use>
+          </svg>
+          <p class="icon-text">has-pending</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-has-reject"></use>
+          </svg>
+          <p class="icon-text">has-reject</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-has-wait"></use>
+          </svg>
+          <p class="icon-text">has-wait</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-left-arrow"></use>
+          </svg>
+          <p class="icon-text">left-arrow</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-expand"></use>
+          </svg>
+          <p class="icon-text">expand</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-user-group-fill"></use>
+          </svg>
+          <p class="icon-text">user-group-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-user-fill"></use>
+          </svg>
+          <p class="icon-text">user-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-user"></use>
+          </svg>
+          <p class="icon-text">user</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-perm-manage"></use>
+          </svg>
+          <p class="icon-text">perm-manage</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-perm-apply"></use>
+          </svg>
+          <p class="icon-text">perm-apply</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-approval-process-manage"></use>
+          </svg>
+          <p class="icon-text">approval-process-manage</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-my-perm"></use>
+          </svg>
+          <p class="icon-text">my-perm</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-my-apply"></use>
+          </svg>
+          <p class="icon-text">my-apply</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-my-approval"></use>
+          </svg>
+          <p class="icon-text">my-approval</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-system-access"></use>
+          </svg>
+          <p class="icon-text">system-access</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-my-approval-resource"></use>
+          </svg>
+          <p class="icon-text">my-approval-resource</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-resource-approver-manage"></use>
+          </svg>
+          <p class="icon-text">resource-approver-manage</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-check-small"></use>
+          </svg>
+          <p class="icon-text">check-small</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-reource"></use>
+          </svg>
+          <p class="icon-text">reource</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-detail"></use>
+          </svg>
+          <p class="icon-text">detail</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-status-current"></use>
+          </svg>
+          <p class="icon-text">status-current</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-status-wait"></use>
+          </svg>
+          <p class="icon-text">status-wait</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-apply-current"></use>
+          </svg>
+          <p class="icon-text">apply-current</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-apply-revoke"></use>
+          </svg>
+          <p class="icon-text">apply-revoke</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-apply-pass"></use>
+          </svg>
+          <p class="icon-text">apply-pass</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-approve-wait"></use>
+          </svg>
+          <p class="icon-text">approve-wait</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-approve-reject"></use>
+          </svg>
+          <p class="icon-text">approve-reject</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-apply-reject"></use>
+          </svg>
+          <p class="icon-text">apply-reject</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-close-small"></use>
+          </svg>
+          <p class="icon-text">close-small</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-reduce-hollow"></use>
+          </svg>
+          <p class="icon-text">reduce-hollow</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-add-hollow"></use>
+          </svg>
+          <p class="icon-text">add-hollow</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-resources"></use>
+          </svg>
+          <p class="icon-text">resources</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-see-details"></use>
+          </svg>
+          <p class="icon-text">see-details</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-copy"></use>
+          </svg>
+          <p class="icon-text">copy</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-paste"></use>
+          </svg>
+          <p class="icon-text">paste</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-changed"></use>
+          </svg>
+          <p class="icon-text">changed</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-expired"></use>
+          </svg>
+          <p class="icon-text">expired</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-new"></use>
+          </svg>
+          <p class="icon-text">new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-edit-fill"></use>
+          </svg>
+          <p class="icon-text">edit-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-loading-circle"></use>
+          </svg>
+          <p class="icon-text">loading-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-organization-fill"></use>
+          </svg>
+          <p class="icon-text">organization-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-user-group"></use>
+          </svg>
+          <p class="icon-text">user-group</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-personal-user"></use>
+          </svg>
+          <p class="icon-text">personal-user</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-revoke"></use>
+          </svg>
+          <p class="icon-text">revoke</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-user-directory"></use>
+          </svg>
+          <p class="icon-text">user-directory</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-version-log"></use>
+          </svg>
+          <p class="icon-text">version-log</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-done-en"></use>
+          </svg>
+          <p class="icon-text">done-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-apply-current-en"></use>
+          </svg>
+          <p class="icon-text">apply-current-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-approve-wait-en"></use>
+          </svg>
+          <p class="icon-text">approve-wait-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-apply-pass-en"></use>
+          </svg>
+          <p class="icon-text">apply-pass-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-delete-light-en"></use>
+          </svg>
+          <p class="icon-text">delete-light-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-apply-revoke-en"></use>
+          </svg>
+          <p class="icon-text">apply-revoke-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-approve-reject-en"></use>
+          </svg>
+          <p class="icon-text">approve-reject-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-new-en"></use>
+          </svg>
+          <p class="icon-text">new-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-expire-en"></use>
+          </svg>
+          <p class="icon-text">expire-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-change-en"></use>
+          </svg>
+          <p class="icon-text">change-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-delete-en"></use>
+          </svg>
+          <p class="icon-text">delete-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-info-fill"></use>
+          </svg>
+          <p class="icon-text">info-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-switch-identity"></use>
+          </svg>
+          <p class="icon-text">switch-identity</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-nav-stick"></use>
+          </svg>
+          <p class="icon-text">nav-stick</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-grade-admin"></use>
+          </svg>
+          <p class="icon-text">grade-admin</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-logout"></use>
+          </svg>
+          <p class="icon-text">logout</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-system-admin"></use>
+          </svg>
+          <p class="icon-text">system-admin</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-super-admin"></use>
+          </svg>
+          <p class="icon-text">super-admin</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-up-angle"></use>
+          </svg>
+          <p class="icon-text">up-angle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-down-angle"></use>
+          </svg>
+          <p class="icon-text">down-angle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-right-angle"></use>
+          </svg>
+          <p class="icon-text">right-angle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-left-angle"></use>
+          </svg>
+          <p class="icon-text">left-angle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-dustbin"></use>
+          </svg>
+          <p class="icon-text">dustbin</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-perm-template"></use>
+          </svg>
+          <p class="icon-text">perm-template</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-pin"></use>
+          </svg>
+          <p class="icon-text">pin</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-delete-line"></use>
+          </svg>
+          <p class="icon-text">delete-line</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-detail-new"></use>
+          </svg>
+          <p class="icon-text">detail-new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-shrink-line"></use>
+          </svg>
+          <p class="icon-text">shrink-line</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-undo-line"></use>
+          </svg>
+          <p class="icon-text">undo-line</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-file-close"></use>
+          </svg>
+          <p class="icon-text">file-close</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-exact-search-allow"></use>
+          </svg>
+          <p class="icon-text">exact-search-allow</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-fuzzy-search"></use>
+          </svg>
+          <p class="icon-text">fuzzy-search</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-fuzzy-search-allow"></use>
+          </svg>
+          <p class="icon-text">fuzzy-search-allow</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-exact-search"></use>
+          </svg>
+          <p class="icon-text">exact-search</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-drag-fill"></use>
+          </svg>
+          <p class="icon-text">drag-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-add-small"></use>
+          </svg>
+          <p class="icon-text">add-small</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-url"></use>
+          </svg>
+          <p class="icon-text">url</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-super-admin-new"></use>
+          </svg>
+          <p class="icon-text">super-admin-new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-super-admin-new-en"></use>
+          </svg>
+          <p class="icon-text">super-admin-new-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-system-admin-new"></use>
+          </svg>
+          <p class="icon-text">system-admin-new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-grade-admin-new-en"></use>
+          </svg>
+          <p class="icon-text">grade-admin-new-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-system-admin-new-en"></use>
+          </svg>
+          <p class="icon-text">system-admin-new-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-grade-admin-new"></use>
+          </svg>
+          <p class="icon-text">grade-admin-new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-arrows-left"></use>
+          </svg>
+          <p class="icon-text">arrows-left</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-help-fill-2"></use>
+          </svg>
+          <p class="icon-text">help-fill-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-sync-new"></use>
+          </svg>
+          <p class="icon-text">sync-new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-operate-audit"></use>
+          </svg>
+          <p class="icon-text">operate-audit</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-resource-admin"></use>
+          </svg>
+          <p class="icon-text">resource-admin</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-system-api"></use>
+          </svg>
+          <p class="icon-text">system-api</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-auth-api"></use>
+          </svg>
+          <p class="icon-text">auth-api</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-linshishenqingquanxian"></use>
+          </svg>
+          <p class="icon-text">linshishenqingquanxian</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-admin-api"></use>
+          </svg>
+          <p class="icon-text">admin-api</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-brush-fill"></use>
+          </svg>
+          <p class="icon-text">brush-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-refresh-2"></use>
+          </svg>
+          <p class="icon-text">refresh-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-level-two"></use>
+          </svg>
+          <p class="icon-text">level-two</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#iamcenter-level-one"></use>
+          </svg>
+          <p class="icon-text">level-one</p>
+        </li>
+      </ul>
+      <h3 class="describe-title">为什么使用</h3>
+      <ul class="use-describe">
+          <li>支持彩色图标</li>
+          <li>跨 SVG 使用，使用 use 可调用文档中加载的所有 SVG 图标 </li>
+      </ul>
+      <h3 class="describe-title">如何使用</h3>
+      <ul class="use-describe">
+        <li>将下载的资源文件中 iconcool.js 文件外部资源通过 script 标签引入</li>
+        <li>在 html 模板文件中挑选对应的对应图标的名称使用，例如：
+          <pre>
+    &lt;svg aria-hidden="true"&gt;
+      &lt;use xlink:href="#icon-xxx"&gt;&lt;/use&gt;
+    &lt;/svg&gt;
+          </pre>
+        </li>
+      </ul>
+      </section>
+    </section>
+  </div>
+  <script>
+    document.addEventListener('click', function (e) {
+      if (event.target.classList.contains('tab-panel')) {
+        const type = event.target.dataset.type
+        const tabPanels = document.querySelectorAll('.tab-panel')
+        const tabContents = document.querySelectorAll('.tab-content')
+
+        tabPanels.forEach(function(item) {
+          item.classList.remove('active')
+        })
+
+        e.target.classList.add('active')
+        
+        tabContents.forEach(function (item) {
+          const contentType = item.dataset.type
+          if (contentType === type) {
+            item.classList.add('active')
+          } else {
+            item.classList.remove('active')
+          }
+        })
+      }
+      
+    })
+  </script>
+</body>
+</html>
