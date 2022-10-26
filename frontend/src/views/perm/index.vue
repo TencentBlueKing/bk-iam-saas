@@ -2,6 +2,7 @@
     <div class="iam-my-perm-wrapper">
         <div class="header">
             <bk-button
+                v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
                 data-test-id="myPerm_btn_applyPerm"
                 type="button"
                 theme="primary"
@@ -69,6 +70,7 @@
     import CustomPerm from './custom-perm/index.vue';
     import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
     import GroupPerm from './group-perm/index.vue';
+    import { mapGetters } from 'vuex';
     import DepartmentGroupPerm from './department-group-perm/index.vue';
 
     export default {
@@ -107,6 +109,20 @@
                 departmentGroupList: [],
                 enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
             };
+        },
+        computed: {
+            ...mapGetters(['externalSystemsLayout'])
+        },
+        watch: {
+            externalSystemsLayout: {
+                handler (value) {
+                    if (value.myPerm.hideCustomTab) {
+                        this.panels.splice(1, 1);
+                    }
+                },
+                immediate: true,
+                deep: true
+            }
         },
         created () {
             const query = this.$route.query;

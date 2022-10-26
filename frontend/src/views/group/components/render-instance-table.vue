@@ -759,7 +759,9 @@
                         });
                     } else {
                         item.aggregateResourceType.forEach(aggregateResourceItem => {
-                            if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey && this.curCopyDataId !== item.aggregationId) {
+                            const systemId = this.isSuperManager
+                                ? aggregateResourceItem.system_id : item.system_id;
+                            if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey && this.curCopyDataId !== item.aggregationId) {
                                 if (Object.keys(item.instancesDisplayData).length) {
                                     item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempArrgegateData);
                                     item.instances = this.setInstanceData(item.instancesDisplayData);
@@ -1260,8 +1262,6 @@
                             if (!item.isAggregate) {
                                 const curPasteData = (payload.data || []).find(_ => _.id === item.id);
                                 if (curPasteData) {
-                                    // eslint-disable-next-line max-len
-                                    const curPasteDataInstanceName = curPasteData.resource_type.condition[0].instances[0].path[0][0].name;
                                     const systemId = this.isCreateMode ? item.detail.system.id : this.systemId;
                                     const scopeAction = this.authorization[systemId] || [];
                                     // eslint-disable-next-line max-len
@@ -1270,23 +1270,41 @@
                                     if (curScopeAction && curScopeAction.resource_groups && curScopeAction.resource_groups.length) {
                                         curScopeAction.resource_groups.forEach(curScopeActionItem => {
                                             curScopeActionItem.related_resource_types.forEach(curResItem => {
+                                                console.log('curResItem', curResItem, curPasteData);
                                                 if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                                                     // eslint-disable-next-line max-len
-                                                    const nameArr = curResItem.condition[0].instances[0].path.reduce((p, v) => {
+                                                    const canPasteName = curResItem.condition[0].instances[0].path.reduce((p, v) => {
                                                         p.push(v[0].name);
                                                         return p;
                                                     }, []);
                                                     // eslint-disable-next-line max-len
-                                                    if (nameArr.includes(curPasteDataInstanceName)) {
-                                                        item.resource_groups.forEach(groupItem => {
-                                                            groupItem.related_resource_types.forEach(resItem => {
-                                                                if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
-                                                                    resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                                                    item.resource_groups.forEach(groupItem => {
+                                                        groupItem.related_resource_types.forEach(resItem => {
+                                                            if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                                                // eslint-disable-next-line max-len
+                                                                const curPasteDataCondition = curPasteData.resource_type.condition;
+                                                                // eslint-disable-next-line max-len
+                                                                const condition = curPasteDataCondition.map(c => {
+                                                                    c.instances.forEach(j => {
+                                                                        // eslint-disable-next-line max-len
+                                                                        j.path = j.path.filter(e => {
+                                                                            if (!canPasteName.includes(e[0].name)) {
+                                                                                return false;
+                                                                            }
+                                                                            return canPasteName.includes(e[0].name);
+                                                                        });
+                                                                    });
+                                                                    return c;
+                                                                    // eslint-disable-next-line max-len
+                                                                }).filter(d => !!(d.instances[0].path && d.instances[0].path.length));
+                                                                console.log('condition', condition);
+                                                                if (condition && condition.length) {
+                                                                    resItem.condition = condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                                                                     resItem.isError = false;
                                                                 }
-                                                            });
+                                                            }
                                                         });
-                                                    }
+                                                    });
                                                 }
                                             });
                                         });
@@ -1303,7 +1321,9 @@
                                 }
                             } else {
                                 item.aggregateResourceType.forEach(aggregateResourceItem => {
-                                    if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
+                                    const systemId = this.isSuperManager
+                                        ? aggregateResourceItem.system_id : item.system_id;
+                                    if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {
                                         item.instances = _.cloneDeep(tempArrgegateData);
                                         this.instanceKey = aggregateResourceItem.id;
                                         this.setNomalInstancesDisplayData(item, this.instanceKey);

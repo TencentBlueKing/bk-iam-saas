@@ -9,7 +9,7 @@
                         ({{ count }})
                     </template>
                 </span>
-                <template v-if="(isExpanded || ShowEditFill) && !isUser">
+                <template v-if="(isExpanded || ShowEditFill) && !isUser && !externalEdit">
                     <section class="edit-action" @click.stop="handleEdit">
                         <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isDetail ? false : true" />
                     </section>
@@ -20,7 +20,7 @@
                     @confirm="handleDelete"
                     v-if="isStaff || isPermTemplateDetail || isUser || isDetail ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
-                        <section class="delete-action" @click.stop="toDeletePolicyCount">
+                        <section class="delete-action" @click.stop="toDeletePolicyCount" v-if="!externalDelete">
                             <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
                         </section>
                     </template>
@@ -83,6 +83,14 @@
             mode: {
                 type: String,
                 default: 'edit'
+            },
+            externalEdit: {
+                type: Boolean,
+                default: false
+            },
+            externalDelete: {
+                type: Boolean,
+                default: false
             }
         },
         data () {

@@ -349,32 +349,63 @@ const store = new Vuex.Store({
 
         showNoviceGuide: false,
 
-        curRoleId: 0
+        curRoleId: 0,
+
+        externalSystemsLayout: {
+            hideIamHeader: false, // 第一层级头部导航
+            hideIamSlider: false, // 第一层级侧边导航
+            hideIamBreadCrumbs: false, // 第一层级面包屑
+            myPerm: { // 我的权限
+                hideCustomTab: true, // 自定义权限tab - 1
+                hideApplyBtn: true, // 申请权限按钮 - 1
+                hideTemporaryCustomTab: true, // 临时权限tab -1
+                renewal: { // 我的权限-权限续期
+                    hideCustomTab: true // 自定义权限tab - 2
+                },
+                transfer: { // 我的权限-权限交接
+                    hideTextBtn: true, // 交接历史文本按钮 - 3
+                    hideCustomData: true, // 自定义权限交接-3
+                    hideManagerData: true, // 管理员交接数据-3
+                    showUserGroupSearch: true // 显示权限交接用户组查询-3
+                }
+            },
+            userGroup: { // 用户组
+                addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
+                    hideAddTemplateTextBtn: true // 右侧抽屉新增文本按钮-7.1
+                },
+                groupDetail: { // 用户组 - 组详情
+                    hideAddBtn: true, // 用户组-组权限-添加权限按钮-6
+                    hideEditBtn: true, // 用户组-组权限-编辑权限按钮-6
+                    hideDeleteBtn: true // 用户组-组权限-删除权限按钮-6
+                }
+            }
+        }
     },
     getters: {
-        mainContentLoading: (state) => state.mainContentLoading,
-        navStick: (state) => state.nav.stick,
-        navFold: (state) => state.nav.fold,
-        headerTitle: (state) => state.header.title,
-        indicatorIndex: (state) => state.header.indicatorIndex,
-        backRouter: (state) => state.header.backRouter,
-        user: (state) => state.user,
-        users: (state) => state.users,
-        versionLogs: (state) => state.versionLogs,
-        currentNav: (state) => state.currentNav,
-        group: (state) => state.group,
-        isSync: (state) => state.isSync,
-        roleList: (state) => state.roleList,
-        routerDiff: (state) => state.routerDiff,
-        noviceGuide: (state) => state.noviceGuide,
-        loadingConf: (state) => state.loadingConf,
-        host: (state) => state.host,
-        fromRouteName: (state) => state.fromRouteName,
-        navData: (state) => state.navData,
-        index: (state) => state.index,
-        navCurRoleId: (state) => state.navCurRoleId,
-        showNoviceGuide: (state) => state.showNoviceGuide,
-        curRoleId: (state) => state.curRoleId
+        mainContentLoading: state => state.mainContentLoading,
+        navStick: state => state.nav.stick,
+        navFold: state => state.nav.fold,
+        headerTitle: state => state.header.title,
+        indicatorIndex: state => state.header.indicatorIndex,
+        backRouter: state => state.header.backRouter,
+        user: state => state.user,
+        users: state => state.users,
+        versionLogs: state => state.versionLogs,
+        currentNav: state => state.currentNav,
+        group: state => state.group,
+        isSync: state => state.isSync,
+        roleList: state => state.roleList,
+        routerDiff: state => state.routerDiff,
+        noviceGuide: state => state.noviceGuide,
+        loadingConf: state => state.loadingConf,
+        host: state => state.host,
+        fromRouteName: state => state.fromRouteName,
+        navData: state => state.navData,
+        index: state => state.index,
+        navCurRoleId: state => state.navCurRoleId,
+        showNoviceGuide: state => state.showNoviceGuide,
+        curRoleId: state => state.curRoleId,
+        externalSystemsLayout: state => state.externalSystemsLayout
     },
     mutations: {
         updateHost (state, params) {
@@ -544,6 +575,10 @@ const store = new Vuex.Store({
 
         updateCurRoleId (state, id) {
             state.curRoleId = id;
+        },
+
+        setExternalSystemsLayout (state, payload) {
+            state.externalSystemsLayout = payload;
         }
     },
     actions: {
@@ -708,6 +743,23 @@ const store = new Vuex.Store({
          */
         get ({ commit, state, dispatch }, params, config) {
             return http.get(`/app/index?invoke=get&${json2Query(params)}`, config);
+        },
+
+        /**
+         * 获取需要动态展示的按钮或文案
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getExternalSystemsLayout ({ commit, state, dispatch }, config) {
+            return http.get(`${AJAX_URL_PREFIX}/systems/`, config).then(response => {
+                commit('setExternalSystemsLayout', response.data);
+                return response.data;
+            });
         }
     }
 });

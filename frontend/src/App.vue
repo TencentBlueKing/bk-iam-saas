@@ -14,16 +14,21 @@
             :style="processGuideStyle"
             :flag="processGuideShow"
             :content="$t(`m.guide['创建审批流程']`)" />
-        <header-nav @reload-page="handleRefreshPage"
+        <header-nav
+            v-if="!externalSystemsLayout.hideIamHeader"
+            @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId">
         </header-nav>
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
-            v-if="isRouterAlive">
+            v-if="isRouterAlive && !externalSystemsLayout.hideIamBreadCrumbs">
         </the-header>
-        <the-nav class="nav-layout" @reload-page="reloadCurPage"></the-nav>
+        <the-nav class="nav-layout"
+            @reload-page="reloadCurPage"
+            v-if="!externalSystemsLayout.hideIamSlider">
+        </the-nav>
         <main class="main-layout" :class="layoutCls"
             v-bkloading="{ isLoading: mainContentLoading, opacity: 1, zIndex: 1000 }">
             <div ref="mainScroller" class="main-scroller" v-if="isShowPage">
@@ -78,7 +83,7 @@
             };
         },
         computed: {
-            ...mapGetters(['mainContentLoading', 'user'])
+            ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout'])
         },
         watch: {
             '$route' (to, from) {
@@ -153,6 +158,10 @@
                     this.processGuideShow = true;
                 }
             });
+
+            if (this.existKey('source')) {
+                this.fetchExternalSystemsLayout();
+            }
         },
         methods: {
             reload () {
@@ -241,7 +250,41 @@
                         ellipsisCopy: true
                     });
                 }
+            },
+
+            async fetchExternalSystemsLayout () {
+                try {
+                    await this.$store.dispatch('getExternalSystemsLayout');
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+
+            // 是否存在key
+            existKey (key) {
+                // 1、url截取?之后的字符串(不包含?)
+                const pathSearch = window.location.search.substr(1);
+                const result = [];
+                // 2、以&为界截取参数键值对
+                const paramItems = pathSearch.split('&');
+                // 3、将键值对形式的参数存入数组
+                for (let i = 0; i < paramItems.length; i++) {
+                    const paramKey = paramItems[i].split('=')[0];
+                    const paramValue = paramItems[i].split('=')[1];
+                    result.push({
+                        key: paramKey,
+                        value: paramValue
+                    });
+                }
+                // 4、遍历key值
+                for (let j = 0; j < result.length; j++) {
+                    if (result[j].key === key) {
+                        return true;
+                    }
+                }
+                return false;
             }
+
         }
     };
 </script>

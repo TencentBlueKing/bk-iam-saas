@@ -27,7 +27,7 @@
             <bk-select ref="select" v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
                 :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
-                :prefix-icon="selectNode && selectNode.level > 0 ? 'bk-icon icon-cog-shape' : 'bk-icon icon-text-file'"
+                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
                 :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @change="handleSwitchRole" @toggle="handleToggle">
                 <bk-big-tree ref="selectTree" size="small" :data="curRoleList" :selectable="true" :show-checkbox="false"
                     :show-link-line="false" :default-expanded-nodes="[navCurRoleId || curRoleId]" :default-selected-node="navCurRoleId || curRoleId"
@@ -35,8 +35,7 @@
                     <div slot-scope="{ node,data }">
                         <div class="iam-select-collection">
                             <div>
-                                <i :class="[node.level === 0 ? 'bk-icon icon-text-file' : ' bk-icon icon-cog-shape']"></i>
-                                <!-- <span>层级：{{node.level + 1}}，名称： {{data.name}}</span> -->
+                                <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
                                 <span>{{data.name}}</span>
                             </div>
                             <!-- <bk-star
@@ -185,27 +184,27 @@
             };
         },
         computed: {
-        ...mapGetters([
-            'user',
-            'navStick',
-            'navFold',
-            'currentNav',
-            'routerDiff',
-            'roleList',
-            'navData',
-            'index',
-            'navCurRoleId'
-        ]),
-        unfold () {
-            return this.navStick || !this.navFold;
-        },
-        isShowRouterGroup () {
-            return (payload) => {
-                const allRouter = getRouterDiff('all');
-                const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
-                return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
-            };
-        }
+            ...mapGetters([
+                'user',
+                'navStick',
+                'navFold',
+                'currentNav',
+                'routerDiff',
+                'roleList',
+                'navData',
+                'index',
+                'navCurRoleId'
+            ]),
+            unfold () {
+                return this.navStick || !this.navFold;
+            },
+            isShowRouterGroup () {
+                return (payload) => {
+                    const allRouter = getRouterDiff('all');
+                    const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
+                    return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
+                };
+            }
         },
         watch: {
             $route: {
@@ -447,6 +446,19 @@
 
             handleToGradingAdmin () {
                 bus.$emit('rating-admin-change');
+            },
+
+            formatColor (node) {
+                if (node.id === this.curRoleId) {
+                    switch (node.level) {
+                        case 0: {
+                            return '#FF9C01';
+                        }
+                        case 1: {
+                            return '#9B80FE';
+                        }
+                    }
+                }
             }
         }
     };
@@ -459,5 +471,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+.iamcenter-level-one {
+    &.is-active {
+        color: #FF9C01;
+    }
+}
+
+.iamcenter-level-two {
+    &.is-active {
+        color: #9B80FE;
+    }
 }
 </style>
