@@ -24,26 +24,24 @@
                     <i class="bk-icon icon-plus-circle mr10"></i>管理我的分级管理员
                 </div>
             </bk-select> -->
-            <bk-select v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
+            <bk-select ref="select" v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
                 :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
                 :prefix-icon="selectNode && selectNode.level > 0 ? 'bk-icon icon-cog-shape' : 'bk-icon icon-text-file'"
-                :remote-method="handleRemoteTree"
-                ext-popover-cls="iam-nav-select-dropdown-content" @change="handleSwitchRole">
+                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @change="handleSwitchRole" @toggle="handleToggle">
                 <bk-big-tree ref="selectTree" size="small" :data="curRoleList" :selectable="true" :show-checkbox="false"
                     :show-link-line="false" :default-expanded-nodes="[navCurRoleId || curRoleId]" :default-selected-node="navCurRoleId || curRoleId"
                     @expand-on-click="handleExpandClick" @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div class="iam-select-collection">
                             <div>
-                                <i
-                                    :class="[node.level === 0 ? 'bk-icon icon-text-file' : ' bk-icon icon-cog-shape']"></i>
+                                <i :class="[node.level === 0 ? 'bk-icon icon-text-file' : ' bk-icon icon-cog-shape']"></i>
                                 <!-- <span>层级：{{node.level + 1}}，名称： {{data.name}}</span> -->
                                 <span>{{data.name}}</span>
                             </div>
-                            <bk-star
+                            <!-- <bk-star
                                 v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
-                                :rate="node.id === curRoleId" :max-stars="1" />
+                                :rate="node.id === curRoleId" :max-stars="1" /> -->
                         </div>
                     </div>
                 </bk-big-tree>
@@ -173,6 +171,7 @@
         name: '',
         data () {
             return {
+                selectCls: 'iam-nav-select-dropdown-content',
                 openedItem: '',
                 timer: null,
                 curRole: 'staff',
@@ -306,6 +305,8 @@
             handleSelectNode (node) {
                 this.curRoleId = node.id;
                 this.selectNode = node;
+                this.$refs.select.close();
+                this.handleToggle(false);
                 this.handleSwitchRole(node.id);
             },
 
@@ -343,6 +344,10 @@
                     }
                     this.openedItem = item.id === this.openedItem ? '' : item.id;
                 });
+            },
+
+            handleToggle (value) {
+                this.selectCls = value ? 'iam-nav-select-dropdown-content' : 'hide-iam-nav-select-cls';
             },
 
             // 获取当前选中节点

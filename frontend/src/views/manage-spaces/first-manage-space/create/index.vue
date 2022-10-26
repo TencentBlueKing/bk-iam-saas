@@ -129,7 +129,7 @@
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
     export default {
-        name: '',
+        name: 'firstManageSpaceCreate',
         components: {
             IamGuide,
             basicInfo,
