@@ -226,7 +226,9 @@ export const m = {
         '导出': 'export',
         '查询': 'Search',
         '生效条件': 'Effective condition',
-        '批量添加成员': 'Add members in bulk'
+        '批量添加成员': 'Add members in bulk',
+        '选择分级管理员': 'Select rating administrator',
+        '管理我的分级管理员': 'Manage My Level Administrators'
     },
     // 校验
     verify: {
@@ -268,7 +270,8 @@ export const m = {
         '资源类型ID已被占用': 'The resource type ID has been occupied',
         '只允许输入英文': 'Only English is allowed',
         '生效时间': 'Effective time',
-        '生效条件': 'Effective condition'
+        '生效条件': 'Effective condition',
+        '空间名称必填': 'Space name is required'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -404,6 +407,11 @@ export const m = {
         '权限管理': 'Permission management',
         '统计分析': 'Statistical analysis',
         '平台管理': 'Platform management',
+        '授权边界': 'Authorization boundary',
+        '管理空间': 'Manage Spaces',
+        '我的管理空间': "My Management Space",
+        '一级管理空间': 'Primary management space',
+        '二级管理空间': 'Secondary management space'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -579,7 +587,9 @@ export const m = {
         '描述': 'description',
         '所属系统': 'Subordinate to the system',
         '分级管理员': 'Classification manager',
-        '所属分级管理员': 'Classified administrator'
+        '所属分级管理员': 'Classified administrator',
+        '分配': 'Distribution',
+        '分配至': 'Distribution to'
     },
     userGroupDetail: {
         '用户组名': 'Group Name：',
@@ -664,6 +674,20 @@ export const m = {
         '克隆': 'Clone',
         '最大可授权人员范围': 'Maximum scope of authorized personnel',
         '最大可授权资源范围': 'Maximum scope of authorized resources'
+    },
+   levelSpace : {
+        '搜索空间名、描述、创建人': 'Search space name, description and creator',
+        '空间名': 'Space name',
+        '创建人': 'Creator',
+        '创建时间': 'Created Time',
+        '更新人': 'Updater',
+        '更新时间': 'Update',
+        "进入": "Get into",
+        "克隆": "Clone",
+        '请输入空间名': 'Please enter the space name',
+        '管理员': 'Administrators',
+        '请输入管理员': 'Please enter the administrator',
+        '上级空间': 'Superior space'
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',

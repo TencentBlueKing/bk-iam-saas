@@ -5,7 +5,8 @@
                 type="create_perm_template"
                 direction="left"
                 :style="{ top: '-15px', left: '80px' }"
-                :content="$t(`m.guide['创建模板']`)" />
+                :content="$t(`m.guide['创建模板']`)"
+            />
             <bk-button theme="primary" @click="handleCreate" data-test-id="permTemplate_btn_create">
                 {{ $t(`m.common['新建']`) }}
             </bk-button>
@@ -18,7 +19,8 @@
                     :data="searchData"
                     :value="searchValue"
                     :quick-search-method="quickSearchMethod"
-                    style="width: 420px;" />
+                    style="width: 420px"
+                />
             </div>
         </render-search>
         <bk-table
@@ -31,7 +33,8 @@
             @page-limit-change="handleLimitChange"
             @select="handlerChange"
             @select-all="handlerAllChange"
-            v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
+            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
             <!-- <bk-table-column type="selection" align="center"></bk-table-column> -->
             <bk-table-column :label="$t(`m.permTemplate['模板名']`)" :min-width="220">
                 <template slot-scope="{ row }">
@@ -47,6 +50,22 @@
                     <span :title="row.system.name">{{ row.system.name }}</span>
                 </template>
             </bk-table-column>
+            <template v-if="['rating_manager'].includes(curRole)">
+                <bk-table-column
+                    :label="$t(`m.nav['管理空间']`)"
+                    :filters="spaceFiltersList"
+                    :filter-method="handleSpaceFilter"
+                    :filter-multiple="true"
+                >
+                    <!-- <template slot-scope="{ row }">
+                        <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
+                            {{ row.role.name || '--' }}
+                        </span>
+                        <span>{{ user.role && user.role.name === row.role.name
+                            ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
+                    </template> -->
+                </bk-table-column>
+            </template>
             <bk-table-column :label="$t(`m.permTemplate['关联的组']`)">
                 <template slot-scope="{ row }">
                     <template v-if="!!row.subject_count">
@@ -54,9 +73,7 @@
                             {{ row.subject_count }}
                         </bk-button>
                     </template>
-                    <template v-else>
-                        --
-                    </template>
+                    <template v-else> -- </template>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.permTemplate['创建人']`)" prop="creator"></bk-table-column>
@@ -79,18 +96,10 @@
                             @click="handleRelateGroup(row)">
                             {{ $t(`m.permTemplate['关联用户组']`) }}
                         </bk-button> -->
-                        <bk-button
-                            theme="primary"
-                            text
-                            v-if="row.subject_count < 1"
-                            @click="handleTemplateDelete(row)">
+                        <bk-button theme="primary" text v-if="row.subject_count < 1" @click="handleTemplateDelete(row)">
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
-                        <bk-button
-                            theme="primary"
-                            disabled
-                            text
-                            v-else>
+                        <bk-button theme="primary" disabled text v-else>
                             <span v-bk-tooltips.bottom="$t(`m.permTemplate['有关联的组时不能删除']`)">
                                 {{ $t(`m.common['删除']`) }}
                             </span>
@@ -106,11 +115,13 @@
             :template-id="curTempalteId"
             :loading="addGroupLoading"
             @on-cancel="handleCancelSelect"
-            @on-sumbit="handleSumbitSelectUserGroup" />
+            @on-sumbit="handleSumbitSelectUserGroup"
+        />
     </div>
 </template>
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
     import UserGroupDialog from '@/components/render-user-group-dialog';
     import IamSearchSelect from '@/components/iam-search-select';
     import IamGuide from '@/components/iam-guide/index.vue';
@@ -139,21 +150,33 @@
                 currentSelectList: [],
                 currentPermTemplate: {},
                 editLoading: false,
-
                 isShowUserGroupDialog: false,
                 curTemplateName: '',
                 curTempalteId: '',
-                addGroupLoading: false
+                addGroupLoading: false,
+                spaceFiltersList: [],
+                curRole: 'staff'
             };
         },
         computed: {
+            ...mapGetters(['user']),
             isCanBatchDelete () {
                 return this.currentSelectList.length > 0;
+            },
+            isRatingManager () {
+                return this.curRole === 'rating_manager';
             }
         },
         watch: {
             'pagination.current' (value) {
                 this.currentBackup = value;
+            },
+            user: {
+                handler (value) {
+                    this.curRole = value.role.type || 'staff';
+                },
+                immediate: true,
+                deep: true
             }
         },
         created () {
@@ -231,7 +254,7 @@
                 const queryParams = {
                     limit,
                     current,
-                    ...this.searchParams
+                ...this.searchParams
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
@@ -246,9 +269,9 @@
                     }
                 }
                 return {
-                    ...params,
-                    limit,
-                    current
+                ...params,
+                limit,
+                current
                 };
             },
 
@@ -299,9 +322,9 @@
                 this.tableLoading = isLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+                ...this.searchParams,
+                limit: this.pagination.limit,
+                offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
                     const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
@@ -449,26 +472,26 @@
     };
 </script>
 <style lang="postcss">
-    .iam-perm-template-wrapper {
-        .perm-template-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .perm-template-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-            .lock-status {
-                font-size: 12px;
-                color: #fe9c00;
-            }
-        }
+.iam-perm-template-wrapper {
+  .perm-template-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    &.set-border {
+      border-right: 1px solid #dfe0e5;
+      border-bottom: 1px solid #dfe0e5;
     }
+    .perm-template-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+    .lock-status {
+      font-size: 12px;
+      color: #fe9c00;
+    }
+  }
+}
 </style>
