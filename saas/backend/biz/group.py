@@ -16,7 +16,6 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
-from rest_framework import serializers
 
 from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.apps.policy.models import Policy as PolicyModel
@@ -107,7 +106,7 @@ class GroupMemberExpiredAtBean(GroupMemberExpiredAt):
 
 
 class GroupCreateBean(GroupCreate):
-    readonly: bool = True
+    pass
 
 
 class GroupTemplateGrantBean(BaseModel):
@@ -136,9 +135,12 @@ class GroupBiz:
     # 直通的方法
     add_members = GroupService.__dict__["add_members"]
     remove_members = GroupService.__dict__["remove_members"]
+    check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
+    check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
+    list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
     batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
 
     def create_and_add_members(
@@ -162,8 +164,8 @@ class GroupBiz:
         """
         with transaction.atomic():
             groups = self.group_svc.batch_create(parse_obj_as(List[GroupCreate], infos), creator)
-            group_attrs = {group.id: {"readonly": info.readonly} for group, info in zip(groups, infos)}
-            self.group_attribute_svc.batch_set_attributes(group_attrs)
+            # group_attrs = {group.id: {"readonly": info.readonly} for group, info in zip(groups, infos)}
+            # self.group_attribute_svc.batch_set_attributes(group_attrs)
             RoleRelatedObject.objects.batch_create_group_relation(role_id, [group.id for group in groups])
 
         return groups
@@ -286,8 +288,8 @@ class GroupBiz:
                     id=group.id,
                     name=group.name,
                     description=group.description,
-                    expired_at=relation.policy_expired_at,
-                    expired_at_display=expired_at_display(relation.policy_expired_at),
+                    expired_at=relation.expired_at,
+                    expired_at_display=expired_at_display(relation.expired_at),
                     created_time=utc_string_to_local(relation.created_at),
                     department_id=relation.department_id,
                     department_name=relation.department_name,
@@ -296,18 +298,45 @@ class GroupBiz:
 
         return relation_beans
 
-    def list_subject_group(self, subject: Subject, is_recursive: bool = False) -> List[SubjectGroupBean]:
+    def list_paging_subject_group(
+        self, subject: Subject, limit: int = 10, offset: int = 0
+    ) -> Tuple[int, List[SubjectGroupBean]]:
         """
         查询subject所属的用户组
         """
-        relations = self.group_svc.list_subject_group(subject, is_recursive)
+        count, relations = self.group_svc.list_subject_group(subject, limit=limit, offset=offset)
+        return count, self._convert_to_subject_group_beans(relations)
+
+    def list_paging_subject_group_before_expired_at(
+        self, subject: Subject, expired_at: int, limit: int, offset: int
+    ) -> Tuple[int, List[SubjectGroupBean]]:
+        """
+        分页查询指定过期时间之前的用户组
+        """
+        count, relations = self.group_svc.list_subject_group_before_expired_at(subject, expired_at, limit, offset)
+        return count, self._convert_to_subject_group_beans(relations)
+
+    def list_all_subject_group(self, subject: Subject) -> List[SubjectGroupBean]:
+        """
+        查询指定过期时间之前的所有用户组
+        注意: 分页查询, 可能会有性能问题
+        """
+        relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at=0)
         return self._convert_to_subject_group_beans(relations)
 
-    def list_subject_group_before_expired_at(self, subject: Subject, expired_at: int) -> List[SubjectGroupBean]:
+    def list_all_subject_group_before_expired_at(self, subject: Subject, expired_at: int) -> List[SubjectGroupBean]:
         """
-        查询指定过期时间之前的用户组
+        查询指定过期时间之前的所有用户组
+        注意: 分页查询, 可能会有性能问题
         """
-        relations = self.group_svc.list_subject_group_before_expired_at(subject, expired_at)
+        relations = self.group_svc.list_all_subject_group_before_expired_at(subject, expired_at)
+        return self._convert_to_subject_group_beans(relations)
+
+    def list_all_user_department_group(self, subject: Subject) -> List[SubjectGroupBean]:
+        """
+        查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)
+        """
+        relations = self.group_svc.list_user_department_group(subject)
         return self._convert_to_subject_group_beans(relations)
 
     def update_members_expired_at(self, group_id: int, members: List[GroupMemberExpiredAtBean]):
@@ -348,8 +377,8 @@ class GroupBiz:
                 continue
 
             group_member_bean = GroupMemberBean(
-                expired_at=relation.policy_expired_at,
-                expired_at_display=expired_at_display(relation.policy_expired_at),
+                expired_at=relation.expired_at,
+                expired_at_display=expired_at_display(relation.expired_at),
                 created_time=utc_string_to_local(relation.created_at),
                 department_id=relation.department_id,
                 department_name=relation.department_name,
@@ -419,7 +448,12 @@ class GroupBiz:
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板或自定义权限已经在授权中, 不能重复授权!"))
 
     def check_before_grant(
-        self, group: Group, templates: List[GroupTemplateGrantBean], role: Role, need_check_resource_name=True
+        self,
+        group: Group,
+        templates: List[GroupTemplateGrantBean],
+        role: Role,
+        need_check_action_not_exists=True,
+        need_check_resource_name=True,
     ):
         """
         检查用户组授权自定义权限或模板
@@ -434,7 +468,7 @@ class GroupBiz:
             if template.template_id != 0:
                 # 检查操作列表是否与模板一致
                 self.template_check_biz.check_add_member(template.template_id, subject, action_ids)
-            else:
+            elif need_check_action_not_exists:
                 # 检查操作列表是否为新增自定义权限
                 self._valid_grant_actions_not_exists(subject, template.system_id, action_ids)
 
@@ -552,17 +586,6 @@ class GroupCheckBiz:
                 True,
             )
 
-    def check_subject_group_limit(self, subject: Subject):
-        """
-        检查subject授权的group数量是否超限
-        """
-        limit = settings.SUBJECT_AUTHORIZATION_LIMIT["default_subject_group_limit"]
-        relations = self.svc.list_subject_group(subject)
-        if len(relations) >= limit:
-            raise serializers.ValidationError(
-                _("被授权对象: {} {} 加入的用户组数量已超过最大值 {}").format(subject.type, subject.id, limit)
-            )
-
     def check_role_group_name_unique(self, role_id: int, name: str, group_id: int = 0):
         """
         检查角色的用户组名字是否已存在
@@ -595,6 +618,8 @@ class GroupCheckBiz:
         """
         批量检查角色的用户组名字是否唯一
         """
+        # FIXME: 对于RBAC模型下，某个系统管理员下可能有上亿个用户组（10万项目 * 500流水线 * 3个用户组 = 1.5亿用户组 ）
+        #  性能问题如何解决？？
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
         if Group.objects.filter(name__in=names, id__in=role_group_ids).exists():
             raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))

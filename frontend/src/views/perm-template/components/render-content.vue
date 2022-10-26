@@ -612,14 +612,14 @@
             },
 
             handleNameBlur (payload) {
-                const maxLength = 32;
+                const maxLength = 128;
                 if (payload === '') {
                     this.nameValidateText = this.$t(`m.verify['模板名称必填']`);
                     this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {
                     if (payload.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['模板名称最长不超过32个字符']`);
+                        this.nameValidateText = this.$t(`m.verify['模板名称最长不超过128个字符']`);
                         this.isShowNameError = true;
                     }
                 }

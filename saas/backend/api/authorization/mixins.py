@@ -165,6 +165,7 @@ class AuthViewMixin:
     def policy_response(self, policy: PolicyBean):
         """所有返回单一策略的接口都统一返回的结构"""
         return Response(
+            # TODO: 这个PolicyID是否去除呢？这里已经调整为SaaS Policy ID了，对于调用方没什么意义
             {"policy_id": policy.policy_id, "statistics": {"instance_count": policy.count_all_type_instance()}}
         )
 

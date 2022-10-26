@@ -23,14 +23,13 @@ from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.template.models import PermTemplatePolicyAuthorized
-from backend.biz.group import GroupBiz, GroupCheckBiz
+from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType
 from backend.service.group_saas_attribute import GroupAttributeService
-from backend.service.models import Subject
 
 
 class GroupMemberSLZ(serializers.Serializer):
@@ -122,16 +121,6 @@ class GroupAddMemberSLZ(serializers.Serializer):
     def validate_members(self, value):
         # 屏蔽admin授权
         return [m for m in value if not (m["type"] == GroupMemberType.USER.value and m["id"] == ADMIN_USER)]
-
-    def validate(self, data):
-        """
-        校验成员加入的用户组数是否超过限制
-        """
-        group_check_biz = GroupCheckBiz()
-        for member in data["members"]:
-            # subject加入的用户组数量不能超过最大值
-            group_check_biz.check_subject_group_limit(Subject.parse_obj(member))
-        return data
 
 
 class GroupsAddMemberSLZ(GroupAddMemberSLZ):
@@ -325,10 +314,6 @@ class GroupCreateSLZ(serializers.Serializer):
             if data["expired_at"] <= int(time.time()):
                 raise serializers.ValidationError({"expired_at": ["greater than now timestamp"]})
 
-            group_check_biz = GroupCheckBiz()
-            for member in data["members"]:
-                # subject加入的用户组数量不能超过最大值
-                group_check_biz.check_subject_group_limit(Subject.parse_obj(member))
         return data
 
 

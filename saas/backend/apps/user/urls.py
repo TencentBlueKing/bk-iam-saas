@@ -14,6 +14,11 @@ from . import views
 
 urlpatterns = [
     path("groups/", views.UserGroupViewSet.as_view({"get": "list", "delete": "destroy"}), name="user.group"),
+    path(
+        "departments/-/groups/",
+        views.UserDepartmentGroupViewSet.as_view({"get": "list"}),
+        name="user.department.group",
+    ),
     path("groups_expire_soon/", views.UserGroupRenewViewSet.as_view({"get": "list"}), name="user.group.renew"),
     path(
         "profile/newbie/",

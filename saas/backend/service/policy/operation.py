@@ -9,21 +9,183 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import itertools
-from typing import List, Optional
+import logging
+from typing import Dict, List, Optional
 
 from django.db import transaction
 
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.temporary_policy.models import TemporaryPolicy
+from backend.common.time import PERMANENT_SECONDS
 from backend.component import iam
 from backend.service.action import ActionList
+from backend.service.constants import SubjectType
+from backend.service.models import Policy, Subject, UniversalPolicyChangedContent
 from backend.util.json import json_dumps
 
-from ..models import Policy, PolicyIDExpiredAt, Subject
-from .query import PolicyList, new_backend_policy_list_by_subject
+from .backend import BackendPolicyOperationService
+from .common import UniversalPolicyChangedContentAnalyzer
+from .query import new_backend_policy_list_by_subject
+
+logger = logging.getLogger("app")
 
 
-class PolicyOperationService:
+class PolicyCommonDBOperationService:
+    """rbac和abac都需要使用到的"""
+
+    def _create_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
+        """
+        创建新的策略
+        """
+        db_policies = [p.to_db_model(system_id, subject) for p in policies]
+        PolicyModel.objects.bulk_create(db_policies, batch_size=100)
+
+    def update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]):
+        """
+        更新已有的策略
+        """
+        # 使用主键更新, 避免死锁
+        for p in policies:
+            PolicyModel.objects.filter(
+                id=p.policy_id,
+                subject_id=subject.id,
+                subject_type=subject.type,
+                system_id=system_id,
+            ).update(
+                _resources=json_dumps(p.resource_groups.dict()),
+                auth_type=p.auth_type,
+            )
+
+    def _delete_db_policies(self, system_id: str, subject: Subject, policy_ids: List[int]):
+        """
+        删除db Policies
+        """
+        PolicyModel.objects.filter(
+            system_id=system_id, subject_type=subject.type, subject_id=subject.id, id__in=policy_ids
+        ).delete()
+
+
+class UniversalPolicyOperationService(PolicyCommonDBOperationService, BackendPolicyOperationService):
+    """专门用于处理包含RBAC策略的"""
+
+    analyzer = UniversalPolicyChangedContentAnalyzer()
+
+    def delete_backend_policy_by_action(self, system_id: str, action_id: str):
+        """删除指定操作的后台策略"""
+        # TODO: 该函数是用于删除某个Action所有的操作，对于RBAC,需要后台单独提供接口，同时删除RBAC和ABAC策略？？？
+        # TODO: 对于RBAC，需要后台单独提供接口，但是后台RBAC策略action_pks是一个字段，不好删除
+        # TODO: 可以先根据action_id判断是否会有RBAC策略，如果不会，则不需要执行
+
+    def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
+        """
+        删除指定policy_id的策略
+        """
+        # 1. 计算变更的后台策略内容
+        changed_policies = self._cal_policy_change_contents_by_deleted(system_id, subject, policy_ids)
+
+        # 2. 变更DB,并进行后台变更
+        with transaction.atomic():
+            self._delete_db_policies(system_id, subject, policy_ids)
+            self.alter_backend_policies(subject, 0, system_id, changed_policies)
+
+    def alter(
+        self,
+        system_id: str,
+        subject: Subject,
+        create_policies: List[Policy],
+        update_policies: List[Policy],
+        delete_policy_ids: List[int],
+    ):
+        # Note: 必须先计算出策略的变更内容，否则先变更DB后，则查询不到老策略，无法进行新老策略对比
+        changed_policies = []
+        # 1. 新增策略
+        changed_policies.extend(self.analyzer.cal_for_created(system_id, create_policies))
+
+        # 2. 删除策略
+        changed_policies.extend(self._cal_policy_change_contents_by_deleted(system_id, subject, delete_policy_ids))
+
+        # 3. 更新
+        changed_policies.extend(self._cal_policy_change_contents_by_updated(system_id, subject, update_policies))
+
+        # 4. 设置Policy的AuthType
+        action_auth_types = {cp.action_id: cp.auth_type for cp in changed_policies}
+        # 只需要新建和更新的策略设置对应的AuthType，删除的策略不需要
+        for p in create_policies:
+            p.auth_type = action_auth_types[p.action_id]
+        for p in update_policies:
+            p.auth_type = action_auth_types[p.action_id]
+
+        # 5. 变更DB，并变更后台
+        with transaction.atomic():
+            if create_policies:
+                self._create_db_policies(system_id, subject, create_policies)
+
+            if update_policies:
+                self.update_db_policies(system_id, subject, update_policies)
+
+            if delete_policy_ids:
+                self._delete_db_policies(system_id, subject, delete_policy_ids)
+
+            if changed_policies:
+                self.alter_backend_policies(subject, 0, system_id, changed_policies)
+
+    def _cal_policy_change_contents_by_deleted(
+        self, system_id: str, subject: Subject, delete_policy_ids: List[int]
+    ) -> List[UniversalPolicyChangedContent]:
+        """根据要删除的策略ID，组装计算出要变更的策略内容"""
+        if len(delete_policy_ids) == 0:
+            return []
+
+        # 查询策略
+        qs = PolicyModel.objects.filter(
+            system_id=system_id, subject_type=subject.type, subject_id=subject.id, id__in=delete_policy_ids
+        )
+        policies = [Policy.from_db_model(p, PERMANENT_SECONDS) for p in qs]
+
+        # 填充后台PolicyID
+        backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
+        for p in policies:
+            # 对于纯RBAC策略，不存在Backend PolicyID
+            if not backend_policy_list.get(p.action_id):
+                continue
+
+            p.backend_policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
+
+        return self.analyzer.cal_for_deleted(system_id, policies)
+
+    def _cal_policy_change_contents_by_updated(
+        self, system_id: str, subject: Subject, update_policies: List[Policy]
+    ) -> List[UniversalPolicyChangedContent]:
+        """根据更新的策略，组装计算出要变更的策略内容"""
+        if len(update_policies) == 0:
+            return []
+
+        # 1 根据ActionID查询旧策略内容
+        qs = PolicyModel.objects.filter(
+            system_id=system_id,
+            subject_type=subject.type,
+            subject_id=subject.id,
+            action_id__in=[p.action_id for p in update_policies],
+        )
+        old_policies = {p.action_id: Policy.from_db_model(p, PERMANENT_SECONDS) for p in qs}
+
+        # 2. 填充后台PolicyID
+        backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
+        for _, p in old_policies.items():
+            # 对于纯RBAC策略，不存在Backend PolicyID
+            if not backend_policy_list.get(p.action_id):
+                continue
+            p.backend_policy_id = backend_policy_list.get(p.action_id).id  # type: ignore
+
+        # 3 遍历组装每个新旧策略对
+        update_pair_policies = [(p, old_policies[p.action_id]) for p in update_policies]
+
+        return self.analyzer.cal_for_updated(system_id, update_pair_policies)
+
+
+class ABACPolicyOperationService(PolicyCommonDBOperationService):
+    """用于处理ABAC策略的"""
+
     def delete_backend_policy_by_action(self, system_id: str, action_id: str):
         """删除指定操作的后台策略"""
         iam.delete_action_policies(system_id, action_id)
@@ -32,25 +194,40 @@ class PolicyOperationService:
         """
         删除指定policy_id的策略
         """
+        # 查询要删除的策略对应的后台PolicyID
+        policy_id_map = self._query_backend_policy_id(system_id, subject, policy_ids)
+        backend_policy_ids = [policy_id_map[_id] for _id in policy_ids]
+
+        # 4. 过滤出要删除策略的
         with transaction.atomic():
             self._delete_db_policies(system_id, subject, policy_ids)
-            iam.delete_policies(system_id, subject.type, subject.id, policy_ids)
+            iam.delete_policies(system_id, subject.type, subject.id, backend_policy_ids)
 
     def alter(
         self,
         system_id: str,
         subject: Subject,
-        create_policies: Optional[List[Policy]] = None,
-        update_policies: Optional[List[Policy]] = None,
-        delete_policy_ids: Optional[List[int]] = None,
+        create_policies: List[Policy],
+        update_policies: List[Policy],
+        delete_policy_ids: List[int],
         action_list: Optional[ActionList] = None,
     ):
         """
         变更subject的Policies
         """
-        create_policies = create_policies or []
-        update_policies = update_policies or []
-        delete_policy_ids = delete_policy_ids or []
+        delete_backend_policy_ids = []
+        # 更新或删除，需要查询对应的后台策略ID
+        if update_policies or delete_policy_ids:
+            # 查询更新和要删除策略对应的后台PolicyID
+            policy_ids = [p.policy_id for p in update_policies] + delete_policy_ids
+            policy_id_map = self._query_backend_policy_id(system_id, subject, policy_ids)
+
+            # 2. 填充要更新的策略的后台PolicyID
+            for p in update_policies:
+                p.backend_policy_id = policy_id_map[p.policy_id]
+
+            # 3. 计算出要删除的后台策略
+            delete_backend_policy_ids = [policy_id_map[_id] for _id in delete_policy_ids]
 
         with transaction.atomic():
             if create_policies:
@@ -62,13 +239,26 @@ class PolicyOperationService:
             if delete_policy_ids:
                 self._delete_db_policies(system_id, subject, delete_policy_ids)
 
-            if create_policies or update_policies or delete_policy_ids:
+            if create_policies or update_policies or delete_backend_policy_ids:
                 self._alter_backend_policies(
-                    system_id, subject, create_policies, update_policies, delete_policy_ids, action_list
+                    system_id, subject, create_policies, update_policies, delete_backend_policy_ids, action_list
                 )
 
-        if create_policies:
-            self._sync_db_policy_id(system_id, subject)
+    def _query_backend_policy_id(self, system_id: str, subject: Subject, policy_ids: List[int]) -> Dict[int, int]:
+        """根据SaaS PolicyIDs 查询对应的后台策略"""
+        # 1. 查询后台PolicyID
+        backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
+        action_to_backend_policy_id_map = {p.action_id: p.id for p in backend_policy_list.policies}
+
+        # 2. 查询策略对应的Action
+        db_policies = PolicyModel.objects.filter(
+            subject_id=subject.id, subject_type=subject.type, system_id=system_id, id__in=policy_ids
+        ).only("id", "action_id")
+
+        # 3. 计算出SaaS PolicyID 与 Backend PolicyID的映射
+        policy_id_map = {p.id: action_to_backend_policy_id_map[p.action_id] for p in db_policies}
+
+        return policy_id_map
 
     def _alter_backend_policies(
         self,
@@ -97,64 +287,6 @@ class PolicyOperationService:
         return iam.alter_policies(
             system_id, subject.type, subject.id, backend_create_policies, backend_update_policies, delete_policy_ids
         )
-
-    def _create_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
-        """
-        创建新的策略
-        """
-        db_policies = [p.to_db_model(system_id, subject) for p in policies]
-        PolicyModel.objects.bulk_create(db_policies, batch_size=100)
-
-    def update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
-        """
-        更新已有的策略
-        """
-        policy_list = PolicyList(policies)
-
-        db_policies = PolicyModel.objects.filter(
-            subject_id=subject.id, subject_type=subject.type, system_id=system_id, policy_id__in=policy_list.ids
-        ).only("id", "action_id")
-
-        # 使用主键更新, 避免死锁
-        for p in db_policies:
-            update_policy = policy_list.get(p.action_id)
-            if not update_policy:
-                continue
-            PolicyModel.objects.filter(id=p.id).update(_resources=json_dumps(update_policy.resource_groups.dict()))
-
-    def _delete_db_policies(self, system_id: str, subject: Subject, policy_ids: List[int]):
-        """
-        删除db Policies
-        """
-        PolicyModel.objects.filter(
-            system_id=system_id, subject_type=subject.type, subject_id=subject.id, policy_id__in=policy_ids
-        ).delete()
-
-    def _sync_db_policy_id(self, system_id: str, subject: Subject) -> None:
-        """
-        同步SaaS-后端策略的policy_id
-        """
-        db_policies = PolicyModel.objects.filter(
-            system_id=system_id, subject_type=subject.type, subject_id=subject.id, policy_id=0
-        ).defer("_resources")
-
-        if len(db_policies) == 0:
-            return
-
-        backend_policy_list = new_backend_policy_list_by_subject(system_id, subject)
-        for p in db_policies:
-            backend_policy = backend_policy_list.get(p.action_id)
-            if not backend_policy:
-                continue
-            p.policy_id = backend_policy.id
-
-        PolicyModel.objects.bulk_update(db_policies, fields=["policy_id"], batch_size=100)
-
-    def renew(self, subject: Subject, thin_policies: List[PolicyIDExpiredAt]):
-        """
-        权策续期
-        """
-        iam.update_policy_expired_at(subject.type, subject.id, [one.dict() for one in thin_policies])
 
     def create_temporary_policies(
         self,
@@ -185,8 +317,8 @@ class PolicyOperationService:
         )
 
         # 写入后端policy_ids
-        for p, id in zip(db_policies, data["ids"]):
-            p.policy_id = id
+        for p, _id in zip(db_policies, data["ids"]):
+            p.policy_id = _id
 
         # 创建db权限
         TemporaryPolicy.objects.bulk_create(db_policies, batch_size=100)
@@ -195,8 +327,97 @@ class PolicyOperationService:
         """
         删除指定policy_id的临时策略
         """
+        backend_policy_ids = list(
+            TemporaryPolicy.objects.filter(
+                system_id=system_id, subject_type=subject.type, subject_id=subject.id, id__in=policy_ids
+            ).values_list("policy_id", flat=True)
+        )
+
         with transaction.atomic():
             TemporaryPolicy.objects.filter(
-                system_id=system_id, subject_type=subject.type, subject_id=subject.id, policy_id__in=policy_ids
+                system_id=system_id, subject_type=subject.type, subject_id=subject.id, id__in=policy_ids
             ).delete()
-            iam.delete_temporary_policies(system_id, subject.type, subject.id, policy_ids)
+            iam.delete_temporary_policies(system_id, subject.type, subject.id, backend_policy_ids)
+
+
+# Note: 用户组权限相关的操作使用支持RBAC的接口，用户权限相关的操作使用ABAC接口
+class PolicyOperationService:
+    abac_svc = ABACPolicyOperationService()
+    universal_svc = UniversalPolicyOperationService()
+
+    def delete_backend_policy_by_action(self, system_id: str, action_id: str):
+        """删除指定操作的后台策略"""
+        # ABAC处理
+        self.abac_svc.delete_backend_policy_by_action(system_id, action_id)
+
+        # RBAC处理
+        self.universal_svc.delete_backend_policy_by_action(system_id, action_id)
+
+    def delete_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
+        """
+        删除指定policy_id的策略
+        """
+        if subject.type == SubjectType.USER.value:
+            self.abac_svc.delete_by_ids(system_id, subject, policy_ids)
+            return
+
+        self.universal_svc.delete_by_ids(system_id, subject, policy_ids)
+
+    def alter(
+        self,
+        system_id: str,
+        subject: Subject,
+        create_policies: Optional[List[Policy]] = None,
+        update_policies: Optional[List[Policy]] = None,
+        delete_policy_ids: Optional[List[int]] = None,
+        action_list: Optional[ActionList] = None,
+    ):
+        """
+        变更subject的Policies
+        """
+        create_policies = create_policies or []
+        update_policies = update_policies or []
+        delete_policy_ids = delete_policy_ids or []
+
+        # Note: type只有user和group，user默认走ABAC权限
+        if subject.type == SubjectType.USER.value:
+            self.abac_svc.alter(system_id, subject, create_policies, update_policies, delete_policy_ids, action_list)
+            return
+
+        # Note: 下面是对type=group的处理
+        self.universal_svc.alter(system_id, subject, create_policies, update_policies, delete_policy_ids)
+
+    def only_update_db_policies(self, system_id: str, subject: Subject, policies: List[Policy]) -> None:
+        """
+        更新已有的SaaS DB里策略，一般只用于更新resource name之类的，不影响鉴权的，不需要同步后台的数据
+        """
+        # 使用主键更新, 避免死锁，只更新resource字段
+        for p in policies:
+            PolicyModel.objects.filter(
+                id=p.policy_id,
+                subject_id=subject.id,
+                subject_type=subject.type,
+                system_id=system_id,
+            ).update(_resources=json_dumps(p.resource_groups.dict()))
+
+    def create_temporary_policies(
+        self,
+        system_id: str,
+        subject: Subject,
+        policies: List[Policy],
+        action_list: Optional[ActionList] = None,
+    ):
+        """
+        创建临时权限
+        """
+        # 只有用户才有临时权限
+        assert subject.type == SubjectType.USER.value
+        self.abac_svc.create_temporary_policies(system_id, subject, policies, action_list)
+
+    def delete_temporary_policies_by_ids(self, system_id: str, subject: Subject, policy_ids: List[int]):
+        """
+        删除指定policy_id的临时策略
+        """
+        # 只有用户才有临时权限
+        assert subject.type == SubjectType.USER.value
+        self.abac_svc.delete_temporary_policies_by_ids(system_id, subject, policy_ids)
