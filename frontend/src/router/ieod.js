@@ -22,160 +22,144 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import il8n from '@/language';
 
 const SITE_URL = window.SITE_URL;
 
 // 系统接入
-const SystemAccess = () => import(/* webpackChunkName: 'system-access' */'../views/system-access');
-const SystemAccessAccess = () => import(/* webpackChunkName: 'system' */'../views/system-access/access');
-const SystemAccessRegistry = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/registry');
-const SystemAccessOptimize = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/optimize');
-const SystemAccessComplete = () => import(/* webpackChunkName: 'system-access' */'../views/system-access/complete');
+const SystemAccess = () => import(/* webpackChunkName: 'system-access' */ '../views/system-access');
+const SystemAccessAccess = () => import(/* webpackChunkName: 'system' */ '../views/system-access/access');
+const SystemAccessRegistry = () => import(/* webpackChunkName: 'system-access' */ '../views/system-access/registry');
+const SystemAccessOptimize = () => import(/* webpackChunkName: 'system-access' */ '../views/system-access/optimize');
+const SystemAccessComplete = () => import(/* webpackChunkName: 'system-access' */ '../views/system-access/complete');
 
 // 申请自定义权限
-const ApplyCustomPerm = () => import(
-    /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-custom-perm');
+const ApplyCustomPerm = () => import(/* webpackChunkName: 'perm-apply' */ '../views/perm-apply/apply-custom-perm');
 
 // 申请临时权限
-const applyProvisionPerm = () => import(
-    /* webpackChunkName: 'perm-apply' */'../views/tempora-perm-apply/apply-custom-perm');
+const applyProvisionPerm = () =>
+    import(/* webpackChunkName: 'perm-apply' */ '../views/tempora-perm-apply/apply-custom-perm');
 
 // 申请加入用户组
-const ApplyJoinUserGroup = () => import(
-    /* webpackChunkName: 'perm-apply' */'../views/perm-apply/apply-join-user-group');
+const ApplyJoinUserGroup = () =>
+    import(/* webpackChunkName: 'perm-apply' */ '../views/perm-apply/apply-join-user-group');
 
 // 我的申请
-const Apply = () => import(
-    /* webpackChunkName: 'my-apply' */'../views/apply');
+const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 
 // 我的权限
-const MyPerm = () => import(
-    /* webpackChunkName: 'my-perm' */'../views/perm');
+const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
+
+// 我的管理空间
+const MyManageSpace = () => import(/* webpackChunkName: 'my-perm' */ '../views/my-manage-space');
 
 // 用户组
-const UserGroup = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group');
+const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
 
 // 用户组新建
-const CreateUserGroup = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/create');
+const CreateUserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group/create');
 
 // 用户组克隆
-const CloneUserGroup = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/clone');
+const CloneUserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group/clone');
 
 // 用户组详情
-const UserGroupDetail = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/detail');
+const UserGroupDetail = () => import(/* webpackChunkName: 'user-group' */ '../views/group/detail');
 
 // 用户组组权限详情
-const UserGroupPermDetail = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/detail/group-perm-detail');
+const UserGroupPermDetail = () =>
+    import(/* webpackChunkName: 'user-group' */ '../views/group/detail/group-perm-detail');
 
 // 用户组添加权限
-const AddGroupPerm = () => import(
-    /* webpackChunkName: 'user-group' */'../views/group/add-perm');
+const AddGroupPerm = () => import(/* webpackChunkName: 'user-group' */ '../views/group/add-perm');
 
 // 权限模板
-const PermTemplate = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/index');
+const PermTemplate = () => import(/* webpackChunkName: 'perm-template' */ '../views/perm-template/index');
 
 // 权限模板详情
-const PermTemplateDetail = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/detail');
+const PermTemplateDetail = () => import(/* webpackChunkName: 'perm-template' */ '../views/perm-template/detail');
 
 // 权限模板新建
-const PermTemplateCreate = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/create/index');
+const PermTemplateCreate = () => import(/* webpackChunkName: 'perm-template' */ '../views/perm-template/create/index');
 
 // 权限模板编辑
-const PermTemplateEdit = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/edit');
+const PermTemplateEdit = () => import(/* webpackChunkName: 'perm-template' */ '../views/perm-template/edit');
 
 // 权限模板编辑差异
-const PermTemplateDifference = () => import(
-    /* webpackChunkName: 'perm-template' */'../views/perm-template/edit/difference');
+const PermTemplateDifference = () =>
+    import(/* webpackChunkName: 'perm-template' */ '../views/perm-template/edit/difference');
 
 // 用户
-const User = () => import(
-    /* webpackChunkName: 'user' */'../views/user');
+const User = () => import(/* webpackChunkName: 'user' */ '../views/user');
 
 // 分级管理员
-const GradingAdmin = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin');
+const GradingAdmin = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin');
 
 // 分级管理员新建
-const GradingAdminCreate = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/create');
+const GradingAdminCreate = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
 
 // 分级管理员详情
-const GradingAdminDetail = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/detail');
+const GradingAdminDetail = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/detail');
 
 // 分级管理员编辑
-const GradingAdminEdit = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/edit');
+const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/edit');
 
 // 分级管理员更新权限模板
-const GradingAdminUpdateTemplate = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/grading-admin/update-template');
+const GradingAdminUpdateTemplate = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
+
+// 一级管理空间
+const FirstManageSpace = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
+
+// 一级管理空间新建
+const FirstManageSpaceCreate = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
+
+// 授权边界
+const AuthorizationBoundary = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
+
+// 二极管理空间
+const SecondaryManageSpace = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space');
 
 // 资源权限管理
-const ResourcePermiss = () => import(
-    /* webpackChunkName: 'grading-admin' */'../views/resource-permiss');
+const ResourcePermiss = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
 
 // 设置
-const Setting = () => import(
-    /* webpackChunkName: 'set' */'../views/set');
+const Setting = () => import(/* webpackChunkName: 'set' */ '../views/set');
 
 // 审批流程设置
-const ApprovalProcess = () => import(
-    /* webpackChunkName: 'approvalProcess' */'../views/approval-process');
+const ApprovalProcess = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/approval-process');
 
 // 权限续期
-const PermRenewal = () => import(
-    /* webpackChunkName: 'PermRenewal' */'../views/perm/perm-renewal');
+const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/perm-renewal');
 
 // 组织权限续期
-const GroupPermRenewal = () => import(
-    /* webpackChunkName: 'PermRenewal' */'../views/perm/group-perm-renewal');
+const GroupPermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/group-perm-renewal');
 
 // 审计
-const Audit = () => import(
-    /* webpackChunkName: 'audit' */'../views/audit');
+const Audit = () => import(/* webpackChunkName: 'audit' */ '../views/audit');
 
-const TemplatePermDetail = () => import(
-    /* webpackChunkName: 'my-perm-template-perm' */'../views/perm/template-perm/detail'
-);
-const GroupPermDetail = () => import(
-    /* webpackChunkName: 'my-perm-group-perm' */'../views/perm/group-perm/detail'
-);
-const OrgPermDetail = () => import(
-    /* webpackChunkName: 'my-perm-org-perm' */'../views/perm/organization-perm/detail'
-);
+const TemplatePermDetail = () =>
+    import(/* webpackChunkName: 'my-perm-template-perm' */ '../views/perm/template-perm/detail');
+const GroupPermDetail = () => import(/* webpackChunkName: 'my-perm-group-perm' */ '../views/perm/group-perm/detail');
+const OrgPermDetail = () => import(/* webpackChunkName: 'my-perm-org-perm' */ '../views/perm/organization-perm/detail');
 
-const PermTransfer = () => import(
-    /* webpackChunkName: 'perm-transfer' */'../views/transfer'
-);
+const PermTransfer = () => import(/* webpackChunkName: 'perm-transfer' */ '../views/transfer');
 
-const PermTransferHistory = () => import(
-    /* webpackChunkName: 'perm-transfer' */'../views/transfer/history'
-);
+const PermTransferHistory = () => import(/* webpackChunkName: 'perm-transfer' */ '../views/transfer/history');
 
 // no-perm
-const NoPerm = () => import(
-    /* webpackChunkName: 'no-perm' */'../views/no-perm');
+const NoPerm = () => import(/* webpackChunkName: 'no-perm' */ '../views/no-perm');
 
 // 404
-const NotFound = () => import(
-    /* webpackChunkName: 'none' */'../views/404');
+const NotFound = () => import(/* webpackChunkName: 'none' */ '../views/404');
 
 // Main
-const MainEntry = () => import(
-    /* webpackChunkName: 'index' */'../views');
+const MainEntry = () => import(/* webpackChunkName: 'index' */ '../views');
 
 export const routes = [
     {
@@ -247,6 +231,14 @@ export const routes = [
                 component: MyPerm
             },
             {
+                path: 'my-manage-space',
+                name: 'myManageSpace',
+                meta: {
+                    headerTitle: il8n('nav', '我的管理空间')
+                },
+                component: MyManageSpace
+            },
+            {
                 path: 'perm-renewal',
                 name: 'permRenewal',
                 meta: {
@@ -295,6 +287,22 @@ export const routes = [
                     headerTitle: ''
                 },
                 component: OrgPermDetail
+            },
+            {
+                path: 'manage-spaces/authorization-boundary',
+                name: 'authorBoundary',
+                meta: {
+                    headerTitle: il8n('nav', '授权边界')
+                },
+                component: AuthorizationBoundary
+            },
+            {
+                path: 'manage-spaces/secondary-manage-space',
+                name: 'secondaryManageSpace',
+                meta: {
+                    headerTitle: il8n('nav', '二级管理空间')
+                },
+                component: SecondaryManageSpace
             },
             {
                 path: 'user-group',
@@ -479,6 +487,24 @@ export const routes = [
                     backRouter: 'gradingAdminEdit'
                 },
                 component: GradingAdminUpdateTemplate
+            },
+            {
+                path: 'first-manage-space',
+                name: 'firstManageSpace',
+                meta: {
+                    headerTitle: il8n('nav', '一级管理空间')
+                },
+                component: FirstManageSpace
+            },
+            {
+                path: ':id/first-manage-space-create',
+                name: 'firstManageSpaceCreate',
+                meta: {
+                    headerTitle: il8n('levelSpace', '新建一级管理空间'),
+                    backRouter: 'firstManageSpace'
+                },
+                props: true,
+                component: FirstManageSpaceCreate
             },
             {
                 path: 'resource-permiss',

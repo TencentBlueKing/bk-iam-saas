@@ -22,7 +22,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import Vue from 'vue';
 import Vuex from 'vuex';
@@ -107,7 +107,6 @@ const currentNav = [
             // }
         ]
     },
-
     {
         icon: 'perm-manage',
         name: il8n('nav', '工作台'),
@@ -134,10 +133,40 @@ const currentNav = [
                 name: il8n('nav', '我的权限'),
                 path: `${SITE_URL}my-perm`,
                 disabled: false
+            },
+            {
+                icon: 'my-perm',
+                id: 'myManageSpaceNav',
+                rkey: 'myManageSpace',
+                name: il8n('nav', '我的管理空间'),
+                path: `${SITE_URL}my-manage-space`,
+                disabled: false
             }
         ]
     },
-    
+    {
+        icon: 'perm-manage',
+        name: il8n('nav', '管理空间'),
+        rkey: 'manageSpaces',
+        children: [
+            {
+                icon: 'user-group',
+                id: 'authorBoundaryNav',
+                rkey: 'authorBoundary',
+                name: il8n('nav', '授权边界'),
+                path: `${SITE_URL}manage-spaces/authorization-boundary`,
+                disabled: false
+            },
+            {
+                icon: 'perm-template',
+                id: 'secondaryManageSpaceNav',
+                rkey: 'secondaryManageSpace',
+                name: il8n('nav', '二级管理空间'),
+                path: `${SITE_URL}manage-spaces/secondary-manage-space`,
+                disabled: false
+            }
+        ]
+    },
     {
         icon: 'perm-manage',
         name: il8n('nav', '权限管理'),
@@ -175,6 +204,14 @@ const currentNav = [
         rkey: 'ratingManager',
         name: il8n('grading', '分级管理员'),
         path: `${SITE_URL}rating-manager`,
+        disabled: false
+    },
+    {
+        icon: 'grade-admin',
+        id: 'firstManageSpaceNav',
+        rkey: 'firstManageSpace',
+        name: il8n('nav', '一级管理空间'),
+        path: `${SITE_URL}first-manage-space`,
         disabled: false
     },
     {
@@ -283,15 +320,15 @@ const store = new Vuex.Store({
 
         roleList: [],
         noviceGuide: {
-            'rating_manager_authorization_scope': true,
-            'rating_manager_subject_scope': true,
-            'rating_manager_merge_action': true,
-            'switch_role': true,
-            'create_perm_template': true,
-            'create_group': true,
-            'set_group_approval_process': true,
-            'add_group_member': true,
-            'add_group_perm_template': true
+            rating_manager_authorization_scope: true,
+            rating_manager_subject_scope: true,
+            rating_manager_merge_action: true,
+            switch_role: true,
+            create_perm_template: true,
+            create_group: true,
+            set_group_approval_process: true,
+            add_group_member: true,
+            add_group_perm_template: true
         },
         loadingConf: {
             speed: 2,
@@ -315,29 +352,29 @@ const store = new Vuex.Store({
         curRoleId: 0
     },
     getters: {
-        mainContentLoading: state => state.mainContentLoading,
-        navStick: state => state.nav.stick,
-        navFold: state => state.nav.fold,
-        headerTitle: state => state.header.title,
-        indicatorIndex: state => state.header.indicatorIndex,
-        backRouter: state => state.header.backRouter,
-        user: state => state.user,
-        users: state => state.users,
-        versionLogs: state => state.versionLogs,
-        currentNav: state => state.currentNav,
-        group: state => state.group,
-        isSync: state => state.isSync,
-        roleList: state => state.roleList,
-        routerDiff: state => state.routerDiff,
-        noviceGuide: state => state.noviceGuide,
-        loadingConf: state => state.loadingConf,
-        host: state => state.host,
-        fromRouteName: state => state.fromRouteName,
-        navData: state => state.navData,
-        index: state => state.index,
-        navCurRoleId: state => state.navCurRoleId,
-        showNoviceGuide: state => state.showNoviceGuide,
-        curRoleId: state => state.curRoleId
+        mainContentLoading: (state) => state.mainContentLoading,
+        navStick: (state) => state.nav.stick,
+        navFold: (state) => state.nav.fold,
+        headerTitle: (state) => state.header.title,
+        indicatorIndex: (state) => state.header.indicatorIndex,
+        backRouter: (state) => state.header.backRouter,
+        user: (state) => state.user,
+        users: (state) => state.users,
+        versionLogs: (state) => state.versionLogs,
+        currentNav: (state) => state.currentNav,
+        group: (state) => state.group,
+        isSync: (state) => state.isSync,
+        roleList: (state) => state.roleList,
+        routerDiff: (state) => state.routerDiff,
+        noviceGuide: (state) => state.noviceGuide,
+        loadingConf: (state) => state.loadingConf,
+        host: (state) => state.host,
+        fromRouteName: (state) => state.fromRouteName,
+        navData: (state) => state.navData,
+        index: (state) => state.index,
+        navCurRoleId: (state) => state.navCurRoleId,
+        showNoviceGuide: (state) => state.showNoviceGuide,
+        curRoleId: (state) => state.curRoleId
     },
     mutations: {
         updateHost (state, params) {
@@ -363,7 +400,7 @@ const store = new Vuex.Store({
         },
 
         setNoviceGuide (state, payload) {
-            payload.forEach(item => {
+            payload.forEach((item) => {
                 if (state.noviceGuide.hasOwnProperty(item.scene)) {
                     state.noviceGuide[item.scene] = item.status;
                 }
@@ -480,6 +517,7 @@ const store = new Vuex.Store({
         },
 
         updataRouterDiff (state, role) {
+            console.log(state, role);
             state.routerDiff = [...getRouterDiff(role)];
         },
 
@@ -540,7 +578,7 @@ const store = new Vuex.Store({
             // }
             // return data
             const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
-            return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then(response => {
+            return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then((response) => {
                 const data = response ? response.data : {};
                 if (data.role.type === 'system_manager') {
                     data.role.name = `${data.role.name}${il8n('nav', '系统管理员')}`;
@@ -575,9 +613,9 @@ const store = new Vuex.Store({
          */
         roleList ({ commit, state, dispatch }, config) {
             const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
-            return http.get(`${AJAX_URL_PREFIX}/accounts/user/roles/`, config).then(response => {
+            return http.get(`${AJAX_URL_PREFIX}/accounts/user/roles/`, config).then((response) => {
                 const data = response ? response.data : [];
-                data.forEach(item => {
+                data.forEach((item) => {
                     if (item.type === 'system_manager') {
                         item.name = `${item.name}${il8n('nav', '系统管理员')}`;
                     }
@@ -599,7 +637,7 @@ const store = new Vuex.Store({
          */
         versionLogInfo ({ commit, state, dispatch }, config) {
             const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
-            return http.get(`${AJAX_URL_PREFIX}/version_log/`, config).then(response => {
+            return http.get(`${AJAX_URL_PREFIX}/version_log/`, config).then((response) => {
                 commit('updateVersion', response.data);
                 return response.data;
             });
@@ -617,7 +655,7 @@ const store = new Vuex.Store({
          */
         allUserInfo ({ commit, state, dispatch }, config) {
             const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
-            return http.get(`${AJAX_URL_PREFIX}/accounts/users/`, config).then(response => {
+            return http.get(`${AJAX_URL_PREFIX}/accounts/users/`, config).then((response) => {
                 commit('updateUsers', response.data);
                 return response.data;
             });
@@ -635,7 +673,7 @@ const store = new Vuex.Store({
          */
         getNoviceGuide ({ commit, state, dispatch }, config) {
             const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
-            return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then(response => {
+            return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then((response) => {
                 commit('setNoviceGuide', response.data);
                 return response.data;
             });
@@ -695,13 +733,11 @@ store.dispatch = function (_type, _payload, config = {}) {
         return;
     }
 
-    store._actionSubscribers.forEach(sub => {
+    store._actionSubscribers.forEach((sub) => {
         return sub(action, store.state);
     });
 
-    return entry.length > 1
-        ? Promise.all(entry.map(handler => handler(payload, config)))
-        : entry[0](payload, config);
+    return entry.length > 1 ? Promise.all(entry.map((handler) => handler(payload, config))) : entry[0](payload, config);
 };
 
 export default store;
