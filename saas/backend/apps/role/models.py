@@ -59,6 +59,7 @@ class RoleUser(BaseModel):
 
     role_id = models.IntegerField("角色ID")
     username = models.CharField("用户id", max_length=64)
+    readonly = models.BooleanField("用户组只读标识", default=False)  # 增加可读标识
 
     objects = RoleUserManager()
 
@@ -230,7 +231,7 @@ class RoleRelation(BaseModel):
     """
 
     parent_id = models.IntegerField("父级角色ID")
-    role_id = models.IntegerField("角色ID")
+    role_id = models.IntegerField("角色ID", db_index=True)
 
     objects = RoleRelationManager()
 
@@ -311,3 +312,13 @@ class AnonymousRole:
     @property
     def permissions(self):
         return []
+
+
+"""
+子集管理员同步分级管理员成员:
+
+1. 在RoleUser上增加readonly字段
+2. 子集管理员创建时默认需要查询分级管理员的成员, 并加入到成员中, 设置readonly=True
+3. 子集管理员删除成员时, 不能删除readonly=True的成员
+4. 分级管理员的成员变更时, 需要同步变更子集管理员中readonly=True的成员
+"""

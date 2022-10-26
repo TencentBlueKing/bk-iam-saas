@@ -9,13 +9,15 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import time
+from collections import defaultdict
 
 from django.conf import settings
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
-from backend.apps.role.models import Role, RoleCommonAction, RoleUser
+from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
 from backend.common.time import PERMANENT_SECONDS
@@ -139,7 +141,7 @@ class RoleIdSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="角色ID")
 
 
-class RatingMangerListSchemaSLZ(serializers.Serializer):
+class BaseRatingMangerSchemaSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=128))
 
     class Meta:
@@ -147,12 +149,32 @@ class RatingMangerListSchemaSLZ(serializers.Serializer):
         fields = ("id", "name", "description", "updated_time", "creator", "members")
 
 
+class RatingMangerListSchemaSLZ(BaseRatingMangerSchemaSLZ):
+    is_member = serializers.BooleanField(label="是否是成员")
+    has_subset_manager = serializers.BooleanField(label="是否有子集管理员")
+
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+            "is_member",
+            "has_subset_manager",
+        )
+
+
 class RoleScopeAuthorizationSchemaSLZ(serializers.Serializer):
     system = SystemInfoSLZ(label="系统信息")
     actions = serializers.ListField(label="操作策略", child=GradeManagerActionSLZ(label="策略"))
 
 
-class RatingMangerDetailSchemaSLZ(RatingMangerListSchemaSLZ):
+class RatingMangerDetailSchemaSLZ(BaseRatingMangerSchemaSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSchemaSLZ(label="系统操作"), allow_empty=False
     )
@@ -172,7 +194,7 @@ class RatingMangerDetailSchemaSLZ(RatingMangerListSchemaSLZ):
         )
 
 
-class RatingMangerListSLZ(serializers.ModelSerializer):
+class BaseRatingMangerSLZ(serializers.ModelSerializer):
     members = serializers.SerializerMethodField(label="成员列表")
 
     class Meta:
@@ -183,7 +205,63 @@ class RatingMangerListSLZ(serializers.ModelSerializer):
         return list(RoleUser.objects.filter(role_id=obj.id).values_list("username", flat=True))
 
 
-class RatingMangerDetailSLZ(RatingMangerListSLZ):
+class RatingManagerListSLZ(BaseRatingMangerSLZ):
+    is_member = serializers.SerializerMethodField(label="是否是成员")
+    has_subset_manager = serializers.SerializerMethodField(label="是否有子集管理员")
+
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+            "is_member",
+            "has_subset_manager",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.role_users = defaultdict(list)
+        self.role_subset_managers = defaultdict(list)
+        self.user_role_ids = []
+        if isinstance(self.instance, (QuerySet, list)) and self.instance:
+            role_ids = [role.id for role in self.instance]
+
+            # 查询role_users
+            for one in RoleUser.objects.filter(role_id__id=role_ids):
+                self.role_users[one.role_id].append(one.username)
+
+            # 查询role_subset_managers
+            for one in RoleRelation.objects.filter(parent_id__in=role_ids):
+                self.role_subset_managers[one.parent_id].append(one.role_id)
+
+            # user_role_ids
+            username = self.context["request"].user.username
+            self.user_role_ids = list(RoleUser.objects.filter(username=username).values_list("role_id", flat=True))
+
+    def get_members(self, obj):
+        return self.role_users[obj.id]
+
+    def get_is_member(self, obj):
+        username = self.context["request"].user.username
+        return username in self.role_users[obj.id]
+
+    def get_has_subset_manager(self, obj):
+        # 查询是否有子集管理员
+        subset_manager_ids = self.role_subset_managers[obj.id]
+        if not subset_manager_ids:
+            return False
+
+        # 查询子集管理员中是否有当前用户
+        return bool(set(subset_manager_ids) & set(self.user_role_ids))
+
+
+class RatingMangerDetailSLZ(BaseRatingMangerSLZ):
     authorization_scopes = serializers.SerializerMethodField(label="系统操作")
     subject_scopes = serializers.SerializerMethodField(label="授权对象")
 
@@ -211,7 +289,7 @@ class RatingMangerDetailSLZ(RatingMangerListSLZ):
         return [one.dict() for one in subject_list.subjects]
 
 
-class SystemManagerSLZ(RatingMangerListSLZ):
+class SystemManagerSLZ(BaseRatingMangerSLZ):
     system_permission_global_enabled = serializers.SerializerMethodField(label="是否拥有系统所有权限")
 
     class Meta:

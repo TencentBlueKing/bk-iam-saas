@@ -43,16 +43,18 @@ from backend.apps.role.audit import (
     UserRoleDeleteAuditProvider,
 )
 from backend.apps.role.filters import RatingMangerFilter, RoleCommonActionFilter
-from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleUser
+from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleRelation, RoleUser
 from backend.apps.role.serializers import (
+    BaseRatingMangerSchemaSLZ,
+    BaseRatingMangerSLZ,
     GradeManagerActionSLZ,
     MemberSystemPermissionUpdateSLZ,
+    RatingManagerListSLZ,
     RatingMangerBaseInfoSZL,
     RatingMangerCreateSLZ,
     RatingMangerDetailSchemaSLZ,
     RatingMangerDetailSLZ,
     RatingMangerListSchemaSLZ,
-    RatingMangerListSLZ,
     RoleCommonActionSLZ,
     RoleCommonCreateSLZ,
     RoleGroupMembersRenewSLZ,
@@ -96,7 +98,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
-    serializer_class = RatingMangerListSLZ
+    serializer_class = RatingManagerListSLZ
     filterset_class = RatingMangerFilter
 
     biz = RoleBiz()
@@ -695,7 +697,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
-    serializer_class = RatingMangerListSLZ
+    serializer_class = BaseRatingMangerSLZ
 
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
@@ -708,7 +710,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="子集管理员列表",
-        responses={status.HTTP_200_OK: RatingMangerListSchemaSLZ(label="子集管理员列表", many=True)},
+        responses={status.HTTP_200_OK: BaseRatingMangerSchemaSLZ(label="子集管理员列表", many=True)},
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
@@ -840,3 +842,40 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         audit_context_setter(role=role)
 
         return Response({})
+
+
+class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
+    """
+    用户加入的子集管理员列表
+    """
+
+    lookup_field = "id"
+    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
+    serializer_class = BaseRatingMangerSLZ
+
+    def get_queryset(self):
+        grade_manager_id = self.kwargs["id"]
+        subset_manager_ids = list(
+            RoleRelation.objects.filter(parent_id=grade_manager_id).values_list("role_id", flat=True)
+        )
+        if not subset_manager_ids:
+            return Role.objects.none()
+
+        # 筛选出用户加入的子集管理员id
+        role_ids = list(
+            RoleUser.objects.filter(role_id__in=subset_manager_ids, username=self.request.user.username).values_list(
+                "role_id", flat=True
+            )
+        )
+        if not role_ids:
+            return Role.objects.none()
+
+        return self.queryset.filter(id__in=role_ids)
+
+    @swagger_auto_schema(
+        operation_description="用户加入的子集管理员列表",
+        responses={status.HTTP_200_OK: BaseRatingMangerSchemaSLZ(label="子集管理员列表", many=True)},
+        tags=["role"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

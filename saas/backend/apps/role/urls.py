@@ -97,4 +97,9 @@ urlpatterns = [
         views.SubsetManagerViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update"}),
         name="role.subset_manager_detail",
     ),
+    path(
+        "grade_managers/<int:id>/subset_managers/",
+        views.UserSubsetManagerViewSet.as_view({"get": "list"}),
+        name="role.user_subset_manager",
+    ),
 ]

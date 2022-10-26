@@ -12,7 +12,7 @@ from rest_framework import serializers
 
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role
-from backend.apps.role.serializers import RatingMangerListSLZ
+from backend.apps.role.serializers import BaseRatingMangerSLZ
 from backend.service.constants import GroupMemberType, RoleType
 
 
@@ -47,7 +47,7 @@ class SuperManagerMemberSLZ(serializers.Serializer):
         ref_name = "AdminSuperManagerMemberSLZ"
 
 
-class SystemManagerWithMembersSLZ(RatingMangerListSLZ):
+class SystemManagerWithMembersSLZ(BaseRatingMangerSLZ):
     has_system_permission = serializers.SerializerMethodField(label="是否拥有系统所有权限")
 
     class Meta:

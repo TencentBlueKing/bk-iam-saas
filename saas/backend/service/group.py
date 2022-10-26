@@ -269,6 +269,15 @@ class GroupService:
         data = iam.list_subject_member(SubjectType.GROUP.value, str(group_id), limit, offset)
         return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
 
+    def list_all_group_member(self, group_id: int) -> List[SubjectGroup]:
+        """
+        分页查询用户组所有成员
+
+        NOTE: 谨慎使用, 性能问题
+        """
+        data = iam.list_all_subject_member(SubjectType.GROUP.value, str(group_id))
+        return parse_obj_as(List[SubjectGroup], data)
+
     def list_group_subject_before_expired_at(self, expired_at: int) -> Generator[GroupSubject, None, None]:
         """
         查询在指定过期时间之前的相关GroupSubject关系

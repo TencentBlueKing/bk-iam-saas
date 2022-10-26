@@ -49,7 +49,6 @@ DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
     ],
     RoleType.SUBSET_MANAGER.value: [
         PermissionCodeEnum.MANAGE_GROUP.value,
-        PermissionCodeEnum.MANAGE_TEMPLATE.value,
         PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value,
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
     ],

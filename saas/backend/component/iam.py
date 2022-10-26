@@ -256,6 +256,23 @@ def list_subject_member(_type: str, id: str, limit: int = 10, offset: int = 0) -
     return _call_iam_api(http_get, url_path, data=params)
 
 
+def list_all_subject_member(_type: str, id: str) -> List[Dict]:
+    """
+    分页查询subject所有成员列表
+
+    NOTE: 谨慎使用, 有性能问题
+    """
+
+    def list_paging_subject_member(page: int, page_size: int) -> Tuple[int, List[Dict]]:
+        """[分页]获取subject-member"""
+        limit = page_size
+        offset = (page - 1) * page_size
+        data = list_subject_member(_type, id, limit, offset)
+        return data["count"], data["results"]
+
+    return list_all_data_by_paging(list_paging_subject_member, 1000)
+
+
 def get_subject_groups(_type: str, id: str, expired_at: int = 0, limit: int = 10, offset: int = 0) -> Dict:
     """
     获取subject的关系列表

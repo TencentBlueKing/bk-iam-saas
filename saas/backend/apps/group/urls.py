@@ -36,6 +36,11 @@ urlpatterns = [
         views.GroupMemberUpdateExpiredAtViewSet.as_view({"post": "create"}),
         name="group.members.renew",
     ),
+    path(
+        "<str:id>/transfer/",
+        views.GradeManagerGroupTransferView.as_view({"post": "post"}),
+        name="group.grade_manager_transfer",
+    ),
     # 用户组的模板
     path("<str:id>/templates/", views.GroupTemplateViewSet.as_view({"get": "list"}), name="group.templates"),
     path(

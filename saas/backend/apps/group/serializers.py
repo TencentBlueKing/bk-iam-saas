@@ -21,7 +21,7 @@ from backend.apps.application.base_serializers import BaseAggActionListSLZ, vali
 from backend.apps.application.serializers import ExpiredAtSLZ, SystemInfoSLZ
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
-from backend.apps.role.models import Role, RoleRelatedObject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
@@ -321,3 +321,13 @@ class GroupAuthoriedConditionSLZ(serializers.Serializer):
     action_id = serializers.CharField(label="操作ID")
     resource_group_id = serializers.CharField(label="资源条件组ID")
     related_resource_type = ResourceTypeSLZ(label="资源类型")
+
+
+class GradeManagerGroupTransferSLZ(serializers.Serializer):
+    subset_manager_id = serializers.IntegerField(label="子集管理员id")
+
+    def validate_subset_manager_id(self, value):
+        role = self.context["role"]
+        if not RoleRelation.objects.filter(parent_id=role.id, role_id=value).exists():
+            raise serializers.ValidationError(f"subset manager id {value} not exists")
+        return value

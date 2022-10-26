@@ -613,8 +613,53 @@ class RoleListQuery:
         """
         assert self.user
 
-        template_ids = self._get_role_related_object_ids(RoleRelatedObjectType.TEMPLATE.value)
+        if self.role.type == RoleType.SUBSET_MANAGER.value:
+            template_ids = self._query_subset_manager_template_id()
+        else:
+            template_ids = self._get_role_related_object_ids(RoleRelatedObjectType.TEMPLATE.value)
         return PermTemplate.objects.filter(id__in=template_ids)
+
+    def _query_subset_manager_template_id(self) -> List[int]:
+        """
+        查询子集管理员可授权的模板列表
+
+        1. 子集管理员可授权的模板列表来源于父级分级管理员的模板列表
+        2. 子集管理员可授权的模板必须满足子集管理员的授权范围
+        """
+
+        assert self.role.type == RoleType.SUBSET_MANAGER.value
+
+        # 1. 查询子集管理员的父级分级管理员
+        parent_role_id = RoleRelation.objects.get_parent_role_id(self.role.id)
+        if not parent_role_id:
+            return []
+
+        # 2. 查询子集管理员的授权范围
+        system_actions = self.get_scope_system_actions()
+
+        # 3. 查询分级管理员的模板列表
+        parent_template_ids = list(
+            RoleRelatedObject.objects.filter(
+                role_id=parent_role_id, object_type=RoleRelatedObjectType.TEMPLATE.value
+            ).values_list("object_id", flat=True)
+        )
+
+        template_ids = []
+        # 4. 遍历筛选出满足子集管理员授权范围的模板id
+        for template in PermTemplate.objects.filter(id__in=parent_template_ids):
+            if not system_actions.has_system(template.system_id):
+                continue
+
+            # 满足授权范围
+            if system_actions.is_all_action(template.system_id):
+                template_ids.append(template.id)
+                continue
+
+            # 满足授权范围
+            if set(template.action_ids).issubset(set(system_actions.list_action_id(template.system_id))):
+                template_ids.append(template.id)
+
+        return template_ids
 
     def query_group(self):
         """
@@ -691,7 +736,13 @@ class RoleListQuery:
         # 作为个人时，只能管理加入的的分级管理员
         assert self.user
 
+        # 查询用户加入的角色id
         role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
+
+        # 查询子集管理员的父级分级管理员id
+        grade_manager_ids = list(RoleRelation.objects.filter(role_id__in=role_ids).values_list("parent_id", flat=True))
+        role_ids.extend(grade_manager_ids)
+
         return Role.objects.filter(type=RoleType.RATING_MANAGER.value, id__in=role_ids).order_by("-updated_time")
 
     def query_subset_manager(self):

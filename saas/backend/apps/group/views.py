@@ -26,6 +26,7 @@ from backend.apps.application.serializers import ConditionCompareSLZ, ConditionT
 from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
+from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.template.filters import TemplateFilter
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
@@ -39,7 +40,7 @@ from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import PermissionCodeEnum, RoleType, SubjectType
+from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
 from backend.trans.group import GroupTrans
 
@@ -58,6 +59,7 @@ from .audit import (
 from .constants import OperateEnum
 from .filters import GroupFilter, GroupTemplateSystemFilter
 from .serializers import (
+    GradeManagerGroupTransferSLZ,
     GroupAddMemberSLZ,
     GroupAuthoriedConditionSLZ,
     GroupAuthorizationSLZ,
@@ -843,3 +845,76 @@ class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
             subject, [one.id for one in queryset]
         )
         return set(exists_template_ids)
+
+
+class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
+    """
+    分级管理员用户组转出到子集管理员
+
+    1. 把用户组关系转移到子集管理员
+    2. 如果用户组授权的信息大于子集管理员的范围, 需要扩展子集管理员的授权范围
+    3. 如果用户组的授权人员大于子集管理员的范围, 需要扩展子集管理员的授权范围
+    """
+
+    permission_classes = [role_perm_class(PermissionCodeEnum.TRANSFER_GROUP_BY_RATING_MANAGER.value)]
+    queryset = Group.objects.all()
+    lookup_field = "id"
+
+    role_biz = RoleBiz()
+    group_biz = GroupBiz()
+    policy_query_biz = PolicyQueryBiz()
+
+    @swagger_auto_schema(
+        operation_description="分级管理员用户组转出",
+        request_body=GradeManagerGroupTransferSLZ(label="用户转移"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    @view_audit_decorator(GroupTransferAuditProvider)
+    def post(self, request, *args, **kwargs):
+        slz = GradeManagerGroupTransferSLZ(data=request.data, context={"role": request.role})
+        slz.is_valid(raise_exception=True)
+
+        subset_manager_id = slz.validated_data["subset_manager_id"]
+        group = self.get_object()
+        subset_manager = Role.objects.get(id=subset_manager_id)
+
+        # 1. 转移用户组关系
+        RoleRelatedObject.objects.filter(object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id).update(
+            role_id=subset_manager_id
+        )
+
+        # 2. 查询用户组所有授权信息, 并扩张子集管理员的授权范围
+        auth_scope_systems: List[AuthScopeSystem] = []
+
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+
+        # 2.1 查询所有的自定义权限
+        system_counts = self.group_biz.list_system_counter(group.id)
+        for system_count in system_counts:
+            system_id = system_count.id
+            policies = self.policy_query_biz.list_by_subject(system_id, subject)
+            auth_scope_systems.append(
+                AuthScopeSystem(system_id=system_id, actions=parse_obj_as(List[AuthScopeAction], policies))
+            )
+
+        # 2.2 查询所有的模板授权
+        queryset = PermTemplatePolicyAuthorized.objects.filter_by_subject(subject)
+        for template in queryset:
+            system_id = template.system_id
+            policies = parse_obj_as(List[PolicyBean], template.data["actions"])
+            auth_scope_systems.append(
+                AuthScopeSystem(system_id=system_id, actions=parse_obj_as(List[AuthScopeAction], policies))
+            )
+
+        # 2.3 扩张授权范围
+        self.role_biz.incr_update_auth_scope(subset_manager, auth_scope_systems)
+
+        # 3. 查询用户组所有的授权人员, 并扩张子集管理员的人员授权范围
+        members = self.group_biz.list_all_group_member(group.id)
+        self.role_biz.incr_update_subject_scope(subset_manager, members)
+
+        # 记录审计信息
+        audit_context_setter(group_ids=[group.id], role_id=subset_manager_id)
+
+        return Response({})
