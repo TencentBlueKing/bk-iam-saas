@@ -24,27 +24,23 @@
                     <i class="bk-icon icon-plus-circle mr10"></i>管理我的分级管理员
                 </div>
             </bk-select> -->
-            <bk-select v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
+            <bk-select ref="select" v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
                 :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
-                :prefix-icon="selectNode && selectNode.level > 0 ? 'bk-icon icon-cog-shape' : 'icon iam-icon iamcenter-level-one'"
-                :remote-method="handleRemoteTree"
-                ext-popover-cls="iam-nav-select-dropdown-content" @change="handleSwitchRole">
+                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
+                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @change="handleSwitchRole" @toggle="handleToggle">
                 <bk-big-tree ref="selectTree" size="small" :data="curRoleList" :selectable="true" :show-checkbox="false"
                     :show-link-line="false" :default-expanded-nodes="[navCurRoleId || curRoleId]" :default-selected-node="navCurRoleId || curRoleId"
                     @expand-on-click="handleExpandClick" @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div class="iam-select-collection">
                             <div>
-                                <!-- <i
-                                    :class="[node.level === 0 ? 'bk-icon icon-text-file' : ' bk-icon icon-cog-shape']"></i> -->
-                                <!-- <span>层级：{{node.level + 1}}，名称： {{data.name}}</span> -->
-                                <Icon type="level-one" />
+                                <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
                                 <span>{{data.name}}</span>
                             </div>
-                            <bk-star
+                            <!-- <bk-star
                                 v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
-                                :rate="node.id === curRoleId" :max-stars="1" />
+                                :rate="node.id === curRoleId" :max-stars="1" /> -->
                         </div>
                     </div>
                 </bk-big-tree>
@@ -174,6 +170,7 @@
         name: '',
         data () {
             return {
+                selectCls: 'iam-nav-select-dropdown-content',
                 openedItem: '',
                 timer: null,
                 curRole: 'staff',
@@ -187,27 +184,27 @@
             };
         },
         computed: {
-        ...mapGetters([
-            'user',
-            'navStick',
-            'navFold',
-            'currentNav',
-            'routerDiff',
-            'roleList',
-            'navData',
-            'index',
-            'navCurRoleId'
-        ]),
-        unfold () {
-            return this.navStick || !this.navFold;
-        },
-        isShowRouterGroup () {
-            return (payload) => {
-                const allRouter = getRouterDiff('all');
-                const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
-                return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
-            };
-        }
+            ...mapGetters([
+                'user',
+                'navStick',
+                'navFold',
+                'currentNav',
+                'routerDiff',
+                'roleList',
+                'navData',
+                'index',
+                'navCurRoleId'
+            ]),
+            unfold () {
+                return this.navStick || !this.navFold;
+            },
+            isShowRouterGroup () {
+                return (payload) => {
+                    const allRouter = getRouterDiff('all');
+                    const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
+                    return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
+                };
+            }
         },
         watch: {
             $route: {
@@ -307,6 +304,8 @@
             handleSelectNode (node) {
                 this.curRoleId = node.id;
                 this.selectNode = node;
+                this.$refs.select.close();
+                this.handleToggle(false);
                 this.handleSwitchRole(node.id);
             },
 
@@ -344,6 +343,10 @@
                     }
                     this.openedItem = item.id === this.openedItem ? '' : item.id;
                 });
+            },
+
+            handleToggle (value) {
+                this.selectCls = value ? 'iam-nav-select-dropdown-content' : 'hide-iam-nav-select-cls';
             },
 
             // 获取当前选中节点
@@ -443,6 +446,19 @@
 
             handleToGradingAdmin () {
                 bus.$emit('rating-admin-change');
+            },
+
+            formatColor (node) {
+                if (node.id === this.curRoleId) {
+                    switch (node.level) {
+                        case 0: {
+                            return '#FF9C01';
+                        }
+                        case 1: {
+                            return '#9B80FE';
+                        }
+                    }
+                }
             }
         }
     };
@@ -455,5 +471,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+.iamcenter-level-one {
+    &.is-active {
+        color: #FF9C01;
+    }
+}
+
+.iamcenter-level-two {
+    &.is-active {
+        color: #9B80FE;
+    }
 }
 </style>
