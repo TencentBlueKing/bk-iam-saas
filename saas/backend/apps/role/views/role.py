@@ -104,6 +104,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     filterset_class = RatingMangerFilter
 
     biz = RoleBiz()
+    group_biz = GroupBiz()
     role_check_biz = RoleCheckBiz()
 
     role_trans = RoleTrans()
@@ -135,6 +136,10 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 结构转换
         info = self.role_trans.from_role_data(data)
         role = self.biz.create_grade_manager(info, user_id)
+
+        # 创建同步权限用户组
+        if info.sync_perm:
+            self.group_biz.create_sync_perm_group_by_role(role, user_id)
 
         audit_context_setter(role=role)
 
@@ -192,6 +197,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         info = self.role_trans.from_role_data(data, old_system_policy_list=old_system_policy_list)
         self.biz.update(role, info, user_id)
 
+        # 更新同步权限用户组信息
+        self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True, sync_prem=True)
+
         audit_context_setter(role=role)
 
         return Response({})
@@ -234,6 +242,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
+        # 更新同步权限用户组信息
+        self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True)
+
         audit_context_setter(role=role)
 
         return Response({})
@@ -245,6 +256,7 @@ class RoleMemberView(views.APIView):
     """
 
     biz = RoleBiz()
+    group_biz = GroupBiz()
 
     @swagger_auto_schema(
         operation_description="退出角色",
@@ -256,6 +268,12 @@ class RoleMemberView(views.APIView):
         role_id = kwargs["id"]
         user_id = request.user.username
         self.biz.delete_member(int(role_id), user_id)
+
+        # 更新同步权限用户组信息
+        role = Role.objects.filter(id=role_id).first()
+        if role and role.sync_perm:
+            self.group_biz.update_sync_perm_group_by_role(role, user_id, sync_members=True)
+
         audit_context_setter(role_id=role_id)
         return Response({})
 

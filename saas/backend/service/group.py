@@ -58,15 +58,15 @@ class GroupMemberExpiredAt(Subject):
 
 
 class GroupService:
-    def create(self, name: str, description: str, creator: str) -> Group:
+    def create(self, info: GroupCreate, creator: str) -> Group:
         """
         创建用户组
         """
-        group = Group(name=name, description=description, creator=creator)
+        group = Group(name=info.name, description=info.description, readonly=info.readonly, creator=creator)
         group.save(force_insert=True)
 
         # 创建后端的用户组
-        iam.create_subjects([{"type": SubjectType.GROUP.value, "id": str(group.id), "name": name}])
+        iam.create_subjects([{"type": SubjectType.GROUP.value, "id": str(group.id), "name": info.name}])
 
         return group
 

@@ -131,6 +131,7 @@ class RatingMangerCreateSLZ(RatingMangerBaseInfoSZL):
         label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", default=False)
 
     def validate(self, data):
         if len(data["authorization_scopes"]) != len({sys["system_id"] for sys in data["authorization_scopes"]}):
@@ -196,6 +197,7 @@ class RatingMangerDetailSchemaSLZ(BaseRatingMangerSchemaSLZ):
             "members",
             "authorization_scopes",
             "subject_scopes",
+            "sync_perm",
         )
 
 
@@ -283,6 +285,7 @@ class RatingMangerDetailSLZ(BaseRatingMangerSLZ):
             "members",
             "authorization_scopes",
             "subject_scopes",
+            "sync_perm",
         )
 
     def get_authorization_scopes(self, obj):

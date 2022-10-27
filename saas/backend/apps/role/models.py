@@ -33,6 +33,7 @@ class Role(BaseModel):
     type = models.CharField("类型", max_length=32, choices=RoleType.get_choices())
     code = models.CharField("标志", max_length=64, default="")
     inherit_subject_scope = models.BooleanField("继承人员管理范围", default=False)
+    sync_perm = models.BooleanField("同步角色权限", default=False)
 
     class Meta:
         verbose_name = "角色"
@@ -212,6 +213,7 @@ class RoleRelatedObject(BaseModel):
     role_id = models.IntegerField("角色ID")
     object_type = models.CharField("对象类型", max_length=32, choices=RoleRelatedObjectType.get_choices())
     object_id = models.IntegerField("对象ID")
+    sync_perm = models.BooleanField("跟随角色同步", default=False)
 
     objects = RoleRelatedObjectManager()
 

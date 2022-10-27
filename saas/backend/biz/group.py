@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
@@ -38,7 +39,7 @@ from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupServic
 from backend.service.group_saas_attribute import GroupAttributeService
 from backend.service.models import Policy, Subject
 from backend.service.policy.query import PolicyQueryService
-from backend.service.role import RoleService, UserRole
+from backend.service.role import AuthScopeSystem, RoleService, UserRole
 from backend.service.system import SystemService
 from backend.service.template import TemplateService
 from backend.util.time import utc_string_to_local
@@ -151,7 +152,7 @@ class GroupBiz:
         创建用户组
         """
         with transaction.atomic():
-            group = self.group_svc.create(name, description, creator)
+            group = self.group_svc.create(GroupCreate(name=name, description=description), creator)
             RoleRelatedObject.objects.create_group_relation(role_id, group.id)
             if subjects:
                 self.group_svc.add_members(group.id, subjects, expired_at)
@@ -566,6 +567,153 @@ class GroupBiz:
         hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
 
         return hit_members
+
+    def create_sync_perm_group_by_role(self, role: Role, creator: str):
+        """
+        创建与分级管理员授权范围同步的用户组
+
+        同步数据:
+        1. 分级管理员授权范围 -> 用户组的自定义权限
+        2. 分级管理员的成员 -> 用户组的成员 (过期时间永久)
+        """
+
+        # 创建用户组, 加成员
+        with transaction.atomic():
+
+            # TODO 用户组的名字需要定义
+            group = self.group_svc.create(
+                GroupCreate(name=role.name, description=Role.description, readonly=True), creator
+            )
+            RoleRelatedObject.objects.create(
+                role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True
+            )
+            members = self.role_svc.list_members_by_role_id(role.id)
+            if members:
+                self.group_svc.add_members(
+                    group.id,
+                    [Subject(type=SubjectType.USER.value, id=username) for username in members],
+                    PERMANENT_SECONDS,
+                )
+
+        # 查询角色的授权范围
+        auth_scopes = self.role_svc.list_auth_scope(role.id)
+
+        # 转换成group授权的自定义权限
+        templates = []
+        for scope in auth_scopes:
+            templates.append(
+                GroupTemplateGrantBean(
+                    system_id=scope.system_id, template_id=0, policies=parse_obj_as(List[PolicyBean], scope.actions)
+                )
+            )
+
+        self.grant(role, group, templates)
+
+    def update_sync_perm_group_by_role(
+        self, role: Role, user_id: str, sync_members: bool = False, sync_prem: bool = False
+    ):
+        """
+        同步用户组的成员或权限
+        """
+        # 查询role的同步权限用户组
+        relation = (
+            RoleRelatedObject.objects.filter(
+                role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, sync_perm=True
+            )
+            .only("object_id")
+            .first()
+        )
+
+        # 1. 如果role sync_perm 被修改为False, 同时存在同步权限用户组, 需要删除用户组
+        if relation and not role.sync_perm:
+            self.delete(relation.object_id)
+            return
+
+        # 2. 如果role sync_perm 被修改为True, 同时不存在同步权限用户组, 需要创建同步权限用户组
+        if not relation and role.sync_perm:
+            self.create_sync_perm_group_by_role(role, user_id)
+            return
+
+        # 3. 不存在同步权限用户组, 不需要处理
+        if not relation and not role.sync_perm:
+            return
+
+        # 4. 更新用户组的成员
+        if sync_members:
+            self._update_sync_perm_group_member(role, relation.object_id)
+
+        # 5. 更新用户组权限
+        if sync_prem:
+            self._update_sync_perm_group_permission(role, relation.object_id)
+
+    def _update_sync_perm_group_permission(self, role: Role, group_id: int):
+        # 查询角色的授权范围
+        auth_scopes = self.role_svc.list_auth_scope(role.id)
+
+        # 删除用户组超出授权范围的权限
+        self._delete_sync_perm_group_permission_out_of_scope(group_id, auth_scopes)
+
+        # 重新授权
+        templates = []
+        for scope in auth_scopes:
+            templates.append(
+                GroupTemplateGrantBean(
+                    system_id=scope.system_id, template_id=0, policies=parse_obj_as(List[PolicyBean], scope.actions)
+                )
+            )
+
+        group = Group.objects.get(id=group_id)
+        self.grant(role, group, templates)
+
+    def _delete_sync_perm_group_permission_out_of_scope(self, group_id, auth_scopes: List[AuthScopeSystem]):
+        system_action_ids = defaultdict(list)
+        action_policy_id = {}
+
+        queryset = PolicyModel.objects.filter(subject_type=SubjectType.GROUP.value, subject_id=str(group_id)).only(
+            "id", "system_id", "action_id"
+        )
+        for p in queryset:
+            system_action_ids[p.system_id].append(p.action_id)
+            action_policy_id[(p.system_id, p.action_id)] = p.id
+
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+
+        # 删除系统部分被删除的操作权限
+        for scope in auth_scopes:
+            if scope.system_id not in system_action_ids:
+                continue
+
+            delete_actions = set(system_action_ids[scope.system_id]) - {a.id for a in scope.actions}
+            policy_ids = [action_policy_id[(scope.system_id, action_id)] for action_id in delete_actions]
+            if policy_ids:
+                self.policy_operation_biz.delete_by_ids(scope.system_id, subject, policy_ids)
+
+        # 删除系统被整体删除的权限
+        auth_scope_systems = {scope.system_id for scope in auth_scopes}
+        for system_id in system_action_ids.keys():
+            if system_id in auth_scope_systems:
+                continue
+
+            policy_ids = [action_policy_id[(system_id, action_id)] for action_id in system_action_ids[system_id]]
+            if policy_ids:
+                self.policy_operation_biz.delete_by_ids(scope.system_id, subject, policy_ids)
+
+    def _update_sync_perm_group_member(self, role: Role, group_id: int):
+        role_members = self.role_svc.list_members_by_role_id(role.id)
+        group_members = self.group_svc.list_all_group_member(group_id)
+
+        role_subjects = {Subject(type=SubjectType.USER.value, id=username) for username in role_members}
+        group_subjects = {Subject.parse_obj(s) for s in group_members}
+
+        # 需要新增的成员
+        add_subjects = list(role_subjects - group_subjects)
+        if add_subjects:
+            self.group_svc.add_members(group_id, add_subjects, PERMANENT_SECONDS)
+
+            # 需要删除的成员
+        del_subjects = list(group_subjects - role_subjects)
+        if del_subjects:
+            self.group_svc.remove_members(group_id, del_subjects)
 
 
 class GroupCheckBiz:

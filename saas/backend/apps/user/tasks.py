@@ -261,6 +261,9 @@ class UserPermissionCleaner:
             ):
                 self.role_biz.delete_member(role.id, username)
 
+                if role.sync_perm:
+                    self.group_biz.update_sync_perm_group_by_role(role, "admin", sync_members=True)
+
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
 

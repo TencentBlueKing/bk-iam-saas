@@ -35,6 +35,7 @@ from backend.apps.role.audit import (
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.service.constants import RoleSourceTypeEnum, RoleType
@@ -184,6 +185,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
 
     biz = RoleBiz()
+    group_biz = GroupBiz()
     role_check_biz = RoleCheckBiz()
 
     @swagger_auto_schema(
@@ -216,6 +218,10 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         # 批量添加成员(添加时去重)
         self.biz.add_grade_manager_members(role.id, members)
 
+        # 同步权限用户组成员
+        if role.sync_perm:
+            self.group_biz.update_sync_perm_group_by_role(role, request.user.username, sync_members=True)
+
         # 审计
         audit_context_setter(role=role, members=members)
 
@@ -236,6 +242,10 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
 
         members = list(set(serializer.validated_data["members"]))
         self.biz.delete_grade_manager_member(role.id, members)
+
+        # 同步权限用户组成员
+        if role.sync_perm:
+            self.group_biz.update_sync_perm_group_by_role(role, request.user.username, sync_members=True)
 
         # 审计
         audit_context_setter(role=role, members=members)
