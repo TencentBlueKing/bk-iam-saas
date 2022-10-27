@@ -271,7 +271,11 @@ export const m = {
         '只允许输入英文': 'Only English is allowed',
         '生效时间': 'Effective time',
         '生效条件': 'Effective condition',
-        '空间名称必填': 'Space name is required'
+        '空间名称必填': 'Space name is required',
+        '空间名称最长不超过32个字符': 'The space name cannot exceed 32 characters',
+        '空间名称不允许空格': 'Space name does not allow spaces',
+        '操作和资源边界范围不可为空': 'Operation and resource boundary range cannot be empty',
+        '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -687,7 +691,21 @@ export const m = {
         '请输入空间名': 'Please enter the space name',
         '管理员': 'Administrators',
         '请输入管理员': 'Please enter the administrator',
-        '上级空间': 'Superior space'
+        '上级空间': 'Superior space',
+        '当前空间': 'Current Space',
+        '实例值': 'Instance Value',
+        '最大可授权范围操作和资源边界': 'Maximum authorized scope operation and resource boundary',
+        '选择操作和资源边界范围': 'Select operation and resource boundary range',
+        '最大可授权人员边界': 'Maximum authorized personnel boundary',
+        '选择可授权人员边界': 'Select authorized personnel boundary',
+        '最大可授权操作和资源边界': 'Maximum authorized operations and resource boundaries',
+        '授权人员边界': 'Authorized personnel boundary',
+        '搜索空间名、描述、创建人、创建时间': 'Search space name, description, creator and creation time',
+        '我有权限': 'I have authority',
+        '全部空间': 'All spaces',
+        '如需编辑授权边界的内容请点击': 'edit the content of the authorization boundary, click',
+        '释放': 'Release',
+        '一级管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space'
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',

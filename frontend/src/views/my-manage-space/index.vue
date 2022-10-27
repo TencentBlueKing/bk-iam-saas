@@ -19,31 +19,104 @@
                 </div>
             </div>
         </render-search>
-        <bk-table :data="tableList" size="small" :class="{ 'set-border': tableLoading }" ext-cls="level-manage-table"
-            :pagination="pagination" @page-change="handlePageChange" @page-limit-change="handleLimitChange"
+        <bk-table ref="spaceTable" size="small" ext-cls="level-manage-table" :data="tableList" :max-height="tableHeight"
+            :cell-class-name="getCellClass" :pagination="pagination" @page-change="handlePageChange"
+            @page-limit-change="handleLimitChange" @expand-change="handleExpandChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column type="expand" width="60">
+            <bk-table-column type="expand" width="30">
                 <template slot-scope="{ row }">
-                    <bk-table size="small" :data="row.children" :outer-border="false" :row-border="false"
-                        :col-border="false" :header-cell-style="{ background: '#fff', border: 'none' }">
-                        <bk-table-column prop="name" label="任务名称"></bk-table-column>
-                        <bk-table-column prop="count" label="节点数量"></bk-table-column>
-                        <bk-table-column prop="creator" label="创建人"></bk-table-column>
-                        <bk-table-column prop="create_time" label="创建时间"></bk-table-column>
-                        <bk-table-column prop="desc" label="描述"></bk-table-column>
+                    <bk-table size="small" ext-cls="children-expand-cls" :data="row.children" :row-key="row.id"
+                        :show-header="false" :border="false" :cell-class-name="getCellClass" @row-click="handleRowClick"
+                        @row-mouse-enter="handleRowMouseEnter" @row-mouse-leave="handleRowMouseLeave">
+                        <bk-table-column width="40" />
+                        <bk-table-column prop="name" width="140">
+                            <template slot-scope="child">
+                                <div class="child_space_name">
+                                    <Icon type="level-two" :style="{ color: iconColor[1] }" />
+                                    <!-- <span v-bk-tooltips.right="row.name" class="right-start"> -->
+                                    <!-- <bk-button theme="primary" text @click="handleView(row)">
+                                            {{ child.row.name }}
+                                        </bk-button> -->
+                                    <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
+                                        :value="child.row.name" style="width: 100%;margin-left: 5px;"
+                                        :mode.sync="isEditMode"
+                                        :remote-hander="handleUpdateRatingManager" />
+                                    <!-- </span> -->
+                                </div>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column prop="members" width="300">
+                            <template slot-scope="child">
+                                <bk-tag v-for="tag in child.row.members" closable :key="tag" @close="closeTag(tag)">
+                                    {{tag}}
+                                </bk-tag>
+                                <!-- <iam-edit-input field="members" :placeholder="$t(`m.verify['请输入']`)"
+                                    :value="child.row.members" style="width: 100%;margin-left: 5px;"
+                                    :mode.sync="isEditMode"
+                                    :remote-hander="handleUpdateRatingManager" /> -->
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column prop="description">
+                            <template slot-scope="child">
+                                <iam-edit-input field="description" :placeholder="$t(`m.verify['请输入']`)"
+                                    :value="child.row.description" :remote-hander="handleUpdateRatingManager" />
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
+                        <bk-table-column :label="$t(`m.common['创建时间']`)">
+                            <template slot-scope="child">
+                                <span :title="row.created_time">{{ child.row.created_time }}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column prop="updater"></bk-table-column>
+                        <bk-table-column prop="updated_time">
+                            <template slot-scope="child">
+                                <span :title="row.updated_time">{{ child.row.updated_time }}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column prop="updater" width="300">
+                            <template slot-scope="child">
+                                <div class="operate_btn">
+                                    <bk-button theme="primary" text @click.stop="handleClone(child.row)">
+                                        {{ $t(`m.levelSpace['进入']`) }}
+                                    </bk-button>
+                                    <bk-button theme="primary" text @click.stop="handleClone(child.row)">
+                                        {{ $t(`m.nav['授权边界']`) }}
+                                    </bk-button>
+                                    <bk-button theme="primary" text @click.stop="handleClone(child.row)">
+                                        {{ $t(`m.levelSpace['克隆']`) }}
+                                    </bk-button>
+                                    <bk-button theme="primary" text @click.stop="handleClone(child.row)">
+                                        {{ $t(`m.levelSpace['释放']`) }}
+                                    </bk-button>
+                                </div>
+                            </template>
+                        </bk-table-column>
                     </bk-table>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['空间名']`)">
+            <bk-table-column :label="$t(`m.levelSpace['空间名']`)" prop="name" width="150">
                 <template slot-scope="{ row }">
-                    <span class="first-manage-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                    <div>
+                        <Icon type="level-one" :style="{ color: iconColor[0] }" />
+                        <span v-bk-tooltips.right="row.name" class="right-start">
+                            <bk-button theme="primary" text @click="handleView(row)">
+                                {{ row.name }}
+                            </bk-button>
+                        </span>
+                    </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['管理员']`)">
+            <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
                 <template slot-scope="{ row }">
-                    <span class="first-manage-name" :title="row.name" @click="handleView(row)">
-                        {{ row.members.length ? row.members.join(',') : '-' }}
-                    </span>
+                    <bk-tag v-for="(tag, index) of row.members" :key="index">
+                        {{tag}}
+                    </bk-tag>
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.common['描述']`)">
+                <template slot-scope="{ row }">
+                    <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
@@ -58,16 +131,11 @@
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)">
-                <template slot-scope="{ row }">
-                    <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="300" fixed="right">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="300">
                 <template slot-scope="{ row }">
                     <div class="operate_btn">
                         <bk-button theme="primary" text>{{ $t(`m.levelSpace['进入']`) }}</bk-button>
-                        <bk-button theme="primary" text @click="handleClone(row)">
+                        <bk-button theme="primary" text @click.stop="handleClone(row)">
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button theme="primary" text @click="handleClone(row)">
@@ -82,11 +150,20 @@
 
 <script>
     import { mapGetters } from 'vuex';
+    import { getWindowHeight } from '@/common/util';
+    import IamEditInput from '@/components/iam-edit/input';
+    // import IamEditTextarea from '@/components/iam-edit/textarea';
+    // import IamEditMember from '@/views/manage-spaces/components/member-edit';
     export default {
-        name: '',
+        name: 'myManageSpace',
+        components: {
+            IamEditInput
+            // IamEditTextarea,
+            // IamEditMember
+        },
         data () {
             return {
-                searchValue: '',
+                tableLoading: false,
                 isFilter: false,
                 tableList: [
                     {
@@ -96,60 +173,188 @@
                         creator: 'admin',
                         updated_time: '2022-10-26 10:12:21',
                         updater: 'admin',
-                        description: '测试',
-                        members: ['admin', 'liu07'],
+                        description: '管理员可授予他人xxx的权限',
+                        members: ['admin', 'liu0742666', 'gc_lihao'],
                         children: [
                             {
-                                id: 46,
+                                id: 47,
+                                name: 'admin',
                                 created_time: '2022-10-13 14:53:36',
                                 creator: 'admin',
+                                updated_time: '2022-10-26 10:12:21',
+                                updater: 'admin',
                                 description: '测试',
                                 members: ['admin', 'liu07']
                             },
                             {
-                                id: 46,
+                                id: 48,
+                                name: 'admin',
                                 created_time: '2022-10-13 14:53:36',
                                 creator: 'admin',
+                                updated_time: '2022-10-26 10:12:21',
+                                updater: 'admin',
+                                description: '测试',
+                                members: ['admin', 'liu07', 'gc_lihao']
+                            }
+                        ]
+                    },
+                    {
+                        id: 49,
+                        name: 'admin2',
+                        created_time: '2022-10-13 14:53:36',
+                        creator: 'admin',
+                        updated_time: '2022-10-26 10:12:21',
+                        updater: 'admin',
+                        description: '管理员可授予他人xxx的权限',
+                        members: ['admin', 'liu0742666', 'gc_lihao'],
+                        children: [
+                            {
+                                id: 50,
+                                name: 'admin',
+                                created_time: '2022-10-13 14:53:36',
+                                creator: 'admin',
+                                updated_time: '2022-10-26 10:12:21',
+                                updater: 'admin',
                                 description: '测试',
                                 members: ['admin', 'liu07']
+                            },
+                            {
+                                id: 51,
+                                name: 'admin',
+                                created_time: '2022-10-13 14:53:36',
+                                creator: 'admin',
+                                updated_time: '2022-10-26 10:12:21',
+                                updater: 'admin',
+                                description: '测试',
+                                members: ['admin', 'liu07', 'gc_lihao']
                             }
                         ]
                     }
                 ],
                 pagination: {
                     current: 1,
-                    count: 0,
+                    count: 1,
                     limit: 10
                 },
                 currentBackup: 1,
-                tableLoading: false,
-                confirmLoading: false,
-                confirmDialogTitle: '',
-                confirmDialogSubTitle: '',
-                isShowConfirmDialog: false,
-                curOperateType: '',
-                curId: -1,
-                isShowApplyDialog: false,
-                applyLoading: false,
-                curName: '',
-                showImageDialog: false,
-                noFooter: false,
-                radioValue: 'haveRole'
+                searchValue: '',
+                hoverMode: '',
+                radioValue: 'haveRole',
+                iconColor: ['#FF9C01', '#9B80FE'],
+                expandRowList: [] // 所有展开折叠项
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user']),
+            tableHeight () {
+                return getWindowHeight() - 185;
+            },
+            isEditMode: {
+                get () {
+                    return this.hoverMode;
+                },
+                set (value) {
+                    this.$emit('update:mode', value);
+                }
+
+            }
         },
         methods: {
+            getCellClass ({ row, column, rowIndex, columnIndex }) {
+                if (columnIndex === 2) {
+                    return 'iam-tag-table-cell-cls';
+                }
+                return '';
+            },
+
+            // 通过子集id找父级数据
+            findParentNode (id, list = [], result = []) {
+                for (let i = 0; i < list.length; i += 1) {
+                    const item = list[i];
+                    if (item.id === id) {
+                        result.push(item.id);
+                        if (result.length === 1) return result;
+                        return true;
+                    }
+                    if (item.children) {
+                        result.push(item.id);
+                        const isFind = this.findParentNode(id, item.children, result);
+                        if (isFind) {
+                            return result;
+                        }
+                        result.pop();
+                    }
+                }
+                return false;
+            },
+
+            handleUpdateRatingManager (payload) {
+                console.log(payload, 555);
+            },
+
+            handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
+                const allNodeId = this.findParentNode(row.id, this.expandRowList);
+                if (allNodeId.length) {
+                    const rowData = this.expandRowList.find(item => item.id === allNodeId[0]);
+                    this.$refs.spaceTable.toggleRowExpansion(rowData, false);
+                }
+            },
+
+            handleRowMouseEnter (index, row, event) {
+                this.hoverMode = 'edit';
+                console.log(index, row, event, '移入');
+            },
+
+            handleRowMouseLeave (index, row, event) {
+            // console.log(index, row, event, '移除');
+            },
+
+            handleExpandChange (row, expandedRows) {
+                this.expandRowList = expandedRows;
+                // if (this.expandRowList.includes(row.id)) {
+                //     this.expandRowList = this.expandRowList.filter(val => val !== row.id);
+                // } else {
+                //     this.expandRowList.push(row.id);
+                // }
+                console.log(row, expandedRows, '展开');
+            },
+
             handleCreate () {
                 console.log(this.user);
                 this.$store.commit('updateIndex', 3);
+            // this.$router.push({
+            //     name: 'firstManageSpaceCreate',
+            //     params: {
+            //         id: 0
+            //     }
+            // });
+            },
+            handleView ({ id, name }) {
+                window.localStorage.setItem('iam-header-name-cache', name);
+                this.$store.commit('updateIndex', 1);
                 this.$router.push({
-                    name: 'firstManageSpaceCreate',
+                    name: 'authorBoundary',
                     params: {
-                        id: 0
+                        id
                     }
                 });
+            },
+
+            handleClone () {
+                console.log(455);
+            },
+
+            handlePageChange (page) {
+                if (this.currentBackup === page) {
+                    return;
+                }
+                this.pagination.current = page;
+                this.fetchGradingAdmin(true);
+            },
+
+            handleLimitChange (limit) {
+                this.pagination = Object.assign(this.pagination, { limit, current: 1 });
+                this.fetchGradingAdmin(true);
             }
         }
     };
@@ -165,10 +370,49 @@
         display: flex;
     }
 
-     .operate_btn {
+    .child_space_name {
+        display: flex;
+        align-items: center;
+    }
+
+    .operate_btn {
         .bk-button-text {
             &:nth-child(n + 2) {
-                margin-left: 10px;;
+                margin-left: 10px;
+                ;
+            }
+        }
+    }
+
+    .level-manage-table {
+
+        /deep/ .bk-table-pagination-wrapper {
+            background: #fff;
+        }
+    }
+
+    /deep/ .bk-table-expanded-cell {
+        padding: 0 !important;
+
+        &:hover {
+            cursor: pointer;
+        }
+
+        .bk-table {
+            border: 0;
+        }
+    }
+
+    /deep/ .iam-tag-table-cell-cls {
+        .cell {
+            .bk-tag {
+                &:first-of-type {
+                    margin-left: 0;
+                }
+
+                &:hover {
+                    cursor: pointer;
+                }
             }
         }
     }

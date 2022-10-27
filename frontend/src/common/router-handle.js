@@ -213,6 +213,10 @@ export const getNavRouterDiff = (navIndex) => {
         ];
     }
 
+    if (navIndex === 1) {
+        return ['firstManageSpace'];
+    }
+
     if (navIndex === 2) {
         return [
             'systemAccess',
