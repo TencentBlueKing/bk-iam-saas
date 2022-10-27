@@ -413,3 +413,30 @@ class AuthorizedSubjectsSLZ(serializers.Serializer):
     type = serializers.CharField(label="Subject对象类型")
     id = serializers.CharField(label="Subject对象ID")
     name = serializers.CharField(label="Subject对象名称")
+
+
+class SubsetMangerCreateSLZ(RatingMangerCreateSLZ):
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
+    inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围")
+
+    def validate(self, data):
+        data = super().validate(data)
+        if not data["inherit_subject_scope"] and not data["subject_scopes"]:
+            raise serializers.ValidationError({"subject_scopes": ["must not be empty"]})
+        return data
+
+
+class SubsetMangerDetailSLZ(RatingMangerDetailSLZ):
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "updated_time",
+            "creator",
+            "members",
+            "authorization_scopes",
+            "inherit_subject_scope",
+            "subject_scopes",
+        )

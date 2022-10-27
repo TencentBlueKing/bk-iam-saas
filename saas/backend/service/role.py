@@ -106,6 +106,7 @@ class RoleInfo(PartialModel):
     name_en: str = ""
     description: str
     type: str = RoleType.RATING_MANAGER.value
+    inherit_subject_scope: bool = False
 
     members: List[RoleMember]
     subject_scopes: List[Subject] = []
@@ -194,6 +195,7 @@ class RoleService:
                 name_en=info.name_en,
                 description=info.description,
                 type=info.type,
+                inherit_subject_scope=info.inherit_subject_scope,
                 creator=creator,
                 updater=creator,
             )
@@ -279,6 +281,8 @@ class RoleService:
                 role.name_en = info.name_en
             if "description" in update_fields:
                 role.description = info.description
+            if role.type == RoleType.SUBSET_MANAGER.value and "inherit_subject_scope" in update_fields:
+                role.inherit_subject_scope = info.inherit_subject_scope
 
             role.updater = updater
             role.save()

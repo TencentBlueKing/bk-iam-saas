@@ -32,6 +32,7 @@ class Role(BaseModel):
     description = models.CharField("描述", max_length=255, default="")
     type = models.CharField("类型", max_length=32, choices=RoleType.get_choices())
     code = models.CharField("标志", max_length=64, default="")
+    inherit_subject_scope = models.BooleanField("继承人员管理范围", default=False)
 
     class Meta:
         verbose_name = "角色"
@@ -312,13 +313,3 @@ class AnonymousRole:
     @property
     def permissions(self):
         return []
-
-
-"""
-子集管理员同步分级管理员成员:
-
-1. 在RoleUser上增加readonly字段
-2. 子集管理员创建时默认需要查询分级管理员的成员, 并加入到成员中, 设置readonly=True
-3. 子集管理员删除成员时, 不能删除readonly=True的成员
-4. 分级管理员的成员变更时, 需要同步变更子集管理员中readonly=True的成员
-"""

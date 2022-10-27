@@ -60,6 +60,8 @@ from backend.apps.role.serializers import (
     RoleGroupMembersRenewSLZ,
     RoleIdSLZ,
     RoleScopeSubjectSLZ,
+    SubsetMangerCreateSLZ,
+    SubsetMangerDetailSLZ,
     SuperManagerMemberDeleteSLZ,
     SuperManagerMemberSLZ,
     SystemManagerMemberUpdateSLZ,
@@ -725,13 +727,13 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         role = self.get_object()
-        serializer = RatingMangerDetailSLZ(instance=role)
+        serializer = SubsetMangerDetailSLZ(instance=role)
         data = serializer.data
         return Response(data)
 
     @swagger_auto_schema(
         operation_description="创建子集管理员",
-        request_body=RatingMangerCreateSLZ(label="创建子集管理员"),
+        request_body=SubsetMangerCreateSLZ(label="创建子集管理员"),
         responses={status.HTTP_201_CREATED: RoleIdSLZ(label="子集管理员ID")},
         tags=["role"],
     )
@@ -740,7 +742,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         """
         创建子集管理员
         """
-        serializer = RatingMangerCreateSLZ(data=request.data)
+        serializer = SubsetMangerCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
@@ -756,8 +758,12 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 检查授权范围
         self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
 
-        # 检查人员范围
-        self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
+        if not info.inherit_subject_scope:
+            # 检查人员范围
+            self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
+        else:
+            subject_scopes = self.biz.list_subject_scope(grade_manager.id)
+            info.subject_scopes = subject_scopes
 
         # 创建子集管理员, 并创建分级管理员与子集管理员的关系
         role = self.biz.create_subset_manager(grade_manager, info, user_id)
@@ -802,8 +808,12 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 检查授权范围
         self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
 
-        # 检查人员范围
-        self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
+        if not info.inherit_subject_scope:
+            # 检查人员范围
+            self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
+        else:
+            subject_scopes = self.biz.list_subject_scope(grade_manager.id)
+            info.subject_scopes = subject_scopes
 
         self.biz.update(role, info, user_id)
 
