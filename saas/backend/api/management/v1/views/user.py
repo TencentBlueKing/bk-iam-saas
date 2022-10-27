@@ -72,7 +72,7 @@ class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
     group_biz = GroupBiz()
 

@@ -13,7 +13,7 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
-from backend.apps.role.serializers import RatingMangerBaseInfoSZL, RoleScopeSubjectSLZ
+from backend.apps.role.serializers import GradeMangerBaseInfoSZL, RoleScopeSubjectSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.service.constants import GroupMemberType, SubjectType
 from backend.service.models import Subject
@@ -77,7 +77,7 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
         return data
 
 
-class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
+class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, GradeMangerBaseInfoSZL):
     members = serializers.ListField(
         label="成员列表",
         child=serializers.CharField(label="用户ID", max_length=64),

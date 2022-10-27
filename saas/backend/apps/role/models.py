@@ -61,7 +61,7 @@ class RoleUser(BaseModel):
 
     role_id = models.IntegerField("角色ID")
     username = models.CharField("用户id", max_length=64)
-    readonly = models.BooleanField("用户组只读标识", default=False)  # 增加可读标识
+    readonly = models.BooleanField("只读标识", default=False)  # 增加可读标识
 
     objects = RoleUserManager()
 

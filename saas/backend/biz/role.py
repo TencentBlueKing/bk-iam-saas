@@ -143,7 +143,7 @@ class RoleBiz:
 
             if node.type != RoleType.SUBSET_MANAGER.value:
                 tree.append(node)
-                if node.type == RoleType.RATING_MANAGER.value:
+                if node.type == RoleType.GRADE_MANAGER.value:
                     grade_manager_dict[node.id] = node
             else:
                 subset_manager_dict[node.id] = node
@@ -202,7 +202,7 @@ class RoleBiz:
         self.svc.update(role, info, updater)
 
         # 同步更新自动跟随的子集管理员的人员选择范围
-        if role.type == RoleType.RATING_MANAGER.value and "subject_scopes" in info.get_partial_fields():
+        if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in info.get_partial_fields():
             subject_scopes = self.svc.list_subject_scope(role.id)
 
             subset_manager_ids = list(RoleRelation.objects.filter(parent_id=role.id).values_list("role_id", flat=True))
@@ -476,15 +476,15 @@ class RoleCheckBiz:
         # 新名称已经有对应的分级管理员，则不可以
         if Role.objects.filter(
             name=new_name,
-            type__in=[RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value],
+            type__in=[RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.GRADE_MANAGER.value],
         ).exists():
             raise error_codes.CONFLICT_ERROR.format(_("名称[{}]已存在，请修改为其他名称").format(new_name), True)
 
         # 检测是否已经有正在申请中的
         applications = Application.objects.filter(
             type__in=[
-                ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
-                ApplicationTypeEnum.UPDATE_RATING_MANAGER.value,
+                ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+                ApplicationTypeEnum.UPDATE_GRADE_MANAGER.value,
             ],
             status=ApplicationStatus.PENDING.value,
         )
@@ -554,7 +554,7 @@ class RoleCheckBiz:
         Note: 目前subject仅仅支持User
         """
         limit = settings.SUBJECT_AUTHORIZATION_LIMIT["subject_grade_manager_limit"]
-        exists_count = RoleUser.objects.filter(username=subject.id, type=RoleType.RATING_MANAGER.value).count()
+        exists_count = RoleUser.objects.filter(username=subject.id, type=RoleType.GRADE_MANAGER.value).count()
         if exists_count >= limit:
             raise serializers.ValidationError(_("成员({}): 加入的分级管理员数量已超过最大值 {}").format(subject.id, limit))
 
@@ -697,7 +697,7 @@ class RoleListQuery:
 
     def _get_role_related_object_ids(self, object_type: str) -> List[int]:
         # 分级管理员可以管理子集管理员的所有用户组
-        if self.role.type == RoleType.RATING_MANAGER.value and object_type == RoleRelatedObjectType.GROUP.value:
+        if self.role.type == RoleType.GRADE_MANAGER.value and object_type == RoleRelatedObjectType.GROUP.value:
             role_ids = RoleRelation.objects.list_subset_id(self.role.id)
             role_ids.append(self.role.id)
             return list(
@@ -758,7 +758,7 @@ class RoleListQuery:
         """
         # 作为超级管理员时，可以管理所有分级管理员
         if self.role.type == RoleType.SUPER_MANAGER.value:
-            return Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+            return Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
         # 作为个人时，只能管理加入的的分级管理员
         assert self.user
@@ -770,13 +770,13 @@ class RoleListQuery:
         grade_manager_ids = list(RoleRelation.objects.filter(role_id__in=role_ids).values_list("parent_id", flat=True))
         role_ids.extend(grade_manager_ids)
 
-        return Role.objects.filter(type=RoleType.RATING_MANAGER.value, id__in=role_ids).order_by("-updated_time")
+        return Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids).order_by("-updated_time")
 
     def query_subset_manager(self):
         """
         查询子集管理员
         """
-        if self.role.type == RoleType.RATING_MANAGER.value:
+        if self.role.type == RoleType.GRADE_MANAGER.value:
             sub_ids = RoleRelation.objects.list_sub_id(self.role.id)
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
 

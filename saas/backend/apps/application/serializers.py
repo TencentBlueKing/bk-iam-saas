@@ -17,7 +17,7 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User
 from backend.apps.policy.serializers import PolicyActionSLZ, ResourceSLZ, ResourceTypeSLZ, ValueFiled
-from backend.apps.role.serializers import RatingMangerCreateSLZ
+from backend.apps.role.serializers import GradeMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
@@ -200,8 +200,8 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
 
         # 对于申请创建分级管理员
         if obj.type in [
-            ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
-            ApplicationTypeEnum.UPDATE_RATING_MANAGER.value,
+            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+            ApplicationTypeEnum.UPDATE_GRADE_MANAGER.value,
         ]:
             # 兼容老数据，老数据只有system_id，而不是完整的system
             # 授权范围处理
@@ -240,7 +240,7 @@ class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
     groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False)
 
 
-class GradeManagerCreatedApplicationSLZ(RatingMangerCreateSLZ, ReasonSLZ):
+class GradeManagerCreatedApplicationSLZ(GradeMangerCreateSLZ, ReasonSLZ):
     pass
 
 

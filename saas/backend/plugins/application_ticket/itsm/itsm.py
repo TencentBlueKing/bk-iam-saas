@@ -114,7 +114,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         """创建 - 创建或更新分级管理员"""
         params = self._generate_ticket_common_params(data, process, callback_url)
 
-        title_prefix = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_RATING_MANAGER.value else "申请编辑分级管理员"
+        title_prefix = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_GRADE_MANAGER.value else "申请编辑分级管理员"
         params["title"] = f"{title_prefix}：{data.content.name}"
 
         params["content"] = {

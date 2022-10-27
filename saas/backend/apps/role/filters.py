@@ -13,7 +13,7 @@ from django_filters import rest_framework as filters
 from backend.apps.role.models import Role, RoleCommonAction
 
 
-class RatingMangerFilter(filters.FilterSet):
+class GradeMangerFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains", label="名称")
 
     class Meta:

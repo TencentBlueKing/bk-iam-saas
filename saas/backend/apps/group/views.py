@@ -856,7 +856,7 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
     3. 如果用户组的授权人员大于子集管理员的范围, 需要扩展子集管理员的授权范围
     """
 
-    permission_classes = [role_perm_class(PermissionCodeEnum.TRANSFER_GROUP_BY_RATING_MANAGER.value)]
+    permission_classes = [role_perm_class(PermissionCodeEnum.TRANSFER_GROUP_BY_GRADE_MANAGER.value)]
     queryset = Group.objects.all()
     lookup_field = "id"
 
@@ -871,6 +871,7 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupTransferAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_TRANSFER.label)
     def post(self, request, *args, **kwargs):
         slz = GradeManagerGroupTransferSLZ(data=request.data, context={"role": request.role})
         slz.is_valid(raise_exception=True)

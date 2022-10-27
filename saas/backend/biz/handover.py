@@ -128,10 +128,11 @@ class RoleHandoverHandler(BaseHandoverHandler):
         self.role_id = object_detail["id"]
         self.role_type = object_detail["type"]
 
+        self.role = Role.objects.get(id=self.role_id)
+
     def grant_permission(self):
         if self.role_type == RoleType.SUPER_MANAGER.value:
-            role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-            need_sync_backend_role = self.handover_from in role.system_permission_enabled_content.enabled_users
+            need_sync_backend_role = self.handover_from in self.role.system_permission_enabled_content.enabled_users
             self.biz.add_super_manager_member(username=self.handover_to, need_sync_backend_role=need_sync_backend_role)
         elif self.role_type == RoleType.SYSTEM_MANAGER.value:
             members = self._get_system_manager_members()
@@ -139,21 +140,17 @@ class RoleHandoverHandler(BaseHandoverHandler):
                 return
             members.append(self.handover_to)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
-        elif self.role_type in [RoleType.RATING_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
+        elif self.role_type in [RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
             self.biz.add_grade_manager_members(self.role_id, [self.handover_to])
 
-            role = Role.objects.get(id=self.role_id)
-            if role.sync_perm:
-                self.group_biz.update_sync_perm_group_by_role(role, "admin", sync_members=True)
-
-        if self.role_type != RoleType.SUPER_MANAGER.value:
-            role = Role.objects.get(id=self.role_id)
+            if self.role.sync_perm:
+                self.group_biz.update_sync_perm_group_by_role(self.role, "admin", sync_members=True)
 
         # 审计
         log_role_event(
             AuditType.ROLE_MEMBER_CREATE.value,
             Subject(type=SubjectType.USER.value, id=self.handover_from),
-            role,
+            self.role,
             extra={"members": [self.handover_to]},
             source_type=AuditSourceType.HANDOVER.value,
         )
@@ -165,8 +162,11 @@ class RoleHandoverHandler(BaseHandoverHandler):
             members = self._get_system_manager_members()
             members.remove(self.handover_from)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
-        elif self.role_type in [RoleType.RATING_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
+        elif self.role_type in [RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
             self.biz.delete_member(self.role_id, self.handover_from)
+
+            if self.role.sync_perm:
+                self.group_biz.update_sync_perm_group_by_role(self.role, "admin", sync_members=True)
 
     def _get_system_manager_members(self) -> List[str]:
         if self.role_type != RoleType.SYSTEM_MANAGER.value:

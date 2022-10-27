@@ -25,27 +25,27 @@ DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
         not in (
             PermissionCodeEnum.CREATE_SUBSET_MANAGER.value,
             PermissionCodeEnum.MANAGE_SUBSET_MANAGER.value,
-            PermissionCodeEnum.TRANSFER_GROUP_BY_RATING_MANAGER.value,
+            PermissionCodeEnum.TRANSFER_GROUP_BY_GRADE_MANAGER.value,
         )
     ],
     RoleType.SYSTEM_MANAGER.value: [
         PermissionCodeEnum.MANAGE_GROUP.value,
         PermissionCodeEnum.MANAGE_TEMPLATE.value,
-        PermissionCodeEnum.CREATE_RATING_MANAGER.value,
+        PermissionCodeEnum.CREATE_GRADE_MANAGER.value,
         PermissionCodeEnum.AUDIT.value,
         PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value,
         PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value,
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
         PermissionCodeEnum.MANAGE_SYSTEM_MANAGER_MEMBER.value,
     ],
-    RoleType.RATING_MANAGER.value: [
+    RoleType.GRADE_MANAGER.value: [
         PermissionCodeEnum.MANAGE_GROUP.value,
         PermissionCodeEnum.MANAGE_TEMPLATE.value,
         PermissionCodeEnum.CONFIGURE_APPROVAL_PROCESS.value,
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
         PermissionCodeEnum.CREATE_SUBSET_MANAGER.value,
         PermissionCodeEnum.MANAGE_SUBSET_MANAGER.value,
-        PermissionCodeEnum.TRANSFER_GROUP_BY_RATING_MANAGER.value,
+        PermissionCodeEnum.TRANSFER_GROUP_BY_GRADE_MANAGER.value,
     ],
     RoleType.SUBSET_MANAGER.value: [
         PermissionCodeEnum.MANAGE_GROUP.value,

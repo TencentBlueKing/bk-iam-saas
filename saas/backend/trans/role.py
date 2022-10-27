@@ -28,7 +28,7 @@ class RoleTrans:
         self,
         data: Dict[str, Any],
         old_system_policy_list: Optional[Dict[str, PolicyBeanList]] = None,
-        _type: str = RoleType.RATING_MANAGER.value,
+        _type: str = RoleType.GRADE_MANAGER.value,
     ) -> RoleInfoBean:
         """
         data: {

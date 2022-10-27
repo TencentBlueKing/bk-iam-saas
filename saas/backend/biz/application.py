@@ -255,16 +255,16 @@ class ApprovedPassApplicationBiz:
                 scope["system_id"] = scope["system"]["id"]
         return RoleInfoBean(**data)
 
-    def _create_rating_manager(self, subject: Subject, application: Application):
+    def _create_grade_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
         info = self._gen_role_info_bean(application.data)
         role = self.role_biz.create_grade_manager(info, subject.id)
 
         log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
 
-    def _update_rating_manager(self, subject: Subject, application: Application):
+    def _update_grade_manager(self, subject: Subject, application: Application):
         """更新分级管理员"""
-        role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=application.data["id"])
+        role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=application.data["id"])
         info = self._gen_role_info_bean(application.data)
         self.role_biz.update(role, info, subject.id)
 
@@ -335,7 +335,7 @@ class ApplicationBiz:
                 processors = self.approval_processor_biz.get_super_manager_members()
             elif node.processor_type == RoleType.SYSTEM_MANAGER.value:
                 processors = self.approval_processor_biz.get_system_manager_members(system_id=kwargs["system_id"])
-            elif node.processor_type == RoleType.RATING_MANAGER.value:
+            elif node.processor_type == RoleType.GRADE_MANAGER.value:
                 processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
                     group_id=kwargs["group_id"]
                 )
@@ -629,7 +629,7 @@ class ApplicationBiz:
 
         # 2. 查询对应的审批流程(所有分级管理员的申请都使用同一个流程)
         grade_manager_process = self.approval_process_svc.get_default_process(
-            ApplicationTypeEnum.CREATE_RATING_MANAGER.value
+            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value
         )
 
         # 3. 实例化流程

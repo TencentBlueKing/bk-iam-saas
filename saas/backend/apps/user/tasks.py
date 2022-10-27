@@ -256,7 +256,7 @@ class UserPermissionCleaner:
         roles = self.role_biz.list_user_role(username)
         for role in roles:
             if role.type in (
-                RoleType.RATING_MANAGER.value,
+                RoleType.GRADE_MANAGER.value,
                 RoleType.SUBSET_MANAGER.value,
             ):
                 self.role_biz.delete_member(role.id, username)

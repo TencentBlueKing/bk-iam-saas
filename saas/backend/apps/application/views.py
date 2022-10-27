@@ -264,7 +264,7 @@ class ApplicationByGradeManagerView(views.APIView):
         # 结构转换
         info = self.role_trans.from_role_data(data)
         self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
+            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
             GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
         )
 
@@ -294,7 +294,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         data = serializer.validated_data
         user_id = request.user.username
 
-        role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=data["id"])
+        role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=data["id"])
         # 名称唯一性检查
         self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
@@ -312,7 +312,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
 
         info = self.role_trans.from_role_data(data, old_system_policy_list=old_system_policy_list)
         self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.UPDATE_RATING_MANAGER,
+            ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
             GradeManagerApplicationDataBean(role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info),
         )
 

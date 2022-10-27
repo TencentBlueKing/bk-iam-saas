@@ -15,6 +15,7 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, Field, parse_obj_as
 
+from backend.apps.group.models import Group
 from backend.apps.role.models import (
     Role,
     RoleRelatedObject,
@@ -105,7 +106,7 @@ class RoleInfo(PartialModel):
     name: str
     name_en: str = ""
     description: str
-    type: str = RoleType.RATING_MANAGER.value
+    type: str = RoleType.GRADE_MANAGER.value
     inherit_subject_scope: bool = False
     sync_perm: bool = False
 
@@ -150,7 +151,7 @@ class RoleService:
         if not with_permission:
             return self.list_by_ids(role_ids)
 
-        roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
+        roles = Role.objects.exclude(type=RoleType.GRADE_MANAGER.value).filter(id__in=role_ids)
         role_dict = {role.id: role for role in roles}
 
         role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
@@ -181,7 +182,7 @@ class RoleService:
         sort_index = [
             RoleType.SUPER_MANAGER.value,
             RoleType.SYSTEM_MANAGER.value,
-            RoleType.RATING_MANAGER.value,
+            RoleType.GRADE_MANAGER.value,
             RoleType.SUBSET_MANAGER.value,
         ]
         sorted_data = sorted(data, key=lambda r: sort_index.index(r.type))
@@ -291,7 +292,7 @@ class RoleService:
             # 分级管理员成员
             if "members" in update_fields:
                 self._update_members(role, info.member_usernames)
-                if role.type == RoleType.RATING_MANAGER.value:
+                if role.type == RoleType.GRADE_MANAGER.value:
                     self.sync_subset_manager_members(role.id)
 
             # 可授权的权限范围
@@ -326,7 +327,7 @@ class RoleService:
             # 全删除
             RoleUser.objects.filter(role_id=role_id, readonly=False).delete()
             # 重新全部添加
-            self._add_members(role_id, [RoleMember(username=one) for one in new_members])
+            self._add_members(role_id, new_members)
 
         # 同步后端的role信息
         if need_sync_backend_role:
@@ -649,6 +650,9 @@ class RoleService:
         """
         转移用户组角色关系
         """
+        # 排除只读用户组
+        group_ids = list(Group.objects.filter(id__in=group_ids, readonly=False).values_list("id", flat=True))
+
         # 查询所有用户组的权限模板, 检查查询的模板是否关联了除了选中的用户组的其它用户组
         template_ids = list(
             PermTemplatePolicyAuthorized.objects.filter(

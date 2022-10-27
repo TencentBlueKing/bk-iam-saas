@@ -54,7 +54,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
     pagination_class = CustomPageNumberPagination
 
     biz = RoleBiz()
@@ -182,7 +182,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
     biz = RoleBiz()
     group_biz = GroupBiz()

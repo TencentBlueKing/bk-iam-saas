@@ -42,19 +42,19 @@ from backend.apps.role.audit import (
     RoleUpdateAuditProvider,
     UserRoleDeleteAuditProvider,
 )
-from backend.apps.role.filters import RatingMangerFilter, RoleCommonActionFilter
+from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleRelation, RoleUser
 from backend.apps.role.serializers import (
-    BaseRatingMangerSchemaSLZ,
-    BaseRatingMangerSLZ,
+    BaseGradeMangerSchemaSLZ,
+    BaseGradeMangerSLZ,
     GradeManagerActionSLZ,
+    GradeManagerListSLZ,
+    GradeMangerBaseInfoSZL,
+    GradeMangerCreateSLZ,
+    GradeMangerDetailSchemaSLZ,
+    GradeMangerDetailSLZ,
+    GradeMangerListSchemaSLZ,
     MemberSystemPermissionUpdateSLZ,
-    RatingManagerListSLZ,
-    RatingMangerBaseInfoSZL,
-    RatingMangerCreateSLZ,
-    RatingMangerDetailSchemaSLZ,
-    RatingMangerDetailSLZ,
-    RatingMangerListSchemaSLZ,
     RoleCommonActionSLZ,
     RoleCommonCreateSLZ,
     RoleGroupMembersRenewSLZ,
@@ -94,14 +94,14 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     permission_classes = [RolePermission]
     action_permission = {
-        "create": PermissionCodeEnum.CREATE_RATING_MANAGER.value,
-        "update": PermissionCodeEnum.MANAGE_RATING_MANAGER.value,
+        "create": PermissionCodeEnum.CREATE_GRADE_MANAGER.value,
+        "update": PermissionCodeEnum.MANAGE_GRADE_MANAGER.value,
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
-    serializer_class = RatingManagerListSLZ
-    filterset_class = RatingMangerFilter
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+    serializer_class = GradeManagerListSLZ
+    filterset_class = GradeMangerFilter
 
     biz = RoleBiz()
     group_biz = GroupBiz()
@@ -115,7 +115,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="创建分级管理员",
-        request_body=RatingMangerCreateSLZ(label="创建分级管理员"),
+        request_body=GradeMangerCreateSLZ(label="创建分级管理员"),
         responses={status.HTTP_201_CREATED: RoleIdSLZ(label="分级管理员ID")},
         tags=["role"],
     )
@@ -124,7 +124,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         """
         创建分级管理员
         """
-        serializer = RatingMangerCreateSLZ(data=request.data)
+        serializer = GradeMangerCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
@@ -147,7 +147,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="分级管理员列表",
-        responses={status.HTTP_200_OK: RatingMangerListSchemaSLZ(label="分级管理员列表", many=True)},
+        responses={status.HTTP_200_OK: GradeMangerListSchemaSLZ(label="分级管理员列表", many=True)},
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
@@ -155,27 +155,27 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="分级管理员详情",
-        responses={status.HTTP_200_OK: RatingMangerDetailSchemaSLZ(label="分级管理员详情")},
+        responses={status.HTTP_200_OK: GradeMangerDetailSchemaSLZ(label="分级管理员详情")},
         filter_inspectors=[],
         paginator_inspectors=[],
         tags=["role"],
     )
     def retrieve(self, request, *args, **kwargs):
         role = self.get_object()
-        serializer = RatingMangerDetailSLZ(instance=role)
+        serializer = GradeMangerDetailSLZ(instance=role)
         data = serializer.data
         return Response(data)
 
     @swagger_auto_schema(
         operation_description="分级管理员更新",
-        request_body=RatingMangerCreateSLZ(label="更新分级管理员"),
+        request_body=GradeMangerCreateSLZ(label="更新分级管理员"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RoleUpdateAuditProvider)
     def update(self, request, *args, **kwargs):
         role = self.get_object()
-        serializer = RatingMangerCreateSLZ(data=request.data)
+        serializer = GradeMangerCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
@@ -206,7 +206,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="分级管理员基本信息更新",
-        request_body=RatingMangerBaseInfoSZL(label="更新分级管理员基本信息"),
+        request_body=GradeMangerBaseInfoSZL(label="更新分级管理员基本信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -214,7 +214,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     def partial_update(self, request, *args, **kwargs):
         """仅仅做基本信息更新"""
         role = self.get_object()
-        serializer = RatingMangerBaseInfoSZL(data=request.data)
+        serializer = GradeMangerBaseInfoSZL(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
@@ -717,7 +717,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
-    serializer_class = BaseRatingMangerSLZ
+    serializer_class = BaseGradeMangerSLZ
 
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
@@ -730,7 +730,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="子集管理员列表",
-        responses={status.HTTP_200_OK: BaseRatingMangerSchemaSLZ(label="子集管理员列表", many=True)},
+        responses={status.HTTP_200_OK: BaseGradeMangerSchemaSLZ(label="子集管理员列表", many=True)},
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
@@ -738,7 +738,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="子集管理员详情",
-        responses={status.HTTP_200_OK: RatingMangerDetailSchemaSLZ(label="子集管理员详情")},
+        responses={status.HTTP_200_OK: GradeMangerDetailSchemaSLZ(label="子集管理员详情")},
         filter_inspectors=[],
         paginator_inspectors=[],
         tags=["role"],
@@ -792,14 +792,14 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="子集管理员更新",
-        request_body=RatingMangerCreateSLZ(label="子集分级管理员"),
+        request_body=GradeMangerCreateSLZ(label="子集分级管理员"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RoleUpdateAuditProvider)
     def update(self, request, *args, **kwargs):
         role = self.get_object()
-        serializer = RatingMangerCreateSLZ(data=request.data)
+        serializer = GradeMangerCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
@@ -841,7 +841,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="子集管理员基本信息更新",
-        request_body=RatingMangerBaseInfoSZL(label="更新子集管理员基本信息"),
+        request_body=GradeMangerBaseInfoSZL(label="更新子集管理员基本信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -849,7 +849,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     def partial_update(self, request, *args, **kwargs):
         """仅仅做基本信息更新"""
         role = self.get_object()
-        serializer = RatingMangerBaseInfoSZL(data=request.data)
+        serializer = GradeMangerBaseInfoSZL(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
@@ -879,7 +879,7 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
-    serializer_class = BaseRatingMangerSLZ
+    serializer_class = BaseGradeMangerSLZ
 
     def get_queryset(self):
         grade_manager_id = self.kwargs["id"]
@@ -902,7 +902,7 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户加入的子集管理员列表",
-        responses={status.HTTP_200_OK: BaseRatingMangerSchemaSLZ(label="子集管理员列表", many=True)},
+        responses={status.HTTP_200_OK: BaseGradeMangerSchemaSLZ(label="子集管理员列表", many=True)},
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
