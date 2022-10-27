@@ -111,12 +111,17 @@ class RoleScopeAuthorizationSLZ(serializers.Serializer):
         return data
 
 
+class RoleMember(serializers.Serializer):
+    username = serializers.CharField(label="用户ID", max_length=128)
+    readonly = serializers.BooleanField(default=False)
+
+
 class RatingMangerBaseInfoSZL(serializers.Serializer):
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
     members = serializers.ListField(
         label="成员列表",
-        child=serializers.CharField(label="用户ID", max_length=64),
+        child=RoleMember(label="成员"),
         max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
     )
 
@@ -142,7 +147,7 @@ class RoleIdSLZ(serializers.Serializer):
 
 
 class BaseRatingMangerSchemaSLZ(serializers.Serializer):
-    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=128))
+    members = serializers.ListField(label="成员列表", child=RoleMember(label="成员"))
 
     class Meta:
         model = Role
@@ -202,7 +207,9 @@ class BaseRatingMangerSLZ(serializers.ModelSerializer):
         fields = ("id", "name", "description", "creator", "created_time", "updated_time", "updater", "members")
 
     def get_members(self, obj):
-        return list(RoleUser.objects.filter(role_id=obj.id).values_list("username", flat=True))
+        return [
+            {"username": one.username, "readonly": one.readonly} for one in RoleUser.objects.filter(role_id=obj.id)
+        ]
 
 
 class RatingManagerListSLZ(BaseRatingMangerSLZ):
@@ -234,7 +241,7 @@ class RatingManagerListSLZ(BaseRatingMangerSLZ):
 
             # 查询role_users
             for one in RoleUser.objects.filter(role_id__id=role_ids):
-                self.role_users[one.role_id].append(one.username)
+                self.role_users[one.role_id].append({"username": one.username, "readonly": one.readonly})
 
             # 查询role_subset_managers
             for one in RoleRelation.objects.filter(parent_id__in=role_ids):
@@ -249,7 +256,7 @@ class RatingManagerListSLZ(BaseRatingMangerSLZ):
 
     def get_is_member(self, obj):
         username = self.context["request"].user.username
-        return username in self.role_users[obj.id]
+        return username in {one["username"] for one in self.role_users[obj.id]}
 
     def get_has_subset_manager(self, obj):
         # 查询是否有子集管理员

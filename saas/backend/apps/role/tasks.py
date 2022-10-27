@@ -70,7 +70,7 @@ def sync_system_manager():
             "name": f"{system.name}",
             "name_en": f"{system.name_en}",
             "description": "",
-            "members": members,
+            "members": [{"username": username} for username in members],
             "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
             "subject_scopes": [{"type": "*", "id": "*"}],
         }

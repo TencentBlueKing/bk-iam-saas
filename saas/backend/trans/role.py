@@ -34,7 +34,11 @@ class RoleTrans:
         data: {
             "name": str,
             "description": str,
-            "members": List[str],
+            "members": List[
+                {
+                    "username": str
+                }
+            ],
             "subject_scopes": [
                 {
                     "type": str,

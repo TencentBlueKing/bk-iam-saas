@@ -138,7 +138,7 @@ class RoleHandoverHandler(BaseHandoverHandler):
                 return
             members.append(self.handover_to)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
-        elif self.role_type == RoleType.RATING_MANAGER.value:
+        elif self.role_type in [RoleType.RATING_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
             self.biz.add_grade_manager_members(self.role_id, [self.handover_to])
 
         if self.role_type != RoleType.SUPER_MANAGER.value:
@@ -160,7 +160,7 @@ class RoleHandoverHandler(BaseHandoverHandler):
             members = self._get_system_manager_members()
             members.remove(self.handover_from)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
-        elif self.role_type == RoleType.RATING_MANAGER.value:
+        elif self.role_type in [RoleType.RATING_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
             self.biz.delete_member(self.role_id, self.handover_from)
 
     def _get_system_manager_members(self) -> List[str]:

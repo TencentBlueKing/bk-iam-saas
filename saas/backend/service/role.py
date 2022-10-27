@@ -96,6 +96,10 @@ class UserRoleMember(BaseModel):
     members: list
 
 
+class RoleMember(BaseModel):
+    username: str
+
+
 class RoleInfo(PartialModel):
     code: str = ""
     name: str
@@ -103,9 +107,13 @@ class RoleInfo(PartialModel):
     description: str
     type: str = RoleType.RATING_MANAGER.value
 
-    members: List[str]
+    members: List[RoleMember]
     subject_scopes: List[Subject] = []
     authorization_scopes: List[AuthScopeSystem] = []
+
+    @property
+    def member_usernames(self):
+        return [member.username for member in self.members]
 
 
 class CommonAction(BaseModel):
@@ -159,10 +167,9 @@ class RoleService:
         role_ids = list(queryset.values_list("role_id", flat=True)[offset : offset + limit])
         return count, self.list_by_ids(role_ids)
 
-    def list_members_by_role_id(self, role_id: int):
+    def list_members_by_role_id(self, role_id: int) -> List[str]:
         """查询指定角色的成员列表"""
-        members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
-        return members
+        return list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
 
     def list_by_ids(self, role_ids: List[int]) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
@@ -178,7 +185,7 @@ class RoleService:
         sorted_data = sorted(data, key=lambda r: sort_index.index(r.type))
         return sorted_data
 
-    def create(self, info: RoleInfo, creator: str) -> Role:
+    def create(self, info: RoleInfo, creator: str, add_member=True) -> Role:
         """创建Role"""
         with transaction.atomic():
             role = Role(
@@ -192,7 +199,9 @@ class RoleService:
             )
             role.save(force_insert=True)
 
-            self._add_members(role.id, info.members)
+            if add_member:
+                self._add_members(role.id, info.member_usernames)
+
             self._create_role_scope(role.id, info.subject_scopes, info.authorization_scopes)
 
         return role
@@ -201,15 +210,31 @@ class RoleService:
         """
         创建子集管理员
         """
+        # 创建子集管理员的同时加入分级管理员的人员名单
+        grade_manager_members = self.list_members_by_role_id(grade_manager.id)
+
         with transaction.atomic():
-            role = self.create(info, creator)
+            role = self.create(info, creator, add_member=False)
             RoleRelation.objects.create(parent_id=grade_manager.id, role_id=role.id)
+
+            role_users = [  # 从上级分级管理员继承的成员是readonly的
+                RoleUser(role_id=role.id, username=username, readonly=True) for username in grade_manager_members
+            ]
+            role_users.extend(
+                [
+                    RoleUser(role_id=role.id, username=username, readonly=False)
+                    for username in info.member_usernames
+                    if username not in grade_manager_members
+                ]
+            )
+            if role_users:
+                RoleUser.objects.bulk_create(role_users, batch_size=100)
 
         return role
 
-    def _add_members(self, role_id: int, usernames: List[str]):
+    def _add_members(self, role_id: int, members: List[str]):
         """Role增加成员"""
-        role_users = [RoleUser(role_id=role_id, username=username) for username in usernames]
+        role_users = [RoleUser(role_id=role_id, username=username) for username in members]
         if role_users:
             RoleUser.objects.bulk_create(role_users, batch_size=100)
 
@@ -260,7 +285,9 @@ class RoleService:
 
             # 分级管理员成员
             if "members" in update_fields:
-                self._update_members(role, info.members)
+                self._update_members(role, info.member_usernames)
+                if role.type == RoleType.RATING_MANAGER.value:
+                    self.sync_subset_manager_members(role.id)
 
             # 可授权的权限范围
             if "authorization_scopes" in update_fields:
@@ -271,17 +298,30 @@ class RoleService:
                 self.update_role_subject_scope(role.id, info.subject_scopes)
 
     def _update_members(self, role: Role, members: List[str], need_sync_backend_role: bool = False):
-        """更新Role成员"""
+        """
+        更新Role成员
+
+        NOTE: 只变更readonly为False的成员
+        """
         role_id = role.id
-        new_members = sorted(set(members), key=members.index)  # 去重，但保持顺序不变
-        old_members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
+
+        # 查询用户的已设置为readonly的成员
+        readonly_usernames = set(
+            RoleUser.objects.filter(role_id=role_id, readonly=True).values_list("username", flat=True)
+        )
+
+        # NOTE readonly的成员只能通过其它逻辑处理
+        update_usernames = [username for username in members if username not in readonly_usernames]
+
+        new_members = sorted(set(update_usernames), key=update_usernames.index)  # 去重，但保持顺序不变
+        old_members = list(RoleUser.objects.filter(role_id=role_id, readonly=False).values_list("username", flat=True))
 
         # 由于需要保持顺序不变，所以需要看是否变化了包括顺序，如果改变了则直接全删除，然后全添加
         if new_members != old_members:
             # 全删除
-            RoleUser.objects.filter(role_id=role_id).delete()
+            RoleUser.objects.filter(role_id=role_id, readonly=False).delete()
             # 重新全部添加
-            self._add_members(role_id, new_members)
+            self._add_members(role_id, [RoleMember(username=one) for one in new_members])
 
         # 同步后端的role信息
         if need_sync_backend_role:
@@ -291,6 +331,35 @@ class RoleService:
             # 向IAM后台同步
             self._create_backend_role_member(role, list(created_members))
             self._delete_backend_role_member(role, list(deleted_members))
+
+    def sync_subset_manager_members(self, parent_id: int):
+        """
+        同步子集管理员成员
+        """
+        grade_manager_members = self.list_members_by_role_id(parent_id)
+        for relation in RoleRelation.objects.filter(parent_id=parent_id):
+            subset_manager_id = relation.role_id
+            subset_manager_members = List(
+                RoleUser.objects.filter(role_id=subset_manager_id, readonly=False).values_list("username", fields=True)
+            )
+
+            role_users = [  # 从上级分级管理员继承的成员是readonly的
+                RoleUser(role_id=subset_manager_id, username=username, readonly=True)
+                for username in grade_manager_members
+            ]
+            role_users.extend(
+                [
+                    RoleUser(role_id=subset_manager_id, username=username, readonly=False)
+                    for username in subset_manager_members
+                    if username not in grade_manager_members
+                ]
+            )
+
+            # 全删除
+            RoleUser.objects.filter(role_id=subset_manager_id).delete()
+            # 重新全部添加
+            if role_users:
+                RoleUser.objects.bulk_create(role_users, batch_size=100)
 
     def _create_backend_role_member(self, role: Role, created_members: List[str]):
         """创建后端role成员"""

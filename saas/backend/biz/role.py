@@ -121,7 +121,6 @@ class RoleBiz:
     list_paging_user_role = RoleService.__dict__["list_paging_user_role"]
     list_user_role_for_system = RoleService.__dict__["list_user_role_for_system"]
     list_paging_role_for_system = RoleService.__dict__["list_paging_role_for_system"]
-    add_grade_manager_members = RoleService.__dict__["add_grade_manager_members"]
     list_subject_scope = RoleService.__dict__["list_subject_scope"]
     list_auth_scope = RoleService.__dict__["list_auth_scope"]
     list_by_ids = RoleService.__dict__["list_by_ids"]
@@ -226,11 +225,31 @@ class RoleBiz:
         """删除超级管理员成员"""
         self.svc.delete_super_manager_member(username)
 
+    def add_grade_manager_members(self, role_id: int, usernames: List[str]):
+        """
+        添加分级管理员成员
+        """
+        self.svc.add_grade_manager_members(role_id, usernames)
+
+        self.svc.sync_subset_manager_members(role_id)
+
+    def delete_grade_manager_member(self, role_id: int, usernames: List[str]):
+        """
+        批量删除分级管理员成员
+        """
+        RoleUser.objects.delete_grade_manager_member(role_id, usernames)
+
+        self.svc.sync_subset_manager_members(role_id)
+
     def delete_member(self, role_id: int, username: str):
         """
         角色删除成员
         """
         self.svc.delete_member(role_id, username)
+
+        # 同步删除子集管理员的成员
+        for one in RoleRelation.objects.filter(parent_id=role_id):
+            self.svc.delete_member(one.role_id, username)
 
     def update_super_manager_member_system_permission(self, username: str, need_sync_backend_role: bool):
         """

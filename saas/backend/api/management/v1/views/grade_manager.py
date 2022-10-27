@@ -32,7 +32,7 @@ from backend.apps.role.audit import (
     RoleMemberDeleteAuditProvider,
     RoleUpdateAuditProvider,
 )
-from backend.apps.role.models import Role, RoleSource, RoleUser
+from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.role import RoleBiz, RoleCheckBiz
@@ -84,6 +84,9 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         self.role_check_biz.check_grade_manager_unique_name(data["name"])
         # 检查该系统可创建的分级管理员数量是否超限
         self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
+
+        # 兼容member格式
+        data["members"] = [{"username": username} for username in data["members"]]
 
         # 转换为RoleInfoBean，用于创建时使用
         role_info = self.trans.to_role_info(data)
@@ -232,7 +235,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         members = list(set(serializer.validated_data["members"]))
-        RoleUser.objects.delete_grade_manager_member(role.id, members)
+        self.biz.delete_grade_manager_member(role.id, members)
 
         # 审计
         audit_context_setter(role=role, members=members)

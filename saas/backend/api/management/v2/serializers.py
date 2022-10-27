@@ -63,6 +63,11 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
 
 
 class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
+    members = serializers.ListField(
+        label="成员列表",
+        child=serializers.CharField(label="用户ID", max_length=64),
+        max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
+    )
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
