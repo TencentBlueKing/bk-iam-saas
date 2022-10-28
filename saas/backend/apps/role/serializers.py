@@ -116,7 +116,7 @@ class RoleMember(serializers.Serializer):
     readonly = serializers.BooleanField(default=False)
 
 
-class GradeMangerBaseInfoSZL(serializers.Serializer):
+class GradeMangerBaseInfoSLZ(serializers.Serializer):
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
     members = serializers.ListField(
@@ -126,7 +126,7 @@ class GradeMangerBaseInfoSZL(serializers.Serializer):
     )
 
 
-class GradeMangerCreateSLZ(GradeMangerBaseInfoSZL):
+class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )

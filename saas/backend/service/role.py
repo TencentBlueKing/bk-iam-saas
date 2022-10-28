@@ -33,7 +33,7 @@ from backend.util.json import json_dumps
 from backend.util.model import PartialModel
 
 from .constants import (
-    DEAULT_RESOURCE_GROUP_ID,
+    DEFAULT_RESOURCE_GROUP_ID,
     RoleRelatedObjectType,
     RoleScopeType,
     RoleSourceTypeEnum,
@@ -56,7 +56,7 @@ class AuthScopeAction(BaseModel):
                 data["resource_groups"] = [
                     # NOTE: 固定resource_group_id方便删除逻辑
                     {
-                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "id": DEFAULT_RESOURCE_GROUP_ID,
                         "related_resource_types": data.pop("related_resource_types"),
                     }
                 ]

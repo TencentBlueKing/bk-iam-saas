@@ -29,7 +29,7 @@ from backend.biz.policy import (
     group_paths,
 )
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
-from backend.service.constants import DEAULT_RESOURCE_GROUP_ID, SelectionMode
+from backend.service.constants import DEFAULT_RESOURCE_GROUP_ID, SelectionMode
 from backend.service.models import PathResourceType, ResourceTypeDict
 from backend.service.models.action import Action, RelatedResourceType
 from backend.service.models.instance_selection import InstanceSelection
@@ -511,7 +511,7 @@ class TestPolicyBean:
         assert policy_bean.get_system_id_set() == {"system_id"}
 
     def test_get_related_resource_type(self, policy_bean: PolicyBean):
-        assert policy_bean.get_related_resource_type(DEAULT_RESOURCE_GROUP_ID, "system_id", "type")
+        assert policy_bean.get_related_resource_type(DEFAULT_RESOURCE_GROUP_ID, "system_id", "type")
 
     def test_set_expired_at(self, policy_bean: PolicyBean):
         policy_bean.set_expired_at(PERMANENT_SECONDS)
@@ -775,11 +775,11 @@ def test_group_paths():
 
 class TestResourceGroupBeanList:
     def test_get_by_id(self, policy_bean: PolicyBean):
-        resource_group = policy_bean.resource_groups.get_by_id(DEAULT_RESOURCE_GROUP_ID)
+        resource_group = policy_bean.resource_groups.get_by_id(DEFAULT_RESOURCE_GROUP_ID)
         assert resource_group
 
     def test_pop_by_id(self, policy_bean: PolicyBean):
-        resource_group = policy_bean.resource_groups.pop_by_id(DEAULT_RESOURCE_GROUP_ID)
+        resource_group = policy_bean.resource_groups.pop_by_id(DEFAULT_RESOURCE_GROUP_ID)
         assert resource_group
         assert len(policy_bean.resource_groups) == 0
 

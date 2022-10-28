@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, AbacPolicyChangeType, AuthTypeEnum
+from backend.service.constants import ANY_ID, DEFAULT_RESOURCE_GROUP_ID, AbacPolicyChangeType, AuthTypeEnum
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
@@ -251,7 +251,7 @@ class Policy(BaseModel):
                 data["resource_groups"] = [
                     # NOTE: 固定resource_group_id方便删除逻辑
                     {
-                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "id": DEFAULT_RESOURCE_GROUP_ID,
                         "related_resource_types": data.pop("related_resource_types"),
                     }
                 ]
@@ -274,7 +274,7 @@ class Policy(BaseModel):
         resource_groups = policy.resources
         if cls._is_old_structure(policy.resources):
             # NOTE: 固定resource_group_id, 方便删除逻辑
-            resource_groups = [ResourceGroup(id=DEAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
+            resource_groups = [ResourceGroup(id=DEFAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
 
         obj = cls(
             action_id=policy.action_id,

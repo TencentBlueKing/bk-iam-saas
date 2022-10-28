@@ -49,7 +49,7 @@ from backend.apps.role.serializers import (
     BaseGradeMangerSLZ,
     GradeManagerActionSLZ,
     GradeManagerListSLZ,
-    GradeMangerBaseInfoSZL,
+    GradeMangerBaseInfoSLZ,
     GradeMangerCreateSLZ,
     GradeMangerDetailSchemaSLZ,
     GradeMangerDetailSLZ,
@@ -207,7 +207,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="分级管理员基本信息更新",
-        request_body=GradeMangerBaseInfoSZL(label="更新分级管理员基本信息"),
+        request_body=GradeMangerBaseInfoSLZ(label="更新分级管理员基本信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -215,7 +215,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     def partial_update(self, request, *args, **kwargs):
         """仅仅做基本信息更新"""
         role = self.get_object()
-        serializer = GradeMangerBaseInfoSZL(data=request.data)
+        serializer = GradeMangerBaseInfoSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
@@ -841,7 +841,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="子集管理员基本信息更新",
-        request_body=GradeMangerBaseInfoSZL(label="更新子集管理员基本信息"),
+        request_body=GradeMangerBaseInfoSLZ(label="更新子集管理员基本信息"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
@@ -849,7 +849,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     def partial_update(self, request, *args, **kwargs):
         """仅仅做基本信息更新"""
         role = self.get_object()
-        serializer = GradeMangerBaseInfoSZL(data=request.data)
+        serializer = GradeMangerBaseInfoSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
