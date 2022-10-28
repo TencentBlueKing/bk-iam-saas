@@ -26,6 +26,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
+from backend.biz.utils import fill_resources_attribute
 from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
@@ -407,8 +408,6 @@ class GroupBiz:
         """
         获取用户预申请的用户组列表
         """
-        from backend.biz.utils import fill_resources_attribute
-
         system_id, policies = policy_list.system_id, policy_list.policies
 
         try:

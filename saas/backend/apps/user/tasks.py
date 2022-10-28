@@ -26,10 +26,10 @@ from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.biz.group import GroupBiz
+from backend.biz.helper import RoleSyncGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.system import SystemBiz
-from backend.biz.utils import RoleSyncGroupBiz
 from backend.common.time import db_time, get_soon_expire_ts
 from backend.component import esb
 from backend.service.constants import RoleType, SubjectType

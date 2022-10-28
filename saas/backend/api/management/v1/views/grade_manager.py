@@ -35,8 +35,8 @@ from backend.apps.role.audit import (
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.helper import RoleSyncGroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
-from backend.biz.utils import RoleSyncGroupBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans

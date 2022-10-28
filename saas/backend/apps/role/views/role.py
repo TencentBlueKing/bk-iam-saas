@@ -69,6 +69,7 @@ from backend.apps.role.serializers import (
 )
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
+from backend.biz.helper import RoleSyncGroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import (
     RoleBiz,
@@ -79,7 +80,6 @@ from backend.biz.role import (
     RoleSubjectScopeChecker,
 )
 from backend.biz.subject import SubjectInfoList
-from backend.biz.utils import RoleSyncGroupBiz
 from backend.common.error_codes import error_codes
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
@@ -269,7 +269,8 @@ class RoleMemberView(views.APIView):
         user_id = request.user.username
 
         role = Role.objects.filter(id=int(role_id)).first()
-        self.role_sync_group_biz.delete_role_member(role, user_id, user_id)
+        if role:
+            self.role_sync_group_biz.delete_role_member(role, user_id, user_id)
 
         audit_context_setter(role_id=role_id)
         return Response({})
@@ -773,6 +774,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 检查授权范围
         self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
 
+        # 如果配置使用上级的人员选择范围直接使用上级的相关信息覆盖
         if not info.inherit_subject_scope:
             # 检查人员范围
             self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)
@@ -823,6 +825,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 检查授权范围
         self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
 
+        # 如果配置使用上级的人员选择范围直接使用上级的相关信息覆盖
         if not info.inherit_subject_scope:
             # 检查人员范围
             self.role_check_biz.check_subset_manager_subject_scope(grade_manager, info.subject_scopes)

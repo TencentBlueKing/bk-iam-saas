@@ -18,9 +18,9 @@ from backend.apps.role.models import Role
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
+from backend.biz.helper import RoleSyncGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
-from backend.biz.utils import RoleSyncGroupBiz
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
 
