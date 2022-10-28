@@ -43,7 +43,7 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
+from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.pagination import CompatiblePagination
@@ -90,7 +90,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
         groups = self.group_biz.batch_create(
-            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
+            role.id, parse_obj_as(List[GroupCreationBean], groups_data), request.user.username
         )
 
         # 添加审计信息

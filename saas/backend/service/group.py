@@ -47,7 +47,7 @@ class GroupSubject(BaseModel):
     expired_at: int
 
 
-class GroupCreate(BaseModel):
+class GroupCreation(BaseModel):
     name: str
     description: str
     readonly: bool = False
@@ -58,7 +58,7 @@ class GroupMemberExpiredAt(Subject):
 
 
 class GroupService:
-    def create(self, info: GroupCreate, creator: str) -> Group:
+    def create(self, info: GroupCreation, creator: str) -> Group:
         """
         创建用户组
         """
@@ -70,7 +70,7 @@ class GroupService:
 
         return group
 
-    def batch_create(self, infos: List[GroupCreate], creator: str) -> List[Group]:
+    def batch_create(self, infos: List[GroupCreation], creator: str) -> List[Group]:
         """
         批量创建用户组
         """

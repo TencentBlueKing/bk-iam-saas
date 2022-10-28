@@ -35,7 +35,7 @@ from backend.long_task.tasks import TaskFactory
 from backend.service.action import ActionService
 from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.engine import EngineService
-from backend.service.group import GroupCreate, GroupMemberExpiredAt, GroupService, SubjectGroup
+from backend.service.group import GroupCreation, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
 from backend.service.models import Policy, Subject
 from backend.service.policy.query import PolicyQueryService
@@ -106,7 +106,7 @@ class GroupMemberExpiredAtBean(GroupMemberExpiredAt):
     pass
 
 
-class GroupCreateBean(GroupCreate):
+class GroupCreationBean(GroupCreation):
     pass
 
 
@@ -152,20 +152,20 @@ class GroupBiz:
         创建用户组
         """
         with transaction.atomic():
-            group = self.group_svc.create(GroupCreate(name=name, description=description), creator)
+            group = self.group_svc.create(GroupCreation(name=name, description=description), creator)
             RoleRelatedObject.objects.create_group_relation(role_id, group.id)
             if subjects:
                 self.group_svc.add_members(group.id, subjects, expired_at)
 
         return group
 
-    def batch_create(self, role_id: int, infos: List[GroupCreateBean], creator: str) -> List[Group]:
+    def batch_create(self, role_id: int, infos: List[GroupCreationBean], creator: str) -> List[Group]:
         """
         批量创建用户组
         用于管理api
         """
         with transaction.atomic():
-            groups = self.group_svc.batch_create(parse_obj_as(List[GroupCreate], infos), creator)
+            groups = self.group_svc.batch_create(parse_obj_as(List[GroupCreation], infos), creator)
             # group_attrs = {group.id: {"readonly": info.readonly} for group, info in zip(groups, infos)}
             # self.group_attribute_svc.batch_set_attributes(group_attrs)
             RoleRelatedObject.objects.batch_create_group_relation(role_id, [group.id for group in groups])
@@ -582,7 +582,7 @@ class GroupBiz:
 
             # TODO 用户组的名字需要定义
             group = self.group_svc.create(
-                GroupCreate(name=role.name, description=Role.description, readonly=True), creator
+                GroupCreation(name=role.name, description=Role.description, readonly=True), creator
             )
             RoleRelatedObject.objects.create(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True

@@ -317,7 +317,7 @@ class GroupCreateSLZ(serializers.Serializer):
         return data
 
 
-class GroupAuthoriedConditionSLZ(serializers.Serializer):
+class GroupAuthorizedConditionSLZ(serializers.Serializer):
     action_id = serializers.CharField(label="操作ID")
     resource_group_id = serializers.CharField(label="资源条件组ID")
     related_resource_type = ResourceTypeSLZ(label="资源类型")

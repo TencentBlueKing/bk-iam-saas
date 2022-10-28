@@ -62,8 +62,8 @@ from .filters import GroupFilter, GroupTemplateSystemFilter
 from .serializers import (
     GradeManagerGroupTransferSLZ,
     GroupAddMemberSLZ,
-    GroupAuthoriedConditionSLZ,
     GroupAuthorizationSLZ,
+    GroupAuthorizedConditionSLZ,
     GroupCreateSLZ,
     GroupDeleteMemberSLZ,
     GroupIdSLZ,
@@ -704,12 +704,12 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="权限模板操作条件对比",
-        request_body=GroupAuthoriedConditionSLZ(label="操作条件"),
+        request_body=GroupAuthorizedConditionSLZ(label="操作条件"),
         responses={status.HTTP_200_OK: ConditionTagSLZ(label="条件差异", many=True)},
         tags=["group"],
     )
     def create(self, request, *args, **kwargs):
-        serializer = GroupAuthoriedConditionSLZ(data=request.data)
+        serializer = GroupAuthorizedConditionSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 

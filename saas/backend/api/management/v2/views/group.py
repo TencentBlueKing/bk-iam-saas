@@ -46,7 +46,7 @@ from backend.audit.audit import add_audit, audit_context_setter, view_audit_deco
 from backend.biz.group import (
     GroupBiz,
     GroupCheckBiz,
-    GroupCreateBean,
+    GroupCreationBean,
     GroupMemberExpiredAtBean,
     GroupTemplateGrantBean,
 )
@@ -94,7 +94,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
         groups = self.group_biz.batch_create(
-            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
+            role.id, parse_obj_as(List[GroupCreationBean], groups_data), request.user.username
         )
 
         # 添加审计信息
