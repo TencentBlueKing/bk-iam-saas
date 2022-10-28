@@ -596,8 +596,7 @@ class ApplicationBiz:
     ) -> GradeManagerApplicationContent:
         """生成申请单据所需内容"""
         # 成员需要显示名称
-        # TODO 申请role的数据结构改变
-        members = SubjectInfoList([Subject(type=SubjectType.USER.value, id=m) for m in role_info.members])
+        members = SubjectInfoList(Subject.from_usernames(role_info.member_usernames))
         # 授权成员范围，查询相关信息
         subject_scopes = SubjectInfoList(role_info.subject_scopes)
 
