@@ -152,7 +152,7 @@
         // 二级管理空间
         [['secondaryManageSpace'], 'secondaryManageSpaceNav'],
         // 授权边界
-        [['authorBoundary'], 'authorBoundaryNav'],
+        [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
         // 资源权限
         [['resourcePermiss'], 'resourcePermissNav'],
         // 管理员
@@ -216,7 +216,6 @@
                     this.curRole = newValue.role.type || 'staff';
                     if (newValue.role.id !== oldValue.role.id) {
                         this.reload();
-                        console.log(newValue, '用户');
                         this.curRoleId = newValue.role.id;
                     }
                 },

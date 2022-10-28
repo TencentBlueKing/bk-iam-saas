@@ -1,6 +1,6 @@
 <template>
     <div class="iam-grading-admin-detail-wrapper">
-        <p class="edit-action">
+        <p class="edit-action" v-show="$route.params.id">
             {{ $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) }}
             <bk-button
                 theme="primary"
@@ -53,6 +53,7 @@
 
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
     import BasicInfo from '../components/basic-info-detail';
     import RenderDetailTable from '@/views/manage-spaces/components/render-instance-detail-table';
     import RenderPerm from '@/components/render-perm';
@@ -75,6 +76,9 @@
             };
         },
         computed: {
+            ...mapGetters([
+                'user'
+            ]),
             isHasUser () {
                 return this.users.length > 0;
             },
@@ -157,12 +161,11 @@
                     });
                 });
                 this.policyList = _.cloneDeep(tempActions);
-                console.log(this.policyList, '列表');
             },
 
             handleEdit () {
                 this.$router.push({
-                    name: 'gradingAdminEdit',
+                    name: this.user.role.type === 'rating_manager' ? 'authorBoundaryEditFirstLevel' : 'authorBoundaryEditSecondLevel',
                     params: {
                         id: this.$route.params.id
                     }

@@ -183,6 +183,8 @@ export const getRouterDiff = (payload) => {
         'permTemplateDiff',
         'addGroupPerm',
         'authorBoundary',
+        'authorBoundaryEditFirstLevel',
+        'authorBoundaryEditSecondLevel',
         'secondaryManageSpace',
         'myManageSpace'
     ];

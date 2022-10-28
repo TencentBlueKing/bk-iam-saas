@@ -121,6 +121,14 @@ const FirstManageSpaceCreate = () =>
 const AuthorizationBoundary = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
 
+// 授权边界一级管理空间编辑
+const AuthorizationBoundaryEditFirstLevel = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary/edit/first-level');
+
+// 授权边界二级管理空间编辑
+const AuthorizationBoundarySecondLevel = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary/edit/second-level');
+
 // 二极管理空间
 const SecondaryManageSpace = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space');
@@ -298,6 +306,24 @@ export const routes = [
                     headerTitle: il8n('nav', '授权边界')
                 },
                 component: AuthorizationBoundary
+            },
+            {
+                path: 'manage-spaces/authorization-boundary/first-level/:id',
+                name: 'authorBoundaryEditFirstLevel',
+                meta: {
+                    headerTitle: '',
+                    backRouter: 'authorBoundary'
+                },
+                component: AuthorizationBoundaryEditFirstLevel
+            },
+            {
+                path: 'manage-spaces/authorization-boundary/second-level/:id',
+                name: 'authorBoundaryEditSecondLevel',
+                meta: {
+                    headerTitle: '',
+                    backRouter: 'authorBoundary'
+                },
+                component: AuthorizationBoundarySecondLevel
             },
             {
                 path: 'manage-spaces/secondary-manage-space',
