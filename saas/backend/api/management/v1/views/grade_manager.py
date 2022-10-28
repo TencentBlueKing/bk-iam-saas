@@ -237,7 +237,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         members = list(set(serializer.validated_data["members"]))
-        self.role_sync_group_biz.batch_add_grade_manager_member(role, members, request.user.username)
+        self.role_sync_group_biz.batch_delete_grade_manager_member(role, members, request.user.username)
 
         # 审计
         audit_context_setter(role=role, members=members)
