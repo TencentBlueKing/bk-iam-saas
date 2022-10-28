@@ -38,7 +38,7 @@ from backend.common.error_codes import error_codes
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
-from backend.service.constants import PermissionCodeEnum, SubjectType
+from backend.service.constants import PermissionCodeEnum
 from backend.service.models import Subject
 
 from .audit import (
@@ -148,7 +148,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         if group_id == "":
             return set()
 
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
         exists_template_ids = PermTemplatePolicyAuthorized.objects.query_exists_template_auth(
             subject, [one.id for one in queryset]
         )

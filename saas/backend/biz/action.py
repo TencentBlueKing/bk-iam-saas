@@ -16,7 +16,7 @@ from pydantic.tools import parse_obj_as
 
 from backend.common.error_codes import error_codes
 from backend.service.action import ActionList, ActionService
-from backend.service.constants import ACTION_ALL, SubjectType
+from backend.service.constants import ACTION_ALL
 from backend.service.models import Action, RelatedResourceType, ResourceTypeDict, Subject
 from backend.service.policy.query import PolicyQueryService
 from backend.service.resource_type import ResourceTypeService
@@ -159,7 +159,7 @@ class ActionBiz:
         """
         获取用户预申请的操作列表
         """
-        actions = self.list_by_subject(system_id, role, Subject(type=SubjectType.USER.value, id=user_id))
+        actions = self.list_by_subject(system_id, role, Subject.from_username(user_id))
 
         action_set = set(action_ids)
 

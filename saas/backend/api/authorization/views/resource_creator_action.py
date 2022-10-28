@@ -15,7 +15,6 @@ from rest_framework.views import APIView
 from backend.api.authentication import ESBAuthentication
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.resource_creator_action import ResourceCreatorActionBiz
-from backend.service.constants import SubjectType
 from backend.service.models import Subject
 from backend.trans.open_authorization import AuthorizationTrans
 
@@ -56,7 +55,7 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
 
         data = serializer.validated_data
 
-        subject = Subject(type=SubjectType.USER.value, id=data["creator"])
+        subject = Subject.from_username(data["creator"])
         system_id = data["system"]
         resource_type_id = data["type"]
         instances = [{"id": data["id"], "name": data["name"], "ancestors": data.get("ancestors")}]
@@ -107,7 +106,7 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
 
         data = serializer.validated_data
 
-        subject = Subject(type=SubjectType.USER.value, id=data["creator"])
+        subject = Subject.from_username(data["creator"])
         system_id = data["system"]
         resource_type_id = data["type"]
         instances = data["instances"]
@@ -158,7 +157,7 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
 
         data = serializer.validated_data
 
-        subject = Subject(type=SubjectType.USER.value, id=data["creator"])
+        subject = Subject.from_username(data["creator"])
         system_id = data["system"]
         resource_type_id = data["type"]
         attributes = data["attributes"]

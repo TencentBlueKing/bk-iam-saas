@@ -32,7 +32,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.error_codes import error_codes
-from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType, SubjectType
+from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType
 from backend.service.models import Subject
 from backend.trans.application import ApplicationDataTrans
 from backend.trans.role import RoleTrans
@@ -180,7 +180,7 @@ class ConditionView(views.APIView):
         # 1. 查询用户已有的policy的condition
         related_resource_type: Dict[str, Any] = data["related_resource_type"]
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
-            Subject(type=SubjectType.USER.value, id=request.user.username),
+            Subject.from_username(request.user.username),
             data["policy_id"],
             data["resource_group_id"],
             related_resource_type["system_id"],
@@ -219,9 +219,7 @@ class ApplicationByGroupView(views.APIView):
         user_id = request.user.username
 
         # 检查用户组数量是否超限
-        self.group_biz.check_subject_groups_quota(
-            Subject(type=SubjectType.USER.value, id=user_id), [g["id"] for g in data["groups"]]
-        )
+        self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), [g["id"] for g in data["groups"]])
 
         # 创建申请
         self.biz.create_for_group(

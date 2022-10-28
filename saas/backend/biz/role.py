@@ -184,7 +184,7 @@ class RoleBiz:
 
         checker = RoleSubjectScopeChecker(role)
         try:
-            checker.check([Subject(type=SubjectType.USER.value, id=username)])
+            checker.check([Subject.from_username(username)])
             return role
         except APIError:
             return None

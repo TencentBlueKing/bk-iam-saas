@@ -19,7 +19,7 @@ from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
 from backend.biz.group import GroupBiz
-from backend.service.constants import ApplicationTypeEnum, SubjectType
+from backend.service.constants import ApplicationTypeEnum
 from backend.service.models import Subject
 
 
@@ -56,7 +56,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         user_id = data["applicant"]
 
         # 检查用户组数量是否超限
-        self.group_biz.check_subject_groups_quota(Subject(type=SubjectType.USER.value, id=user_id), data["group_ids"])
+        self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
         # 创建申请
         applications = self.biz.create_for_group(

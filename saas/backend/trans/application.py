@@ -42,7 +42,7 @@ class ApplicationDataTrans:
         # 1. 查询已有权限
         old_policy_list = self.policy_query_biz.new_policy_list(
             system_id,
-            Subject(type=SubjectType.USER.value, id=applicant),
+            Subject.from_username(applicant),
         )
 
         # 2. 申请的策略里移除已有策略数据, 生成移除已有权限后的策略

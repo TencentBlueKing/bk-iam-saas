@@ -53,7 +53,7 @@ from backend.biz.group import (
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.common.pagination import CompatiblePagination
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import RoleType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
@@ -386,7 +386,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
-        self.policy_biz.alter(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.alter(system_id, Subject.from_group(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -416,7 +416,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"变更权限（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权的回收，直接使用policy_biz提供的方法即可
-        self.policy_biz.revoke(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.revoke(system_id, Subject.from_group(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -459,15 +459,11 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         action_ids = [a["id"] for a in data["actions"]]
 
         # 查询将要被删除PolicyID列表
-        policies = self.policy_query_biz.list_by_subject(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), action_ids
-        )
+        policies = self.policy_query_biz.list_by_subject(system_id, Subject.from_group(group.id), action_ids)
 
         # 根据PolicyID删除策略
         policy_ids = [p.policy_id for p in policies]
-        self.policy_operation_biz.delete_by_ids(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_ids
-        )
+        self.policy_operation_biz.delete_by_ids(system_id, Subject.from_group(group.id), policy_ids)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policies)
@@ -500,7 +496,7 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
         group = self.get_object()
 
         system_id = kwargs["system_id"]
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+        subject = Subject.from_group(group.id)
 
         # 查询用户组Policy列表
         policies = self.policy_query_biz.list_by_subject(system_id, subject)

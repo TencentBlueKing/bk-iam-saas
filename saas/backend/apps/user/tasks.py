@@ -55,7 +55,7 @@ class SendUserExpireRemindMailTask(Task):
         if not user:
             return
 
-        subject = Subject(type=SubjectType.USER.value, id=username)
+        subject = Subject.from_username(username)
 
         # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
         groups = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
@@ -153,7 +153,7 @@ def user_cleanup_expired_policy():
             if not user:
                 continue
 
-            subject = Subject(type=SubjectType.USER.value, id=username)
+            subject = Subject.from_username(username)
 
             # 查询用户指定过期时间之前的所有策略
             policies = policy_query_biz.list_expired(subject, expired_at)
@@ -187,7 +187,7 @@ class UserPermissionCleaner:
         record = UserPermissionCleanupRecord.objects.get(username=username)
 
         self._record = record
-        self._subject = Subject(type=SubjectType.USER.value, id=username)
+        self._subject = Subject.from_username(username)
 
     def cleanup(self):
         # 有其他的任务在处理, 忽略

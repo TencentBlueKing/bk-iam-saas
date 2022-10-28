@@ -16,7 +16,6 @@ from rest_framework.viewsets import GenericViewSet
 from backend.biz.action import ActionBiz
 from backend.biz.action_group import ActionGroupBiz
 from backend.biz.open import ApplicationPolicyListCache
-from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
 from ..serializers import ActionSLZ, GroupActionQuerySLZ
@@ -48,15 +47,11 @@ class ActionViewSet(GenericViewSet):
 
         # 1. 获取用户的权限列表
         if user_id != "" and user_id == request.user.username:
-            actions = self.biz.list_by_subject(
-                system_id, request.role, Subject(type=SubjectType.USER.value, id=user_id)
-            )
+            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_username(user_id))
         elif user_id != "" and user_id != request.user.username:
             raise exceptions.PermissionDenied
         elif group_id != -1:
-            actions = self.biz.list_by_subject(
-                system_id, request.role, Subject(type=SubjectType.GROUP.value, id=group_id)
-            )
+            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_group(group_id))
         # 3. 获取的预申请的权限列表
         elif cache_id != "":
             # 从缓存里获取预申请的操作ID列表

@@ -32,7 +32,7 @@ from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
 from backend.service.role import AuthScopeAction, AuthScopeSystem
@@ -221,7 +221,7 @@ class InitBizGradeManagerTask(Task):
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,
-                subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
+                subjects=[Subject.from_username(u.username) for u in users],
                 expired_at=expired_at,  # 过期时间半年
             )
 

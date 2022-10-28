@@ -24,7 +24,7 @@ from backend.biz.role import RoleBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import SubjectRelationType, SubjectType
+from backend.service.constants import SubjectRelationType
 from backend.service.models import Subject
 
 from .serializers import GroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
@@ -42,7 +42,7 @@ class UserGroupViewSet(GenericViewSet):
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
         slz = GroupSLZ(instance=relations, many=True)
@@ -56,7 +56,7 @@ class UserGroupViewSet(GenericViewSet):
     )
     @view_audit_decorator(SubjectGroupDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
 
         serializer = UserRelationSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
@@ -84,7 +84,7 @@ class UserDepartmentGroupViewSet(GenericViewSet):
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
         # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
         relations = self.biz.list_all_user_department_group(subject)
         slz = GroupSLZ(instance=relations, many=True)
@@ -104,7 +104,7 @@ class UserGroupRenewViewSet(GenericViewSet):
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         expired_at = get_soon_expire_ts()
         count, relations = self.group_biz.list_paging_subject_group_before_expired_at(

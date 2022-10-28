@@ -297,7 +297,7 @@ class ApprovedPassApplicationBiz:
         func_name = f"_{application.type}"
         handle_func = getattr(self, func_name)
 
-        subject = Subject(type=SubjectType.USER.value, id=application.applicant)
+        subject = Subject.from_username(application.applicant)
         handle_func(subject, application)
 
 
@@ -456,7 +456,7 @@ class ApplicationBiz:
         self, policy_infos: List[ApplicationRenewPolicyInfoBean], applicant: str, reason: str
     ) -> List[Application]:
         """自定义权限续期"""
-        subject = Subject(type=SubjectType.USER.value, id=applicant)
+        subject = Subject.from_username(applicant)
         policy_expired_at_dict = {p.id: p.expired_at for p in policy_infos}
 
         # 查询策略所属系统
@@ -489,7 +489,7 @@ class ApplicationBiz:
 
     def _gen_group_permission_data(self, group_id: int) -> List[ApplicationGroupPermTemplate]:
         """生成用户组权限数据"""
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
 
         application_templates = []
 
@@ -596,6 +596,7 @@ class ApplicationBiz:
     ) -> GradeManagerApplicationContent:
         """生成申请单据所需内容"""
         # 成员需要显示名称
+        # TODO 申请role的数据结构改变
         members = SubjectInfoList([Subject(type=SubjectType.USER.value, id=m) for m in role_info.members])
         # 授权成员范围，查询相关信息
         subject_scopes = SubjectInfoList(role_info.subject_scopes)

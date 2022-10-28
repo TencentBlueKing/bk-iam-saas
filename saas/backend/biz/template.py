@@ -192,7 +192,7 @@ class TemplateBiz:
             create_policies = parse_obj_as(List[Policy], group_pre_commit.data["actions"])
 
         # 执行策略变更
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
         self.svc.alter_template_auth(subject, template_id, create_policies, del_action_ids)
         if group_pre_commit:
             PermTemplatePreGroupSync.objects.update_status(group_pre_commit.id, TemplatePreUpdateStatus.FINISHED.value)
@@ -285,7 +285,7 @@ class TemplateCheckBiz:
             "subject_type", "subject_id"
         )
         exists_members = [Subject(type=one[0], id=one[1]) for one in queryset]
-        subjects = [Subject(type=SubjectType.GROUP.value, id=str(one.group_id)) for one in pre_commits]
+        subjects = [Subject.from_group(one.group_id) for one in pre_commits]
         if not set(subjects).issubset(set(exists_members)):
             raise error_codes.VALIDATE_ERROR.format(_("提交数据中存在模板未授权的用户组!"))
 

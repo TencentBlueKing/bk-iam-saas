@@ -83,7 +83,7 @@ from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 from backend.trans.role import RoleTrans
 
@@ -232,7 +232,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             if username in old_members:
                 continue
             # subject加入的分级管理员数量不能超过最大值
-            self.role_check_biz.check_subject_grade_manager_limit(Subject(type=SubjectType.USER.value, id=username))
+            self.role_check_biz.check_subject_grade_manager_limit(Subject.from_username(username))
 
         # 非超级管理员 且 并非分级管理员成员，则无法更新基本信息
         if (
@@ -584,7 +584,7 @@ class UserView(views.APIView):
         users = User.objects.filter(username__in=usernames)
 
         scope_checker = RoleSubjectScopeChecker(request.role)
-        subjects = scope_checker.check([Subject(type=SubjectType.USER.value, id=u.username) for u in users], False)
+        subjects = scope_checker.check([Subject.from_username(u.username) for u in users], False)
 
         data = [
             {"username": u.username, "name": u.display_name} for u in users if u.username in {s.id for s in subjects}

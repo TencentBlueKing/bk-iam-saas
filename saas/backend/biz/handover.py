@@ -21,7 +21,7 @@ from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleSyncGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import RoleType
 from backend.service.models import Subject
 
 
@@ -55,8 +55,8 @@ class GroupHandoverhandler(BaseHandoverHandler):
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
 
-        self.grant_subject = Subject(type=SubjectType.USER.value, id=handover_to)
-        self.remove_subject = Subject(type=SubjectType.USER.value, id=handover_from)
+        self.grant_subject = Subject.from_username(handover_to)
+        self.remove_subject = Subject.from_username(handover_from)
 
         self.group_id = object_detail["id"]
         self.expired_at = object_detail["expired_at"]
@@ -87,8 +87,8 @@ class CustomHandoverHandler(BaseHandoverHandler):
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
 
-        self.grant_subject = Subject(type=SubjectType.USER.value, id=handover_to)
-        self.remove_subject = Subject(type=SubjectType.USER.value, id=handover_from)
+        self.grant_subject = Subject.from_username(handover_to)
+        self.remove_subject = Subject.from_username(handover_from)
 
         self.system_id = object_detail["id"]
         self.policy_ids = object_detail["policy_ids"]
@@ -147,7 +147,7 @@ class RoleHandoverHandler(BaseHandoverHandler):
         # 审计
         log_role_event(
             AuditType.ROLE_MEMBER_CREATE.value,
-            Subject(type=SubjectType.USER.value, id=self.handover_from),
+            Subject.from_username(self.handover_from),
             self.role,
             extra={"members": [self.handover_to]},
             source_type=AuditSourceType.HANDOVER.value,

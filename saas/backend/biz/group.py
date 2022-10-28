@@ -176,7 +176,7 @@ class GroupBiz:
         """
         查询用户组授权的系统信息, 返回自定义权限/模板的数量
         """
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
         policy_systems_count = self.policy_query_svc.list_system_counter_by_subject(subject)
         template_system_count = self.template_svc.list_system_counter_by_subject(subject)
         policy_system_count_dict = {system.id: system.count for system in policy_systems_count}
@@ -232,7 +232,7 @@ class GroupBiz:
         """
         更新用户组单个权限
         """
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
         # 检查新增的实例名字, 检查新增的实例是否满足角色的授权范围
         self.check_update_policies_resource_name_and_role_scope(role, system_id, template_id, policies, subject)
         # 检查策略是否与操作信息匹配
@@ -263,7 +263,7 @@ class GroupBiz:
         更新用户组被授权模板里的资源实例名称
         返回的数据包括完全的模板授权信息，包括未被更新的授权策略
         """
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
 
         updated_policies = policy_list.auto_update_resource_name()
         # 只有存在更新，才修改DB数据
@@ -354,7 +354,7 @@ class GroupBiz:
         if GroupAuthorizeLock.objects.filter(group_id=group_id).exists():
             raise error_codes.VALIDATE_ERROR.format(_("用户组正在授权, 不能删除!"))
 
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
         with transaction.atomic():
             # 删除分级管理员与用户组的关系
             RoleRelatedObject.objects.delete_group_relation(group_id)
@@ -463,7 +463,7 @@ class GroupBiz:
         （2）权限是否超过分级管理员的授权范围
         （3）检查实例名称是否正确
         """
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+        subject = Subject.from_group(group.id)
         # 这里遍历时，兼容了自定义权限和模板权限的检查
         for template in templates:
             action_ids = [p.action_id for p in template.policies]
@@ -523,7 +523,7 @@ class GroupBiz:
 
         locks = []
         uuid = gen_uuid()
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+        subject = Subject.from_group(group.id)
 
         for template in templates:
             # 生成授权数据锁
@@ -591,7 +591,7 @@ class GroupBiz:
             if members:
                 self.group_svc.add_members(
                     group.id,
-                    [Subject(type=SubjectType.USER.value, id=username) for username in members],
+                    Subject.from_usernames(members),
                     PERMANENT_SECONDS,
                 )
 
@@ -686,7 +686,7 @@ class GroupBiz:
             system_action_ids[p.system_id].append(p.action_id)
             action_policy_id[(p.system_id, p.action_id)] = p.id
 
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
 
         # 如果系统以被授权, 删除系统下操过范围的操作
         for scope in auth_scopes:
@@ -715,7 +715,7 @@ class GroupBiz:
         role_members = self.role_svc.list_members_by_role_id(role.id)
         group_members = self.group_svc.list_all_group_member(group_id)
 
-        role_subjects = {Subject(type=SubjectType.USER.value, id=username) for username in role_members}
+        role_subjects = set(Subject.from_usernames(role_members))
         group_subjects = {Subject.parse_obj(s) for s in group_members}
 
         # 需要新增的成员
@@ -797,7 +797,7 @@ class GroupCheckBiz:
         """
         检查用户组自定义授权时只能新增不能修改
         """
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group(group_id)
         policies = self.policy_svc.list_by_subject(system_id, subject)
         policy_list = PolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies))
         for p in policies:
