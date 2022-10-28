@@ -35,8 +35,8 @@ from backend.apps.role.audit import (
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
+from backend.biz.utils import RoleSyncGroupBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
@@ -184,9 +184,9 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
-    biz = RoleBiz()
-    group_biz = GroupBiz()
     role_check_biz = RoleCheckBiz()
+
+    role_sync_group_biz = RoleSyncGroupBiz()
 
     @swagger_auto_schema(
         operation_description="分级管理员成员列表",
@@ -216,11 +216,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         self.role_check_biz.check_member_count(role.id, len(members))
 
         # 批量添加成员(添加时去重)
-        self.biz.add_grade_manager_members(role.id, members)
-
-        # 同步权限用户组成员
-        if role.sync_perm:
-            self.group_biz.update_sync_perm_group_by_role(role, request.user.username, sync_members=True)
+        self.role_sync_group_biz.batch_add_grade_manager_member(role, members, request.user.username)
 
         # 审计
         audit_context_setter(role=role, members=members)
@@ -241,11 +237,7 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         members = list(set(serializer.validated_data["members"]))
-        self.biz.delete_grade_manager_member(role.id, members)
-
-        # 同步权限用户组成员
-        if role.sync_perm:
-            self.group_biz.update_sync_perm_group_by_role(role, request.user.username, sync_members=True)
+        self.role_sync_group_biz.batch_add_grade_manager_member(role, members, request.user.username)
 
         # 审计
         audit_context_setter(role=role, members=members)

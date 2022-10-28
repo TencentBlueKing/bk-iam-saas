@@ -14,8 +14,13 @@ from typing import Any, Dict, List
 
 from blue_krill.web.std_error import APIError
 
+from backend.apps.role.models import Role
 from backend.biz.resource import ResourceInfoBean, ResourceInfoDictBean
+from backend.service.constants import ADMIN_USER
 from backend.service.resource import ResourceProvider
+
+from .group import GroupBiz
+from .role import RoleBiz
 
 
 def new_resource_provider(system_id: str, resource_type_id: str):
@@ -89,3 +94,42 @@ def fill_resources_attribute(resources: List[Dict[str, Any]]):
 
     for key, parts in groupby(need_fetch_resources, key=lambda resource: (resource["system"], resource["type"])):
         exec_fill_resources_attribute(key[0], key[1], list(parts))
+
+
+class RoleSyncGroupBiz:
+    """
+    角色同步权限用户组操作
+    """
+
+    role_biz = RoleBiz()
+    group_biz = GroupBiz()
+
+    def delete_role_member(self, role: Role, username: str, operator: str = ADMIN_USER):
+        """
+        删除成员, 同时删除相关的权限
+        """
+        self.role_biz.delete_member(role.id, username)
+
+        if role.sync_perm:
+            self.group_biz.update_sync_perm_group_by_role(role, operator, sync_members=True)
+
+    def batch_add_grade_manager_member(self, role: Role, usernames: List[str], operator: str = ADMIN_USER):
+        """
+        批量增加分级管理员成员
+        """
+        # 批量添加成员(添加时去重)
+        self.role_biz.add_grade_manager_members(role.id, usernames)
+
+        # 同步权限用户组成员
+        if role.sync_perm:
+            self.group_biz.update_sync_perm_group_by_role(role, operator, sync_members=True)
+
+    def batch_delete_grade_manager_member(self, role: Role, usernames: List[str], operator: str = ADMIN_USER):
+        """
+        批量删除分级管理员成员
+        """
+        self.role_biz.delete_grade_manager_member(role.id, usernames)
+
+        # 同步权限用户组成员
+        if role.sync_perm:
+            self.group_biz.update_sync_perm_group_by_role(role, operator, sync_members=True)

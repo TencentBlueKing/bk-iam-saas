@@ -79,6 +79,7 @@ from backend.biz.role import (
     RoleSubjectScopeChecker,
 )
 from backend.biz.subject import SubjectInfoList
+from backend.biz.utils import RoleSyncGroupBiz
 from backend.common.error_codes import error_codes
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
@@ -255,8 +256,7 @@ class RoleMemberView(views.APIView):
     角色退出
     """
 
-    biz = RoleBiz()
-    group_biz = GroupBiz()
+    role_sync_group_biz = RoleSyncGroupBiz()
 
     @swagger_auto_schema(
         operation_description="退出角色",
@@ -267,12 +267,9 @@ class RoleMemberView(views.APIView):
     def delete(self, request, *args, **kwargs):
         role_id = kwargs["id"]
         user_id = request.user.username
-        self.biz.delete_member(int(role_id), user_id)
 
-        # 更新同步权限用户组信息
-        role = Role.objects.filter(id=role_id).first()
-        if role and role.sync_perm:
-            self.group_biz.update_sync_perm_group_by_role(role, user_id, sync_members=True)
+        role = Role.objects.filter(id=int(role_id)).first()
+        self.role_sync_group_biz.delete_role_member(role, user_id, user_id)
 
         audit_context_setter(role_id=role_id)
         return Response({})

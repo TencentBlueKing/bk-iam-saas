@@ -29,6 +29,7 @@ from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.system import SystemBiz
+from backend.biz.utils import RoleSyncGroupBiz
 from backend.common.time import db_time, get_soon_expire_ts
 from backend.component import esb
 from backend.service.constants import RoleType, SubjectType
@@ -180,6 +181,7 @@ class UserPermissionCleaner:
 
     group_biz = GroupBiz()
     role_biz = RoleBiz()
+    role_sync_group_biz = RoleSyncGroupBiz()
 
     def __init__(self, username: str) -> None:
         record = UserPermissionCleanupRecord.objects.get(username=username)
@@ -259,10 +261,7 @@ class UserPermissionCleaner:
                 RoleType.GRADE_MANAGER.value,
                 RoleType.SUBSET_MANAGER.value,
             ):
-                self.role_biz.delete_member(role.id, username)
-
-                if role.sync_perm:
-                    self.group_biz.update_sync_perm_group_by_role(role, "admin", sync_members=True)
+                self.role_sync_group_biz.delete_role_member(role, username)
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)

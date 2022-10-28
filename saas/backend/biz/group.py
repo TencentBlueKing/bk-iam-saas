@@ -26,7 +26,6 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
-from backend.biz.utils import fill_resources_attribute
 from backend.common.error_codes import error_codes
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.long_task.constants import TaskType
@@ -408,6 +407,8 @@ class GroupBiz:
         """
         获取用户预申请的用户组列表
         """
+        from backend.biz.utils import fill_resources_attribute
+
         system_id, policies = policy_list.system_id, policy_list.policies
 
         try:
@@ -599,13 +600,7 @@ class GroupBiz:
         auth_scopes = self.role_svc.list_auth_scope(role.id)
 
         # 转换成group授权的自定义权限
-        templates = []
-        for scope in auth_scopes:
-            templates.append(
-                GroupTemplateGrantBean(
-                    system_id=scope.system_id, template_id=0, policies=parse_obj_as(List[PolicyBean], scope.actions)
-                )
-            )
+        templates = self._trans_auth_scope_to_grant_templates(auth_scopes)
 
         self.grant(role, group, templates)
 
@@ -647,6 +642,10 @@ class GroupBiz:
             self._update_sync_perm_group_permission(role, relation.object_id)
 
     def _update_sync_perm_group_permission(self, role: Role, group_id: int):
+        """
+        使用角色的授权范围更新同步权限用户组的权限
+        """
+
         # 查询角色的授权范围
         auth_scopes = self.role_svc.list_auth_scope(role.id)
 
@@ -654,6 +653,15 @@ class GroupBiz:
         self._delete_sync_perm_group_permission_out_of_scope(group_id, auth_scopes)
 
         # 重新授权
+        templates = self._trans_auth_scope_to_grant_templates(auth_scopes)
+
+        group = Group.objects.get(id=group_id)
+        self.grant(role, group, templates)
+
+    def _trans_auth_scope_to_grant_templates(self, auth_scopes) -> List[GroupTemplateGrantBean]:
+        """
+        转换role授权范围为用户组授权模板信息
+        """
         templates = []
         for scope in auth_scopes:
             templates.append(
@@ -662,13 +670,16 @@ class GroupBiz:
                 )
             )
 
-        group = Group.objects.get(id=group_id)
-        self.grant(role, group, templates)
+        return templates
 
     def _delete_sync_perm_group_permission_out_of_scope(self, group_id, auth_scopes: List[AuthScopeSystem]):
+        """
+        删除用户组自定义权限中超出授权范围的操作
+        """
         system_action_ids = defaultdict(list)
         action_policy_id = {}
 
+        # 查询用户组所有的自定义权限操作集合
         queryset = PolicyModel.objects.filter(subject_type=SubjectType.GROUP.value, subject_id=str(group_id)).only(
             "id", "system_id", "action_id"
         )
@@ -678,7 +689,7 @@ class GroupBiz:
 
         subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
 
-        # 删除系统部分被删除的操作权限
+        # 如果系统以被授权, 删除系统下操过范围的操作
         for scope in auth_scopes:
             if scope.system_id not in system_action_ids:
                 continue
@@ -688,7 +699,7 @@ class GroupBiz:
             if policy_ids:
                 self.policy_operation_biz.delete_by_ids(scope.system_id, subject, policy_ids)
 
-        # 删除系统被整体删除的权限
+        # 如果在授权范围中每个这个系统, 删除系统所有的权限
         auth_scope_systems = {scope.system_id for scope in auth_scopes}
         for system_id in system_action_ids.keys():
             if system_id in auth_scope_systems:
@@ -699,6 +710,9 @@ class GroupBiz:
                 self.policy_operation_biz.delete_by_ids(scope.system_id, subject, policy_ids)
 
     def _update_sync_perm_group_member(self, role: Role, group_id: int):
+        """
+        更新同步权限用户组的成员
+        """
         role_members = self.role_svc.list_members_by_role_id(role.id)
         group_members = self.group_svc.list_all_group_member(group_id)
 

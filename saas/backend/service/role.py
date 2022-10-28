@@ -221,16 +221,7 @@ class RoleService:
             role = self.create(info, creator, add_member=False)
             RoleRelation.objects.create(parent_id=grade_manager.id, role_id=role.id)
 
-            role_users = [  # 从上级分级管理员继承的成员是readonly的
-                RoleUser(role_id=role.id, username=username, readonly=True) for username in grade_manager_members
-            ]
-            role_users.extend(
-                [
-                    RoleUser(role_id=role.id, username=username, readonly=False)
-                    for username in info.member_usernames
-                    if username not in grade_manager_members
-                ]
-            )
+            role_users = self._gen_subset_manager_role_user(role.id, grade_manager_members, info.member_usernames)
             if role_users:
                 RoleUser.objects.bulk_create(role_users, batch_size=100)
 
@@ -349,16 +340,8 @@ class RoleService:
                 RoleUser.objects.filter(role_id=subset_manager_id, readonly=False).values_list("username", fields=True)
             )
 
-            role_users = [  # 从上级分级管理员继承的成员是readonly的
-                RoleUser(role_id=subset_manager_id, username=username, readonly=True)
-                for username in grade_manager_members
-            ]
-            role_users.extend(
-                [
-                    RoleUser(role_id=subset_manager_id, username=username, readonly=False)
-                    for username in subset_manager_members
-                    if username not in grade_manager_members
-                ]
+            role_users = self._gen_subset_manager_role_user(
+                subset_manager_id, grade_manager_members, subset_manager_members
             )
 
             # 全删除
@@ -366,6 +349,28 @@ class RoleService:
             # 重新全部添加
             if role_users:
                 RoleUser.objects.bulk_create(role_users, batch_size=100)
+
+    def _gen_subset_manager_role_user(
+        self, subset_manager_id: int, grade_manager_members: List[str], subset_manager_members: List[str]
+    ):
+        """
+        生成子集管理员的成员关系
+
+        1. 分级管理员的成员readonly=True
+        2. 子集管理员子集的成员readonly=False
+        """
+        role_users = [  # 从上级分级管理员继承的成员是readonly的
+            RoleUser(role_id=subset_manager_id, username=username, readonly=True) for username in grade_manager_members
+        ]
+        role_users.extend(
+            [
+                RoleUser(role_id=subset_manager_id, username=username, readonly=False)
+                for username in subset_manager_members
+                if username not in grade_manager_members
+            ]
+        )
+
+        return role_users
 
     def _create_backend_role_member(self, role: Role, created_members: List[str]):
         """创建后端role成员"""

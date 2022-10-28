@@ -43,6 +43,7 @@ from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Subject
 from backend.trans.group import GroupTrans
+from backend.trans.role import RoleAuthScopeTrans
 
 from .audit import (
     GroupCreateAuditProvider,
@@ -534,6 +535,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
     role_biz = RoleBiz()
 
     group_trans = GroupTrans()
+    role_auth_scope_trans = RoleAuthScopeTrans()
 
     @swagger_auto_schema(
         operation_description="用户组添加权限",
@@ -557,13 +559,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         group_role = self.role_biz.get_role_by_group_id(group.id)
         if group_role.id != request.role.id:
             self.role_biz.incr_update_auth_scope(
-                group_role,
-                [
-                    AuthScopeSystem(
-                        system_id=template.system_id, actions=parse_obj_as(List[AuthScopeAction], template.policies)
-                    )
-                    for template in templates
-                ],
+                group_role, self.role_auth_scope_trans.from_group_auth_templates(templates)
             )
 
         # 写入审计上下文
@@ -871,7 +867,7 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         tags=["group"],
     )
     @view_audit_decorator(GroupTransferAuditProvider)
-    @check_readonly_group(operation=OperateEnum.GROUP_TRANSFER.label)
+    @check_readonly_group(operation=OperateEnum.GROUP_TRANSFER.value)
     def post(self, request, *args, **kwargs):
         slz = GradeManagerGroupTransferSLZ(data=request.data, context={"role": request.role})
         slz.is_valid(raise_exception=True)
@@ -886,29 +882,9 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         )
 
         # 2. 查询用户组所有授权信息, 并扩张子集管理员的授权范围
-        auth_scope_systems: List[AuthScopeSystem] = []
+        auth_scope_systems = self._query_group_auth_scope(group)
 
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
-
-        # 2.1 查询所有的自定义权限
-        system_counts = self.group_biz.list_system_counter(group.id)
-        for system_count in system_counts:
-            system_id = system_count.id
-            policies = self.policy_query_biz.list_by_subject(system_id, subject)
-            auth_scope_systems.append(
-                AuthScopeSystem(system_id=system_id, actions=parse_obj_as(List[AuthScopeAction], policies))
-            )
-
-        # 2.2 查询所有的模板授权
-        queryset = PermTemplatePolicyAuthorized.objects.filter_by_subject(subject)
-        for template in queryset:
-            system_id = template.system_id
-            policies = parse_obj_as(List[PolicyBean], template.data["actions"])
-            auth_scope_systems.append(
-                AuthScopeSystem(system_id=system_id, actions=parse_obj_as(List[AuthScopeAction], policies))
-            )
-
-        # 2.3 扩张授权范围
+        # 扩张授权范围
         self.role_biz.incr_update_auth_scope(subset_manager, auth_scope_systems)
 
         # 3. 查询用户组所有的授权人员, 并扩张子集管理员的人员授权范围
@@ -919,3 +895,31 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         audit_context_setter(group_ids=[group.id], role_id=subset_manager_id)
 
         return Response({})
+
+    def _query_group_auth_scope(self, group: Group) -> List[AuthScopeSystem]:
+        """
+        查询用户组自定义权限, 模板权限转换为role授权范围
+        """
+
+        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+        auth_scope_systems: List[AuthScopeSystem] = []
+
+        # 查询自定义权限
+        system_counts = self.group_biz.list_system_counter(group.id)
+        for system_count in system_counts:
+            system_id = system_count.id
+            policies = self.policy_query_biz.list_by_subject(system_id, subject)
+            auth_scope_systems.append(
+                AuthScopeSystem(system_id=system_id, actions=parse_obj_as(List[AuthScopeAction], policies))
+            )
+
+        # 查询所有的模板授权
+        queryset = PermTemplatePolicyAuthorized.objects.filter_by_subject(subject)
+        for template in queryset:
+            system_id = template.system_id
+            policies = parse_obj_as(List[PolicyBean], template.data["actions"])
+            auth_scope_systems.append(
+                AuthScopeSystem(system_id=system_id, actions=parse_obj_as(List[AuthScopeAction], policies))
+            )
+
+        return auth_scope_systems

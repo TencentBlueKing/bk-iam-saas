@@ -20,6 +20,7 @@ from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
+from backend.biz.utils import RoleSyncGroupBiz
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
 
@@ -118,7 +119,7 @@ class CustomHandoverHandler(BaseHandoverHandler):
 
 class RoleHandoverHandler(BaseHandoverHandler):
     biz = RoleBiz()
-    group_biz = GroupBiz()
+    role_sync_group_biz = RoleSyncGroupBiz()
 
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
@@ -141,10 +142,7 @@ class RoleHandoverHandler(BaseHandoverHandler):
             members.append(self.handover_to)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
         elif self.role_type in [RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
-            self.biz.add_grade_manager_members(self.role_id, [self.handover_to])
-
-            if self.role.sync_perm:
-                self.group_biz.update_sync_perm_group_by_role(self.role, "admin", sync_members=True)
+            self.role_sync_group_biz.batch_add_grade_manager_member(self.role, [self.handover_to])
 
         # 审计
         log_role_event(
@@ -163,10 +161,7 @@ class RoleHandoverHandler(BaseHandoverHandler):
             members.remove(self.handover_from)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
         elif self.role_type in [RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
-            self.biz.delete_member(self.role_id, self.handover_from)
-
-            if self.role.sync_perm:
-                self.group_biz.update_sync_perm_group_by_role(self.role, "admin", sync_members=True)
+            self.role_sync_group_biz.delete_role_member(self.role, self.handover_from)
 
     def _get_system_manager_members(self) -> List[str]:
         if self.role_type != RoleType.SYSTEM_MANAGER.value:

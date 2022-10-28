@@ -11,18 +11,18 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import List
 
-from pydantic import parse_obj_as
 from rest_framework import exceptions
 from rest_framework.response import Response
 
 from backend.api.constants import ALLOW_ANY
 from backend.biz.org_sync.syncer import Syncer
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import AuthScopeAction, AuthScopeSystem, RoleBiz
+from backend.biz.role import RoleBiz
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
+from backend.trans.role import RoleAuthScopeTrans
 
 from .constants import AllowListMatchOperationEnum, AllowListObjectOperationSep, AuthorizationAPIEnum, OperateEnum
 from .models import AuthAPIAllowListConfig
@@ -106,6 +106,7 @@ class AuthViewMixin:
 
     policy_query_biz = PolicyQueryBiz()
     policy_operation_biz = PolicyOperationBiz()
+    role_auth_scope_trans = RoleAuthScopeTrans()
 
     def grant_or_revoke(self, operate: OperateEnum, subject: Subject, policy_list: PolicyBeanList) -> List[PolicyBean]:
         """授权或回收权限"""
@@ -153,14 +154,7 @@ class AuthViewMixin:
         role = self.role_biz.get_role_by_group_id(int(subject.id))
 
         # NOTE: 临时处理: 自动扩张管理员的授权范围
-        self.role_biz.incr_update_auth_scope(
-            role,
-            [
-                AuthScopeSystem(
-                    system_id=policy_list.system_id, actions=parse_obj_as(List[AuthScopeAction], policy_list.policies)
-                )
-            ],
-        )
+        self.role_biz.incr_update_auth_scope(role, [self.role_auth_scope_trans.from_policy_list(policy_list)])
 
     def policy_response(self, policy: PolicyBean):
         """所有返回单一策略的接口都统一返回的结构"""
