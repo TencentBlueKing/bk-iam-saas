@@ -293,12 +293,9 @@
 
             handleCreate () {
                 this.$store.commit('updateIndex', 3);
-            // this.$router.push({
-            //     name: 'firstManageSpaceCreate',
-            //     params: {
-            //         id: 0
-            //     }
-            // });
+                this.$router.push({
+                    name: 'myManageSpaceCreate'
+                });
             },
             handleView ({ id, name }) {
                 window.localStorage.setItem('iam-header-name-cache', name);

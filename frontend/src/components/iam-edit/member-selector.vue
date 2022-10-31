@@ -148,8 +148,8 @@
 
             triggerChange () {
                 this.isEditable = false;
-                this.isLoading = true;
-                if (this.displayValue.length > 1) {
+                if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+                    this.isLoading = true;
                     this.remoteHandler({
                         [this.field]: this.displayValue
                     }).then(() => {

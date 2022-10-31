@@ -164,10 +164,12 @@
             },
 
             handleEdit () {
+                const { id, type } = this.$route.params;
                 this.$router.push({
-                    name: this.user.role.type === 'rating_manager' ? 'authorBoundaryEditFirstLevel' : 'authorBoundaryEditSecondLevel',
+                    name: type === 'first' ? 'authorBoundaryEditFirstLevel' : 'authorBoundaryEditSecondLevel',
                     params: {
-                        id: this.$route.params.id
+                        id,
+                        type
                     }
                 });
             },

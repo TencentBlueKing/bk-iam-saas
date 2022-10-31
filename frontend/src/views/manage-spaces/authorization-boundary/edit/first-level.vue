@@ -91,7 +91,7 @@
         <p class="reason-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
-                {{ $t(`m.common['确定']`) }}
+                {{ $t(`m.common['下一步']`) }}
             </bk-button>
             <bk-button @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
@@ -115,44 +115,11 @@
             @on-cancel="handleSelectCancel"
             @animation-end="handleAnimationEnd" />
 
-        <bk-dialog
-            v-model="isShowReasonDialog"
-            :loading="dialogLoading"
-            header-position="left"
-            :width="480"
-            :mask-close="false"
-            ext-cls="iam-edit-rate-manager-reason-dialog"
-            @after-leave="reason = ''">
-            <section class="content-wrapper">
-                <label>
-                    {{ $t(`m.common['理由']`) }}
-                    <span>*</span>
-                </label>
-                <bk-input
-                    type="textarea"
-                    :rows="5"
-                    v-model="reason"
-                    style="margin-bottom: 15px;">
-                </bk-input>
-            </section>
-            <section slot="footer">
-                <bk-button theme="primary"
-                    :disabled="reason === ''"
-                    :loading="dialogLoading"
-                    @click="handleSubmitWithReason">
-                    {{ $t(`m.common['确定']`) }}
-                </bk-button>
-                <bk-button
-                    style="margin-left: 6px;"
-                    @click="handleDialogCancel">
-                    {{ $t(`m.common['取消']`) }}
-                </bk-button>
-            </section>
-        </bk-dialog>
     </smart-action>
 </template>
 <script>
     import _ from 'lodash';
+    import { il8n } from '@/language';
     import store from '@/store';
     import { mapGetters } from 'vuex';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
@@ -941,7 +908,7 @@
         },
         beforeRouteEnter (to, from, next) {
             const nameCache = window.localStorage.getItem('iam-header-name-cache');
-            window.localStorage.setItem('iam-header-title-cache', nameCache);
+            window.localStorage.setItem('iam-header-title-cache', `${il8n('common', '编辑')}：${nameCache}`);
             store.commit('setHeaderTitle', '');
             next();
         }

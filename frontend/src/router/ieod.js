@@ -53,7 +53,10 @@ const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
 // 我的管理空间
-const MyManageSpace = () => import(/* webpackChunkName: 'my-perm' */ '../views/my-manage-space');
+const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space');
+
+// 新建我的管理空间
+const MyManageSpaceCreate = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/create');
 
 // 用户组
 const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
@@ -251,6 +254,15 @@ export const routes = [
                 component: MyManageSpace
             },
             {
+                path: 'my-manage-space/create',
+                name: 'myManageSpaceCreate',
+                meta: {
+                    headerTitle: il8n('levelSpace', '新建我的管理空间'),
+                    backRouter: 'myManageSpace'
+                },
+                component: MyManageSpaceCreate
+            },
+            {
                 path: 'perm-renewal',
                 name: 'permRenewal',
                 meta: {
@@ -318,7 +330,7 @@ export const routes = [
                 component: AuthorizationBoundaryEditFirstLevel
             },
             {
-                path: ':id/manage-spaces/authorization-boundary/second-level/:id',
+                path: 'manage-spaces/authorization-boundary/second-level/:id',
                 name: 'authorBoundaryEditSecondLevel',
                 meta: {
                     headerTitle: '',

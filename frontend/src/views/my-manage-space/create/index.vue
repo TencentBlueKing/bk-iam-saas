@@ -5,36 +5,37 @@
                 <basic-info :data="formData" @on-change="handleBasicInfoChange" ref="basicInfoRef" />
             </section>
         </render-horizontal-block>
-        <render-action
-            style="margin-bottom: 16px;"
-            :title="$t(`m.grading['选择操作和资源实例范围']`)"
-            :tips="addActionTips"
-            v-if="!isSelectSystem"
-            @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.grading['最大可授权资源范围']`)" v-if="isSelectSystem">
+        <render-horizontal-block
+            :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)"
+            v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
-                <div class="showTableClick" @click.stop="isShowTableClick">
-                    <div class="action">
-                        <section class="action-wrapper" @click.stop="handleAddAction">
-                            <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
-                        </section>
-                        <Icon
-                            type="info-fill"
-                            class="info-icon"
-                            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
-                    </div>
-                    <div class="sub-title" v-if="policyList.length > 0 && !isShowTable">
-                        {{ $t(`m.common['共']`) }}
-                        <span class="number">{{policyList.length}}</span>
-                        {{ $t(`m.common['个']`) }}
-                        {{ $t(`m.perm['操作权限']`) }}
-                    </div>
+                <div class="action">
+                    <section class="action-wrapper" @click.stop="handleAddAction"
+                        data-test-id="grading_btn_showAddAction">
+                        <Icon bk type="plus-circle-shape" />
+                        <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
+                    </section>
+                    <Icon
+                        type="info-fill"
+                        class="info-icon"
+                        v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
                 </div>
-                <div v-show="isShowTable">
+                <div class="sub-title" v-if="isSelectSystem">
+                    {{ $t(`m.common['共']`) }}
+                    <span class="number">0</span>
+                    {{ $t(`m.common['个']`) }}
+                    {{ $t(`m.perm['操作权限']`) }}
+                </div>
+                <div v-if="isSelectSystemShow">
                     <div class="info-wrapper">
                         <p class="tips">{{ infoText }}</p>
-                        <section style="min-width: 108px;">
+                        <section style="min-width: 108px; position: relative;">
+                            <iam-guide
+                                type="rating_manager_merge_action"
+                                direction="right"
+                                :loading="isLoading"
+                                :style="{ top: '-15px', right: '120px' }"
+                                :content="$t(`m.guide['聚合操作']`)" />
                             <bk-switcher
                                 v-model="isAllExpanded"
                                 :disabled="isAggregateDisabled"
@@ -46,42 +47,52 @@
                     </div>
                     <div class="resource-instance-wrapper"
                         ref="instanceTableContentRef"
-                        v-bkloading="{ isLoading, opacity: 1, extCls: 'loading-resource-instance-cls' }">
+                        v-bkloading="{ isLoading, opacity: 1, zIndex: 1000, extCls: 'loading-resource-instance-cls' }">
                         <render-instance-table
-                            :is-all-expanded="isAllExpanded"
                             ref="resourceInstanceRef"
+                            :is-all-expanded="isAllExpanded"
                             :data="policyList"
                             :list="policyList"
                             :backup-list="aggregationsTableData"
                             @on-delete="handleDelete"
                             @on-aggregate-delete="handleAggregateDelete"
-                            @on-select="handleResourceSelect" />
+                            @on-select="handleAttrValueSelected" />
                     </div>
                 </div>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源实例范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界范围不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
-                :title="$t(`m.grading['选择可授权人员范围']`)"
+                ref="memberRef"
+                :title="$t(`m.levelSpace['最大可授权人员边界']`)"
                 :tips="addMemberTips"
-                style="margin-bottom: 16px;"
-                @on-click="handleAddMember" />
+                @on-click="handleAddMember"
+            >
+                <iam-guide
+                    type="rating_manager_authorization_scope"
+                    direction="left"
+                    :style="{ top: '-25px', left: '440px' }"
+                    :content="$t(`m.guide['授权人员范围']`)" />
+            </render-action>
         </section>
         <render-member
             v-else
+            :tip="$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间人员边界的权限']`)"
+            :is-all="isAll"
             :users="users"
             :departments="departments"
-            :is-all="isAll"
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <div slot="action">
-            <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
-                {{ $t(`m.levelSpace['提交审批']`) }}
+            <bk-button theme="primary" type="button" @click="handleSubmit"
+                data-test-id="grading_btn_createSubmit"
+                :loading="submitLoading">
+                {{ $t(`m.common['提交']`) }}
             </bk-button>
-            <bk-button @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
 
         <add-member-dialog
@@ -92,44 +103,47 @@
             :all-checked="isAll"
             show-limit
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd" />
+            @on-sumbit="handleSubmitAdd" />
 
         <add-action-side-slider
             :is-show.sync="isShowAddActionSideSlider"
             :default-value="curActionValue"
-            :default-system="curSystem"
             :default-data="defaultValue"
-            @on-submit="handleSelectSubmit"
-            @on-cancel="handleSelectCancel"
-            @animation-end="handleAnimationEnd" />
+            @on-submit="handleSelectSubmit" />
 
     </smart-action>
 </template>
 <script>
     import _ from 'lodash';
-    import store from '@/store';
     import { mapGetters } from 'vuex';
-    import { il8n } from '@/language';
+    import { guid } from '@/common/util';
+    import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
     import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     import RenderMember from '@/views/manage-spaces/components/render-member';
+    import RenderInstanceTable from '@/views/manage-spaces/components/render-instance-table';
     import AddActionSideSlider from '@/views/manage-spaces/components/add-action-side-slider';
     import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
-    import RenderInstanceTable from '@/views/manage-spaces/components/render-instance-table';
-    import { guid } from '@/common/util';
     export default {
-        name: '',
+        name: 'firstManageSpaceCreate',
         components: {
+            IamGuide,
             basicInfo,
             renderAction,
             AddMemberDialog,
             RenderMember,
             AddActionSideSlider,
             RenderInstanceTable
+        },
+        props: {
+            id: {
+                type: [String, Number],
+                default: 0
+            }
         },
         data () {
             return {
@@ -138,44 +152,41 @@
                     description: '',
                     members: []
                 },
-                submitLoading: false,
-                addActionTips: this.$t(`m.grading['添加操作提示']`),
-                addMemberTips: this.$t(`m.grading['添加成员提示']`),
-                isShowAddMemberDialog: false,
                 users: [],
                 departments: [],
-                isShowMemberAdd: true,
-                isShowAddActionSideSlider: false,
-                isShowActionEmptyError: false,
-                isExpanded: false,
-                curSystem: '',
-                curActionValue: [],
-                addMemberTitle: this.$t(`m.grading['选择可授权人员范围']`),
                 originalList: [],
-                isShowMemberEmptyError: false,
-
-                infoText: this.$t(`m.grading['选择提示']`),
-                tips: this.$t(`m.grading['添加操作提示']`),
+                curActionValue: [],
                 policyList: [],
-                isLoading: false,
-                isAllExpanded: false,
                 aggregations: [],
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-
-                isShowReasonDialog: false,
                 reason: '',
+                tips: this.$t(`m.grading['添加操作提示']`),
+                infoText: this.$t(`m.grading['选择提示']`),
+                addMemberTips: this.$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间的权限']`),
+                addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
+                submitLoading: false,
+                isShowAddMemberDialog: false,
+                isShowMemberAdd: false,
+                isShowAddActionSideSlider: false,
+                isShowActionEmptyError: false,
+                reasonEmptyError: false,
+                isExpanded: false,
+                isShowMemberEmptyError: false,
+                isShowReasonDialog: false,
                 dialogLoading: false,
-                isAll: false,
-                isShowTable: false,
-                reasonEmptyError: false
-                
+                isLoading: false,
+                isAllExpanded: false,
+                isAll: true
             };
         },
         computed: {
             ...mapGetters(['user']),
             isSelectSystem () {
+                return this.originalList.length === 0;
+            },
+            isSelectSystemShow () {
                 return this.originalList.length > 0;
             },
             defaultValue () {
@@ -220,7 +231,7 @@
                     if (difference.length > 0) {
                         this.curSystemId = [...this.curSystemId.concat(difference)];
                         this.resetData();
-                        if (this.policyList.length > 1) {
+                        if (this.policyList.length > 0) {
                             this.fetchAggregationAction(this.curSystemId.join(','));
                         }
                     } else {
@@ -231,13 +242,70 @@
                 deep: true
             }
         },
-        
+        mounted () {
+            this.formData.members = [this.user.username];
+        },
         methods: {
-            isShowTableClick () {
-                this.isShowTable = !this.isShowTable;
-            },
             async fetchPageData () {
-                await this.fetchRatingManagerDetail();
+                if (Number(this.id) > 0) {
+                    await this.fetchDetail();
+                }
+            },
+
+            async fetchDetail () {
+                try {
+                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.id });
+                    this.formData.members = res.data.members;
+                    this.users = res.data.subject_scopes.filter(item => item.type === 'user').map(item => {
+                        return {
+                            name: item.name,
+                            username: item.id,
+                            type: item.type
+                        };
+                    });
+                    this.departments = res.data.subject_scopes.filter(item => item.type === 'department').map(item => {
+                        return {
+                            name: item.name,
+                            count: item.member_count,
+                            type: item.type,
+                            id: item.id
+                        };
+                    });
+                    this.isShowMemberAdd = false;
+                    const list = [];
+                    res.data.authorization_scopes.forEach(item => {
+                        item.actions.forEach(act => {
+                            const tempResource = _.cloneDeep(act.resource_groups);
+                            tempResource.forEach(groupItem => {
+                                groupItem.related_resource_types.forEach(subItem => {
+                                    subItem.condition = null;
+                                });
+                            });
+                            list.push({
+                                description: act.description,
+                                expired_at: act.expired_at,
+                                id: act.id,
+                                name: act.name,
+                                system_id: item.system.id,
+                                system_name: item.system.name,
+                                $id: `${item.system.id}&${act.id}`,
+                                tag: act.tag,
+                                type: act.type,
+                                resource_groups: tempResource
+                            });
+                        });
+                    });
+                    this.originalList = _.cloneDeep(list);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
             },
 
             setPolicyList (payload) {
@@ -289,7 +357,7 @@
                 }
             },
 
-            handleResourceSelect (payload) {
+            handleAttrValueSelected (payload) {
                 window.changeDialog = true;
                 const instances = (function () {
                     const arr = [];
@@ -397,12 +465,12 @@
             handleAggregateAction (payload) {
                 window.changeDialog = true;
                 const aggregationAction = this.aggregations;
-                console.log('aggregationAction', aggregationAction);
                 const actionIds = [];
                 aggregationAction.forEach(item => {
                     actionIds.push(...item.actions.map(_ => `${_.system_id}&${_.id}`));
                 });
                 if (payload) {
+                    // debugger
                     // 缓存新增加的操作权限数据
                     aggregationAction.forEach(item => {
                         const filterArray = this.policyList.filter(subItem => item.actions.map(_ => `${_.system_id}&${_.id}`).includes(`${subItem.system_id}&${subItem.id}`));
@@ -412,12 +480,14 @@
                         }
                     });
                     const aggregations = aggregationAction.filter(item => {
+                        // debugger
                         const target = item.actions.map(v => v.id).sort();
                         const existData = this.policyList.find(subItem => {
                             return subItem.isAggregate && _.isEqual(target, subItem.actions.map(v => v.id).sort());
                         });
                         return !existData;
                     }).map((item, index) => {
+                        // debugger
                         // 从缓存值中取值
                         const isExistActions = this.aggregationsTableData.filter(subItem =>
                             item.actions.map(v => `${v.system_id}&${v.id}`).includes(`${subItem.system_id}&${subItem.id}`)
@@ -435,11 +505,7 @@
                                     break;
                                 }
                             }
-                            console.log('instances: ');
-                            console.log(instances);
-                            console.log('isAllEqual: ' + isAllEqual);
                             if (isAllEqual) {
-                                console.log(instances[0][0]);
                                 // const instanceData = instances[0][0][0];
                                 // item.instances = instanceData.path.map(pathItem => {
                                 //     return {
@@ -447,8 +513,8 @@
                                 //         name: pathItem[0].name
                                 //     };
                                 // });
+
                                 const instanceData = instances[0][0];
-                                console.log('instanceData', instanceData);
                                 item.instances = [];
                                 instanceData.map(pathItem => {
                                     const instance = pathItem.path.map(e => {
@@ -471,7 +537,6 @@
                     });
                     this.policyList = this.policyList.filter(item => !actionIds.includes(`${item.system_id}&${item.id}`));
                     this.policyList.unshift(...aggregations);
-                    console.log('this.policyList', this.policyList);
                     return;
                 }
                 const aggregationData = [];
@@ -556,86 +621,15 @@
                 return this.$refs.resourceInstanceRef && this.$refs.resourceInstanceRef.handleGetValue();
             },
 
-            async fetchRatingManagerDetail () {
-                try {
-                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.$route.params.id });
-                    this.handleDetailData(res.data);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                }
-            },
-
-            handleDetailData (payload) {
-                console.log('payload', payload);
-                const { name, description, members } = payload;
-                this.formData = Object.assign({}, {
-                    name,
-                    description,
-                    members
-                });
-                const departments = [];
-                const users = [];
-                payload.subject_scopes.forEach(item => {
-                    if (item.type === 'department') {
-                        departments.push({
-                            id: Number(item.id),
-                            type: 'depart',
-                            name: item.name,
-                            fullName: item.full_name,
-                            count: item.member_count
-                        });
-                    }
-                    if (item.type === 'user') {
-                        users.push({
-                            type: 'user',
-                            name: item.name,
-                            username: item.id
-                        });
-                    }
-                });
-
-                this.isAll = payload.subject_scopes.some(item => item.type === '*' && item.id === '*');
-
-                this.users.splice(0, this.users.length, ...users);
-                this.departments.splice(0, this.departments.length, ...departments);
-                this.isShowMemberAdd = false;
-
-                const tempActions = [];
-                payload.authorization_scopes.forEach(item => {
-                    item.actions.forEach(act => {
-                        tempActions.push({
-                            ...act,
-                            system_id: item.system.id,
-                            system_name: item.system.name,
-                            $id: `${item.system.id}&${act.id}`
-                        });
-                    });
-                });
-
-                this.originalList = _.cloneDeep(tempActions);
-            },
-            /**
-             * @description: 处理 base-info数据
-             * @param {*} field
-             * @param {*} data
-             * @return {*}
-             */
             handleBasicInfoChange (field, data) {
                 window.changeDialog = true;
                 this.formData[field] = data;
             },
 
             handleAddAction () {
-                this.isShowTable = true;
                 this.curActionValue = this.originalList.map(item => item.$id);
                 this.isShowAddActionSideSlider = true;
+                console.log(4555, this.isShowAddActionSideSlider);
             },
 
             setAggregateExpanded () {
@@ -673,25 +667,14 @@
             },
 
             handleSelectSubmit (payload) {
-                window.changeDialog = true;
-                payload.forEach(e => {
-                    if (!e.resource_groups || !e.resource_groups.length) {
-                        e.resource_groups = (e.related_resource_types && e.related_resource_types.length) ? [{ id: '', related_resource_types: e.related_resource_types }] : [];
+                payload.forEach(item => {
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
                     }
                 });
+                window.changeDialog = true;
                 this.originalList = _.cloneDeep(payload);
                 this.isShowActionEmptyError = false;
-                this.isShowAddActionSideSlider = false;
-            },
-
-            handleSelectCancel () {
-                this.isShowAddActionSideSlider = false;
-            },
-
-            handleAnimationEnd () {
-                this.curSystem = '';
-                this.curActionValue = [];
-                this.isShowAddActionSideSlider = false;
             },
 
             handleAddMember () {
@@ -717,20 +700,16 @@
                 this.isShowMemberAdd = true;
             },
 
-            handleSumbitAdd (payload) {
+            handleSubmitAdd (payload) {
                 window.changeDialog = true;
                 const { users, departments } = payload;
                 this.isAll = payload.isAll;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
+                console.log(123);
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
                 this.isShowMemberEmptyError = false;
-            },
-
-            handleDialogCancel () {
-                this.isShowReasonDialog = false;
-                this.dialogLoading = false;
             },
 
             async handleSubmitWithReason () {
@@ -763,12 +742,10 @@
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    reason: this.reason,
-                    id: this.$route.params.id
+                    reason: this.reason
                 };
-                console.log('params', params);
                 try {
-                    await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
+                    await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
                     await this.$store.dispatch('roleList');
                     this.isShowReasonDialog = false;
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
@@ -785,8 +762,14 @@
                         ellipsisCopy: true
                     });
                 } finally {
+                    this.submitLoading = false;
                     this.dialogLoading = false;
                 }
+            },
+
+            handleDialogCancel () {
+                this.isShowReasonDialog = false;
+                this.dialogLoading = false;
             },
 
             async handleSubmit () {
@@ -800,9 +783,8 @@
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
-
-                if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError
-                    || this.reasonEmptyError) {
+                if (validatorFlag || flag || this.isShowActionEmptyError
+                    || this.isShowMemberEmptyError || this.reasonEmptyError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -844,23 +826,16 @@
                     description,
                     members,
                     subject_scopes: subjects,
-                    authorization_scopes: data,
-                    id: this.$route.params.id
+                    authorization_scopes: data
                 };
-                this.submitLoading = true;
                 window.changeDialog = false;
-                console.log('params', params);
-                
-                const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
+                this.submitLoading = true;
                 try {
-                    await this.$store.dispatch(`role/${dispatchMethod}`, params);
+                    await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['编辑分级管理员成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
                     this.$router.push({
-                        name: 'gradingAdminDetail',
-                        params: {
-                            id: this.$route.params.id
-                        }
+                        name: 'ratingManager'
                     });
                 } catch (e) {
                     console.error(e);
@@ -883,10 +858,7 @@
                 }
                 cancelHandler.then(() => {
                     this.$router.push({
-                        name: 'gradingAdminDetail',
-                        params: {
-                            id: this.$route.params.id
-                        }
+                        name: 'ratingManager'
                     });
                 }, _ => _);
             },
@@ -894,12 +866,6 @@
             checkReason () {
                 this.reasonEmptyError = this.reason === '';
             }
-        },
-        beforeRouteEnter (to, from, next) {
-            const nameCache = window.localStorage.getItem('iam-header-name-cache');
-            window.localStorage.setItem('iam-header-title-cache', `${il8n('common', '编辑')}：${nameCache}`);
-            store.commit('setHeaderTitle', '');
-            next();
         }
     };
 </script>
@@ -915,17 +881,10 @@
             font-size: 12px;
             color: #ff4d4d;
         }
-        .reason-empty-error{
-            position: relative;
-            top: -45px;
-            left: 160px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
+
         .grade-admin-select-wrapper {
-            .showTableClick {
-                cursor: pointer;
             .action {
+                position: relative;
                 display: flex;
                 justify-content: flex-start;
                 .action-wrapper {
@@ -955,15 +914,15 @@
                 margin-left:10px;
                 font-size:14px;
                 color: #979ba5;
-            .number {
-                font-weight: 600;
-        }
-    }
-        }
+                .number {
+                    font-weight: 600;
+                }
+            }
             .info-wrapper {
                 display: flex;
                 justify-content: space-between;
                 margin-top: 16px;
+                margin-left: 8px;
                 line-height: 24px;
                 .tips,
                 .text {
@@ -972,17 +931,15 @@
                 }
             }
             .resource-instance-wrapper {
+                margin-left: 8px;
                 min-height: 200px;
             }
             .loading-resource-instance-cls {
                 border: 1px solid #c4c6cc;
             }
         }
-    .horizontal-item .label {
-        width: 130px;
     }
-    }
-    .iam-edit-rate-manager-reason-dialog {
+    .iam-create-rate-manager-reason-dialog {
         .content-wrapper {
             display: flex;
             justify-content: flex-start;

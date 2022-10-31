@@ -186,7 +186,8 @@ export const getRouterDiff = (payload) => {
         'authorBoundaryEditFirstLevel',
         'authorBoundaryEditSecondLevel',
         'secondaryManageSpace',
-        'myManageSpace'
+        'myManageSpace',
+        'MyManageSpaceCreate'
     ];
 };
 
