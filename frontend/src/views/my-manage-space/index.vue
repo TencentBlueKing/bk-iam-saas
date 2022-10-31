@@ -27,39 +27,36 @@
                 <template slot-scope="{ row }">
                     <bk-table size="small" ext-cls="children-expand-cls" :data="row.children" :row-key="row.id"
                         :show-header="false" :border="false" :cell-class-name="getCellClass" @row-click="handleRowClick"
-                        @row-mouse-enter="handleRowMouseEnter" @row-mouse-leave="handleRowMouseLeave">
+                    >
                         <bk-table-column width="40" />
                         <bk-table-column prop="name" width="140">
                             <template slot-scope="child">
                                 <div class="child_space_name">
                                     <Icon type="level-two" :style="{ color: iconColor[1] }" />
-                                    <!-- <span v-bk-tooltips.right="row.name" class="right-start"> -->
-                                    <!-- <bk-button theme="primary" text @click="handleView(row)">
-                                            {{ child.row.name }}
-                                        </bk-button> -->
                                     <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
                                         :value="child.row.name" style="width: 100%;margin-left: 5px;"
-                                        :mode.sync="isEditMode"
-                                        :remote-hander="handleUpdateRatingManager" />
-                                    <!-- </span> -->
+                                        :remote-hander="handleUpdateManageSpace" />
                                 </div>
                             </template>
                         </bk-table-column>
                         <bk-table-column prop="members" width="300">
                             <template slot-scope="child">
-                                <bk-tag v-for="tag in child.row.members" closable :key="tag" @close="closeTag(tag)">
-                                    {{tag}}
-                                </bk-tag>
-                                <!-- <iam-edit-input field="members" :placeholder="$t(`m.verify['请输入']`)"
-                                    :value="child.row.members" style="width: 100%;margin-left: 5px;"
-                                    :mode.sync="isEditMode"
-                                    :remote-hander="handleUpdateRatingManager" /> -->
+                                <iam-edit-member-selector
+                                    field="members"
+                                    width="200"
+                                    :placeholder="$t(`m.verify['请输入']`)"
+                                    :value="child.row.members"
+                                    :remote-handler="handleUpdateManageSpace" />
                             </template>
                         </bk-table-column>
-                        <bk-table-column prop="description">
+                        <bk-table-column prop="description" width="200">
                             <template slot-scope="child">
-                                <iam-edit-input field="description" :placeholder="$t(`m.verify['请输入']`)"
-                                    :value="child.row.description" :remote-hander="handleUpdateRatingManager" />
+                                <iam-edit-textarea
+                                    field="description"
+                                    width="200"
+                                    :placeholder="$t(`m.verify['用户组描述提示']`)"
+                                    :value="child.row.description"
+                                    :remote-hander="handleUpdateGroup" />
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
@@ -114,9 +111,9 @@
                     </bk-tag>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)">
+            <bk-table-column :label="$t(`m.common['描述']`)" prop="description" width="200">
                 <template slot-scope="{ row }">
-                    <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
+                    <span :title="row.description">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
@@ -152,14 +149,14 @@
     import { mapGetters } from 'vuex';
     import { getWindowHeight } from '@/common/util';
     import IamEditInput from '@/components/iam-edit/input';
-    // import IamEditTextarea from '@/components/iam-edit/textarea';
-    // import IamEditMember from '@/views/manage-spaces/components/member-edit';
+    import IamEditMemberSelector from '@/components/iam-edit/member-selector';
+    import IamEditTextarea from '@/components/iam-edit/textarea';
     export default {
         name: 'myManageSpace',
         components: {
-            IamEditInput
-            // IamEditTextarea,
-            // IamEditMember
+            IamEditInput,
+            IamEditMemberSelector,
+            IamEditTextarea
         },
         data () {
             return {
@@ -194,7 +191,7 @@
                                 updated_time: '2022-10-26 10:12:21',
                                 updater: 'admin',
                                 description: '测试',
-                                members: ['admin', 'liu07', 'gc_lihao']
+                                members: ['admin', 'liu07', 'gc_lihao', 'gc_lihao', 'gc_lihao']
                             }
                         ]
                     },
@@ -215,7 +212,7 @@
                                 creator: 'admin',
                                 updated_time: '2022-10-26 10:12:21',
                                 updater: 'admin',
-                                description: '测试',
+                                description: '管理员可授予他人xxx的权限',
                                 members: ['admin', 'liu07']
                             },
                             {
@@ -238,7 +235,6 @@
                 },
                 currentBackup: 1,
                 searchValue: '',
-                hoverMode: '',
                 radioValue: 'haveRole',
                 iconColor: ['#FF9C01', '#9B80FE'],
                 expandRowList: [] // 所有展开折叠项
@@ -248,15 +244,6 @@
             ...mapGetters(['user']),
             tableHeight () {
                 return getWindowHeight() - 185;
-            },
-            isEditMode: {
-                get () {
-                    return this.hoverMode;
-                },
-                set (value) {
-                    this.$emit('update:mode', value);
-                }
-
             }
         },
         methods: {
@@ -288,7 +275,7 @@
                 return false;
             },
 
-            handleUpdateRatingManager (payload) {
+            handleUpdateManageSpace (payload) {
                 console.log(payload, 555);
             },
 
@@ -300,34 +287,15 @@
                 }
             },
 
-            handleRowMouseEnter (index, row, event) {
-                this.hoverMode = 'edit';
-                console.log(index, row, event, '移入');
-            },
-
-            handleRowMouseLeave (index, row, event) {
-            // console.log(index, row, event, '移除');
-            },
-
             handleExpandChange (row, expandedRows) {
                 this.expandRowList = expandedRows;
-                // if (this.expandRowList.includes(row.id)) {
-                //     this.expandRowList = this.expandRowList.filter(val => val !== row.id);
-                // } else {
-                //     this.expandRowList.push(row.id);
-                // }
-                console.log(row, expandedRows, '展开');
             },
 
             handleCreate () {
-                console.log(this.user);
                 this.$store.commit('updateIndex', 3);
-            // this.$router.push({
-            //     name: 'firstManageSpaceCreate',
-            //     params: {
-            //         id: 0
-            //     }
-            // });
+                this.$router.push({
+                    name: 'myManageSpaceCreate'
+                });
             },
             handleView ({ id, name }) {
                 window.localStorage.setItem('iam-header-name-cache', name);

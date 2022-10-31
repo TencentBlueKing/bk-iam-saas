@@ -353,7 +353,8 @@ export const m = {
         '申请自定义权限': 'Request custom permissions',
         '没有匹配到合适的用户组': 'The appropriate user group was not matched',
         '如需要可继续前往': 'Continue if necessary',
-        '请选择资源实例': 'Select the resource instance'
+        '请选择资源实例': 'Select the resource instance',
+        '分配成功': 'Allocation succeeded'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -593,7 +594,9 @@ export const m = {
         '分级管理员': 'Classification manager',
         '所属分级管理员': 'Classified administrator',
         '分配': 'Distribution',
-        '分配至': 'Distribution to'
+        '分配至': 'Distribution to',
+        '分配 (二级管理空间)': 'Allocation (secondary management space)',
+        '搜索用户组名、描述、管理空间、创建人': 'Search user group name, description, management space and creator'
     },
     userGroupDetail: {
         '用户组名': 'Group Name：',
@@ -705,7 +708,9 @@ export const m = {
         '全部空间': 'All spaces',
         '如需编辑授权边界的内容请点击': 'edit the content of the authorization boundary, click',
         '释放': 'Release',
-        '一级管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space'
+        '一级管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space',
+        '提交审批': 'Submit for approval',
+        '新建我的管理空间': 'New My Management Space'
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',
