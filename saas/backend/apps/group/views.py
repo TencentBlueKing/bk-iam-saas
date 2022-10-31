@@ -796,6 +796,7 @@ class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
     queryset = PermTemplate.objects.all()
     serializer_class = TemplateListSLZ
     filterset_class = TemplateFilter
+    filter_backends = [NoCheckModelFilterBackend]
 
     role_biz = RoleBiz()
 
