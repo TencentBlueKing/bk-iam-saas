@@ -98,7 +98,7 @@ class RoleType(ChoicesEnum, LowerStrEnum):
     STAFF = auto()
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    GRADE_MANAGER: enum = "rating_manager"
+    GRADE_MANAGER: enum = "rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
     SUBSET_MANAGER = auto()
 
     _choices_labels = skip(
@@ -149,7 +149,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_TEMPLATE = auto()
     MANAGE_SUPER_MANAGER_MEMBER = auto()
     MANAGE_SYSTEM_MANAGER_MEMBER = auto()
-    CREATE_GRADE_MANAGER: enum = "create_rating_manager"
+    CREATE_GRADE_MANAGER: enum = "create_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
     MANAGE_GRADE_MANAGER: enum = "manage_rating_manager"
     TRANSFER_GROUP = auto()
     AUDIT = auto()
@@ -186,7 +186,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
     RENEW_ACTION = auto()
     JOIN_GROUP = auto()
     RENEW_GROUP = auto()
-    JOIN_GRADE_MANAGER: enum = "join_rating_manager"
+    JOIN_GRADE_MANAGER: enum = "join_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
     CREATE_GRADE_MANAGER: enum = "create_rating_manager"
     UPDATE_GRADE_MANAGER: enum = "update_rating_manager"
     GRANT_TEMPORARY_ACTION = auto()
