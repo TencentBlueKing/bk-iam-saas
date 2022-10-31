@@ -51,7 +51,7 @@ class ActionViewSet(GenericViewSet):
         elif user_id != "" and user_id != request.user.username:
             raise exceptions.PermissionDenied
         elif group_id != -1:
-            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_group(group_id))
+            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_group_id(group_id))
         # 3. 获取的预申请的权限列表
         elif cache_id != "":
             # 从缓存里获取预申请的操作ID列表

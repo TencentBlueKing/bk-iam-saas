@@ -69,7 +69,7 @@ from backend.apps.role.serializers import (
 )
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
-from backend.biz.helper import RoleSyncGroupBiz
+from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.role import (
     RoleBiz,
@@ -256,7 +256,7 @@ class RoleMemberView(views.APIView):
     角色退出
     """
 
-    role_sync_group_biz = RoleSyncGroupBiz()
+    role_with_perm_group_biz = RoleWithPermGroupBiz()
 
     @swagger_auto_schema(
         operation_description="退出角色",
@@ -270,7 +270,7 @@ class RoleMemberView(views.APIView):
 
         role = Role.objects.filter(id=int(role_id)).first()
         if role:
-            self.role_sync_group_biz.delete_role_member(role, user_id, user_id)
+            self.role_with_perm_group_biz.delete_role_member(role, user_id, user_id)
 
         audit_context_setter(role_id=role_id)
         return Response({})

@@ -26,7 +26,7 @@ from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.biz.group import GroupBiz
-from backend.biz.helper import RoleSyncGroupBiz
+from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.system import SystemBiz
@@ -181,7 +181,7 @@ class UserPermissionCleaner:
 
     group_biz = GroupBiz()
     role_biz = RoleBiz()
-    role_sync_group_biz = RoleSyncGroupBiz()
+    role_with_perm_group_biz = RoleWithPermGroupBiz()
 
     def __init__(self, username: str) -> None:
         record = UserPermissionCleanupRecord.objects.get(username=username)
@@ -261,7 +261,7 @@ class UserPermissionCleaner:
                 RoleType.GRADE_MANAGER.value,
                 RoleType.SUBSET_MANAGER.value,
             ):
-                self.role_sync_group_biz.delete_role_member(role, username)
+                self.role_with_perm_group_biz.delete_role_member(role, username)
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)

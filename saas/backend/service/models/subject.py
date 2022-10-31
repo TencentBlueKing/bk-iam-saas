@@ -30,11 +30,11 @@ class Subject(BaseModel):
         return cls(type=SubjectType.USER.value, id=username)
 
     @classmethod
-    def from_group(cls, group_id: Union[int, str]) -> "Subject":
+    def from_group_id(cls, group_id: Union[int, str]) -> "Subject":
         return cls(type=SubjectType.GROUP.value, id=str(group_id))
 
     @classmethod
-    def from_department(cls, department_id: Union[int, str]) -> "Subject":
+    def from_department_id(cls, department_id: Union[int, str]) -> "Subject":
         return cls(type=SubjectType.DEPARTMENT.value, id=str(department_id))
 
     @classmethod

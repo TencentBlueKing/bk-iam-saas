@@ -489,7 +489,7 @@ class ApplicationBiz:
 
     def _gen_group_permission_data(self, group_id: int) -> List[ApplicationGroupPermTemplate]:
         """生成用户组权限数据"""
-        subject = Subject.from_group(group_id)
+        subject = Subject.from_group_id(group_id)
 
         application_templates = []
 

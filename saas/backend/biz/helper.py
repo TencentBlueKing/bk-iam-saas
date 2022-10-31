@@ -17,7 +17,7 @@ from .group import GroupBiz
 from .role import RoleBiz
 
 
-class RoleSyncGroupBiz:
+class RoleWithPermGroupBiz:
     """
     角色同步权限用户组操作
     """

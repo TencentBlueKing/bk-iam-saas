@@ -91,7 +91,7 @@ class ManagementDepartmentGroupBelongViewSet(GenericViewSet):
         department_id = kwargs["id"]
 
         group_belongs = self.group_biz.check_subject_groups_belong(
-            Subject.from_department(department_id),
+            Subject.from_department_id(department_id),
             group_ids,
             inherit=False,  # 对于部门，没存在继承的关系
         )

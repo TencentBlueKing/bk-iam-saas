@@ -148,7 +148,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         if group_id == "":
             return set()
 
-        subject = Subject.from_group(group_id)
+        subject = Subject.from_group_id(group_id)
         exists_template_ids = PermTemplatePolicyAuthorized.objects.query_exists_template_auth(
             subject, [one.id for one in queryset]
         )

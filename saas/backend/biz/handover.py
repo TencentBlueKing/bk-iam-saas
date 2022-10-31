@@ -18,7 +18,7 @@ from backend.apps.role.models import Role
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
-from backend.biz.helper import RoleSyncGroupBiz
+from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.service.constants import RoleType
@@ -119,7 +119,7 @@ class CustomHandoverHandler(BaseHandoverHandler):
 
 class RoleHandoverHandler(BaseHandoverHandler):
     biz = RoleBiz()
-    role_sync_group_biz = RoleSyncGroupBiz()
+    role_with_perm_group_biz = RoleWithPermGroupBiz()
 
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
         self.handover_task_id = handover_task_id
@@ -142,7 +142,7 @@ class RoleHandoverHandler(BaseHandoverHandler):
             members.append(self.handover_to)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
         elif self.role_type in [RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
-            self.role_sync_group_biz.batch_add_grade_manager_member(self.role, [self.handover_to])
+            self.role_with_perm_group_biz.batch_add_grade_manager_member(self.role, [self.handover_to])
 
         # 审计
         log_role_event(
@@ -161,7 +161,7 @@ class RoleHandoverHandler(BaseHandoverHandler):
             members.remove(self.handover_from)
             self.biz.modify_system_manager_members(role_id=self.role_id, members=members)
         elif self.role_type in [RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]:
-            self.role_sync_group_biz.delete_role_member(self.role, self.handover_from)
+            self.role_with_perm_group_biz.delete_role_member(self.role, self.handover_from)
 
     def _get_system_manager_members(self) -> List[str]:
         if self.role_type != RoleType.SYSTEM_MANAGER.value:

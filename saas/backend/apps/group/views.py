@@ -496,7 +496,7 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         group = get_object_or_404(self.queryset, pk=kwargs["id"])
-        subject = Subject.from_group(group.id)
+        subject = Subject.from_group_id(group.id)
         queryset = PermTemplatePolicyAuthorized.objects.filter_by_subject(subject).defer("_data")
 
         queryset = self.filter_queryset(queryset)
@@ -511,7 +511,7 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         group = get_object_or_404(self.queryset, pk=kwargs["id"])
         template_id = kwargs["template_id"]
 
-        subject = Subject.from_group(group.id)
+        subject = Subject.from_group_id(group.id)
         authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, int(template_id))
         return Response(GroupTemplateDetailSLZ(authorized_template).data)
 
@@ -583,7 +583,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         system_id = slz.validated_data["system_id"]
         group = get_object_or_404(self.queryset, pk=kwargs["id"])
 
-        subject = Subject.from_group(group.id)
+        subject = Subject.from_group_id(group.id)
 
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
@@ -607,7 +607,7 @@ class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
         group = self.get_object()
-        subject = Subject.from_group(group.id)
+        subject = Subject.from_group_id(group.id)
 
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
@@ -723,7 +723,7 @@ class GroupTemplateConditionCompareView(GroupPermissionMixin, GenericViewSet):
         # 从模板数据中查找匹配的操作, 资源类型的条件
         template_id = kwargs["template_id"]
 
-        subject = Subject.from_group(group.id)
+        subject = Subject.from_group_id(group.id)
         authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, int(template_id))
         for action in authorized_template.data["actions"]:
             policy = PolicyBean.parse_obj(action)
@@ -765,7 +765,7 @@ class GroupCustomPolicyConditionCompareView(GroupPermissionMixin, GenericViewSet
         data = serializer.validated_data
 
         group = self.get_object()
-        subject = Subject.from_group(group.id)
+        subject = Subject.from_group_id(group.id)
 
         # 1. 查询policy的condition
         related_resource_type = data["related_resource_type"]
@@ -837,7 +837,7 @@ class GroupRoleTemplatesViewSet(GroupQueryMixin, GenericViewSet):
         """
         查询group已授权的模板集合
         """
-        subject = Subject.from_group(group_id)
+        subject = Subject.from_group_id(group_id)
         exists_template_ids = PermTemplatePolicyAuthorized.objects.query_exists_template_auth(
             subject, [one.id for one in queryset]
         )
@@ -902,7 +902,7 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         查询用户组自定义权限, 模板权限转换为role授权范围
         """
 
-        subject = Subject.from_group(group.id)
+        subject = Subject.from_group_id(group.id)
         auth_scope_systems: List[AuthScopeSystem] = []
 
         # 查询自定义权限
