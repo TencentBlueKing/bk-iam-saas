@@ -242,7 +242,7 @@ class GradeManagerListSLZ(BaseGradeMangerSLZ):
             role_ids = [role.id for role in self.instance]
 
             # 查询role_users
-            for one in RoleUser.objects.filter(role_id__id=role_ids):
+            for one in RoleUser.objects.filter(role_id__in=role_ids):
                 self.role_users[one.role_id].append({"username": one.username, "readonly": one.readonly})
 
             # 查询role_subset_managers

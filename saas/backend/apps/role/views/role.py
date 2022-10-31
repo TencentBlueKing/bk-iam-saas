@@ -791,14 +791,14 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="子集管理员更新",
-        request_body=GradeMangerCreateSLZ(label="子集分级管理员"),
+        request_body=SubsetMangerCreateSLZ(label="子集分级管理员"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     @view_audit_decorator(RoleUpdateAuditProvider)
     def update(self, request, *args, **kwargs):
         role = self.get_object()
-        serializer = GradeMangerCreateSLZ(data=request.data)
+        serializer = SubsetMangerCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_id = request.user.username
