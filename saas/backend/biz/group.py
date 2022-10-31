@@ -654,8 +654,11 @@ class GroupBiz:
         # 重新授权
         templates = self._trans_auth_scope_to_grant_templates(auth_scopes)
 
-        group = Group.objects.get(id=group_id)
-        self.grant(role, group, templates)
+        subject = Subject.from_group_id(group_id)
+        for template in templates:
+            # Note: 同步授权, 避免检查逻辑
+            # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
+            self.policy_operation_biz.alter(template.system_id, subject, template.policies)
 
     def _trans_auth_scope_to_grant_templates(self, auth_scopes) -> List[GroupTemplateGrantBean]:
         """
