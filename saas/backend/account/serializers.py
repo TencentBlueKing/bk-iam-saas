@@ -18,6 +18,8 @@ class AccountRoleSLZ(serializers.Serializer):
     type = serializers.CharField(label="角色类型", help_text=f"{RoleType.get_choices()}")
     name = serializers.CharField()
     description = serializers.CharField()
+    is_member = serializers.BooleanField(label="登录用户是否是角色成员")
+    sub_roles = serializers.ListField(label="子集管理员列表", child=serializers.CharField(label="子集管理员"))
 
 
 class AccountUserSLZ(serializers.Serializer):
