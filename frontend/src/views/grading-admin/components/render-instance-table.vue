@@ -284,28 +284,7 @@
         watch: {
             list: {
                 handler (value) {
-                    if (this.isAllExpanded) {
-                        this.tableList = value.filter(e =>
-                            (e.resource_groups && e.resource_groups.length)
-                            || e.isAggregate);
-                        this.emptyResourceGroupsList = value.filter(e =>
-                            e.resource_groups && !e.resource_groups.length);
-                        this.emptyResourceGroupsName = (this.emptyResourceGroupsList || []).reduce((p, e) => {
-                            p.push(e.name);
-                            return p;
-                        }, []);
-                        if (this.emptyResourceGroupsName.length) {
-                            this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName.join('，');
-                            this.emptyResourceGroupsTableList = this.emptyResourceGroupsList[0];
-                            this.tableList = [...this.tableList, this.emptyResourceGroupsTableList];
-                        }
-                    } else {
-                        value.forEach(e => {
-                            e.name = e.name.split('，')[0];
-                        });
-                        this.emptyResourceGroupsList = []; // 重置变量
-                        this.tableList = value;
-                    }
+                    this.tableList = value;
                     this.tableList.forEach(item => {
                         if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {
                             this.systemFilter.push({

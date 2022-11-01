@@ -45,6 +45,21 @@
                         <span :title="row.group_desc">{{ row.group_desc || '--' }}</span>
                     </template>
                 </bk-table-column>
+                <template v-if="['rating_manager'].includes(user.role.type)">
+                    <bk-table-column
+                        :label="$t(`m.nav['管理空间']`)"
+                        :filters="spaceFiltersList"
+                        :filter-method="handleSpaceFilter"
+                        :filter-multiple="true"
+                    >
+                        <!-- <template slot-scope="{ row }">
+                            <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
+                                {{ row.role.name || '--' }}
+                            </span>
+                            <span>{{ user.role.name === row.role.name ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
+                        </template> -->
+                    </bk-table-column>
+                </template>
                 <bk-table-column :label="$t(`m.approvalProcess['审批流程']`)">
                     <template slot-scope="{ row }">
                         <section class="process-select-wrapper" v-if="row.canEdit || row.isToggle">
@@ -97,6 +112,7 @@
     </div>
 </template>
 <script>
+    import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
     import editProcessDialog from './edit-process-dialog';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
@@ -137,10 +153,12 @@
                 curGroupName: '',
                 batchEditLoading: false,
                 procssValue: '',
-                tips: this.$t(`m.common['暂未开放']`)
+                tips: this.$t(`m.common['暂未开放']`),
+                spaceFiltersList: []
             };
         },
         computed: {
+            ...mapGetters(['user']),
             isCanBatchDelete () {
                 return this.currentSelectList.length > 0 && this.tableList.length > 0;
             },
