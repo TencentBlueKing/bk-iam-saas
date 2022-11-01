@@ -43,9 +43,6 @@
                         <bk-button theme="primary" text @click="handleClone(row)">
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text @click="handleClone(row)" style="margin-left: 10px">
-                            {{ $t(`m.levelSpace['释放']`) }}
-                        </bk-button>
                     </section>
                 </template>
             </bk-table-column>
@@ -225,6 +222,10 @@
                     count: 0,
                     limit: 10
                 });
+            },
+
+            handleClone () {
+                
             }
         }
     };

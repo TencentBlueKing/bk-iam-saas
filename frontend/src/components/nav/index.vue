@@ -223,6 +223,15 @@
             },
             roleList: {
                 handler (value) {
+                    value = value.map(e => {
+                        e.level = 0;
+                        if (e.sub_roles.length) {
+                            e.sub_roles.forEach(sub => {
+                                sub.level = 1;
+                            });
+                        }
+                        return e;
+                    });
                     this.curRoleList.splice(0, this.curRoleList.length, ...value);
                 },
                 immediate: true

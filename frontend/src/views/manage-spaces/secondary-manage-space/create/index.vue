@@ -82,9 +82,12 @@
             :is-all="isAll"
             :users="users"
             :departments="departments"
+            :inherit-subject-scope="inheritSubjectScope"
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
-            @on-delete-all="handleDeleteAll" />
+            @on-delete-all="handleDeleteAll"
+            @on-change="handleChange" />
+        
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit"
@@ -178,7 +181,8 @@
                 dialogLoading: false,
                 isLoading: false,
                 isAllExpanded: false,
-                isAll: true
+                isAll: true,
+                inheritSubjectScope: true
             };
         },
         computed: {
@@ -700,6 +704,10 @@
                 this.isShowMemberAdd = true;
             },
 
+            handleChange (payload) {
+                this.inheritSubjectScope = payload;
+            },
+
             handleSubmitAdd (payload) {
                 window.changeDialog = true;
                 const { users, departments } = payload;
@@ -826,14 +834,29 @@
                     description,
                     members,
                     subject_scopes: subjects,
-                    authorization_scopes: data
+                    authorization_scopes: data,
+                    sync_perm: false,
+                    inherit_subject_scope: this.inheritSubjectScope
                 };
+                // 成员需要做处理
+                params.members = params.members.reduce((p, v) => {
+                    p.push({
+                        username: v
+                    });
+                    return p;
+                }, []);
+                // 如果是动态继承上级空间 组织架构可为空
+                if (this.inheritSubjectScope) {
+                    params.subject_scopes = [];
+                }
                 window.changeDialog = false;
                 this.submitLoading = true;
+                console.log('params', params);
+                debugger;
                 try {
-                    await this.$store.dispatch('role/addRatingManager', params);
+                    await this.$store.dispatch('spaceManage/addSecondManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.levelSpace['新建二级管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'ratingManager'
                     });
