@@ -226,7 +226,9 @@ export const m = {
         '导出': 'export',
         '查询': 'Search',
         '生效条件': 'Effective condition',
-        '批量添加成员': 'Add members in bulk'
+        '批量添加成员': 'Add members in bulk',
+        '选择分级管理员': 'Select rating administrator',
+        '管理我的分级管理员': 'Manage My Level Administrators'
     },
     // 校验
     verify: {
@@ -242,7 +244,7 @@ export const m = {
         '描述必填': 'Description is required',
         '输入审批意见': 'Input approval comments',
         '请输入审批意见': 'Please give your approval comments',
-        '模板名称最长不超过32个字符': 'The template name can be no longer than 32 characters',
+        '模板名称最长不超过128个字符': 'The template name can be no longer than 128 characters',
         '请添加授权成员': 'Please add authorized members',
         '用户组名不允许空格': 'Group name does not allow spaces',
         '用户组描述提示': 'The description must be at least 10 characters',
@@ -268,7 +270,12 @@ export const m = {
         '资源类型ID已被占用': 'The resource type ID has been occupied',
         '只允许输入英文': 'Only English is allowed',
         '生效时间': 'Effective time',
-        '生效条件': 'Effective condition'
+        '生效条件': 'Effective condition',
+        '空间名称必填': 'Space name is required',
+        '空间名称最长不超过32个字符': 'The space name cannot exceed 32 characters',
+        '空间名称不允许空格': 'Space name does not allow spaces',
+        '操作和资源边界范围不可为空': 'Operation and resource boundary range cannot be empty',
+        '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -346,7 +353,8 @@ export const m = {
         '申请自定义权限': 'Request custom permissions',
         '没有匹配到合适的用户组': 'The appropriate user group was not matched',
         '如需要可继续前往': 'Continue if necessary',
-        '请选择资源实例': 'Select the resource instance'
+        '请选择资源实例': 'Select the resource instance',
+        '分配成功': 'Allocation succeeded'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -404,6 +412,11 @@ export const m = {
         '权限管理': 'Permission management',
         '统计分析': 'Statistical analysis',
         '平台管理': 'Platform management',
+        '授权边界': 'Authorization boundary',
+        '管理空间': 'Manage Spaces',
+        '我的管理空间': "My Management Space",
+        '一级管理空间': 'Primary management space',
+        '二级管理空间': 'Secondary management space'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -579,7 +592,11 @@ export const m = {
         '描述': 'description',
         '所属系统': 'Subordinate to the system',
         '分级管理员': 'Classification manager',
-        '所属分级管理员': 'Classified administrator'
+        '所属分级管理员': 'Classified administrator',
+        '分配': 'Distribution',
+        '分配至': 'Distribution to',
+        '分配 (二级管理空间)': 'Allocation (secondary management space)',
+        '搜索用户组名、描述、管理空间、创建人': 'Search user group name, description, management space and creator'
     },
     userGroupDetail: {
         '用户组名': 'Group Name：',
@@ -664,6 +681,36 @@ export const m = {
         '克隆': 'Clone',
         '最大可授权人员范围': 'Maximum scope of authorized personnel',
         '最大可授权资源范围': 'Maximum scope of authorized resources'
+    },
+   levelSpace : {
+        '搜索空间名、描述、创建人': 'Search space name, description and creator',
+        '空间名': 'Space name',
+        '创建人': 'Creator',
+        '创建时间': 'Created Time',
+        '更新人': 'Updater',
+        '更新时间': 'Update',
+        "进入": "Get into",
+        "克隆": "Clone",
+        '请输入空间名': 'Please enter the space name',
+        '管理员': 'Administrators',
+        '请输入管理员': 'Please enter the administrator',
+        '上级空间': 'Superior space',
+        '当前空间': 'Current Space',
+        '实例值': 'Instance Value',
+        '最大可授权范围操作和资源边界': 'Maximum authorized scope operation and resource boundary',
+        '选择操作和资源边界范围': 'Select operation and resource boundary range',
+        '最大可授权人员边界': 'Maximum authorized personnel boundary',
+        '选择可授权人员边界': 'Select authorized personnel boundary',
+        '最大可授权操作和资源边界': 'Maximum authorized operations and resource boundaries',
+        '授权人员边界': 'Authorized personnel boundary',
+        '搜索空间名、描述、创建人、创建时间': 'Search space name, description, creator and creation time',
+        '我有权限': 'I have authority',
+        '全部空间': 'All spaces',
+        '如需编辑授权边界的内容请点击': 'edit the content of the authorization boundary, click',
+        '释放': 'Release',
+        '一级管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space',
+        '提交审批': 'Submit for approval',
+        '新建我的管理空间': 'New My Management Space'
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',

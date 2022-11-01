@@ -22,7 +22,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import Vue from 'vue';
 import VueRouter from 'vue-router';
@@ -43,7 +43,7 @@ if (NODE_ENV === 'development') {
     routes = require('./ieod').routes;
 } else {
     // eslint-disable-next-line
-    routes = require(`./${VERSION}`).routes
+    routes = require(`./${VERSION}`).routes;
 }
 
 const router = new VueRouter({
@@ -53,8 +53,8 @@ const router = new VueRouter({
 
 const cancelRequest = async () => {
     const allRequest = http.queue.get();
-    const requestQueue = allRequest.filter(request => request.cancelWhenRouteChange);
-    await http.cancel(requestQueue.map(request => request.requestId));
+    const requestQueue = allRequest.filter((request) => request.cancelWhenRouteChange);
+    await http.cancel(requestQueue.map((request) => request.requestId));
 };
 
 let preloading = true;
@@ -78,7 +78,8 @@ export const beforeEach = async (to, from, next) => {
     // if (curRole === 'staff') {
     //     await store.dispatch('role/updateCurrentRole', { id: 0 });
     // }
-    if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
+    if (['userGroup', 'permTemplate', 'approvalProcess', 'authorBoundary'].includes(to.name)) {
+        console.log(to.name, store.state.index, '路由钩子');
         await store.dispatch('role/updateCurrentRole', { id: curRoleId });
         store.commit('updateIndex', 1);
         window.localStorage.setItem('index', 1);
@@ -91,7 +92,7 @@ export const beforeEach = async (to, from, next) => {
                 cancelWhenRouteChange: false,
                 cancelPrevious: false
             });
-            const currentRole = roleList.find(item => String(item.id) === currentRoleId);
+            const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
             if (currentRole) {
                 await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
                 await store.dispatch('userInfo');
@@ -116,7 +117,7 @@ export const beforeEach = async (to, from, next) => {
                 cancelWhenRouteChange: false,
                 cancelPrevious: false
             });
-            const currentRole = roleList.find(item => String(item.id) === currentRoleId);
+            const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
             if (currentRole) {
                 await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
                 await store.dispatch('userInfo');
@@ -174,7 +175,6 @@ export const beforeEach = async (to, from, next) => {
         } else {
             difference = getNavRouterDiff(navIndex);
         }
-        
         if (difference.length) {
             console.log('to', to);
             store.dispatch('versionLogInfo');
@@ -202,9 +202,7 @@ export const beforeEach = async (to, from, next) => {
                     // } else if (['createUserGroup', 'userGroupDetail'].includes(to.name) && noFrom) {
                 } else if (['createUserGroup'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}user-group` });
-                } else if (
-                    ['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom
-                ) {
+                } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}rating-manager` });
                 } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
                     next();
@@ -225,7 +223,7 @@ export const beforeEach = async (to, from, next) => {
     /* eslint-disable */
     let setClass = ' ' + node.className + ' ';
 
-    classNames.forEach(cl => {
+    classNames.forEach((cl) => {
         /* eslint-disable */
         setClass = setClass.replace(' ' + cl + ' ', ' ');
     });
@@ -245,7 +243,7 @@ export const afterEach = async (to, from) => {
     preloading = false;
     const pageDataMethods = [];
     const routerList = to.matched;
-    routerList.forEach(r => {
+    routerList.forEach((r) => {
         const fetchPageData = r.instances.default && r.instances.default.fetchPageData;
         if (fetchPageData && typeof fetchPageData === 'function') {
             pageDataMethods.push(r.instances.default.fetchPageData());
@@ -256,15 +254,9 @@ export const afterEach = async (to, from) => {
 
     const headerTitle = window.localStorage.getItem('iam-header-title-cache');
 
-    store.commit(
-        'setHeaderTitle',
-        (to.meta && to.meta.headerTitle) || store.getters.headerTitle || headerTitle || ''
-    );
+    store.commit('setHeaderTitle', (to.meta && to.meta.headerTitle) || store.getters.headerTitle || headerTitle || '');
 
-    store.commit(
-        'setBackRouter',
-        (to.meta && to.meta.backRouter) || store.getters.backRouter || ''
-    );
+    store.commit('setBackRouter', (to.meta && to.meta.backRouter) || store.getters.backRouter || '');
 
     await Promise.all(pageDataMethods);
 

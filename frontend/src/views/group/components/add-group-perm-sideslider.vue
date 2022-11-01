@@ -16,7 +16,7 @@
                             {{ $t(`m.common['条']`) }}
                         </div>
                         <div slot="right">
-                            <div class="add-button">
+                            <div class="add-button" v-if="!externalTemplate">
                                 <bk-button
                                     size="small"
                                     text
@@ -156,6 +156,10 @@
             groupId: {
                 type: [String, Number],
                 default: ''
+            },
+            externalTemplate: {
+                type: Boolean,
+                default: false
             }
         },
         data () {

@@ -1,10 +1,8 @@
 <template>
     <!-- eslint-disable max-len -->
-    <nav :class="['nav-layout', { 'sticked': navStick }]"
-        @mouseenter="handleMouseEnter"
-        @mouseleave="handleMouseLeave">
+    <nav :class="['nav-layout', { sticked: navStick }]" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
         <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick }]">
-            <bk-select
+            <!-- <bk-select
                 v-if="unfold && index === 1"
                 :value="navCurRoleId || curRoleId"
                 :clearable="false"
@@ -13,59 +11,84 @@
                 searchable
                 ext-cls="iam-nav-select-cls"
                 ext-popover-cls="iam-nav-select-dropdown-content"
-                @change="handleSwitchRole">
+                @change="handleSwitchRole"
+            >
                 <bk-option
                     v-for="item in curRoleList"
                     :key="item.id"
                     :id="item.id"
-                    :name="item.name">
+                    :name="item.name"
+                >
                 </bk-option>
                 <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer;">
                     <i class="bk-icon icon-plus-circle mr10"></i>管理我的分级管理员
                 </div>
+            </bk-select> -->
+            <bk-select ref="select" v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
+                :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
+                :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
+                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
+                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @change="handleSwitchRole" @toggle="handleToggle">
+                <bk-big-tree ref="selectTree" size="small" :data="curRoleList" :selectable="true" :show-checkbox="false"
+                    :show-link-line="false" :default-expanded-nodes="[navCurRoleId || curRoleId]" :default-selected-node="navCurRoleId || curRoleId"
+                    @expand-on-click="handleExpandClick" @select-change="handleSelectNode">
+                    <div slot-scope="{ node,data }">
+                        <div class="iam-select-collection">
+                            <div>
+                                <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
+                                <span>{{data.name}}</span>
+                            </div>
+                            <!-- <bk-star
+                                v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
+                                :rate="node.id === curRoleId" :max-stars="1" /> -->
+                        </div>
+                    </div>
+                </bk-big-tree>
+                <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer">
+                    <i class="bk-icon icon-cog-shape mr10"></i>{{ $t(`m.nav['我的管理空间']`) }}
+                </div>
             </bk-select>
             <div class="nav-slider-list">
-                <div class="iam-menu"
-                    v-for="item in [...currentNav]"
-                    :key="item.id">
+                <div class="iam-menu" v-for="item in [...currentNav]" :key="item.id">
                     <template v-if="item.children && item.children.length > 0">
                         <div class="iam-menu-parent-title" v-show="isShowRouterGroup(item)">
                             <template v-if="item.rkey === 'set'">
                                 {{ item.name }}
                             </template>
                             <template v-else>
-                                {{ curLanguageIsCn ? isUnfold ? item.name : item.name.substr(0, 2) : isUnfold ? item.name : 'MP' }}
+                                {{ curLanguageIsCn ? (isUnfold ? item.name : item.name.substr(0, 2)) : isUnfold ?
+                                    item.name : 'MP' }}
                             </template>
                         </div>
                         <template>
-                            <div v-for="child in item.children"
-                                v-show="!routerDiff.includes(child.rkey)"
-                                :key="child.id"
-                                :class="['iam-menu-item', { active: openedItem === child.id }]"
-                                @click.stop="handleSwitchNav(child.id, child)" :data-test-id="`nav_menu_switchNav_${child.id}`">
+                            <div v-for="child in item.children" v-show="!routerDiff.includes(child.rkey)"
+                                :key="child.id" :class="['iam-menu-item', { active: openedItem === child.id }]"
+                                @click.stop="handleSwitchNav(child.id, child)"
+                                :data-test-id="`nav_menu_switchNav_${child.id}`">
                                 <Icon :type="child.icon" class="iam-menu-icon" />
-                                <span class="iam-menu-text" v-if="child.name === '管理员' && curRole === 'system_manager'">系统{{ child.name }}</span>
+                                <span class="iam-menu-text"
+                                    v-if="child.name === '管理员' && curRole === 'system_manager'">系统{{ child.name
+                                }}</span>
                                 <span class="iam-menu-text" v-else>{{ child.name }}</span>
                             </div>
                         </template>
                     </template>
                     <template v-else>
-                        <div
-                            v-show="!routerDiff.includes(item.rkey)"
+                        <div v-show="!routerDiff.includes(item.rkey)"
                             :class="['iam-menu-item', { active: openedItem === item.id }]"
-                            @click.stop="handleSwitchNav(item.id, item)" :data-test-id="`nav_menu_switchNav_${item.id}`">
+                            @click.stop="handleSwitchNav(item.id, item)"
+                            :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
-                            <span class="iam-menu-text" v-if="item.name === '分级管理员' && curRole === 'staff'">我的{{ item.name }}</span>
+                            <span class="iam-menu-text" v-if="item.name === '分级管理员' && curRole === 'staff'">我的{{
+                                item.name }}</span>
                             <span class="iam-menu-text" v-else>{{ item.name }}</span>
                         </div>
                     </template>
                 </div>
             </div>
-            <div
-                :class="['nav-stick-wrapper']"
-                :title="navStick ? $t(`m.nav['收起导航']`) : $t(`m.nav['固定导航']`)"
+            <div :class="['nav-stick-wrapper']" :title="navStick ? $t(`m.nav['收起导航']`) : $t(`m.nav['固定导航']`)"
                 @click="toggleNavStick">
-                <Icon type="shrink-line" :class="['nav-stick', { 'sticked': navStick }]" />
+                <Icon type="shrink-line" :class="['nav-stick', { sticked: navStick }]" />
             </div>
         </div>
     </nav>
@@ -86,17 +109,18 @@
         [['', 'index'], 'indexNav'],
         // 用户组
         [
-            [
-                'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail',
-                'groupPermRenewal', 'addGroupPerm'
-            ],
+            ['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
             'userGroupNav'
         ],
         // 系统接入
         [
             [
-                'systemAccess', 'systemAccessCreate', 'systemAccessAccess',
-                'systemAccessRegistry', 'systemAccessOptimize', 'systemAccessComplete'
+                'systemAccess',
+                'systemAccessCreate',
+                'systemAccessAccess',
+                'systemAccessRegistry',
+                'systemAccessOptimize',
+                'systemAccessComplete'
             ],
             'systemAccessNav'
         ],
@@ -109,13 +133,26 @@
         // 我的权限
         [
             [
-                'myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal',
-                'groupPermRenewal', 'permTransfer', 'permTransferHistory'
+                'myPerm',
+                'templatePermDetail',
+                'groupPermDetail',
+                'permRenewal',
+                'groupPermRenewal',
+                'permTransfer',
+                'permTransferHistory'
             ],
             'myPermNav'
         ],
+        // 我的管理空间
+        [['myManageSpace', 'myManageSpaceCreate'], 'myManageSpaceNav'],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
+        // 一级管理空间
+        [['firstManageSpace', 'firstManageSpaceCreate'], 'firstManageSpaceNav'],
+        // 二级管理空间
+        [['secondaryManageSpace'], 'secondaryManageSpaceNav'],
+        // 授权边界
+        [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
         // 资源权限
         [['resourcePermiss'], 'resourcePermissNav'],
         // 管理员
@@ -133,30 +170,44 @@
         name: '',
         data () {
             return {
+                selectCls: 'iam-nav-select-dropdown-content',
                 openedItem: '',
                 timer: null,
                 curRole: 'staff',
                 isUnfold: true,
                 routerMap: routerMap,
                 curRoleList: [],
-                curRoleId: 0
+                curRoleId: 0,
+                hoverId: -1,
+                selectValue: '',
+                selectNode: null
             };
         },
         computed: {
-            ...mapGetters(['user', 'navStick', 'navFold', 'currentNav', 'routerDiff', 'roleList', 'navData', 'index', 'navCurRoleId']),
+            ...mapGetters([
+                'user',
+                'navStick',
+                'navFold',
+                'currentNav',
+                'routerDiff',
+                'roleList',
+                'navData',
+                'index',
+                'navCurRoleId'
+            ]),
             unfold () {
                 return this.navStick || !this.navFold;
             },
             isShowRouterGroup () {
-                return payload => {
+                return (payload) => {
                     const allRouter = getRouterDiff('all');
-                    const curRouter = allRouter.filter(item => !this.routerDiff.includes(item));
-                    return curRouter.filter(item => payload.children.map(_ => _.rkey).includes(item)).length > 0;
+                    const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
+                    return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
                 };
             }
         },
         watch: {
-            '$route': {
+            $route: {
                 handler: 'routeChangeHandler',
                 immediate: true
             },
@@ -165,13 +216,14 @@
                     this.curRole = newValue.role.type || 'staff';
                     if (newValue.role.id !== oldValue.role.id) {
                         this.reload();
+                        this.curRoleId = newValue.role.id;
                     }
                 },
                 deep: true
             },
             roleList: {
-                handler (newValue, oldValue) {
-                    this.curRoleList.splice(0, this.curRoleList.length, ...newValue);
+                handler (value) {
+                    this.curRoleList.splice(0, this.curRoleList.length, ...value);
                 },
                 immediate: true
             }
@@ -188,7 +240,7 @@
         },
         mounted () {
             this.index = this.index || Number(window.localStorage.getItem('index') || 0);
-            bus.$on('theme-change', payload => {
+            bus.$on('theme-change', (payload) => {
                 this.curRole = payload;
             });
 
@@ -198,6 +250,20 @@
             });
         },
         methods: {
+            initTree (parentId, list) {
+                if (!parentId) {
+                    return list.filter(item => !item.parentId).map(item => {
+                        item.children = this.initTree(item.id, list);
+                        return item;
+                    });
+                } else {
+                    return list.filter(item => item.parentId === parentId).map(item => {
+                        item.children = this.initTree(item.id, list);
+                        return item;
+                    });
+                }
+            },
+
             /**
              * route change 回调
              * 此方法在 created 之前执行
@@ -234,6 +300,18 @@
                 }
             },
 
+            handleSelectNode (node) {
+                this.curRoleId = node.id;
+                this.selectNode = node;
+                this.$refs.select.close();
+                this.handleToggle(false);
+                this.handleSwitchRole(node.id);
+            },
+
+            handleRemoteTree  (value) {
+                this.$refs.selectTree && this.$refs.selectTree.filter(value);
+            },
+
             // 切换导航展开固定
             toggleNavStick () {
                 bus.$emit('nav-resize', !this.navStick);
@@ -257,15 +335,37 @@
                         return;
                     }
                     if (item.hasOwnProperty('path')) {
+                        this.$store.commit('setNavStatus', {
+                            stick: !!this.unfold
+                        });
                         this.$router.push(item.path);
                     }
                     this.openedItem = item.id === this.openedItem ? '' : item.id;
                 });
             },
 
+            handleToggle (value) {
+                this.selectCls = value ? 'iam-nav-select-dropdown-content' : 'hide-iam-nav-select-cls';
+            },
+
+            // 获取当前选中节点
+            getTreeNode (id, list) {
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i].id === id) {
+                        return list[i];
+                    } else if (list[i].children && list[i].children.length) {
+                        const result = this.getTreeNode(id, list[i].children);
+                        if (result) {
+                            return result;
+                        }
+                    }
+                }
+            },
+
             // 切换身份
             async handleSwitchRole (id) {
-                const { type, name } = this.curRoleList.find(e => e.id === id);
+                const result = this.getTreeNode(id, this.curRoleList);
+                const { type, name } = result;
                 try {
                     await this.$store.dispatch('role/updateCurrentRole', { id });
                     this.curRoleId = id;
@@ -311,10 +411,7 @@
                         return;
                     }
 
-                    const permTemplateRoutes = [
-                        'permTemplateCreate', 'permTemplateDetail',
-                        'permTemplateEdit', 'permTemplateDiff'
-                    ];
+                    const permTemplateRoutes = ['permTemplateCreate', 'permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'];
                     if (permTemplateRoutes.includes(curRouterName)) {
                         this.$router.push({ name: 'permTemplate' });
                         return;
@@ -348,11 +445,41 @@
 
             handleToGradingAdmin () {
                 bus.$emit('rating-admin-change');
+            },
+
+            formatColor (node) {
+                if (node.id === this.curRoleId) {
+                    switch (node.level) {
+                        case 0: {
+                            return '#FF9C01';
+                        }
+                        case 1: {
+                            return '#9B80FE';
+                        }
+                    }
+                }
             }
         }
     };
 </script>
 
-<style>
-    @import './index.css';
+<style lang="postcss">
+@import './index.css';
+
+.iam-select-collection {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.iamcenter-level-one {
+    &.is-active {
+        color: #FF9C01;
+    }
+}
+
+.iamcenter-level-two {
+    &.is-active {
+        color: #9B80FE;
+    }
+}
 </style>

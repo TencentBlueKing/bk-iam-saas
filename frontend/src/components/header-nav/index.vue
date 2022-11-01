@@ -440,7 +440,8 @@
                         window.localStorage.removeItem('iam-header-name-cache');
                         let name = 'myPerm';
                         if (this.isRatingChange) {
-                            name = 'ratingManager';
+                            // name = 'ratingManager';
+                            name = 'myManageSpace';
                         }
                         if (navIndex === 1) {
                             name = 'userGroup';

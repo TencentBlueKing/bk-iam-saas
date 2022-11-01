@@ -4,41 +4,57 @@
             <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
                 {{ $t(`m.common['新建']`) }}
             </bk-button>
-            <bk-button
-                v-if="isSuperManager"
+            <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
+                data-test-id="group_btn_transferOut" @click="handleTransferOut">
+                {{ $t(`m.userGroup['转出']`) }}
+            </bk-button> -->
+            <!-- <bk-button
                 :disabled="currentSelectList.length < 1"
-                style="margin-left: 6px;"
-                data-test-id="group_btn_transferOut"
-                @click="handleTransferOut">{{ $t(`m.userGroup['转出']`) }}</bk-button>
-            <bk-button :disabled="currentSelectList.length < 1"
-                theme="primary" @click="handleBatchAddMember" data-test-id="group_btn_create">
+                theme="primary"
+                @click="handleBatchAddMember"
+                data-test-id="group_btn_create"
+            >
                 {{ $t(`m.common['批量添加成员']`) }}
-            </bk-button>
+            </bk-button> -->
+            <!-- <bk-button
+                v-if="isRatingManager"
+                :disabled="currentSelectList.length < 1"
+                style="margin-left: 6px"
+                data-test-id="group_btn_distribute"
+                @click="handleDistribute"
+            >{{ $t(`m.userGroup['分配']`) }}</bk-button
+            > -->
+            <bk-select
+                v-model="selectKeyword"
+                :searchable="true"
+                :placeholder="$t(`m.userGroup['批量']`)"
+                ext-cls="select-custom"
+                ext-popover-cls="select-popover-custom"
+                @change="handleSelect"
+                @toggle="handleToggle">
+                <bk-option
+                    v-for="option in batchOptions"
+                    :key="option.id"
+                    :id="option.id"
+                    :name="option.name"
+                    :disabled="option.disabled"
+                />
+            </bk-select>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
-                    @on-change="handleSearch"
-                    :data="searchData"
-                    :value="searchValue"
+                    style="width: 420px;"
+                    :placeholder="$t(`m.userGroup['搜索用户组名、描述、管理空间、创建人']`)"
+                    :data="searchData" :value="searchValue"
                     :quick-search-method="quickSearchMethod"
-                    style="width: 420px;" />
+                    @on-change="handleSearch" />
             </div>
         </render-search>
-        <bk-table
-            :data="tableList"
-            size="small"
-            :class="{ 'set-border': tableLoading }"
-            ext-cls="user-group-table"
-            :pagination="pagination"
-            ref="tableRef"
-            row-key="id"
-            @page-change="pageChange"
-            @page-limit-change="limitChange"
-            @select="handlerChange"
-            @select-all="handlerAllChange"
+        <bk-table :data="tableList" size="small" :class="{ 'set-border': tableLoading }" ext-cls="user-group-table"
+            :pagination="pagination" ref="tableRef" row-key="id" @page-change="pageChange"
+            @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column type="selection" align="center" :selectable="getIsSelect"
-                reserve-selection></bk-table-column>
+            <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection />
             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                 <template slot-scope="{ row }">
                     <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
@@ -58,6 +74,23 @@
                     </div>
                 </template>
             </bk-table-column>
+            <template v-if="['rating_manager'].includes(curRole)">
+                <bk-table-column :label="$t(`m.nav['二级管理空间']`)" :filters="spaceFiltersList"
+                    :filter-method="handleSpaceFilter" :filter-multiple="true">
+                    <template slot-scope="{ row }">
+                        <!-- <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
+                            {{ row.role.name || '--' }}
+                        </span> -->
+                        <div class="user-group-space">
+                            <Icon type="level-two" :style="{ color: '#9B80FE' }" />
+                            <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
+                                :value="row.role.name || ''" :rules="rules" style="width: 100%; margin-left: 5px;"
+                                :remote-hander="handleUpdateManageSpace" />
+                        </div>
+
+                    </template>
+                </bk-table-column>
+            </template>
             <bk-table-column :label="$t(`m.userGroup['创建人']`)">
                 <template slot-scope="{ row }">
                     <span>{{ row.creator || '--' }}</span>
@@ -87,13 +120,13 @@
                         <bk-button theme="primary" text @click="handleAddMember(row)">
                             {{ $t(`m.common['添加成员']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleAddPerm(row)">
+                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleAddPerm(row)">
                             {{ $t(`m.common['添加权限']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleClone(row)">
+                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleClone(row)">
                             {{ $t(`m.grading['克隆']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleDelete(row)">
+                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleDelete(row)">
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
                     </div>
@@ -107,14 +140,16 @@
             :name="currentUserGroup.name"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSumbitDelete" />
+            @on-sumbit="handleSumbitDelete"
+        />
 
         <edit-process-dialog
             :show.sync="isShowEditProcessDialog"
             :loading="editLoading"
             @on-after-leave="handleAfterEditLeave"
             @on-cancel="hideCancelEdit"
-            @on-sumbit="handleSumbitEdit" />
+            @on-sumbit="handleSumbitEdit"
+        />
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
@@ -126,19 +161,30 @@
             show-expired-at
             @on-cancel="handleCancelAdd"
             @on-sumbit="handleSumbitAdd"
-            @on-after-leave="handleAddAfterClose" />
+            @on-after-leave="handleAddAfterClose"
+        />
 
         <transfer-out-dialog
             :show.sync="isShowRolloutGroupDialog"
             :group-ids="curSelectIds"
             @on-success="handleTransferOutSuccess"
-            @on-cancel="handleTransferOutCancel" />
+            @on-cancel="handleTransferOutCancel"
+        />
+
+        <DistributeToDialog
+            :show.sync="isShowSpaceDialog"
+            :group-ids="curSelectIds"
+            @on-success="handleDistributeSuccess"
+            @on-cancel="handleDistributeCancel"
+        />
+
         <novice-guide :flag="showNoviceGuide" :content="content" />
     </div>
 </template>
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
+    import { il8n } from '@/language';
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
@@ -146,16 +192,20 @@
     import AddMemberDialog from './components/iam-add-member';
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
+    import DistributeToDialog from './components/distribute-to-dialog.vue';
     import NoviceGuide from '@/components/iam-novice-guide';
+    import IamEditInput from '@/components/iam-edit/input';
     export default {
         name: '',
         components: {
             DeleteDialog,
             AddMemberDialog,
             EditProcessDialog,
-            IamSearchSelect,
             TransferOutDialog,
-            NoviceGuide
+            DistributeToDialog,
+            IamSearchSelect,
+            NoviceGuide,
+            IamEditInput
         },
         data () {
             return {
@@ -177,20 +227,57 @@
                 currentUserGroup: {},
                 isShowEditProcessDialog: false,
                 editLoading: false,
-
                 loading: false,
                 departs: [],
                 users: [],
                 curName: '',
                 curId: 0,
-
                 curRole: 'staff',
-
                 isShowRolloutGroupDialog: false,
-
                 isBatch: false,
-
-                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]')
+                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]'),
+                il8n,
+                spaceFiltersList: [],
+                selectKeyword: '',
+                isShowSpaceDialog: false,
+                rules: [
+                    {
+                        required: true,
+                        message: this.$t(`m.verify['空间名称必填']`),
+                        trigger: 'blur'
+                    },
+                    {
+                        validator: (value) => {
+                            return value.length <= 32;
+                        },
+                        message: this.$t(`m.verify['空间名称最长不超过32个字符']`),
+                        trigger: 'blur'
+                    },
+                    {
+                        validator: (value) => {
+                            return /^[^\s]*$/g.test(value);
+                        },
+                        message: this.$t(`m.verify['空间名称不允许空格']`),
+                        trigger: 'blur'
+                    }
+                ],
+                batchOptions: [
+                    {
+                        id: 0,
+                        name: this.$t(`m.common['添加成员']`),
+                        disabled: false
+                    },
+                    {
+                        id: 1,
+                        name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
+                        disabled: false
+                    },
+                    {
+                        id: 2,
+                        name: this.$t(`m.userGroup['转出']`),
+                        disabled: false
+                    }
+                ]
             };
         },
         computed: {
@@ -205,7 +292,7 @@
                 return this.curRole === 'super_manager';
             },
             curSelectIds () {
-                return this.currentSelectList.map(item => item.id);
+                return this.currentSelectList.map((item) => item.id);
             }
         },
         watch: {
@@ -226,10 +313,10 @@
                 {
                     id: 'id',
                     name: 'ID'
-                    // validate (values, item) {
-                    //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-                    //     return !validate ? '' : true
-                    // }
+                // validate (values, item) {
+                //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
+                //     return !validate ? '' : true
+                // }
                 },
                 {
                     id: 'name',
@@ -262,7 +349,7 @@
                     disabled: true
                 }
             ];
-            const isObject = payload => {
+            const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
 
@@ -275,7 +362,7 @@
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
                         const curData = currentQueryCache[key];
-                        const tempData = this.searchData.find(item => item.id === key);
+                        const tempData = this.searchData.find((item) => item.id === key);
                         if (isObject(curData)) {
                             if (tempData) {
                                 this.searchValue.push({
@@ -290,10 +377,12 @@
                             this.searchValue.push({
                                 id: key,
                                 name: tempData.name,
-                                values: [{
-                                    id: curData,
-                                    name: curData
-                                }]
+                                values: [
+                                    {
+                                        id: curData,
+                                        name: curData
+                                    }
+                                ]
                             });
                             this.searchList.push(..._.cloneDeep(this.searchValue));
                             this.searchParams[key] = curData;
@@ -322,15 +411,15 @@
                 const queryParams = {
                     limit,
                     current,
-                    ...this.searchParams,
-                    ...this.$route.query
+                ...this.searchParams,
+                ...this.$route.query
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
-                    const tempObj = this.searchData.find(item => key === item.id);
+                    const tempObj = this.searchData.find((item) => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
-                            const tempData = this.searchList.find(item => item.id === key);
+                            const tempData = this.searchList.find((item) => item.id === key);
                             params[key] = tempData.values[0];
                         }
                     } else {
@@ -338,9 +427,9 @@
                     }
                 }
                 return {
-                    ...params,
-                    limit,
-                    current
+                ...params,
+                limit,
+                current
                 };
             },
 
@@ -364,16 +453,16 @@
                 this.tableLoading = isLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+                ...this.searchParams,
+                limit: this.pagination.limit,
+                offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
                     this.pagination.count = res.data.count || 0;
                     this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
-                    this.currentSelectList = this.currentSelectList.filter(item => {
-                        return this.tableList.map(_ => _.id).includes(item.id);
+                    this.currentSelectList = this.currentSelectList.filter((item) => {
+                        return this.tableList.map((_) => _.id).includes(item.id);
                     });
                     if (this.currentSelectList.length < 1) {
                         this.$refs.tableRef && this.$refs.tableRef.clearSelection();
@@ -392,19 +481,28 @@
                 }
             },
 
+            handleUpdateManageSpace (payload) {
+                return this.$store.dispatch().then(() => {
+                    
+                });
+            },
+
+            handleSpaceFilter (value, row, column) {
+                const property = column.property;
+                return row[property] === value;
+            },
+
             handleRemoteRtx (value) {
                 console.log('value', value);
-                return fuzzyRtxSearch(value)
-                    .then(data => {
-                        return data.results;
-                    });
+                return fuzzyRtxSearch(value).then((data) => {
+                    return data.results;
+                });
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
-                    .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
-                    });
+                return this.$store.dispatch('system/getSystems').then(({ data }) => {
+                    return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
+                });
             },
 
             handleCreate () {
@@ -439,16 +537,34 @@
                 this.isShowRolloutGroupDialog = false;
             },
 
+            handleDistribute () {
+                this.isShowSpaceDialog = true;
+            },
+
+            handleDistributeSuccess () {
+                this.currentSelectList = [];
+                this.handleTransferOutCancel();
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleDistributeCancel () {
+                this.isShowRolloutGroupDialog = false;
+            },
+
             handleEditApprovalProcess () {
-                this.isShowEditProcessDialog = true;
+                this.isShowSpaceDialog = true;
             },
 
             resetPagination () {
-                this.pagination = Object.assign({}, {
-                    limit: 10,
-                    current: 1,
-                    count: 0
-                });
+                this.pagination = Object.assign(
+                    {},
+                    {
+                        limit: 10,
+                        current: 1,
+                        count: 0
+                    }
+                );
             },
 
             handleSearch (payload, result) {
@@ -486,26 +602,30 @@
                 if (expiredAt !== 4102444800) {
                     const nowTimestamp = +new Date() / 1000;
                     const tempArr = String(nowTimestamp).split('');
-                    const dotIndex = tempArr.findIndex(item => item === '.');
+                    const dotIndex = tempArr.findIndex((item) => item === '.');
                     const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
                     expired = expired + nowSecond;
                 }
                 const arr = [];
                 if (departments.length > 0) {
-                    arr.push(...departments.map(item => {
-                        return {
-                            id: item.id,
-                            type: 'department'
-                        };
-                    }));
+                    arr.push(
+                        ...departments.map((item) => {
+                            return {
+                                id: item.id,
+                                type: 'department'
+                            };
+                        })
+                    );
                 }
                 if (users.length > 0) {
-                    arr.push(...users.map(item => {
-                        return {
-                            id: item.username,
-                            type: 'user'
-                        };
-                    }));
+                    arr.push(
+                        ...users.map((item) => {
+                            return {
+                                id: item.username,
+                                type: 'user'
+                            };
+                        })
+                    );
                 }
                 const params = {
                     members: arr,
@@ -538,7 +658,7 @@
                 }
             },
 
-            handleAddAfterClose  () {
+            handleAddAfterClose () {
                 this.curName = '';
                 this.curId = 0;
             },
@@ -622,72 +742,122 @@
                 this.currentUserGroup = {};
             },
 
-            handleAfterEditLeave () {},
+            handleAfterEditLeave () { },
 
             handleBatchAddMember () {
                 this.isBatch = true;
                 this.isShowAddMemberDialog = true;
+            },
+
+            handleSelect (value) {
+                console.log(value);
+                switch (value) {
+                    case 0: {
+                        return this.handleBatchAddMember();
+                    }
+                    case 1: {
+                        return this.handleDistribute();
+                    }
+                    case 2: {
+                        return this.handleTransferOut();
+                    }
+                }
+            },
+            
+            handleToggle (value) {
+                if (value) {
+                    this.formatOption();
+                }
+            },
+
+            formatOption () {
+                const batchItem = [false, !this.isRatingManager, !this.isSuperManager];
+                this.batchOptions.forEach((item) => {
+                    if (this.currentSelectList.length) {
+                        item.disabled = batchItem[item.id];
+                    } else {
+                        item.disabled = true;
+                    }
+                });
             }
         }
     };
 </script>
 <style lang="postcss">
-    .iam-user-group-wrapper {
-        .user-group-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
+.iam-user-group-wrapper {
+    .select-custom {
+        width: 220px;
+        background-color: #fff;
+        margin-left: 20px;
+    }
+
+    .user-group-table {
+        margin-top: 16px;
+        border-right: none;
+        border-bottom: none;
+
+        &.set-border {
+            border-right: 1px solid #dfe0e5;
+            border-bottom: 1px solid #dfe0e5;
+        }
+
+        tr:hover {
+            .user-group-process {
+                background: #fff;
             }
-            tr:hover {
-                .user-group-process {
-                    background: #fff;
-                }
-                .member-wrapper {
-                    .user,
-                    .depart {
-                        background: #fff;
-                    }
-                }
-            }
-            .user-group-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
+
             .member-wrapper {
-                display: flex;
-                justify-content: flex-start;
+
                 .user,
                 .depart {
-                    display: inline-block;
-                    min-width: 54px;
-                    padding: 4px 6px;
-                    background: #f0f1f5;
-                    border-radius: 2px;
-                    i {
-                        font-size: 14px;
-                        color: #c4c6cc;
-                    }
+                    background: #fff;
                 }
-                .depart {
-                    margin-left: 2px;
-                }
-            }
-            .user-group-process {
-                display: inline-block;
-                padding: 4px 10px;
-                max-width: 200px;
-                background: #f0f1f5;
-                border-radius: 2px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
             }
         }
+
+        .user-group-space {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+
+            &:hover {
+                color: #699df4;
+            }
+        }
+
+        .member-wrapper {
+            display: flex;
+            justify-content: flex-start;
+
+            .user,
+            .depart {
+                display: inline-block;
+                min-width: 54px;
+                padding: 4px 6px;
+                background: #f0f1f5;
+                border-radius: 2px;
+
+                i {
+                    font-size: 14px;
+                    color: #c4c6cc;
+                }
+            }
+
+            .depart {
+                margin-left: 2px;
+            }
+        }
+
+        .user-group-process {
+            display: inline-block;
+            padding: 4px 10px;
+            max-width: 200px;
+            background: #f0f1f5;
+            border-radius: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
+}
 </style>

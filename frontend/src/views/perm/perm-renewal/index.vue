@@ -51,6 +51,7 @@
     import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import RenderTable from '../components/render-renewal-table';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -82,7 +83,8 @@
                 return payload => {
                     return payload === this.active ? '#e1ecff' : '#f0f1f5';
                 };
-            }
+            },
+            ...mapGetters(['externalSystemsLayout'])
         },
         watch: {
             panels: {
@@ -102,6 +104,15 @@
                     }
                 },
                 immediate: true
+            },
+            externalSystemsLayout: {
+                handler (value) {
+                    if (value.myPerm.renewal.hideCustomTab) {
+                        this.panels.splice(1, 1);
+                    }
+                },
+                immediate: true,
+                deep: true
             }
         },
         async created () {
