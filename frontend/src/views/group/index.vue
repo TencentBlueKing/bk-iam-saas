@@ -4,55 +4,56 @@
             <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
                 {{ $t(`m.common['新建']`) }}
             </bk-button>
-            <bk-button
-                v-if="isSuperManager"
-                :disabled="currentSelectList.length < 1"
-                style="margin-left: 6px"
-                data-test-id="group_btn_transferOut"
-                @click="handleTransferOut"
-            >{{ $t(`m.userGroup['转出']`) }}</bk-button
-            >
-            <bk-button
+            <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
+                data-test-id="group_btn_transferOut" @click="handleTransferOut">
+                {{ $t(`m.userGroup['转出']`) }}
+            </bk-button> -->
+            <!-- <bk-button
                 :disabled="currentSelectList.length < 1"
                 theme="primary"
                 @click="handleBatchAddMember"
                 data-test-id="group_btn_create"
             >
                 {{ $t(`m.common['批量添加成员']`) }}
-            </bk-button>
-            <bk-button
+            </bk-button> -->
+            <!-- <bk-button
                 v-if="isRatingManager"
                 :disabled="currentSelectList.length < 1"
                 style="margin-left: 6px"
                 data-test-id="group_btn_distribute"
                 @click="handleDistribute"
             >{{ $t(`m.userGroup['分配']`) }}</bk-button
-            >
+            > -->
+            <bk-select
+                v-model="selectKeyword"
+                :searchable="true"
+                :placeholder="$t(`m.userGroup['批量']`)"
+                ext-cls="select-custom"
+                ext-popover-cls="select-popover-custom"
+                @change="handleSelect"
+                @toggle="handleToggle">
+                <bk-option
+                    v-for="option in batchOptions"
+                    :key="option.id"
+                    :id="option.id"
+                    :name="option.name"
+                    :disabled="option.disabled"
+                />
+            </bk-select>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
-                    @on-change="handleSearch"
-                    :data="searchData"
-                    :value="searchValue"
+                    style="width: 420px;"
+                    :placeholder="$t(`m.userGroup['搜索用户组名、描述、管理空间、创建人']`)"
+                    :data="searchData" :value="searchValue"
                     :quick-search-method="quickSearchMethod"
-                    style="width: 420px"
-                />
+                    @on-change="handleSearch" />
             </div>
         </render-search>
-        <bk-table
-            :data="tableList"
-            size="small"
-            :class="{ 'set-border': tableLoading }"
-            ext-cls="user-group-table"
-            :pagination="pagination"
-            ref="tableRef"
-            row-key="id"
-            @page-change="pageChange"
-            @page-limit-change="limitChange"
-            @select="handlerChange"
-            @select-all="handlerAllChange"
-            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-        >
+        <bk-table :data="tableList" size="small" :class="{ 'set-border': tableLoading }" ext-cls="user-group-table"
+            :pagination="pagination" ref="tableRef" row-key="id" @page-change="pageChange"
+            @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
+            v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection />
             <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                 <template slot-scope="{ row }">
@@ -74,17 +75,19 @@
                 </template>
             </bk-table-column>
             <template v-if="['rating_manager'].includes(curRole)">
-                <bk-table-column
-                    :label="$t(`m.nav['管理空间']`)"
-                    :filters="spaceFiltersList"
-                    :filter-method="handleSpaceFilter"
-                    :filter-multiple="true"
-                >
+                <bk-table-column :label="$t(`m.nav['二级管理空间']`)" :filters="spaceFiltersList"
+                    :filter-method="handleSpaceFilter" :filter-multiple="true">
                     <template slot-scope="{ row }">
-                        <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
+                        <!-- <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
                             {{ row.role.name || '--' }}
-                        </span>
-                        <span>{{ user.role.name === row.role.name ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
+                        </span> -->
+                        <div class="user-group-space">
+                            <Icon type="level-two" :style="{ color: '#9B80FE' }" />
+                            <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
+                                :value="row.role.name || ''" :rules="rules" style="width: 100%; margin-left: 5px;"
+                                :remote-hander="handleUpdateManageSpace" />
+                        </div>
+
                     </template>
                 </bk-table-column>
             </template>
@@ -191,6 +194,7 @@
     import TransferOutDialog from './components/transfer-out-dialog';
     import DistributeToDialog from './components/distribute-to-dialog.vue';
     import NoviceGuide from '@/components/iam-novice-guide';
+    import IamEditInput from '@/components/iam-edit/input';
     export default {
         name: '',
         components: {
@@ -200,7 +204,8 @@
             TransferOutDialog,
             DistributeToDialog,
             IamSearchSelect,
-            NoviceGuide
+            NoviceGuide,
+            IamEditInput
         },
         data () {
             return {
@@ -222,7 +227,6 @@
                 currentUserGroup: {},
                 isShowEditProcessDialog: false,
                 editLoading: false,
-
                 loading: false,
                 departs: [],
                 users: [],
@@ -234,22 +238,61 @@
                 content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]'),
                 il8n,
                 spaceFiltersList: [],
-                isShowSpaceDialog: false
+                selectKeyword: '',
+                isShowSpaceDialog: false,
+                rules: [
+                    {
+                        required: true,
+                        message: this.$t(`m.verify['空间名称必填']`),
+                        trigger: 'blur'
+                    },
+                    {
+                        validator: (value) => {
+                            return value.length <= 32;
+                        },
+                        message: this.$t(`m.verify['空间名称最长不超过32个字符']`),
+                        trigger: 'blur'
+                    },
+                    {
+                        validator: (value) => {
+                            return /^[^\s]*$/g.test(value);
+                        },
+                        message: this.$t(`m.verify['空间名称不允许空格']`),
+                        trigger: 'blur'
+                    }
+                ],
+                batchOptions: [
+                    {
+                        id: 0,
+                        name: this.$t(`m.common['添加成员']`),
+                        disabled: false
+                    },
+                    {
+                        id: 1,
+                        name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
+                        disabled: false
+                    },
+                    {
+                        id: 2,
+                        name: this.$t(`m.userGroup['转出']`),
+                        disabled: false
+                    }
+                ]
             };
         },
         computed: {
             ...mapGetters(['user', 'showNoviceGuide']),
             isCanEditProcess () {
-            return this.currentSelectList.length > 0;
+                return this.currentSelectList.length > 0;
             },
             isRatingManager () {
-            return this.curRole === 'rating_manager';
+                return this.curRole === 'rating_manager';
             },
             isSuperManager () {
-            return this.curRole === 'super_manager';
+                return this.curRole === 'super_manager';
             },
             curSelectIds () {
-            return this.currentSelectList.map((item) => item.id);
+                return this.currentSelectList.map((item) => item.id);
             }
         },
         watch: {
@@ -270,10 +313,10 @@
                 {
                     id: 'id',
                     name: 'ID'
-                    // validate (values, item) {
-                    //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-                    //     return !validate ? '' : true
-                    // }
+                // validate (values, item) {
+                //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
+                //     return !validate ? '' : true
+                // }
                 },
                 {
                     id: 'name',
@@ -368,8 +411,8 @@
                 const queryParams = {
                     limit,
                     current,
-        ...this.searchParams,
-        ...this.$route.query
+                ...this.searchParams,
+                ...this.$route.query
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
@@ -384,9 +427,9 @@
                     }
                 }
                 return {
-        ...params,
-        limit,
-        current
+                ...params,
+                limit,
+                current
                 };
             },
 
@@ -410,9 +453,9 @@
                 this.tableLoading = isLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+                ...this.searchParams,
+                limit: this.pagination.limit,
+                offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
@@ -436,6 +479,12 @@
                 } finally {
                     this.tableLoading = false;
                 }
+            },
+
+            handleUpdateManageSpace (payload) {
+                return this.$store.dispatch().then(() => {
+                    
+                });
             },
 
             handleSpaceFilter (value, row, column) {
@@ -693,72 +742,122 @@
                 this.currentUserGroup = {};
             },
 
-            handleAfterEditLeave () {},
+            handleAfterEditLeave () { },
 
             handleBatchAddMember () {
                 this.isBatch = true;
                 this.isShowAddMemberDialog = true;
+            },
+
+            handleSelect (value) {
+                console.log(value);
+                switch (value) {
+                    case 0: {
+                        return this.handleBatchAddMember();
+                    }
+                    case 1: {
+                        return this.handleDistribute();
+                    }
+                    case 2: {
+                        return this.handleTransferOut();
+                    }
+                }
+            },
+            
+            handleToggle (value) {
+                if (value) {
+                    this.formatOption();
+                }
+            },
+
+            formatOption () {
+                const batchItem = [false, !this.isRatingManager, !this.isSuperManager];
+                this.batchOptions.forEach((item) => {
+                    if (this.currentSelectList.length) {
+                        item.disabled = batchItem[item.id];
+                    } else {
+                        item.disabled = true;
+                    }
+                });
             }
         }
     };
 </script>
 <style lang="postcss">
 .iam-user-group-wrapper {
-  .user-group-table {
-    margin-top: 16px;
-    border-right: none;
-    border-bottom: none;
-    &.set-border {
-      border-right: 1px solid #dfe0e5;
-      border-bottom: 1px solid #dfe0e5;
+    .select-custom {
+        width: 220px;
+        background-color: #fff;
+        margin-left: 20px;
     }
-    tr:hover {
-      .user-group-process {
-        background: #fff;
-      }
-      .member-wrapper {
-        .user,
-        .depart {
-          background: #fff;
+
+    .user-group-table {
+        margin-top: 16px;
+        border-right: none;
+        border-bottom: none;
+
+        &.set-border {
+            border-right: 1px solid #dfe0e5;
+            border-bottom: 1px solid #dfe0e5;
         }
-      }
-    }
-    .user-group-name {
-      color: #3a84ff;
-      cursor: pointer;
-      &:hover {
-        color: #699df4;
-      }
-    }
-    .member-wrapper {
-      display: flex;
-      justify-content: flex-start;
-      .user,
-      .depart {
-        display: inline-block;
-        min-width: 54px;
-        padding: 4px 6px;
-        background: #f0f1f5;
-        border-radius: 2px;
-        i {
-          font-size: 14px;
-          color: #c4c6cc;
+
+        tr:hover {
+            .user-group-process {
+                background: #fff;
+            }
+
+            .member-wrapper {
+
+                .user,
+                .depart {
+                    background: #fff;
+                }
+            }
         }
-      }
-      .depart {
-        margin-left: 2px;
-      }
+
+        .user-group-space {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+
+            &:hover {
+                color: #699df4;
+            }
+        }
+
+        .member-wrapper {
+            display: flex;
+            justify-content: flex-start;
+
+            .user,
+            .depart {
+                display: inline-block;
+                min-width: 54px;
+                padding: 4px 6px;
+                background: #f0f1f5;
+                border-radius: 2px;
+
+                i {
+                    font-size: 14px;
+                    color: #c4c6cc;
+                }
+            }
+
+            .depart {
+                margin-left: 2px;
+            }
+        }
+
+        .user-group-process {
+            display: inline-block;
+            padding: 4px 10px;
+            max-width: 200px;
+            background: #f0f1f5;
+            border-radius: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
-    .user-group-process {
-      display: inline-block;
-      padding: 4px 10px;
-      max-width: 200px;
-      background: #f0f1f5;
-      border-radius: 2px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
 }
 </style>

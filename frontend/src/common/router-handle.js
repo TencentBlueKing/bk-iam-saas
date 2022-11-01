@@ -183,8 +183,11 @@ export const getRouterDiff = (payload) => {
         'permTemplateDiff',
         'addGroupPerm',
         'authorBoundary',
+        'authorBoundaryEditFirstLevel',
+        'authorBoundaryEditSecondLevel',
         'secondaryManageSpace',
-        'myManageSpace'
+        'myManageSpace',
+        'MyManageSpaceCreate'
     ];
 };
 
@@ -211,6 +214,10 @@ export const getNavRouterDiff = (navIndex) => {
             'authorBoundary',
             'secondaryManageSpace'
         ];
+    }
+
+    if (navIndex === 1) {
+        return ['firstManageSpace'];
     }
 
     if (navIndex === 2) {

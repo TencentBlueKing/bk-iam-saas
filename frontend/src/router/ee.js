@@ -53,7 +53,10 @@ const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
 // 我的管理空间
-const MyManageSpace = () => import(/* webpackChunkName: 'my-perm' */ '../views/my-manage-space');
+const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space');
+
+// 新建我的管理空间
+const MyManageSpaceCreate = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/create');
 
 // 用户组
 const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
@@ -120,6 +123,14 @@ const FirstManageSpaceCreate = () =>
 // 授权边界
 const AuthorizationBoundary = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
+
+// 授权边界一级管理空间编辑
+const AuthorizationBoundaryEditFirstLevel = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary/edit/first-level');
+
+// 授权边界二级管理空间编辑
+const AuthorizationBoundarySecondLevel = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary/edit/second-level');
 
 // 二极管理空间
 const SecondaryManageSpace = () =>
@@ -242,6 +253,15 @@ export const routes = [
                 component: MyManageSpace
             },
             {
+                path: 'my-manage-space/create',
+                name: 'myManageSpaceCreate',
+                meta: {
+                    headerTitle: il8n('levelSpace', '新建我的管理空间'),
+                    backRouter: 'myManageSpace'
+                },
+                component: MyManageSpaceCreate
+            },
+            {
                 path: 'perm-renewal',
                 name: 'permRenewal',
                 meta: {
@@ -298,6 +318,24 @@ export const routes = [
                     headerTitle: il8n('nav', '授权边界')
                 },
                 component: AuthorizationBoundary
+            },
+            {
+                path: 'manage-spaces/authorization-boundary/first-level/:id',
+                name: 'authorBoundaryEditFirstLevel',
+                meta: {
+                    headerTitle: '',
+                    backRouter: 'authorBoundary'
+                },
+                component: AuthorizationBoundaryEditFirstLevel
+            },
+            {
+                path: 'manage-spaces/authorization-boundary/second-level/:id',
+                name: 'authorBoundaryEditSecondLevel',
+                meta: {
+                    headerTitle: '',
+                    backRouter: 'authorBoundary'
+                },
+                component: AuthorizationBoundarySecondLevel
             },
             {
                 path: 'manage-spaces/secondary-manage-space',

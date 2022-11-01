@@ -168,7 +168,8 @@
                 this.$router.push({
                     name: 'authorBoundary',
                     params: {
-                        id: payload.id
+                        id: payload.id,
+                        type: 'first'
                     }
                 });
             },
@@ -235,7 +236,7 @@
     };
 </script>
 
-<style lang="postcss">
+<style lang="postcss" scoped>
 .iam-level-manage-space-wrapper {
     .level-manage-table {
         margin-top: 16px;
@@ -256,7 +257,7 @@
             }
         }
 
-        .bk-table-pagination-wrapper {
+        /deep/ .bk-table-pagination-wrapper {
             background: #fff;
         }
     }

@@ -135,7 +135,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'my-perm',
+                icon: 'grade-admin',
                 id: 'myManageSpaceNav',
                 rkey: 'myManageSpace',
                 name: il8n('nav', '我的管理空间'),

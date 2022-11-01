@@ -162,7 +162,8 @@
                 this.$router.push({
                     name: 'authorBoundary',
                     params: {
-                        id: payload.id
+                        id: payload.id,
+                        type: 'second'
                     }
                 });
             },

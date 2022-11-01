@@ -45,7 +45,8 @@
             positionStyles () {
                 if (this.isHide) {
                     return {
-                        height: '50px'
+                        height: '50px',
+                        marginTop: '50px'
                     };
                 }
                 return {};
