@@ -6,6 +6,7 @@
             :header-border="false"
             :cell-class-name="getCellClass"
             :empty-text="$t(`m.verify['请选择操作']`)"
+            :max-height="maxHeight"
             @row-mouse-enter="handlerRowMouseEnter"
             @row-mouse-leave="handlerRowMouseLeave">
             <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="280">
@@ -96,76 +97,7 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.levelSpace['实例值']`)" min-width="240">
-                <template slot-scope="{ row, $index }">
-                    <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                        <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">
-                            {{ row.aggregateResourceType[0].name }}</label>
-                        <div class="bk-button-group tab-button" v-else>
-                            <bk-button v-for="(item, index) in row.aggregateResourceType"
-                                :key="item.id" @click="selectResourceType(row, index)"
-                                :class="row.selectedIndex === index ? 'is-selected' : ''"
-                                size="small">{{item.name}}
-                                <span v-if="row.instancesDisplayData[item.id]
-                                    && row.instancesDisplayData[item.id].length">
-                                    ({{row.instancesDisplayData[item.id].length}})</span>
-                            </bk-button>
-                        </div>
-                        <render-condition
-                            :ref="`condition_${$index}_aggregateRef`"
-                            :value="row.value"
-                            :is-empty="row.empty"
-                            :can-view="false"
-                            :can-paste="row.canPaste"
-                            :is-error="row.isError"
-                            @on-mouseover="handlerAggregateConditionMouseover(row)"
-                            @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                            @on-copy="handlerAggregateOnCopy(row, $index)"
-                            @on-paste="handlerAggregateOnPaste(row)"
-                            @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                            @on-click="showAggregateResourceInstance(row, $index)" />
-                    </div>
-                    <div class="relation-content-wrapper" v-else>
-                        <template v-if="!row.isEmpty">
-                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
-                                <div class="relation-content-item"
-                                    v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
-                                    <div class="content-name">
-                                        {{ content.name }}
-                                        <template v-if="row.isShowRelatedText && _.id">
-                                            <div style="display: inline-block; color: #979ba5;">
-                                                ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <div class="contents">
-                                        <!-- eslint-disable max-len -->
-                                        <render-condition
-                                            :ref="`condition_${$index}_${contentIndex}_ref`"
-                                            :value="content.value"
-                                            :is-empty="content.empty"
-                                            :can-view="row.canView"
-                                            :params="curCopyParams"
-                                            :can-paste="content.canPaste"
-                                            :is-error="content.isError"
-                                            @on-mouseover="handlerConditionMouseover(content)"
-                                            @on-mouseleave="handlerConditionMouseleave(content)"
-                                            @on-view="handlerOnView(row, content, contentIndex, groIndex)"
-                                            @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
-                                            @on-paste="handlerOnPaste(...arguments, content)"
-                                            @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
-                                            @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                        <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
-                        </template>
-                    </div>
-                </template>
-            </bk-table-column>
-            <bk-table-column :resizable="false" min-width="20" border>
+            <bk-table-column :resizable="false" min-width="20" border fixed="right">
                 <template slot-scope="{ row, $index }">
                     <div class="relation-content-wrapper">
                         <div class="remove-icon" @click.stop="handlerRemove(row, $index)">
@@ -261,6 +193,10 @@
             isAllExpanded: {
                 type: Boolean,
                 default: false
+            },
+            maxHeight: {
+                type: Number,
+                default: 500
             }
         },
         data () {
@@ -1405,10 +1341,10 @@
 
             .remove-icon {
                 /* display: none; */
-                /* position: absolute; */
+                position: absolute;
                 /* top: 5px; */
-                /* top: 0;
-                right: 10px; */
+                top: 5px;
+                right: 0;
                 cursor: pointer;
                 &:hover {
                     color: #3a84ff;

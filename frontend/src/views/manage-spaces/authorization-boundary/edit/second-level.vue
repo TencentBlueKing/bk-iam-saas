@@ -92,7 +92,7 @@
             :all-checked="isAll"
             show-limit
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd" />
+            @on-sumbit="handleSubmitAdd" />
 
         <add-action-side-slider
             :is-show.sync="isShowAddActionSideSlider"
@@ -140,7 +140,7 @@
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
-                addMemberTips: this.$t(`m.grading['添加成员提示']`),
+                addMemberTips: this.$t(`m.levelSpace['二级管理空间扩大自己的授权边界，需要走一级管理空间管理员审批']`),
                 isShowAddMemberDialog: false,
                 users: [],
                 departments: [],
@@ -153,7 +153,6 @@
                 addMemberTitle: this.$t(`m.grading['选择可授权人员范围']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
-
                 infoText: this.$t(`m.grading['选择提示']`),
                 tips: this.$t(`m.grading['添加操作提示']`),
                 policyList: [],
@@ -163,13 +162,11 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-
-                isShowReasonDialog: false,
-                reason: '',
                 dialogLoading: false,
                 isAll: false,
                 isShowTable: false,
-                reasonEmptyError: false
+                reasonEmptyError: false,
+                boundaryValue: 'dynamic'
                 
             };
         },
@@ -717,7 +714,7 @@
                 this.isShowMemberAdd = true;
             },
 
-            handleSumbitAdd (payload) {
+            handleSubmitAdd (payload) {
                 window.changeDialog = true;
                 const { users, departments } = payload;
                 this.isAll = payload.isAll;
@@ -726,11 +723,6 @@
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
                 this.isShowMemberEmptyError = false;
-            },
-
-            handleDialogCancel () {
-                this.isShowReasonDialog = false;
-                this.dialogLoading = false;
             },
 
             async handleSubmitWithReason () {
@@ -763,7 +755,6 @@
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    reason: this.reason,
                     id: this.$route.params.id
                 };
                 console.log('params', params);
@@ -794,7 +785,6 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isStaff && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
@@ -889,10 +879,6 @@
                         }
                     });
                 }, _ => _);
-            },
-
-            checkReason () {
-                this.reasonEmptyError = this.reason === '';
             }
         },
         beforeRouteEnter (to, from, next) {
@@ -912,13 +898,6 @@
             position: relative;
             top: -50px;
             left: 150px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
-        .reason-empty-error{
-            position: relative;
-            top: -45px;
-            left: 160px;
             font-size: 12px;
             color: #ff4d4d;
         }
@@ -981,18 +960,5 @@
     .horizontal-item .label {
         width: 130px;
     }
-    }
-    .iam-edit-rate-manager-reason-dialog {
-        .content-wrapper {
-            display: flex;
-            justify-content: flex-start;
-            label {
-                display: block;
-                width: 70px;
-                span {
-                    color: #ea3636;
-                }
-            }
-        }
     }
 </style>
