@@ -24,7 +24,7 @@
                 @click="handleDistribute"
             >{{ $t(`m.userGroup['分配']`) }}</bk-button
             > -->
-            <bk-select
+            <!-- <bk-select
                 v-model="selectKeyword"
                 :searchable="true"
                 :placeholder="$t(`m.userGroup['批量']`)"
@@ -39,7 +39,7 @@
                     :name="option.name"
                     :disabled="option.disabled"
                 />
-            </bk-select>
+            </bk-select> -->
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
