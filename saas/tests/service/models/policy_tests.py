@@ -243,44 +243,42 @@ class TestUniversalPolicy:
         assert is_absolute_abac == expected
 
     @pytest.mark.parametrize(
-        "expression_resource_groups,expected",
+        "auth_type,expected",
         [
-            ([], False),
-            ([ResourceGroup(related_resource_types=[])], True),
-            ([ResourceGroup(related_resource_types=[]), ResourceGroup(related_resource_types=[])], True),
+            ("rbac", False),
+            ("none", False),
+            ("abac", True),
+            ("all", True),
         ],
     )
-    def test_has_abac(self, expression_resource_groups, expected):
+    def test_has_abac(self, auth_type, expected):
         p = UniversalPolicy(
             action_id="a",
             policy_id=0,
             expired_at=0,
             resource_groups=ResourceGroupList(__root__=[]),
-            expression_resource_groups=ResourceGroupList(__root__=expression_resource_groups),
+            expression_resource_groups=ResourceGroupList(__root__=[]),
+            auth_type=auth_type,
         )
         assert p.has_abac() == expected
 
     @pytest.mark.parametrize(
-        "instances,expected",
+        "auth_type,expected",
         [
-            ([], False),
-            ([PathNode(id="id", name="name", system_id="s_id", type="rt_id")], True),
-            (
-                [
-                    PathNode(id="id1", name="name1", system_id="s_id1", type="rt_id1"),
-                    PathNode(id="id2", name="name2", system_id="s_id2", type="rt_id2"),
-                ],
-                True,
-            ),
+            ("rbac", True),
+            ("none", False),
+            ("abac", False),
+            ("all", True),
         ],
     )
-    def test_has_rbac(self, instances, expected):
+    def test_has_rbac(self, auth_type, expected):
         p = UniversalPolicy(
             action_id="a",
             policy_id=0,
             expired_at=0,
             resource_groups=ResourceGroupList(__root__=[]),
-            instances=instances,
+            instances=[],
+            auth_type=auth_type,
         )
         assert p.has_rbac() == expected
 
@@ -348,7 +346,7 @@ class TestUniversalPolicy:
                     [],
                 ),
                 # old(auth_type, abac_data, rbac_data)
-                (AuthTypeEnum.ABAC.value, [], []),
+                (AuthTypeEnum.NONE.value, [], []),
                 # expected(auth_type, abac_data, rbac_data)
                 (
                     AuthTypeEnum.ABAC.value,
