@@ -11,8 +11,8 @@ from backend.util.json import json_dumps
 
 def migrate_template_auth_types(apps, schema_editor):
     """刷新用户组模板授权的auth_types"""
-    Template = apps.get_model("template", "PermTemplatePolicyAuthorized")
-    qs = Template.objects.all()
+    PermTemplatePolicyAuthorized = apps.get_model("template", "PermTemplatePolicyAuthorized")
+    qs = PermTemplatePolicyAuthorized.objects.all()
     paginator = Paginator(qs, 100)
 
     for i in paginator.page_range:
