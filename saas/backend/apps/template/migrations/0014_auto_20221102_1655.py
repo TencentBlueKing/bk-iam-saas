@@ -23,7 +23,14 @@ def migrate_template_auth_types(apps, schema_editor):
 
             data = json.loads(auth._data)
             for action in data["actions"]:
-                auth_types[action["id"]] = AuthTypeEnum.ABAC.value
+                if "id" in action:
+                    action_id = action["id"]
+                elif "action_id" in action:
+                    action_id = action["action_id"]
+                else:
+                    continue
+
+                auth_types[action_id] = AuthTypeEnum.ABAC.value
 
             auth._auth_types = json_dumps(auth_types)
             auth.save(update_fields=["_auth_types"])
