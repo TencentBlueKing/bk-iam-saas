@@ -1,39 +1,26 @@
 <template>
     <render-horizontal-block
         :label="$t(`m.levelSpace['最大可授权人员边界']`)">
-        <div class="pl10 pb10">
-            <bk-radio-group v-model="isInheritSubject" @change="handleChange">
-                <bk-radio :value="true">
-                    {{ $t(`m.levelSpace['动态继承上级空间']`) }}
-                </bk-radio>
-                <bk-radio :value="false" class="pl10">
-                    {{ $t(`m.levelSpace['指定组织架构和人员']`) }}
-                </bk-radio>
-            </bk-radio-group>
-        </div>
-        <template v-if="!isInheritSubject">
-            <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
-                <Icon bk type="plus-circle-shape" />
-                <span>{{ $t(`m.levelSpace['选择可授权人员边界']`) }}</span>
-            </section>
-            <Icon
-                type="info-fill"
-                class="info-icon"
-                v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
-            <div style="margin-top: 9px;" v-if="isAll">
-                <div class="all-item">
-                    <span class="member-name">{{ $t(`m.common['全员']`) }}</span>
-                    <span class="display-name">(All)</span>
-                    <Icon type="close-fill" class="remove-icon" @click="handleDelete" />
-                </div>
+        <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
+            <Icon bk type="plus-circle-shape" />
+            <span>{{ $t(`m.levelSpace['选择可授权人员边界']`) }}</span>
+        </section>
+        <Icon
+            type="info-fill"
+            class="info-icon"
+            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
+        <div style="margin-top: 9px;" v-if="isAll">
+            <div class="all-item">
+                <span class="member-name">{{ $t(`m.common['全员']`) }}</span>
+                <span class="display-name">(All)</span>
+                <Icon type="close-fill" class="remove-icon" @click="handleDelete" />
             </div>
-            <template v-else>
-                <render-member-item :data="users" @on-delete="handleDeleteUser" v-if="isHasUser" />
-                <render-member-item :data="departments" type="department" v-if="isHasDepartment"
-                    @on-delete="handleDeleteDepartment" />
-            </template>
+        </div>
+        <template v-else>
+            <render-member-item :data="users" @on-delete="handleDeleteUser" v-if="isHasUser" />
+            <render-member-item :data="departments" type="department" v-if="isHasDepartment"
+                @on-delete="handleDeleteDepartment" />
         </template>
-        
     </render-horizontal-block>
 </template>
 <script>
@@ -59,10 +46,6 @@
             tip: {
                 type: String,
                 default: ''
-            },
-            inheritSubjectScope: {
-                type: Boolean,
-                default: true
             }
         },
         data () {
@@ -71,9 +54,6 @@
             };
         },
         computed: {
-            isInheritSubject () {
-                return this.inheritSubjectScope;
-            },
             isHasUser () {
                 return this.users.length > 0;
             },
@@ -96,10 +76,6 @@
 
             handleDelete () {
                 this.$emit('on-delete-all');
-            },
-
-            handleChange (payload) {
-                this.$emit('on-change', payload);
             }
         }
     };

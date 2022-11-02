@@ -28,13 +28,18 @@
                 :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
                 :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
-                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @change="handleSwitchRole" @toggle="handleToggle">
-                <bk-big-tree ref="selectTree" size="small" :data="curRoleList" :selectable="true" :show-checkbox="false"
-                    :show-link-line="false" :default-expanded-nodes="[navCurRoleId || curRoleId]" :default-selected-node="navCurRoleId || curRoleId"
+                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @toggle="handleToggle">
+                <bk-big-tree ref="selectTree" size="small"
+                    :data="curRoleList"
+                    :selectable="true"
+                    :show-checkbox="false"
+                    :show-link-line="false"
+                    :default-expanded-nodes="[navCurRoleId || curRoleId]"
+                    :default-selected-node="navCurRoleId || curRoleId"
                     @expand-on-click="handleExpandClick" @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div class="iam-select-collection">
-                            <div>
+                            <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
                                 <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
                                 <span>{{data.name}}</span>
                             </div>
@@ -223,12 +228,16 @@
             },
             roleList: {
                 handler (value) {
-                    value = value.map(e => {
+                    value = value.map((e, i) => {
                         e.level = 0;
+                        // if (i === 5) {
+                        //     e.is_member = false;
+                        // }
                         if (e.sub_roles.length) {
                             e.sub_roles.forEach(sub => {
                                 sub.level = 1;
                             });
+                            e.children = e.sub_roles;
                         }
                         return e;
                     });
@@ -310,10 +319,12 @@
             },
 
             handleSelectNode (node) {
+                if (!node.data.is_member) return;
                 this.curRoleId = node.id;
                 this.selectNode = node;
                 this.$refs.select.close();
                 this.handleToggle(false);
+                console.log(node, node.id);
                 this.handleSwitchRole(node.id);
             },
 
@@ -359,6 +370,7 @@
 
             // 获取当前选中节点
             getTreeNode (id, list) {
+                console.log('list', list);
                 for (let i = 0; i < list.length; i++) {
                     if (list[i].id === id) {
                         return list[i];
@@ -374,6 +386,7 @@
             // 切换身份
             async handleSwitchRole (id) {
                 const result = this.getTreeNode(id, this.curRoleList);
+                console.log('result', result);
                 const { type, name } = result;
                 try {
                     await this.$store.dispatch('role/updateCurrentRole', { id });
@@ -402,6 +415,7 @@
                 const difference = getRouterDiff(roleType);
                 const curRouterName = this.$route.name;
                 if (difference.length) {
+                    console.log(difference.includes(curRouterName), curRouterName, difference);
                     if (difference.includes(curRouterName)) {
                         this.$store.commit('setHeaderTitle', '');
                         window.localStorage.removeItem('iam-header-title-cache');
@@ -412,6 +426,7 @@
                             });
                             return;
                         }
+                        console.log(1111);
                         this.$router.push({
                             // name: 'permTemplate'
                             // 切换角色默认跳转到用户组

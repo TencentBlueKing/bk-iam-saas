@@ -32,8 +32,8 @@
     import DetailItem from '@/components/detail-layout/item';
     import IamEditInput from '@/components/iam-edit/input';
     import IamEditTextarea from '@/components/iam-edit/textarea';
-    import IamEditMember from '@/views/grading-admin/components/member-edit';
     import RenderLayout from '@/views/group/common/render-layout';
+    import IamEditMember from './iam-edit-member';
 
     export default {
         name: '',

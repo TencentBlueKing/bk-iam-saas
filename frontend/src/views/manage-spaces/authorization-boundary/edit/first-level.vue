@@ -91,7 +91,7 @@
         <p class="reason-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
-                {{ $t(`m.common['下一步']`) }}
+                {{ $t(`m.common['确定']`) }}
             </bk-button>
             <bk-button @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
@@ -106,8 +106,8 @@
             @on-cancel="handleCancelAdd"
             @on-sumbit="handleSumbitAdd" />
 
-        <add-action-side-slider
-            :is-show.sync="isShowAddActionSideSlider"
+        <add-action-sideslider
+            :is-show.sync="isShowAddActionSideslider"
             :default-value="curActionValue"
             :default-system="curSystem"
             :default-data="defaultValue"
@@ -115,19 +115,51 @@
             @on-cancel="handleSelectCancel"
             @animation-end="handleAnimationEnd" />
 
+        <bk-dialog
+            v-model="isShowReasonDialog"
+            :loading="dialogLoading"
+            header-position="left"
+            :width="480"
+            :mask-close="false"
+            ext-cls="iam-edit-rate-manager-reason-dialog"
+            @after-leave="reason = ''">
+            <section class="content-wrapper">
+                <label>
+                    {{ $t(`m.common['理由']`) }}
+                    <span>*</span>
+                </label>
+                <bk-input
+                    type="textarea"
+                    :rows="5"
+                    v-model="reason"
+                    style="margin-bottom: 15px;">
+                </bk-input>
+            </section>
+            <section slot="footer">
+                <bk-button theme="primary"
+                    :disabled="reason === ''"
+                    :loading="dialogLoading"
+                    @click="handleSubmitWithReason">
+                    {{ $t(`m.common['确定']`) }}
+                </bk-button>
+                <bk-button
+                    style="margin-left: 6px;"
+                    @click="handleDialogCancel">
+                    {{ $t(`m.common['取消']`) }}
+                </bk-button>
+            </section>
+        </bk-dialog>
     </smart-action>
 </template>
 <script>
     import _ from 'lodash';
-    import { il8n } from '@/language';
-    import store from '@/store';
     import { mapGetters } from 'vuex';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
     import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     import RenderMember from '@/views/manage-spaces/components/render-member';
-    import AddActionSideSlider from '@/views/manage-spaces/components/add-action-side-slider';
+    import AddActionSideslider from '@/views/manage-spaces/components/add-action-side-slider';
     import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
@@ -140,7 +172,7 @@
             renderAction,
             AddMemberDialog,
             RenderMember,
-            AddActionSideSlider,
+            AddActionSideslider,
             RenderInstanceTable
         },
         data () {
@@ -157,7 +189,7 @@
                 users: [],
                 departments: [],
                 isShowMemberAdd: true,
-                isShowAddActionSideSlider: false,
+                isShowAddActionSideslider: false,
                 isShowActionEmptyError: false,
                 isExpanded: false,
                 curSystem: '',
@@ -646,7 +678,7 @@
             handleAddAction () {
                 this.isShowTable = true;
                 this.curActionValue = this.originalList.map(item => item.$id);
-                this.isShowAddActionSideSlider = true;
+                this.isShowAddActionSideslider = true;
             },
 
             setAggregateExpanded () {
@@ -692,17 +724,17 @@
                 });
                 this.originalList = _.cloneDeep(payload);
                 this.isShowActionEmptyError = false;
-                this.isShowAddActionSideSlider = false;
+                this.isShowAddActionSideslider = false;
             },
 
             handleSelectCancel () {
-                this.isShowAddActionSideSlider = false;
+                this.isShowAddActionSideslider = false;
             },
 
             handleAnimationEnd () {
                 this.curSystem = '';
                 this.curActionValue = [];
-                this.isShowAddActionSideSlider = false;
+                this.isShowAddActionSideslider = false;
             },
 
             handleAddMember () {
@@ -905,12 +937,6 @@
             checkReason () {
                 this.reasonEmptyError = this.reason === '';
             }
-        },
-        beforeRouteEnter (to, from, next) {
-            const nameCache = window.localStorage.getItem('iam-header-name-cache');
-            window.localStorage.setItem('iam-header-title-cache', `${il8n('common', '编辑')}：${nameCache}`);
-            store.commit('setHeaderTitle', '');
-            next();
         }
     };
 </script>
