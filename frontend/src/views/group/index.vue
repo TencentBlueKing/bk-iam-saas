@@ -30,7 +30,6 @@
                 :placeholder="$t(`m.userGroup['批量']`)"
                 ext-cls="select-custom"
                 ext-popover-cls="select-popover-custom"
-                @change="handleSelect"
                 @toggle="handleToggle">
                 <bk-option
                     v-for="option in batchOptions"
@@ -38,7 +37,11 @@
                     :id="option.id"
                     :name="option.name"
                     :disabled="option.disabled"
-                />
+                >
+                    <div class="select-collection" @click.stop="handleSelect(option)">
+                        <span>{{ option.name }}</span>
+                    </div>
+                </bk-option>
             </bk-select>
             <!-- 先屏蔽 -->
             <div slot="right">
@@ -140,7 +143,7 @@
             :name="currentUserGroup.name"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSumbitDelete"
+            @on-submit="handleSubmitDelete"
         />
 
         <edit-process-dialog
@@ -148,7 +151,7 @@
             :loading="editLoading"
             @on-after-leave="handleAfterEditLeave"
             @on-cancel="hideCancelEdit"
-            @on-sumbit="handleSumbitEdit"
+            @on-submit="handleSubmitEdit"
         />
 
         <add-member-dialog
@@ -168,14 +171,12 @@
             :show.sync="isShowRolloutGroupDialog"
             :group-ids="curSelectIds"
             @on-success="handleTransferOutSuccess"
-            @on-cancel="handleTransferOutCancel"
         />
 
         <DistributeToDialog
             :show.sync="isShowSpaceDialog"
             :group-ids="curSelectIds"
             @on-success="handleDistributeSuccess"
-            @on-cancel="handleDistributeCancel"
         />
 
         <novice-guide :flag="showNoviceGuide" :content="content" />
@@ -192,7 +193,7 @@
     import AddMemberDialog from './components/iam-add-member';
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
-    import DistributeToDialog from './components/distribute-to-dialog.vue';
+    import DistributeToDialog from './components/distribute-to-dialog';
     import NoviceGuide from '@/components/iam-novice-guide';
     import IamEditInput from '@/components/iam-edit/input';
     export default {
@@ -302,6 +303,15 @@
             user: {
                 handler (value) {
                     this.curRole = value.role.type || 'staff';
+                },
+                immediate: true,
+                deep: true
+            },
+            currentSelectList: {
+                handler (value) {
+                    if (!value.length) {
+                        this.selectKeyword = '';
+                    }
                 },
                 immediate: true,
                 deep: true
@@ -527,14 +537,10 @@
             },
 
             handleTransferOutSuccess () {
+                this.isShowRolloutGroupDialog = false;
                 this.currentSelectList = [];
-                this.handleTransferOutCancel();
                 this.resetPagination();
                 this.fetchUserGroupList(true);
-            },
-
-            handleTransferOutCancel () {
-                this.isShowRolloutGroupDialog = false;
             },
 
             handleDistribute () {
@@ -542,14 +548,10 @@
             },
 
             handleDistributeSuccess () {
+                this.isShowSpaceDialog = false;
                 this.currentSelectList = [];
-                this.handleTransferOutCancel();
                 this.resetPagination();
                 this.fetchUserGroupList(true);
-            },
-
-            handleDistributeCancel () {
-                this.isShowRolloutGroupDialog = false;
             },
 
             handleEditApprovalProcess () {
@@ -702,7 +704,7 @@
                 });
             },
 
-            async handleSumbitDelete () {
+            async handleSubmitDelete () {
                 this.deleteLoading = true;
                 try {
                     await this.$store.dispatch('userGroup/deleteUserGroup', {
@@ -726,7 +728,7 @@
                 }
             },
 
-            handleSumbitEdit () {
+            handleSubmitEdit () {
                 this.isShowEditProcessDialog = false;
             },
 
@@ -750,16 +752,19 @@
             },
 
             handleSelect (value) {
-                console.log(value);
-                switch (value) {
-                    case 0: {
-                        return this.handleBatchAddMember();
-                    }
-                    case 1: {
-                        return this.handleDistribute();
-                    }
-                    case 2: {
-                        return this.handleTransferOut();
+                const { id, disabled } = value;
+                if (!disabled) {
+                    this.selectKeyword = id;
+                    switch (id) {
+                        case 0: {
+                            return this.handleBatchAddMember();
+                        }
+                        case 1: {
+                            return this.handleDistribute();
+                        }
+                        case 2: {
+                            return this.handleTransferOut();
+                        }
                     }
                 }
             },
@@ -773,7 +778,7 @@
             formatOption () {
                 const batchItem = [false, !this.isRatingManager, !this.isSuperManager];
                 this.batchOptions.forEach((item) => {
-                    if (this.currentSelectList.length) {
+                    if (this.isCanEditProcess) {
                         item.disabled = batchItem[item.id];
                     } else {
                         item.disabled = true;

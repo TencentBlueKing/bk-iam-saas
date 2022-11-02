@@ -61,7 +61,7 @@
             <div>
                 <bk-button
                     theme="primary"
-                    :disabled="disbaled"
+                    :disabled="disabled"
                     :loading="loading"
                     @click="handleSubmit">
                     {{ $t(`m.common['确定']`) }}
@@ -111,7 +111,7 @@
             };
         },
         computed: {
-            disbaled () {
+            disabled () {
                 return this.curGradeManager === '';
             }
         },
@@ -239,7 +239,7 @@
             },
 
             handleCancel () {
-                this.$emit('on-cancel');
+                this.$emit('update:show', false);
             },
             
             handleAfterLeave () {
