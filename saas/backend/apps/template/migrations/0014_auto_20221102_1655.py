@@ -17,11 +17,11 @@ def migrate_template_auth_types(apps, schema_editor):
 
     for i in paginator.page_range:
         for auth in paginator.page(i):
-            data = json.loads(auth._data)
             auth_types = json.loads(auth._auth_types)
             if auth_types:
                 continue
 
+            data = json.loads(auth._data)
             for action in data["actions"]:
                 auth_types[action["id"]] = AuthTypeEnum.ABAC.value
 
