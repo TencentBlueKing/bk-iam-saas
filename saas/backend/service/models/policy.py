@@ -562,12 +562,11 @@ class UniversalPolicy(Policy):
 
     def to_resource_expression(self, system_id: str) -> str:
         """将ABAC权限翻译为后台所需表达式"""
-        assert len(self.expression_resource_groups) > 0
         translator = ResourceExpressionTranslator()
         return translator.translate(system_id, self.expression_resource_groups.dict())
 
     def has_abac(self) -> bool:
-        return len(self.expression_resource_groups) > 0
+        return self.auth_type in (AuthTypeEnum.ABAC.value, AuthTypeEnum.ALL.value)
 
     def has_rbac(self) -> bool:
-        return len(self.instances) > 0
+        return self.auth_type in (AuthTypeEnum.RBAC.value, AuthTypeEnum.ALL.value)

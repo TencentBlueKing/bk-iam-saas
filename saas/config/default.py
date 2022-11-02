@@ -341,7 +341,7 @@ BK_IAM_ENGINE_HOST_TYPE = env.str("BKAPP_IAM_ENGINE_HOST_TYPE", default="direct"
 SUBJECT_AUTHORIZATION_LIMIT = {
     # -------- 用户 ---------
     # 用户能加入的分级管理员的最大数量
-    "subject_grade_manager_limit": env.int("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", default=100),
+    "subject_grade_manager_limit": env.int("BKAPP_SUBJECT_GRADE_MANAGER_LIMIT", default=500),
     # -------- 用户组 ---------
     # 用户组能加入同一个系统的权限模板的最大数量
     "default_subject_system_template_limit": env.int("BKAPP_DEFAULT_SUBJECT_SYSTEM_TEMPLATE_LIMIT", default=10),
