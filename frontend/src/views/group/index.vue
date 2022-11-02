@@ -25,6 +25,7 @@
             >{{ $t(`m.userGroup['分配']`) }}</bk-button
             > -->
             <bk-select
+                ref="userGroupSelect"
                 v-model="selectKeyword"
                 :searchable="true"
                 :placeholder="$t(`m.userGroup['批量']`)"
@@ -266,17 +267,20 @@
                     {
                         id: 0,
                         name: this.$t(`m.common['添加成员']`),
-                        disabled: false
+                        disabled: false,
+                        method: 'handleBatchAddMember'
                     },
                     {
                         id: 1,
                         name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
-                        disabled: false
+                        disabled: false,
+                        method: 'handleDistribute'
                     },
                     {
                         id: 2,
                         name: this.$t(`m.userGroup['转出']`),
-                        disabled: false
+                        disabled: false,
+                        method: 'handleTransferOut'
                     }
                 ]
             };
@@ -752,20 +756,11 @@
             },
 
             handleSelect (value) {
-                const { id, disabled } = value;
+                const { id, disabled, method } = value;
                 if (!disabled) {
                     this.selectKeyword = id;
-                    switch (id) {
-                        case 0: {
-                            return this.handleBatchAddMember();
-                        }
-                        case 1: {
-                            return this.handleDistribute();
-                        }
-                        case 2: {
-                            return this.handleTransferOut();
-                        }
-                    }
+                    this.$refs.userGroupSelect.close();
+                    this[method]();
                 }
             },
             
