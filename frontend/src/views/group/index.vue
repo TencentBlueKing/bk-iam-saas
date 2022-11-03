@@ -54,7 +54,9 @@
                     @on-change="handleSearch" />
             </div>
         </render-search>
-        <bk-table :data="tableList" size="small" :class="{ 'set-border': tableLoading }" ext-cls="user-group-table"
+        <bk-table
+            size="small" :data="tableList"
+            :max-height="tableHeight" :class="{ 'set-border': tableLoading }" ext-cls="user-group-table"
             :pagination="pagination" ref="tableRef" row-key="id" @page-change="pageChange"
             @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
@@ -187,6 +189,7 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { il8n } from '@/language';
+    import { getWindowHeight } from '@/common/util';
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
@@ -298,6 +301,9 @@
             },
             curSelectIds () {
                 return this.currentSelectList.map((item) => item.id);
+            },
+            tableHeight () {
+                return getWindowHeight() - 185;
             }
         },
         watch: {
@@ -859,5 +865,9 @@
             white-space: nowrap;
         }
     }
+}
+
+.bk-table-pagination-wrapper {
+    background-color: #ffffff;
 }
 </style>
