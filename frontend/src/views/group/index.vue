@@ -1,49 +1,51 @@
 <template>
     <div class="iam-user-group-wrapper">
         <render-search>
-            <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
-                {{ $t(`m.common['新建']`) }}
-            </bk-button>
-            <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
-                data-test-id="group_btn_transferOut" @click="handleTransferOut">
-                {{ $t(`m.userGroup['转出']`) }}
-            </bk-button> -->
-            <!-- <bk-button
-                :disabled="currentSelectList.length < 1"
-                theme="primary"
-                @click="handleBatchAddMember"
-                data-test-id="group_btn_create"
-            >
-                {{ $t(`m.common['批量添加成员']`) }}
-            </bk-button> -->
-            <!-- <bk-button
-                v-if="isRatingManager"
-                :disabled="currentSelectList.length < 1"
-                style="margin-left: 6px"
-                data-test-id="group_btn_distribute"
-                @click="handleDistribute"
-            >{{ $t(`m.userGroup['分配']`) }}</bk-button
-            > -->
-            <bk-select
-                ref="userGroupSelect"
-                v-model="selectKeyword"
-                :searchable="true"
-                :placeholder="$t(`m.userGroup['批量']`)"
-                ext-cls="select-custom"
-                ext-popover-cls="select-popover-custom"
-                @toggle="handleToggle">
-                <bk-option
-                    v-for="option in batchOptions"
-                    :key="option.id"
-                    :id="option.id"
-                    :name="option.name"
-                    :disabled="option.disabled"
+            <div class="search_left">
+                <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
+                    {{ $t(`m.common['新建']`) }}
+                </bk-button>
+                <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
+                    data-test-id="group_btn_transferOut" @click="handleTransferOut">
+                    {{ $t(`m.userGroup['转出']`) }}
+                </bk-button> -->
+                <!-- <bk-button
+                    :disabled="currentSelectList.length < 1"
+                    theme="primary"
+                    @click="handleBatchAddMember"
+                    data-test-id="group_btn_create"
                 >
-                    <div class="select-collection" @click.stop="handleSelect(option)">
-                        <span>{{ option.name }}</span>
-                    </div>
-                </bk-option>
-            </bk-select>
+                    {{ $t(`m.common['批量添加成员']`) }}
+                </bk-button> -->
+                <!-- <bk-button
+                    v-if="isRatingManager"
+                    :disabled="currentSelectList.length < 1"
+                    style="margin-left: 6px"
+                    data-test-id="group_btn_distribute"
+                    @click="handleDistribute"
+                >{{ $t(`m.userGroup['分配']`) }}</bk-button
+                > -->
+                <bk-select
+                    ref="userGroupSelect"
+                    v-model="selectKeyword"
+                    :searchable="true"
+                    :placeholder="$t(`m.userGroup['批量']`)"
+                    ext-cls="select-custom"
+                    ext-popover-cls="select-popover-custom"
+                    @toggle="handleToggle">
+                    <bk-option
+                        v-for="option in batchOptions"
+                        :key="option.id"
+                        :id="option.id"
+                        :name="option.name"
+                        :disabled="option.disabled"
+                    >
+                        <div class="select-collection" @click.stop="handleSelect(option)">
+                            <span>{{ option.name }}</span>
+                        </div>
+                    </bk-option>
+                </bk-select>
+            </div>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -791,6 +793,11 @@
 </script>
 <style lang="postcss">
 .iam-user-group-wrapper {
+    .search_left {
+        display: flex;
+        align-items: center;
+    }
+
     .select-custom {
         width: 220px;
         background-color: #fff;
