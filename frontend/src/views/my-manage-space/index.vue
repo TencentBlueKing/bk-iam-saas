@@ -29,7 +29,7 @@
                         :show-header="false" :border="false" :cell-class-name="getCellClass" @row-click="handleRowClick"
                     >
                         <bk-table-column width="40" />
-                        <bk-table-column prop="name" width="140">
+                        <bk-table-column prop="name" width="130">
                             <template slot-scope="child">
                                 <div class="child_space_name">
                                     <Icon type="level-two" :style="{ color: iconColor[1] }" />
@@ -39,7 +39,7 @@
                                 </div>
                             </template>
                         </bk-table-column>
-                        <bk-table-column prop="members" width="300">
+                        <bk-table-column prop="members" width="305">
                             <template slot-scope="child">
                                 <iam-edit-member-selector
                                     field="members"
@@ -65,13 +65,13 @@
                                 <span :title="row.created_time">{{ child.row.created_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column prop="updater"></bk-table-column>
+                        <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
                         <bk-table-column prop="updated_time">
                             <template slot-scope="child">
                                 <span :title="row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column prop="updater" width="300">
+                        <bk-table-column width="300">
                             <template slot-scope="child">
                                 <div class="operate_btn">
                                     <bk-button theme="primary" text @click.stop="handleClone(child.row)">
@@ -92,7 +92,7 @@
                     </bk-table>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['空间名']`)" prop="name" width="150">
+            <bk-table-column :label="$t(`m.levelSpace['空间名']`)" prop="name" width="145">
                 <template slot-scope="{ row }">
                     <div>
                         <Icon type="level-one" :style="{ color: iconColor[0] }" />

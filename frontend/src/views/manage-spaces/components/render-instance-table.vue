@@ -6,6 +6,7 @@
             :header-border="false"
             :cell-class-name="getCellClass"
             :empty-text="$t(`m.verify['请选择操作']`)"
+            :max-height="maxHeight"
             @row-mouse-enter="handlerRowMouseEnter"
             @row-mouse-leave="handlerRowMouseLeave">
             <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="280">
@@ -96,7 +97,7 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" min-width="20" border>
+            <bk-table-column :resizable="false" min-width="20" border fixed="right">
                 <template slot-scope="{ row, $index }">
                     <div class="relation-content-wrapper">
                         <div class="remove-icon" @click.stop="handlerRemove(row, $index)">
@@ -192,6 +193,10 @@
             isAllExpanded: {
                 type: Boolean,
                 default: false
+            },
+            maxHeight: {
+                type: Number,
+                default: 500
             }
         },
         data () {
@@ -1336,10 +1341,10 @@
 
             .remove-icon {
                 /* display: none; */
-                /* position: absolute; */
+                position: absolute;
                 /* top: 5px; */
-                /* top: 0;
-                right: 10px; */
+                top: 5px;
+                right: 0;
                 cursor: pointer;
                 &:hover {
                     color: #3a84ff;

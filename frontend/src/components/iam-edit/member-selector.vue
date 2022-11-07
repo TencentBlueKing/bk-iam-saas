@@ -32,11 +32,11 @@
         <template v-else>
             <bk-user-selector
                 v-model="displayValue"
-                class="edit-input"
-                ref="input"
+                :class="['edit-selector', isErrorClass]"
+                ref="selector"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
-                @change="handleChange">
+                @keydown="handleEnter(...arguments)">
             </bk-user-selector>
         </template>
     </div>
@@ -65,14 +65,14 @@
                 type: Function,
                 default: () => Promise.resolve()
             },
-            rules: {
-                type: Array,
-                default: () => []
+            isErrorClass: {
+                type: String,
+                default: ''
             }
         },
         data () {
             return {
-                displayValue: this.value,
+                displayValue: [],
                 isEditable: false,
                 isLoading: false,
                 userApi: window.BK_USER_API,
@@ -87,8 +87,11 @@
             }
         },
         watch: {
-            value (newVal) {
-                this.displayValue = [...newVal];
+            value: {
+                handler (newVal) {
+                    this.displayValue = [...newVal];
+                },
+                immediate: true
             }
         },
         mounted () {
@@ -120,11 +123,11 @@
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.input.focus();
+                    this.$refs.selector.focus();
                 });
             },
 
-            handleEnter (value, event) {
+            handleEnter (event) {
                 if (!this.isEditable) return;
                 if (event.key === 'Enter' && event.keyCode === 13) {
                     this.triggerChange();
@@ -143,9 +146,9 @@
                         }
                     }
                 }
-                this.isEditable = false;
+                this.triggerChange();
             },
-
+            
             triggerChange () {
                 this.isEditable = false;
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
@@ -230,8 +233,14 @@
                 animation: 'textarea-edit-loading' 1s linear infinite;
             }
         }
-        .edit-input {
+        .edit-selector {
             width: 100%;
         }
+
+        /deep/  .is-member-empty-cls {
+         .user-selector-container {
+            border-color: #ff4d4d;
+        }
+    }
     }
 </style>

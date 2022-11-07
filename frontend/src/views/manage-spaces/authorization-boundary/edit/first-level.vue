@@ -7,22 +7,22 @@
         </render-horizontal-block>
         <render-action
             style="margin-bottom: 16px;"
-            :title="$t(`m.grading['选择操作和资源实例范围']`)"
+            :title="$t(`m.levelSpace['选择操作和资源边界范围']`)"
             :tips="addActionTips"
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.grading['最大可授权资源范围']`)" v-if="isSelectSystem">
+        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)" v-if="isSelectSystem">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
                         <section class="action-wrapper" @click.stop="handleAddAction">
                             <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
+                            <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
                         </section>
                         <Icon
                             type="info-fill"
                             class="info-icon"
-                            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
+                            v-bk-tooltips.top="{ content: addActionTips, width: 236, extCls: 'iam-tooltips-cls' }" />
                     </div>
                     <div class="sub-title" v-if="policyList.length > 0 && !isShowTable">
                         {{ $t(`m.common['共']`) }}
@@ -63,16 +63,17 @@
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源实例范围不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
-                :title="$t(`m.grading['选择可授权人员范围']`)"
+                :title="$t(`m.levelSpace['选择可授权人员边界']`)"
                 :tips="addMemberTips"
                 style="margin-bottom: 16px;"
                 @on-click="handleAddMember" />
         </section>
         <render-member
+            v-else
             :users="users"
             :departments="departments"
             :is-all="isAll"
-            v-else
+            :tip="addMemberTips"
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
@@ -183,8 +184,8 @@
                     members: []
                 },
                 submitLoading: false,
-                addActionTips: this.$t(`m.grading['添加操作提示']`),
-                addMemberTips: this.$t(`m.grading['添加成员提示']`),
+                addActionTips: this.$t(`m.levelSpace['二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间']`),
+                addMemberTips: this.$t(`m.levelSpace['一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
                 isShowAddMemberDialog: false,
                 users: [],
                 departments: [],
@@ -197,9 +198,8 @@
                 addMemberTitle: this.$t(`m.grading['选择可授权人员范围']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
-
                 infoText: this.$t(`m.grading['选择提示']`),
-                tips: this.$t(`m.grading['添加操作提示']`),
+                tips: this.$t(`m.levelSpace['二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间']`),
                 policyList: [],
                 isLoading: false,
                 isAllExpanded: false,
@@ -207,7 +207,6 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-
                 isShowReasonDialog: false,
                 reason: '',
                 dialogLoading: false,
