@@ -13,9 +13,9 @@
         position: relative;
         display: flex;
         justify-content: space-between;
-        .left {
+        /* .left {
             display: flex;
             align-items: center;
-        }
+        } */
     }
 </style>

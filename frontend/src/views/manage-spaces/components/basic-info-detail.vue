@@ -20,6 +20,7 @@
                     <iam-edit-textarea
                         field="description"
                         width="600px"
+                        :max-length="100"
                         :value="formData.description"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>

@@ -710,7 +710,10 @@ export const m = {
         '释放': 'Release',
         '一级管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space',
         '提交审批': 'Submit for approval',
-        '新建我的管理空间': 'New My Management Space'
+        '新建我的管理空间': 'New My Management Space',
+        '一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界': 'When the primary management space shrinks/modifies the authorization boundary, synchronously modify the authorization boundary of the related secondary management space',
+        '二级管理空间扩大自己的授权边界，需要走一级管理空间管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the primary management space administrator',
+        '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the primary administrator space'
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',
