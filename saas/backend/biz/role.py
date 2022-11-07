@@ -779,6 +779,8 @@ class RoleListQuery:
         if self.role.type == RoleType.GRADE_MANAGER.value:
             sub_ids = RoleRelation.objects.list_sub_id(self.role.id)
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
+        elif self.role.type == RoleType.SUBSET_MANAGER.value:
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id=self.role.id)
 
         return Role.objects.none()
 

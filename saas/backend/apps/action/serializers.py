@@ -17,6 +17,7 @@ from backend.service.constants import SelectionMode
 class GroupActionQuerySLZ(ActionQuerySLZ):
     group_id = serializers.IntegerField(label="用户组id", required=False, default=-1)
     user_id = serializers.CharField(label="用户ID", required=False, default="")
+    all = serializers.BooleanField(label="查询所有的操作", default=False)
 
 
 class InstanceSelectionQuerySLZ(serializers.Serializer):
