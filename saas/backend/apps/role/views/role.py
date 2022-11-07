@@ -863,7 +863,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 非分级管理员/子集管理员成员，则无法更新基本信息
-        if RoleUser.objects.filter(role_id__in=[role.id, grade_manager.id], username=user_id).exists():
+        if not RoleUser.objects.filter(role_id__in=[role.id, grade_manager.id], username=user_id).exists():
             raise error_codes.FORBIDDEN.format(message=_("非管理员({})的成员，无权限修改").format(role.name), replace=True)
 
         self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
