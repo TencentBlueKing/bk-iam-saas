@@ -15,21 +15,32 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.biz.resource_type import ResourceTypeBiz
 from backend.biz.role import RoleListQuery
+from backend.biz.system import SystemBiz
 
-from .serializers import QueryResourceTypeSLZ, SystemResourceTypeSLZ, SystemSLZ
+from .serializers import QueryResourceTypeSLZ, SystemQuerySLZ, SystemResourceTypeSLZ, SystemSLZ
 
 
 class SystemViewSet(GenericViewSet):
 
     pagination_class = None  # 去掉swagger中的limit offset参数
 
+    biz = SystemBiz()
+
     @swagger_auto_schema(
         operation_description="系统列表",
+        query_serializer=SystemQuerySLZ(label="系统ID"),
         responses={status.HTTP_200_OK: SystemSLZ(label="系统", many=True)},
         tags=["system"],
     )
     def list(self, request, *args, **kwargs):
-        systems = RoleListQuery(request.role).list_system()
+        slz = SystemQuerySLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+
+        all = slz.validated_data["all"]
+        if all:
+            systems = self.biz.list()
+        else:
+            systems = RoleListQuery(request.role).list_system()
         data = [i.dict(include={"id", "name", "name_en"}) for i in systems]
         return Response(data)
 

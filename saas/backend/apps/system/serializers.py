@@ -35,3 +35,7 @@ class QueryResourceTypeSLZ(serializers.Serializer):
 class SystemResourceTypeSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源类别ID")
     name = serializers.CharField(label="资源类别名称")
+
+
+class SystemQuerySLZ(serializers.Serializer):
+    all = serializers.BooleanField(label="查询所有的系统", default=False)
