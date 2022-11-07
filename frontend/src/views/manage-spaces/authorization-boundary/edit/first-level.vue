@@ -77,7 +77,7 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
-        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
+        <render-horizontal-block v-if="isRatingManager" :label="$t(`m.common['理由']`)" :required="true">
             <section class="content-wrapper">
                 <bk-input
                     type="textarea"
@@ -252,6 +252,9 @@
             },
             isStaff () {
                 return this.user.role.type === 'staff';
+            },
+            isRatingManager () {
+                return this.user.role.type === 'rating_manager';
             }
         },
         watch: {
@@ -812,6 +815,7 @@
                 console.log('params', params);
                 try {
                     await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
+                    await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
                     await this.$store.dispatch('roleList');
                     this.isShowReasonDialog = false;
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
@@ -837,7 +841,7 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isStaff && this.reason === '';
+                this.reasonEmptyError = this.isRatingManager && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
@@ -855,7 +859,7 @@
                     }
                     return;
                 }
-                if (this.isStaff) {
+                if (this.isRatingManager) {
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -894,7 +898,7 @@
                 window.changeDialog = false;
                 console.log('params', params);
                 
-                const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
+                const dispatchMethod = this.isRatingManager ? 'editRatingManagerWithGeneral' : 'editRatingManager';
                 try {
                     await this.$store.dispatch(`role/${dispatchMethod}`, params);
                     await this.$store.dispatch('roleList');

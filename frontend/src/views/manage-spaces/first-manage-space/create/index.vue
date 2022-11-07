@@ -243,7 +243,7 @@
             }
         },
         mounted () {
-            this.formData.members = [this.user.username];
+            this.formData.members = [{ username: this.user.username, readonly: true }];
         },
         methods: {
             async fetchPageData () {

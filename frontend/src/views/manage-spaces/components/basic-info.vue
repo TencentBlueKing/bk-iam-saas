@@ -9,7 +9,7 @@
                 <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
             </iam-form-item>
             <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
-                <bk-user-selector :value="formData.members" :api="userApi" :placeholder="$t(`m.verify['请输入']`)"
+                <bk-user-selector :value="displayMembers" :api="userApi" :placeholder="$t(`m.verify['请输入']`)"
                     style="width: 100%;" :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                     data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
                     @change="handleRtxChange">
@@ -50,14 +50,17 @@
                 isShowNameError: false,
                 isShowMemberError: false,
                 nameValidateText: '',
-                userApi: window.BK_USER_API
+                userApi: window.BK_USER_API,
+                displayMembers: []
             };
         },
         watch: {
             data: {
                 handler (value) {
                     if (Object.keys(value).length) {
-                        const { name, description, members } = value;
+                        const { name, description } = value;
+                        this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
+                        const members = value.members.filter(e => !e.readonly).map(e => e.username);
                         this.formData = Object.assign({}, {
                             name,
                             description,
@@ -75,7 +78,7 @@
             },
 
             handleRtxBlur () {
-                this.isShowMemberError = this.formData.members.length < 1;
+                this.isShowMemberError = this.displayMembers.length < 1;
             },
 
             handleNameInput (payload) {
@@ -103,6 +106,13 @@
 
             handleRtxChange (payload) {
                 this.isShowMemberError = false;
+                payload = payload.reduce((p, v) => {
+                    p.push({
+                        username: v,
+                        readonly: false
+                    });
+                    return p;
+                }, []);
                 this.$emit('on-change', 'members', payload);
             },
 
@@ -141,7 +151,6 @@
                         this.isShowNameError = true;
                     }
                 }
-
                 this.isShowMemberError = members.length < 1;
 
                 return this.isShowNameError || this.isShowMemberError;

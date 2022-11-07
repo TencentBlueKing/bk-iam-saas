@@ -14,6 +14,7 @@
                     <iam-edit-member
                         field="members"
                         :value="formData.members"
+                        @on-change="handleUpdateMembers"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>
                 <detail-item :label="`${$t(`m.common['描述']`)}：`">
@@ -109,7 +110,7 @@
                     ...payload,
                     id: this.id
                 };
-                return this.$store.dispatch('role/updateRatingManager', params)
+                return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
                     .then(async () => {
                         this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
                         this.formData.name = params.name;
@@ -126,6 +127,10 @@
                             message: e.message || e.data.msg || e.statusText
                         });
                     });
+            },
+
+            handleUpdateMembers (payload) {
+                this.handleUpdateRatingManager(payload);
             }
         }
     };

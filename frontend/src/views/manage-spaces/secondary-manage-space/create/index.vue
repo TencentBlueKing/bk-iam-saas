@@ -89,6 +89,7 @@
         </section>
         <section v-else ref="memberRef">
             <render-member
+                :tip="$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间人员边界的权限']`)"
                 :users="users"
                 :departments="departments"
                 :expired-at-error="isShowExpiredError"
@@ -304,7 +305,7 @@
             }
         },
         mounted () {
-            this.formData.members = [this.user.username];
+            this.formData.members = [{ username: this.user.username, readonly: true }];
         },
         methods: {
             async fetchPageData () {
@@ -895,7 +896,8 @@
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
                 this.reasonEmptyError = this.isStaff && this.reason === '';
-                this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
+                this.isShowMemberEmptyError = this.inheritSubjectScope ? false
+                    : (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
@@ -947,13 +949,6 @@
                     sync_perm: false,
                     inherit_subject_scope: this.inheritSubjectScope
                 };
-                // 成员需要做处理
-                params.members = params.members.reduce((p, v) => {
-                    p.push({
-                        username: v
-                    });
-                    return p;
-                }, []);
                 // 如果是动态继承上级空间 组织架构可为空
                 if (this.inheritSubjectScope) {
                     params.subject_scopes = [];

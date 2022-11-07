@@ -7,12 +7,11 @@
                         <span
                             v-for="(item, index) in displayValue"
                             :key="index"
-                            class="member-item">
+                            class="member-item"
+                            :class="item.readonly ? 'member-readonly' : ''">
                             {{ item.username }}
-                            <!-- <Icon v-if="!isShowRole" type="close-small"
+                            <Icon v-if="!item.readonly" type="close-small"
                                 @click.stop="handleDelete(index)" />
-                            <Icon v-else type="close-small"
-                                @click.stop="handleDelete(index)" /> -->
                         </span>
                     </slot>
                 </div>
@@ -36,6 +35,7 @@
                 ref="input"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
+                @blur="handleRtxBlur"
                 @change="handleChange">
             </bk-user-selector>
         </template>
@@ -128,6 +128,13 @@
                 });
             },
 
+            handleDelete (index) {
+                this.displayValue.splice(index, 1);
+                this.$emit('on-change', {
+                    [this.field]: this.displayValue
+                });
+            },
+
             handleEnter (value, event) {
                 if (!this.isEditable) return;
                 if (event.key === 'Enter' && event.keyCode === 13) {
@@ -167,7 +174,6 @@
             },
 
             handleChange () {
-                console.log('editValue', this.editValue);
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
                         username: v,
@@ -176,6 +182,12 @@
                     return p;
                 }, []);
                 this.displayValue = [...this.disabledValue, ...editValue];
+            },
+
+            handleRtxBlur () {
+                this.$emit('on-change', {
+                    [this.field]: this.displayValue
+                });
             }
         }
     };
@@ -224,6 +236,10 @@
                         cursor: not-allowed;
                     }
                 }
+            }
+            .member-readonly{
+                background: #FFF1DB;
+                color: #FE9C00;
             }
         }
         .edit-action-box {

@@ -5,10 +5,10 @@
                 <div class="edit-content">
                     <slot>
                         <span
-                            v-for="(item, index) in newVal"
+                            v-for="(item, index) in value"
                             :key="index"
                             class="member-item">
-                            {{ item }}
+                            {{ item.username }}
                             <Icon v-if="!isShowRole" type="close-small"
                                 @click.stop="handleDelete(index)" />
                             <Icon v-else type="close-small"
@@ -99,7 +99,7 @@
         },
         watch: {
             value (newVal) {
-                this.newVal = [...newVal];
+                this.newVal = [...newVal].map(e => e.username);
             }
         },
         mounted () {
@@ -170,27 +170,28 @@
             },
             async deleteRole (newPayload) {
                 // 超级管理员操作
+                const newVal = this.editNewValue();
                 if (this.isShowRole) {
-                    if (this.newVal.length === 1) {
+                    if (newVal.length === 1) {
                         return;
                     }
-                    this.newVal.splice(newPayload, 1);
+                    newVal.splice(newPayload, 1);
                     this.isLoading = true;
                     this.remoteHander({
-                        [this.field]: this.newVal
+                        [this.field]: newVal
                     }).then(() => {
                         this.$emit('on-change', {
-                            [this.field]: this.newVal
+                            [this.field]: newVal
                         });
                     }).finally(() => {
                         this.isLoading = false;
                     });
                 } else {
                     // 普通用户操作
-                    if (this.newVal.length === 1) {
+                    if (newVal.length === 1) {
                         return;
                     }
-                    this.newVal.splice(newPayload, 1);
+                    newVal.splice(newPayload, 1);
                     this.isLoading = true;
                     try {
                         await this.$store.dispatch('role/deleteRatingManager', { id: this.$route.params.id });
@@ -224,19 +225,29 @@
             },
             triggerChange () {
                 this.isEditable = false;
-                if (_.isEqual(this.newVal, this.value)) {
+                const newVal = this.editNewValue();
+                if (_.isEqual(newVal, this.value)) {
                     return;
                 }
                 this.isLoading = true;
                 this.remoteHander({
-                    [this.field]: this.newVal
+                    [this.field]: newVal
                 }).then(() => {
                     this.$emit('on-change', {
-                        [this.field]: this.newVal
+                        [this.field]: newVal
                     });
                 }).finally(() => {
                     this.isLoading = false;
                 });
+            },
+            editNewValue () {
+                return this.newVal.reduce((p, v) => {
+                    p.push({
+                        username: v,
+                        readonly: false
+                    });
+                    return p;
+                }, []);
             }
         }
     };

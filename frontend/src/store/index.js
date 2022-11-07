@@ -205,18 +205,18 @@ const currentNav = [
         icon: 'grade-admin',
         id: 'gradingAdminNav',
         rkey: 'ratingManager',
-        name: il8n('grading', '分级管理员'),
+        name: il8n('nav', '一级管理空间'),
         path: `${SITE_URL}rating-manager`,
         disabled: false
     },
-    {
-        icon: 'grade-admin',
-        id: 'firstManageSpaceNav',
-        rkey: 'firstManageSpace',
-        name: il8n('nav', '一级管理空间'),
-        path: `${SITE_URL}first-manage-space`,
-        disabled: false
-    },
+    // {
+    //     icon: 'grade-admin',
+    //     id: 'firstManageSpaceNav',
+    //     rkey: 'firstManageSpace',
+    //     name: il8n('nav', '一级管理空间'),
+    //     path: `${SITE_URL}first-manage-space`,
+    //     disabled: false
+    // },
     {
         icon: 'grade-admin',
         id: 'resourcePermissNav',

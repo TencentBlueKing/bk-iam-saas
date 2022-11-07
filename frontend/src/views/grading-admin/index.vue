@@ -33,7 +33,7 @@
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.grading['分级管理员名称']`)">
+            <bk-table-column :label="$t(`m.levelSpace['空间名']`)">
                 <template slot-scope="{ row }">
                     <span class="grading-admin-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
                 </template>

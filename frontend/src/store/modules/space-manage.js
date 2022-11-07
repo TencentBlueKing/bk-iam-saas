@@ -25,7 +25,7 @@
 */
 
 import http from '@/api';
-// import { json2Query } from '@/common/util';
+import { json2Query } from '@/common/util';
 
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
@@ -47,6 +47,54 @@ export default {
          */
         addSecondManager ({ commit, state, dispatch }, params, config) {
             return http.post(`${AJAX_URL_PREFIX}/roles/subset_managers/`, params, config);
+        },
+
+        /**
+         * 获取二级管理员
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getSecondManager ({ commit, state, dispatch }, params, config) {
+            return http.get(`${AJAX_URL_PREFIX}/roles/subset_managers/?${json2Query(params)}`, config);
+        },
+
+        /**
+         * 获取二级管理员详情
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getSecondManagerDetail ({ commit, state, dispatch }, { id }, config) {
+            return http.get(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, config);
+        },
+
+        /**
+         * 更新二级管理员成员
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        updateSecondManagerManager ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            return http.patch(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, requestParams, config);
         }
     }
 };

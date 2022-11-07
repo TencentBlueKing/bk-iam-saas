@@ -82,6 +82,8 @@ export const getRouterDiff = (payload) => {
             'resourcePermiss',
             'userGroupDetail',
             'firstManageSpace',
+            'secondaryManageSpace',
+            'authorBoundary',
             'myManageSpace'
         ];
     }
@@ -142,6 +144,7 @@ export const getRouterDiff = (payload) => {
             'systemAccessOptimize',
             'systemAccessComplete',
             'myManageSpace',
+            'resourcePermiss',
             'firstManageSpace'
         ];
     }

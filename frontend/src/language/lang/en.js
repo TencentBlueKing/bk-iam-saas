@@ -680,7 +680,8 @@ export const m = {
         '分级管理员列表': 'Grading  Manager List',
         '克隆': 'Clone',
         '最大可授权人员范围': 'Maximum scope of authorized personnel',
-        '最大可授权资源范围': 'Maximum scope of authorized resources'
+        '最大可授权资源范围': 'Maximum scope of authorized resources',
+        '同时具备空间下操作和资源权限': 'At the same time have space operation and resource permissions'
     },
    levelSpace : {
         '搜索空间名、描述、创建人': 'Search space name, description and creator',
@@ -710,7 +711,8 @@ export const m = {
         '释放': 'Release',
         '一级管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space',
         '提交审批': 'Submit for approval',
-        '新建我的管理空间': 'New My Management Space'
+        '新建我的管理空间': 'New My Management Space',
+        '一级管理空间可以编辑、管理二级管理空间人员边界的权限': 'The first-level management space can edit and manage the permissions of the personnel boundaries of the second-level management space'
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',
