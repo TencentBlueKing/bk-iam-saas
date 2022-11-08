@@ -97,7 +97,7 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :resizable="false" min-width="20" border fixed="right">
+            <bk-table-column :resizable="false" min-width="20" :border="false">
                 <template slot-scope="{ row, $index }">
                     <div class="relation-content-wrapper">
                         <div class="remove-icon" @click.stop="handlerRemove(row, $index)">
