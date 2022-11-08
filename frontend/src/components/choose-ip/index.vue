@@ -970,7 +970,7 @@
                 node.loadingMore = true;
 
                 const chainLen = this.curChain.length;
-                let keyword = this.curKeyword;
+                let keyword = '';
                 if (Object.keys(this.curSearchObj).length) {
                     if (node.parentId === this.curSearchObj.parentId) {
                         keyword = this.curSearchObj.value;
