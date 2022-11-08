@@ -79,6 +79,9 @@ import resourcePermiss from './modules/resource-permiss';
 // 临时权限模块
 import applyProvisionPerm from './modules/apply-provision-perm';
 
+// 管理空间模块
+import spaceManage from './modules/space-manage';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -202,18 +205,18 @@ const currentNav = [
         icon: 'grade-admin',
         id: 'gradingAdminNav',
         rkey: 'ratingManager',
-        name: il8n('grading', '分级管理员'),
+        name: il8n('nav', '一级管理空间'),
         path: `${SITE_URL}rating-manager`,
         disabled: false
     },
-    {
-        icon: 'grade-admin',
-        id: 'firstManageSpaceNav',
-        rkey: 'firstManageSpace',
-        name: il8n('nav', '一级管理空间'),
-        path: `${SITE_URL}first-manage-space`,
-        disabled: false
-    },
+    // {
+    //     icon: 'grade-admin',
+    //     id: 'firstManageSpaceNav',
+    //     rkey: 'firstManageSpace',
+    //     name: il8n('nav', '一级管理空间'),
+    //     path: `${SITE_URL}first-manage-space`,
+    //     disabled: false
+    // },
     {
         icon: 'grade-admin',
         id: 'resourcePermissNav',
@@ -290,7 +293,8 @@ const store = new Vuex.Store({
         audit,
         access,
         resourcePermiss,
-        applyProvisionPerm
+        applyProvisionPerm,
+        spaceManage
     },
     state: {
         mainContentLoading: false,

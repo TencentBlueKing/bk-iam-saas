@@ -207,7 +207,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    syncPerm: true
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
@@ -303,7 +304,7 @@
             }
         },
         mounted () {
-            this.formData.members = [this.user.username];
+            this.formData.members = [{ username: this.user.username, readonly: true }];
         },
         methods: {
             async fetchPageData () {
@@ -793,14 +794,15 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, syncPerm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    reason: this.reason
+                    reason: this.reason,
+                    sync_perm: syncPerm
                 };
                 try {
                     await this.$store.dispatch('role/addRatingManagerWithGeneral', params);

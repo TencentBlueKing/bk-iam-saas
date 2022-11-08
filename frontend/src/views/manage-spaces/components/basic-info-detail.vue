@@ -14,12 +14,14 @@
                     <iam-edit-member
                         field="members"
                         :value="formData.members"
+                        @on-change="handleUpdateMembers"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>
                 <detail-item :label="`${$t(`m.common['描述']`)}：`">
                     <iam-edit-textarea
                         field="description"
                         width="600px"
+                        :max-length="100"
                         :value="formData.description"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>
@@ -32,8 +34,8 @@
     import DetailItem from '@/components/detail-layout/item';
     import IamEditInput from '@/components/iam-edit/input';
     import IamEditTextarea from '@/components/iam-edit/textarea';
-    import IamEditMember from '@/views/grading-admin/components/member-edit';
     import RenderLayout from '@/views/group/common/render-layout';
+    import IamEditMember from './iam-edit-member';
 
     export default {
         name: '',
@@ -109,7 +111,7 @@
                     ...payload,
                     id: this.id
                 };
-                return this.$store.dispatch('role/updateRatingManager', params)
+                return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
                     .then(async () => {
                         this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
                         this.formData.name = params.name;
@@ -126,6 +128,10 @@
                             message: e.message || e.data.msg || e.statusText
                         });
                     });
+            },
+
+            handleUpdateMembers (payload) {
+                this.handleUpdateRatingManager(payload);
             }
         }
     };

@@ -176,7 +176,6 @@ export const beforeEach = async (to, from, next) => {
             difference = getNavRouterDiff(navIndex);
         }
         if (difference.length) {
-            console.log('to', to);
             store.dispatch('versionLogInfo');
             if (difference.includes(to.name)) {
                 store.commit('setHeaderTitle', '');
@@ -188,6 +187,10 @@ export const beforeEach = async (to, from, next) => {
                     if (to.name === 'groupPermRenewal') {
                         store.commit('updateIndex', 1);
                         window.localStorage.setItem('index', 1);
+                        next();
+                    } if (to.name === 'apply') {
+                        store.commit('updateIndex', 0);
+                        window.localStorage.setItem('index', 0);
                         next();
                     } else {
                         next({ path: `${SITE_URL}user-group` });

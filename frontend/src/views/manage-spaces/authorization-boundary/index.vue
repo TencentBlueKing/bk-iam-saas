@@ -1,6 +1,6 @@
 <template>
-    <div class="iam-grading-admin-detail-wrapper">
-        <p class="edit-action" v-show="$route.params.id">
+    <div class="iam-grading-admin-detail-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
+        <p class="edit-action" v-show="curRoleType !== 'subset_manager'">
             {{ $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) }}
             <bk-button
                 theme="primary"
@@ -15,7 +15,7 @@
                 <basic-info
                     :data="formData"
                     ref="basicInfoRef"
-                    :id="$route.params.id"
+                    :id="curRoleId"
                     @on-change="handleBasicInfoChange" />
             </render-horizontal-block>
 
@@ -72,7 +72,8 @@
                 policyList: [],
                 infoText: this.$t(`m.grading['选择提示']`),
                 curExpanded: false,
-                isAll: false
+                isAll: false,
+                loading: false
             };
         },
         computed: {
@@ -84,22 +85,29 @@
             },
             isHasDepartment () {
                 return this.departments.length > 0;
+            },
+            curRoleId () {
+                return this.user.role.id;
+            },
+            curRoleType () {
+                return this.user.role.type;
+            }
+        },
+        watch: {
+            '$route': {
+                handler () {
+                    this.fetchRatingManagerDetail();
+                },
+                immediate: true
             }
         },
         methods: {
-            /**
-             * @description: fetchPageData 进入页面时在路由文件中统一请求 @/router/index.js
-             * @param {*}
-             * @return {*}
-             */
-            async fetchPageData () {
-                await this.fetchRatingManagerDetail();
-            },
-
             async fetchRatingManagerDetail () {
-                if (this.$route.params.id) {
+                if (this.curRoleId) {
                     try {
-                        const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.$route.params.id });
+                        this.loading = true;
+                        const fetchUrl = this.curRoleType === 'subset_manager' ? 'spaceManage/getSecondManagerDetail' : 'role/getRatingManagerDetail';
+                        const res = await this.$store.dispatch(fetchUrl, { id: this.curRoleId });
                         this.getDetailData(res.data);
                     } catch (e) {
                         console.error(e);
@@ -110,6 +118,8 @@
                             ellipsisLine: 2,
                             ellipsisCopy: true
                         });
+                    } finally {
+                        this.loading = false;
                     }
                 }
             },
@@ -164,12 +174,10 @@
             },
 
             handleEdit () {
-                const { id, type } = this.$route.params;
                 this.$router.push({
-                    name: type === 'first' ? 'authorBoundaryEditFirstLevel' : 'authorBoundaryEditSecondLevel',
+                    name: this.curRoleType === 'subset_manager' ? 'authorBoundaryEditSecondLevel' : 'authorBoundaryEditFirstLevel',
                     params: {
-                        id,
-                        type
+                        id: this.curRoleId
                     }
                 });
             },

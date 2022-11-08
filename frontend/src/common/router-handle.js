@@ -82,6 +82,8 @@ export const getRouterDiff = (payload) => {
             'resourcePermiss',
             'userGroupDetail',
             'firstManageSpace',
+            'secondaryManageSpace',
+            'authorBoundary',
             'myManageSpace'
         ];
     }
@@ -141,6 +143,40 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete',
+            'myManageSpace',
+            'resourcePermiss',
+            'firstManageSpace'
+        ];
+    }
+    if (payload === 'subset_manager') {
+        return [
+            'applyCustomPerm',
+            'applyProvisionPerm',
+            'applyJoinUserGroup',
+            'apply',
+            'myPerm',
+            'templatePermDetail',
+            'groupPermDetail',
+            'orgPermDetail',
+            'ratingManager',
+            'gradingAdminCreate',
+            'gradingAdminDetail',
+            'user',
+            'gradingAdminUpdateTemplate',
+            'administrator',
+            'approval',
+            'permRenewal',
+            'audit',
+            'systemAccess',
+            'systemAccessCreate',
+            'systemAccessAccess',
+            'systemAccessRegistry',
+            'systemAccessOptimize',
+            'systemAccessComplete',
+            'resourcePermiss',
+            'userGroupDetail',
+            'secondaryManageSpace',
+            'firstManageSpace',
             'myManageSpace'
         ];
     }

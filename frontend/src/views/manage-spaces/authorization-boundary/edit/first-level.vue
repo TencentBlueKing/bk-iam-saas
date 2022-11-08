@@ -7,22 +7,22 @@
         </render-horizontal-block>
         <render-action
             style="margin-bottom: 16px;"
-            :title="$t(`m.grading['选择操作和资源实例范围']`)"
+            :title="$t(`m.levelSpace['选择操作和资源边界范围']`)"
             :tips="addActionTips"
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.grading['最大可授权资源范围']`)" v-if="isSelectSystem">
+        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)" v-if="isSelectSystem">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
                         <section class="action-wrapper" @click.stop="handleAddAction">
                             <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
+                            <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
                         </section>
                         <Icon
                             type="info-fill"
                             class="info-icon"
-                            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
+                            v-bk-tooltips.top="{ content: addActionTips, width: 236, extCls: 'iam-tooltips-cls' }" />
                     </div>
                     <div class="sub-title" v-if="policyList.length > 0 && !isShowTable">
                         {{ $t(`m.common['共']`) }}
@@ -63,21 +63,22 @@
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源实例范围不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
-                :title="$t(`m.grading['选择可授权人员范围']`)"
+                :title="$t(`m.levelSpace['选择可授权人员边界']`)"
                 :tips="addMemberTips"
                 style="margin-bottom: 16px;"
                 @on-click="handleAddMember" />
         </section>
         <render-member
+            v-else
             :users="users"
             :departments="departments"
             :is-all="isAll"
-            v-else
+            :tip="addMemberTips"
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
-        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
+        <render-horizontal-block v-if="isRatingManager" :label="$t(`m.common['理由']`)" :required="true">
             <section class="content-wrapper">
                 <bk-input
                     type="textarea"
@@ -91,7 +92,7 @@
         <p class="reason-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
-                {{ $t(`m.common['下一步']`) }}
+                {{ $t(`m.common['确定']`) }}
             </bk-button>
             <bk-button @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
@@ -106,8 +107,8 @@
             @on-cancel="handleCancelAdd"
             @on-sumbit="handleSumbitAdd" />
 
-        <add-action-side-slider
-            :is-show.sync="isShowAddActionSideSlider"
+        <add-action-sideslider
+            :is-show.sync="isShowAddActionSideslider"
             :default-value="curActionValue"
             :default-system="curSystem"
             :default-data="defaultValue"
@@ -115,19 +116,51 @@
             @on-cancel="handleSelectCancel"
             @animation-end="handleAnimationEnd" />
 
+        <bk-dialog
+            v-model="isShowReasonDialog"
+            :loading="dialogLoading"
+            header-position="left"
+            :width="480"
+            :mask-close="false"
+            ext-cls="iam-edit-rate-manager-reason-dialog"
+            @after-leave="reason = ''">
+            <section class="content-wrapper">
+                <label>
+                    {{ $t(`m.common['理由']`) }}
+                    <span>*</span>
+                </label>
+                <bk-input
+                    type="textarea"
+                    :rows="5"
+                    v-model="reason"
+                    style="margin-bottom: 15px;">
+                </bk-input>
+            </section>
+            <section slot="footer">
+                <bk-button theme="primary"
+                    :disabled="reason === ''"
+                    :loading="dialogLoading"
+                    @click="handleSubmitWithReason">
+                    {{ $t(`m.common['确定']`) }}
+                </bk-button>
+                <bk-button
+                    style="margin-left: 6px;"
+                    @click="handleDialogCancel">
+                    {{ $t(`m.common['取消']`) }}
+                </bk-button>
+            </section>
+        </bk-dialog>
     </smart-action>
 </template>
 <script>
     import _ from 'lodash';
-    import { il8n } from '@/language';
-    import store from '@/store';
     import { mapGetters } from 'vuex';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
     import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     import RenderMember from '@/views/manage-spaces/components/render-member';
-    import AddActionSideSlider from '@/views/manage-spaces/components/add-action-side-slider';
+    import AddActionSideslider from '@/views/manage-spaces/components/add-action-side-slider';
     import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
@@ -140,7 +173,7 @@
             renderAction,
             AddMemberDialog,
             RenderMember,
-            AddActionSideSlider,
+            AddActionSideslider,
             RenderInstanceTable
         },
         data () {
@@ -151,13 +184,13 @@
                     members: []
                 },
                 submitLoading: false,
-                addActionTips: this.$t(`m.grading['添加操作提示']`),
-                addMemberTips: this.$t(`m.grading['添加成员提示']`),
+                addActionTips: this.$t(`m.levelSpace['二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间']`),
+                addMemberTips: this.$t(`m.levelSpace['一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
                 isShowAddMemberDialog: false,
                 users: [],
                 departments: [],
                 isShowMemberAdd: true,
-                isShowAddActionSideSlider: false,
+                isShowAddActionSideslider: false,
                 isShowActionEmptyError: false,
                 isExpanded: false,
                 curSystem: '',
@@ -165,9 +198,8 @@
                 addMemberTitle: this.$t(`m.grading['选择可授权人员范围']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
-
                 infoText: this.$t(`m.grading['选择提示']`),
-                tips: this.$t(`m.grading['添加操作提示']`),
+                tips: this.$t(`m.levelSpace['二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间']`),
                 policyList: [],
                 isLoading: false,
                 isAllExpanded: false,
@@ -175,7 +207,6 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-
                 isShowReasonDialog: false,
                 reason: '',
                 dialogLoading: false,
@@ -220,6 +251,9 @@
             },
             isStaff () {
                 return this.user.role.type === 'staff';
+            },
+            isRatingManager () {
+                return this.user.role.type === 'rating_manager';
             }
         },
         watch: {
@@ -646,7 +680,7 @@
             handleAddAction () {
                 this.isShowTable = true;
                 this.curActionValue = this.originalList.map(item => item.$id);
-                this.isShowAddActionSideSlider = true;
+                this.isShowAddActionSideslider = true;
             },
 
             setAggregateExpanded () {
@@ -692,17 +726,17 @@
                 });
                 this.originalList = _.cloneDeep(payload);
                 this.isShowActionEmptyError = false;
-                this.isShowAddActionSideSlider = false;
+                this.isShowAddActionSideslider = false;
             },
 
             handleSelectCancel () {
-                this.isShowAddActionSideSlider = false;
+                this.isShowAddActionSideslider = false;
             },
 
             handleAnimationEnd () {
                 this.curSystem = '';
                 this.curActionValue = [];
-                this.isShowAddActionSideSlider = false;
+                this.isShowAddActionSideslider = false;
             },
 
             handleAddMember () {
@@ -780,6 +814,7 @@
                 console.log('params', params);
                 try {
                     await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
+                    await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
                     await this.$store.dispatch('roleList');
                     this.isShowReasonDialog = false;
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
@@ -805,7 +840,7 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isStaff && this.reason === '';
+                this.reasonEmptyError = this.isRatingManager && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
@@ -823,7 +858,7 @@
                     }
                     return;
                 }
-                if (this.isStaff) {
+                if (this.isRatingManager) {
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -862,7 +897,7 @@
                 window.changeDialog = false;
                 console.log('params', params);
                 
-                const dispatchMethod = this.isStaff ? 'editRatingManagerWithGeneral' : 'editRatingManager';
+                const dispatchMethod = this.isRatingManager ? 'editRatingManagerWithGeneral' : 'editRatingManager';
                 try {
                     await this.$store.dispatch(`role/${dispatchMethod}`, params);
                     await this.$store.dispatch('roleList');
@@ -905,12 +940,6 @@
             checkReason () {
                 this.reasonEmptyError = this.reason === '';
             }
-        },
-        beforeRouteEnter (to, from, next) {
-            const nameCache = window.localStorage.getItem('iam-header-name-cache');
-            window.localStorage.setItem('iam-header-title-cache', `${il8n('common', '编辑')}：${nameCache}`);
-            store.commit('setHeaderTitle', '');
-            next();
         }
     };
 </script>

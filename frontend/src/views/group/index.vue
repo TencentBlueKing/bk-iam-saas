@@ -24,7 +24,7 @@
                 @click="handleDistribute"
             >{{ $t(`m.userGroup['分配']`) }}</bk-button
             > -->
-            <bk-select
+            <!-- <bk-select
                 v-model="selectKeyword"
                 :searchable="true"
                 :placeholder="$t(`m.userGroup['批量']`)"
@@ -39,7 +39,7 @@
                     :name="option.name"
                     :disabled="option.disabled"
                 />
-            </bk-select>
+            </bk-select> -->
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -50,7 +50,9 @@
                     @on-change="handleSearch" />
             </div>
         </render-search>
-        <bk-table :data="tableList" size="small" :class="{ 'set-border': tableLoading }" ext-cls="user-group-table"
+        <bk-table
+            size="small" :data="tableList"
+            :max-height="tableHeight" :class="{ 'set-border': tableLoading }" ext-cls="user-group-table"
             :pagination="pagination" ref="tableRef" row-key="id" @page-change="pageChange"
             @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
@@ -140,7 +142,7 @@
             :name="currentUserGroup.name"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSumbitDelete"
+            @on-submit="handleSubmitDelete"
         />
 
         <edit-process-dialog
@@ -148,7 +150,7 @@
             :loading="editLoading"
             @on-after-leave="handleAfterEditLeave"
             @on-cancel="hideCancelEdit"
-            @on-sumbit="handleSumbitEdit"
+            @on-submit="handleSubmitEdit"
         />
 
         <add-member-dialog
@@ -168,14 +170,12 @@
             :show.sync="isShowRolloutGroupDialog"
             :group-ids="curSelectIds"
             @on-success="handleTransferOutSuccess"
-            @on-cancel="handleTransferOutCancel"
         />
 
         <DistributeToDialog
             :show.sync="isShowSpaceDialog"
             :group-ids="curSelectIds"
             @on-success="handleDistributeSuccess"
-            @on-cancel="handleDistributeCancel"
         />
 
         <novice-guide :flag="showNoviceGuide" :content="content" />
@@ -185,6 +185,7 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { il8n } from '@/language';
+    import { getWindowHeight } from '@/common/util';
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
@@ -192,7 +193,7 @@
     import AddMemberDialog from './components/iam-add-member';
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
-    import DistributeToDialog from './components/distribute-to-dialog.vue';
+    import DistributeToDialog from './components/distribute-to-dialog';
     import NoviceGuide from '@/components/iam-novice-guide';
     import IamEditInput from '@/components/iam-edit/input';
     export default {
@@ -265,17 +266,20 @@
                     {
                         id: 0,
                         name: this.$t(`m.common['添加成员']`),
-                        disabled: false
+                        disabled: false,
+                        method: 'handleBatchAddMember'
                     },
                     {
                         id: 1,
                         name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
-                        disabled: false
+                        disabled: false,
+                        method: 'handleDistribute'
                     },
                     {
                         id: 2,
                         name: this.$t(`m.userGroup['转出']`),
-                        disabled: false
+                        disabled: false,
+                        method: 'handleTransferOut'
                     }
                 ]
             };
@@ -293,6 +297,9 @@
             },
             curSelectIds () {
                 return this.currentSelectList.map((item) => item.id);
+            },
+            tableHeight () {
+                return getWindowHeight() - 185;
             }
         },
         watch: {
@@ -302,6 +309,15 @@
             user: {
                 handler (value) {
                     this.curRole = value.role.type || 'staff';
+                },
+                immediate: true,
+                deep: true
+            },
+            currentSelectList: {
+                handler (value) {
+                    if (!value.length) {
+                        this.selectKeyword = '';
+                    }
                 },
                 immediate: true,
                 deep: true
@@ -527,14 +543,10 @@
             },
 
             handleTransferOutSuccess () {
+                this.isShowRolloutGroupDialog = false;
                 this.currentSelectList = [];
-                this.handleTransferOutCancel();
                 this.resetPagination();
                 this.fetchUserGroupList(true);
-            },
-
-            handleTransferOutCancel () {
-                this.isShowRolloutGroupDialog = false;
             },
 
             handleDistribute () {
@@ -542,14 +554,10 @@
             },
 
             handleDistributeSuccess () {
+                this.isShowSpaceDialog = false;
                 this.currentSelectList = [];
-                this.handleTransferOutCancel();
                 this.resetPagination();
                 this.fetchUserGroupList(true);
-            },
-
-            handleDistributeCancel () {
-                this.isShowRolloutGroupDialog = false;
             },
 
             handleEditApprovalProcess () {
@@ -702,7 +710,7 @@
                 });
             },
 
-            async handleSumbitDelete () {
+            async handleSubmitDelete () {
                 this.deleteLoading = true;
                 try {
                     await this.$store.dispatch('userGroup/deleteUserGroup', {
@@ -726,7 +734,7 @@
                 }
             },
 
-            handleSumbitEdit () {
+            handleSubmitEdit () {
                 this.isShowEditProcessDialog = false;
             },
 
@@ -750,17 +758,11 @@
             },
 
             handleSelect (value) {
-                console.log(value);
-                switch (value) {
-                    case 0: {
-                        return this.handleBatchAddMember();
-                    }
-                    case 1: {
-                        return this.handleDistribute();
-                    }
-                    case 2: {
-                        return this.handleTransferOut();
-                    }
+                const { id, disabled, method } = value;
+                if (!disabled) {
+                    this.selectKeyword = id;
+                    this.$refs.userGroupSelect.close();
+                    this[method]();
                 }
             },
             
@@ -773,7 +775,7 @@
             formatOption () {
                 const batchItem = [false, !this.isRatingManager, !this.isSuperManager];
                 this.batchOptions.forEach((item) => {
-                    if (this.currentSelectList.length) {
+                    if (this.isCanEditProcess) {
                         item.disabled = batchItem[item.id];
                     } else {
                         item.disabled = true;
@@ -785,6 +787,11 @@
 </script>
 <style lang="postcss">
 .iam-user-group-wrapper {
+    .search_left {
+        display: flex;
+        align-items: center;
+    }
+
     .select-custom {
         width: 220px;
         background-color: #fff;
@@ -859,5 +866,9 @@
             white-space: nowrap;
         }
     }
+}
+
+.bk-table-pagination-wrapper {
+    background-color: #ffffff;
 }
 </style>

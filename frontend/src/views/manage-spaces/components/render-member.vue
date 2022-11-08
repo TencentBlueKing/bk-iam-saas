@@ -1,14 +1,24 @@
 <template>
     <render-horizontal-block
         :label="$t(`m.levelSpace['最大可授权人员边界']`)">
-        <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
-            <Icon bk type="plus-circle-shape" />
-            <span>{{ $t(`m.levelSpace['选择可授权人员边界']`) }}</span>
-        </section>
-        <Icon
-            type="info-fill"
-            class="info-icon"
-            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
+        <bk-radio-group v-model="radioValue" @change="handleChange" class="pl10 pb10">
+            <bk-radio :value="true">
+                {{ $t(`m.levelSpace['动态继承上级空间']`) }}
+            </bk-radio>
+            <bk-radio :value="false" class="pl10">
+                {{ $t(`m.levelSpace['指定组织架构和人员']`) }}
+            </bk-radio>
+        </bk-radio-group>
+        <template v-if="!radioValue">
+            <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
+                <Icon bk type="plus-circle-shape" />
+                <span>{{ $t(`m.levelSpace['选择可授权人员边界']`) }}</span>
+            </section>
+            <Icon
+                type="info-fill"
+                class="info-icon"
+                v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
+        </template>
         <div style="margin-top: 9px;" v-if="isAll">
             <div class="all-item">
                 <span class="member-name">{{ $t(`m.common['全员']`) }}</span>
@@ -50,7 +60,8 @@
         },
         data () {
             return {
-                tips: this.tip
+                tips: this.tip,
+                radioValue: true
             };
         },
         computed: {
@@ -76,6 +87,10 @@
 
             handleDelete () {
                 this.$emit('on-delete-all');
+            },
+
+            handleChange () {
+                this.$emit('on-change', this.radioValue);
             }
         }
     };

@@ -28,13 +28,18 @@
                 :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
                 :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
-                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @change="handleSwitchRole" @toggle="handleToggle">
-                <bk-big-tree ref="selectTree" size="small" :data="curRoleList" :selectable="true" :show-checkbox="false"
-                    :show-link-line="false" :default-expanded-nodes="[navCurRoleId || curRoleId]" :default-selected-node="navCurRoleId || curRoleId"
+                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @toggle="handleToggle">
+                <bk-big-tree ref="selectTree" size="small"
+                    :data="curRoleList"
+                    :selectable="true"
+                    :show-checkbox="false"
+                    :show-link-line="false"
+                    :default-expanded-nodes="[navCurRoleId || curRoleId]"
+                    :default-selected-node="navCurRoleId || curRoleId"
                     @expand-on-click="handleExpandClick" @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div class="iam-select-collection">
-                            <div>
+                            <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
                                 <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
                                 <span>{{data.name}}</span>
                             </div>
@@ -223,6 +228,19 @@
             },
             roleList: {
                 handler (value) {
+                    value = value.map((e, i) => {
+                        e.level = 0;
+                        // if (i === 5) {
+                        //     e.is_member = false;
+                        // }
+                        if (e.sub_roles.length) {
+                            e.sub_roles.forEach(sub => {
+                                sub.level = 1;
+                            });
+                            e.children = e.sub_roles;
+                        }
+                        return e;
+                    });
                     this.curRoleList.splice(0, this.curRoleList.length, ...value);
                 },
                 immediate: true
@@ -301,6 +319,7 @@
             },
 
             handleSelectNode (node) {
+                if (!node.data.is_member) return;
                 this.curRoleId = node.id;
                 this.selectNode = node;
                 this.$refs.select.close();

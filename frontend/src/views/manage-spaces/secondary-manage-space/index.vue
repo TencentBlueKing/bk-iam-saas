@@ -43,9 +43,6 @@
                         <bk-button theme="primary" text @click="handleClone(row)">
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text @click="handleClone(row)" style="margin-left: 10px">
-                            {{ $t(`m.levelSpace['释放']`) }}
-                        </bk-button>
                     </section>
                 </template>
             </bk-table-column>
@@ -119,7 +116,7 @@
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const { current, limit } = this.pagination;
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', {
+                    const res = await this.$store.dispatch('spaceManage/getSecondManager', {
                         limit,
                         offset: (current - 1) * limit,
                         name: this.searchValue
@@ -160,10 +157,9 @@
                 window.localStorage.setItem('iam-header-name-cache', payload.name);
                 this.$store.commit('updateIndex', 1);
                 this.$router.push({
-                    name: 'authorBoundary',
+                    name: 'secondaryManageSpaceDetail',
                     params: {
-                        id: payload.id,
-                        type: 'second'
+                        id: payload.id
                     }
                 });
             },
@@ -225,6 +221,10 @@
                     count: 0,
                     limit: 10
                 });
+            },
+
+            handleClone () {
+                
             }
         }
     };

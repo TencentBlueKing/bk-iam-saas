@@ -220,7 +220,7 @@
             },
 
             handleCancel () {
-                this.$emit('on-cancel');
+                this.$emit('update:show', false);
             },
 
             handleAfterLeave () {
