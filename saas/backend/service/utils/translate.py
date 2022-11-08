@@ -78,7 +78,9 @@ class ResourceExpressionTranslator:
         ]
         """
         content = [self._translate_resource_group(system_id, r) for r in resource_groups]
-        if len(content) == 1:
+        if len(content) == 0:
+            expression: Any = content
+        elif len(content) == 1:
             expression = content[0]
         else:
             expression = {"OR": {"content": content}}
