@@ -50,6 +50,7 @@ export const getRouterDiff = (payload) => {
             'addGroupPerm',
             'resourcePermiss',
             'firstManageSpace',
+            'ratingManager',
             'secondaryManageSpace',
             'authorBoundary'
         ];
