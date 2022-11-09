@@ -9,12 +9,21 @@
                 <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
             </iam-form-item>
             <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
-                <bk-user-selector :value="displayMembers" :api="userApi" :placeholder="$t(`m.verify['请输入']`)"
-                    style="width: 100%;" :class="isShowMemberError ? 'is-member-empty-cls' : ''"
-                    data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
-                    @change="handleRtxChange">
-                </bk-user-selector>
-                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                <div class="select-warp">
+                    <bk-user-selector :value="displayMembers" :api="userApi" :placeholder="$t(`m.verify['请输入']`)"
+                        style="width: 75%;" :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
+                        @change="handleRtxChange">
+                    </bk-user-selector>
+                    <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                    <bk-checkbox
+                        :true-value="true"
+                        :false-value="false"
+                        v-model="formData.syncPerm"
+                        @change="handleCheckboxChange">
+                        {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
+                    </bk-checkbox>
+                </div>
             </iam-form-item>
             <iam-form-item :label="$t(`m.common['描述']`)">
                 <bk-input type="textarea" maxlength="100" :value="formData.description"
@@ -28,7 +37,8 @@
     const getDefaultData = () => ({
         name: '',
         description: '',
-        members: []
+        members: [],
+        syncPerm: false
     });
 
     export default {
@@ -58,13 +68,14 @@
             data: {
                 handler (value) {
                     if (Object.keys(value).length) {
-                        const { name, description } = value;
+                        const { name, description, syncPerm } = value;
                         this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
                         const members = value.members.filter(e => !e.readonly).map(e => e.username);
                         this.formData = Object.assign({}, {
                             name,
                             description,
-                            members
+                            members,
+                            syncPerm
                         });
                     }
                 },
@@ -161,6 +172,10 @@
                     item.validator.content = '';
                     item.validator.state = '';
                 });
+            },
+
+            handleCheckboxChange () {
+                this.$emit('on-change', 'syncPerm', this.formData.syncPerm);
             }
         }
     };
@@ -179,6 +194,12 @@
     .name-empty-error {
         font-size: 12px;
         color: #ff4d4d;
+    }
+
+    .select-warp {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
     .is-member-empty-cls {

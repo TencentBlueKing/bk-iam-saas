@@ -552,7 +552,6 @@ const store = new Vuex.Store({
         },
 
         updataRouterDiff (state, role) {
-            console.log(state, role);
             state.routerDiff = [...getRouterDiff(role)];
         },
 

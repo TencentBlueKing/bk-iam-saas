@@ -218,7 +218,7 @@
                 curMap: null,
                 tips: this.$t(`m.grading['添加操作提示']`),
                 infoText: this.$t(`m.grading['选择提示']`),
-                addMemberTips: this.$t(`m.levelSpace['一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
+                addMemberTips: this.$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间的权限']`),
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 inheritSubjectScope: true
             };
