@@ -255,7 +255,6 @@
                 // if (row.id !== this.gradingAdminId) return;
                 this.gradingAdminId = row.id;
                 expandedRows = expandedRows.filter(e => e.id === this.gradingAdminId);
-                this.curData = row;
                 if (!expandedRows.length) return;
                 console.log('expandedRows', row, expandedRows);
                 this.tableList.forEach(e => {
@@ -288,6 +287,7 @@
                         ellipsisCopy: true
                     });
                 } finally {
+                    this.curData = row;
                     this.subLoading = false;
                 }
             },
