@@ -698,7 +698,7 @@ class RoleListQuery:
     def _get_role_related_object_ids(self, object_type: str) -> List[int]:
         # 分级管理员可以管理子集管理员的所有用户组
         if self.role.type == RoleType.GRADE_MANAGER.value and object_type == RoleRelatedObjectType.GROUP.value:
-            role_ids = RoleRelation.objects.list_subset_id(self.role.id)
+            role_ids = RoleRelation.objects.list_sub_id(self.role.id)
             role_ids.append(self.role.id)
             return list(
                 RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type=object_type).values_list(
@@ -779,6 +779,8 @@ class RoleListQuery:
         if self.role.type == RoleType.GRADE_MANAGER.value:
             sub_ids = RoleRelation.objects.list_sub_id(self.role.id)
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
+        elif self.role.type == RoleType.SUBSET_MANAGER.value:
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id=self.role.id)
 
         return Role.objects.none()
 

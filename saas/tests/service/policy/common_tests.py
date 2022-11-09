@@ -11,7 +11,8 @@ specific language governing permissions and limitations under the License.
 import pytest
 from mock import patch
 
-from backend.service.models import Policy, UniversalPolicyChangedContent
+from backend.service.constants import AbacPolicyChangeType
+from backend.service.models import AbacPolicyChangeContent, Policy, UniversalPolicyChangedContent
 from backend.service.policy.common import UniversalPolicyChangedContentAnalyzer
 
 
@@ -28,7 +29,17 @@ class TestUniversalPolicyChangedContentAnalyzer:
                 # mock_action_auth_types
                 {"test": "abac"},
                 # expected_result
-                [UniversalPolicyChangedContent(action_id="test", auth_type="abac", abac=None, rbac=None)],
+                [
+                    UniversalPolicyChangedContent(
+                        action_id="test",
+                        auth_type="abac",
+                        abac=AbacPolicyChangeContent(
+                            change_type=AbacPolicyChangeType.CREATED.value,
+                            resource_expression="[]",
+                        ),
+                        rbac=None,
+                    )
+                ],
             ),
         ],
     )
@@ -50,7 +61,14 @@ class TestUniversalPolicyChangedContentAnalyzer:
                 # mock_action_auth_types
                 {"test": "abac"},
                 # expected_result
-                [UniversalPolicyChangedContent(action_id="test", auth_type="none", abac=None, rbac=None)],
+                [
+                    UniversalPolicyChangedContent(
+                        action_id="test",
+                        auth_type="none",
+                        abac=AbacPolicyChangeContent(change_type=AbacPolicyChangeType.DELETED.value, id=0),
+                        rbac=None,
+                    )
+                ],
             ),
         ],
     )
@@ -75,7 +93,17 @@ class TestUniversalPolicyChangedContentAnalyzer:
                 # mock_action_auth_types
                 {"test": "abac"},
                 # expected_result
-                [UniversalPolicyChangedContent(action_id="test", auth_type="abac", abac=None, rbac=None)],
+                [
+                    UniversalPolicyChangedContent(
+                        action_id="test",
+                        auth_type="abac",
+                        abac=AbacPolicyChangeContent(
+                            change_type=AbacPolicyChangeType.UPDATED.value,
+                            resource_expression="[]",
+                        ),
+                        rbac=None,
+                    )
+                ],
             ),
         ],
     )
