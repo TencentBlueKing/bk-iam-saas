@@ -108,6 +108,7 @@
             @on-sumbit="handleSumbitAdd" />
 
         <add-action-sideslider
+            :all="allSystem"
             :is-show.sync="isShowAddActionSideslider"
             :default-value="curActionValue"
             :default-system="curSystem"
@@ -159,7 +160,7 @@
     import basicInfo from '@/views/manage-spaces/components/basic-info';
     import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
-    import RenderMember from '@/views/manage-spaces/components/render-member';
+    import RenderMember from '@/views/grading-admin/components/render-member';
     import AddActionSideslider from '@/views/manage-spaces/components/add-action-side-slider';
     import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
     import GradePolicy from '@/model/grade-policy';
@@ -212,7 +213,8 @@
                 dialogLoading: false,
                 isAll: false,
                 isShowTable: false,
-                reasonEmptyError: false
+                reasonEmptyError: false,
+                allSystem: true
                 
             };
         },

@@ -190,6 +190,12 @@
             defaultData: {
                 type: Object,
                 default: () => []
+            },
+            all: {
+                type: Boolean,
+                default: () => {
+                    return false;
+                }
             }
         },
         data () {
@@ -479,7 +485,7 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const res = await this.$store.dispatch('system/getSystems', { all: this.all });
                     this.systemList = _.cloneDeep(res.data);
                     this.curSystemList = _.cloneDeep(res.data);
                     this.curSystem = this.defaultSystem || this.systemList[0].id;
@@ -542,7 +548,7 @@
             async fetchActions (systemId, isLoading = true) {
                 this.isRightLoading = isLoading;
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', { system_id: systemId });
+                    const res = await this.$store.dispatch('permApply/getActions', { system_id: systemId, all: this.all });
                     this.handleDefaultData(systemId, res.data);
                 } catch (e) {
                     console.error(e);

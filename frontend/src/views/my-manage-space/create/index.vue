@@ -86,6 +86,18 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
+        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
+            <section class="content-wrapper">
+                <bk-input
+                    type="textarea"
+                    :rows="5"
+                    v-model="reason"
+                    @input="checkReason"
+                    style="margin-bottom: 15px;">
+                </bk-input>
+            </section>
+        </render-horizontal-block>
+        <p class="action-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit"
                 data-test-id="grading_btn_createSubmit"
@@ -122,7 +134,7 @@
     import basicInfo from '@/views/manage-spaces/components/basic-info';
     import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
-    import RenderMember from '@/views/manage-spaces/components/render-member';
+    import RenderMember from '@/views/grading-admin/components/render-member';
     import RenderInstanceTable from '@/views/manage-spaces/components/render-instance-table';
     import AddActionSideSlider from '@/views/manage-spaces/components/add-action-side-slider';
     import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
@@ -150,7 +162,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    syncPerm: true
                 },
                 users: [],
                 departments: [],
@@ -243,7 +256,7 @@
             }
         },
         mounted () {
-            this.formData.members = [this.user.username];
+            this.formData.members = [{ username: this.user.username, readonly: false }];
         },
         methods: {
             async fetchPageData () {
@@ -735,14 +748,15 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, syncPerm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    reason: this.reason
+                    reason: this.reason,
+                    sync_perm: syncPerm
                 };
                 try {
                     await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
@@ -820,13 +834,14 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, syncPerm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
-                    authorization_scopes: data
+                    authorization_scopes: data,
+                    sync_perm: syncPerm
                 };
                 window.changeDialog = false;
                 this.submitLoading = true;

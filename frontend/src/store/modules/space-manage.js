@@ -95,6 +95,24 @@ export default {
             const id = requestParams.id;
             delete requestParams.id;
             return http.patch(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, requestParams, config);
+        },
+
+        /**
+         * 获取用户加入的子级管理员列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getStaffSubManagerList ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/subset_managers/?${json2Query(requestParams)}`, config);
         }
     }
 };
