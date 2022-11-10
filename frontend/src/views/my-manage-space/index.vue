@@ -42,6 +42,7 @@
                                     <Icon type="level-two" :style="{ color: iconColor[1] }" />
                                     <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
                                         :value="child.row.name" style="width: 100%;margin-left: 5px;"
+                                        :index="child.$index"
                                         :remote-hander="handleUpdateManageSpace" />
                                 </div>
                             </template>
@@ -53,7 +54,8 @@
                                     width="200"
                                     :placeholder="$t(`m.verify['请输入']`)"
                                     :value="child.row.members"
-                                    :remote-handler="handleUpdateManageSpace" />
+                                    :index="child.$index"
+                                    @on-change="handleUpdateMembers" />
                             </template>
                         </bk-table-column>
                         <bk-table-column prop="description" width="200">
@@ -63,7 +65,8 @@
                                     width="200"
                                     :placeholder="$t(`m.verify['用户组描述提示']`)"
                                     :value="child.row.description"
-                                    :remote-hander="handleUpdateGroup" />
+                                    :index="child.$index"
+                                    :remote-hander="handleUpdateManageSpace" />
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
@@ -81,10 +84,10 @@
                         <bk-table-column width="200">
                             <template slot-scope="child">
                                 <div class="operate_btn">
-                                    <bk-button theme="primary" text @click.stop="handleClone(child.row)">
+                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row)">
                                         {{ $t(`m.levelSpace['进入']`) }}
                                     </bk-button>
-                                    <bk-button theme="primary" text @click.stop="handleClone(child.row)">
+                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row)">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
                                     <bk-button theme="primary" text @click.stop="handleClone(child.row)">
@@ -101,9 +104,7 @@
                     <div>
                         <Icon type="level-one" :style="{ color: iconColor[0] }" />
                         <span v-bk-tooltips.right="row.name" class="right-start">
-                            <bk-button theme="primary" text @click="handleView(row)">
-                                {{ row.name }}
-                            </bk-button>
+                            {{ row.name }}
                         </span>
                     </div>
                 </template>
@@ -140,8 +141,9 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="{ row }">
                     <div class="operate_btn">
-                        <bk-button theme="primary" text>{{ $t(`m.levelSpace['进入']`) }}</bk-button>
-                        <bk-button theme="primary" text @click.stop="handleClone(row)">
+                        <bk-button theme="primary" text
+                            @click="handleView(row, 'detail')">{{ $t(`m.levelSpace['进入']`) }}</bk-button>
+                        <bk-button theme="primary" text @click.stop="handleView(row, 'edit')">
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button theme="primary" text @click="handleClone(row)">
@@ -157,9 +159,9 @@
 <script>
     import { mapGetters } from 'vuex';
     import { getWindowHeight } from '@/common/util';
-    import IamEditInput from '@/components/iam-edit/input';
+    import IamEditInput from './components/iam-edit/input';
     import IamEditMemberSelector from './components/iam-edit/member-selector';
-    import IamEditTextarea from '@/components/iam-edit/textarea';
+    import IamEditTextarea from './components/iam-edit/textarea';
     import { buildURLParams } from '@/common/url';
     export default {
         name: 'myManageSpace',
@@ -192,7 +194,11 @@
                 subTableList: [],
                 gradingAdminId: 0,
                 curData: {},
-                rowKey: 0
+                formData: {
+                    name: '',
+                    description: '',
+                    members: []
+                }
             };
         },
         computed: {
@@ -239,8 +245,32 @@
                 return false;
             },
 
-            handleUpdateManageSpace (payload) {
-                console.log(payload, 555);
+            handleUpdateManageSpace (payload, index) {
+                this.formData = this.subTableList.find((e, i) => i === index);
+                const params = {
+                    name: payload.name || this.formData.name,
+                    description: payload.description || this.formData.description,
+                    members: payload.members || this.formData.members,
+                    id: this.formData.id
+                };
+                return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
+                    .then(async () => {
+                        this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                        this.formData.name = params.name;
+                        this.formData.description = params.description;
+                        this.formData.members = [...params.members];
+                    }, (e) => {
+                        console.warn('error');
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText
+                        });
+                    });
+            },
+
+            handleUpdateMembers (payload, index) {
+                this.handleUpdateManageSpace(payload, index);
             },
 
             handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
@@ -298,13 +328,24 @@
                     name: 'myManageSpaceCreate'
                 });
             },
-            handleView ({ id, name }) {
+            // 一级管理空间
+            handleView ({ id, name }, type) {
                 window.localStorage.setItem('iam-header-name-cache', name);
-                this.$store.commit('updateIndex', 1);
                 this.$router.push({
-                    name: 'authorBoundary',
+                    name: type === 'detail' ? 'gradingAdminDetail' : 'gradingAdminEdit',
                     params: {
                         id
+                    }
+                });
+            },
+
+            // 二级管理空间
+            handleSubView ({ id, name }) {
+                window.localStorage.setItem('iam-header-name-cache', name);
+                this.$router.push({
+                    name: 'myManageSpaceSubDetail',
+                    params: {
+                        id: id
                     }
                 });
             },

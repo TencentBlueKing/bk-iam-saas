@@ -200,11 +200,8 @@
             async handleSubmit () {
                 const params = {
                     id: this.distributeDetail.id,
-                    data: {
-                        subset_manager_id: this.curGradeManager
-                    }
+                    subset_manager_id: this.curGradeManager
                 };
-                console.log(params);
                 try {
                     this.loading = true;
                     await this.$store.dispatch('userGroup/userGroupDistribute', params);

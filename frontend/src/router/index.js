@@ -78,7 +78,7 @@ export const beforeEach = async (to, from, next) => {
     // if (curRole === 'staff') {
     //     await store.dispatch('role/updateCurrentRole', { id: 0 });
     // }
-    if (['userGroup', 'permTemplate', 'approvalProcess', 'authorBoundary'].includes(to.name)) {
+    if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
         console.log(to.name, store.state.index, '路由钩子');
         await store.dispatch('role/updateCurrentRole', { id: curRoleId });
         store.commit('updateIndex', 1);

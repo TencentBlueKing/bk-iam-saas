@@ -58,6 +58,9 @@ const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '..
 // 新建我的管理空间
 const MyManageSpaceCreate = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/create');
 
+// 我的管理空间二级管理员授权边界
+const MyManageSpaceSubDetail = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/detail');
+
 // 用户组
 const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
 
@@ -261,6 +264,15 @@ export const routes = [
                     backRouter: 'myManageSpace'
                 },
                 component: MyManageSpaceCreate
+            },
+            {
+                path: 'my-manage-space/sub-detail',
+                name: 'myManageSpaceSubDetail',
+                meta: {
+                    headerTitle: il8n('levelSpace', '我的管理空间'),
+                    backRouter: 'myManageSpace'
+                },
+                component: MyManageSpaceSubDetail
             },
             {
                 path: 'perm-renewal',

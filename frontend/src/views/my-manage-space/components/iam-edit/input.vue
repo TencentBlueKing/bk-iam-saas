@@ -1,16 +1,11 @@
 <template>
-    <div class="iam-edit-textarea" :style="styles">
+    <div class="iam-edit-input" :style="styles">
         <template v-if="!isEditable">
             <div class="edit-wraper">
                 <div class="edit-content" :title="newVal">
-                    <slot v-bind:value="newVal">
-                        {{ newVal }}
-                        <template v-if="newVal === '' && !isLoading">
-                            --
-                        </template>
-                    </slot>
+                    <slot v-bind:value="newVal">{{ newVal }}</slot>
                 </div>
-                <div class="edit-action-box">
+                <div class="edit-action-box" v-if="isEditMode">
                     <Icon
                         type="edit-fill"
                         class="edit-action"
@@ -25,24 +20,21 @@
         </template>
         <template v-else>
             <bk-input
-                v-model="newVal"
-                class="edit-input"
                 ref="input"
-                type="textarea"
+                v-model="newVal"
                 :placeholder="placeholder"
-                :maxlength="maxLength"
-                :rows="3"
                 @input="handleInput"
-                @blur="handleBlur" />
+                @blur="handleBlur"
+                @keyup="handleEnter" />
             <p class="validate-error-tips" v-if="isShowError">{{ errorTips }}</p>
         </template>
     </div>
 </template>
 <script>
     import il8n from '@/language';
-
+    
     export default {
-        name: 'iam-edit-textarea',
+        name: 'iam-edit-input',
         props: {
             field: {
                 type: String,
@@ -68,9 +60,12 @@
                 type: Array,
                 default: () => []
             },
-            maxLength: {
-                type: Number,
-                default: 255
+            mode: {
+                type: String,
+                default: 'edit',
+                validator: function (value) {
+                    return ['detail', 'edit'].includes(value);
+                }
             },
             index: {
                 type: Number,
@@ -82,7 +77,7 @@
                 newVal: this.value,
                 isEditable: false,
                 isLoading: false,
-                isShowError: '',
+                isShowError: false,
                 errorTips: ''
             };
         },
@@ -91,6 +86,9 @@
                 return {
                     width: this.width
                 };
+            },
+            isEditMode () {
+                return this.mode === 'edit';
             }
         },
         watch: {
@@ -156,11 +154,12 @@
                 if (event.path && event.path.length > 0) {
                     for (let i = 0; i < event.path.length; i++) {
                         const target = event.path[i];
-                        if (target.className === 'iam-edit-textarea') {
+                        if (target.className === 'iam-edit-input') {
                             return;
                         }
                     }
                 }
+
                 this.handleValidate();
                 if (this.isShowError) return;
                 this.isEditable = false;
@@ -177,7 +176,6 @@
                     this.$emit('on-change', {
                         [this.field]: this.newVal
                     });
-                    // this.messageSuccess('编辑成功')
                 }).finally(() => {
                     this.isLoading = false;
                 });
@@ -186,28 +184,29 @@
     };
 </script>
 <style lang="postcss">
-    @keyframes textarea-edit-loading {
+    @keyframes ani-edit-loading {
         to {
             transform: rotateZ(360deg)
         }
     }
 </style>
 <style lang='postcss' scoped>
-    .iam-edit-textarea {
-        position: relative;
+    .iam-edit-input {
         .edit-wraper {
             position: relative;
             display: flex;
-            align-items: center;
+            height: 32px;
             &:hover {
-                .edit-action {
-                    display: block;
+                .edit-action-box {
+                    .edit-action {
+                        display: block;
+                    }
                 }
             }
         }
         .edit-content {
-            flex: 0 0 auto;
             max-width: calc(100% - 25px);
+            line-height: 32px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -215,25 +214,23 @@
         .edit-action-box {
             display: flex;
             align-items: center;
+            min-height: 1em;
             margin-right: auto;
             font-size: 16px;
             .edit-action {
+                display: none;
                 padding: 6px 15px 6px 2px;
                 cursor: pointer;
-                display: none;
                 &:hover {
                     color: #3a84ff;
                 }
             }
             .edit-loading {
                 position: absolute;
-                top: 8px;
+                top: 9px;
                 margin-left: 2px;
-                animation: 'textarea-edit-loading' 1s linear infinite;
+                animation: 'ani-edit-loading' 1s linear infinite;
             }
-        }
-        .edit-input {
-            width: 100%;
         }
         .validate-error-tips {
             font-size: 12px;
