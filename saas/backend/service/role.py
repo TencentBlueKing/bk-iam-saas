@@ -336,7 +336,7 @@ class RoleService:
         grade_manager_members = self.list_members_by_role_id(parent_id)
         for relation in RoleRelation.objects.filter(parent_id=parent_id):
             subset_manager_id = relation.role_id
-            subset_manager_members = List(
+            subset_manager_members = list(
                 RoleUser.objects.filter(role_id=subset_manager_id, readonly=False).values_list("username", flat=True)
             )
 
