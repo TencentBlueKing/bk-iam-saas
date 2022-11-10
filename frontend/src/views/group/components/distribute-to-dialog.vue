@@ -70,6 +70,10 @@
             groupIds: {
                 type: Number,
                 default: () => []
+            },
+            distributeDetail: {
+                type: Object,
+                default: null
             }
         },
         data () {
@@ -114,7 +118,7 @@
                     name: this.searchValue
                 };
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', params);
+                    const res = await this.$store.dispatch('spaceManage/getSecondManager', params);
                     if (isScrollRemote) {
                         const len = this.gradeManagerList.length;
                         this.gradeManagerList.splice(len - 1, 0, ...res.data.results);
@@ -189,16 +193,21 @@
             },
 
             getMembersDisplay (payload) {
-                return `${this.$t(`m.common['管理员']`)}: ${payload.members.join(',')}`;
+                const members = payload.members.map(item => item.username);
+                return `${this.$t(`m.common['管理员']`)}: ${members.join(',')}`;
             },
 
             async handleSubmit () {
-                this.loading = true;
+                const params = {
+                    id: this.distributeDetail.id,
+                    data: {
+                        subset_manager_id: this.curGradeManager
+                    }
+                };
+                console.log(params);
                 try {
-                    await this.$store.dispatch('userGroup/userGroupTransfer', {
-                        group_ids: this.groupIds,
-                        role_id: this.curGradeManager
-                    });
+                    this.loading = true;
+                    await this.$store.dispatch('userGroup/userGroupDistribute', params);
                     this.messageSuccess(this.$t(`m.info['分配成功']`), 1000);
                     this.$emit('on-success');
                 } catch (e) {
@@ -241,7 +250,7 @@
     margin-top: 5px;
     line-height: 18px;
     font-size: 12px;
-    color: #ff9c01;
+    color: #FF9C01;
 
     i {
       position: relative;
