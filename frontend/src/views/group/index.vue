@@ -1,9 +1,6 @@
 <template>
     <div class="iam-user-group-wrapper">
         <render-search>
-            <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
-                {{ $t(`m.common['新建']`) }}
-            </bk-button>
             <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
                 data-test-id="group_btn_transferOut" @click="handleTransferOut">
                 {{ $t(`m.userGroup['转出']`) }}
@@ -24,22 +21,31 @@
                 @click="handleDistribute"
             >{{ $t(`m.userGroup['分配']`) }}</bk-button
             > -->
-            <!-- <bk-select
-                v-model="selectKeyword"
-                :searchable="true"
-                :placeholder="$t(`m.userGroup['批量']`)"
-                ext-cls="select-custom"
-                ext-popover-cls="select-popover-custom"
-                @change="handleSelect"
-                @toggle="handleToggle">
-                <bk-option
-                    v-for="option in batchOptions"
-                    :key="option.id"
-                    :id="option.id"
-                    :name="option.name"
-                    :disabled="option.disabled"
-                />
-            </bk-select> -->
+            <div class="search_left">
+                <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
+                    {{ $t(`m.common['新建']`) }}
+                </bk-button>
+                <bk-select
+                    ref="userGroupSelect"
+                    v-model="selectKeyword"
+                    :searchable="true"
+                    :placeholder="$t(`m.userGroup['批量']`)"
+                    ext-cls="select-custom"
+                    ext-popover-cls="select-popover-custom"
+                    @toggle="handleToggle">
+                    <bk-option
+                        v-for="option in batchOptions"
+                        :key="option.id"
+                        :id="option.id"
+                        :name="option.name"
+                        :disabled="option.disabled"
+                    >
+                        <div @click.stop="handleSelect(option)">
+                            {{option.name}}
+                        </div>
+                    </bk-option>
+                </bk-select>
+            </div>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
@@ -85,9 +91,14 @@
                         </span> -->
                         <div class="user-group-space">
                             <Icon type="level-two" :style="{ color: '#9B80FE' }" />
-                            <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
-                                :value="row.role.name || ''" :rules="rules" style="width: 100%; margin-left: 5px;"
-                                :remote-hander="handleUpdateManageSpace" />
+                            <iam-edit-input
+                                field="name"
+                                style="width: 100%; margin-left: 5px;"
+                                :placeholder="$t(`m.verify['请输入']`)"
+                                :is-show-other="true"
+                                :value="row.role.name || '--'"
+                                :remote-hander="handleShowDistribute"
+                                @handleShow="handleDistribute(row)" />
                         </div>
 
                     </template>
@@ -173,8 +184,9 @@
         />
 
         <DistributeToDialog
-            :show.sync="isShowSpaceDialog"
+            :show.sync="isShowDistributeDialog"
             :group-ids="curSelectIds"
+            :distribute-detail="distributeDetail"
             @on-success="handleDistributeSuccess"
         />
 
@@ -240,48 +252,29 @@
                 il8n,
                 spaceFiltersList: [],
                 selectKeyword: '',
-                isShowSpaceDialog: false,
-                rules: [
-                    {
-                        required: true,
-                        message: this.$t(`m.verify['空间名称必填']`),
-                        trigger: 'blur'
-                    },
-                    {
-                        validator: (value) => {
-                            return value.length <= 32;
-                        },
-                        message: this.$t(`m.verify['空间名称最长不超过32个字符']`),
-                        trigger: 'blur'
-                    },
-                    {
-                        validator: (value) => {
-                            return /^[^\s]*$/g.test(value);
-                        },
-                        message: this.$t(`m.verify['空间名称不允许空格']`),
-                        trigger: 'blur'
-                    }
-                ],
+                isShowDistributeDialog: false,
                 batchOptions: [
                     {
                         id: 0,
                         name: this.$t(`m.common['添加成员']`),
-                        disabled: false,
-                        method: 'handleBatchAddMember'
+                        method: 'handleBatchAddMember',
+                        roles: ['allManager']
                     },
-                    {
-                        id: 1,
-                        name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
-                        disabled: false,
-                        method: 'handleDistribute'
-                    },
+                    // 暂不支持批量，后期迭代再开放该选项
+                    // {
+                    //     id: 1,
+                    //     name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
+                    //     method: 'handleDistribute',
+                    //     roles: ['rating_manager']
+                    // },
                     {
                         id: 2,
                         name: this.$t(`m.userGroup['转出']`),
-                        disabled: false,
-                        method: 'handleTransferOut'
+                        method: 'handleTransferOut',
+                        roles: ['super_manager']
                     }
-                ]
+                ],
+                distributeDetail: null
             };
         },
         computed: {
@@ -497,7 +490,7 @@
                 }
             },
 
-            handleUpdateManageSpace (payload) {
+            handleShowDistribute (payload) {
                 return this.$store.dispatch().then(() => {
                     
                 });
@@ -549,19 +542,20 @@
                 this.fetchUserGroupList(true);
             },
 
-            handleDistribute () {
-                this.isShowSpaceDialog = true;
+            handleDistribute ({ id, role }) {
+                this.isShowDistributeDialog = true;
+                this.distributeDetail = Object.assign({}, { id, role });
             },
 
             handleDistributeSuccess () {
-                this.isShowSpaceDialog = false;
+                this.isShowDistributeDialog = false;
                 this.currentSelectList = [];
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },
 
             handleEditApprovalProcess () {
-                this.isShowSpaceDialog = true;
+                this.isShowDistributeDialog = true;
             },
 
             resetPagination () {
@@ -759,6 +753,7 @@
 
             handleSelect (value) {
                 const { id, disabled, method } = value;
+                console.log(value);
                 if (!disabled) {
                     this.selectKeyword = id;
                     this.$refs.userGroupSelect.close();
@@ -774,13 +769,12 @@
 
             formatOption () {
                 const batchItem = [false, !this.isRatingManager, !this.isSuperManager];
-                this.batchOptions.forEach((item) => {
-                    if (this.isCanEditProcess) {
-                        item.disabled = batchItem[item.id];
-                    } else {
-                        item.disabled = true;
-                    }
-                });
+                this.batchOptions = this.batchOptions.reduce((current, next) => {
+                    return next.roles.includes('allManager') || next.roles.includes(this.curRole)
+                        ? current.concat(Object.assign({}, next, {
+                            disabled: this.isCanEditProcess ? batchItem[next.id] : true
+                        })) : current;
+                }, []);
             }
         }
     };

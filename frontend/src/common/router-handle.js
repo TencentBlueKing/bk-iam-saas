@@ -248,6 +248,7 @@ export const getNavRouterDiff = (navIndex) => {
             'addGroupPerm',
             'resourcePermiss',
             'firstManageSpace',
+            'ratingManager',
             'authorBoundary',
             'secondaryManageSpace'
         ];
