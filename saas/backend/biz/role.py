@@ -554,7 +554,8 @@ class RoleCheckBiz:
         Note: 目前subject仅仅支持User
         """
         limit = settings.SUBJECT_AUTHORIZATION_LIMIT["subject_grade_manager_limit"]
-        exists_count = RoleUser.objects.filter(username=subject.id, type=RoleType.GRADE_MANAGER.value).count()
+        role_ids = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).values_list("id", flat=True)
+        exists_count = RoleUser.objects.filter(username=subject.id, role_id__in=role_ids).count()
         if exists_count >= limit:
             raise serializers.ValidationError(_("成员({}): 加入的分级管理员数量已超过最大值 {}").format(subject.id, limit))
 
@@ -781,6 +782,10 @@ class RoleListQuery:
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
         elif self.role.type == RoleType.SUBSET_MANAGER.value:
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id=self.role.id)
+        elif self.role.type == RoleType.STAFF.value:
+            assert self.user
+            role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=role_ids)
 
         return Role.objects.none()
 
