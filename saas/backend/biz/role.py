@@ -782,6 +782,10 @@ class RoleListQuery:
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
         elif self.role.type == RoleType.SUBSET_MANAGER.value:
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id=self.role.id)
+        elif self.role.type == RoleType.STAFF.value:
+            assert self.user
+            role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=role_ids)
 
         return Role.objects.none()
 
