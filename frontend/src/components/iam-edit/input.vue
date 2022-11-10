@@ -66,6 +66,10 @@
                 validator: function (value) {
                     return ['detail', 'edit'].includes(value);
                 }
+            },
+            isShowOther: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -125,10 +129,14 @@
             },
             handleEdit () {
                 document.body.click();
-                this.isEditable = true;
-                this.$nextTick(() => {
-                    this.$refs.input.focus();
-                });
+                if (!this.isShowOther) {
+                    this.isEditable = true;
+                    this.$nextTick(() => {
+                        this.$refs.input.focus();
+                    });
+                } else {
+                    this.$emit('handleShow');
+                }
             },
             handleInput () {
                 this.isShowError = false;
