@@ -890,7 +890,7 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
 
         # 3. 查询用户组所有的授权人员, 并扩张子集管理员的人员授权范围
         members = self.group_biz.list_all_group_member(group.id)
-        self.role_biz.incr_update_subject_scope(subset_manager, members)
+        self.role_biz.incr_update_subject_scope(subset_manager, parse_obj_as(List[Subject], members))
 
         # 记录审计信息
         audit_context_setter(group_ids=[group.id], role_id=subset_manager_id)
