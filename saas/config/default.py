@@ -406,3 +406,6 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
     "INIT_GRADE_MANAGER_SYSTEM_LIST",
     default=["bk_job", "bk_cmdb", "bk_monitorv3", "bk_log_search", "bk_sops", "bk_nodeman", "bk_gsekit"],
 )
+
+# disable display systems
+HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_ci"])

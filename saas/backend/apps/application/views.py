@@ -229,6 +229,7 @@ class ApplicationByGroupView(views.APIView):
                 reason=data["reason"],
                 groups=[ApplicationGroupInfoBean(id=g["id"], expired_at=data["expired_at"]) for g in data["groups"]],
             ),
+            source_system_id=data["source_system_id"],
         )
 
         return Response({}, status=status.HTTP_201_CREATED)
@@ -344,6 +345,7 @@ class ApplicationByRenewGroupView(views.APIView):
                 reason=data["reason"],
                 groups=parse_obj_as(List[ApplicationGroupInfoBean], data["groups"]),
             ),
+            source_system_id=data["source_system_id"],
         )
 
         return Response({}, status=status.HTTP_201_CREATED)

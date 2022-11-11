@@ -137,7 +137,7 @@ class RoleBiz:
         subset_manager_dict: Dict[int, UserRoleNode] = {}
 
         # 查询用户直接加入的role
-        roles = self.list_user_role(user_id)
+        roles = self.list_user_role(user_id, with_hidden=False)
         for role in roles:
             node = UserRoleNode.parse_obj(role)
 
@@ -751,7 +751,7 @@ class RoleListQuery:
         assert self.user
 
         mgr_ids = self._list_authorization_scope_include_user_role_ids()
-        return self.role_svc.list_by_ids(mgr_ids)
+        return self.role_svc.list_by_ids(mgr_ids, with_hidden=False)
 
     def query_grade_manager(self):
         """

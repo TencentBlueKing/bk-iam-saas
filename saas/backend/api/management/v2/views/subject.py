@@ -54,7 +54,6 @@ class ManagementUserGroupBelongViewSet(GenericViewSet):
         group_belongs = self.group_biz.check_subject_groups_belong(
             Subject.from_username(username),
             group_ids,
-            inherit=data["inherit"],
         )
 
         return Response(group_belongs)
@@ -93,7 +92,6 @@ class ManagementDepartmentGroupBelongViewSet(GenericViewSet):
         group_belongs = self.group_biz.check_subject_groups_belong(
             Subject.from_department_id(department_id),
             group_ids,
-            inherit=False,  # 对于部门，没存在继承的关系
         )
 
         return Response(group_belongs)

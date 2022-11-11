@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, Dict, List, Optional
 
+from django.conf import settings
 from pydantic import parse_obj_as
 
 from backend.biz.group import GroupTemplateGrantBean
@@ -33,6 +34,7 @@ class RoleTrans:
         data: Dict[str, Any],
         old_system_policy_list: Optional[Dict[str, PolicyBeanList]] = None,
         _type: str = RoleType.GRADE_MANAGER.value,
+        source_system_id: str = "",
     ) -> RoleInfoBean:
         """
         data: {
@@ -60,7 +62,13 @@ class RoleTrans:
 
         old_system_policy_list: 更新的数据提供
         """
-        data["type"] = _type
+        data.update(
+            {
+                "type": _type,
+                "source_system_id": source_system_id,
+                "hidden": source_system_id in settings.HIDDEN_SYSTEM_LIST if source_system_id else False,
+            }
+        )
 
         for system in data["authorization_scopes"]:
             system_id = system["system_id"]

@@ -13,6 +13,7 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
+from backend.apps.group.models import Group
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.service.constants import GroupMemberType
@@ -62,7 +63,7 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
         return data
 
 
-class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, GradeMangerBaseInfoSLZ):
+class ManagementGradeManagerCreateApplicationSLZ(GradeMangerBaseInfoSLZ, ReasonSLZ):
     members = serializers.ListField(
         label="成员列表",
         child=serializers.CharField(label="用户ID", max_length=64),
@@ -72,9 +73,15 @@ class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, GradeMangerBase
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", default=False)
+    applicant = serializers.CharField(label="申请者的用户名", max_length=32)
+    callback_id = serializers.CharField(label="回调ID", max_length=32, required=False, allow_blank=True, default="")
+    callback_url = serializers.CharField(label="回调URL", required=False, allow_blank=True, default="")
+    title = serializers.CharField(label="审批单标题", required=False, allow_blank=True, default="")
+    content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
 
 
-class ManagementGradeManagerUpdateSLZ(serializers.Serializer):
+class ManagementGradeManagerUpdateApplicationSLZ(ReasonSLZ):
     name = serializers.CharField(label="分级管理员名称", max_length=128, required=False)
     description = serializers.CharField(label="描述", allow_blank=True, required=False)
 
@@ -90,6 +97,12 @@ class ManagementGradeManagerUpdateSLZ(serializers.Serializer):
         required=False,
         allow_empty=False,
     )
+    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", default=False)
+    applicant = serializers.CharField(label="申请者的用户名", max_length=32)
+    callback_id = serializers.CharField(label="回调ID", max_length=32, required=False, allow_blank=True, default="")
+    callback_url = serializers.CharField(label="回调URL", required=False, allow_blank=True, default="")
+    title = serializers.CharField(label="审批单标题", required=False, allow_blank=True, default="")
+    content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
 
 
 class ManagementGradeManagerBasicInfoSLZ(serializers.Serializer):
@@ -231,4 +244,42 @@ class ManagementApplicationIDSLZ(serializers.Serializer):
 
 class ManagementSubjectGroupBelongSLZ(serializers.Serializer):
     group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255)
-    inherit = serializers.BooleanField(label="是否包含继承的用户组", required=False, default=False)
+
+
+class ManagementGradeManagerApplicationResultSLZ(serializers.Serializer):
+    id = serializers.CharField(label="申请单据ID")
+    sn = serializers.CharField(label="ITSM审批单SN")
+
+
+class ManagementSubsetMangerCreateSLZ(GradeMangerBaseInfoSLZ):
+    members = serializers.ListField(
+        label="成员列表",
+        child=serializers.CharField(label="用户ID", max_length=64),
+        max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
+    )
+    authorization_scopes = serializers.ListField(
+        label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
+    )
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
+    inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围")
+
+    def validate(self, data):
+        data = super().validate(data)
+        if not data["inherit_subject_scope"] and not data["subject_scopes"]:
+            raise serializers.ValidationError({"subject_scopes": ["must not be empty"]})
+        return data
+
+
+class ManagementGroupSLZ(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = (
+            "id",
+            "name",
+            "user_count",
+            "department_count",
+            "description",
+            "creator",
+            "created_time",
+            "readonly",
+        )

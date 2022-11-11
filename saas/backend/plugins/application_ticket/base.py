@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import abc
-from typing import List
+from typing import Dict, List, Optional
 
 from rest_framework.request import Request
 
@@ -51,7 +51,12 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_for_grade_manager(
-        self, data: GradeManagerApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self,
+        data: GradeManagerApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 创建或更新分级管理员"""
         pass

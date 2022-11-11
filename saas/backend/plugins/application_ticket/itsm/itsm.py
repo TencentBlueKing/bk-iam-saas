@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from rest_framework.request import Request
 
@@ -109,18 +109,30 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         return ticket["sn"]
 
     def create_for_grade_manager(
-        self, data: GradeManagerApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self,
+        data: GradeManagerApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 创建或更新分级管理员"""
         params = self._generate_ticket_common_params(data, process, callback_url)
 
-        title_prefix = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_GRADE_MANAGER.value else "申请编辑分级管理员"
-        params["title"] = f"{title_prefix}：{data.content.name}"
+        if approval_title:
+            params["title"] = approval_title
+        else:
+            title_prefix = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_GRADE_MANAGER.value else "申请编辑分级管理员"
+            params["title"] = f"{title_prefix}：{data.content.name}"
 
-        params["content"] = {
-            "schemes": FORM_SCHEMES,
-            "form_data": GradeManagerForm.from_application(data.content).form_data,
-        }
+        if approval_content:
+            params["content"] = approval_content
+        else:
+            params["content"] = {
+                "schemes": FORM_SCHEMES,
+                "form_data": GradeManagerForm.from_application(data.content).form_data,
+            }
+
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 

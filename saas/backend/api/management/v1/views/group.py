@@ -89,9 +89,13 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         # 用户组数量在角色内是否超限
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
-        groups = self.group_biz.batch_create(
-            role.id, parse_obj_as(List[GroupCreationBean], groups_data), request.user.username
-        )
+        infos = parse_obj_as(List[GroupCreationBean], groups_data)
+        # NOTE: 兼容v2 api记录用户组来源系统, 是否隐藏
+        for one in infos:
+            one.source_system_id = role.source_system_id
+            one.hidden = role.hidden
+
+        groups = self.group_biz.batch_create(role.id, infos, request.user.username)
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里

@@ -187,5 +187,5 @@ class RoleViewSet(GenericViewSet):
         slz.is_valid(raise_exception=True)
         with_perm = slz.validated_data["with_perm"]
 
-        user_roles = self.biz.list_user_role(request.user.username, with_perm)
+        user_roles = self.biz.list_user_role(request.user.username, with_perm, with_hidden=False)
         return Response([one.dict() for one in user_roles])

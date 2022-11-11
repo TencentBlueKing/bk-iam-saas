@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -41,7 +42,9 @@ class SystemViewSet(GenericViewSet):
             systems = self.biz.list()
         else:
             systems = RoleListQuery(request.role).list_system()
-        data = [i.dict(include={"id", "name", "name_en"}) for i in systems]
+        data = [
+            i.dict(include={"id", "name", "name_en"}) for i in systems if i.id not in settings.HIDDEN_SYSTEM_LIST
+        ]  # NOTE: 频闭掉需要隐藏的系统
         return Response(data)
 
 

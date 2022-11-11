@@ -27,6 +27,7 @@ from backend.api.management.v2.serializers import (
     ManagementGroupMemberSLZ,
     ManagementGroupPolicyDeleteSLZ,
     ManagementGroupRevokeSLZ,
+    ManagementGroupSLZ,
 )
 from backend.apps.group.audit import (
     GroupCreateAuditProvider,
@@ -51,7 +52,7 @@ from backend.biz.group import (
     GroupTemplateGrantBean,
 )
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz
+from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import RoleType
 from backend.service.models import Subject
@@ -66,10 +67,13 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
     management_api_permission = {
         "create": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
+        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_LIST.value),
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]).order_by(
+        "-updated_time"
+    )
 
     group_biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -93,9 +97,13 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         # 用户组数量在角色内是否超限
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
-        groups = self.group_biz.batch_create(
-            role.id, parse_obj_as(List[GroupCreationBean], groups_data), request.user.username
-        )
+        infos = parse_obj_as(List[GroupCreationBean], groups_data)
+        # 来源系统是否隐藏与角色保持一致
+        for one in infos:
+            one.source_system_id = role.source_system_id
+            one.hidden = role.hidden
+
+        groups = self.group_biz.batch_create(role.id, infos, "admin")
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
@@ -103,6 +111,24 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             add_audit(GroupCreateAuditProvider, request, group=g)
 
         return Response([group.id for group in groups])
+
+    @swagger_auto_schema(
+        operation_description="用户组列表",
+        responses={status.HTTP_200_OK: ManagementGroupSLZ(label="用户组", many=True)},
+        tags=["management.role.group"],
+    )
+    def list(self, request, *args, **kwargs):
+        role = self.get_object()
+
+        queryset = RoleListQuery(role).query_group()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ManagementGroupSLZ(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ManagementGroupSLZ(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):

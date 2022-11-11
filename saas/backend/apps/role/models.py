@@ -14,7 +14,7 @@ from typing import Dict, List, Union
 from django.db import models
 from django.utils.functional import cached_property
 
-from backend.common.models import BaseModel
+from backend.common.models import BaseModel, BaseSystemHiddenModel
 from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
 from backend.util.json import json_dumps
 
@@ -22,7 +22,7 @@ from .constants import DEFAULT_ROLE_PERMISSIONS
 from .managers import RoleRelatedObjectManager, RoleRelationManager, RoleUserManager
 
 
-class Role(BaseModel):
+class Role(BaseModel, BaseSystemHiddenModel):
     """
     角色
     """

@@ -45,6 +45,7 @@ class ManagementAPIEnum(BaseAPIEnum):
 
     # V2 API
     # 用户组
+    V2_GROUP_LIST = auto()
     V2_GROUP_BATCH_CREATE = auto()
     V2_GROUP_UPDATE = auto()
     V2_GROUP_DELETE = auto()
@@ -63,6 +64,13 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 用户组归属
     V2_USER_GROUPS_BELONG_CHECK = auto()
     V2_DEPARTMENT_GROUPS_BELONG_CHECK = auto()
+    # 分级管理员
+    V2_GRADE_MANAGER_APPLICATION_CREATE = auto()
+    V2_GRADE_MANAGER_APPLICATION_UPDATE = auto()
+    # 子集管理员
+    V2_SUBSET_MANAGER_CREATE = auto()
+    # 审批
+    V2_APPLICATION_APPROVAL = auto()
 
     _choices_labels = skip(
         (
@@ -111,6 +119,9 @@ class ManagementAPIEnum(BaseAPIEnum):
             # 用户组归属
             (V2_USER_GROUPS_BELONG_CHECK, "[V2]判断用户与用户组归属"),
             (V2_DEPARTMENT_GROUPS_BELONG_CHECK, "[V2]判断部门与用户组归属"),
+            # 分级管理员
+            (V2_GRADE_MANAGER_APPLICATION_CREATE, "[V2]创建分级管理员创建申请单"),
+            (V2_GRADE_MANAGER_APPLICATION_UPDATE, "[V2]创建分级管理员更新申请单"),
         )
     )
 

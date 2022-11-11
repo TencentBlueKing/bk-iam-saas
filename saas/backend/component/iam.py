@@ -569,9 +569,7 @@ def unfreeze_subjects(subjects: List[Dict]) -> None:
     return _call_iam_api(http_delete, url_path, data=subjects)
 
 
-def check_subject_groups_belong(
-    subject_type: str, subject_id: str, group_ids: List[int], inherit: bool = False
-) -> Dict[str, bool]:
+def check_subject_groups_belong(subject_type: str, subject_id: str, group_ids: List[int]) -> Dict[str, bool]:
     """
     校验Subject与用户组是否存在关系
     """
@@ -580,7 +578,6 @@ def check_subject_groups_belong(
         "type": subject_type,
         "id": subject_id,
         "group_ids": ",".join(map(str, group_ids)),
-        "inherit": inherit,
     }
     return _call_iam_api(http_get, url_path, data=data)
 

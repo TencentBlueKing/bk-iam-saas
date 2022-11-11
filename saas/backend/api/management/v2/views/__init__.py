@@ -8,7 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from .application import ManagementGroupApplicationViewSet
+from .application import (
+    ManagementGradeManagerApplicationViewSet,
+    ManagementGradeManagerUpdatedApplicationViewSet,
+    ManagementGroupApplicationViewSet,
+)
+from .approval import ManagementApplicationApprovalView
 from .group import (
     ManagementGradeManagerGroupViewSet,
     ManagementGroupActionPolicyViewSet,
@@ -20,6 +25,7 @@ from .group import (
     ManagementSystemManagerGroupViewSet,
 )
 from .subject import ManagementDepartmentGroupBelongViewSet, ManagementUserGroupBelongViewSet
+from .subset_manager import ManagementSubsetManagerViewSet
 
 __all__ = [
     "ManagementSystemManagerGroupViewSet",
@@ -33,4 +39,8 @@ __all__ = [
     "ManagementGroupPolicyActionViewSet",
     "ManagementUserGroupBelongViewSet",
     "ManagementDepartmentGroupBelongViewSet",
+    "ManagementGradeManagerApplicationViewSet",
+    "ManagementGradeManagerUpdatedApplicationViewSet",
+    "ManagementApplicationApprovalView",
+    "ManagementSubsetManagerViewSet",
 ]

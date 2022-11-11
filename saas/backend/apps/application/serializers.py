@@ -238,6 +238,7 @@ class ApplicationGroupInfoSLZ(serializers.Serializer):
 
 class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
     groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False)
+    source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
 
 
 class GradeManagerCreatedApplicationSLZ(GradeMangerCreateSLZ, ReasonSLZ):
@@ -254,6 +255,7 @@ class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
 
 class RenewGroupApplicationSLZ(ReasonSLZ):
     groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupExpiredAtSLZ(label="用户组"), allow_empty=False)
+    source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
 
 
 class IDExpiredAtSLZ(ExpiredAtSLZ):

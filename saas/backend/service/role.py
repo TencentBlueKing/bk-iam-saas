@@ -114,6 +114,10 @@ class RoleInfo(PartialModel):
     subject_scopes: List[Subject] = []
     authorization_scopes: List[AuthScopeSystem] = []
 
+    # NOTE: 只在role创建时有用
+    source_system_id: str = ""
+    hidden: bool = False
+
     @property
     def member_usernames(self):
         return [member.username for member in self.members]
@@ -144,12 +148,12 @@ class RoleService:
 
         return parse_obj_as(List[AuthScopeSystem], json.loads(role_scope.content))
 
-    def list_user_role(self, user_id: str, with_permission: bool = False) -> List[UserRole]:
+    def list_user_role(self, user_id: str, with_permission: bool = False, with_hidden: bool = True) -> List[UserRole]:
         """查询用户的角色列表"""
         role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
 
         if not with_permission:
-            return self.list_by_ids(role_ids)
+            return self.list_by_ids(role_ids, with_hidden=with_hidden)
 
         roles = Role.objects.exclude(type=RoleType.GRADE_MANAGER.value).filter(id__in=role_ids)
         role_dict = {role.id: role for role in roles}
@@ -174,8 +178,11 @@ class RoleService:
         """查询指定角色的成员列表"""
         return list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
 
-    def list_by_ids(self, role_ids: List[int]) -> List[UserRole]:
+    def list_by_ids(self, role_ids: List[int], with_hidden: bool = True) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
+        if not with_hidden:
+            roles = roles.filter(hidden=True)
+
         data = [UserRole.convert_from_role(role) for role in roles]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
@@ -200,6 +207,8 @@ class RoleService:
                 inherit_subject_scope=info.inherit_subject_scope,
                 creator=creator,
                 updater=creator,
+                source_system_id=info.source_system_id,
+                hidden=info.hidden,
             )
             role.save(force_insert=True)
 

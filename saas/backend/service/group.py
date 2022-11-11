@@ -52,6 +52,10 @@ class GroupCreation(BaseModel):
     description: str
     readonly: bool = False
 
+    # NOTE: 只在group创建时有用
+    source_system_id: str = ""
+    hidden: bool = False
+
 
 class GroupMemberExpiredAt(Subject):
     expired_at: int
@@ -62,7 +66,14 @@ class GroupService:
         """
         创建用户组
         """
-        group = Group(name=info.name, description=info.description, readonly=info.readonly, creator=creator)
+        group = Group(
+            name=info.name,
+            description=info.description,
+            readonly=info.readonly,
+            creator=creator,
+            source_system_id=info.source_system_id,
+            hidden=info.hidden,
+        )
         group.save(force_insert=True)
 
         # 创建后端的用户组
@@ -75,7 +86,15 @@ class GroupService:
         批量创建用户组
         """
         groups = [
-            Group(name=one.name, description=one.description, readonly=one.readonly, creator=creator) for one in infos
+            Group(
+                name=one.name,
+                description=one.description,
+                readonly=one.readonly,
+                creator=creator,
+                source_system_id=one.source_system_id,
+                hidden=one.hidden,
+            )
+            for one in infos
         ]
         with transaction.atomic():
             # 为了获取返回的insert id, 不能使用bulk_create
@@ -128,17 +147,11 @@ class GroupService:
             department_count=F("department_count") - type_count[SubjectType.DEPARTMENT.value],
         )
 
-    def check_subject_groups_belong(
-        self, subject: Subject, group_ids: List[int], inherit: bool = False
-    ) -> Dict[int, bool]:
+    def check_subject_groups_belong(self, subject: Subject, group_ids: List[int]) -> Dict[int, bool]:
         """
         校验Subject与用户组是否存在关系
         """
-        # 对于非用户，则不存在继承的查询
-        if subject.type != SubjectType.USER.value:
-            inherit = False
-
-        group_belongs = iam.check_subject_groups_belong(subject.type, subject.id, group_ids, inherit)
+        group_belongs = iam.check_subject_groups_belong(subject.type, subject.id, group_ids)
 
         # 将group_id从str转为int
         return {int(k): v for k, v in group_belongs.items()}

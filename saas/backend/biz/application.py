@@ -24,7 +24,7 @@ from backend.apps.group.models import Group
 from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
-from backend.apps.role.models import Role
+from backend.apps.role.models import Role, RoleSource
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditType
@@ -33,7 +33,7 @@ from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, RoleType, SubjectType
+from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, RoleSourceTypeEnum, RoleType, SubjectType
 from backend.service.models import (
     ApplicantDepartment,
     ApplicantInfo,
@@ -245,7 +245,9 @@ class ApprovedPassApplicationBiz:
             sn=application.sn,
         )
 
-    def _gen_role_info_bean(self, data: Dict[Any, Any]) -> RoleInfoBean:
+    def _gen_role_info_bean(
+        self, data: Dict[Any, Any], source_system_id: str = "", hidden: bool = False
+    ) -> RoleInfoBean:
         """处理分级管理员数据"""
         # 兼容新老数据
         auth_scopes = data["authorization_scopes"]
@@ -253,12 +255,23 @@ class ApprovedPassApplicationBiz:
             # 新数据是system，没有system_id
             if "system_id" not in scope:
                 scope["system_id"] = scope["system"]["id"]
-        return RoleInfoBean(**data)
+        return RoleInfoBean(source_system_id=source_system_id, hidden=hidden, **data)
 
     def _create_grade_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
-        info = self._gen_role_info_bean(application.data)
-        role = self.role_biz.create_grade_manager(info, subject.id)
+        info = self._gen_role_info_bean(
+            application.data, source_system_id=application.source_system_id, hidden=application.hidden
+        )
+        with transaction.atomic():
+            role = self.role_biz.create_grade_manager(info, subject.id)
+
+            if application.source_system_id:
+                # 记录role创建来源信息
+                RoleSource.objects.create(
+                    role_id=role.id,
+                    source_type=RoleSourceTypeEnum.API.value,
+                    source_system_id=application.source_system_id,
+                )
 
         log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
 
@@ -551,7 +564,7 @@ class ApplicationBiz:
         return GroupApplicationContent(groups=group_infos)
 
     def create_for_group(
-        self, application_type: ApplicationTypeEnum, data: GroupApplicationDataBean
+        self, application_type: ApplicationTypeEnum, data: GroupApplicationDataBean, source_system_id: str = ""
     ) -> List[Application]:
         """申请加入用户组"""
         # 1. 查询申请者信息
@@ -586,7 +599,7 @@ class ApplicationBiz:
         # 7. 循环创建申请单
         applications = []
         for _data, _process in new_data_list:
-            application = self.svc.create_for_group(_data, _process)
+            application = self.svc.create_for_group(_data, _process, source_system_id=source_system_id)
             applications.append(application)
 
         return applications
@@ -621,7 +634,14 @@ class ApplicationBiz:
         )
 
     def create_for_grade_manager(
-        self, application_type: ApplicationTypeEnum, data: GradeManagerApplicationDataBean
+        self,
+        application_type: ApplicationTypeEnum,
+        data: GradeManagerApplicationDataBean,
+        source_system_id: str = "",
+        callback_id: str = "",
+        callback_url: str = "",
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> List[Application]:
         """分级管理员"""
         # 1. 查询申请者信息
@@ -644,6 +664,11 @@ class ApplicationBiz:
                 content=self._gen_grade_manager_application_content(data.role_info, data.role_id),
             ),
             process,
+            source_system_id=source_system_id,
+            callback_id=callback_id,
+            callback_url=callback_url,
+            approval_title=approval_title,
+            approval_content=approval_content,
         )
 
         return [application]

@@ -11,14 +11,16 @@ specific language governing permissions and limitations under the License.
 from django_filters import rest_framework as filters
 
 from backend.apps.role.models import Role, RoleCommonAction
+from backend.common.filters import InitialFilterSet
 
 
-class GradeMangerFilter(filters.FilterSet):
+class GradeMangerFilter(InitialFilterSet):
     name = filters.CharFilter(lookup_expr="icontains", label="名称")
+    hidden = filters.BooleanFilter(initial=True)
 
     class Meta:
         model = Role
-        fields = ["name"]
+        fields = ["name", "hidden"]
 
 
 class RoleCommonActionFilter(filters.FilterSet):
