@@ -129,6 +129,7 @@
                         }
                         this.gradeManagerList.splice(0, this.gradeManagerList.length, ...(res.data.results || []));
                     }
+                    this.curGradeManager = this.distributeDetail.role.id;
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({

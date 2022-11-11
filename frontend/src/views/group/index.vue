@@ -96,7 +96,7 @@
                                 style="width: 100%; margin-left: 5px;"
                                 :placeholder="$t(`m.verify['请输入']`)"
                                 :is-show-other="true"
-                                :value="row.role.name || '--'"
+                                :value="['subset_manager'].includes(row.role.type) ? row.role.name : '--'"
                                 :remote-hander="handleShowDistribute"
                                 @handleShow="handleDistribute(row)" />
                         </div>
