@@ -211,12 +211,13 @@
             async fetchPageData () {
                 await this.fetchGradingAdmin();
             },
+            
             getCellClass ({ row, column, rowIndex, columnIndex }) {
                 if (!row.is_member) {
-                    return 'iam-tag-table-cell-opacity-cls';
+                    return 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls';
                 }
                 if (!row.has_subset_manager) {
-                    return 'iam-tag-table-cell-subset-cls';
+                    return 'iam-tag-table-cell-cls iam-tag-table-cell-subset-cls';
                 }
                 if (columnIndex === 2) {
                     return 'iam-tag-table-cell-cls';

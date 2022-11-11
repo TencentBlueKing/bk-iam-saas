@@ -157,6 +157,7 @@
                     });
                 }
             },
+
             handleChange () {
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
@@ -211,6 +212,9 @@
                 border-radius: 2px;
                 background: #f0f1f5;
                 font-size: 12px;
+                &:first-child {
+                    margin-left: 0;
+                }
                 i {
                     font-size: 18px;
                     color: #979ba5;
