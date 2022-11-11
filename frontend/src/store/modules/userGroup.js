@@ -244,9 +244,7 @@ export default {
          * @return {Promise} promise 对象
          */
         userGroupDistribute ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            const { id } = requestParams;
-            delete requestParams.id;
+            const { id } = params;
             return http.post(`${AJAX_URL_PREFIX}/groups/${id}/transfer/`, params, config);
         },
 
