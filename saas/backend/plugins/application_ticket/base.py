@@ -44,7 +44,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_for_group(
-        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str, tag: str = ""
     ) -> str:
         """创建 - 申请加入或续期用户组单据"""
         pass
@@ -57,6 +57,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         callback_url: str,
         approval_title: str = "",
         approval_content: Optional[Dict] = None,
+        tag: str = "",
     ) -> str:
         """创建 - 创建或更新分级管理员"""
         pass

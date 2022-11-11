@@ -94,7 +94,7 @@ class ApplicationService:
         """创建加入或续期用户组申请单"""
         return self._create(
             data,
-            lambda callback_url: self.provider.create_for_group(data, process, callback_url),
+            lambda callback_url: self.provider.create_for_group(data, process, callback_url, tag=source_system_id),
             source_system_id=source_system_id,
         )
 
@@ -112,7 +112,12 @@ class ApplicationService:
         return self._create(
             data,
             lambda callback_url: self.provider.create_for_grade_manager(
-                data, process, callback_url, approval_title=approval_title, approval_content=approval_content
+                data,
+                process,
+                callback_url,
+                approval_title=approval_title,
+                approval_content=approval_content,
+                tag=source_system_id,
             ),
             source_system_id=source_system_id,
             callback_id=callback_id,

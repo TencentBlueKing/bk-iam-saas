@@ -92,7 +92,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         return ticket["sn"]
 
     def create_for_group(
-        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str, tag: str = ""
     ) -> str:
         """创建 - 申请加入或续期用户组单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
@@ -105,6 +105,8 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
 
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
+
+        params["tag"] = tag
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 
@@ -115,6 +117,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         callback_url: str,
         approval_title: str = "",
         approval_content: Optional[Dict] = None,
+        tag: str = "",
     ) -> str:
         """创建 - 创建或更新分级管理员"""
         params = self._generate_ticket_common_params(data, process, callback_url)
@@ -133,6 +136,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 "form_data": GradeManagerForm.from_application(data.content).form_data,
             }
 
+        params["tag"] = tag
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 

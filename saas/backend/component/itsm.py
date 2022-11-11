@@ -40,6 +40,7 @@ def create_ticket(
     organization_names: str,
     reason: str,
     content: Dict,
+    tag: str = "",
     **kwargs,
 ) -> Dict:
     """获取审批流程，并根据单据创建者判断是否实例化审批节点"""
@@ -47,6 +48,7 @@ def create_ticket(
     data = {
         "service_id": process_id,
         "creator": creator,
+        "tag": tag,  # NOTE: 用于ITSM审批单列表api筛选过滤字段
         "meta": {"callback_url": callback_url, "state_processors": node_processors},
         "fields": [
             {"key": "title", "value": title},
