@@ -101,6 +101,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             (GROUP_APPLICATION_CREATE, "创建用户组申请单"),
             # V2
             # 用户组
+            (V2_GROUP_LIST, "[V2]用户组列表"),
             (V2_GROUP_BATCH_CREATE, "[V2]批量创建用户组"),
             (V2_GROUP_UPDATE, "[V2]更新用户组"),
             (V2_GROUP_DELETE, "[V2]删除用户组"),
@@ -122,6 +123,10 @@ class ManagementAPIEnum(BaseAPIEnum):
             # 分级管理员
             (V2_GRADE_MANAGER_APPLICATION_CREATE, "[V2]创建分级管理员创建申请单"),
             (V2_GRADE_MANAGER_APPLICATION_UPDATE, "[V2]创建分级管理员更新申请单"),
+            # 子集管理员
+            (V2_SUBSET_MANAGER_CREATE, "[V2]创建子集管理员"),
+            # 审批
+            (V2_APPLICATION_APPROVAL, "[V2]申请单审批通知"),
         )
     )
 

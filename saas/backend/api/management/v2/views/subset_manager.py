@@ -85,11 +85,8 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
             subject_scopes = self.biz.list_subject_scope(grade_manager.id)
             info.subject_scopes = subject_scopes
 
-        # 创建子集管理员, 并创建分级管理员与子集管理员的关系
-        role = self.biz.create_subset_manager(grade_manager, info, "admin")
-
         with transaction.atomic():
-            # 创建角色
+            # 创建子集管理员, 并创建分级管理员与子集管理员的关系
             role = self.biz.create_subset_manager(grade_manager, info, "admin")
 
             # 记录role创建来源信息
