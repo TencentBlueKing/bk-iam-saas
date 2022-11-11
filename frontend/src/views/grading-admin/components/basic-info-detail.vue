@@ -2,7 +2,8 @@
     <div class="iam-grading-admin-basic-info-wrapper">
         <detail-layout mode="see">
             <render-layout>
-                <detail-item :label="$t(`m.gradingDetail['分级管理员名称']`)">
+                <detail-item :label="curRoleType === 'staff' ?
+                    $t(`m.levelSpace['空间名']`) : $t(`m.gradingDetail['分级管理员名称']`)">
                     <iam-edit-input
                         field="name"
                         :placeholder="$t(`m.verify['请输入']`)"
@@ -28,6 +29,7 @@
     </div>
 </template>
 <script>
+    import { mapGetters } from 'vuex';
     import DetailLayout from '@/components/detail-layout';
     import DetailItem from '@/components/detail-layout/item';
     import IamEditInput from '@/components/iam-edit/input';
@@ -65,6 +67,12 @@
                     members: []
                 }
             };
+        },
+        computed: {
+            ...mapGetters(['user']),
+            curRoleType () {
+                return this.user.role.type;
+            }
         },
         watch: {
             data: {
