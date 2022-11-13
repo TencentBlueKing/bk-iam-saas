@@ -433,7 +433,6 @@
                     this.$store.commit('updataNavRouterDiff', navIndex);
                 }
                 const curRouterName = this.$route.name;
-                console.log('difference', difference, curRouterName);
                 if (difference.length) {
                     if (difference.includes(curRouterName)) {
                         this.$store.commit('setHeaderTitle', '');
