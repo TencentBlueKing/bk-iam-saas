@@ -433,6 +433,7 @@
                     this.$store.commit('updataNavRouterDiff', navIndex);
                 }
                 const curRouterName = this.$route.name;
+                console.log('difference', difference, curRouterName);
                 if (difference.length) {
                     if (difference.includes(curRouterName)) {
                         this.$store.commit('setHeaderTitle', '');
@@ -453,6 +454,16 @@
                         this.$router.push({
                             name
                         });
+                    } else {
+                        if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
+                            this.$router.push({
+                                name: 'myPerm'
+                            });
+                        } else if (navIndex === 3 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'myManageSpaceSubDetail'].includes(curRouterName)) {
+                            this.$router.push({
+                                name: 'user'
+                            });
+                        }
                     }
                 }
             },

@@ -294,6 +294,9 @@
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
                         this.openedItem = value;
+                        if (this.openedItem === 'myManageSpaceNav' && this.curRole === 'super_manager') {
+                            this.openedItem = 'gradingAdminNav';
+                        }
                         break;
                     }
                 }
@@ -408,6 +411,7 @@
 
             // 更新路由
             updateRouter (roleType) {
+                console.log('roleType', roleType);
                 this.$store.commit('updataRouterDiff', roleType);
                 const difference = getRouterDiff(roleType);
                 const curRouterName = this.$route.name;

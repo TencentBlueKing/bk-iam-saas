@@ -52,7 +52,8 @@ export const getRouterDiff = (payload) => {
             'firstManageSpace',
             'ratingManager',
             'secondaryManageSpace',
-            'authorBoundary'
+            'authorBoundary',
+            'secondaryManageSpaceCreate'
         ];
     }
     if (payload === 'super_manager') {
@@ -85,7 +86,11 @@ export const getRouterDiff = (payload) => {
             'firstManageSpace',
             'secondaryManageSpace',
             'authorBoundary',
-            'myManageSpace'
+            'myManageSpace',
+            'myManageSpaceCreate',
+            'permTransfer',
+            'cloneUserGroup',
+            'myManageSpaceSubDetail'
         ];
     }
     if (payload === 'system_manager') {
@@ -250,12 +255,10 @@ export const getNavRouterDiff = (navIndex) => {
             'firstManageSpace',
             'ratingManager',
             'authorBoundary',
-            'secondaryManageSpace'
+            'secondaryManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail'
         ];
-    }
-
-    if (navIndex === 1) {
-        return ['firstManageSpace'];
     }
 
     if (navIndex === 2) {
@@ -299,7 +302,9 @@ export const getNavRouterDiff = (navIndex) => {
             'firstManageSpace',
             'authorBoundary',
             'secondaryManageSpace',
-            'myManageSpace'
+            'myManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail'
         ];
     }
 
@@ -332,7 +337,9 @@ export const getNavRouterDiff = (navIndex) => {
             'approvalProcess',
             'authorBoundary',
             'secondaryManageSpace',
-            'myManageSpace'
+            'myManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail'
         ];
     }
 };
