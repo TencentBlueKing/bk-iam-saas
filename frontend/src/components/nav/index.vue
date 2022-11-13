@@ -294,6 +294,9 @@
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
                         this.openedItem = value;
+                        if (this.openedItem === 'myManageSpaceNav' && this.curRole === 'super_manager') {
+                            this.openedItem = 'gradingAdminNav';
+                        }
                         break;
                     }
                 }

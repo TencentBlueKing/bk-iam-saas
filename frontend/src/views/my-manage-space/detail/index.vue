@@ -143,7 +143,7 @@
                     description: description || '--',
                     members
                 });
-                // this.$store.commit('setHeaderTitle', name);
+                this.$store.commit('setHeaderTitle', name);
                 payload.subject_scopes.forEach(item => {
                     if (item.type === 'department') {
                         departments.push({

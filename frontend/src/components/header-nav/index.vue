@@ -453,6 +453,16 @@
                         this.$router.push({
                             name
                         });
+                    } else {
+                        if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
+                            this.$router.push({
+                                name: 'myPerm'
+                            });
+                        } else if (navIndex === 3 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'myManageSpaceSubDetail'].includes(curRouterName)) {
+                            this.$router.push({
+                                name: 'user'
+                            });
+                        }
                     }
                 }
             },
