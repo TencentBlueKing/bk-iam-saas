@@ -62,6 +62,9 @@
                         :authorization="curAuthorizationData"
                         :original-list="tableListBackup"
                         :is-all-expanded="isAllExpanded"
+                        :backup-list="aggregationsTableData"
+                        @on-delete="handleDelete"
+                        @on-aggregate-delete="handleAggregateDelete"
                         @handleAggregateAction="handleAggregateAction"
                         @on-select="handleAttrValueSelected"
                         @on-resource-select="handleResSelect" />
@@ -199,6 +202,7 @@
                 tableListBackup: [],
                 templateDetailList: [],
                 aggregationData: {},
+                aggregations: [],
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 authorizationData: {},
@@ -218,8 +222,7 @@
                 addMemberTips: this.$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间的权限']`),
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 inheritSubjectScope: true,
-                curSystemId: [],
-                aggregations: []
+                curSystemId: []
             };
         },
         computed: {
@@ -312,7 +315,7 @@
                     if (difference.length) {
                         this.curSystemId = [...this.curSystemId.concat(difference)];
                         this.resetData();
-                        if (this.policyList.length > 0) {
+                        if (this.policyList.length) {
                             this.fetchAggregationAction(this.curSystemId.join(','));
                         }
                     } else {
@@ -349,7 +352,10 @@
             getDetailData (payload) {
                 const tempActions = [];
                 const {
-                    name, description, members, sync_perm,
+                    name,
+                    description,
+                    members,
+                    sync_perm,
                     inherit_subject_scope: inheritSubjectScope,
                     subject_scopes, authorization_scopes
                 } = payload;
@@ -407,16 +413,15 @@
                     this.policyList = payload.map(item => {
                         return new GroupPolicy(
                             item,
-                            'template',
+                            'add',
                             'custom',
                             Object.assign(
                                 item,
                                 {
                                     system: {
-                                        id: item.id,
+                                        id: item.system_id,
                                         name: item.system_name
-                                    },
-                                    id: CUSTOM_PERM_TEMPLATE_ID
+                                    }
                                 }
                             )
                         );
@@ -1138,6 +1143,40 @@
              */
             handleCancelAdd () {
                 this.isShowAddMemberDialog = false;
+            },
+
+            setAggregateExpanded () {
+                const flag = this.policyList.every(item => !item.isAggregate);
+                if (flag) {
+                    this.isAllExpanded = false;
+                }
+            },
+
+            handleDelete (systemId, actionId, payload, index) {
+                window.changeDialog = true;
+                this.originalList = this.originalList.filter(item => payload !== item.$id);
+                this.policyList.splice(index, 1);
+                for (let i = 0; i < this.aggregations.length; i++) {
+                    const item = this.aggregations[i];
+                    if (item.actions[0].system_id === systemId) {
+                        item.actions = item.actions.filter(subItem => subItem.id !== actionId);
+                        break;
+                    }
+                }
+                this.aggregations = this.aggregations.filter(item => item.actions.length > 1);
+                this.setAggregateExpanded();
+            },
+
+            handleAggregateDelete (systemId, actions, index) {
+                window.changeDialog = true;
+                this.policyList.splice(index, 1);
+                const deleteAction = actions.map(item => `${systemId}&${item.id}`);
+                this.originalList = this.originalList.filter(item => !deleteAction.includes(item.$id));
+                this.aggregations = this.aggregations.filter(item =>
+                    !(item.actions[0].system_id === systemId
+                        && _.isEqual(item.actions.map(_ => _.id).sort(), actions.map(_ => _.id).sort()))
+                );
+                this.setAggregateExpanded();
             },
 
             /**

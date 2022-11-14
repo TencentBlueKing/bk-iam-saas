@@ -129,9 +129,9 @@
                                 {{ $t(`m.common['无需关联实例']`) }}
                             </template>
                         </div>
-                        <!-- <div class="remove-icon">
+                        <div class="remove-icon" @click.stop="handlerRemove(row, $index)">
                             <Icon type="close-small" />
-                        </div> -->
+                        </div>
                     </template>
                 </template>
             </bk-table-column>
@@ -569,6 +569,14 @@
             },
             handleDelete () {
                 this.$emit('on-delete', this.newRow);
+            },
+            handlerRemove (row, payload) {
+                window.changeDialog = true;
+                if (row.isAggregate) {
+                    this.$emit('on-aggregate-delete', row.system_id, row.actions, payload);
+                    return;
+                }
+                this.$emit('on-delete', row.system_id, row.id, `${row.system_id}&${row.id}`, payload);
             },
             handleViewResource (payload) {
                 this.curId = payload.id;
@@ -1956,6 +1964,9 @@
                         & > td {
                             background-color: transparent;
                         }
+                        .remove-icon {
+                            display: inline-block;
+                        }
                     }
                 }
                 td:first-child .cell,
@@ -1972,6 +1983,7 @@
             }
             .relation-content-wrapper,
             .conditions-wrapper {
+                position: relative;
                 height: 100%;
                 padding: 17px 0;
                 color: #63656e;
@@ -1979,15 +1991,21 @@
                     display: block;
                     margin-bottom: 9px;
                 }
+                .iam-condition-item {
+                    width: 90%;
+                }
             }
             .remove-icon {
+                display: none;
                 position: absolute;
-                right: 2px;
-                top: 2px;
-                font-size: 20px;
+                top: 10px;
+                right: 10px;
                 cursor: pointer;
                 &:hover {
                     color: #3a84ff;
+                }
+                i {
+                    font-size: 20px;
                 }
             }
             .relation-content-item {

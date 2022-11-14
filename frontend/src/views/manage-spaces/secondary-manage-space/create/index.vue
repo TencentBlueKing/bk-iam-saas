@@ -62,6 +62,8 @@
                         :authorization="curAuthorizationData"
                         :original-list="tableListBackup"
                         :is-all-expanded="isAllExpanded"
+                        @on-delete="handleDelete"
+                        @on-aggregate-delete="handleAggregateDelete"
                         @handleAggregateAction="handleAggregateAction"
                         @on-select="handleAttrValueSelected"
                         @on-resource-select="handleResSelect" />
@@ -882,7 +884,6 @@
                     name,
                     description,
                     members,
-                    syncPerm,
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     sync_perm: syncPerm,
@@ -984,6 +985,40 @@
              */
             handleCancelAdd () {
                 this.isShowAddMemberDialog = false;
+            },
+
+            setAggregateExpanded () {
+                const flag = this.tableList.every(item => !item.isAggregate);
+                if (flag) {
+                    this.isAllExpanded = false;
+                }
+            },
+
+            handleDelete (systemId, actionId, payload, index) {
+                window.changeDialog = true;
+                this.originalList = this.originalList.filter(item => payload !== item.$id);
+                this.tableList.splice(index, 1);
+                for (let i = 0; i < this.aggregations.length; i++) {
+                    const item = this.aggregations[i];
+                    if (item.actions[0].system_id === systemId) {
+                        item.actions = item.actions.filter(subItem => subItem.id !== actionId);
+                        break;
+                    }
+                }
+                this.aggregations = this.aggregations.filter(item => item.actions.length > 1);
+                this.setAggregateExpanded();
+            },
+
+            handleAggregateDelete (systemId, actions, index) {
+                window.changeDialog = true;
+                this.tableList.splice(index, 1);
+                const deleteAction = actions.map(item => `${systemId}&${item.id}`);
+                this.originalList = this.originalList.filter(item => !deleteAction.includes(item.$id));
+                this.aggregations = this.aggregations.filter(item =>
+                    !(item.actions[0].system_id === systemId
+                        && _.isEqual(item.actions.map(_ => _.id).sort(), actions.map(_ => _.id).sort()))
+                );
+                this.setAggregateExpanded();
             },
 
             /**
