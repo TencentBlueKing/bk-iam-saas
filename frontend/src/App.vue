@@ -23,7 +23,7 @@
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
-            v-if="isRouterAlive && !externalSystemsLayout.hideIamBreadCrumbs">
+            v-if="isRouterAlive">
         </the-header>
         <the-nav class="nav-layout"
             @reload-page="reloadCurPage"
