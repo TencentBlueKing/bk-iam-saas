@@ -77,7 +77,11 @@
         },
         computed: {
             getTableList () {
-                return this.panels.find(item => item.name === this.active).data || [];
+                const panelData = this.panels.find(item => item.name === this.active);
+                if (panelData) {
+                    return panelData.data;
+                }
+                return [];
             },
             curBadgeTheme () {
                 return payload => {
@@ -96,7 +100,7 @@
                             this.isEmpty = true;
                         }
                     } else if (this.active === 'custom') {
-                        if (value[1].total > 0) {
+                        if (value[1] && value[1].total > 0) {
                             this.isEmpty = false;
                         } else {
                             this.isEmpty = true;
@@ -109,6 +113,7 @@
                 handler (value) {
                     if (value.myPerm.renewal.hideCustomTab) {
                         this.panels.splice(1, 1);
+                        this.active = 'group';
                     }
                 },
                 immediate: true,
@@ -134,8 +139,10 @@
                 });
                 this.panels[0].total = resultList[0].data.count;
                 this.panels[0].data = resultList[0].data.results;
-                this.panels[1].total = resultList[1].data.length;
-                this.panels[1].data = resultList[1].data;
+                if (this.panels[1]) {
+                    this.panels[1].total = resultList[1].data.length;
+                    this.panels[1].data = resultList[1].data;
+                }
                 this.tabKey = +new Date();
             },
             // async fetchPageData () {

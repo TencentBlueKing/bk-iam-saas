@@ -159,9 +159,9 @@
                 }
             });
 
-            if (this.existKey('source')) {
-                this.fetchExternalSystemsLayout();
-            }
+            // if (this.existKey('source')) {
+            //     this.fetchExternalSystemsLayout();
+            // }
         },
         methods: {
             reload () {
