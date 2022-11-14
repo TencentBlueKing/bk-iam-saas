@@ -22,6 +22,7 @@ from backend.api.management.v2.serializers import ManagementGradeManagerBasicSLZ
 from backend.apps.role.audit import RoleCreateAuditProvider
 from backend.apps.role.models import Role, RoleSource
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.role import RoleTrans
@@ -41,6 +42,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
 
     lookup_field = "id"
     biz = RoleBiz()
+    group_biz = GroupBiz()
     role_check_biz = RoleCheckBiz()
     role_trans = RoleTrans()
 
@@ -93,6 +95,10 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
             RoleSource.objects.create(
                 role_id=role.id, source_type=RoleSourceTypeEnum.API.value, source_system_id=source_system_id
             )
+
+            # 创建同步权限用户组
+            if info.sync_perm:
+                self.group_biz.create_sync_perm_group_by_role(role, "admin")
 
         audit_context_setter(role=role)
 

@@ -262,6 +262,7 @@ class ManagementSubsetMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
     inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围", required=False, default=False)
+    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
 
     def validate(self, data):
         data = super().validate(data)
