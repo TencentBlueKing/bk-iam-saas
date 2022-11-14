@@ -1,7 +1,7 @@
 <template>
     <div class="iam-grading-admin-detail-wrapper">
         <p class="edit-action">
-            {{ $t(`m.grading['如需编辑分级管理员的内容请点击']`) }}
+            {{curRoleType === 'staff' ? $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) : $t(`m.grading['如需编辑分级管理员的内容请点击']`)}}
             <bk-button
                 theme="primary"
                 text
@@ -53,6 +53,7 @@
 </template>
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
     import store from '@/store';
     import RenderPerm from '@/components/render-perm';
     import basicInfo from '../components/basic-info-detail';
@@ -86,11 +87,15 @@
             next();
         },
         computed: {
+            ...mapGetters(['user']),
             isHasUser () {
                 return this.users.length > 0;
             },
             isHasDepartment () {
                 return this.departments.length > 0;
+            },
+            curRoleType () {
+                return this.user.role.type;
             }
         },
         methods: {

@@ -273,7 +273,6 @@ export const routes = [
                 path: 'my-manage-space/sub-detail',
                 name: 'myManageSpaceSubDetail',
                 meta: {
-                    headerTitle: il8n('levelSpace', '我的管理空间'),
                     backRouter: 'myManageSpace'
                 },
                 component: MyManageSpaceSubDetail

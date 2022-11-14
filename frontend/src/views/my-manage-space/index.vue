@@ -146,7 +146,7 @@
                         <bk-button theme="primary" text @click.stop="handleView(row, 'edit')">
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text @click="handleClone(row)">
+                        <bk-button theme="primary" text @click="handleView(row, 'clone')">
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
                     </div>
@@ -332,8 +332,23 @@
             // 一级管理空间
             handleView ({ id, name }, type) {
                 window.localStorage.setItem('iam-header-name-cache', name);
+                let routerName = 'gradingAdminDetail';
+                switch (type) {
+                    case 'detail':
+                        routerName = 'gradingAdminDetail';
+                        break;
+                    case 'edit':
+                        routerName = 'gradingAdminEdit';
+                        break;
+                    case 'clone':
+                        routerName = 'gradingAdminCreate';
+                        break;
+                    default:
+                        routerName = 'gradingAdminDetail';
+                        break;
+                }
                 this.$router.push({
-                    name: type === 'detail' ? 'gradingAdminDetail' : 'gradingAdminEdit',
+                    name: routerName,
                     params: {
                         id
                     }

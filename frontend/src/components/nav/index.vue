@@ -149,7 +149,7 @@
             'myPermNav'
         ],
         // 我的管理空间
-        [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'myManageSpaceSubDetail'], 'myManageSpaceNav'],
+        [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail'], 'myManageSpaceNav'],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
         // 一级管理空间
@@ -294,6 +294,9 @@
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
                         this.openedItem = value;
+                        if (this.openedItem === 'myManageSpaceNav' && this.curRole === 'super_manager') {
+                            this.openedItem = 'gradingAdminNav';
+                        }
                         break;
                     }
                 }
