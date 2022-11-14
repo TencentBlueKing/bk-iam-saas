@@ -36,7 +36,14 @@
                     </section>
                 </div>
                 <div class="info-wrapper">
+                    <p class="tips">{{ infoText }}</p>
                     <section style="min-width: 108px; position: relative;">
+                        <iam-guide
+                            type="rating_manager_merge_action"
+                            direction="right"
+                            :loading="isLoading"
+                            :style="{ top: '-15px', right: '120px' }"
+                            :content="$t(`m.guide['聚合操作']`)" />
                         <bk-switcher
                             v-model="isAllExpanded"
                             :disabled="isAggregateDisabled"
@@ -62,18 +69,6 @@
             </div>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界范围不可为空']`) }}</p>
-        <!-- <render-action
-            :title="$t(`m.userGroup['添加组成员']`)"
-            v-if="isShowMemberAdd"
-            style="margin-bottom: 16px;"
-            data-test-id="group_btn_showAddGroupMember"
-            @on-click="handleAddMember">
-            <iam-guide
-                type="add_group_member"
-                direction="left"
-                :style="{ top: '-20px', left: '180px' }"
-                :content="$t(`m.guide['添加组成员']`)" />
-        </render-action> -->
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
@@ -120,7 +115,7 @@
             ref="addPermSideslider"
             :is-show.sync="isShowAddSideslider"
             :custom-perm="originalList"
-            :template="tempalteDetailList"
+            :template="templateDetailList"
             :aggregation="aggregationData"
             :authorization="authorizationData"
             @on-view="handleViewDetail"
@@ -186,7 +181,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    syncPerm: true
                 },
                 isShowAddMemberDialog: false,
                 isShowMemberAdd: false,
@@ -200,17 +196,15 @@
                 isShowAddActionSideslider: false,
                 curActionValue: [],
                 originalList: [],
-
                 tableList: [],
                 tableListBackup: [],
-                tempalteDetailList: [],
+                templateDetailList: [],
                 aggregationData: {},
                 authorizationData: {},
                 aggregationDataByCustom: {},
                 authorizationDataByCustom: {},
                 allAggregationData: {},
                 isAllExpanded: false,
-
                 hasDeleteCustomList: [],
                 hasAddCustomList: [],
                 templateDetailSideslider: {
@@ -307,69 +301,68 @@
             }
         },
         mounted () {
-            this.formData.members = [{ username: this.user.username, readonly: true }];
+            // this.formData.members = [{ username: this.user.username, readonly: true }];
+            this.formData.members = [{ username: 'poloohuang', readonly: false }, { username: 'admin', readonly: true }];
         },
         methods: {
-            async fetchPageData () {
-                if (Number(this.id) > 0) {
-                    await this.fetchDetail();
-                }
-            },
-            async fetchDetail () {
-                try {
-                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.id });
-                    this.formData.members = res.data.members;
-                    this.users = res.data.subject_scopes.filter(item => item.type === 'user').map(item => {
-                        return {
-                            name: item.name,
-                            username: item.id,
-                            type: item.type
-                        };
-                    });
-                    this.departments = res.data.subject_scopes.filter(item => item.type === 'department').map(item => {
-                        return {
-                            name: item.name,
-                            count: item.member_count,
-                            type: item.type,
-                            id: item.id
-                        };
-                    });
-                    this.isShowMemberAdd = false;
-                    const list = [];
-                    res.data.authorization_scopes.forEach(item => {
-                        item.actions.forEach(act => {
-                            const tempResource = _.cloneDeep(act.resource_groups);
-                            tempResource.forEach(groupItem => {
-                                groupItem.related_resource_types.forEach(subItem => {
-                                    subItem.condition = null;
-                                });
-                            });
-                            list.push({
-                                description: act.description,
-                                expired_at: act.expired_at,
-                                id: act.id,
-                                name: act.name,
-                                system_id: item.system.id,
-                                system_name: item.system.name,
-                                $id: `${item.system.id}&${act.id}`,
-                                tag: act.tag,
-                                type: act.type,
-                                resource_groups: tempResource
-                            });
-                        });
-                    });
-                    this.originalList = _.cloneDeep(list);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                }
-            },
+            // async fetchPageData () {
+            //     await this.fetchDetail();
+            // },
+            // async fetchDetail () {
+            //     try {
+            //         const res = await this.$store.dispatch('spaceManage/getSecondManagerDetail', { id: this.$route.query.id });
+            //         this.formData.members = res.data.members;
+            //         this.users = res.data.subject_scopes.filter(item => item.type === 'user').map(item => {
+            //             return {
+            //                 name: item.name,
+            //                 username: item.id,
+            //                 type: item.type
+            //             };
+            //         });
+            //         this.departments = res.data.subject_scopes.filter(item => item.type === 'department').map(item => {
+            //             return {
+            //                 name: item.name,
+            //                 count: item.member_count,
+            //                 type: item.type,
+            //                 id: item.id
+            //             };
+            //         });
+            //         this.isShowMemberAdd = false;
+            //         const list = [];
+            //         res.data.authorization_scopes.forEach(item => {
+            //             item.actions.forEach(act => {
+            //                 const tempResource = _.cloneDeep(act.resource_groups);
+            //                 tempResource.forEach(groupItem => {
+            //                     groupItem.related_resource_types.forEach(subItem => {
+            //                         subItem.condition = null;
+            //                     });
+            //                 });
+            //                 list.push({
+            //                     description: act.description,
+            //                     expired_at: act.expired_at,
+            //                     id: act.id,
+            //                     name: act.name,
+            //                     system_id: item.system.id,
+            //                     system_name: item.system.name,
+            //                     $id: `${item.system.id}&${act.id}`,
+            //                     tag: act.tag,
+            //                     type: act.type,
+            //                     resource_groups: tempResource
+            //                 });
+            //             });
+            //         });
+            //         this.originalList = _.cloneDeep(list);
+            //     } catch (e) {
+            //         console.error(e);
+            //         this.bkMessageInstance = this.$bkMessage({
+            //             limit: 1,
+            //             theme: 'error',
+            //             message: e.message || e.data.msg || e.statusText,
+            //             ellipsisLine: 2,
+            //             ellipsisCopy: true
+            //         });
+            //     }
+            // },
             /**
              * handleBasicInfoChange
              */
@@ -416,18 +409,18 @@
 
                 let hasDeleteTemplateList = [];
                 let hasAddTemplateList = [];
-                if (this.tempalteDetailList.length > 0) {
+                if (this.templateDetailList.length > 0) {
                     const intersection = templates.filter(
-                        item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
+                        item => this.templateDetailList.map(sub => sub.id).includes(item.id)
                     );
-                    hasDeleteTemplateList = this.tempalteDetailList.filter(
+                    hasDeleteTemplateList = this.templateDetailList.filter(
                         item => !intersection.map(sub => sub.id).includes(item.id)
                     );
                     hasAddTemplateList = templates.filter(item => !intersection.map(sub => sub.id).includes(item.id));
                 } else {
                     hasAddTemplateList = templates;
                 }
-                this.tempalteDetailList = _.cloneDeep(templates);
+                this.templateDetailList = _.cloneDeep(templates);
 
                 if (hasDeleteTemplateList.length > 0) {
                     this.tableList = this.tableList.filter(
@@ -836,68 +829,11 @@
             /**
              * handleSubmit
              */
-            // async handleSubmit () {
-            //     if (this.expired_at === 0) {
-            //         this.isShowExpiredError = true;
-            //     }
-            //     const infoFlag = this.$refs.basicInfoRef.handleValidator();
-            //     if (infoFlag) {
-            //         this.scrollToLocation(this.$refs.basicInfoContentRef);
-            //     }
-            //     const $ref = this.$refs.resInstanceTableRef;
-            //     let templates = [];
-            //     let flag = false;
-            //     if (!infoFlag) {
-            //         if ($ref) {
-            //             flag = $ref.getData().flag;
-            //             templates = $ref.getData().templates;
-            //         }
-            //         if (!this.isShowMemberAdd) {
-            //             if (this.expired_at === 0) {
-            //                 this.isShowExpiredError = true;
-            //             }
-            //         }
-            //         if (this.isShowExpiredError || flag) {
-            //             const $dom = flag ? this.$refs.instanceTableContentRef : this.$refs.memberRef;
-            //             this.scrollToLocation($dom);
-            //             return;
-            //         }
-            //         this.submitLoading = true;
-            //         window.changeDialog = false;
-            //         const params = {
-            //             ...this.formData,
-            //             members: this.members,
-            //             expired_at: this.expired_at,
-            //             templates
-            //         };
-            //         try {
-            //             await this.$store.dispatch('userGroup/addUserGroup', params);
-            //             this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
-            //             bus.$emit('show-guide', 'process');
-            //             this.$router.push({
-            //                 name: 'userGroup'
-            //             });
-            //         } catch (e) {
-            //             console.error(e);
-            //             this.bkMessageInstance = this.$bkMessage({
-            //                 limit: 1,
-            //                 theme: 'error',
-            //                 message: e.message || e.data.msg || e.statusText,
-            //                 ellipsisLine: 2,
-            //                 ellipsisCopy: true
-            //             });
-            //         } finally {
-            //             this.submitLoading = false;
-            //         }
-            //     }
-            // },
-
             async handleSubmit () {
                 const validatorFlag = this.$refs.basicInfoRef.handleValidator();
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isStaff && this.reason === '';
                 this.isShowMemberEmptyError = this.inheritSubjectScope ? false
                     : (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
@@ -941,14 +877,15 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, syncPerm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
+                    syncPerm,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    sync_perm: false,
+                    sync_perm: syncPerm,
                     inherit_subject_scope: this.inheritSubjectScope
                 };
                 // 如果是动态继承上级空间 组织架构可为空

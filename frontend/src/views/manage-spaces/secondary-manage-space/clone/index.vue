@@ -36,7 +36,14 @@
                     </section>
                 </div>
                 <div class="info-wrapper">
+                    <p class="tips">{{ infoText }}</p>
                     <section style="min-width: 108px; position: relative;">
+                        <iam-guide
+                            type="rating_manager_merge_action"
+                            direction="right"
+                            :loading="isLoading"
+                            :style="{ top: '-15px', right: '120px' }"
+                            :content="$t(`m.guide['聚合操作']`)" />
                         <bk-switcher
                             v-model="isAllExpanded"
                             :disabled="isAggregateDisabled"
@@ -298,14 +305,12 @@
         watch: {
             originalList: {
                 handler (value) {
-                    console.log(value, 45454554);
                     this.setPolicyList(value);
                     const uniqueList = [...new Set(this.policyList.map(item => item.system_id))];
                     // 无新增的的系统时无需请求聚合数据
                     const difference = uniqueList.filter(item => !this.curSystemId.includes(item));
                     if (difference.length) {
                         this.curSystemId = [...this.curSystemId.concat(difference)];
-                        console.log(uniqueList, difference, this.curSystemId);
                         this.resetData();
                         if (this.policyList.length > 0) {
                             this.fetchAggregationAction(this.curSystemId.join(','));
@@ -342,16 +347,20 @@
             },
 
             getDetailData (payload) {
-                console.log('payload', payload);
-                const { name, description, members, sync_perm, subject_scopes, authorization_scopes } = payload;
                 const tempActions = [];
+                const {
+                    name, description, members, sync_perm,
+                    inherit_subject_scope: inheritSubjectScope,
+                    subject_scopes, authorization_scopes
+                } = payload;
+                this.inheritSubjectScope = inheritSubjectScope;
                 this.formData = Object.assign({}, {
                     name: `${name}_克隆`,
                     members,
                     description,
                     syncPerm: sync_perm
                 });
-                this.isAll = payload.subject_scopes.some(item => item.type === '*' && item.id === '*');
+                this.isAll = subject_scopes.some(item => item.type === '*' && item.id === '*');
                 this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
                     return {
                         name: item.name,
@@ -396,9 +405,22 @@
             setPolicyList (payload) {
                 if (this.policyList.length < 1) {
                     this.policyList = payload.map(item => {
-                        return new GroupPolicy(Object.assign(item, { isAggregate: true }));
+                        return new GroupPolicy(
+                            item,
+                            'template',
+                            'custom',
+                            Object.assign(
+                                item,
+                                {
+                                    system: {
+                                        id: item.id,
+                                        name: item.system_name
+                                    },
+                                    id: CUSTOM_PERM_TEMPLATE_ID
+                                }
+                            )
+                        );
                     });
-                    console.log(payload, this.policyList, 4545);
                     return;
                 }
                 const isAddIds = payload.map(item => `${item.system_id}&${item.id}`);
@@ -443,7 +465,6 @@
                         this.policyList.unshift(new GroupPolicy(curSys));
                     });
                 }
-                console.log(this.policyList, 65644);
             },
             
             /**
@@ -791,7 +812,6 @@
             getFilterAggregation (payload) {
                 const curSelectActions = [];
                 this.policyList.forEach(item => {
-                    console.log(item, 444);
                     if (item.isAggregate) {
                         curSelectActions.push(...item.actions.map(v => `${item.system_id}&${v.id}`));
                     } else {
