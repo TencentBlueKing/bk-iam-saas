@@ -490,6 +490,7 @@
     align-items: center;
     justify-content: space-between;
 }
+
 .iamcenter-level-one {
     &.is-active {
         color: #FF9C01;
@@ -501,4 +502,9 @@
         color: #9B80FE;
     }
 }
+
+.iam-nav-select-dropdown-content .bk-big-tree-node {
+    padding: 0;
+}
+
 </style>
