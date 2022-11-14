@@ -1,7 +1,7 @@
 <template>
-    <div class="iam-grading-admin-detail-wrapper">
-        <p class="edit-action">
-            {{curRoleType === 'staff' ? $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) : $t(`m.grading['如需编辑分级管理员的内容请点击']`)}}
+    <div class="iam-grading-admin-detail-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
+        <p class="edit-action" v-show="curRoleType !== 'subset_manager' && curRoleType !== 'staff'">
+            {{ $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) }}
             <bk-button
                 theme="primary"
                 text
@@ -15,21 +15,20 @@
                 <basic-info
                     :data="formData"
                     ref="basicInfoRef"
-                    :id="$route.params.id"
+                    :id="id"
                     @on-change="handleBasicInfoChange" />
             </render-horizontal-block>
 
-            <!-- <p class="tips">{{ infoText }}</p> -->
             <render-perm
-                :title="$t(`m.grading['最大可授权资源范围']`)"
+                :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
                 :perm-length="policyList.length"
                 :expanded.sync="curExpanded"
                 ext-cls="iam-grade-detail-panel-cls">
                 <render-detail-table :actions="policyList" />
             </render-perm>
 
-            <render-horizontal-block
-                :label="$t(`m.grading['最大可授权人员范围']`)">
+            <render-perm
+                :title="$t(`m.levelSpace['最大可授权人员边界']`)">
                 <template v-if="isAll">
                     <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
                 </template>
@@ -47,86 +46,92 @@
                     <render-member-item :data="users" v-if="isHasUser" mode="view" />
                     <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
                 </template>
-            </render-horizontal-block>
+            </render-perm>
         </div>
     </div>
 </template>
+
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    import store from '@/store';
+    import BasicInfo from '@/views/manage-spaces/components/basic-info-detail';
+    import RenderDetailTable from '@/views/manage-spaces/components/render-instance-detail-table';
     import RenderPerm from '@/components/render-perm';
-    import basicInfo from '../components/basic-info-detail';
-    import RenderMemberItem from '../../group/common/render-member-display';
-    import renderDetailTable from '../components/render-instance-detail-table';
+    import RenderMemberItem from '@/views/group/common/render-member-display';
     export default {
-        name: '',
         components: {
+            BasicInfo,
             RenderPerm,
-            basicInfo,
             RenderMemberItem,
-            renderDetailTable
+            RenderDetailTable
         },
         data () {
             return {
-                formData: {
-                    name: '',
-                    description: '',
-                    members: []
-                },
                 users: [],
                 departments: [],
-                infoText: this.$t(`m.grading['选择提示']`),
                 policyList: [],
+                infoText: this.$t(`m.grading['选择提示']`),
                 curExpanded: false,
-                isAll: false
+                isAll: false,
+                loading: false,
+                id: 0
             };
         },
-        beforeRouteEnter (to, from, next) {
-            store.commit('setHeaderTitle', '');
-            next();
-        },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters([
+                'user'
+            ]),
             isHasUser () {
                 return this.users.length > 0;
             },
             isHasDepartment () {
                 return this.departments.length > 0;
             },
+            curRoleId () {
+                return this.user.role.id;
+            },
             curRoleType () {
                 return this.user.role.type;
             }
         },
+        watch: {
+            '$route': {
+                handler (value) {
+                    this.fetchRatingManagerDetail();
+                },
+                immediate: true
+            }
+        },
         methods: {
-            /**
-             * @description: fetchPageData 进入页面时在路由文件中统一请求 @/router/index.js
-             * @param {*}
-             * @return {*}
-             */
-            async fetchPageData () {
-                await this.fetchRatingManagerDetail();
-            },
-
             async fetchRatingManagerDetail () {
-                try {
-                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.$route.params.id });
-                    this.getDetailData(res.data);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                this.id = this.$route.params.id;
+                if (this.curRoleId || this.id) {
+                    try {
+                        this.loading = true;
+                        const fetchUrl = (this.curRoleType === 'subset_manager' || this.curRoleType === 'staff') ? 'spaceManage/getSecondManagerDetail' : 'role/getRatingManagerDetail';
+                        const res = await this.$store.dispatch(fetchUrl, { id: this.curRoleId || this.id });
+                        this.getDetailData(res.data);
+                    } catch (e) {
+                        console.error(e);
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    } finally {
+                        this.loading = false;
+                    }
                 }
             },
 
             getDetailData (payload) {
                 const { name, description, members, authorization_scopes } = payload;
                 const authorizationScopes = [];
+                const tempActions = [];
+                const departments = [];
+                const users = [];
                 authorization_scopes.forEach(item => {
                     authorizationScopes.push({
                         actions: item.actions,
@@ -139,8 +144,6 @@
                     members
                 });
                 this.$store.commit('setHeaderTitle', name);
-                const departments = [];
-                const users = [];
                 payload.subject_scopes.forEach(item => {
                     if (item.type === 'department') {
                         departments.push({
@@ -156,13 +159,9 @@
                         });
                     }
                 });
-
                 this.isAll = payload.subject_scopes.some(item => item.id === '*' && item.type === '*');
-
                 this.users.splice(0, this.users.length, ...users);
                 this.departments.splice(0, this.departments.length, ...departments);
-
-                const tempActions = [];
                 payload.authorization_scopes.forEach(item => {
                     item.actions.forEach(act => {
                         const obj = {
@@ -178,9 +177,9 @@
 
             handleEdit () {
                 this.$router.push({
-                    name: 'gradingAdminEdit',
+                    name: this.curRoleType === 'subset_manager' ? 'authorBoundaryEditSecondLevel' : 'authorBoundaryEditFirstLevel',
                     params: {
-                        id: this.$route.params.id
+                        id: this.curRoleId
                     }
                 });
             },
@@ -191,7 +190,8 @@
         }
     };
 </script>
-<style lang="postcss">
+
+<style lang="postcss" scoped>
     .iam-grading-admin-detail-wrapper {
         padding-top: 10px;
         .edit-action {

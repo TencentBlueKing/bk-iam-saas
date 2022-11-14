@@ -205,6 +205,7 @@ class RoleService:
                 description=info.description,
                 type=info.type,
                 inherit_subject_scope=info.inherit_subject_scope,
+                sync_perm=info.sync_perm,
                 creator=creator,
                 updater=creator,
                 source_system_id=info.source_system_id,
@@ -285,6 +286,8 @@ class RoleService:
                 role.description = info.description
             if role.type == RoleType.SUBSET_MANAGER.value and "inherit_subject_scope" in update_fields:
                 role.inherit_subject_scope = info.inherit_subject_scope
+            if "sync_perm" in update_fields:
+                role.sync_perm = info.sync_perm
 
             role.updater = updater
             role.save()

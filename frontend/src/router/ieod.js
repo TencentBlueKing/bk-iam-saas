@@ -58,6 +58,9 @@ const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '..
 // 新建我的管理空间
 const MyManageSpaceCreate = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/create');
 
+// 我的管理空间二级管理员授权边界
+const MyManageSpaceSubDetail = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/detail');
+
 // 用户组
 const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
 
@@ -264,6 +267,14 @@ export const routes = [
                     backRouter: 'myManageSpace'
                 },
                 component: MyManageSpaceCreate
+            },
+            {
+                path: 'my-manage-space/sub-detail/:id',
+                name: 'myManageSpaceSubDetail',
+                meta: {
+                    backRouter: 'myManageSpace'
+                },
+                component: MyManageSpaceSubDetail
             },
             {
                 path: 'perm-renewal',
@@ -529,7 +540,7 @@ export const routes = [
                 path: ':id/rating-manager-detail',
                 name: 'gradingAdminDetail',
                 meta: {
-                    backRouter: 'ratingManager'
+                    backRouter: -1
                 },
                 component: GradingAdminDetail
             },
@@ -537,7 +548,7 @@ export const routes = [
                 path: ':id/rating-manager-edit',
                 name: 'gradingAdminEdit',
                 meta: {
-                    backRouter: 'gradingAdminDetail'
+                    backRouter: -1
                 },
                 component: GradingAdminEdit
             },

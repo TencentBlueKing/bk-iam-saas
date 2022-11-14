@@ -798,12 +798,28 @@ class RoleObjectRelationChecker:
     def __init__(self, role: Role):
         self.role = role
 
+    def _list_relation_role_id(self):
+        """
+        查询出role关联的所有role id
+
+        分级管理员可以管理所有的子集管理员相关的信息
+        """
+        role_ids = [self.role.id]
+
+        if self.role.type == RoleType.GRADE_MANAGER.value:
+            sub_ids = RoleRelation.objects.list_sub_id(self.role.id)
+            return role_ids + sub_ids
+
+        return role_ids
+
     def _check_object(self, obj_type: str, obj_id: int) -> bool:
-        return RoleRelatedObject.objects.filter(role_id=self.role.id, object_type=obj_type, object_id=obj_id).exists()
+        return RoleRelatedObject.objects.filter(
+            role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id=obj_id
+        ).exists()
 
     def _check_object_ids(self, obj_type: str, obj_ids: List[int]) -> bool:
         count = RoleRelatedObject.objects.filter(
-            role_id=self.role.id, object_type=obj_type, object_id__in=obj_ids
+            role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id__in=obj_ids
         ).count()
         return count == len(set(obj_ids))
 

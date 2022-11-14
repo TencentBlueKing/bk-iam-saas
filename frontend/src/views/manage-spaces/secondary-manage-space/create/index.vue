@@ -61,6 +61,7 @@
                 </section>
             </div>
         </render-horizontal-block>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界范围不可为空']`) }}</p>
         <!-- <render-action
             :title="$t(`m.userGroup['添加组成员']`)"
             v-if="isShowMemberAdd"
@@ -193,6 +194,7 @@
                 users: [],
                 departments: [],
                 submitLoading: false,
+                isShowActionEmptyError: false,
                 isShowExpiredError: false,
                 isShowAddSideslider: false,
                 isShowAddActionSideslider: false,
@@ -956,13 +958,13 @@
                 window.changeDialog = false;
                 this.submitLoading = true;
                 console.log('params', params);
-                debugger;
+                // debugger;
                 try {
                     await this.$store.dispatch('spaceManage/addSecondManager', params);
                     await this.$store.dispatch('roleList');
                     this.messageSuccess(this.$t(`m.levelSpace['新建二级管理空间成功']`), 1000);
                     this.$router.push({
-                        name: 'ratingManager'
+                        name: 'secondaryManageSpace'
                     });
                 } catch (e) {
                     console.error(e);

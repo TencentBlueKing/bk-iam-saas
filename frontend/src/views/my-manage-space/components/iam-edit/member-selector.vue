@@ -5,8 +5,8 @@
                 <div class="edit-content">
                     <slot>
                         <span
-                            v-for="(item, index) in displayValue"
-                            :key="index"
+                            v-for="(item, i) in displayValue"
+                            :key="i"
                             class="member-item"
                             :class="item.readonly ? 'member-readonly' : ''">
                             {{ item.username }}
@@ -71,6 +71,10 @@
             isErrorClass: {
                 type: String,
                 default: ''
+            },
+            index: {
+                type: Number,
+                default: 0
             }
         },
         data () {
@@ -147,12 +151,13 @@
                     }).then(() => {
                         this.$emit('on-change', {
                             [this.field]: this.displayValue
-                        });
+                        }, this.index);
                     }).finally(() => {
                         this.isLoading = false;
                     });
                 }
             },
+
             handleChange () {
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
@@ -167,7 +172,7 @@
             handleRtxBlur () {
                 this.$emit('on-change', {
                     [this.field]: this.displayValue
-                });
+                }, this.index);
             }
         }
     };
@@ -207,6 +212,9 @@
                 border-radius: 2px;
                 background: #f0f1f5;
                 font-size: 12px;
+                &:first-child {
+                    margin-left: 0;
+                }
                 i {
                     font-size: 18px;
                     color: #979ba5;

@@ -720,6 +720,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     filterset_class = GradeMangerFilter
 
     biz = RoleBiz()
+    group_biz = GroupBiz()
     role_check_biz = RoleCheckBiz()
 
     role_trans = RoleTrans()
@@ -787,6 +788,10 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         # 创建子集管理员, 并创建分级管理员与子集管理员的关系
         role = self.biz.create_subset_manager(grade_manager, info, user_id)
 
+        # 创建同步权限用户组
+        if info.sync_perm:
+            self.group_biz.create_sync_perm_group_by_role(role, user_id)
+
         audit_context_setter(role=role)
 
         return Response({"id": role.id}, status=status.HTTP_201_CREATED)
@@ -837,6 +842,9 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         self.biz.update(role, info, user_id)
 
+        # 更新同步权限用户组信息
+        self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True, sync_prem=True)
+
         audit_context_setter(role=role)
 
         return Response({})
@@ -868,6 +876,9 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             raise error_codes.FORBIDDEN.format(message=_("非管理员({})的成员，无权限修改").format(role.name), replace=True)
 
         self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
+
+        # 更新同步权限用户组信息
+        self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True)
 
         audit_context_setter(role=role)
 

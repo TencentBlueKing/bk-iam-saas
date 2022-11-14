@@ -4,7 +4,8 @@
             :model="formData"
             form-type="vertical"
             ref="basicInfoForm">
-            <iam-form-item :label="$t(`m.grading['分级管理员名称']`)" required>
+            <iam-form-item :label="curRoleType === 'staff' ?
+                $t(`m.levelSpace['空间名']`) : $t(`m.gradingDetail['分级管理员名称']`)" required>
                 <bk-input
                     :value="formData.name"
                     style="width: 450px;"
@@ -51,6 +52,7 @@
     </div>
 </template>
 <script>
+    import { mapGetters } from 'vuex';
     import BkUserSelector from '@blueking/user-selector';
     const getDefaultData = () => ({
         name: '',
@@ -81,6 +83,12 @@
                 userApi: window.BK_USER_API,
                 displayMembers: []
             };
+        },
+        computed: {
+            ...mapGetters(['user']),
+            curRoleType () {
+                return this.user.role.type;
+            }
         },
         watch: {
             data: {

@@ -180,7 +180,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    syncPerm: false
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
@@ -617,11 +618,12 @@
 
             handleDetailData (payload) {
                 console.log('payload', payload);
-                const { name, description, members } = payload;
+                const { name, description, members, sync_perm } = payload;
                 this.formData = Object.assign({}, {
                     name,
                     description,
-                    members
+                    members,
+                    syncPerm: sync_perm
                 });
                 const departments = [];
                 const users = [];
@@ -799,7 +801,7 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, syncPerm } = this.formData;
                 const params = {
                     name,
                     description,
@@ -807,7 +809,8 @@
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     reason: this.reason,
-                    id: this.$route.params.id
+                    id: this.$route.params.id,
+                    sync_perm: syncPerm
                 };
                 console.log('params', params);
                 try {
@@ -881,14 +884,15 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, syncPerm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    id: this.$route.params.id
+                    id: this.$route.params.id,
+                    sync_perm: syncPerm
                 };
                 this.submitLoading = true;
                 window.changeDialog = false;
