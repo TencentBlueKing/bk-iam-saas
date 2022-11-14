@@ -83,12 +83,8 @@
                 </template>
             </bk-table-column>
             <template v-if="['rating_manager'].includes(curRole)">
-                <bk-table-column :label="$t(`m.nav['二级管理空间']`)" :filters="spaceFiltersList"
-                    :filter-method="handleSpaceFilter" :filter-multiple="true">
+                <bk-table-column :label="$t(`m.nav['二级管理空间']`)">
                     <template slot-scope="{ row }">
-                        <!-- <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
-                            {{ row.role.name || '--' }}
-                        </span> -->
                         <div class="user-group-space">
                             <Icon type="level-two" :style="{ color: '#9B80FE' }" />
                             <iam-edit-input
@@ -97,7 +93,6 @@
                                 :placeholder="$t(`m.verify['请输入']`)"
                                 :is-show-other="true"
                                 :value="['subset_manager'].includes(row.role.type) ? row.role.name : '--'"
-                                :remote-hander="handleShowDistribute"
                                 @handleShow="handleDistribute(row)" />
                         </div>
 
@@ -250,7 +245,6 @@
                 isBatch: false,
                 content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]'),
                 il8n,
-                spaceFiltersList: [],
                 selectKeyword: '',
                 isShowDistributeDialog: false,
                 batchOptions: [
@@ -488,17 +482,6 @@
                 } finally {
                     this.tableLoading = false;
                 }
-            },
-
-            handleShowDistribute (payload) {
-                return this.$store.dispatch().then(() => {
-                    
-                });
-            },
-
-            handleSpaceFilter (value, row, column) {
-                const property = column.property;
-                return row[property] === value;
             },
 
             handleRemoteRtx (value) {
