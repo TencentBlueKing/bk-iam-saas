@@ -442,4 +442,5 @@ class SubsetMangerDetailSLZ(GradeMangerDetailSLZ):
             "authorization_scopes",
             "inherit_subject_scope",
             "subject_scopes",
+            "sync_perm",
         )
