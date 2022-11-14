@@ -318,6 +318,26 @@ class GroupBiz:
         count, relations = self.group_svc.list_subject_group_before_expired_at(subject, expired_at, limit, offset)
         return count, self._convert_to_subject_group_beans(relations)
 
+    def list_paging_system_subject_group(
+        self, system_id: str, subject: Subject, limit: int = 10, offset: int = 0
+    ) -> Tuple[int, List[SubjectGroupBean]]:
+        """
+        查询有系统权限subject所属的用户组
+        """
+        count, relations = self.group_svc.list_system_subject_group(system_id, subject, limit=limit, offset=offset)
+        return count, self._convert_to_subject_group_beans(relations)
+
+    def list_paging_system_subject_group_before_expired_at(
+        self, system_id: str, subject: Subject, expired_at: int, limit: int, offset: int
+    ) -> Tuple[int, List[SubjectGroupBean]]:
+        """
+        分页查询有系统权限指定过期时间之前的用户组
+        """
+        count, relations = self.group_svc.list_system_subject_group_before_expired_at(
+            system_id, subject, expired_at, limit, offset
+        )
+        return count, self._convert_to_subject_group_beans(relations)
+
     def list_all_subject_group(self, subject: Subject) -> List[SubjectGroupBean]:
         """
         查询指定过期时间之前的所有用户组

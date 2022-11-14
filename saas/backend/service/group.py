@@ -173,6 +173,19 @@ class GroupService:
 
         return count, relations
 
+    def list_system_subject_group(
+        self, system_id: str, subject: Subject, limit: int = 10, offset: int = 0
+    ) -> Tuple[int, List[SubjectGroup]]:
+        """
+        查询有系统权限Subject的Group关系列表
+        """
+        iam_data = iam.get_system_subject_groups(system_id, subject.type, subject.id, limit=limit, offset=offset)
+        count = iam_data["count"]
+
+        relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
+
+        return count, relations
+
     def list_user_department_group(self, subject: Subject) -> List[SubjectGroup]:
         """
         查询user的部门递归的Group
@@ -211,6 +224,20 @@ class GroupService:
         查询subject在指定过期时间之前的相关Group
         """
         iam_data = iam.get_subject_groups(subject.type, subject.id, expired_at=expired_at, limit=limit, offset=offset)
+
+        count = iam_data["count"]
+        relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
+        return count, relations
+
+    def list_system_subject_group_before_expired_at(
+        self, system_id: str, subject: Subject, expired_at: int, limit: int, offset: int
+    ) -> Tuple[int, List[SubjectGroup]]:
+        """
+        查询有系统权限subject在指定过期时间之前的相关Group
+        """
+        iam_data = iam.get_system_subject_groups(
+            system_id, subject.type, subject.id, expired_at=expired_at, limit=limit, offset=offset
+        )
 
         count = iam_data["count"]
         relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
