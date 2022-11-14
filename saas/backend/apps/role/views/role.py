@@ -717,6 +717,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
     serializer_class = BaseGradeMangerSLZ
+    filterset_class = GradeMangerFilter
 
     biz = RoleBiz()
     group_biz = GroupBiz()
