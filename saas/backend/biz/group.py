@@ -582,7 +582,7 @@ class GroupBiz:
 
             # TODO 用户组的名字需要定义
             group = self.group_svc.create(
-                GroupCreation(name=role.name, description=Role.description, readonly=True), creator
+                GroupCreation(name=role.name, description=role.description, readonly=True), creator
             )
             RoleRelatedObject.objects.create(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True
