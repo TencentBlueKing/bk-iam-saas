@@ -24,19 +24,29 @@
                     <i class="bk-icon icon-plus-circle mr10"></i>管理我的分级管理员
                 </div>
             </bk-select> -->
-            <bk-select ref="select" v-if="unfold && index === 1" :value="navCurRoleId || curRoleId" :clearable="false"
-                :multiple="false" :placeholder="$t(`m.common['选择分级管理员']`)"
-                :search-placeholder="$t(`m.common['搜索管理空间']`)" searchable ext-cls="iam-nav-select-cls"
+            <bk-select
+                ref="select"
+                v-if="unfold && index === 1" :value="navCurRoleId || curRoleId"
+                :clearable="false"
+                :multiple="false"
+                :placeholder="$t(`m.common['选择分级管理员']`)"
+                :search-placeholder="$t(`m.common['搜索管理空间']`)"
+                :searchable="true"
                 :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
-                :remote-method="handleRemoteTree" :ext-popover-cls="selectCls" @toggle="handleToggle">
+                :remote-method="handleRemoteTree"
+                :ext-popover-cls="selectCls"
+                ext-cls="iam-nav-select-cls"
+                @toggle="handleToggle">
                 <bk-big-tree ref="selectTree" size="small"
                     :data="curRoleList"
                     :selectable="true"
+                    :use-default-empty="true"
                     :show-checkbox="false"
                     :show-link-line="false"
                     :default-expanded-nodes="[navCurRoleId || curRoleId]"
                     :default-selected-node="navCurRoleId || curRoleId"
-                    @expand-on-click="handleExpandClick" @select-change="handleSelectNode">
+                    @expand-on-click="handleExpandClick"
+                    @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div class="iam-select-collection">
                             <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
@@ -185,7 +195,8 @@
                 curRoleId: 0,
                 hoverId: -1,
                 selectValue: '',
-                selectNode: null
+                selectNode: null,
+                isEmpty: false
             };
         },
         computed: {
@@ -331,6 +342,7 @@
             },
 
             handleRemoteTree  (value) {
+                this.isEmpty = this.$refs.selectTree.filter(value).length === 0;
                 this.$refs.selectTree && this.$refs.selectTree.filter(value);
             },
 
@@ -506,8 +518,13 @@
     }
 }
 
-.iam-nav-select-dropdown-content .bk-big-tree-node {
-    padding: 0;
+.iam-nav-select-dropdown-content .bk-big-tree {
+    &-node {
+        padding: 0;
+    }
+    &-empty {
+        color: #fff !important;
+        opacity: .6;
+    }
 }
-
 </style>
