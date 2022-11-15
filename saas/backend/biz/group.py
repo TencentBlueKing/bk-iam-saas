@@ -603,7 +603,14 @@ class GroupBiz:
 
             # TODO 用户组的名字需要定义
             group = self.group_svc.create(
-                GroupCreation(name=role.name, description=role.description, readonly=True), creator
+                GroupCreation(
+                    name=role.name,
+                    description=role.description,
+                    readonly=True,
+                    source_system_id=role.source_system_id,
+                    hidden=role.hidden,
+                ),
+                creator,
             )
             RoleRelatedObject.objects.create(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True
@@ -652,6 +659,9 @@ class GroupBiz:
         # 3. 不存在同步权限用户组, 不需要处理
         if not relation and not role.sync_perm:
             return
+
+        # 更新用户组名称
+        Group.objects.filter(id=relation.object_id).update(name=role.name, description=role.description)
 
         # 4. 更新用户组的成员
         if sync_members:

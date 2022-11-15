@@ -25,7 +25,7 @@ from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.service.constants import RoleSourceTypeEnum, RoleType
-from backend.trans.role import RoleTrans
+from backend.trans.open_management import GradeManagerTrans
 
 
 class ManagementSubsetManagerViewSet(GenericViewSet):
@@ -44,7 +44,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
     biz = RoleBiz()
     group_biz = GroupBiz()
     role_check_biz = RoleCheckBiz()
-    role_trans = RoleTrans()
+    trans = GradeManagerTrans()
 
     @swagger_auto_schema(
         operation_description="二级管理员创建",
@@ -72,9 +72,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
         data["members"] = [{"username": username} for username in data["members"]]
 
         # 结构转换
-        info = self.role_trans.from_role_data(
-            data, _type=RoleType.SUBSET_MANAGER.value, source_system_id=source_system_id
-        )
+        info = self.trans.to_role_info(data, _type=RoleType.SUBSET_MANAGER.value, source_system_id=source_system_id)
 
         # 检查授权范围
         self.role_check_biz.check_subset_manager_auth_scope(grade_manager, info.authorization_scopes)
@@ -89,7 +87,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
 
         with transaction.atomic():
             # 创建子集管理员, 并创建分级管理员与子集管理员的关系
-            role = self.biz.create_subset_manager(grade_manager, info, "admin")
+            role = self.biz.create_subset_manager(grade_manager, info, request.user.username)
 
             # 记录role创建来源信息
             RoleSource.objects.create(
@@ -98,7 +96,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
 
             # 创建同步权限用户组
             if info.sync_perm:
-                self.group_biz.create_sync_perm_group_by_role(role, "admin")
+                self.group_biz.create_sync_perm_group_by_role(role, request.user.username)
 
         audit_context_setter(role=role)
 

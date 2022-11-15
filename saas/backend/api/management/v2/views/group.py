@@ -28,6 +28,7 @@ from backend.api.management.v2.serializers import (
     ManagementGroupPolicyDeleteSLZ,
     ManagementGroupRevokeSLZ,
     ManagementGroupSLZ,
+    ManagementQueryGroupSLZ,
 )
 from backend.apps.group.audit import (
     GroupCreateAuditProvider,
@@ -103,7 +104,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             one.source_system_id = role.source_system_id
             one.hidden = role.hidden
 
-        groups = self.group_biz.batch_create(role.id, infos, "admin")
+        groups = self.group_biz.batch_create(role.id, infos, request.user.username)
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
@@ -114,13 +115,18 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组列表",
+        query_serializer=ManagementQueryGroupSLZ(label="query_group"),
         responses={status.HTTP_200_OK: ManagementGroupSLZ(label="用户组", many=True)},
         tags=["management.role.group"],
     )
     def list(self, request, *args, **kwargs):
+        slz = ManagementQueryGroupSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        inherit = slz.validated_data["inherit"]
+
         role = self.get_object()
 
-        queryset = RoleListQuery(role).query_group()
+        queryset = RoleListQuery(role).query_group(inherit=inherit)
 
         page = self.paginate_queryset(queryset)
         if page is not None:

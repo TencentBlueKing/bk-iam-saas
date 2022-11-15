@@ -16,6 +16,7 @@ from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.apps.application.models import Application
+from backend.apps.role.models import Role
 from backend.biz.application import ApplicationBiz
 
 
@@ -41,7 +42,11 @@ class ManagementApplicationApprovalView(views.APIView):
         callback_id = kwargs["callback_id"]
 
         # 校验系统与callback_id对应的审批存在
-        get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
+        application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
 
-        self.biz.handle_approval_callback_request(callback_id, request)
-        return Response({})
+        obj = self.biz.handle_approval_callback_request(callback_id, request)
+
+        if isinstance(obj, Role):
+            return Response({"id": application.id, "role_id": obj.id})
+
+        return Response({"id": application.id})

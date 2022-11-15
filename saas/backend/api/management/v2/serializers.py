@@ -81,30 +81,6 @@ class ManagementGradeManagerCreateApplicationSLZ(GradeMangerBaseInfoSLZ, ReasonS
     content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
 
 
-class ManagementGradeManagerUpdateApplicationSLZ(ReasonSLZ):
-    name = serializers.CharField(label="分级管理员名称", max_length=128, required=False)
-    description = serializers.CharField(label="描述", allow_blank=True, required=False)
-
-    authorization_scopes = serializers.ListField(
-        label="可授权的权限范围",
-        child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"),
-        required=False,
-        allow_empty=False,
-    )
-    subject_scopes = serializers.ListField(
-        label="授权对象",
-        child=RoleScopeSubjectSLZ(label="授权对象"),
-        required=False,
-        allow_empty=False,
-    )
-    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
-    applicant = serializers.CharField(label="申请者的用户名", max_length=32)
-    callback_id = serializers.CharField(label="回调ID", max_length=32, required=False, allow_blank=True, default="")
-    callback_url = serializers.CharField(label="回调URL", required=False, allow_blank=True, default="")
-    title = serializers.CharField(label="审批单标题", required=False, allow_blank=True, default="")
-    content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
-
-
 class ManagementGradeManagerBasicInfoSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="分级管理员ID")
     name = serializers.CharField(label="分级管理员名称", max_length=128)
@@ -284,3 +260,7 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
             "created_time",
             "readonly",
         )
+
+
+class ManagementQueryGroupSLZ(serializers.Serializer):
+    inherit = serializers.BooleanField(label="是否继承子集管理员的用户组", required=False, default=False)

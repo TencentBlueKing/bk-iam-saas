@@ -21,7 +21,6 @@ from backend.api.management.v2.serializers import (
     ManagementApplicationIDSLZ,
     ManagementGradeManagerApplicationResultSLZ,
     ManagementGradeManagerCreateApplicationSLZ,
-    ManagementGradeManagerUpdateApplicationSLZ,
     ManagementGroupApplicationCreateSLZ,
 )
 from backend.apps.role.models import Role
@@ -35,7 +34,7 @@ from backend.biz.group import GroupBiz
 from backend.biz.role import RoleCheckBiz
 from backend.service.constants import ApplicationTypeEnum, RoleType
 from backend.service.models import Subject
-from backend.trans.role import RoleTrans
+from backend.trans.open_management import GradeManagerTrans
 
 
 class ManagementGroupApplicationViewSet(GenericViewSet):
@@ -106,7 +105,7 @@ class ManagementGradeManagerApplicationViewSet(GenericViewSet):
 
     biz = ApplicationBiz()
     role_check_biz = RoleCheckBiz()
-    role_trans = RoleTrans()
+    trans = GradeManagerTrans()
 
     @swagger_auto_schema(
         operation_description="分级管理员创建申请单",
@@ -133,7 +132,7 @@ class ManagementGradeManagerApplicationViewSet(GenericViewSet):
         data["members"] = [{"username": username} for username in data["members"]]
 
         # 结构转换
-        info = self.role_trans.from_role_data(data)
+        info = self.trans.to_role_info(data, source_system_id=source_system_id)
         applications = self.biz.create_for_grade_manager(
             ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
             GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
@@ -163,11 +162,11 @@ class ManagementGradeManagerUpdatedApplicationViewSet(GenericViewSet):
 
     biz = ApplicationBiz()
     role_check_biz = RoleCheckBiz()
-    role_trans = RoleTrans()
+    trans = GradeManagerTrans()
 
     @swagger_auto_schema(
         operation_description="分级管理员更新申请单",
-        request_body=ManagementGradeManagerUpdateApplicationSLZ(label="分级管理员更新申请单"),
+        request_body=ManagementGradeManagerCreateApplicationSLZ(label="分级管理员更新申请单"),
         responses={status.HTTP_200_OK: ManagementGradeManagerApplicationResultSLZ(label="单据信息")},
         tags=["management.grade_manager.application"],
     )
@@ -175,7 +174,7 @@ class ManagementGradeManagerUpdatedApplicationViewSet(GenericViewSet):
         """
         分级管理员更新申请单
         """
-        serializer = ManagementGradeManagerUpdateApplicationSLZ(data=request.data)
+        serializer = ManagementGradeManagerCreateApplicationSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
@@ -187,7 +186,10 @@ class ManagementGradeManagerUpdatedApplicationViewSet(GenericViewSet):
         # 名称唯一性检查
         self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
-        info = self.role_trans.from_role_data(data)
+        # 兼容member格式
+        data["members"] = [{"username": username} for username in data["members"]]
+
+        info = self.trans.to_role_info(data, source_system_id=source_system_id)
         applications = self.biz.create_for_grade_manager(
             ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
             GradeManagerApplicationDataBean(role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info),

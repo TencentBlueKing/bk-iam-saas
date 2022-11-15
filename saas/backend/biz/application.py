@@ -255,15 +255,21 @@ class ApprovedPassApplicationBiz:
             # 新数据是system，没有system_id
             if "system_id" not in scope:
                 scope["system_id"] = scope["system"]["id"]
+
+        data["members"] = [{"username": username} for username in data["members"]]
         return RoleInfoBean(source_system_id=source_system_id, hidden=hidden, **data)
 
-    def _create_grade_manager(self, subject: Subject, application: Application):
+    def _create_rating_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
         info = self._gen_role_info_bean(
             application.data, source_system_id=application.source_system_id, hidden=application.hidden
         )
         with transaction.atomic():
             role = self.role_biz.create_grade_manager(info, subject.id)
+
+            # 创建同步权限用户组
+            if info.sync_perm:
+                self.group_biz.create_sync_perm_group_by_role(role, application.applicant)
 
             if application.source_system_id:
                 # 记录role创建来源信息
@@ -275,11 +281,17 @@ class ApprovedPassApplicationBiz:
 
         log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
 
-    def _update_grade_manager(self, subject: Subject, application: Application):
+        return role
+
+    def _update_rating_manager(self, subject: Subject, application: Application):
         """更新分级管理员"""
         role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=application.data["id"])
         info = self._gen_role_info_bean(application.data)
         self.role_biz.update(role, info, subject.id)
+
+        role = Role.objects.get(id=role.id)
+        # 更新同步权限用户组信息
+        self.group_biz.update_sync_perm_group_by_role(role, application.applicant, sync_members=True, sync_prem=True)
 
         log_role_event(
             AuditType.ROLE_UPDATE.value,
@@ -288,6 +300,8 @@ class ApprovedPassApplicationBiz:
             extra={"name": info.name, "description": info.description},
             sn=application.sn,
         )
+
+        return role
 
     def _grant_temporary_action(self, subject: Subject, application: Application):
         """临时权限授权"""
@@ -311,7 +325,7 @@ class ApprovedPassApplicationBiz:
         handle_func = getattr(self, func_name)
 
         subject = Subject.from_username(application.applicant)
-        handle_func(subject, application)
+        return handle_func(subject, application)
 
 
 class ApplicationBiz:
@@ -631,6 +645,7 @@ class ApplicationBiz:
             members=parse_obj_as(List[ApplicationSubject], members.subjects),
             subject_scopes=parse_obj_as(List[ApplicationSubject], subject_scopes.subjects),
             authorization_scopes=authorization_scopes,
+            sync_perm=role_info.sync_perm,
         )
 
     def create_for_grade_manager(
@@ -687,7 +702,7 @@ class ApplicationBiz:
 
             # 审批通过，则执行相关授权等
             if status == ApplicationStatus.PASS.value:
-                self.approved_pass_biz.handle(application)
+                return self.approved_pass_biz.handle(application)
 
     def handle_approval_callback_request(self, callback_id: str, request: Request):
         """处理审批回调请求"""
@@ -700,7 +715,7 @@ class ApplicationBiz:
             raise error_codes.NOT_FOUND_ERROR
 
         # 处理申请单结果
-        self.handle_application_result(application, ticket.status)
+        return self.handle_application_result(application, ticket.status)
 
     def query_application_approval_status(self, applications: List[Application]) -> ApplicationIDStatusDict:
         """查询申请单审批状态"""
