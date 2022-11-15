@@ -148,6 +148,10 @@ const SecondaryManageSpaceCreate = () =>
 const SecondaryManageSpaceClone = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/clone');
 
+// 二极管理空间编辑
+const SecondaryManageSpaceEdit = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/edit');
+
 // 资源权限管理
 const ResourcePermiss = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
 
@@ -366,19 +370,29 @@ export const routes = [
                 path: 'manage-spaces/secondary-manage-space/create',
                 name: 'secondaryManageSpaceCreate',
                 meta: {
-                    headerTitle: il8n('levelSpace', '新建二级管理空间'),
+                    headerTitle: il8n('nav', '新建二级管理空间'),
                     backRouter: -1
                 },
                 component: SecondaryManageSpaceCreate
             },
             {
-                path: 'manage-spaces/secondary-manage-space/clone',
+                path: ':id/manage-spaces/secondary-manage-space/clone',
                 name: 'secondaryManageSpaceClone',
                 meta: {
-                    headerTitle: il8n('levelSpace', '二级管理空间克隆'),
+                    headerTitle: il8n('nav', '二级管理空间克隆'),
                     backRouter: -1
                 },
+                props: true,
                 component: SecondaryManageSpaceClone
+            },
+            {
+                path: ':id/manage-spaces/secondary-manage-space/edit',
+                name: 'secondaryManageSpaceEdit',
+                meta: {
+                    backRouter: -1
+                },
+                props: true,
+                component: SecondaryManageSpaceEdit
             },
             {
                 path: 'user-group',

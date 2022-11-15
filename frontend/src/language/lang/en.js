@@ -228,7 +228,8 @@ export const m = {
         '生效条件': 'Effective condition',
         '批量添加成员': 'Add members in bulk',
         '选择分级管理员': 'Select rating administrator',
-        '管理我的分级管理员': 'Manage My Level Administrators'
+        '管理我的分级管理员': 'Manage My Level Administrators',
+        '搜索管理空间': 'Search Management Space'
     },
     // 校验
     verify: {
@@ -416,7 +417,10 @@ export const m = {
         '管理空间': 'Manage Spaces',
         '我的管理空间': "My Management Space",
         '一级管理空间': 'Primary management space',
-        '二级管理空间': 'Secondary management space'
+        '二级管理空间': 'Secondary management space',
+        '新建一级管理空间': 'Create a new primary management space',
+        '新建二级管理空间': 'New secondary management space',
+        '二级管理空间克隆': 'Secondary management space cloning'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -596,7 +600,8 @@ export const m = {
         '分配': 'Distribution',
         '分配至': 'Distribution to',
         '分配 (二级管理空间)': 'Allocation (secondary management space)',
-        '搜索用户组名、描述、管理空间、创建人': 'Search user group name, description, management space and creator'
+        '搜索用户组名、描述、管理空间、创建人': 'Search user group name, description, management space and creator',
+        '批量': 'Batch'
     },
     userGroupDetail: {
         '用户组名': 'Group Name：',
@@ -712,11 +717,13 @@ export const m = {
         '一级管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space',
         '提交审批': 'Submit for approval',
         '新建我的管理空间': 'New My Management Space',
+        '动态继承上级空间': 'Dynamically inherit the parent space',
+        '指定组织架构和人员': 'Specify organizational structure and personnel',
+        '新建二级管理空间成功': 'Successfully created the secondary management space',
         '一级管理空间可以编辑、管理二级管理空间人员边界的权限': 'The first-level management space can edit and manage the permissions of the personnel boundaries of the second-level management space',
         '一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界': 'When the primary management space shrinks/modifies the authorization boundary, synchronously modify the authorization boundary of the related secondary management space',
         '二级管理空间扩大自己的授权边界，需要走一级管理空间管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the primary management space administrator',
-        '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the primary administrator space',
-        '二级管理空间克隆': 'Secondary management space cloning'
+        '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the primary administrator space'
     },
     gradingDetail: {
         '分级管理员名称': 'Grading  Manager Name：',

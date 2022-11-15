@@ -917,9 +917,7 @@
                     cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'ratingManager'
-                    });
+                    this.$router.go(-1);
                 }, _ => _);
             },
 

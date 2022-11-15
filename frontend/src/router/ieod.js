@@ -148,6 +148,10 @@ const SecondaryManageSpaceCreate = () =>
 const SecondaryManageSpaceClone = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/clone');
 
+// 二极管理空间编辑
+const SecondaryManageSpaceEdit = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
+
 // 二极管理空间详情
 const SecondaryManageSpaceDetail = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/detail');
@@ -370,19 +374,29 @@ export const routes = [
                 path: 'manage-spaces/secondary-manage-space/create',
                 name: 'secondaryManageSpaceCreate',
                 meta: {
-                    headerTitle: il8n('levelSpace', '新建二级管理空间'),
+                    headerTitle: il8n('nav', '新建二级管理空间'),
                     backRouter: -1
                 },
                 component: SecondaryManageSpaceCreate
             },
             {
-                path: 'manage-spaces/secondary-manage-space/clone',
+                path: ':id/manage-spaces/secondary-manage-space/clone',
                 name: 'secondaryManageSpaceClone',
                 meta: {
-                    headerTitle: il8n('levelSpace', '二级管理空间克隆'),
+                    headerTitle: il8n('nav', '二级管理空间克隆'),
                     backRouter: -1
                 },
+                props: true,
                 component: SecondaryManageSpaceClone
+            },
+            {
+                path: ':id/manage-spaces/secondary-manage-space/edit',
+                name: 'secondaryManageSpaceEdit',
+                meta: {
+                    backRouter: -1
+                },
+                props: true,
+                component: SecondaryManageSpaceEdit
             },
             {
                 path: ':id/secondary-space-manager-detail',
@@ -546,7 +560,7 @@ export const routes = [
                 name: 'gradingAdminCreate',
                 meta: {
                     headerTitle: il8n('nav', '新建一级管理空间'),
-                    backRouter: 'ratingManager'
+                    backRouter: -1
                 },
                 props: true,
                 component: GradingAdminCreate

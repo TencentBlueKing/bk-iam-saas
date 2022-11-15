@@ -11,7 +11,7 @@
             <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
                 <div class="select-warp">
                     <bk-user-selector :value="displayMembers" :api="userApi" :placeholder="$t(`m.verify['请输入']`)"
-                        style="width: 75%;" :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        style="width: 60%;" :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                         data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
                         @change="handleRtxChange">
                     </bk-user-selector>
@@ -19,6 +19,7 @@
                     <bk-checkbox
                         :true-value="true"
                         :false-value="false"
+                        style="display: flex"
                         v-model="formData.syncPerm"
                         @change="handleCheckboxChange">
                         {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}

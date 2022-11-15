@@ -30,6 +30,7 @@
                     v-model="selectKeyword"
                     :searchable="true"
                     :placeholder="$t(`m.userGroup['批量']`)"
+                    :search-placeholder="$t(`m.approvalProcess['请输入关键字搜索']`)"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     @toggle="handleToggle">

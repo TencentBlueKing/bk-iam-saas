@@ -184,7 +184,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    syncPerm: true
+                    syncPerm: false
                 },
                 isShowAddMemberDialog: false,
                 isShowMemberAdd: false,
@@ -333,7 +333,7 @@
 
             async fetchDetail () {
                 try {
-                    const res = await this.$store.dispatch('spaceManage/getSecondManagerDetail', { id: this.$route.query.id });
+                    const res = await this.$store.dispatch('spaceManage/getSecondManagerDetail', { id: this.id });
                     if (res.code === 0) {
                         this.getDetailData(res.data);
                     }

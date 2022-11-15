@@ -226,7 +226,7 @@
             handleClone (payload) {
                 this.$router.push({
                     name: 'secondaryManageSpaceClone',
-                    query: {
+                    params: {
                         id: payload.id
                     }
                 });
