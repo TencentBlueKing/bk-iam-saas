@@ -59,7 +59,8 @@ const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '..
 const MyManageSpaceCreate = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/create');
 
 // 我的管理空间二级管理员授权边界
-const MyManageSpaceSubDetail = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/detail');
+const MyManageSpaceSubDetail = () =>
+    import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/detail');
 
 // 用户组
 const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
@@ -143,8 +144,13 @@ const SecondaryManageSpace = () =>
 const SecondaryManageSpaceCreate = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
 
+// 二极管理空间克隆
+const SecondaryManageSpaceClone = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/clone');
+
 // 二极管理空间详情
-const SecondaryManageSpaceDetail = () => import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/detail');
+const SecondaryManageSpaceDetail = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/detail');
 
 // 资源权限管理
 const ResourcePermiss = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
@@ -365,15 +371,24 @@ export const routes = [
                 name: 'secondaryManageSpaceCreate',
                 meta: {
                     headerTitle: il8n('levelSpace', '新建二级管理空间'),
-                    backRouter: 'secondaryManageSpace'
+                    backRouter: -1
                 },
                 component: SecondaryManageSpaceCreate
+            },
+            {
+                path: 'manage-spaces/secondary-manage-space/clone',
+                name: 'secondaryManageSpaceClone',
+                meta: {
+                    headerTitle: il8n('levelSpace', '二级管理空间克隆'),
+                    backRouter: -1
+                },
+                component: SecondaryManageSpaceClone
             },
             {
                 path: ':id/secondary-space-manager-detail',
                 name: 'secondaryManageSpaceDetail',
                 meta: {
-                    backRouter: 'secondaryManageSpace'
+                    backRouter: -1
                 },
                 component: SecondaryManageSpaceDetail
             },
