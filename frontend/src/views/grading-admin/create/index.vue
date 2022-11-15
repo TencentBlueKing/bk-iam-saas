@@ -804,7 +804,6 @@
                     reason: this.reason,
                     sync_perm: syncPerm
                 };
-                console.log('params', params);
                 try {
                     await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
                     await this.$store.dispatch('roleList');
@@ -891,7 +890,6 @@
                 };
                 window.changeDialog = false;
                 this.submitLoading = true;
-                console.log('params', params);
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
