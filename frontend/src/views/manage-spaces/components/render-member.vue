@@ -56,6 +56,10 @@
             tip: {
                 type: String,
                 default: ''
+            },
+            inheritSubjectScope: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -70,6 +74,11 @@
             },
             isHasDepartment () {
                 return this.departments.length > 0;
+            }
+        },
+        watch: {
+            inheritSubjectScope (value) {
+                this.radioValue = value;
             }
         },
         methods: {
