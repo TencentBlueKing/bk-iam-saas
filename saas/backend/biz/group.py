@@ -144,6 +144,7 @@ class GroupBiz:
     list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
     batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
     list_all_group_member = GroupService.__dict__["list_all_group_member"]
+    list_rbac_group_by_resource = GroupService.__dict__["list_rbac_group_by_resource"]
 
     def create_and_add_members(
         self, role_id: int, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int

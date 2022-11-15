@@ -42,7 +42,7 @@ from backend.apps.role.audit import (
     RoleUpdateAuditProvider,
     UserRoleDeleteAuditProvider,
 )
-from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter
+from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter, SystemGradeMangerFilter
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleRelation, RoleUser
 from backend.apps.role.serializers import (
     BaseGradeMangerSchemaSLZ,
@@ -66,6 +66,7 @@ from backend.apps.role.serializers import (
     SuperManagerMemberSLZ,
     SystemManagerMemberUpdateSLZ,
     SystemManagerSLZ,
+    ThinGradeManagerSLZ,
 )
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
@@ -916,6 +917,29 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="用户加入的子集管理员列表",
         responses={status.HTTP_200_OK: BaseGradeMangerSchemaSLZ(label="子集管理员列表", many=True)},
+        tags=["role"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
+class SystemGradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
+    """
+    系统创建的分级管理员
+    """
+
+    lookup_field = "id"
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+    serializer_class = ThinGradeManagerSLZ
+    filterset_class = SystemGradeMangerFilter
+
+    def get_queryset(self):
+        system_id = self.kwargs["system_id"]
+        return super().get_queryset().filter(source_system_id=system_id)
+
+    @swagger_auto_schema(
+        operation_description="系统创建的分级管理员",
+        responses={status.HTTP_200_OK: ThinGradeManagerSLZ(label="分级管理员列表", many=True)},
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):

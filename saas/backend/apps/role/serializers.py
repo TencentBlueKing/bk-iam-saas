@@ -444,3 +444,9 @@ class SubsetMangerDetailSLZ(GradeMangerDetailSLZ):
             "subject_scopes",
             "sync_perm",
         )
+
+
+class ThinGradeManagerSLZ(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ("id", "name", "description")

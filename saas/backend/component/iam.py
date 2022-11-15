@@ -660,3 +660,22 @@ def alter_group_policies_v2(
     }
     result = _call_iam_api(http_post, url_path, data=data)
     return result
+
+
+def query_rbac_group_by_resource(
+    system_id: str,
+    action_id: str,
+    resource_type_system_id: int,
+    resource_type_id: str,
+    resource_id: str,
+) -> List:
+    """
+    查询rbac有实例权限的用户组
+    """
+    url_path = f"/api/v2/web/systems/{system_id}/rbac/resource-groups"
+    data = {
+        "action_id": action_id,
+        "resource": {"system_id": resource_type_system_id, "type": resource_type_id, "id": resource_id},
+    }
+    result = _call_iam_api(http_post, url_path, data=data)
+    return result

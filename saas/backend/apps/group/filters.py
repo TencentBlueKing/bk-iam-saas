@@ -92,3 +92,35 @@ class GroupTemplateSystemFilter(filters.FilterSet):
     class Meta:
         model = PermTemplatePolicyAuthorized
         fields = ["system_id"]
+
+
+class SystemGroupFilter(InitialFilterSet):
+    id = filters.NumberFilter(label="ID")
+    name = filters.CharFilter(label="名字", lookup_expr="icontains")
+    action_id = filters.CharFilter(label="操作id", method="action_id_filter")
+    resource_type_system_id = filters.CharFilter(label="资源类型系统id", method="resource_type_system_id_filter")
+    resource_type_id = filters.CharFilter(label="资源类型id", method="resource_type_id_filter")
+    resource_id = filters.CharFilter(label="资源实例id", method="resource_id_filter")
+
+    class Meta:
+        model = Group
+        fields = [
+            "name",
+            "id",
+            "action_id",
+            "resource_type_id",
+            "resource_id",
+            "resource_type_system_id",
+        ]
+
+    def action_id_filter(self, queryset, name, value):
+        return queryset
+
+    def resource_type_id_filter(self, queryset, name, value):
+        return queryset
+
+    def resource_id_filter(self, queryset, name, value):
+        return queryset
+
+    def resource_type_system_id_filter(self, queryset, name, value):
+        return queryset

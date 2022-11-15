@@ -331,3 +331,18 @@ class GradeManagerGroupTransferSLZ(serializers.Serializer):
         if not RoleRelation.objects.filter(parent_id=role.id, role_id=value).exists():
             raise serializers.ValidationError(f"subset manager id {value} not exists")
         return value
+
+
+class SystemGroupSLZ(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = (
+            "id",
+            "name",
+            "user_count",
+            "department_count",
+            "description",
+            "creator",
+            "created_time",
+            "readonly",
+        )
