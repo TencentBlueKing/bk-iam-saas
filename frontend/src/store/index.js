@@ -360,27 +360,27 @@ const store = new Vuex.Store({
             hideIamSlider: false, // 第一层级侧边导航
             hideIamBreadCrumbs: false, // 第一层级面包屑
             myPerm: { // 我的权限
-                hideCustomTab: true, // 自定义权限tab - 1
-                hideApplyBtn: true, // 申请权限按钮 - 1
-                hideTemporaryCustomTab: true, // 临时权限tab -1
+                hideCustomTab: false, // 自定义权限tab - 1
+                hideApplyBtn: false, // 申请权限按钮 - 1
+                hideTemporaryCustomTab: false, // 临时权限tab -1
                 renewal: { // 我的权限-权限续期
-                    hideCustomTab: true // 自定义权限tab - 2
+                    hideCustomTab: false // 自定义权限tab - 2
                 },
                 transfer: { // 我的权限-权限交接
-                    hideTextBtn: true, // 交接历史文本按钮 - 3
-                    hideCustomData: true, // 自定义权限交接-3
-                    hideManagerData: true, // 管理员交接数据-3
-                    showUserGroupSearch: true // 显示权限交接用户组查询-3
+                    hideTextBtn: false, // 交接历史文本按钮 - 3
+                    hideCustomData: false, // 自定义权限交接-3
+                    hideManagerData: false, // 管理员交接数据-3
+                    showUserGroupSearch: false // 显示权限交接用户组查询-3
                 }
             },
             userGroup: { // 用户组
                 addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
-                    hideAddTemplateTextBtn: true // 右侧抽屉新增文本按钮-7.1
+                    hideAddTemplateTextBtn: false // 右侧抽屉新增文本按钮-7.1
                 },
                 groupDetail: { // 用户组 - 组详情
-                    hideAddBtn: true, // 用户组-组权限-添加权限按钮-6
-                    hideEditBtn: true, // 用户组-组权限-编辑权限按钮-6
-                    hideDeleteBtn: true // 用户组-组权限-删除权限按钮-6
+                    hideAddBtn: false, // 用户组-组权限-添加权限按钮-6
+                    hideEditBtn: false, // 用户组-组权限-编辑权限按钮-6
+                    hideDeleteBtn: false // 用户组-组权限-删除权限按钮-6
                 }
             }
         }
@@ -759,8 +759,37 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         getExternalSystemsLayout ({ commit, state, dispatch }, config) {
+            const externalSystemsLayout = {
+                hideIamHeader: true, // 第一层级头部导航
+                hideIamSlider: true, // 第一层级侧边导航
+                hideIamBreadCrumbs: true, // 第一层级面包屑
+                myPerm: { // 我的权限
+                    hideCustomTab: true, // 自定义权限tab - 1
+                    hideApplyBtn: true, // 申请权限按钮 - 1
+                    hideTemporaryCustomTab: true, // 临时权限tab -1
+                    renewal: { // 我的权限-权限续期
+                        hideCustomTab: true // 自定义权限tab - 2
+                    },
+                    transfer: { // 我的权限-权限交接
+                        hideTextBtn: true, // 交接历史文本按钮 - 3
+                        hideCustomData: true, // 自定义权限交接-3
+                        hideManagerData: true, // 管理员交接数据-3
+                        showUserGroupSearch: true // 显示权限交接用户组查询-3
+                    }
+                },
+                userGroup: { // 用户组
+                    addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
+                        hideAddTemplateTextBtn: true // 右侧抽屉新增文本按钮-7.1
+                    },
+                    groupDetail: { // 用户组 - 组详情
+                        hideAddBtn: true, // 用户组-组权限-添加权限按钮-6
+                        hideEditBtn: true, // 用户组-组权限-编辑权限按钮-6
+                        hideDeleteBtn: true // 用户组-组权限-删除权限按钮-6
+                    }
+                }
+            };
+            commit('setExternalSystemsLayout', externalSystemsLayout);
             return http.get(`${AJAX_URL_PREFIX}/systems/`, config).then(response => {
-                commit('setExternalSystemsLayout', response.data);
                 return response.data;
             });
         }
