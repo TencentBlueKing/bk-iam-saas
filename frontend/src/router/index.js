@@ -109,7 +109,11 @@ export const beforeEach = async (to, from, next) => {
             const noFrom = !from.name;
             // 说明是刷新页面
             if (noFrom) {
-                next({ path: `${SITE_URL}user-group` });
+                if (to.query.source === 'externalApp') {
+                    next();
+                } else {
+                    next({ path: `${SITE_URL}user-group` });
+                }
             } else {
                 next();
             }
