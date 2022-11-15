@@ -1,6 +1,6 @@
 <template>
     <!-- eslint-disable max-len -->
-    <header :class="['header-layout', { 'nav-sticked': navStick }]">
+    <header :class="['header-layout', { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs }]">
         <iam-guide
             v-if="showGuide"
             type="switch_role"
@@ -10,7 +10,7 @@
             :content="$t(`m.guide['切换分级管理员']`)" />
         <div class="breadcrumbs fl"
             :class="backRouter ? 'has-cursor' : ''"
-            v-show="!mainContentLoading"
+            v-show="!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs"
             @click="back">
             <div v-if="!isHide">
                 <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
@@ -95,7 +95,7 @@
                 </section>
             </transition>
         </div> -->
-        <div class="page-tab-wrapper" v-if="hasPageTab">
+        <div class="page-tab-wrapper" :style="{ top: externalSystemsLayout.hideIamBreadCrumbs ? '0' : '54px' }" v-if="hasPageTab">
             <bk-tab
                 :active.sync="active"
                 type="unborder-card"
@@ -257,7 +257,8 @@
                 'backRouter',
                 'user',
                 'mainContentLoading',
-                'roleList'
+                'roleList',
+                'externalSystemsLayout'
             ]),
             style () {
                 return {

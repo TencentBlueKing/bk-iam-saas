@@ -55,6 +55,7 @@
                                     :group-id="groupId"
                                     :template-id="subItem.id"
                                     :is-edit="subItem.isEdit"
+                                    :external-delete="externalSystemsLayout.userGroup.groupDetail.hideDeleteBtn"
                                     @on-delete="handleSingleDelete(...arguments, item)" />
                             </div>
                         </render-template-item>

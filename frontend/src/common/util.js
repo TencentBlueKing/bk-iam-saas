@@ -416,3 +416,33 @@ export function deepEquals (x, y) {
     }
     return true;
 }
+
+/**
+ * 查找地址栏是否有传入的值
+ *
+ * @param {number/string/object} x
+ */
+export function existValue (value) {
+    // 1、url截取?之后的字符串(不包含?)
+    const pathSearch = window.location.search.substr(1);
+    const result = [];
+    // 2、以&为界截取参数键值对
+    const paramItems = pathSearch.split('&');
+    // 3、将键值对形式的参数存入数组
+    for (let i = 0; i < paramItems.length; i++) {
+        const paramKey = paramItems[i].split('=')[0];
+        const paramValue = paramItems[i].split('=')[1];
+        result.push({
+            key: paramKey,
+            value: paramValue
+        });
+    }
+
+    // 4、遍历value值
+    for (let j = 0; j < result.length; j++) {
+        if (result[j].value === value) {
+            return true;
+        }
+    }
+    return false;
+}

@@ -28,6 +28,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 
 import { bus } from '@/common/bus';
+import { existValue } from '@/common/util';
 import store from '@/store';
 import http from '@/api';
 import preload from '@/common/preload';
@@ -65,6 +66,10 @@ let pageMethodExecuting = true;
  * beforeEach 钩子函数
  */
 export const beforeEach = async (to, from, next) => {
+    if (existValue('externalApp')) { // 外部嵌入页面需要请求配置项
+        fetchExternalSystemsLayout();
+    }
+
     bus.$emit('close-apply-perm-modal');
 
     canceling = true;
@@ -79,7 +84,6 @@ export const beforeEach = async (to, from, next) => {
     //     await store.dispatch('role/updateCurrentRole', { id: 0 });
     // }
     if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
-        console.log(to.name, store.state.index, '路由钩子');
         await store.dispatch('role/updateCurrentRole', { id: curRoleId });
         store.commit('updateIndex', 1);
         window.localStorage.setItem('index', 1);
@@ -127,10 +131,14 @@ export const beforeEach = async (to, from, next) => {
                 next({ path: `${SITE_URL}user-group` });
             }
         } else {
-            if (curRole === 'staff') {
-                next({ path: `${SITE_URL}my-perm` });
-            } else {
+            if (to.query.source === 'externalApp') { // 外部嵌入页面
                 next();
+            } else {
+                if (curRole === 'staff') {
+                    next({ path: `${SITE_URL}my-perm` });
+                } else {
+                    next();
+                }
             }
         }
     } else {
@@ -242,6 +250,9 @@ export const afterEach = async (to, from) => {
     store.commit('setMainContentLoading', true && to.name !== 'permTemplateDetail' && to.name !== 'permTransfer');
     store.commit('setBackRouter', '');
     preloading = true;
+    if (to.query.role_id) {
+        await store.dispatch('role/updateCurrentRole', { id: Number(to.query.role_id) });
+    }
     await preload();
     preloading = false;
     const pageDataMethods = [];
@@ -269,6 +280,10 @@ export const afterEach = async (to, from) => {
         store.commit('setMainContentLoading', false);
     }
 };
+
+const fetchExternalSystemsLayout = async () => {
+    await store.dispatch('getExternalSystemsLayout');
+}
 
 router.beforeEach(beforeEach);
 router.afterEach(afterEach);
