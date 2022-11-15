@@ -37,7 +37,9 @@
                 :ext-popover-cls="selectCls"
                 ext-cls="iam-nav-select-cls"
                 @toggle="handleToggle">
-                <bk-big-tree ref="selectTree" size="small"
+                <bk-big-tree
+                    ref="selectTree"
+                    size="small"
                     :data="curRoleList"
                     :selectable="true"
                     :use-default-empty="true"
@@ -48,15 +50,13 @@
                     @expand-on-click="handleExpandClick"
                     @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
-                        <div class="iam-select-collection">
-                            <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
-                                <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
-                                <span>{{data.name}}</span>
-                            </div>
-                            <!-- <bk-star
+                        <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
+                            <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
+                            <span>{{data.name}}</span>
+                        </div>
+                        <!-- <bk-star
                                 v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
                                 :rate="node.id === curRoleId" :max-stars="1" /> -->
-                        </div>
                     </div>
                 </bk-big-tree>
                 <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer">
@@ -520,11 +520,21 @@
 
 .iam-nav-select-dropdown-content .bk-big-tree {
     &-node {
-        padding: 0;
+        padding: 0 16px;
+        .node-options {
+            .node-folder-icon {
+                font-size: 14px;
+                margin: 0 2px 0 -16px;
+            }
+        }
     }
     &-empty {
         color: #fff !important;
         opacity: .6;
     }
+}
+
+.bk-select-search-wrapper .left-icon {
+    left: 18px !important;
 }
 </style>
