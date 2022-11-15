@@ -4,11 +4,11 @@
             <bk-button theme="primary" @click="handleCreate" data-test-id="level-manage_space_btn_create">
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
-            <div slot="right">
+            <!-- <div slot="right">
                 <bk-input :placeholder="$t(`m.levelSpace['搜索空间名、描述、创建人']`)" :clearable="true" style="width: 420px"
                     right-icon="bk-icon icon-search" v-model="searchValue" @enter="handleSearch" @clear="handleClear">
                 </bk-input>
-            </div>
+            </div> -->
         </render-search>
         <bk-table size="small" :max-height="tableHeight" :data="tableList" :class="{ 'set-border': tableLoading }"
             ext-cls="level-manage-table" :pagination="pagination" @page-change="handlePageChange"
@@ -223,8 +223,13 @@
                 });
             },
 
-            handleClone () {
-                
+            handleClone (payload) {
+                this.$router.push({
+                    name: 'secondaryManageSpaceClone',
+                    query: {
+                        id: payload.id
+                    }
+                });
             }
         }
     };
