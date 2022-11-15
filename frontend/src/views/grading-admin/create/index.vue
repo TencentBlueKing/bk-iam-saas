@@ -805,27 +805,27 @@
                     sync_perm: syncPerm
                 };
                 console.log('params', params);
-                // try {
-                //     await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
-                //     await this.$store.dispatch('roleList');
-                //     this.isShowReasonDialog = false;
-                //     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
-                //     this.$router.push({
-                //         name: 'apply'
-                //     });
-                // } catch (e) {
-                //     console.error(e);
-                //     this.bkMessageInstance = this.$bkMessage({
-                //         limit: 1,
-                //         theme: 'error',
-                //         message: e.message || e.data.msg || e.statusText,
-                //         ellipsisLine: 2,
-                //         ellipsisCopy: true
-                //     });
-                // } finally {
-                //     this.submitLoading = false;
-                //     this.dialogLoading = false;
-                // }
+                try {
+                    await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
+                    await this.$store.dispatch('roleList');
+                    this.isShowReasonDialog = false;
+                    this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+                    this.$router.push({
+                        name: 'apply'
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.submitLoading = false;
+                    this.dialogLoading = false;
+                }
             },
 
             handleDialogCancel () {
@@ -892,25 +892,25 @@
                 window.changeDialog = false;
                 this.submitLoading = true;
                 console.log('params', params);
-                // try {
-                //     await this.$store.dispatch('role/addRatingManager', params);
-                //     await this.$store.dispatch('roleList');
-                //     this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
-                //     this.$router.push({
-                //         name: 'ratingManager'
-                //     });
-                // } catch (e) {
-                //     console.error(e);
-                //     this.bkMessageInstance = this.$bkMessage({
-                //         limit: 1,
-                //         theme: 'error',
-                //         message: e.message || e.data.msg || e.statusText,
-                //         ellipsisLine: 2,
-                //         ellipsisCopy: true
-                //     });
-                // } finally {
-                //     this.submitLoading = false;
-                // }
+                try {
+                    await this.$store.dispatch('role/addRatingManager', params);
+                    await this.$store.dispatch('roleList');
+                    this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
+                    this.$router.push({
+                        name: 'ratingManager'
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.submitLoading = false;
+                }
             },
 
             handleCancel () {
