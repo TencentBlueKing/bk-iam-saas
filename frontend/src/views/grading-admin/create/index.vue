@@ -303,13 +303,12 @@
                 deep: true
             }
         },
-        mounted () {
-            this.formData.members = [{ username: this.user.username, readonly: true }];
-        },
         methods: {
             async fetchPageData () {
                 if (Number(this.id) > 0) {
                     await this.fetchDetail();
+                } else {
+                    this.formData.members = [{ username: this.user.username, readonly: true }];
                 }
             },
 

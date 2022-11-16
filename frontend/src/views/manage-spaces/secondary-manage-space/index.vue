@@ -1,14 +1,19 @@
 <template>
     <div class="iam-level-manage-space-wrapper">
         <render-search>
-            <bk-button theme="primary" @click="handleCreate" data-test-id="level-manage_space_btn_create">
+            <bk-button theme="primary" @click="handleView()" data-test-id="level-manage_space_btn_create">
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
-            <!-- <div slot="right">
-                <bk-input :placeholder="$t(`m.levelSpace['搜索空间名、描述、创建人']`)" :clearable="true" style="width: 420px"
-                    right-icon="bk-icon icon-search" v-model="searchValue" @enter="handleSearch" @clear="handleClear">
+            <div slot="right">
+                <bk-input
+                    :placeholder="$t(`m.levelSpace['搜索空间名、描述、创建人']`)"
+                    clearable
+                    style="width: 420px;"
+                    right-icon="bk-icon icon-search"
+                    v-model="searchValue"
+                    @enter="handleSearch">
                 </bk-input>
-            </div> -->
+            </div>
         </render-search>
         <bk-table size="small" :max-height="tableHeight" :data="tableList" :class="{ 'set-border': tableLoading }"
             ext-cls="level-manage-table" :pagination="pagination" @page-change="handlePageChange"
@@ -40,7 +45,7 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="300" fixed="right">
                 <template slot-scope="{ row }">
                     <section>
-                        <bk-button theme="primary" text @click="handleClone(row)">
+                        <bk-button theme="primary" text @click="handleView(row)">
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
                     </section>
@@ -91,6 +96,13 @@
             }
         },
         watch: {
+            searchValue (newVal, oldVal) {
+                if (!newVal && oldVal && this.isFilter) {
+                    this.isFilter = false;
+                    this.resetPagination();
+                    this.fetchGradingAdmin(true);
+                }
+            },
             'pagination.current' (value) {
                 this.currentBackup = value;
             }
@@ -144,11 +156,11 @@
                 await this.fetchGradingAdmin();
             },
 
-            handleCreate () {
+            handleView (payload) {
                 this.$router.push({
                     name: 'secondaryManageSpaceCreate',
                     params: {
-                        id: 0
+                        id: payload ? payload.id : 0
                     }
                 });
             },
@@ -220,15 +232,6 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                });
-            },
-
-            handleClone (payload) {
-                this.$router.push({
-                    name: 'secondaryManageSpaceClone',
-                    params: {
-                        id: payload.id
-                    }
                 });
             }
         }

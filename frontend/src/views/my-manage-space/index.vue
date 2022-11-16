@@ -84,13 +84,13 @@
                         <bk-table-column width="200">
                             <template slot-scope="child">
                                 <div class="operate_btn">
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row)">
+                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'detail')">
                                         {{ $t(`m.levelSpace['进入']`) }}
                                     </bk-button>
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row)">
+                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'edit')">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
-                                    <bk-button theme="primary" text @click.stop="handleClone(child.row)">
+                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
                                         {{ $t(`m.levelSpace['克隆']`) }}
                                     </bk-button>
                                 </div>
@@ -324,11 +324,11 @@
             },
 
             handleCreate () {
-                this.$store.commit('updateIndex', 3);
                 this.$router.push({
                     name: 'myManageSpaceCreate'
                 });
             },
+            
             // 一级管理空间
             handleView ({ id, name }, type) {
                 window.localStorage.setItem('iam-header-name-cache', name);
@@ -356,18 +356,28 @@
             },
 
             // 二级管理空间
-            handleSubView ({ id, name }) {
+            handleSubView ({ id, name }, type) {
                 window.localStorage.setItem('iam-header-name-cache', name);
+                let routerName = 'myManageSpaceSubDetail';
+                switch (type) {
+                    case 'detail':
+                        routerName = 'myManageSpaceSubDetail';
+                        break;
+                    case 'edit':
+                        routerName = 'myManageSpaceSubDetail';
+                        break;
+                    case 'clone':
+                        routerName = 'secondaryManageSpaceCreate';
+                        break;
+                    default:
+                        break;
+                }
                 this.$router.push({
-                    name: 'myManageSpaceSubDetail',
+                    name: routerName,
                     params: {
-                        id: id
+                        id
                     }
                 });
-            },
-
-            handleClone () {
-                console.log(455);
             },
 
             setCurrentQueryCache (payload) {

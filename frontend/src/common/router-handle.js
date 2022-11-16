@@ -255,9 +255,7 @@ export const getNavRouterDiff = (navIndex) => {
             'firstManageSpace',
             'ratingManager',
             'authorBoundary',
-            'secondaryManageSpace',
-            'secondaryManageSpaceCreate',
-            'secondaryManageSpaceDetail'
+            'secondaryManageSpace'
         ];
     }
 

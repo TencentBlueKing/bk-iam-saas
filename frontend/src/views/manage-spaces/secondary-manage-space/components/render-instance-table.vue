@@ -873,7 +873,7 @@
             handleOnInit (payload) {
                 this.disabled = !payload;
             },
-            showResourceInstance (data, index, resItem, resIndex, groupIndex) {
+            async showResourceInstance (data, index, resItem, resIndex, groupIndex) {
                 window.changeDialog = true;
                 this.params = {
                     system_id: this.systemId,
@@ -883,6 +883,7 @@
                 };
                 if (this.isCreateMode) {
                     this.params.system_id = data.detail.system.id;
+                    await this.fetchAuthorizationScopeActions(this.params.system_id);
                 }
                 const scopeAction = this.authorization[this.params.system_id] || [];
                 this.curScopeAction = _.cloneDeep(scopeAction.find(item => item.id === data.id));
@@ -948,6 +949,21 @@
                     });
                 } finally {
                     this.sliderLoading = false;
+                }
+            },
+            async fetchAuthorizationScopeActions (systemId) {
+                try {
+                    const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId });
+                    this.authorization[systemId] = res.data.filter(item => item.id !== '*');
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
                 }
             },
             handleRelatedAction (payload) {
@@ -1998,8 +2014,9 @@
             .remove-icon {
                 display: none;
                 position: absolute;
-                top: 10px;
-                right: 10px;
+                top: 50%;
+                right: 0;
+                transform: translate(-50%, -50%);
                 cursor: pointer;
                 &:hover {
                     color: #3a84ff;

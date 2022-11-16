@@ -159,7 +159,7 @@
             'myPermNav'
         ],
         // 我的管理空间
-        [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit', 'secondaryManageSpaceClone'], 'myManageSpaceNav'],
+        [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
         // 一级管理空间
