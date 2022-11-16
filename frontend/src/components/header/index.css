@@ -19,6 +19,11 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         padding-left: 260px;
     }
 
+    &.hide-bread {
+        padding-left: 0px !important;
+        height: 0px !important;
+    }
+
     .page-tab-wrapper {
         position: relative;
         top: 54px;

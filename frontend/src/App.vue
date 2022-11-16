@@ -23,7 +23,7 @@
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
-            v-if="isRouterAlive && !externalSystemsLayout.hideIamBreadCrumbs">
+            v-if="isRouterAlive">
         </the-header>
         <the-nav class="nav-layout"
             @reload-page="reloadCurPage"
@@ -158,10 +158,6 @@
                     this.processGuideShow = true;
                 }
             });
-
-            if (this.existKey('source')) {
-                this.fetchExternalSystemsLayout();
-            }
         },
         methods: {
             reload () {
@@ -252,16 +248,8 @@
                 }
             },
 
-            async fetchExternalSystemsLayout () {
-                try {
-                    await this.$store.dispatch('getExternalSystemsLayout');
-                } catch (e) {
-                    console.error(e);
-                }
-            },
-
             // 是否存在key
-            existKey (key) {
+            existKey (value) {
                 // 1、url截取?之后的字符串(不包含?)
                 const pathSearch = window.location.search.substr(1);
                 const result = [];
@@ -278,7 +266,7 @@
                 }
                 // 4、遍历key值
                 for (let j = 0; j < result.length; j++) {
-                    if (result[j].key === key) {
+                    if (result[j].value === value) {
                         return true;
                     }
                 }
