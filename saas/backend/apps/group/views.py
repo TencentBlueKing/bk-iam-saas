@@ -946,15 +946,15 @@ class SystemGroupViewSet(mixins.ListModelMixin, GenericViewSet):
         role_id = self.kwargs["role_id"]
 
         request = self.request
-        username = request.user.username
+        user = request.user
 
         # 判断当前用户是否在role的授权范围内
-        filter_role = self.role_biz.get_role_scope_include_user(role_id, username)
+        filter_role = self.role_biz.get_role_scope_include_user(role_id, user.username)
         if not filter_role:
             return Group.objects.none()
 
         # 返回角色的用户组列表
-        queryset = RoleListQuery(filter_role, request.user).query_group().filter(source_system_id=system_id)
+        queryset = RoleListQuery(filter_role, user).query_group().filter(source_system_id=system_id)
 
         # 使用操作, 资源实例筛选有权限的用户组
         action_id = request.query_params.get("action_id")
