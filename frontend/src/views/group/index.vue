@@ -800,6 +800,14 @@
             }
         }
 
+        .user-group-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+              color: #699df4;
+            }
+        }
+
         .user-group-space {
             display: flex;
             align-items: center;
