@@ -37,7 +37,7 @@ class GroupFilter(InitialFilterSet):
     description = filters.CharFilter(label="描述", lookup_expr="icontains")
     role_id = filters.NumberFilter(method="role_id_filter", label="角色ID")
     cache_id = filters.CharFilter(label="cache_id", method="cache_id_filter")
-    hidden = filters.BooleanFilter(initial=True)
+    hidden = filters.BooleanFilter(method="hidden_filter", initial=True)
 
     class Meta:
         model = Group
@@ -84,6 +84,11 @@ class GroupFilter(InitialFilterSet):
     def cache_id_filter(self, queryset, name, value):
         group_ids = _list_pre_application_group_ids(value)
         return queryset.filter(id__in=group_ids)
+
+    def hidden_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(hidden=False)
+        return queryset
 
 
 class GroupTemplateSystemFilter(filters.FilterSet):

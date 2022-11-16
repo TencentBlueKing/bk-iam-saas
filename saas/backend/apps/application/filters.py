@@ -20,7 +20,7 @@ class ApplicationFilter(InitialFilterSet):
     start_time = filters.CharFilter(method="start_time_filter", label="开始时间")
     end_time = filters.CharFilter(method="end_time_filter", label="结束时间")
     period = filters.NumberFilter(method="period_filter", label="区间")
-    hidden = filters.BooleanFilter(initial=True)
+    hidden = filters.BooleanFilter(method="hidden_filter", initial=True)
     source_system_id = filters.CharFilter()
 
     class Meta:
@@ -38,3 +38,8 @@ class ApplicationFilter(InitialFilterSet):
     def start_time_filter(self, queryset, name, value):
         start_time = string_to_datetime(value)
         return queryset.filter(created_time__gte=start_time)
+
+    def hidden_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(hidden=False)
+        return queryset

@@ -181,7 +181,7 @@ class RoleService:
     def list_by_ids(self, role_ids: List[int], with_hidden: bool = True) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
         if not with_hidden:
-            roles = roles.filter(hidden=True)
+            roles = roles.filter(hidden=False)
 
         data = [UserRole.convert_from_role(role) for role in roles]
 
