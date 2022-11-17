@@ -55,7 +55,7 @@ import myApply from './modules/myApply';
 // 用户组 模块
 import userGroup from './modules/userGroup';
 
-// 分级管理员模块
+// 一级管理空间模块
 import role from './modules/role';
 
 // 审批流程设置
@@ -149,29 +149,6 @@ const currentNav = [
     },
     {
         icon: 'perm-manage',
-        name: il8n('nav', '管理空间'),
-        rkey: 'manageSpaces',
-        children: [
-            {
-                icon: 'user-group',
-                id: 'authorBoundaryNav',
-                rkey: 'authorBoundary',
-                name: il8n('nav', '授权边界'),
-                path: `${SITE_URL}manage-spaces/authorization-boundary`,
-                disabled: false
-            },
-            {
-                icon: 'perm-template',
-                id: 'secondaryManageSpaceNav',
-                rkey: 'secondaryManageSpace',
-                name: il8n('nav', '二级管理空间'),
-                path: `${SITE_URL}manage-spaces/secondary-manage-space`,
-                disabled: false
-            }
-        ]
-    },
-    {
-        icon: 'perm-manage',
         name: il8n('nav', '权限管理'),
         rkey: 'managePermission',
         children: [
@@ -197,6 +174,29 @@ const currentNav = [
                 rkey: 'user',
                 name: il8n('nav', '用户'),
                 path: `${SITE_URL}user`,
+                disabled: false
+            }
+        ]
+    },
+    {
+        icon: 'perm-manage',
+        name: il8n('nav', '管理空间'),
+        rkey: 'manageSpaces',
+        children: [
+            {
+                icon: 'user-group',
+                id: 'authorBoundaryNav',
+                rkey: 'authorBoundary',
+                name: il8n('nav', '授权边界'),
+                path: `${SITE_URL}manage-spaces/authorization-boundary`,
+                disabled: false
+            },
+            {
+                icon: 'perm-template',
+                id: 'secondaryManageSpaceNav',
+                rkey: 'secondaryManageSpace',
+                name: il8n('nav', '二级管理空间'),
+                path: `${SITE_URL}manage-spaces/secondary-manage-space`,
                 disabled: false
             }
         ]
