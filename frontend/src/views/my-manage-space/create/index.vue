@@ -642,7 +642,6 @@
             handleAddAction () {
                 this.curActionValue = this.originalList.map(item => item.$id);
                 this.isShowAddActionSideSlider = true;
-                console.log(4555, this.isShowAddActionSideSlider);
             },
 
             setAggregateExpanded () {
@@ -719,7 +718,6 @@
                 this.isAll = payload.isAll;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
-                console.log(123);
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
                 this.isShowMemberEmptyError = false;
