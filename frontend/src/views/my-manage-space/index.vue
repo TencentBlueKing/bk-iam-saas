@@ -48,7 +48,7 @@
                                     <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
                                         :value="child.row.name" style="width: 100%;margin-left: 5px;"
                                         :index="child.$index"
-                                        :remote-hander="handleUpdateManageSpace" />
+                                        :remote-hander="handleUpdateSubManageSpace" />
                                 </div>
                             </template>
                         </bk-table-column>
@@ -60,7 +60,7 @@
                                     :placeholder="$t(`m.verify['请输入']`)"
                                     :value="child.row.members"
                                     :index="child.$index"
-                                    @on-change="handleUpdateMembers" />
+                                    @on-change="handleUpdateSubMembers" />
                             </template>
                         </bk-table-column>
                         <bk-table-column prop="description" width="200">
@@ -71,7 +71,7 @@
                                     :placeholder="$t(`m.verify['用户组描述提示']`)"
                                     :value="child.row.description"
                                     :index="child.$index"
-                                    :remote-hander="handleUpdateManageSpace" />
+                                    :remote-hander="handleUpdateSubManageSpace" />
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
@@ -115,17 +115,31 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
-                <template slot-scope="{ row }">
-                    <bk-tag v-for="(tag, index) of row.members" :key="index">
+                <template slot-scope="{ row, $index }">
+                    <!-- <bk-tag v-for="(tag, index) of row.members" :key="index">
                         {{tag.username}}
-                    </bk-tag>
+                    </bk-tag> -->
+                    <iam-edit-member-selector
+                        field="members"
+                        width="200"
+                        :placeholder="$t(`m.verify['请输入']`)"
+                        :value="row.members"
+                        :index="$index"
+                        @on-change="handleUpdateMembers" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['描述']`)" prop="description" width="200">
-                <template slot-scope="{ row }">
-                    <span
+                <template slot-scope="{ row, $index }">
+                    <!-- <span
                         v-bk-tooltips.top="{ content: row.description, extCls: 'iam-tooltips-cls' }"
-                        :title="row.description">{{ row.description || '--' }}</span>
+                        :title="row.description">{{ row.description || '--' }}</span> -->
+                    <iam-edit-textarea
+                        field="description"
+                        width="200"
+                        :placeholder="$t(`m.verify['用户组描述提示']`)"
+                        :value="row.description"
+                        :index="$index"
+                        :remote-hander="handleUpdateManageSpace" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
@@ -280,32 +294,49 @@
                 }
             },
 
-            handleUpdateManageSpace (payload, index) {
-                this.formData = this.subTableList.find((e, i) => i === index);
-                const params = {
-                    name: payload.name || this.formData.name,
-                    description: payload.description || this.formData.description,
-                    members: payload.members || this.formData.members,
-                    id: this.formData.id
-                };
-                return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
-                    .then(async () => {
-                        this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
-                        this.formData.name = params.name;
-                        this.formData.description = params.description;
-                        this.formData.members = [...params.members];
-                    }, (e) => {
-                        console.warn('error');
-                        this.bkMessageInstance = this.$bkMessage({
-                            limit: 1,
-                            theme: 'error',
-                            message: e.message || e.data.msg || e.statusText
-                        });
-                    });
-            },
-
             handleUpdateMembers (payload, index) {
                 this.handleUpdateManageSpace(payload, index);
+            },
+
+            handleUpdateSubMembers (payload, index) {
+                this.handleUpdateSubManageSpace(payload, index);
+            },
+
+            async handleUpdateManageSpace (payload, index) {
+                this.formData = this.tableList.find((e, i) => i === index);
+                await this.fetchManageTable(payload, 'role/updateRatingManager');
+            },
+
+            async handleUpdateSubManageSpace (payload, index) {
+                this.formData = this.subTableList.find((e, i) => i === index);
+                await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager');
+            },
+
+            async fetchManageTable (payload, url) {
+                const { name, description, members } = payload;
+                const params = {
+                    name: name || this.formData.name,
+                    description: description || this.formData.description,
+                    members: members || this.formData.members,
+                    id: this.formData.id
+                };
+                try {
+                    await this.$store.dispatch(url, params);
+                    this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                    this.formData = Object.assign(this.formData, {
+                        name: params.name,
+                        description: params.description,
+                        members: [...params.members]
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisCopy: true
+                    });
+                }
             },
 
             handleRowClick (row, column, cell, event, rowIndex, columnIndex) {

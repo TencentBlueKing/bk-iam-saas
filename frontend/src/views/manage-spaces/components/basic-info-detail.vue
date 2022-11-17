@@ -10,7 +10,7 @@
                         :value="formData.name"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>
-                <detail-item :label="`${$t(`m.levelSpace['管理员']`)}：`">
+                <detail-item :label="`${$t(`m.levelSpace['空间管理员']`)}：`">
                     <iam-edit-member
                         field="members"
                         :value="formData.members"

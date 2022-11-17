@@ -244,7 +244,7 @@
                 curRole: 'staff',
                 isShowRolloutGroupDialog: false,
                 isBatch: false,
-                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]'),
+                content: this.$t('m.nav["【一级管理空间】 功能，全面升级为【权限管理空间】啦！"]'),
                 il8n,
                 selectKeyword: '',
                 isShowDistributeDialog: false,

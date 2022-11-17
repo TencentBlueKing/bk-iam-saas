@@ -29,10 +29,10 @@
                 v-if="unfold && index === 1" :value="navCurRoleId || curRoleId"
                 :clearable="false"
                 :multiple="false"
-                :placeholder="$t(`m.common['选择分级管理员']`)"
+                :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
-                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
+                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two' : 'icon iam-icon iamcenter-level-one'"
                 :remote-method="handleRemoteTree"
                 :ext-popover-cls="selectCls"
                 ext-cls="iam-nav-select-cls"
@@ -94,7 +94,7 @@
                             @click.stop="handleSwitchNav(item.id, item)"
                             :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
-                            <span class="iam-menu-text" v-if="item.name === '分级管理员' && curRole === 'staff'">我的{{
+                            <span class="iam-menu-text" v-if="item.name === '一级管理空间' && curRole === 'staff'">我的{{
                                 item.name }}</span>
                             <span class="iam-menu-text" v-else>{{ item.name }}</span>
                         </div>
@@ -507,15 +507,11 @@
 }
 
 .iamcenter-level-one {
-    &.is-active {
-        color: #FF9C01;
-    }
+    color: #FF9C01;
 }
 
 .iamcenter-level-two {
-    &.is-active {
-        color: #9B80FE;
-    }
+    color: #9B80FE;
 }
 
 .iam-nav-select-dropdown-content .bk-big-tree {

@@ -3,15 +3,19 @@
         <bk-form :model="formData" form-type="vertical" ref="basicInfoForm">
             <iam-form-item :label="$t(`m.levelSpace['空间名']`)" required>
                 <bk-input :value="formData.name" style="width: 450px;" clearable
-                    :placeholder="$t(`m.levelSpace['请输入空间名']`)" :ext-cls="isShowNameError ? 'group-name-error' : ''"
+                    :placeholder="$t(`m.levelSpace['请输入空间名称']`)" :ext-cls="isShowNameError ? 'group-name-error' : ''"
                     data-test-id="space_input_name" @input="handleNameInput" @blur="handleNameBlur"
                     @change="handleNameChange" />
                 <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
             </iam-form-item>
-            <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
-                <div class="select-warp">
-                    <bk-user-selector :value="displayMembers" :api="userApi" :placeholder="$t(`m.verify['请输入']`)"
-                        style="width: 60%;" :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+            <iam-form-item :label="$t(`m.levelSpace['空间管理员']`)" required>
+                <div class="select-wrap">
+                    <bk-user-selector
+                        :value="displayMembers"
+                        :api="userApi"
+                        :placeholder="$t(`m.verify['请输入']`)"
+                        :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
+                        :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                         data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
                         @change="handleRtxChange">
                     </bk-user-selector>
@@ -19,7 +23,7 @@
                     <bk-checkbox
                         :true-value="true"
                         :false-value="false"
-                        style="display: flex"
+                        class="select-wrap-checkbox"
                         v-model="formData.syncPerm"
                         @change="handleCheckboxChange">
                         {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
@@ -27,13 +31,14 @@
                 </div>
             </iam-form-item>
             <iam-form-item :label="$t(`m.common['描述']`)">
-                <bk-input type="textarea" maxlength="100" :value="formData.description"
+                <bk-input type="textarea" maxlength="255" :value="formData.description"
                     :placeholder="$t(`m.verify['请输入']`)" data-test-id="space_input_desc" @change="handleDescChange" />
             </iam-form-item>
         </bk-form>
     </div>
 </template>
 <script>
+    import { language } from '@/language';
     import BkUserSelector from '@blueking/user-selector';
     const getDefaultData = () => ({
         name: '',
@@ -57,6 +62,7 @@
         },
         data () {
             return {
+                language,
                 formData: getDefaultData(),
                 isShowNameError: false,
                 isShowMemberError: false,
@@ -106,11 +112,11 @@
                 }
                 if (!this.isShowNameError) {
                     if (payload.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称最长不超过32个字符']`);
+                        this.nameValidateText = this.$t(`m.verify['空间名称最长不超过32个字符']`);
                         this.isShowNameError = true;
                     }
                     if (!/^[^\s]*$/g.test(payload)) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称不允许空格']`);
+                        this.nameValidateText = this.$t(`m.verify['一级管理空间名称不允许空格']`);
                         this.isShowNameError = true;
                     }
                 }
@@ -150,16 +156,16 @@
                 const maxLength = 32;
                 const { name, members } = this.formData;
                 if (name === '') {
-                    this.nameValidateText = this.$t(`m.verify['分级管理员名称必填']`);
+                    this.nameValidateText = this.$t(`m.verify['一级管理空间名称必填']`);
                     this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {
                     if (name.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称最长不超过32个字符']`);
+                        this.nameValidateText = this.$t(`m.verify['空间名称最长不超过32个字符']`);
                         this.isShowNameError = true;
                     }
                     if (!/^[^\s]*$/g.test(name)) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称不允许空格']`);
+                        this.nameValidateText = this.$t(`m.verify['一级管理空间名称不允许空格']`);
                         this.isShowNameError = true;
                     }
                 }
@@ -197,10 +203,13 @@
         color: #ff4d4d;
     }
 
-    .select-warp {
+    .select-wrap {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        &-checkbox {
+            display: flex;
+            margin-left: 20px;
+        }
     }
 
     .is-member-empty-cls {

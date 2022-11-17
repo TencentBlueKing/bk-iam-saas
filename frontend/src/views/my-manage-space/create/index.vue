@@ -6,7 +6,7 @@
             </section>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -848,7 +848,7 @@
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['新建一级管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'ratingManager'
                     });

@@ -9,7 +9,7 @@
             </section>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="!isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -26,7 +26,7 @@
             </div>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -330,6 +330,7 @@
         },
         methods: {
             async fetchPageData () {
+                console.log(this.user);
                 const propsId = Number(this.id);
                 const headerTitle = propsId ? '二级管理空间克隆' : '新建二级管理空间';
                 this.$store.commit('setHeaderTitle', headerTitle);
@@ -805,7 +806,6 @@
             },
 
             async fetchAggregationAction (payload) {
-                console.log(555555555555555, payload);
                 this.isLoading = true;
                 try {
                     const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: payload });
@@ -1084,7 +1084,7 @@
                 try {
                     await this.$store.dispatch('spaceManage/addSecondManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.levelSpace['新建二级管理空间成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['新建二级管理空间成功']`), 1000);
                     this.$router.go(-1);
                 } catch (e) {
                     console.error(e);
@@ -1273,7 +1273,7 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
+            top: -45px;
             left: 150px;
             font-size: 12px;
             color: #ff4d4d;

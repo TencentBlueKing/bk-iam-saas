@@ -100,19 +100,19 @@ const PermTemplateDifference = () =>
 // 用户
 const User = () => import(/* webpackChunkName: 'user' */ '../views/user');
 
-// 分级管理员
+// 一级管理空间
 const GradingAdmin = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin');
 
-// 分级管理员新建
+// 一级管理空间新建
 const GradingAdminCreate = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
 
-// 分级管理员详情
+// 一级管理空间详情
 const GradingAdminDetail = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/detail');
 
-// 分级管理员编辑
+// 一级管理空间编辑
 const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/edit');
 
-// 分级管理员更新权限模板
+// 一级管理空间更新权限模板
 const GradingAdminUpdateTemplate = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
 

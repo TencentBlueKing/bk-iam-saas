@@ -41,7 +41,9 @@
                                     @blur="handleRtxBlur"
                                     @change="handleRtxChange">
                                 </bk-user-selector>
-                                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                                <p class="name-empty-error" v-if="isShowMemberError">
+                                    {{ $t(`m.verify['请选择空间管理员']`) }}
+                                </p>
                                 <p class="name-empty-error" v-if="isPermissionsPrompt">
                                     {{ $t(`m.verify['目标交接人不能为本人']`) }}
                                 </p>
