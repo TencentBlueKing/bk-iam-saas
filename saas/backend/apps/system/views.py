@@ -10,13 +10,14 @@ specific language governing permissions and limitations under the License.
 """
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, views
 
 from backend.biz.resource_type import ResourceTypeBiz
 from backend.biz.role import RoleListQuery
 from backend.biz.system import SystemBiz
+from backend.component import iam
 
 from .serializers import QueryResourceTypeSLZ, SystemQuerySLZ, SystemResourceTypeSLZ, SystemSLZ
 
@@ -64,3 +65,20 @@ class ResourceTypeViewSet(GenericViewSet):
         system_id = request.query_params["system_id"]
         data = self.biz.list_resource_types_by_system_id(system_id=system_id)
         return Response(data)
+
+
+class SystemCustomFrontendSettingsView(views.APIView):
+    """
+    查询系统定制前端配置
+    """
+
+    @swagger_auto_schema(
+        operation_description="查询系统定制前端配置",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["system"],
+    )
+    def get(self, request, *args, **kwargs):
+        system_id = kwargs["system_id"]
+        settings = iam.get_custom_frontend_settings(system_id)
+
+        return Response(settings)
