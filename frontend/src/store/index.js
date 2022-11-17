@@ -375,7 +375,8 @@ const store = new Vuex.Store({
             },
             userGroup: { // 用户组
                 addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
-                    hideAddTemplateTextBtn: false // 右侧抽屉新增文本按钮-7.1
+                    hideAddTemplateTextBtn: false, // 右侧抽屉新增文本按钮-7.1
+                    AddUserGroupDiaLogUrl: '' // 用户组 - 添加用户组 - 组成员链接跳转
                 },
                 groupDetail: { // 用户组 - 组详情
                     hideAddBtn: false, // 用户组-组权限-添加权限按钮-6
