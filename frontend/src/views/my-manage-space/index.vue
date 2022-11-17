@@ -16,7 +16,7 @@
                     </bk-radio-group> -->
                     <bk-input
                         v-model="searchValue"
-                        :placeholder="$t(`m.levelSpace['搜索空间名、描述、创建人、创建时间']`)"
+                        :placeholder="$t(`m.levelSpace['请输入空间名称']`)"
                         clearable
                         style="width: 420px"
                         right-icon="bk-icon icon-search"
@@ -41,7 +41,7 @@
                         @row-click="handleRowClick"
                     >
                         <bk-table-column width="30" />
-                        <bk-table-column prop="name" min-width="240">
+                        <bk-table-column prop="name" width="240">
                             <template slot-scope="child">
                                 <div class="child_space_name">
                                     <Icon type="level-two" :style="{ color: iconColor[1] }" />
@@ -104,7 +104,7 @@
                     </bk-table>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['空间名']`)" prop="name" min-width="240">
+            <bk-table-column :label="$t(`m.levelSpace['空间名']`)" prop="name" width="240">
                 <template slot-scope="{ row }">
                     <div>
                         <Icon type="level-one" :style="{ color: iconColor[0] }" />
@@ -140,14 +140,6 @@
                         :value="row.description"
                         :index="$index"
                         :remote-hander="handleUpdateManageSpace" />
-                </template>
-            </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
-                <template slot-scope="{ row }">
-                    <span
-                        v-bk-tooltips.top="{ content: row.created_time, extCls: 'iam-tooltips-cls' }"
-                        :title="row.created_time">{{ row.created_time }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
