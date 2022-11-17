@@ -87,7 +87,7 @@
             this.rules = [
                 {
                     required: true,
-                    message: this.$t(`m.verify['一级管理空间名称必填']`),
+                    message: this.$t(`m.verify['空间名称必填']`),
                     trigger: 'blur'
                 },
                 {

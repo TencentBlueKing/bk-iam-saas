@@ -156,7 +156,7 @@
                 const maxLength = 32;
                 const { name, members } = this.formData;
                 if (name === '') {
-                    this.nameValidateText = this.$t(`m.verify['一级管理空间名称必填']`);
+                    this.nameValidateText = this.$t(`m.verify['空间名称必填']`);
                     this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {

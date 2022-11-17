@@ -88,7 +88,7 @@
         </section>
         <section v-else ref="memberRef">
             <render-member
-                :tip="$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间人员边界的权限']`)"
+                :tip="$t(`m.levelSpace['一级管理空间只能给该范围内的人员授权']`)"
                 :users="users"
                 :departments="departments"
                 :expired-at-error="isShowExpiredError"
@@ -1003,7 +1003,7 @@
                 this.originalList = _.cloneDeep(payload);
                 this.aggregationDataByCustom = _.cloneDeep(aggregation);
                 this.authorizationDataByCustom = _.cloneDeep(authorization);
-                
+                this.isShowActionEmptyError = false;
                 this.$refs.addPermSideslider.handleSubmit();
                 // this.handleSubmitPerm()
             },
