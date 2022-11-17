@@ -48,7 +48,6 @@ def create_ticket(
     data = {
         "service_id": process_id,
         "creator": creator,
-        "tag": tag,  # NOTE: 用于ITSM审批单列表api筛选过滤字段
         "meta": {"callback_url": callback_url, "state_processors": node_processors},
         "fields": [
             {"key": "title", "value": title},
@@ -58,6 +57,10 @@ def create_ticket(
             {"key": "content", "value": content},
         ],
     }
+
+    if tag:
+        data["tag"] = tag  # NOTE: 用于ITSM审批单列表api筛选过滤字段
+
     # 填充额外的fields
     for k, v in kwargs.items():
         data["fields"].append({"key": k, "value": v})  # type: ignore

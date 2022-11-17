@@ -71,6 +71,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_SUBSET_MANAGER_CREATE = auto()
     # 审批
     V2_APPLICATION_APPROVAL = auto()
+    V2_APPLICATION_CANCEL = auto()
 
     _choices_labels = skip(
         (
@@ -127,6 +128,8 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_SUBSET_MANAGER_CREATE, "[V2]创建子集管理员"),
             # 审批
             (V2_APPLICATION_APPROVAL, "[V2]申请单审批通知"),
+            # 申请单取消
+            (V2_APPLICATION_CANCEL, "[V2]申请单取消"),
         )
     )
 
