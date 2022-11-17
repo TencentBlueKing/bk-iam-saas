@@ -36,4 +36,10 @@ urlpatterns = [
         SystemGroupViewSet.as_view({"get": "list"}),
         name="system.list_system_group",
     ),
+    # 定制前端配置
+    path(
+        "<str:system_id>/custom_frontend_settings/",
+        views.SystemCustomFrontendSettingsView.as_view(),
+        name="system.custom_frontend_settings",
+    ),
 ]

@@ -120,11 +120,19 @@ def get_common_actions(system_id: str) -> Dict:
     return _call_iam_api(http_get, url_path, data={})
 
 
-def get_system_managers(system_id: str) -> Dict:
+def get_system_managers(system_id: str) -> List:
     """
     获取系统管理员
     """
     url_path = f"/api/v1/web/systems/{system_id}/system-settings/system-managers"
+    return _call_iam_api(http_get, url_path, data={})
+
+
+def get_custom_frontend_settings(system_id: str) -> Dict:
+    """
+    获取定制前端配置
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/system-settings/custom-frontend-settings"
     return _call_iam_api(http_get, url_path, data={})
 
 
