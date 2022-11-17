@@ -87,7 +87,11 @@
                 <bk-table-column :label="$t(`m.nav['二级管理空间']`)">
                     <template slot-scope="{ row }">
                         <div class="user-group-space">
-                            <Icon type="level-two" :style="{ color: '#9B80FE' }" />
+                            <Icon
+                                v-if="['subset_manager'].includes(row.role.type)"
+                                type="level-two"
+                                :style="{ color: '#9B80FE' }"
+                            />
                             <iam-edit-input
                                 field="name"
                                 style="width: 100%; margin-left: 5px;"
