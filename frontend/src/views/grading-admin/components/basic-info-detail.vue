@@ -2,7 +2,7 @@
     <div class="iam-grading-admin-basic-info-wrapper">
         <detail-layout mode="see">
             <render-layout>
-                <detail-item :label="`${$t(`m.levelSpace['空间名']`)}:`">
+                <detail-item :label="`${$t(`m.levelSpace['空间名称']`)}：`">
                     <iam-edit-input
                         field="name"
                         :placeholder="$t(`m.verify['请输入']`)"

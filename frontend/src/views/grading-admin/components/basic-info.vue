@@ -4,7 +4,7 @@
             :model="formData"
             form-type="vertical"
             ref="basicInfoForm">
-            <iam-form-item :label="$t(`m.levelSpace['空间名']`)" required>
+            <iam-form-item :label="$t(`m.levelSpace['空间名称']`)" required>
                 <bk-input
                     :value="formData.name"
                     style="width: 450px;"

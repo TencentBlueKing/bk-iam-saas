@@ -1,7 +1,7 @@
 <template>
     <div class="iam-space-basic-info-wrapper">
         <bk-form :model="formData" form-type="vertical" ref="basicInfoForm">
-            <iam-form-item :label="$t(`m.levelSpace['空间名']`)" required>
+            <iam-form-item :label="$t(`m.levelSpace['空间名称']`)" required>
                 <bk-input :value="formData.name" style="width: 450px;" clearable
                     :placeholder="$t(`m.levelSpace['请输入空间名称']`)" :ext-cls="isShowNameError ? 'group-name-error' : ''"
                     data-test-id="space_input_name" @input="handleNameInput" @blur="handleNameBlur"
