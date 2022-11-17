@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, views
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
@@ -23,6 +23,7 @@ from backend.api.management.v2.serializers import (
     ManagementGradeManagerCreateApplicationSLZ,
     ManagementGroupApplicationCreateSLZ,
 )
+from backend.apps.application.models import Application
 from backend.apps.role.models import Role
 from backend.biz.application import (
     ApplicationBiz,
@@ -201,3 +202,34 @@ class ManagementGradeManagerUpdatedApplicationViewSet(GenericViewSet):
         )
 
         return Response({"id": applications[0].id, "sn": applications[0].sn})
+
+
+class ManagementApplicationCancelView(views.APIView):
+    """
+    申请单取消
+    """
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+    management_api_permission = {
+        "post": (
+            VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value,
+            ManagementAPIEnum.V2_APPLICATION_CANCEL.value,
+        ),
+    }
+
+    biz = ApplicationBiz()
+
+    # Note: 这里会回调第三方处理，所以不定义参数
+    def put(self, request, *args, **kwargs):
+        source_system_id = kwargs["system_id"]
+        callback_id = kwargs["callback_id"]
+
+        # 校验系统与callback_id对应的审批存在
+        application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
+
+        user_id = request.user.username
+
+        self.biz.cancel_application(application, user_id)
+
+        return Response({})

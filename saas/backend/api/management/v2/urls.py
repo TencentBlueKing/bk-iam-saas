@@ -101,6 +101,12 @@ urlpatterns = [
         views.ManagementApplicationApprovalView.as_view(),
         name="open.management.v2.application_approve",
     ),
+    # 申请单取消
+    path(
+        "applications/<str:callback_id>/cancel/",
+        views.ManagementApplicationCancelView.as_view(),
+        name="open.management.v2.application_cancel",
+    ),
     # -------------- Subset Manager --------------
     # 创建二级管理员
     path(
