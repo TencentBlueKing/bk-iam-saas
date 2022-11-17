@@ -6,7 +6,7 @@
             </bk-button>
             <div slot="right">
                 <bk-input
-                    :placeholder="$t(`m.levelSpace['搜索空间名、描述、创建人']`)"
+                    :placeholder="$t(`m.levelSpace['请输入空间名称']`)"
                     clearable
                     style="width: 420px;"
                     right-icon="bk-icon icon-search"
@@ -30,12 +30,6 @@
                     <span :title="row.description">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
-                <template slot-scope="{ row }">
-                    <span :title="row.created_time">{{ row.created_time }}</span>
-                </template>
-            </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新时间']`)">
                 <template slot-scope="{ row }">
@@ -45,7 +39,10 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="300" fixed="right">
                 <template slot-scope="{ row }">
                     <section>
-                        <bk-button theme="primary" text @click="handleView(row)">
+                        <bk-button theme="primary" text @click="handleNavAuthBoundary(row)">
+                            {{ $t(`m.levelSpace['进入']`) }}
+                        </bk-button>
+                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleView(row)">
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
                     </section>

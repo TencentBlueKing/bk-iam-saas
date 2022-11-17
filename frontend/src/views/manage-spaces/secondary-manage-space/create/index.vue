@@ -302,7 +302,6 @@
                 return this.user.role.type === 'super_manager';
             },
             curAuthorizationData () {
-                console.log(this.authorizationData, this.authorizationDataByCustom, '当前授权数据');
                 const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
                 return data;
             }
@@ -330,7 +329,6 @@
         },
         methods: {
             async fetchPageData () {
-                console.log(this.user);
                 const propsId = Number(this.id);
                 const headerTitle = propsId ? '二级管理空间克隆' : '新建二级管理空间';
                 this.$store.commit('setHeaderTitle', headerTitle);
@@ -420,7 +418,6 @@
                 });
                 this.isShowMemberAdd = false;
                 this.originalList = _.cloneDeep(tempActions);
-                console.log(tempActions, '详情数据');
             },
 
             setPolicyList (payload) {
@@ -439,7 +436,6 @@
                             }
                         );
                     });
-                    console.log(payload, this.policyList, 2222);
                     return;
                 }
                 const isAddIds = payload.map(item => `${item.system_id}&${item.id}`);
@@ -689,7 +685,6 @@
                     }
                 });
                 this.allAggregationData = data;
-                console.log(data, '最新数据');
                 this.policyList.forEach(item => {
                     const aggregationData = this.allAggregationData[item.detail.system.id];
                     if (aggregationData && aggregationData.length) {
@@ -814,7 +809,6 @@
                     });
                     const data = this.getFilterAggregation(res.data.aggregations);
                     this.aggregationsBackup = _.cloneDeep(res.data.aggregations);
-                    console.log(data, '数据');
                     this.aggregations = _.cloneDeep(data);
                 } catch (e) {
                     console.error(e);
@@ -854,7 +848,6 @@
                         });
                     }
                 });
-                console.log(aggregations, 555);
                 // aggregations = aggregations.filter(item => item.actions.length > 1);
                 return aggregations;
             },
