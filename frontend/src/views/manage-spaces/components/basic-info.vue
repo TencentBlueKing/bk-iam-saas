@@ -19,7 +19,7 @@
                         data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
                         @change="handleRtxChange">
                     </bk-user-selector>
-                    <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                  
                     <bk-checkbox
                         :true-value="true"
                         :false-value="false"
@@ -29,6 +29,7 @@
                         {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
                     </bk-checkbox>
                 </div>
+                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择空间管理员']`) }}</p>
             </iam-form-item>
             <iam-form-item :label="$t(`m.common['描述']`)">
                 <bk-input type="textarea" maxlength="255" :value="formData.description"
