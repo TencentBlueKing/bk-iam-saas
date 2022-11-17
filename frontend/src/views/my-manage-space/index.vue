@@ -14,8 +14,13 @@
                             {{ $t(`m.levelSpace['全部空间']`) }}
                         </bk-radio-button>
                     </bk-radio-group> -->
-                    <bk-input :placeholder="$t(`m.levelSpace['搜索空间名、描述、创建人、创建时间']`)" clearable style="width: 420px"
-                        right-icon="bk-icon icon-search" v-model="searchValue" @enter="handleSearch" />
+                    <bk-input
+                        v-model="searchValue"
+                        :placeholder="$t(`m.levelSpace['搜索空间名、描述、创建人、创建时间']`)"
+                        clearable
+                        style="width: 420px"
+                        right-icon="bk-icon icon-search"
+                        @enter="handleSearch" />
                 </div>
             </div>
         </render-search>
@@ -207,6 +212,18 @@
                 return getWindowHeight() - 185;
             }
         },
+        watch: {
+            searchValue (newVal, oldVal) {
+                if (!newVal && oldVal && this.isFilter) {
+                    this.isFilter = false;
+                    this.resetPagination();
+                    this.fetchGradingAdmin(true);
+                }
+            },
+            'pagination.current' (value) {
+                this.currentBackup = value;
+            }
+        },
         methods: {
             async fetchPageData () {
                 await this.fetchGradingAdmin();
@@ -244,6 +261,23 @@
                     }
                 }
                 return false;
+            },
+
+            handleSearch () {
+                if (!this.searchValue) {
+                    return;
+                }
+                this.isFilter = true;
+                this.resetPagination();
+                this.fetchGradingAdmin(true);
+            },
+
+            handleClear () {
+                if (this.isFilter) {
+                    this.isFilter = false;
+                    this.resetPagination();
+                    this.fetchGradingAdmin(true);
+                }
             },
 
             handleUpdateManageSpace (payload, index) {
@@ -450,6 +484,14 @@
             handleLimitChange (limit) {
                 this.pagination = Object.assign(this.pagination, { limit, current: 1 });
                 this.fetchGradingAdmin(true);
+            },
+            
+            resetPagination () {
+                this.pagination = Object.assign({}, {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                });
             }
         }
     };
