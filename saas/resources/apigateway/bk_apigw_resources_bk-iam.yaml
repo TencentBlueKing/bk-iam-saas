@@ -1940,8 +1940,35 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: put
+          method: post
           path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/approve/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/:
+    put:
+      operationId: v2_management_application_cancel
+      description: 取消申请单
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -2021,7 +2048,7 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: put
+          method: post
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/applications/
           matchSubpath: false
           timeout: 0
@@ -2101,7 +2128,7 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: put
+          method: post
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/
           matchSubpath: false
           timeout: 0
