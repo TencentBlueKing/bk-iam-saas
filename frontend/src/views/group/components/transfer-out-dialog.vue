@@ -207,7 +207,7 @@
             },
 
             getMembersDisplay (payload) {
-                return `${this.$t(`m.common['管理员']`)}: ${payload.members.join(',')}`;
+                return `${this.$t(`m.common['管理员']`)}: ${payload.members.map(item => item.username).join(',')}`;
             },
 
             async handleSubmit () {
