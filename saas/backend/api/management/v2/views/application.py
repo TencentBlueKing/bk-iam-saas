@@ -16,6 +16,7 @@ from rest_framework.viewsets import GenericViewSet, views
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
     ManagementApplicationIDSLZ,
@@ -92,7 +93,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         return Response({"ids": [a.id for a in applications]})
 
 
-class ManagementGradeManagerApplicationViewSet(GenericViewSet):
+class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
     """分级管理员创建申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -124,7 +125,10 @@ class ManagementGradeManagerApplicationViewSet(GenericViewSet):
 
         user_id = data["applicant"]
 
+        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
         source_system_id = kwargs["system_id"]
+        auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
+        self.verify_system_scope(source_system_id, auth_system_ids)
 
         # 名称唯一性检查
         self.role_check_biz.check_grade_manager_unique_name(data["name"])
@@ -147,7 +151,7 @@ class ManagementGradeManagerApplicationViewSet(GenericViewSet):
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
 
-class ManagementGradeManagerUpdatedApplicationViewSet(GenericViewSet):
+class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
     """分级管理员更新申请单"""
 
     authentication_classes = [ESBAuthentication]
@@ -181,7 +185,10 @@ class ManagementGradeManagerUpdatedApplicationViewSet(GenericViewSet):
 
         user_id = data["applicant"]
 
+        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
         source_system_id = kwargs["system_id"]
+        auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
+        self.verify_system_scope(source_system_id, auth_system_ids)
 
         role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
         # 名称唯一性检查

@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf import settings
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -90,12 +89,8 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         # 兼容member格式
         data["members"] = [{"username": username} for username in data["members"]]
 
-        # NOTE: 兼容v2 api中创建分级管理员记录来源, 是否隐藏
-        data["source_system_id"] = source_system_id
-        data["hidden"] = source_system_id in settings.HIDDEN_SYSTEM_LIST if source_system_id else False
-
         # 转换为RoleInfoBean，用于创建时使用
-        role_info = self.trans.to_role_info(data)
+        role_info = self.trans.to_role_info(data, source_system_id=source_system_id)
 
         with transaction.atomic():
             # 创建角色
