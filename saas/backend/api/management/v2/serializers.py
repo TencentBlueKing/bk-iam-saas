@@ -264,3 +264,16 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
 
 class ManagementQueryGroupSLZ(serializers.Serializer):
     inherit = serializers.BooleanField(label="是否继承子集管理员的用户组", required=False, default=False)
+
+
+class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
+    members = serializers.ListField(
+        label="成员列表",
+        child=serializers.CharField(label="用户ID", max_length=64),
+        max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
+    )
+    authorization_scopes = serializers.ListField(
+        label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
+    )
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
