@@ -16,6 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import ManagementGradeManagerCreateSLZ
 from backend.apps.role.audit import RoleCreateAuditProvider, RoleUpdateAuditProvider
@@ -28,7 +29,7 @@ from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementGradeManagerViewSet(GenericViewSet):
+class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
     """分级管理员"""
 
     authentication_classes = [ESBAuthentication]
@@ -120,6 +121,9 @@ class ManagementGradeManagerViewSet(GenericViewSet):
         role_source = RoleSource.objects.get(source_type=RoleSourceTypeEnum.API.value, role_id=role.id)
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(role_source.source_system_id, auth_system_ids)
+
+        # 兼容member格式
+        data["members"] = [{"username": username} for username in data["members"]]
 
         # 转换为RoleInfoBean
         role_info = self.trans.to_role_info(data, source_system_id=kwargs["system_id"])
