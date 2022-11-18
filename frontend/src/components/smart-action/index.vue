@@ -48,8 +48,11 @@
                         height: '50px',
                         marginTop: '50px'
                     };
+                } else {
+                    return {
+                        marginTop: '52px'
+                    };
                 }
-                return {};
             },
             styles () {
                 const styles = {

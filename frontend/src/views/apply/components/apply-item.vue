@@ -91,10 +91,10 @@
                         str = `${this.$t(`m.info['申请续期']`)} ${data.extra_info.group_count} ${this.$t(`m.common['个用户组#']`)}`;
                         break;
                     case 'create_rating_manager':
-                        str = this.$t(`m.info['申请创建分级管理员']`);
+                        str = this.$t(`m.info['申请创建一级管理空间']`);
                         break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.info['申请编辑分级管理员']`);
+                        str = this.$t(`m.info['申请编辑一级管理空间']`);
                         break;
                     default:
                         str = '';
