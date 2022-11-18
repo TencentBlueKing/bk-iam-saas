@@ -145,7 +145,6 @@
             :ext-cls="'relate-instance-sideslider'"
             @update:isShow="handleResourceCancel">
             <div slot="content" class="sideslider-content">
-                {{curScopeAction}}
                 <render-resource
                     ref="renderResourceRef"
                     :data="condition"
@@ -889,7 +888,6 @@
                 const scopeAction = this.authorization[this.params.system_id] || [];
                 this.curScopeAction = _.cloneDeep(scopeAction.find(item => item.id === data.id));
                 this.curIndex = index;
-                console.log(this.authorization[this.params.system_id], this.curScopeAction, 454545545);
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
@@ -957,7 +955,6 @@
                 try {
                     const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId });
                     this.authorization[systemId] = res.data.filter(item => item.id !== '*');
-                    console.log(this.authorization[systemId], 5555);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -1297,7 +1294,6 @@
                                     if (curScopeAction && curScopeAction.resource_groups && curScopeAction.resource_groups.length) {
                                         curScopeAction.resource_groups.forEach(curScopeActionItem => {
                                             curScopeActionItem.related_resource_types.forEach(curResItem => {
-                                                console.log('curResItem', curResItem, curPasteData);
                                                 if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                                                     // eslint-disable-next-line max-len
                                                     const canPasteName = curResItem.condition[0].instances[0].path.reduce((p, v) => {
@@ -1324,7 +1320,6 @@
                                                                     return c;
                                                                     // eslint-disable-next-line max-len
                                                                 }).filter(d => !!(d.instances[0].path && d.instances[0].path.length));
-                                                                console.log('condition', condition);
                                                                 if (condition && condition.length) {
                                                                     resItem.condition = condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                                                                     resItem.isError = false;
@@ -1716,7 +1711,6 @@
             handleGetValue () {
                 // flag：提交时校验标识
                 let flag = false;
-                console.log('this.tableList', this.tableList);
                 if (this.tableList.length < 1) {
                     flag = true;
                     return {
