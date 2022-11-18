@@ -6,7 +6,7 @@
             </section>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -642,7 +642,6 @@
             handleAddAction () {
                 this.curActionValue = this.originalList.map(item => item.$id);
                 this.isShowAddActionSideSlider = true;
-                console.log(4555, this.isShowAddActionSideSlider);
             },
 
             setAggregateExpanded () {
@@ -719,7 +718,6 @@
                 this.isAll = payload.isAll;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
-                console.log(123);
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
                 this.isShowMemberEmptyError = false;
@@ -848,7 +846,7 @@
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['新建一级管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'ratingManager'
                     });

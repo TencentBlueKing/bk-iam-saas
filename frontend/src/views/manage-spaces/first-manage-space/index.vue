@@ -13,7 +13,7 @@
         <bk-table size="small" :max-height="tableHeight" :data="tableList" :class="{ 'set-border': tableLoading }"
             ext-cls="level-manage-table" :pagination="pagination" @page-change="handlePageChange"
             @page-limit-change="handleLimitChange" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.levelSpace['空间名']`)">
+            <bk-table-column :label="$t(`m.levelSpace['空间名称']`)">
                 <template slot-scope="{ row }">
                     <span class="level-manage-name" :title="row.name" @click="handleNavAuthBoundary(row)">
                         {{ row.name }}
