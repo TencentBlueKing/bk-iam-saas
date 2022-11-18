@@ -99,7 +99,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         mounted () {
             this.pageContainer = document.querySelector('.main-scroller');
@@ -109,10 +109,14 @@
             async fetchData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
-                        page_size: 100,
+                    const userGroupParams = {
+                        page_size: 10,
                         page: 1
-                    });
+                    };
+                    if (this.externalSystemId) {
+                        userGroupParams.system_id = this.externalSystemId;
+                    }
+                    const res = await this.$store.dispatch('perm/getPersonalGroups', userGroupParams);
                     const groupList = res.data.results || [];
                     groupList.forEach(item => {
                         if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {

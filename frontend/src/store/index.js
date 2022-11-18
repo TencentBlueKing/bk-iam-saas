@@ -375,7 +375,8 @@ const store = new Vuex.Store({
             },
             userGroup: { // 用户组
                 addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
-                    hideAddTemplateTextBtn: false // 右侧抽屉新增文本按钮-7.1
+                    hideAddTemplateTextBtn: false, // 右侧抽屉新增文本按钮-7.1
+                    AddUserGroupDiaLogUrl: '' // 用户组 - 添加用户组 - 组成员链接跳转
                 },
                 groupDetail: { // 用户组 - 组详情
                     hideAddBtn: false, // 用户组-组权限-添加权限按钮-6
@@ -409,7 +410,8 @@ const store = new Vuex.Store({
         navCurRoleId: state => state.navCurRoleId,
         showNoviceGuide: state => state.showNoviceGuide,
         curRoleId: state => state.curRoleId,
-        externalSystemsLayout: state => state.externalSystemsLayout
+        externalSystemsLayout: state => state.externalSystemsLayout,
+        externalSystemId: state => state.externalSystemId
     },
     mutations: {
         updateHost (state, params) {
@@ -582,6 +584,10 @@ const store = new Vuex.Store({
 
         setExternalSystemsLayout (state, payload) {
             state.externalSystemsLayout = payload;
+        },
+
+        updateSystemId (state, payload) {
+            state.externalSystemId = payload;
         }
     },
     actions: {
@@ -758,7 +764,7 @@ const store = new Vuex.Store({
          *
          * @return {Promise} promise 对象
          */
-        getExternalSystemsLayout ({ commit, state, dispatch }, config) {
+        getExternalSystemsLayout ({ commit, state, dispatch }, params, config) {
             const externalSystemsLayout = {
                 hideIamHeader: true, // 第一层级头部导航
                 hideIamSlider: true, // 第一层级侧边导航
@@ -779,7 +785,8 @@ const store = new Vuex.Store({
                 },
                 userGroup: { // 用户组
                     addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
-                        hideAddTemplateTextBtn: true // 右侧抽屉新增文本按钮-7.1
+                        hideAddTemplateTextBtn: true, // 右侧抽屉新增文本按钮-7.1
+                        AddUserGroupDiaLogUrl: '' // 用户组 - 添加用户组 - 组成员链接跳转
                     },
                     groupDetail: { // 用户组 - 组详情
                         hideAddBtn: true, // 用户组-组权限-添加权限按钮-6
@@ -789,7 +796,13 @@ const store = new Vuex.Store({
                 }
             };
             commit('setExternalSystemsLayout', externalSystemsLayout);
-            return http.get(`${AJAX_URL_PREFIX}/systems/`, config).then(response => {
+            const { externalSystemId } = params;
+            return http.get(`${AJAX_URL_PREFIX}/systems/${externalSystemId}/custom_frontend_settings/`, config).then(response => {
+                if (Array.from(response.data).length) {
+                    commit('setExternalSystemsLayout', response.data);
+                } else {
+                    commit('setExternalSystemsLayout', externalSystemsLayout);
+                }
                 return response.data;
             });
         }
