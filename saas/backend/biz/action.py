@@ -94,7 +94,7 @@ class ActionBiz:
     resource_type_svc = ResourceTypeService()
     policy_svc = PolicyQueryService()
 
-    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
+    @cachedmethod(timeout=1 * 60)  # 缓存1分钟
     def list(self, system_id: str) -> ActionBeanList:
         actions = self.action_svc.list(system_id)
         action_list = ActionBeanList(parse_obj_as(List[ActionBean], actions))
