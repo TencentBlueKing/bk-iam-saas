@@ -30,6 +30,7 @@
                     v-model="selectKeyword"
                     :searchable="true"
                     :placeholder="$t(`m.userGroup['批量']`)"
+                    :search-placeholder="$t(`m.approvalProcess['请输入关键字搜索']`)"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     @toggle="handleToggle">
@@ -86,7 +87,11 @@
                 <bk-table-column :label="$t(`m.nav['二级管理空间']`)">
                     <template slot-scope="{ row }">
                         <div class="user-group-space">
-                            <Icon type="level-two" :style="{ color: '#9B80FE' }" />
+                            <Icon
+                                v-if="['subset_manager'].includes(row.role.type)"
+                                type="level-two"
+                                :style="{ color: '#9B80FE' }"
+                            />
                             <iam-edit-input
                                 field="name"
                                 style="width: 100%; margin-left: 5px;"
@@ -243,7 +248,7 @@
                 curRole: 'staff',
                 isShowRolloutGroupDialog: false,
                 isBatch: false,
-                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]'),
+                content: this.$t('m.nav["【一级管理空间】 功能，全面升级为【权限管理空间】啦！"]'),
                 il8n,
                 selectKeyword: '',
                 isShowDistributeDialog: false,

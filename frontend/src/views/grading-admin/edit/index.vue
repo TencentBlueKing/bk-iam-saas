@@ -902,7 +902,7 @@
                 try {
                     await this.$store.dispatch(`role/${dispatchMethod}`, params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['编辑分级管理员成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['编辑一级管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'gradingAdminDetail',
                         params: {

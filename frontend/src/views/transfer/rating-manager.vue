@@ -5,7 +5,7 @@
             <div class="transfer-group-content">
                 <div class="header" @click="handlerateExpanded">
                     <Icon bk class="expanded-icon" :type="rateExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">分级管理员权限交接</label>
+                    <label class="title">一级管理空间权限交接</label>
                 </div>
                 <div class="content" v-if="rateExpanded">
                     <div class="slot-content">
@@ -22,7 +22,7 @@
                             <bk-table-column type="selection" align="center"
                                 :reserve-selection="true">
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.grading['分级管理员名称']`)" width="300">
+                            <bk-table-column :label="$t(`m.grading['一级管理空间名称']`)" width="300">
                                 <template slot-scope="{ row }">
                                     <bk-button text>{{row.name}}</bk-button>
                                 </template>
@@ -60,7 +60,7 @@
                 isEmpty: false,
                 isLoading: false,
                 rateListRender: [],
-                rateListAll: [], // 分级管理员权限交接
+                rateListAll: [], // 一级管理空间权限交接
                 rateExpanded: true,
                 isSelectAllChecked: false,
                 rateSelectData: []

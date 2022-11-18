@@ -281,7 +281,7 @@
                                                 <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                                             </template>
                                         </bk-table-column>
-                                        <bk-table-column :label="$t(`m.userGroup['所属分级管理员']`)">
+                                        <bk-table-column :label="$t(`m.userGroup['所属一级管理空间']`)">
                                             <template slot-scope="{ row }">
                                                 <span :class="row.role && row.role.name ? 'can-view' : ''"
                                                     :title="row.role && row.role.name ? row.role.name : ''"
@@ -520,7 +520,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['分级管理员成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -763,7 +763,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['分级管理员']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },

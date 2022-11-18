@@ -145,6 +145,7 @@
             :ext-cls="'relate-instance-sideslider'"
             @update:isShow="handleResourceCancel">
             <div slot="content" class="sideslider-content">
+                {{curScopeAction}}
                 <render-resource
                     ref="renderResourceRef"
                     :data="condition"
@@ -873,7 +874,7 @@
             handleOnInit (payload) {
                 this.disabled = !payload;
             },
-            showResourceInstance (data, index, resItem, resIndex, groupIndex) {
+            async showResourceInstance (data, index, resItem, resIndex, groupIndex) {
                 window.changeDialog = true;
                 this.params = {
                     system_id: this.systemId,
@@ -883,10 +884,12 @@
                 };
                 if (this.isCreateMode) {
                     this.params.system_id = data.detail.system.id;
+                    await this.fetchAuthorizationScopeActions(this.params.system_id);
                 }
                 const scopeAction = this.authorization[this.params.system_id] || [];
                 this.curScopeAction = _.cloneDeep(scopeAction.find(item => item.id === data.id));
                 this.curIndex = index;
+                console.log(this.authorization[this.params.system_id], this.curScopeAction, 454545545);
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
                 this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
@@ -948,6 +951,22 @@
                     });
                 } finally {
                     this.sliderLoading = false;
+                }
+            },
+            async fetchAuthorizationScopeActions (systemId) {
+                try {
+                    const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId });
+                    this.authorization[systemId] = res.data.filter(item => item.id !== '*');
+                    console.log(this.authorization[systemId], 5555);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
                 }
             },
             handleRelatedAction (payload) {
@@ -1998,8 +2017,9 @@
             .remove-icon {
                 display: none;
                 position: absolute;
-                top: 10px;
-                right: 10px;
+                top: 50% !important;
+                right: 0;
+                transform: translate(-50%, -50%);
                 cursor: pointer;
                 &:hover {
                     color: #3a84ff;

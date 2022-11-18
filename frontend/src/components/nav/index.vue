@@ -29,15 +29,17 @@
                 v-if="unfold && index === 1" :value="navCurRoleId || curRoleId"
                 :clearable="false"
                 :multiple="false"
-                :placeholder="$t(`m.common['选择分级管理员']`)"
+                :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
-                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two is-active' : 'icon iam-icon iamcenter-level-one is-active'"
+                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two' : 'icon iam-icon iamcenter-level-one'"
                 :remote-method="handleRemoteTree"
                 :ext-popover-cls="selectCls"
                 ext-cls="iam-nav-select-cls"
                 @toggle="handleToggle">
-                <bk-big-tree ref="selectTree" size="small"
+                <bk-big-tree
+                    ref="selectTree"
+                    size="small"
                     :data="curRoleList"
                     :selectable="true"
                     :use-default-empty="true"
@@ -48,15 +50,13 @@
                     @expand-on-click="handleExpandClick"
                     @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
-                        <div class="iam-select-collection">
-                            <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
-                                <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
-                                <span>{{data.name}}</span>
-                            </div>
-                            <!-- <bk-star
+                        <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
+                            <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
+                            <span>{{data.name}}</span>
+                        </div>
+                        <!-- <bk-star
                                 v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
                                 :rate="node.id === curRoleId" :max-stars="1" /> -->
-                        </div>
                     </div>
                 </bk-big-tree>
                 <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer">
@@ -94,7 +94,7 @@
                             @click.stop="handleSwitchNav(item.id, item)"
                             :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
-                            <span class="iam-menu-text" v-if="item.name === '分级管理员' && curRole === 'staff'">我的{{
+                            <span class="iam-menu-text" v-if="item.name === '一级管理空间' && curRole === 'staff'">我的{{
                                 item.name }}</span>
                             <span class="iam-menu-text" v-else>{{ item.name }}</span>
                         </div>
@@ -159,7 +159,7 @@
             'myPermNav'
         ],
         // 我的管理空间
-        [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail'], 'myManageSpaceNav'],
+        [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
         // 一级管理空间
@@ -507,24 +507,30 @@
 }
 
 .iamcenter-level-one {
-    &.is-active {
-        color: #FF9C01;
-    }
+    color: #FF9C01;
 }
 
 .iamcenter-level-two {
-    &.is-active {
-        color: #9B80FE;
-    }
+    color: #9B80FE;
 }
 
 .iam-nav-select-dropdown-content .bk-big-tree {
     &-node {
-        padding: 0;
+        padding: 0 16px;
+        .node-options {
+            .node-folder-icon {
+                font-size: 14px;
+                margin: 0 2px 0 -16px;
+            }
+        }
     }
     &-empty {
         color: #fff !important;
         opacity: .6;
     }
+}
+
+.bk-select-search-wrapper .left-icon {
+    left: 18px !important;
 }
 </style>
