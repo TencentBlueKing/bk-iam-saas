@@ -2,8 +2,7 @@
     <div class="iam-grading-admin-basic-info-wrapper">
         <detail-layout mode="see">
             <render-layout>
-                <detail-item :label="curRoleType === 'staff' ?
-                    $t(`m.levelSpace['空间名']`) : $t(`m.gradingDetail['分级管理员名称']`)">
+                <detail-item :label="`${$t(`m.levelSpace['空间名称']`)}：`">
                     <iam-edit-input
                         field="name"
                         :placeholder="$t(`m.verify['请输入']`)"
@@ -11,7 +10,7 @@
                         :value="formData.name"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>
-                <detail-item :label="$t(`m.gradingDetail['成员列表']`)">
+                <detail-item :label="`${$t(`m.levelSpace['空间管理员']`)}：`">
                     <iam-edit-member
                         field="members"
                         :value="formData.members"
@@ -88,21 +87,21 @@
             this.rules = [
                 {
                     required: true,
-                    message: this.$t(`m.verify['分级管理员名称必填']`),
+                    message: this.$t(`m.verify['空间名称必填']`),
                     trigger: 'blur'
                 },
                 {
                     validator: (value) => {
                         return value.length <= 32;
                     },
-                    message: this.$t(`m.verify['分级管理员名称最长不超过32个字符']`),
+                    message: this.$t(`m.verify['空间名称最长不超过32个字符']`),
                     trigger: 'blur'
                 },
                 {
                     validator: (value) => {
                         return /^[^\s]*$/g.test(value);
                     },
-                    message: this.$t(`m.verify['分级管理员名称不允许空格']`),
+                    message: this.$t(`m.verify['空间名称不允许空格']`),
                     trigger: 'blur'
                 }
             ];

@@ -873,7 +873,7 @@
             handleOnInit (payload) {
                 this.disabled = !payload;
             },
-            showResourceInstance (data, index, resItem, resIndex, groupIndex) {
+            async showResourceInstance (data, index, resItem, resIndex, groupIndex) {
                 window.changeDialog = true;
                 this.params = {
                     system_id: this.systemId,
@@ -883,6 +883,7 @@
                 };
                 if (this.isCreateMode) {
                     this.params.system_id = data.detail.system.id;
+                    await this.fetchAuthorizationScopeActions(this.params.system_id);
                 }
                 const scopeAction = this.authorization[this.params.system_id] || [];
                 this.curScopeAction = _.cloneDeep(scopeAction.find(item => item.id === data.id));
@@ -948,6 +949,21 @@
                     });
                 } finally {
                     this.sliderLoading = false;
+                }
+            },
+            async fetchAuthorizationScopeActions (systemId) {
+                try {
+                    const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId });
+                    this.authorization[systemId] = res.data.filter(item => item.id !== '*');
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
                 }
             },
             handleRelatedAction (payload) {
@@ -1278,7 +1294,6 @@
                                     if (curScopeAction && curScopeAction.resource_groups && curScopeAction.resource_groups.length) {
                                         curScopeAction.resource_groups.forEach(curScopeActionItem => {
                                             curScopeActionItem.related_resource_types.forEach(curResItem => {
-                                                console.log('curResItem', curResItem, curPasteData);
                                                 if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                                                     // eslint-disable-next-line max-len
                                                     const canPasteName = curResItem.condition[0].instances[0].path.reduce((p, v) => {
@@ -1305,7 +1320,6 @@
                                                                     return c;
                                                                     // eslint-disable-next-line max-len
                                                                 }).filter(d => !!(d.instances[0].path && d.instances[0].path.length));
-                                                                console.log('condition', condition);
                                                                 if (condition && condition.length) {
                                                                     resItem.condition = condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                                                                     resItem.isError = false;
@@ -1697,7 +1711,6 @@
             handleGetValue () {
                 // flag：提交时校验标识
                 let flag = false;
-                console.log('this.tableList', this.tableList);
                 if (this.tableList.length < 1) {
                     flag = true;
                     return {
@@ -1998,8 +2011,9 @@
             .remove-icon {
                 display: none;
                 position: absolute;
-                top: 10px;
-                right: 10px;
+                top: 50% !important;
+                right: 0;
+                transform: translate(-50%, -50%);
                 cursor: pointer;
                 &:hover {
                     color: #3a84ff;
