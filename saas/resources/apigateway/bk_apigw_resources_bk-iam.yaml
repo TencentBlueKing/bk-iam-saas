@@ -2005,6 +2005,33 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/:
+    post:
+      operationId: v2_management_grade_manager_create
+      description: 创建分级管理员
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/:
     post:
       operationId: v2_management_grade_manager_applications
@@ -2023,6 +2050,33 @@ paths:
           type: HTTP
           method: post
           path: /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/{id}/:
+    put:
+      operationId: v2_management_update_grade_manager
+      description: 更新分级管理员
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
           matchSubpath: false
           timeout: 0
           upstreams: {}
