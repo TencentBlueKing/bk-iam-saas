@@ -61,7 +61,7 @@
                             </template>
                             <div slot="content" class="iam-perm-apply-action-popover-content">
                                 <div>
-                                    由于分级管理员的授权范围没有包含此操作，<br>
+                                    由于一级管理空间的授权范围没有包含此操作，<br>
                                     如需使用该模板进行新的授权必须先删除该操作。
                                 </div>
                             </div>
@@ -128,7 +128,7 @@
                                         <div slot="content" class="iam-perm-apply-action-popover-content">
                                             <div>
 
-                                                由于分级管理员的授权范围没有包含此操作，<br>
+                                                由于一级管理空间的授权范围没有包含此操作，<br>
                                                 如需使用该模板进行新的授权必须先删除该操作。
                                             </div>
                                         </div>

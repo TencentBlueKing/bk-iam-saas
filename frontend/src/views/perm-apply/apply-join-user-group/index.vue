@@ -49,7 +49,7 @@
                             </span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t(`m.common['所属分级管理员']`)">
+                    <bk-table-column :label="$t(`m.common['所属一级管理空间']`)">
                         <template slot-scope="{ row }">
                             <span :class="row.role && row.role.name ? 'can-view' : ''"
                                 :title="row.role && row.role.name ? row.role.name : ''"
@@ -115,7 +115,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['分级管理员成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -209,10 +209,10 @@
                     name: this.$t(`m.common['系统包含']`),
                     remoteMethod: this.handleRemoteSystem
                 },
-                // 分级管理员
+                // 一级管理空间
                 {
                     id: 'role_id',
-                    name: this.$t(`m.grading['分级管理员']`),
+                    name: this.$t(`m.grading['一级管理空间']`),
                     remoteMethod: this.handleGradeAdmin
                 }
             ];
@@ -396,7 +396,7 @@
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });
             },
-            // 分级管理员数据
+            // 一级管理空间数据
             handleGradeAdmin (value) {
                 return this.$store.dispatch('role/getScopeHasUser')
                     .then(({ data }) => {
@@ -425,7 +425,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['分级管理员']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },

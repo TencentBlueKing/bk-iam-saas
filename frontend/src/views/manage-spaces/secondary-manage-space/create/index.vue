@@ -9,7 +9,7 @@
             </section>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="!isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -26,13 +26,13 @@
             </div>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.grading['操作和资源范围']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm">
                         <Icon bk type="plus-circle-shape" />
-                        <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
+                        <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
                     </section>
                 </div>
                 <div class="info-wrapper">
@@ -54,14 +54,15 @@
                     </section>
                 </div>
                 <section ref="instanceTableContentRef">
-                    <resource-instance-table
+                    <render-instance-table
                         is-edit
                         mode="create"
                         ref="resourceInstanceRef"
-                        :list="tableList"
+                        :list="policyList"
                         :authorization="curAuthorizationData"
                         :original-list="tableListBackup"
                         :is-all-expanded="isAllExpanded"
+                        :backup-list="aggregationsTableData"
                         @on-delete="handleDelete"
                         @on-aggregate-delete="handleAggregateDelete"
                         @handleAggregateAction="handleAggregateAction"
@@ -87,7 +88,7 @@
         </section>
         <section v-else ref="memberRef">
             <render-member
-                :tip="$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间人员边界的权限']`)"
+                :tip="$t(`m.levelSpace['一级管理空间只能给该范围内的人员授权']`)"
                 :users="users"
                 :departments="departments"
                 :expired-at-error="isShowExpiredError"
@@ -142,7 +143,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    // import { bus } from '@/common/bus';
+    import { guid } from '@/common/util';
     import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import IamGuide from '@/components/iam-guide/index.vue';
@@ -152,12 +153,12 @@
     import renderAction from '@/views/manage-spaces/common/render-action';
     import AddPermSideslider from '../components/add-group-perm-sideslider';
     import AddActionSideslider from '../components/add-action-sideslider';
-    import ResourceInstanceTable from '../components/render-instance-table';
+    import RenderInstanceTable from '../components/render-instance-table';
     import RenderTemplateSideslider from '../components/render-template-detail-sideslider';
+    // import GroupPolicy from '@/model/grade-policy';
     import GroupPolicy from '@/model/group-policy';
     import GroupAggregationPolicy from '@/model/group-aggregation-policy';
     import Condition from '@/model/condition';
-    import { guid } from '@/common/util';
 
     export default {
         name: '',
@@ -170,7 +171,7 @@
             AddPermSideslider,
             AddActionSideslider,
             RenderTemplateSideslider,
-            ResourceInstanceTable
+            RenderInstanceTable
         },
         props: {
             id: {
@@ -184,7 +185,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    syncPerm: true
+                    syncPerm: false
                 },
                 isShowAddMemberDialog: false,
                 isShowMemberAdd: false,
@@ -198,10 +199,13 @@
                 isShowAddActionSideslider: false,
                 curActionValue: [],
                 originalList: [],
-                tableList: [],
+                policyList: [],
                 tableListBackup: [],
                 templateDetailList: [],
                 aggregationData: {},
+                aggregations: [],
+                aggregationsBackup: [],
+                aggregationsTableData: [],
                 authorizationData: {},
                 aggregationDataByCustom: {},
                 authorizationDataByCustom: {},
@@ -218,7 +222,8 @@
                 infoText: this.$t(`m.grading['选择提示']`),
                 addMemberTips: this.$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间的权限']`),
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
-                inheritSubjectScope: true
+                inheritSubjectScope: true,
+                curSystemId: []
             };
         },
         computed: {
@@ -227,7 +232,7 @@
              * isAggregateDisabled
              */
             isAggregateDisabled () {
-                const aggregationIds = this.tableList.reduce((counter, item) => {
+                const aggregationIds = this.policyList.reduce((counter, item) => {
                     return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
                 }, []);
                 const temps = [];
@@ -285,11 +290,10 @@
                         curData.list.push(item);
                     }
                 });
-
                 return tempList;
             },
             isHasPermTemplate () {
-                return this.tableList.length > 0;
+                return this.policyList.length > 0;
             },
             isRatingManager () {
                 return this.user.role.type === 'rating_manager';
@@ -302,69 +306,182 @@
                 return data;
             }
         },
-        mounted () {
-            // this.formData.members = [{ username: this.user.username, readonly: true }];
-            this.formData.members = [{ username: 'poloohuang', readonly: false }, { username: 'admin', readonly: true }];
+        watch: {
+            originalList: {
+                handler (value) {
+                    this.setPolicyList(value);
+                    const uniqueList = [...new Set(this.policyList.map(item => item.system_id))];
+                    // 无新增的的系统时无需请求聚合数据
+                    const difference = uniqueList.filter(item => !this.curSystemId.includes(item));
+                    if (difference.length > 0) {
+                        this.curSystemId = [...this.curSystemId.concat(difference)];
+                        this.resetData();
+                        if (this.policyList.length) {
+                            this.fetchAggregationAction(this.curSystemId.join(','));
+                        }
+                    } else {
+                        const data = this.getFilterAggregation(this.aggregationsBackup);
+                        this.aggregations = _.cloneDeep(data);
+                    }
+                },
+                deep: true
+            }
         },
         methods: {
-            // async fetchPageData () {
-            //     await this.fetchDetail();
-            // },
-            // async fetchDetail () {
-            //     try {
-            //         const res = await this.$store.dispatch('spaceManage/getSecondManagerDetail', { id: this.$route.query.id });
-            //         this.formData.members = res.data.members;
-            //         this.users = res.data.subject_scopes.filter(item => item.type === 'user').map(item => {
-            //             return {
-            //                 name: item.name,
-            //                 username: item.id,
-            //                 type: item.type
-            //             };
-            //         });
-            //         this.departments = res.data.subject_scopes.filter(item => item.type === 'department').map(item => {
-            //             return {
-            //                 name: item.name,
-            //                 count: item.member_count,
-            //                 type: item.type,
-            //                 id: item.id
-            //             };
-            //         });
-            //         this.isShowMemberAdd = false;
-            //         const list = [];
-            //         res.data.authorization_scopes.forEach(item => {
-            //             item.actions.forEach(act => {
-            //                 const tempResource = _.cloneDeep(act.resource_groups);
-            //                 tempResource.forEach(groupItem => {
-            //                     groupItem.related_resource_types.forEach(subItem => {
-            //                         subItem.condition = null;
-            //                     });
-            //                 });
-            //                 list.push({
-            //                     description: act.description,
-            //                     expired_at: act.expired_at,
-            //                     id: act.id,
-            //                     name: act.name,
-            //                     system_id: item.system.id,
-            //                     system_name: item.system.name,
-            //                     $id: `${item.system.id}&${act.id}`,
-            //                     tag: act.tag,
-            //                     type: act.type,
-            //                     resource_groups: tempResource
-            //                 });
-            //             });
-            //         });
-            //         this.originalList = _.cloneDeep(list);
-            //     } catch (e) {
-            //         console.error(e);
-            //         this.bkMessageInstance = this.$bkMessage({
-            //             limit: 1,
-            //             theme: 'error',
-            //             message: e.message || e.data.msg || e.statusText,
-            //             ellipsisLine: 2,
-            //             ellipsisCopy: true
-            //         });
-            //     }
-            // },
+            async fetchPageData () {
+                const propsId = Number(this.id);
+                const headerTitle = propsId ? '二级管理空间克隆' : '新建二级管理空间';
+                this.$store.commit('setHeaderTitle', headerTitle);
+                if (propsId) {
+                    await this.fetchDetail();
+                } else {
+                    this.formData.members = [{ username: this.user.username, readonly: true }];
+                }
+            },
+
+            async fetchDetail () {
+                try {
+                    const res = await this.$store.dispatch('spaceManage/getSecondManagerDetail', { id: this.id });
+                    if (res.code === 0) {
+                        this.getDetailData(res.data);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+
+            getDetailData (payload) {
+                const tempActions = [];
+                const {
+                    name,
+                    description,
+                    members,
+                    sync_perm,
+                    inherit_subject_scope: inheritSubjectScope,
+                    subject_scopes, authorization_scopes
+                } = payload;
+                this.inheritSubjectScope = inheritSubjectScope;
+                this.formData = Object.assign({}, {
+                    name: `${name}_克隆`,
+                    members,
+                    description,
+                    syncPerm: sync_perm
+                });
+                this.isAll = subject_scopes.some(item => item.type === '*' && item.id === '*');
+                this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
+                    return {
+                        name: item.name,
+                        username: item.id,
+                        type: item.type
+                    };
+                });
+                this.departments = subject_scopes.filter(item => item.type === 'department').map(item => {
+                    return {
+                        name: item.name,
+                        count: item.member_count,
+                        type: item.type,
+                        id: item.id
+                    };
+                });
+                authorization_scopes.forEach(item => {
+                    item.actions.forEach(act => {
+                        const tempResource = _.cloneDeep(act.resource_groups);
+                        tempResource.forEach(groupItem => {
+                            // groupItem.related_resource_types.forEach(subItem => {
+                            //     subItem.condition = null;
+                            // });
+                            groupItem.related_resource_types.forEach(resourceTypeItem => {
+                                resourceTypeItem.id = resourceTypeItem.type;
+                                resourceTypeItem.condition = null;
+                            });
+                        });
+                        tempActions.push({
+                            description: act.description,
+                            expired_at: act.expired_at,
+                            id: act.id,
+                            name: act.name,
+                            system_id: item.system.id,
+                            system_name: item.system.name,
+                            $id: `${item.system.id}&${act.id}`,
+                            tag: act.tag,
+                            type: act.type,
+                            resource_groups: tempResource
+                        });
+                    });
+                });
+                this.isShowMemberAdd = false;
+                this.originalList = _.cloneDeep(tempActions);
+            },
+
+            setPolicyList (payload) {
+                if (this.policyList.length < 1) {
+                    // this.policyList = payload.map(item => new GroupPolicy(item));
+                    this.policyList = payload.map(item => {
+                        return new GroupPolicy(
+                            item,
+                            'add', // 此属性为flag，会在related-resource-types赋值为add
+                            'custom',
+                            {
+                                system: {
+                                    id: item.system_id,
+                                    name: item.system_name
+                                }
+                            }
+                        );
+                    });
+                    return;
+                }
+                const isAddIds = payload.map(item => `${item.system_id}&${item.id}`);
+                const isExistIds = [];
+                this.policyList.forEach(item => {
+                    if (item.isAggregate) {
+                        item.actions.forEach(subItem => {
+                            isExistIds.push(`${item.system_id}&${subItem.id}`);
+                        });
+                    } else {
+                        isExistIds.push(`${item.system_id}&${item.id}`);
+                    }
+                });
+                // 下一次选择的与现存的交集
+                const intersectionIds = isExistIds.filter(item => isAddIds.includes(item));
+                // 下一次选择所删除的操作
+                const existRestIds = isExistIds.filter(item => !intersectionIds.includes(item));
+                // 下一次选择所新增的操作
+                const newRestIds = isAddIds.filter(item => !intersectionIds.includes(item));
+                if (existRestIds.length > 0) {
+                    const tempData = [];
+                    this.policyList.forEach(item => {
+                        if (!item.isAggregate && !existRestIds.includes(`${item.system_id}&${item.id}`)) {
+                            tempData.push(item);
+                        }
+                        if (item.isAggregate) {
+                            const tempList = existRestIds.filter(act => item.actions.map(v => `${item.system_id}&${v.id}`).includes(act));
+                            if (tempList.length > 0) {
+                                item.actions = item.actions.filter(act => !tempList.includes(`${item.system_id}&${act.id}`));
+                            }
+                            tempData.push(item);
+                        }
+                    });
+                    this.policyList = tempData.filter(
+                        item => !item.isAggregate || (item.isAggregate && item.actions.length > 0)
+                    );
+                }
+
+                if (newRestIds.length > 0) {
+                    newRestIds.forEach(item => {
+                        const curSys = payload.find(sys => `${sys.system_id}&${sys.id}` === item);
+                        this.policyList.unshift(new GroupPolicy(curSys));
+                    });
+                }
+            },
+            
             /**
              * handleBasicInfoChange
              */
@@ -384,6 +501,7 @@
              * handleAddCustom
              */
             handleAddCustom () {
+                this.curActionValue = this.originalList.map(item => item.$id);
                 this.isShowAddActionSideslider = true;
             },
 
@@ -425,13 +543,13 @@
                 this.templateDetailList = _.cloneDeep(templates);
 
                 if (hasDeleteTemplateList.length > 0) {
-                    this.tableList = this.tableList.filter(
+                    this.policyList = this.policyList.filter(
                         item => !hasDeleteTemplateList.map(sub => sub.id).includes(item.detail.id)
                     );
                 }
 
                 if (this.hasDeleteCustomList.length > 0) {
-                    this.tableList = this.tableList.filter(item => {
+                    this.policyList = this.policyList.filter(item => {
                         return item.detail.id === CUSTOM_PERM_TEMPLATE_ID
                             && !this.hasDeleteCustomList
                                 .map(sub => sub.$id).includes(`${item.detail.system.id}&${item.id}`);
@@ -462,15 +580,12 @@
                     }));
                 });
 
-                if (this.tableList.length < 1) {
-                    this.tableList = _.cloneDeep(tempList);
+                if (this.policyList.length < 1) {
+                    this.policyList = _.cloneDeep(tempList);
                 } else {
-                    this.tableList.push(..._.cloneDeep(tempList));
+                    this.policyList.push(..._.cloneDeep(tempList));
                 }
-                this.tableListBackup = _.cloneDeep(this.tableList);
-
-                // 处理聚合的数据，将表格数据按照相同的聚合id分配好
-                this.handleAggregateData();
+                this.tableListBackup = _.cloneDeep(this.policyList);
 
                 this.$nextTick(() => {
                     if (hasDeleteTemplateList.length > 0 || this.hasDeleteCustomList.length > 0) {
@@ -484,7 +599,7 @@
              */
             handleResSelect (index, resIndex, condition, groupIndex, resItem) {
                 // debugger
-                if (this.curMap.size > 0) {
+                if (this.curMap && this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
                     const len = actions.length;
@@ -541,14 +656,17 @@
                     });
                     return arr;
                 })();
+                const curAction = payload.actions.map(item => `${payload.system_id}&${item.id}`);
                 if (instances.length > 0) {
-                    const actions = this.curMap.get(payload.aggregationId);
-                    actions.forEach(item => {
-                        item.resource_groups.forEach(groupItem => {
-                            groupItem.related_resource_types.forEach(subItem => {
-                                subItem.condition = [new Condition({ instances }, '', 'add')];
+                    this.aggregationsTableData.forEach(item => {
+                        if (curAction.includes(`${item.system_id}&${item.id}`)) {
+                            item.resource_groups.forEach(groupItem => {
+                                groupItem.related_resource_types
+                                    && groupItem.related_resource_types.forEach(subItem => {
+                                        subItem.condition = [new Condition({ instances }, '', 'add')];
+                                    });
                             });
-                        });
+                        }
                     });
                 }
             },
@@ -567,16 +685,16 @@
                     }
                 });
                 this.allAggregationData = data;
-                this.tableList.forEach(item => {
+                this.policyList.forEach(item => {
                     const aggregationData = this.allAggregationData[item.detail.system.id];
                     if (aggregationData && aggregationData.length) {
                         aggregationData.forEach(aggItem => {
                             if (aggItem.actions.map(act => act.id).includes(item.id)) {
-                                // const existDatas = this.tableList.filter(sub => sub.judgeId === item.judgeId)
-                                // const existDatas = this.tableList.filter(
+                                // const existDatas = this.policyList.filter(sub => sub.judgeId === item.judgeId)
+                                // const existDatas = this.policyList.filter(
                                 //     sub => aggItem.actions.find(act => act.id === sub.id)
                                 // )
-                                const existDatas = this.tableList.filter(
+                                const existDatas = this.policyList.filter(
                                     sub => aggItem.actions.find(act => act.id === sub.id)
                                         && sub.judgeId === item.judgeId
                                 );
@@ -589,7 +707,7 @@
                         });
                     }
                 });
-                const aggregationIds = this.tableList.reduce((counter, item) => {
+                const aggregationIds = this.policyList.reduce((counter, item) => {
                     return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
                 }, []);
                 console.warn('aggregationIds:');
@@ -597,7 +715,7 @@
                 if (!this.curMap) {
                     this.curMap = new Map();
                 }
-                this.tableList.forEach(item => {
+                this.policyList.forEach(item => {
                     if (item.aggregationId !== '') {
                         if (!this.curMap.has(item.aggregationId)) {
                             this.curMap.set(item.aggregationId, [_.cloneDeep(item)]);
@@ -679,19 +797,77 @@
 
                 console.warn('curMap: ');
                 console.warn(this.curMap);
-                console.warn(this.tableList);
+                console.warn(this.policyList);
+            },
+
+            async fetchAggregationAction (payload) {
+                this.isLoading = true;
+                try {
+                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: payload });
+                    (res.data.aggregations || []).forEach(item => {
+                        item.$id = guid();
+                    });
+                    const data = this.getFilterAggregation(res.data.aggregations);
+                    this.aggregationsBackup = _.cloneDeep(res.data.aggregations);
+                    this.aggregations = _.cloneDeep(data);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            getFilterAggregation (payload) {
+                const curSelectActions = [];
+                this.policyList.forEach(item => {
+                    if (item.isAggregate) {
+                        curSelectActions.push(...item.actions.map(v => `${item.system_id}&${v.id}`));
+                    } else {
+                        curSelectActions.push(`${item.system_id}&${item.id}`);
+                    }
+                });
+                const aggregations = [];
+                (payload || []).forEach(item => {
+                    const { actions, aggregate_resource_types, $id } = item;
+                    const curActions = actions.filter(_ => curSelectActions.includes(`${_.system_id}&${_.id}`));
+                    if (curActions.length > 0) {
+                        aggregations.push({
+                            actions: curActions,
+                            aggregate_resource_types,
+                            $id,
+                            system_name: this.policyList.find(
+                                _ => _.system_id === curActions[0].system_id
+                            ).system_name
+                        });
+                    }
+                });
+                // aggregations = aggregations.filter(item => item.actions.length > 1);
+                return aggregations;
+            },
+
+            resetData () {
+                this.aggregations = [];
+                this.aggregationsBackup = [];
             },
 
             /**
              * handleAggregateAction
              */
+
             handleAggregateAction (payload) {
                 const tempData = [];
                 let templateIds = [];
                 let instancesDisplayData = {};
                 if (payload) {
                     // debugger
-                    this.tableList.forEach(item => {
+                    this.policyList.forEach(item => {
                         if (!item.aggregationId) {
                             tempData.push(item);
                             templateIds.push(item.detail.id);
@@ -759,7 +935,7 @@
                         templateIds.push(value[0].detail.id);
                     }
                 } else {
-                    this.tableList.forEach(item => {
+                    this.policyList.forEach(item => {
                         if (item.hasOwnProperty('isAggregate') && item.isAggregate) {
                             const actions = this.curMap.get(item.aggregationId);
                             tempData.push(...actions);
@@ -777,7 +953,7 @@
                     const list = tempData.filter(subItem => subItem.detail.id === item);
                     tempList.push(...list);
                 });
-                this.tableList = _.cloneDeep(tempList);
+                this.policyList = _.cloneDeep(tempList);
             },
 
             setInstancesDisplayData (data) {
@@ -819,18 +995,19 @@
                 } else {
                     this.hasAddCustomList = payload;
                 }
-
+                payload.forEach(item => {
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                    }
+                });
                 this.originalList = _.cloneDeep(payload);
                 this.aggregationDataByCustom = _.cloneDeep(aggregation);
                 this.authorizationDataByCustom = _.cloneDeep(authorization);
-                
+                this.isShowActionEmptyError = false;
                 this.$refs.addPermSideslider.handleSubmit();
                 // this.handleSubmitPerm()
             },
 
-            /**
-             * handleSubmit
-             */
             async handleSubmit () {
                 const validatorFlag = this.$refs.basicInfoRef.handleValidator();
                 let data = [];
@@ -843,7 +1020,7 @@
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
                 if (validatorFlag || flag || this.isShowActionEmptyError
-                    || this.isShowMemberEmptyError || this.reasonEmptyError) {
+                    || this.isShowMemberEmptyError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -900,10 +1077,8 @@
                 try {
                     await this.$store.dispatch('spaceManage/addSecondManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.levelSpace['新建二级管理空间成功']`), 1000);
-                    this.$router.push({
-                        name: 'secondaryManageSpace'
-                    });
+                    this.messageSuccess(this.$t(`m.info['新建二级管理空间成功']`), 1000);
+                    this.$router.go(-1);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -927,9 +1102,7 @@
                     cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'userGroup'
-                    });
+                    this.$router.go(-1);
                 }, _ => _);
             },
 
@@ -988,7 +1161,7 @@
             },
 
             setAggregateExpanded () {
-                const flag = this.tableList.every(item => !item.isAggregate);
+                const flag = this.policyList.every(item => !item.isAggregate);
                 if (flag) {
                     this.isAllExpanded = false;
                 }
@@ -997,7 +1170,7 @@
             handleDelete (systemId, actionId, payload, index) {
                 window.changeDialog = true;
                 this.originalList = this.originalList.filter(item => payload !== item.$id);
-                this.tableList.splice(index, 1);
+                this.policyList.splice(index, 1);
                 for (let i = 0; i < this.aggregations.length; i++) {
                     const item = this.aggregations[i];
                     if (item.actions[0].system_id === systemId) {
@@ -1011,7 +1184,7 @@
 
             handleAggregateDelete (systemId, actions, index) {
                 window.changeDialog = true;
-                this.tableList.splice(index, 1);
+                this.policyList.splice(index, 1);
                 const deleteAction = actions.map(item => `${systemId}&${item.id}`);
                 this.originalList = this.originalList.filter(item => !deleteAction.includes(item.$id));
                 this.aggregations = this.aggregations.filter(item =>
@@ -1041,12 +1214,14 @@
 </script>
 <style lang="postcss" scoped>
     .iam-create-user-group-wrapper {
-        padding-bottom: 50px;
+        /* padding-bottom: 68px; */
+        margin-bottom: 36px;
         .add-perm-action {
             margin: 16px 0 20px 0;
         }
     }
     .grade-admin-select-wrapper {
+
         .action {
             position: relative;
             display: flex;
@@ -1091,7 +1266,7 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
+            top: -45px;
             left: 150px;
             font-size: 12px;
             color: #ff4d4d;
