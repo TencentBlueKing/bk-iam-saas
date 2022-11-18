@@ -88,7 +88,7 @@
                     return payload === this.active ? '#e1ecff' : '#f0f1f5';
                 };
             },
-            ...mapGetters(['externalSystemsLayout'])
+            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
         },
         watch: {
             panels: {
@@ -130,10 +130,14 @@
         methods: {
             async fetchData () {
                 this.tableLoading = true;
-                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                const userGroupParams = {
                     page_size: 10,
                     page: 1
-                }), this.$store.dispatch('renewal/getExpireSoonPerm')];
+                };
+                if (this.externalSystemId) {
+                    userGroupParams.system_id = this.externalSystemId;
+                }
+                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams), this.$store.dispatch('renewal/getExpireSoonPerm')];
                 const resultList = await Promise.all(promiseList).finally(() => {
                     this.tableLoading = false;
                 });
