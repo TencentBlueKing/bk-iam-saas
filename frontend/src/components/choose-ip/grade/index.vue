@@ -786,13 +786,14 @@
                             this.isLoading = true;
                             this.offset += 200;
                             this.firstFetchResources(this.offset);
+                            return;
                         } else {
                             this.isLoading = false;
                         }
-                        res.data.count = res.data.results.length;
                     } else {
                         this.isLoading = false;
                     }
+                    res.data.count = res.data.results.length;
                     const totalPage = Math.ceil(res.data.count / this.limit);
                     const isAsync = this.curChain.length > 1;
                     this.treeData = res.data.results.map(item => {
