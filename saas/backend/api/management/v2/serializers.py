@@ -14,7 +14,8 @@ from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.group.models import Group
-from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, GradeMangerDetailSLZ, RoleScopeSubjectSLZ
+from backend.apps.role.models import Role, RoleUser
+from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
@@ -219,7 +220,7 @@ class ManagementApplicationIDSLZ(serializers.Serializer):
 
 
 class ManagementSubjectGroupBelongSLZ(serializers.Serializer):
-    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255)
+    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255, default="")
 
 
 class ManagementGradeManagerApplicationResultSLZ(serializers.Serializer):
@@ -279,5 +280,22 @@ class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
 
 
-class ManagementGradeMangerDetailSLZ(GradeMangerDetailSLZ):
-    pass
+class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField(label="成员列表")
+
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+            "sync_perm",
+        )
+
+    def get_members(self, obj):
+        return [one.username for one in RoleUser.objects.filter(role_id=obj.id)]
