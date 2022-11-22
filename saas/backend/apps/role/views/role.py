@@ -40,7 +40,6 @@ from backend.apps.role.audit import (
     RoleMemberUpdateAuditProvider,
     RolePolicyAuditProvider,
     RoleUpdateAuditProvider,
-    UserRoleDeleteAuditProvider,
 )
 from backend.apps.role.filters import RatingMangerFilter, RoleCommonActionFilter
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleUser
@@ -247,12 +246,14 @@ class RoleMemberView(views.APIView):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
-    @view_audit_decorator(UserRoleDeleteAuditProvider)
+    @view_audit_decorator(RoleMemberDeleteAuditProvider)
     def delete(self, request, *args, **kwargs):
         role_id = kwargs["id"]
         user_id = request.user.username
         self.biz.delete_member(int(role_id), user_id)
-        audit_context_setter(role_id=role_id)
+
+        role = Role.objects.filter(id=role_id).first()
+        audit_context_setter(role=role, members=[user_id])
         return Response({})
 
     @swagger_auto_schema(

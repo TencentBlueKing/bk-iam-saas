@@ -14,8 +14,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.account.serializers import AccountRoleSLZ
+from backend.apps.group.audit import GroupMemberDeleteAuditProvider
+from backend.apps.group.models import Group
 from backend.apps.role.serializers import RoleCommonActionSLZ
-from backend.apps.subject.audit import SubjectGroupDeleteAuditProvider
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
@@ -54,7 +55,7 @@ class UserGroupViewSet(GenericViewSet):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
     )
-    @view_audit_decorator(SubjectGroupDeleteAuditProvider)
+    @view_audit_decorator(GroupMemberDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         subject = Subject(type=SubjectType.USER.value, id=request.user.username)
 
@@ -67,7 +68,8 @@ class UserGroupViewSet(GenericViewSet):
             self.biz.remove_members(data["id"], [subject])
 
             # 写入审计上下文
-            audit_context_setter(subject=subject, group=Subject.parse_obj(data))
+            group = Group.objects.filter(id=int(data["id"])).first()
+            audit_context_setter(group=group, members=[subject.dict()])
 
         return Response({})
 

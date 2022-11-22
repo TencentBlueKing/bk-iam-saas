@@ -61,30 +61,27 @@ class AuditType(ChoicesEnum, StrEnum):
     GROUP_POLICY_UPDATE = auto()
     GROUP_POLICY_DELETE = auto()
     GROUP_TEMPLATE_CREATE = auto()
-    GROUP_TEMPLATE_DELETE = auto()
+    GROUP_TEMPLATE_DELETE = auto()  # unused
     GROUP_TRANSFER = auto()
 
     USER_POLICY_CREATE = auto()
     USER_POLICY_UPDATE = auto()
-    USER_POLICY_DELETE = auto()
-    USER_GROUP_DELETE = auto()
-    USER_ROLE_DELETE = auto()
+    USER_POLICY_DELETE = auto()  # unused
     USER_TEMPORARY_POLICY_CREATE = auto()
     USER_TEMPORARY_POLICY_DELETE = auto()
-    DEPARTMENT_GROUP_DELETE = auto()
-    DEPARTMENT_UPDATE = auto()
+    DEPARTMENT_UPDATE = auto()  # unused
 
     TEMPLATE_CREATE = auto()
     TEMPLATE_UPDATE = auto()
     TEMPLATE_DELETE = auto()
-    TEMPLATE_MEMBER_CREATE = auto()
-    TEMPLATE_MEMBER_UPDATE = auto()
+    TEMPLATE_MEMBER_CREATE = auto()  # unused
+    TEMPLATE_MEMBER_UPDATE = auto()  # unused
     TEMPLATE_MEMBER_DELETE = auto()
     TEMPLATE_PREUPDATE_CREATE = auto()
     TEMPLATE_PREUPDATE_DELETE = auto()
     TEMPLATE_UPDATE_COMMIT = auto()
-    TEMPLATE_VERSION_SYNC = auto()
-    TEMPLATE_VERSION_UPDATE = auto()
+    TEMPLATE_VERSION_SYNC = auto()  # unused
+    TEMPLATE_VERSION_UPDATE = auto()  # unused
 
     ROLE_CREATE = auto()
     ROLE_UPDATE = auto()
@@ -101,7 +98,7 @@ class AuditType(ChoicesEnum, StrEnum):
     APPROVAL_ACTION_UPDATE = auto()
     APPROVAL_GROUP_UPDATE = auto()
 
-    EVENT_ROLLBACK = auto()
+    EVENT_ROLLBACK = auto()  # unused
 
     ADMIN_API_ALLOW_LIST_CONFIG_CREATE = auto()
     ADMIN_API_ALLOW_LIST_CONFIG_DELETE = auto()

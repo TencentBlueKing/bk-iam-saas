@@ -57,7 +57,7 @@ testpaths = [
 ]
 
 [tool.poetry]
-name = "bk_iam"
+name = "bk_iam_saas"
 version = "0.0.0"
 description = "IAM（Identity and Access Management） is centralized authority management services  provided by Blueking，which is used for centralized access of various Platforms and SaaS within the BlueKing System, and provides access control for resources that are refined to specific resource instance."
 authors = ["TencentBlueKing <contactus_bk@tencent.com>"]
@@ -117,6 +117,7 @@ gunicorn = "^20.1.0"
 gevent = "^21.12.0"
 blue-krill = "^1.1.0"
 protobuf = "3.19.5"
+bk-iam = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 # For flake8 support pyproject.toml
