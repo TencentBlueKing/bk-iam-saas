@@ -28,7 +28,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 
 import { bus } from '@/common/bus';
-import { existValue } from '@/common/util';
+import { existValue, getParamsValue } from '@/common/util';
 import store from '@/store';
 import http from '@/api';
 import preload from '@/common/preload';
@@ -66,8 +66,11 @@ let pageMethodExecuting = true;
  * beforeEach 钩子函数
  */
 export const beforeEach = async (to, from, next) => {
-    if (existValue('externalApp')) { // 外部嵌入页面需要请求配置项
-        fetchExternalSystemsLayout();
+    // 外部嵌入页面需要请求配置项
+    if (existValue('externalApp')) {
+        const externalSystemId = getParamsValue('system_id');
+        store.commit('updateSystemId', externalSystemId);
+        fetchExternalSystemsLayout(externalSystemId);
     }
 
     bus.$emit('close-apply-perm-modal');
@@ -285,8 +288,8 @@ export const afterEach = async (to, from) => {
     }
 };
 
-const fetchExternalSystemsLayout = async () => {
-    await store.dispatch('getExternalSystemsLayout');
+const fetchExternalSystemsLayout = async (externalSystemId) => {
+    await store.dispatch('getExternalSystemsLayout', {externalSystemId});
 }
 
 router.beforeEach(beforeEach);

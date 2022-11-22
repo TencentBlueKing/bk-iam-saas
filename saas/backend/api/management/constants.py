@@ -67,6 +67,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 分级管理员
     V2_GRADE_MANAGER_CREATE = auto()
     V2_GRADE_MANAGER_UPDATE = auto()
+    V2_GRADE_MANAGER_DETAIL = auto()
     V2_GRADE_MANAGER_APPLICATION_CREATE = auto()
     V2_GRADE_MANAGER_APPLICATION_UPDATE = auto()
     # 子集管理员
@@ -124,6 +125,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_USER_GROUPS_BELONG_CHECK, "[V2]判断用户与用户组归属"),
             (V2_DEPARTMENT_GROUPS_BELONG_CHECK, "[V2]判断部门与用户组归属"),
             # 分级管理员
+            (V2_GRADE_MANAGER_DETAIL, "[V2]分级管理员详情"),
             (V2_GRADE_MANAGER_CREATE, "[V2]新建分级管理员"),
             (V2_GRADE_MANAGER_UPDATE, "[V2]更新分级管理员"),
             (V2_GRADE_MANAGER_APPLICATION_CREATE, "[V2]创建分级管理员创建申请单"),

@@ -111,7 +111,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemsLayout'])
+            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
         },
         watch: {
             externalSystemsLayout: {
@@ -144,11 +144,15 @@
             async fetchData () {
                 this.componentLoading = true;
                 try {
+                    const userGroupParams = {
+                        page_size: 10,
+                        page: 1
+                    };
+                    if (this.externalSystemId) {
+                        userGroupParams.system_id = this.externalSystemId;
+                    }
                     const [res1, res2, res3, res4, res5, res6] = await Promise.all([
-                        this.$store.dispatch('perm/getPersonalGroups', {
-                            page_size: 10,
-                            page: 1
-                        }),
+                        this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
                         this.$store.dispatch('permApply/getHasPermSystem'),
                         this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
                             page_size: 10,

@@ -26,6 +26,7 @@
     import RenderDetail from './components/apply-detail';
     import RenderGroupDetail from './components/apply-group-detail';
     import RenderRatingManager from './components/apply-create-rate-manager-detail';
+    import { mapGetters } from 'vuex';
 
     const COM_MAP = new Map([
         [['grant_action', 'renew_action', 'grant_temporary_action'], 'RenderDetail'],
@@ -72,6 +73,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             curCom () {
                 let com = '';
                 for (const [key, value] of this.comMap.entries()) {
@@ -104,6 +106,10 @@
                 };
                 if (!isScrollLoad) {
                     this.applyList.splice(0, this.applyList.length, ...[]);
+                }
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                    params.source_system_id = this.externalSystemId;
                 }
                 try {
                     const res = await this.$store.dispatch('myApply/getApplyList', params);

@@ -18,7 +18,7 @@ from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.v2.permissions import ManagementAPIPermission
-from backend.api.management.v2.serializers import ManagementGradeManagerCreateSLZ
+from backend.api.management.v2.serializers import ManagementGradeManagerCreateSLZ, ManagementGradeMangerDetailSLZ
 from backend.apps.role.audit import RoleCreateAuditProvider, RoleUpdateAuditProvider
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
@@ -37,6 +37,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     management_api_permission = {
         "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.V2_GRADE_MANAGER_CREATE.value),
         "update": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GRADE_MANAGER_UPDATE.value),
+        "retrieve": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GRADE_MANAGER_DETAIL.value),
     }
 
     lookup_field = "id"
@@ -140,3 +141,16 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         audit_context_setter(role=role)
 
         return Response({})
+
+    @swagger_auto_schema(
+        operation_description="分级管理员详情",
+        responses={status.HTTP_200_OK: ManagementGradeMangerDetailSLZ(label="分级管理员详情")},
+        filter_inspectors=[],
+        paginator_inspectors=[],
+        tags=["management.role"],
+    )
+    def retrieve(self, request, *args, **kwargs):
+        role = self.get_object()
+        serializer = ManagementGradeMangerDetailSLZ(instance=role)
+        data = serializer.data
+        return Response(data)
