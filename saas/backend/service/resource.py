@@ -12,6 +12,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from backend.common.cache import Cache, CacheEnum, CacheKeyPrefixEnum, cachedmethod
+from backend.common.error_codes import error_codes
 from backend.component import iam, resource_provider
 from backend.service.models.resource import ResourceApproverAttribute
 from backend.util.basic import chunked
@@ -262,12 +263,15 @@ class ResourceProvider:
         # 未被缓存的需要实时查询
         not_cached_ids = [_id for _id in ids if _id not in cache_id_name_map]
         not_cached_results = self.fetch_instance_info(not_cached_ids, [self.name_attribute])
-        results.extend(
-            [
-                ResourceInstanceBaseInfo(id=i.id, display_name=i.attributes[self.name_attribute])
-                for i in not_cached_results
-            ]
-        )
+
+        for one in not_cached_results:
+            if self.name_attribute not in one.attributes:
+                raise error_codes.RESOURCE_PROVIDER_VALIDATE_ERROR.format(
+                    f"fetch_instance_info[system:{self.system_id} resource_type_id:{self.resource_type_id}"
+                    + f" resource_id:{one.id}] attribute:{self.name_attribute} must not be empty"
+                )
+
+            results.append(ResourceInstanceBaseInfo(id=one.id, display_name=one.attributes[self.name_attribute]))
 
         return results
 

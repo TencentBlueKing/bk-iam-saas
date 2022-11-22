@@ -401,14 +401,13 @@ class RecommendPolicyViewSet(GenericViewSet):
         subject = SvcSubject.from_username(request.user.username)
         own_policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
-        own_action_id_set = {p.action_id for p in own_policies}
-        policy_list = PolicyBeanList(
-            system_id, [p for p in policy_list.policies if p.action_id not in own_action_id_set]
-        )
+        # 只移除用户已有的实例
+        policy_list = policy_list.sub(PolicyBeanList(system_id, own_policies))
 
         policy_list.fill_empty_fields()
 
         # 生成推荐的操作, 排除已生成推荐策略的操作
+        own_action_id_set = {p.action_id for p in own_policies}
         actions, action_id_set = [], set()
         for action_id in chain(*list(recommend_action_dict.values())):
             if action_id in action_id_set:  # 去重
