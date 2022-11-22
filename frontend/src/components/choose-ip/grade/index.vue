@@ -158,6 +158,7 @@
                 isLoading: false,
                 // 节点数据分页的limit
                 limit: 100,
+                offset: 0,
                 // limit: 11,
                 // 当前选择的链路
                 curChain: [],
@@ -761,13 +762,13 @@
                 }
             },
 
-            async firstFetchResources () {
+            async firstFetchResources (offset = 0) {
                 // debugger
                 this.isLoading = true;
                 this.treeData = [];
                 const params = {
                     limit: this.limit,
-                    offset: 0,
+                    offset,
                     system_id: this.curChain[0].system_id,
                     type: this.curChain[0].id,
                     // parent_type: '',
@@ -781,8 +782,18 @@
                         res.data.results = res.data.results.filter(item => {
                             return this.curSelectionCondition.includes(item.id);
                         });
-                        res.data.count = res.data.results.length;
+                        if (!res.data.results.length) {
+                            this.isLoading = true;
+                            this.offset += 200;
+                            this.firstFetchResources(this.offset);
+                            return;
+                        } else {
+                            this.isLoading = false;
+                        }
+                    } else {
+                        this.isLoading = false;
                     }
+                    res.data.count = res.data.results.length;
                     const totalPage = Math.ceil(res.data.count / this.limit);
                     const isAsync = this.curChain.length > 1;
                     this.treeData = res.data.results.map(item => {
@@ -843,7 +854,7 @@
                         ellipsisCopy: true
                     });
                 } finally {
-                    this.isLoading = false;
+                    // this.isLoading = false;
                 }
             },
 
@@ -1345,7 +1356,7 @@
                 node.loadingMore = true;
 
                 const chainLen = this.curChain.length;
-                let keyword = '';
+                let keyword = this.curKeyword;
                 if (Object.keys(this.curSearchObj).length) {
                     if (node.parentId === this.curSearchObj.parentId) {
                         keyword = this.curSearchObj.value;
