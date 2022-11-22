@@ -22,7 +22,7 @@ urlpatterns = [
     ),
     path(
         "grade_managers/<int:id>/",
-        views.ManagementGradeManagerViewSet.as_view({"put": "update"}),
+        views.ManagementGradeManagerViewSet.as_view({"put": "update", "get": "retrieve"}),
         name="open.management.v2.grade_manager",
     ),
     # -------------- 用户组本身 --------------
