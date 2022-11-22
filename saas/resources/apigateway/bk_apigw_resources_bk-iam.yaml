@@ -2062,7 +2062,7 @@ paths:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/:
     get:
       operationId: v2_management_grade_manager_detail
-      description: 更新分级管理员
+      description: 分级管理员详情
       tags:
       - open
       - v2
