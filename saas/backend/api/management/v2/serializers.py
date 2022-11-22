@@ -14,7 +14,7 @@ from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.group.models import Group
-from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
+from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, GradeMangerDetailSLZ, RoleScopeSubjectSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
@@ -277,3 +277,7 @@ class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
+
+
+class ManagementGradeMangerDetailSLZ(GradeMangerDetailSLZ):
+    pass

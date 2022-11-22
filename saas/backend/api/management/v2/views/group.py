@@ -18,6 +18,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.v2.filters import GroupFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
     ManagementGradeManagerGroupCreateSLZ,
@@ -54,6 +55,7 @@ from backend.biz.group import (
 )
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
+from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import RoleType
 from backend.service.models import Subject
@@ -75,6 +77,8 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]).order_by(
         "-updated_time"
     )
+    filterset_class = GroupFilter
+    filter_backends = [NoCheckModelFilterBackend]
 
     group_biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -127,6 +131,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         role = self.get_object()
 
         queryset = RoleListQuery(role).query_group(inherit=inherit)
+        queryset = self.filter_queryset(queryset)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
