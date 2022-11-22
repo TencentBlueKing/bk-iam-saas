@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
@@ -90,7 +91,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         tags=["management.role.group"],
     )
     def create(self, request, *args, **kwargs):
-        role = self.get_object()
+        role = get_object_or_404(self.queryset, id=kwargs["id"])
 
         serializer = ManagementGradeManagerGroupCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -128,7 +129,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         slz.is_valid(raise_exception=True)
         inherit = slz.validated_data["inherit"]
 
-        role = self.get_object()
+        role = get_object_or_404(self.queryset, id=kwargs["id"])
 
         queryset = RoleListQuery(role).query_group(inherit=inherit)
         queryset = self.filter_queryset(queryset)
