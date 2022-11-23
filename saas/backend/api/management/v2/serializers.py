@@ -220,7 +220,7 @@ class ManagementApplicationIDSLZ(serializers.Serializer):
 
 
 class ManagementSubjectGroupBelongSLZ(serializers.Serializer):
-    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255, default="")
+    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255, required=True)
 
 
 class ManagementGradeManagerApplicationResultSLZ(serializers.Serializer):

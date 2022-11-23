@@ -389,7 +389,11 @@ class ApplicationBiz:
     def _get_applicant_info(self, applicant: str) -> ApplicantInfo:
         """获取申请者相关信息"""
         # 查询用户的部门信息
-        departments = User.objects.get(username=applicant).departments
+        user = User.objects.filter(username=applicant).first()
+        if not user:
+            raise error_codes.INVALID_ARGS.format(f"user: {applicant} not exists")
+
+        departments = user.departments
         applicant_departments = [
             ApplicantDepartment(id=dept.id, name=dept.name, full_name=dept.full_name) for dept in departments
         ]

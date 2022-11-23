@@ -18,6 +18,7 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLo
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import ManagementSubjectGroupBelongSLZ
 from backend.biz.group import GroupBiz
+from backend.common.error_codes import error_codes
 from backend.service.models import Subject
 
 
@@ -48,7 +49,12 @@ class ManagementUserGroupBelongViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        group_ids = list(map(int, data["group_ids"].split(",")))
+        try:
+            group_ids_str = data["group_ids"]
+            group_ids = list(map(int, group_ids_str.split(",")))
+        except ValueError:
+            raise error_codes.INVALID_ARGS.format(f"group_ids: {group_ids_str} valid error")
+
         username = kwargs["user_id"]
 
         group_belongs = self.group_biz.check_subject_groups_belong(
