@@ -120,7 +120,6 @@ class RoleBiz:
     list_user_role = RoleService.__dict__["list_user_role"]
     list_paging_user_role = RoleService.__dict__["list_paging_user_role"]
     list_user_role_for_system = RoleService.__dict__["list_user_role_for_system"]
-    list_paging_role_for_system = RoleService.__dict__["list_paging_role_for_system"]
     list_subject_scope = RoleService.__dict__["list_subject_scope"]
     list_auth_scope = RoleService.__dict__["list_auth_scope"]
     list_by_ids = RoleService.__dict__["list_by_ids"]
