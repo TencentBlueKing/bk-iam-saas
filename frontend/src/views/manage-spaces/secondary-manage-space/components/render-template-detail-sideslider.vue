@@ -13,7 +13,7 @@
 </template>
 
 <script>
-    import RenderAction from '../../../perm-template/components/render-action';
+    import RenderAction from '@/views/perm-template/components/render-action';
 
     export default {
         name: '',
