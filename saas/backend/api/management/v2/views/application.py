@@ -219,7 +219,7 @@ class ManagementApplicationCancelView(views.APIView):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "post": (
+        "put": (
             VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value,
             ManagementAPIEnum.V2_APPLICATION_CANCEL.value,
         ),
