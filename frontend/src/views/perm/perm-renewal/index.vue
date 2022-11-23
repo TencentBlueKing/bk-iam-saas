@@ -189,8 +189,10 @@
                     this.panels[0].count = this.panels[0].total;
                     this.curSelectedList = value;
                 } else {
-                    this.panels[1].count = value.length;
-                    this.curSelectedList = value;
+                    if (this.panels[1]) {
+                        this.panels[1].count = value.length;
+                        this.curSelectedList = value;
+                    }
                 }
                 this.isShowErrorTips = false;
                 this.$nextTick(() => {

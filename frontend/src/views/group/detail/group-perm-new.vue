@@ -1,7 +1,7 @@
 <template>
     <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
         <bk-button
-            v-if="!isLoading && isEditMode && !externalSystemsLayout.userGroup.groupDetail.hideAddBtn"
+            v-if="!isLoading && isEditMode && (!externalSystemsLayout.userGroup.groupDetail.hideAddBtn || canEditGroup)"
             theme="primary"
             style="margin-bottom: 16px"
             @click="handleAddPerm">
@@ -29,8 +29,9 @@
                             :key="subIndex"
                             :title="subItem.name"
                             :count="subItem.count"
-                            :external-edit="externalSystemsLayout.userGroup.groupDetail.hideAddBtn"
-                            :external-delete="externalSystemsLayout.userGroup.groupDetail.hideDeleteBtn"
+                            :external-edit="externalSystemsLayout.userGroup.groupDetail.hideAddBtn && !canEditGroup"
+                            :external-delete="externalSystemsLayout.userGroup.groupDetail.hideDeleteBtn
+                                && !canEditGroup"
                             :is-edit="subItem.isEdit"
                             :loading="subItem.editLoading"
                             :expanded.sync="subItem.expanded"
@@ -121,6 +122,9 @@
             },
             expandedText () {
                 return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+            },
+            canEditGroup () {
+                return this.$route.query.edit === 'GroupEdit';
             }
         },
         watch: {
@@ -138,12 +142,6 @@
                 immediate: true
             }
         },
-        // created () {
-        //     this.role = store.state.user.role.type
-        //     if (this.$route.name === 'permTemplateDetail') {
-        //         this.isPermTemplateDetail = true
-        //     }
-        // },
         methods: {
             async handleInit () {
                 this.isLoading = true;
