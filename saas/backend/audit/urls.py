@@ -14,6 +14,5 @@ from . import views
 
 urlpatterns = [
     path("", views.EventViewSet.as_view({"get": "list"}), name="audit.audit"),
-    # path("resources/", dispatcher.as_view([login_exempt])),
     path("<uuid:id>/", views.EventViewSet.as_view({"get": "retrieve"}), name="audit.detail"),
 ]

@@ -52,7 +52,7 @@ class SubjectPolicyDeleteAuditProvider(BaseSubjectProvider):
     @property
     def type(self):
         if self.subject.type == SubjectType.USER.value:
-            return AuditType.USER_POLICY_UPDATE.value
+            return AuditType.USER_POLICY_DELETE.value
 
         return ""
 

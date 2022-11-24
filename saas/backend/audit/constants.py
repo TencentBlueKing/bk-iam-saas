@@ -20,6 +20,13 @@ class AuditSourceType(ChoicesEnum, LowerStrEnum):
     APPROVAL = auto()
     HANDOVER = auto()
 
+    @classmethod
+    def to_int(cls, _type: str) -> int:
+        return {
+            cls.WEB.value: 0,
+            cls.OPENAPI.value: 1,
+        }.get(_type, -1)
+
 
 class AuditObjectType(ChoicesEnum, LowerStrEnum):
     GROUP = auto()

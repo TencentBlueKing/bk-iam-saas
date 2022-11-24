@@ -118,6 +118,7 @@ gevent = "^21.12.0"
 blue-krill = "^1.1.0"
 protobuf = "3.19.5"
 bk-iam = "^1.2.2"
+bk-audit = "^1.0.1-rc.0"
 
 [tool.poetry.dev-dependencies]
 # For flake8 support pyproject.toml

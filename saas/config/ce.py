@@ -217,6 +217,14 @@ LOGGING = {
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
+        "bk-audit": {
+            "class": _LOG_CLASS,
+            "formatter": "verbose",
+            "filename": os.path.join(_LOG_DIR, "%s-audit.log" % _LOG_NAME_PREFIX),
+            "maxBytes": 1024 * 1024 * 10,
+            "backupCount": 5,
+            "filters": ["request_id_filter"],
+        },
     },
     "loggers": {
         "django": {
@@ -266,6 +274,12 @@ LOGGING = {
         "organization": {
             "handlers": ["root" if IS_LOCAL else "organization"],
             "level": LOG_LEVEL,
+            "propagate": True,
+        },
+        # 审计日志文件
+        "bk-audit": {
+            "handlers": ["bk-audit"],
+            "level": "INFO",
             "propagate": True,
         },
     },
