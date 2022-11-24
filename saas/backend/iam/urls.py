@@ -10,10 +10,9 @@ specific language governing permissions and limitations under the License.
 """
 from django.urls import path
 
-from . import views
+from backend.common.views import login_exempt
+from backend.iam.dispatchers import dispatcher
 
 urlpatterns = [
-    path("", views.EventViewSet.as_view({"get": "list"}), name="audit.audit"),
-    # path("resources/", dispatcher.as_view([login_exempt])),
-    path("<uuid:id>/", views.EventViewSet.as_view({"get": "retrieve"}), name="audit.detail"),
+    path("resources/", dispatcher.as_view([login_exempt])),
 ]

@@ -27,7 +27,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -42,7 +42,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -57,7 +57,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -72,7 +72,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -87,7 +87,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -102,7 +102,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -117,7 +117,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -132,7 +132,7 @@
         "description_en": "",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/audits/resources/"
+          "path": "/api/v1/iam/resources/"
         },
         "version": 1
       }
@@ -166,9 +166,9 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "user_permission_cleanup",
+        "id": "user_permission_clean",
         "name": "用户组权限清理",
-        "name_en": "UserPermissionCleanup",
+        "name_en": "UserPermissionClean",
         "description": "",
         "description_en": "",
         "type": "delete",

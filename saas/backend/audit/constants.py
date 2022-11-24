@@ -37,7 +37,7 @@ class AuditObjectType(ChoicesEnum, LowerStrEnum):
     USER_BLACK_LIST = auto()
 
     # 用户权限清理
-    USER_PERMISSION_CLEANUP = auto()
+    USER_PERMISSION_CLEAN = auto()
 
 
 class AuditStatus(ChoicesEnum):
@@ -111,4 +111,4 @@ class AuditType(ChoicesEnum, StrEnum):
 
     USER_BLACKLIST_MEMBER_CREATE = auto()
     USER_BLACKLIST_MEMBER_DELETE = auto()
-    USER_PERMISSION_CLEANUP = auto()
+    USER_PERMISSION_CLEAN = auto()

@@ -8,12 +8,24 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-from . import views
+from backend.audit.tasks import log_audit_event
 
-urlpatterns = [
-    path("", views.EventViewSet.as_view({"get": "list"}), name="audit.audit"),
-    # path("resources/", dispatcher.as_view([login_exempt])),
-    path("<uuid:id>/", views.EventViewSet.as_view({"get": "retrieve"}), name="audit.detail"),
-]
+
+@receiver(post_save)
+def audit_event_handler(sender, instance, created, **kwargs):
+    # NOTE: 由于审计的模型是分表的动态模型, 所以这里不能直接指定sender, 只能在获取所有模型的post_save事件
+    if not sender.__name__.startswith("Event_"):
+        return
+
+    # 只有创建事件需要处理
+    if not created:
+        return
+
+    # 发送到celery处理
+    suffix = sender.__name__.split("_")[1]
+    id = instance.id
+
+    log_audit_event.delay(suffix, id)

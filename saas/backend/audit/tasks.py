@@ -23,3 +23,15 @@ def pre_create_audit_model():
     """
     next_month = (timezone.now() + timedelta(days=15)).strftime("%Y%m")
     get_event_model(next_month)
+
+
+@task(ignore_result=True)
+def log_audit_event(suffix: str, id: int):
+    """
+    记录审计事件到审计中心规范的日志文件
+    """
+    AuditModel = get_event_model(suffix)
+    event = AuditModel.objects.get(id=id)
+
+    # TODO 处理审计事件转换成日志, 并记录日志
+    print(event)
