@@ -348,7 +348,7 @@ class AdminAPIAllowListConfigResourceProvider(BaseResourceProvider):
             results.append(
                 {
                     "id": str(config.id),
-                    "display_name": f"api: {config.api} app_code: {config.app_code}",
+                    "display_name": config.api,
                     "creator": config.creator,
                     "created_at": config.created_timestamp,
                     "updater": config.updater,
@@ -399,7 +399,7 @@ class AuthAPIAllowListConfigResourceProvider(BaseResourceProvider):
             results.append(
                 {
                     "id": str(config.id),
-                    "display_name": f"type: {config.type} system_id: {config.system_id} object_id: {config.object_id}",
+                    "display_name": config.type,
                     "creator": config.creator,
                     "created_at": config.created_timestamp,
                     "updater": config.updater,
@@ -455,7 +455,7 @@ class ManagementAPIAllowListConfigResourceProvider(BaseResourceProvider):
             results.append(
                 {
                     "id": str(config.id),
-                    "display_name": f"api: {config.api} system_id: {config.system_id}",
+                    "display_name": config.api,
                     "creator": config.creator,
                     "created_at": config.created_timestamp,
                     "updater": config.updater,
