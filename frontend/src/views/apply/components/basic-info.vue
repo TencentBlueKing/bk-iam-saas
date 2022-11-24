@@ -92,10 +92,10 @@
                         str = this.$t(`m.myApply['加入用户组']`);
                         break;
                     case 'create_rating_manager':
-                        str = this.$t(`m.myApply['创建分级管理员']`);
+                        str = this.$t(`m.myApply['创建一级管理空间']`);
                         break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.myApply['编辑分级管理员']`);
+                        str = this.$t(`m.myApply['编辑一级管理空间']`);
                         break;
                     default:
                         str = '';

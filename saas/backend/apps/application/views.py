@@ -32,7 +32,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.error_codes import error_codes
-from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType, SubjectType
+from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType
 from backend.service.models import Subject
 from backend.trans.application import ApplicationDataTrans
 from backend.trans.role import RoleTrans
@@ -180,7 +180,7 @@ class ConditionView(views.APIView):
         # 1. 查询用户已有的policy的condition
         related_resource_type: Dict[str, Any] = data["related_resource_type"]
         old_condition = self.policy_biz.get_policy_resource_type_conditions(
-            Subject(type=SubjectType.USER.value, id=request.user.username),
+            Subject.from_username(request.user.username),
             data["policy_id"],
             data["resource_group_id"],
             related_resource_type["system_id"],
@@ -219,9 +219,7 @@ class ApplicationByGroupView(views.APIView):
         user_id = request.user.username
 
         # 检查用户组数量是否超限
-        self.group_biz.check_subject_groups_quota(
-            Subject(type=SubjectType.USER.value, id=user_id), [g["id"] for g in data["groups"]]
-        )
+        self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), [g["id"] for g in data["groups"]])
 
         # 创建申请
         self.biz.create_for_group(
@@ -231,6 +229,7 @@ class ApplicationByGroupView(views.APIView):
                 reason=data["reason"],
                 groups=[ApplicationGroupInfoBean(id=g["id"], expired_at=data["expired_at"]) for g in data["groups"]],
             ),
+            source_system_id=data["source_system_id"],
         )
 
         return Response({}, status=status.HTTP_201_CREATED)
@@ -259,12 +258,12 @@ class ApplicationByGradeManagerView(views.APIView):
         user_id = request.user.username
 
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"])
+        self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
         # 结构转换
         info = self.role_trans.from_role_data(data)
         self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
+            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
             GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
         )
 
@@ -294,9 +293,9 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         data = serializer.validated_data
         user_id = request.user.username
 
-        role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=data["id"])
+        role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=data["id"])
         # 名称唯一性检查
-        self.role_check_biz.check_unique_name(data["name"], role.name)
+        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
         # 必须是分级管理员的成员才可以申请修改
         if not RoleUser.objects.user_role_exists(user_id=user_id, role_id=role.id):
@@ -312,7 +311,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
 
         info = self.role_trans.from_role_data(data, old_system_policy_list=old_system_policy_list)
         self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.UPDATE_RATING_MANAGER,
+            ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
             GradeManagerApplicationDataBean(role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info),
         )
 
@@ -346,6 +345,7 @@ class ApplicationByRenewGroupView(views.APIView):
                 reason=data["reason"],
                 groups=parse_obj_as(List[ApplicationGroupInfoBean], data["groups"]),
             ),
+            source_system_id=data["source_system_id"],
         )
 
         return Response({}, status=status.HTTP_201_CREATED)

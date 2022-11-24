@@ -209,7 +209,7 @@
             },
             selectValue: {
                 handler (value) {
-                    console.log('selectList', this.selectList);
+                    console.log('this.limitValue', this.limitValue);
                     if (value) {
                         this.curChain = this.selectList[0].resource_type_chain;
                         console.log('choose-ip this.curChain', this.curChain);

@@ -12,12 +12,12 @@ import json
 
 from django.db import models
 
-from backend.common.models import BaseModel
+from backend.common.models import BaseModel, BaseSystemHiddenModel
 from backend.service.constants import ApplicationStatus, ApplicationTypeEnum
 from backend.util.json import json_dumps
 
 
-class Application(BaseModel):
+class Application(BaseModel, BaseSystemHiddenModel):
     """
     权限申请单
     """

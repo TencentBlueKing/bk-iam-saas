@@ -11,18 +11,21 @@ specific language governing permissions and limitations under the License.
 from django_filters import rest_framework as filters
 
 from backend.apps.application.models import Application
+from backend.common.filters import InitialFilterSet
 from backend.common.time import get_period_start_end
 from backend.util.time import string_to_datetime
 
 
-class ApplicationFilter(filters.FilterSet):
+class ApplicationFilter(InitialFilterSet):
     start_time = filters.CharFilter(method="start_time_filter", label="开始时间")
     end_time = filters.CharFilter(method="end_time_filter", label="结束时间")
     period = filters.NumberFilter(method="period_filter", label="区间")
+    hidden = filters.BooleanFilter(method="hidden_filter", initial=True)
+    source_system_id = filters.CharFilter()
 
     class Meta:
         model = Application
-        fields = ["start_time", "end_time", "period"]
+        fields = ["start_time", "end_time", "period", "hidden", "source_system_id"]
 
     def period_filter(self, queryset, name, value):
         start_time, end_time = get_period_start_end(int(value))
@@ -35,3 +38,8 @@ class ApplicationFilter(filters.FilterSet):
     def start_time_filter(self, queryset, name, value):
         start_time = string_to_datetime(value)
         return queryset.filter(created_time__gte=start_time)
+
+    def hidden_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(hidden=False)
+        return queryset

@@ -1,7 +1,8 @@
 <template>
     <div class="iam-transfer-wrapper" v-bkloading="{ isLoading: submitLoading, opacity: 1 }">
         <bk-button
-            v-if="enablePermissionHandover.toLowerCase() === 'true'"
+            v-if="enablePermissionHandover.toLowerCase() === 'true'
+                && !externalSystemsLayout.myPerm.transfer.hideTextBtn"
             data-test-id="permTransfer_btn_history"
             text
             style="position: relative; top: -13px; width: 100%; text-align: right;"
@@ -11,9 +12,13 @@
 
         <Group @group-selection-change="handleGroupSelection" />
 
-        <Custom @custom-selection-change="handleCustomSelection" />
+        <Custom
+            v-if="!externalSystemsLayout.myPerm.transfer.hideCustomData"
+            @custom-selection-change="handleCustomSelection" />
 
-        <Manager @manager-selection-change="handleManagerSelection" />
+        <Manager
+            v-if="!externalSystemsLayout.myPerm.transfer.hideManagerData"
+            @manager-selection-change="handleManagerSelection" />
 
         <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -36,7 +41,9 @@
                                     @blur="handleRtxBlur"
                                     @change="handleRtxChange">
                                 </bk-user-selector>
-                                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                                <p class="name-empty-error" v-if="isShowMemberError">
+                                    {{ $t(`m.verify['请选择空间管理员']`) }}
+                                </p>
                                 <p class="name-empty-error" v-if="isPermissionsPrompt">
                                     {{ $t(`m.verify['目标交接人不能为本人']`) }}
                                 </p>
@@ -104,7 +111,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemsLayout'])
         },
         created () {
             // this.fetchCategories()

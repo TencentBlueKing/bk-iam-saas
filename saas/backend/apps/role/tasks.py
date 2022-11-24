@@ -32,7 +32,7 @@ from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
 from backend.service.role import AuthScopeAction, AuthScopeSystem
@@ -70,11 +70,11 @@ def sync_system_manager():
             "name": f"{system.name}",
             "name_en": f"{system.name_en}",
             "description": "",
-            "members": members,
+            "members": [{"username": username} for username in members],
             "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
             "subject_scopes": [{"type": "*", "id": "*"}],
         }
-        RoleBiz().create(RoleInfoBean.parse_obj(data), "admin")
+        RoleBiz().create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
@@ -195,7 +195,7 @@ class InitBizGradeManagerTask(Task):
             return
 
         try:
-            self.role_check_biz.check_unique_name(biz_name)
+            self.role_check_biz.check_grade_manager_unique_name(biz_name)
         except APIError:
             # 缓存结果
             self._exist_names.add(biz_name)
@@ -203,7 +203,7 @@ class InitBizGradeManagerTask(Task):
 
         role_info = self._init_role_info(project, maintainers)
 
-        role = self.biz.create(role_info, ADMIN_USER)
+        role = self.biz.create_grade_manager(role_info, ADMIN_USER)
 
         # 创建用户组并授权
         expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
@@ -221,7 +221,7 @@ class InitBizGradeManagerTask(Task):
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,
-                subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
+                subjects=[Subject.from_username(u.username) for u in users],
                 expired_at=expired_at,  # 过期时间半年
             )
 

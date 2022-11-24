@@ -10,6 +10,9 @@ specific language governing permissions and limitations under the License.
 """
 from django.urls import path
 
+from backend.apps.group.views import SystemGroupViewSet
+from backend.apps.role.views.role import SystemGradeManagerViewSet
+
 from . import views
 
 urlpatterns = [
@@ -19,5 +22,24 @@ urlpatterns = [
         "resource_types/",
         views.ResourceTypeViewSet.as_view({"get": "list_resource_types"}),
         name="system.list_resource_types",
+    ),
+    # 蓝盾定制页面
+    # 分级管理员列表
+    path(
+        "<str:system_id>/grade_managers/",
+        SystemGradeManagerViewSet.as_view({"get": "list"}),
+        name="system.list_system_role",
+    ),
+    # 用户组列表
+    path(
+        "<str:system_id>/grade_managers/<int:role_id>/groups/",
+        SystemGroupViewSet.as_view({"get": "list"}),
+        name="system.list_system_group",
+    ),
+    # 定制前端配置
+    path(
+        "<str:system_id>/custom_frontend_settings/",
+        views.SystemCustomFrontendSettingsView.as_view(),
+        name="system.custom_frontend_settings",
     ),
 ]

@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import LowerStrEnum, StrEnum, auto, skip
+from aenum import LowerStrEnum, StrEnum, auto, enum, skip
 from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
@@ -98,10 +98,17 @@ class RoleType(ChoicesEnum, LowerStrEnum):
     STAFF = auto()
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    RATING_MANAGER = auto()
+    GRADE_MANAGER: enum = "rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    SUBSET_MANAGER = auto()
 
     _choices_labels = skip(
-        ((STAFF, "个人用户"), (SUPER_MANAGER, "超级管理员"), (SYSTEM_MANAGER, "系统管理员"), (RATING_MANAGER, "分级管理员"))
+        (
+            (STAFF, "个人用户"),
+            (SUPER_MANAGER, "超级管理员"),
+            (SYSTEM_MANAGER, "系统管理员"),
+            (GRADE_MANAGER, "分级管理员"),
+            (SUBSET_MANAGER, "子集管理员"),
+        )
     )
 
 
@@ -140,11 +147,10 @@ class RoleSourceTypeEnum(ChoicesEnum, LowerStrEnum):
 class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_GROUP = auto()
     MANAGE_TEMPLATE = auto()
-    MANAGE_RATING_MANAGER_MEMBER = auto()
     MANAGE_SUPER_MANAGER_MEMBER = auto()
     MANAGE_SYSTEM_MANAGER_MEMBER = auto()
-    CREATE_RATING_MANAGER = auto()
-    MANAGE_RATING_MANAGER = auto()
+    CREATE_GRADE_MANAGER: enum = "create_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    MANAGE_GRADE_MANAGER: enum = "manage_rating_manager"
     TRANSFER_GROUP = auto()
     AUDIT = auto()
     CONFIGURE_APPROVAL_PROCESS = auto()
@@ -156,6 +162,9 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     VIEW_AUTHORIZED_SUBJECTS = auto()
     MANAGE_API_WHITE_LIST = auto()
     MANAGE_LONG_TASK = auto()
+    CREATE_SUBSET_MANAGER = auto()
+    MANAGE_SUBSET_MANAGER = auto()
+    TRANSFER_GROUP_BY_GRADE_MANAGER = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -177,9 +186,9 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
     RENEW_ACTION = auto()
     JOIN_GROUP = auto()
     RENEW_GROUP = auto()
-    JOIN_RATING_MANAGER = auto()
-    CREATE_RATING_MANAGER = auto()
-    UPDATE_RATING_MANAGER = auto()
+    JOIN_GRADE_MANAGER: enum = "join_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    CREATE_GRADE_MANAGER: enum = "create_rating_manager"
+    UPDATE_GRADE_MANAGER: enum = "update_rating_manager"
     GRANT_TEMPORARY_ACTION = auto()
 
     _choices_labels = skip(
@@ -188,9 +197,9 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
             (RENEW_ACTION, "自定义权限续期"),
             (JOIN_GROUP, "加入用户组"),
             (RENEW_GROUP, "用户组续期"),
-            (JOIN_RATING_MANAGER, "加入分级管理员"),
-            (CREATE_RATING_MANAGER, "创建分级管理员"),
-            (UPDATE_RATING_MANAGER, "修改分级管理员"),
+            (JOIN_GRADE_MANAGER, "加入分级管理员"),
+            (CREATE_GRADE_MANAGER, "创建分级管理员"),
+            (UPDATE_GRADE_MANAGER, "修改分级管理员"),
             (GRANT_TEMPORARY_ACTION, "临时权限申请"),
         )
     )
@@ -200,7 +209,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
 class ProcessorNodeTypeEnum(LowerStrEnum):
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    RATING_MANAGER = auto()
+    GRADE_MANAGER: enum = "rating_manager"
     INSTANCE_APPROVER = auto()
 
 
@@ -213,14 +222,14 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
     ),
     ApplicationTypeEnum.JOIN_GROUP.value: (
         ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.RATING_MANAGER.value,
+        ProcessorNodeTypeEnum.GRADE_MANAGER.value,
     ),
-    ApplicationTypeEnum.JOIN_RATING_MANAGER.value: (
+    ApplicationTypeEnum.JOIN_GRADE_MANAGER.value: (
         ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.RATING_MANAGER.value,
+        ProcessorNodeTypeEnum.GRADE_MANAGER.value,
     ),
-    ApplicationTypeEnum.CREATE_RATING_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
-    ApplicationTypeEnum.UPDATE_RATING_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
+    ApplicationTypeEnum.CREATE_GRADE_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
+    ApplicationTypeEnum.UPDATE_GRADE_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
 }
 
 
@@ -235,7 +244,7 @@ class ProcessorSourceEnum(ChoicesEnum, StrEnum):
 IAM_SUPPORT_PROCESSOR_TYPES = [
     ProcessorNodeTypeEnum.SUPER_MANAGER.value,
     ProcessorNodeTypeEnum.SYSTEM_MANAGER.value,
-    ProcessorNodeTypeEnum.RATING_MANAGER.value,
+    ProcessorNodeTypeEnum.GRADE_MANAGER.value,
     ProcessorNodeTypeEnum.INSTANCE_APPROVER.value,
 ]
 
@@ -244,7 +253,7 @@ IAM_SUPPORT_PROCESSOR_TYPES = [
 DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
     ApplicationTypeEnum.GRANT_ACTION.value,
     ApplicationTypeEnum.JOIN_GROUP.value,
-    ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
+    ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
 ]
 
 
@@ -259,7 +268,7 @@ class ApplicationStatus(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((PENDING, _("审批中")), (PASS, _("通过")), (REJECT, _("拒绝")), (CANCELLED, _("已取消"))))
 
 
-DEAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
+DEFAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
 
 
 # ---------------------------------------------------------------------------------------------- #

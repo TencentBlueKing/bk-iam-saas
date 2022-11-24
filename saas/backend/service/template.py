@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, F
 from pydantic import BaseModel
@@ -301,7 +302,11 @@ class TemplateService:
             .order_by()
         )
 
-        return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
+        return [
+            SystemCounter(id=one["system_id"], count=one["count"])
+            for one in qs
+            if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
+        ]  # NOTE: 屏蔽掉需要隐藏的系统
 
     def create_or_update_group_pre_commit(self, template_id: int, pre_commits: List[TemplateGroupPreCommit]):
         """

@@ -86,4 +86,20 @@ urlpatterns = [
         views.QueryAuthorizedSubjectsViewSet.as_view({"post": "export"}),
         name="role.query_authorized_subjects.export",
     ),
+    # 子集管理员
+    path(
+        "subset_managers/",
+        views.SubsetManagerViewSet.as_view({"get": "list", "post": "create"}),
+        name="role.subset_manager",
+    ),
+    path(
+        "subset_managers/<int:id>/",
+        views.SubsetManagerViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update"}),
+        name="role.subset_manager_detail",
+    ),
+    path(
+        "grade_managers/<int:id>/subset_managers/",
+        views.UserSubsetManagerViewSet.as_view({"get": "list"}),
+        name="role.user_subset_manager",
+    ),
 ]

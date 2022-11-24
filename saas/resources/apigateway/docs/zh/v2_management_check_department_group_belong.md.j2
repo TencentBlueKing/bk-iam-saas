@@ -15,20 +15,39 @@
 #### Request
 
 ```json
-GET /api/v2/open/management/systems/demo/departments/1/groups/belong/?groups=1,2,3,4
+GET /api/v2/open/management/systems/demo/departments/1/groups/belong/?group_ids=1,2,3,4
 ```
 
 #### Response
+
+> Status: 200 OK
+
+| 字段 | 类型 | 描述 |
+|---|---|---|
+| belong| bool | 是否属于用户组 | 
+| expired_at| int | 过期时间戳 |
 
 ```json
 {
   "code": 0,
   "message": "ok",
   "data": {
-    1: true,
-    2: false,
-    3: false,
-    4: true
+    1: {
+	  "belong": true,
+	  "expired_at": 1667806640
+	},
+    2: {
+	  "belong": false,
+	  "expired_at": 0
+	},
+    3: {
+	  "belong": false,
+	  "expired_at": 0
+	},
+    4: {
+	  "belong": true,
+	  "expired_at": 1667806640
+	}
   }
 }
 ```

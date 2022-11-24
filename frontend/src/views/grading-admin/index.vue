@@ -11,11 +11,11 @@
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
             <bk-link class="AdminLink" theme="primary" @click="showImgDialog">
-                <span class="linkText">{{ $t('m.common["什么是分级管理员"]') }}</span>
+                <span class="linkText">{{ $t('m.common["什么是一级管理空间"]') }}</span>
             </bk-link>
             <div slot="right">
                 <bk-input
-                    :placeholder="$t(`m.grading['搜索提示']`)"
+                    :placeholder="$t(`m.levelSpace['请输入空间名称']`)"
                     clearable
                     style="width: 420px;"
                     right-icon="bk-icon icon-search"
@@ -29,19 +29,21 @@
             size="small"
             :class="{ 'set-border': tableLoading }"
             ext-cls="grading-admin-table"
+            :cell-class-name="getCellClass"
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.grading['分级管理员名称']`)">
+            <bk-table-column :label="$t(`m.levelSpace['空间名称']`)">
                 <template slot-scope="{ row }">
                     <span class="grading-admin-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.grading['创建人']`)" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
+            <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
                 <template slot-scope="{ row }">
-                    <span :title="row.created_time">{{ row.created_time }}</span>
+                    <bk-tag v-for="(tag, index) of row.members" :key="index">
+                        {{tag.username}}
+                    </bk-tag>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
@@ -64,11 +66,15 @@
                         <bk-button theme="primary" style="margin-left: 10px;" text @click="handleDelete(row)">
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
-                    </section>
-                    <bk-button theme="primary" text @click="handleApplyJoin(row)">
-                        {{ $t(`m.myApply['申请加入']`) }}
-                    </bk-button> -->
-                    <bk-button theme="primary" text @click="handleCopy(row)">{{ $t(`m.grading['克隆']`) }}</bk-button>
+                    </section> -->
+                    <bk-button theme="primary" text @click="handleView(row)">
+                        {{ $t(`m.levelSpace['进入']`) }}
+                    </bk-button>
+                    <bk-button
+                        theme="primary"
+                        text
+                        style="margin-left: 10px;"
+                        @click="handleCopy(row)">{{ $t(`m.grading['克隆']`) }}</bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -94,13 +100,13 @@
             width="820"
             :position="{ top: 50 }"
             ext-cls="showImage">
-            <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是分级管理员"]') }}</h2>
-            <p>{{ $t('m.common["分级管理员概念"]') }}</p>
+            <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是一级管理空间"]') }}</h2>
+            <p>{{ $t('m.common["一级管理空间概念"]') }}</p>
             <img src="../../images/boot-page/one2x2.png" alt="" style="width:765px;height:263px">
-            <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用分级管理员"]') }}</h2>
-            <p>1. {{ $t('m.common["我的分级管理员 > 申请新建（已有分级管理员忽略）"]') }}</p>
+            <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用一级管理空间"]') }}</h2>
+            <p>1. {{ $t('m.common["我的管理空间 > 申请新建（已有管理空间忽略）"]') }}</p>
             <img src="@/images/boot-page/two2x2.png" alt="" style="width:765px; height:300px">
-            <p>2. {{ $t('m.common["切换顶部导航至“权限管理” ，在左上角切换“分级管理员空间”"]') }}</p>
+            <p>2. {{ $t('m.common["切换顶部导航至“权限管理” ，在左上角切换“一级管理空间”"]') }}</p>
             <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px">
             <p>3. {{ $t('m.common["在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员"]') }}</p>
             <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px">
@@ -178,9 +184,16 @@
             }
         },
         methods: {
+            getCellClass ({ row, column, rowIndex, columnIndex }) {
+                if (columnIndex === 1) {
+                    return 'iam-tag-table-cell-cls';
+                }
+            },
+
             showImgDialog () {
                 this.showImageDialog = true;
             },
+
             async fetchPageData () {
                 await this.fetchGradingAdmin();
             },
@@ -412,5 +425,19 @@
     .linkText {
         font-size: 12px
          }
+    }
+
+    .iam-tag-table-cell-cls {
+        .cell {
+            .bk-tag {
+                &:first-of-type {
+                    margin-left: 0;
+                }
+
+                &:hover {
+                    cursor: pointer;
+                }
+            }
+        }
     }
 </style>

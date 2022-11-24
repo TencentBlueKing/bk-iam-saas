@@ -84,3 +84,17 @@ class CompressedJSONField(models.BinaryField):
 
     def from_db_value(self, value, expression, connection, context):
         return self.to_python(value)
+
+
+class BaseSystemHiddenModel(models.Model):
+    """
+    系统隐藏字段
+
+    用于记录model对象是否需要在权限中心SaaS隐藏
+    """
+
+    source_system_id = models.CharField(max_length=32, default="")
+    hidden = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True

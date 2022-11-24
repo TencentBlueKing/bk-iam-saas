@@ -4,7 +4,7 @@
             :model="formData"
             form-type="vertical"
             ref="basicInfoForm">
-            <iam-form-item :label="$t(`m.grading['分级管理员名称']`)" required>
+            <iam-form-item :label="$t(`m.levelSpace['空间名称']`)" required>
                 <bk-input
                     :value="formData.name"
                     style="width: 450px;"
@@ -17,19 +17,29 @@
                     @change="handleNameChange" />
                 <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
             </iam-form-item>
-            <iam-form-item :label="$t(`m.set['管理员列表']`)" required>
-                <bk-user-selector
-                    :value="formData.members"
-                    :api="userApi"
-                    :placeholder="$t(`m.verify['请输入']`)"
-                    style="width: 100%;"
-                    :class="isShowMemberError ? 'is-member-empty-cls' : ''"
-                    data-test-id="grading_userSelector_member"
-                    @focus="handleRtxFocus"
-                    @blur="handleRtxBlur"
-                    @change="handleRtxChange">
-                </bk-user-selector>
-                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+            <iam-form-item :label="$t(`m.levelSpace['空间管理员']`)" required>
+                <div class="select-wrap">
+                    <bk-user-selector
+                        :value="displayMembers"
+                        :api="userApi"
+                        :placeholder="$t(`m.verify['请输入']`)"
+                        :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
+                        :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        data-test-id="grading_userSelector_member"
+                        @focus="handleRtxFocus"
+                        @blur="handleRtxBlur"
+                        @change="handleRtxChange">
+                    </bk-user-selector>
+                    <bk-checkbox
+                        :true-value="true"
+                        :false-value="false"
+                        class="select-wrap-checkbox"
+                        v-model="formData.syncPerm"
+                        @change="handleCheckboxChange">
+                        {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
+                    </bk-checkbox>
+                </div>
+                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择空间管理员']`) }}</p>
             </iam-form-item>
             <iam-form-item :label="$t(`m.common['描述']`)">
                 <bk-input :value="formData.description"
@@ -42,11 +52,14 @@
     </div>
 </template>
 <script>
+    import { mapGetters } from 'vuex';
+    import { language } from '@/language';
     import BkUserSelector from '@blueking/user-selector';
     const getDefaultData = () => ({
         name: '',
         description: '',
-        members: []
+        members: [],
+        syncPerm: false
     });
 
     export default {
@@ -64,22 +77,32 @@
         },
         data () {
             return {
+                language,
                 formData: getDefaultData(),
                 isShowNameError: false,
                 isShowMemberError: false,
                 nameValidateText: '',
-                userApi: window.BK_USER_API
+                userApi: window.BK_USER_API,
+                displayMembers: []
             };
+        },
+        computed: {
+            ...mapGetters(['user']),
+            curRoleType () {
+                return this.user.role.type;
+            }
         },
         watch: {
             data: {
                 handler (value) {
                     if (Object.keys(value).length) {
-                        const { name, description, members } = value;
+                        const { name, description, members, syncPerm } = value;
+                        this.displayMembers = members.map(e => e.username);
                         this.formData = Object.assign({}, {
                             name,
                             description,
-                            members
+                            members,
+                            syncPerm
                         });
                     }
                 },
@@ -93,7 +116,7 @@
             },
 
             handleRtxBlur () {
-                this.isShowMemberError = this.formData.members.length < 1;
+                this.isShowMemberError = this.displayMembers.length < 1;
             },
 
             handleNameInput (payload) {
@@ -104,16 +127,16 @@
             handleNameBlur (payload) {
                 const maxLength = 32;
                 if (payload === '') {
-                    this.nameValidateText = this.$t(`m.verify['分级管理员名称必填']`);
+                    this.nameValidateText = this.$t(`m.verify['空间名称必填']`);
                     this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {
                     if (payload.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称最长不超过32个字符']`);
+                        this.nameValidateText = this.$t(`m.verify['空间名称最长不超过32个字符']`);
                         this.isShowNameError = true;
                     }
                     if (!/^[^\s]*$/g.test(payload)) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称不允许空格']`);
+                        this.nameValidateText = this.$t(`m.verify['空间名称不允许空格']`);
                         this.isShowNameError = true;
                     }
                 }
@@ -121,6 +144,13 @@
 
             handleRtxChange (payload) {
                 this.isShowMemberError = false;
+                payload = payload.reduce((p, v) => {
+                    p.push({
+                        username: v,
+                        readonly: false
+                    });
+                    return p;
+                }, []);
                 this.$emit('on-change', 'members', payload);
             },
 
@@ -146,16 +176,16 @@
                 const maxLength = 32;
                 const { name, members } = this.formData;
                 if (name === '') {
-                    this.nameValidateText = this.$t(`m.verify['分级管理员名称必填']`);
+                    this.nameValidateText = this.$t(`m.verify['空间名称必填']`);
                     this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {
                     if (name.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称最长不超过32个字符']`);
+                        this.nameValidateText = this.$t(`m.verify['空间名称最长不超过32个字符']`);
                         this.isShowNameError = true;
                     }
                     if (!/^[^\s]*$/g.test(name)) {
-                        this.nameValidateText = this.$t(`m.verify['分级管理员名称不允许空格']`);
+                        this.nameValidateText = this.$t(`m.verify['空间名称不允许空格']`);
                         this.isShowNameError = true;
                     }
                 }
@@ -170,6 +200,10 @@
                     item.validator.content = '';
                     item.validator.state = '';
                 });
+            },
+
+            handleCheckboxChange () {
+                this.$emit('on-change', 'syncPerm', this.formData.syncPerm);
             }
         }
     };
@@ -186,6 +220,14 @@
         .name-empty-error {
             font-size: 12px;
             color: #ff4d4d;
+        }
+        .select-wrap {
+            display: flex;
+            align-items: center;
+            &-checkbox {
+                display: flex;
+                margin-left: 20px;
+            }
         }
         .is-member-empty-cls {
             .user-selector-container {

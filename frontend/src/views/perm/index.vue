@@ -2,6 +2,7 @@
     <div class="iam-my-perm-wrapper">
         <div class="header">
             <bk-button
+                v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
                 data-test-id="myPerm_btn_applyPerm"
                 type="button"
                 theme="primary"
@@ -69,6 +70,7 @@
     import CustomPerm from './custom-perm/index.vue';
     import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
     import GroupPerm from './group-perm/index.vue';
+    import { mapGetters } from 'vuex';
     import DepartmentGroupPerm from './department-group-perm/index.vue';
 
     export default {
@@ -108,6 +110,20 @@
                 enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
             };
         },
+        computed: {
+            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
+        },
+        watch: {
+            externalSystemsLayout: {
+                handler (value) {
+                    if (value.myPerm.hideCustomTab) {
+                        this.panels.splice(1, 1);
+                    }
+                },
+                immediate: true,
+                deep: true
+            }
+        },
         created () {
             const query = this.$route.query;
             if (query.tab) {
@@ -128,11 +144,15 @@
             async fetchData () {
                 this.componentLoading = true;
                 try {
+                    const userGroupParams = {
+                        page_size: 10,
+                        page: 1
+                    };
+                    if (this.externalSystemId) {
+                        userGroupParams.system_id = this.externalSystemId;
+                    }
                     const [res1, res2, res3, res4, res5, res6] = await Promise.all([
-                        this.$store.dispatch('perm/getPersonalGroups', {
-                            page_size: 10,
-                            page: 1
-                        }),
+                        this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
                         this.$store.dispatch('permApply/getHasPermSystem'),
                         this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
                             page_size: 10,

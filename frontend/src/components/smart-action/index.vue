@@ -4,7 +4,9 @@
             <slot />
         </div>
         <div ref="actionPosition" :style="positionStyles" role="action-position">
-            <div ref="dynamicPosition" class="fixed" style="padding-left:284px" role="dynamic-position">
+            <div ref="dynamicPosition"
+                class="fixed"
+                style="padding-left:284px;margin-top: 52px;" role="dynamic-position">
                 <div :style="styles">
                     <slot name="action" />
                 </div>
@@ -43,10 +45,14 @@
             positionStyles () {
                 if (this.isHide) {
                     return {
-                        height: '50px'
+                        height: '50px',
+                        marginTop: '50px'
+                    };
+                } else {
+                    return {
+                        marginTop: '52px'
                     };
                 }
-                return {};
             },
             styles () {
                 const styles = {

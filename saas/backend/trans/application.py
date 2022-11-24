@@ -18,7 +18,6 @@ from django.utils.translation import gettext as _
 from backend.biz.application import ActionApplicationDataBean
 from backend.biz.policy import PolicyBeanList, PolicyQueryBiz
 from backend.common.error_codes import error_codes
-from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
 from .policy import PolicyTrans
@@ -42,7 +41,7 @@ class ApplicationDataTrans:
         # 1. 查询已有权限
         old_policy_list = self.policy_query_biz.new_policy_list(
             system_id,
-            Subject(type=SubjectType.USER.value, id=applicant),
+            Subject.from_username(applicant),
         )
 
         # 2. 申请的策略里移除已有策略数据, 生成移除已有权限后的策略
@@ -213,7 +212,7 @@ class ApplicationDataTrans:
         # 2. 获取某个系统的所有的临时权限, 包括过期的
         old_policies = self.policy_query_biz.list_temporary_by_subject(
             system_id,
-            Subject(type=SubjectType.USER.value, id=applicant),
+            Subject.from_username(applicant),
         )
 
         for p in policy_list.policies:

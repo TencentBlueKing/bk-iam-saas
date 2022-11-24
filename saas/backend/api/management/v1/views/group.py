@@ -43,11 +43,11 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
+from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.pagination import CompatiblePagination
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import RoleType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
@@ -64,7 +64,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
     pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
@@ -89,9 +89,13 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         # 用户组数量在角色内是否超限
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
-        groups = self.group_biz.batch_create(
-            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
-        )
+        infos = parse_obj_as(List[GroupCreationBean], groups_data)
+        # NOTE: 兼容v2 api记录用户组来源系统, 是否隐藏
+        for one in infos:
+            one.source_system_id = role.source_system_id
+            one.hidden = role.hidden
+
+        groups = self.group_biz.batch_create(role.id, infos, request.user.username)
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
@@ -344,7 +348,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
-        self.policy_biz.alter(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.alter(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -374,7 +378,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"变更权限（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权的回收，直接使用policy_biz提供的方法即可
-        self.policy_biz.revoke(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.revoke(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -417,15 +421,11 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         action_ids = [a["id"] for a in data["actions"]]
 
         # 查询将要被删除PolicyID列表
-        policies = self.policy_query_biz.list_by_subject(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), action_ids
-        )
+        policies = self.policy_query_biz.list_by_subject(system_id, Subject.from_group_id(group.id), action_ids)
 
         # 根据PolicyID删除策略
         policy_ids = [p.policy_id for p in policies]
-        self.policy_operation_biz.delete_by_ids(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_ids
-        )
+        self.policy_operation_biz.delete_by_ids(system_id, Subject.from_group_id(group.id), policy_ids)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policies)

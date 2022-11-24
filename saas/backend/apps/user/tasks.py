@@ -26,6 +26,7 @@ from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.biz.group import GroupBiz
+from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.system import SystemBiz
@@ -54,7 +55,7 @@ class SendUserExpireRemindMailTask(Task):
         if not user:
             return
 
-        subject = Subject(type=SubjectType.USER.value, id=username)
+        subject = Subject.from_username(username)
 
         # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
         groups = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
@@ -152,7 +153,7 @@ def user_cleanup_expired_policy():
             if not user:
                 continue
 
-            subject = Subject(type=SubjectType.USER.value, id=username)
+            subject = Subject.from_username(username)
 
             # 查询用户指定过期时间之前的所有策略
             policies = policy_query_biz.list_expired(subject, expired_at)
@@ -180,12 +181,13 @@ class UserPermissionCleaner:
 
     group_biz = GroupBiz()
     role_biz = RoleBiz()
+    role_with_perm_group_biz = RoleWithPermGroupBiz()
 
     def __init__(self, username: str) -> None:
         record = UserPermissionCleanupRecord.objects.get(username=username)
 
         self._record = record
-        self._subject = Subject(type=SubjectType.USER.value, id=username)
+        self._subject = Subject.from_username(username)
 
     def cleanup(self):
         # 有其他的任务在处理, 忽略
@@ -255,8 +257,11 @@ class UserPermissionCleaner:
         username = self._subject.id
         roles = self.role_biz.list_user_role(username)
         for role in roles:
-            if role.type == RoleType.RATING_MANAGER.value:
-                self.role_biz.delete_member(role.id, username)
+            if role.type in (
+                RoleType.GRADE_MANAGER.value,
+                RoleType.SUBSET_MANAGER.value,
+            ):
+                self.role_with_perm_group_biz.delete_role_member(role, username)
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)

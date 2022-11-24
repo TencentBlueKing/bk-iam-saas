@@ -120,11 +120,19 @@ def get_common_actions(system_id: str) -> Dict:
     return _call_iam_api(http_get, url_path, data={})
 
 
-def get_system_managers(system_id: str) -> Dict:
+def get_system_managers(system_id: str) -> List:
     """
     获取系统管理员
     """
     url_path = f"/api/v1/web/systems/{system_id}/system-settings/system-managers"
+    return _call_iam_api(http_get, url_path, data={})
+
+
+def get_custom_frontend_settings(system_id: str) -> Dict:
+    """
+    获取定制前端配置
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/system-settings/custom-frontend-settings"
     return _call_iam_api(http_get, url_path, data={})
 
 
@@ -256,11 +264,39 @@ def list_subject_member(_type: str, id: str, limit: int = 10, offset: int = 0) -
     return _call_iam_api(http_get, url_path, data=params)
 
 
+def list_all_subject_member(_type: str, id: str) -> List[Dict]:
+    """
+    分页查询subject所有成员列表
+
+    NOTE: 谨慎使用, 有性能问题
+    """
+
+    def list_paging_subject_member(page: int, page_size: int) -> Tuple[int, List[Dict]]:
+        """[分页]获取subject-member"""
+        limit = page_size
+        offset = (page - 1) * page_size
+        data = list_subject_member(_type, id, limit, offset)
+        return data["count"], data["results"]
+
+    return list_all_data_by_paging(list_paging_subject_member, 1000)
+
+
 def get_subject_groups(_type: str, id: str, expired_at: int = 0, limit: int = 10, offset: int = 0) -> Dict:
     """
     获取subject的关系列表
     """
     url_path = "/api/v1/web/subject-groups"
+    params = {"type": _type, "id": id, "before_expired_at": expired_at, "limit": limit, "offset": offset}
+    return _call_iam_api(http_get, url_path, data=params)
+
+
+def get_system_subject_groups(
+    system_id: str, _type: str, id: str, expired_at: int = 0, limit: int = 10, offset: int = 0
+) -> Dict:
+    """
+    获取有系统权限subject的关系列表
+    """
+    url_path = f"/api/v1/web/systems/{system_id}/subject-groups"
     params = {"type": _type, "id": id, "before_expired_at": expired_at, "limit": limit, "offset": offset}
     return _call_iam_api(http_get, url_path, data=params)
 
@@ -552,9 +588,7 @@ def unfreeze_subjects(subjects: List[Dict]) -> None:
     return _call_iam_api(http_delete, url_path, data=subjects)
 
 
-def check_subject_groups_belong(
-    subject_type: str, subject_id: str, group_ids: List[int], inherit: bool = False
-) -> Dict[str, bool]:
+def check_subject_groups_belong(subject_type: str, subject_id: str, group_ids: List[int]) -> Dict[str, bool]:
     """
     校验Subject与用户组是否存在关系
     """
@@ -563,7 +597,6 @@ def check_subject_groups_belong(
         "type": subject_type,
         "id": subject_id,
         "group_ids": ",".join(map(str, group_ids)),
-        "inherit": inherit,
     }
     return _call_iam_api(http_get, url_path, data=data)
 
@@ -632,6 +665,25 @@ def alter_group_policies_v2(
         "delete_policy_ids": delete_policy_ids,
         "resource_actions": resource_actions,
         "group_auth_type": group_auth_type,
+    }
+    result = _call_iam_api(http_post, url_path, data=data)
+    return result
+
+
+def query_rbac_group_by_resource(
+    system_id: str,
+    action_id: str,
+    resource_type_system_id: int,
+    resource_type_id: str,
+    resource_id: str,
+) -> List:
+    """
+    查询rbac有实例权限的用户组
+    """
+    url_path = f"/api/v2/web/systems/{system_id}/rbac/resource-groups"
+    data = {
+        "action_id": action_id,
+        "resource": {"system_id": resource_type_system_id, "type": resource_type_id, "id": resource_id},
     }
     result = _call_iam_api(http_post, url_path, data=data)
     return result

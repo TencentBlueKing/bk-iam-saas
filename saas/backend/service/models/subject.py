@@ -8,7 +8,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import List, Union
+
 from pydantic import BaseModel
+
+from backend.service.constants import SubjectType
 
 
 class Subject(BaseModel):
@@ -20,3 +24,19 @@ class Subject(BaseModel):
 
     def __eq__(self, other):
         return self.type == other.type and self.id == other.id
+
+    @classmethod
+    def from_username(cls, username: str) -> "Subject":
+        return cls(type=SubjectType.USER.value, id=username)
+
+    @classmethod
+    def from_group_id(cls, group_id: Union[int, str]) -> "Subject":
+        return cls(type=SubjectType.GROUP.value, id=str(group_id))
+
+    @classmethod
+    def from_department_id(cls, department_id: Union[int, str]) -> "Subject":
+        return cls(type=SubjectType.DEPARTMENT.value, id=str(department_id))
+
+    @classmethod
+    def from_usernames(cls, usernames: str) -> List["Subject"]:
+        return [cls.from_username(username) for username in usernames]

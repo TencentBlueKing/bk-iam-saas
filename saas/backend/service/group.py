@@ -47,10 +47,14 @@ class GroupSubject(BaseModel):
     expired_at: int
 
 
-class GroupCreate(BaseModel):
+class GroupCreation(BaseModel):
     name: str
     description: str
     readonly: bool = False
+
+    # NOTE: 只在group创建时有用
+    source_system_id: str = ""
+    hidden: bool = False
 
 
 class GroupMemberExpiredAt(Subject):
@@ -58,24 +62,39 @@ class GroupMemberExpiredAt(Subject):
 
 
 class GroupService:
-    def create(self, name: str, description: str, creator: str) -> Group:
+    def create(self, info: GroupCreation, creator: str) -> Group:
         """
         创建用户组
         """
-        group = Group(name=name, description=description, creator=creator)
+        group = Group(
+            name=info.name,
+            description=info.description,
+            readonly=info.readonly,
+            creator=creator,
+            source_system_id=info.source_system_id,
+            hidden=info.hidden,
+        )
         group.save(force_insert=True)
 
         # 创建后端的用户组
-        iam.create_subjects([{"type": SubjectType.GROUP.value, "id": str(group.id), "name": name}])
+        iam.create_subjects([{"type": SubjectType.GROUP.value, "id": str(group.id), "name": info.name}])
 
         return group
 
-    def batch_create(self, infos: List[GroupCreate], creator: str) -> List[Group]:
+    def batch_create(self, infos: List[GroupCreation], creator: str) -> List[Group]:
         """
         批量创建用户组
         """
         groups = [
-            Group(name=one.name, description=one.description, readonly=one.readonly, creator=creator) for one in infos
+            Group(
+                name=one.name,
+                description=one.description,
+                readonly=one.readonly,
+                creator=creator,
+                source_system_id=one.source_system_id,
+                hidden=one.hidden,
+            )
+            for one in infos
         ]
         with transaction.atomic():
             # 为了获取返回的insert id, 不能使用bulk_create
@@ -128,17 +147,11 @@ class GroupService:
             department_count=F("department_count") - type_count[SubjectType.DEPARTMENT.value],
         )
 
-    def check_subject_groups_belong(
-        self, subject: Subject, group_ids: List[int], inherit: bool = False
-    ) -> Dict[int, bool]:
+    def check_subject_groups_belong(self, subject: Subject, group_ids: List[int]) -> Dict[int, bool]:
         """
         校验Subject与用户组是否存在关系
         """
-        # 对于非用户，则不存在继承的查询
-        if subject.type != SubjectType.USER.value:
-            inherit = False
-
-        group_belongs = iam.check_subject_groups_belong(subject.type, subject.id, group_ids, inherit)
+        group_belongs = iam.check_subject_groups_belong(subject.type, subject.id, group_ids)
 
         # 将group_id从str转为int
         return {int(k): v for k, v in group_belongs.items()}
@@ -154,6 +167,19 @@ class GroupService:
         查询Subject的Group关系列表
         """
         iam_data = iam.get_subject_groups(subject.type, subject.id, limit=limit, offset=offset)
+        count = iam_data["count"]
+
+        relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
+
+        return count, relations
+
+    def list_system_subject_group(
+        self, system_id: str, subject: Subject, limit: int = 10, offset: int = 0
+    ) -> Tuple[int, List[SubjectGroup]]:
+        """
+        查询有系统权限Subject的Group关系列表
+        """
+        iam_data = iam.get_system_subject_groups(system_id, subject.type, subject.id, limit=limit, offset=offset)
         count = iam_data["count"]
 
         relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
@@ -198,6 +224,20 @@ class GroupService:
         查询subject在指定过期时间之前的相关Group
         """
         iam_data = iam.get_subject_groups(subject.type, subject.id, expired_at=expired_at, limit=limit, offset=offset)
+
+        count = iam_data["count"]
+        relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
+        return count, relations
+
+    def list_system_subject_group_before_expired_at(
+        self, system_id: str, subject: Subject, expired_at: int, limit: int, offset: int
+    ) -> Tuple[int, List[SubjectGroup]]:
+        """
+        查询有系统权限subject在指定过期时间之前的相关Group
+        """
+        iam_data = iam.get_system_subject_groups(
+            system_id, subject.type, subject.id, expired_at=expired_at, limit=limit, offset=offset
+        )
 
         count = iam_data["count"]
         relations = parse_obj_as(List[SubjectGroup], iam_data["results"])
@@ -269,6 +309,15 @@ class GroupService:
         data = iam.list_subject_member(SubjectType.GROUP.value, str(group_id), limit, offset)
         return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
 
+    def list_all_group_member(self, group_id: int) -> List[SubjectGroup]:
+        """
+        分页查询用户组所有成员
+
+        NOTE: 谨慎使用, 性能问题
+        """
+        data = iam.list_all_subject_member(SubjectType.GROUP.value, str(group_id))
+        return parse_obj_as(List[SubjectGroup], data)
+
     def list_group_subject_before_expired_at(self, expired_at: int) -> Generator[GroupSubject, None, None]:
         """
         查询在指定过期时间之前的相关GroupSubject关系
@@ -284,3 +333,14 @@ class GroupService:
                 yield relation
 
             offset += limit
+
+    def list_rbac_group_by_resource(
+        self, system_id: str, action_id: str, resource_type_system_id: int, resource_type_id: str, resource_id: str
+    ) -> List[Subject]:
+        """
+        查询rbac资源权限的用户组
+        """
+        data = iam.query_rbac_group_by_resource(
+            system_id, action_id, resource_type_system_id, resource_type_id, resource_id
+        )
+        return parse_obj_as(List[Subject], data)
