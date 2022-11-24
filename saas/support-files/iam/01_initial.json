@@ -1,0 +1,886 @@
+{
+  "system_id": "bk_iam",
+  "operations": [
+    {
+      "operation": "upsert_system",
+      "data": {
+        "id": "bk_iam",
+        "name": "蓝鲸权限中心",
+        "name_en": "blueking iam",
+        "description": "",
+        "description_en": "",
+        "clients": "bk_iam,iam",
+        "provider_config": {
+          "host": "",
+          "auth": "basic",
+          "healthz": "/healthz"
+        }
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "policy",
+        "name": "权限策略",
+        "name_en": "PermissionPolicy",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "temporary_policy",
+        "name": "临时权限策略",
+        "name_en": "TemporaryPermissionPolicy",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "role",
+        "name": "角色",
+        "name_en": "Role",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "group",
+        "name": "用户组",
+        "name_en": "Group",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "template",
+        "name": "权限模板",
+        "name_en": "PermissionTemplate",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "admin_api_white_list",
+        "name": "超级管理类API白名单",
+        "name_en": "AdminApiWhiteList",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "auth_api_white_list",
+        "name": "授权类API白名单",
+        "name_en": "AuthApiWhiteList",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "management_api_white_list",
+        "name": "管理类API白名单",
+        "name_en": "ManagementApiWhiteList",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/v1/audits/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "user_blacklist_member_create",
+        "name": "创建用户黑名单成员",
+        "name_en": "UserBlacklistMemberCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "user_blacklist_member_delete",
+        "name": "删除用户黑名单成员",
+        "name_en": "UserBlacklistMemberDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "user_permission_cleanup",
+        "name": "用户组权限清理",
+        "name_en": "UserPermissionCleanup",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "policy_create",
+        "name": "创建权限策略",
+        "name_en": "PolicyCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "policy_update",
+        "name": "更新权限策略",
+        "name_en": "PolicyUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "policy",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "policy_delete",
+        "name": "删除权限策略",
+        "name_en": "PolicyDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "policy",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "temporary_policy_create",
+        "name": "创建临时权限策略",
+        "name_en": "TemporaryPolicyCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "temporary_policy_update",
+        "name": "更新临时权限策略",
+        "name_en": "TemporaryPolicyUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "temporary_policy",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "temporary_policy_delete",
+        "name": "删除临时权限策略",
+        "name_en": "TemporaryPolicyDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "temporary_policy",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_create",
+        "name": "创建角色",
+        "name_en": "RoleCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_update",
+        "name": "更新角色",
+        "name_en": "RoleUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_member_create",
+        "name": "创建角色成员",
+        "name_en": "RoleMemberCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_member_update",
+        "name": "更新角色成员",
+        "name_en": "RoleMemberUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_member_delete",
+        "name": "删除角色成员",
+        "name_en": "RoleMemberDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_member_policy_create",
+        "name": "创建角色成员权限",
+        "name_en": "RoleMemberPolicyCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_member_policy_delete",
+        "name": "删除角色成员权限",
+        "name_en": "RoleMemberPolicyDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_commonaction_create",
+        "name": "创建角色常用操作",
+        "name_en": "RoleMemberCommonActionCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_commonaction_delete",
+        "name": "删除角色常用操作",
+        "name_en": "RoleCommonActionDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "role_group_renew",
+        "name": "角色用户组续期",
+        "name_en": "RoleGroupRenew",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_transfer",
+        "name": "用户组转移",
+        "name_en": "GroupTransfer",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_create",
+        "name": "创建用户组",
+        "name_en": "GroupCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_update",
+        "name": "更新用户组",
+        "name_en": "GroupUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "group",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_delete",
+        "name": "删除用户组",
+        "name_en": "GroupDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "group",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_member_create",
+        "name": "创建用户组成员",
+        "name_en": "GroupMemberCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [
+            {
+              "system_id": "bk_iam",
+              "id": "group",
+              "related_instance_selections": []
+            }
+          ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_member_renew",
+        "name": "续期用户组成员",
+        "name_en": "GroupMemberRenew",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "group",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_member_delete",
+        "name": "删除用户组成员",
+        "name_en": "GroupMemberDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "group",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "group_template_create ",
+        "name": "创建用户组权限策略",
+        "name_en": "GroupTemplateCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [
+            {
+              "system_id": "bk_iam",
+              "id": "group",
+              "related_instance_selections": []
+            }
+          ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "template_create",
+        "name": "创建权限模板",
+        "name_en": "TemplateCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "template_update",
+        "name": "更新权限模板",
+        "name_en": "TemplateUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "template",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "template_delete",
+        "name": "删除权限模板",
+        "name_en": "TemplateDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "template",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "template_member_delete",
+        "name": "删除权限模板授权用户组",
+        "name_en": "TemplateMemberDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "template",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "template_preupdate_create",
+        "name": "创建权限模板预更新",
+        "name_en": "TemplatePerUpdateCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "template",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "template_preupdate_delete",
+        "name": "删除权限模板预更新",
+        "name_en": "TemplatePerUpdateDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "template",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "template_update_commit",
+        "name": "提交权限模板更新",
+        "name_en": "TemplateUpdateCommit",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "template",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "admin_api_white_list_create",
+        "name": "创建超级管理类API白名单",
+        "name_en": "AdminApiWhiteListCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "admin_api_white_list_delete",
+        "name": "删除超级管理类API白名单",
+        "name_en": "AdminApiWhiteListDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "admin_api_white_list",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "auth_api_white_list_create",
+        "name": "创建授权类API白名单",
+        "name_en": "AuthApiWhiteListCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "auth_api_white_list_delete",
+        "name": "删除授权类API白名单",
+        "name_en": "AuthApiWhiteListDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "auth_api_white_list",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "management_api_white_list_create",
+        "name": "创建管理类API白名单",
+        "name_en": "ManagementApiWhiteListCreate",
+        "description": "",
+        "description_en": "",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "management_api_white_list_delete",
+        "name": "删除管理类API白名单",
+        "name_en": "ManagementApiWhiteListDelete",
+        "description": "",
+        "description_en": "",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "management_api_white_list",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "approval_global_update",
+        "name": "更新全局审批流程",
+        "name_en": "ApprovalGlobalUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "approval_action_update",
+        "name": "更新操作审批流程",
+        "name_en": "ApprovalActionUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "approval_group_update",
+        "name": "更新用户组审批流程",
+        "name_en": "ApprovalGroupUpdate",
+        "description": "",
+        "description_en": "",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_iam",
+            "id": "role",
+            "related_instance_selections": []
+          }
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

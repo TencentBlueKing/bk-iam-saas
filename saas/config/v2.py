@@ -259,3 +259,6 @@ BK_ITSM_APP_URL = BK_PAAS_HOST.rstrip("/") + "/o/bk_itsm"
 
 LOGIN_SERVICE_URL = BK_PAAS_HOST.rstrip("/") + "/login/"
 LOGIN_SERVICE_PLAIN_URL = LOGIN_SERVICE_URL + "plain/"
+
+# 对接审计中心相关配置
+BK_IAM_RESOURCE_API_HOST = env.str("BK_IAM_RESOURCE_API_HOST", default=APP_URL)

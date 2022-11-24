@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django_prometheus",
     "djcelery",
     "apigw_manager.apigw",
+    "iam.contrib.iam_migration",
     "backend.apps.system",
     "backend.apps.action",
     "backend.apps.policy",
@@ -409,3 +410,14 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 
 # disable display systems
 HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=[])
+
+
+# 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置
+BK_IAM_SYSTEM_ID = "bk_iam"
+if BK_IAM_HOST_TYPE == "direct":
+    BK_IAM_USE_APIGATEWAY = False
+    BK_IAM_INNER_HOST = BK_IAM_HOST
+elif BK_IAM_HOST_TYPE == "apigateway":
+    BK_IAM_USE_APIGATEWAY = True
+    BK_IAM_APIGATEWAY_URL = BK_IAM_HOST
+BK_IAM_MIGRATION_APP_NAME = "audit"
