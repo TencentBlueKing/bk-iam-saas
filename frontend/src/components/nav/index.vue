@@ -154,7 +154,8 @@
                 'permRenewal',
                 'groupPermRenewal',
                 'permTransfer',
-                'permTransferHistory'
+                'permTransferHistory',
+                'applyPerm'
             ],
             'myPermNav'
         ],

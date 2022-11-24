@@ -475,3 +475,16 @@ export function getParamsValue (key) {
         }
     }
 }
+
+/**
+ * 根据毫秒生成睡眠函数
+ *
+ * @param number
+ */
+export function sleep (time) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
+}
