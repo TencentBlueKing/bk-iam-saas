@@ -82,6 +82,8 @@ class AuditEventHandler:
         """
         默认转换
         """
+        action_id = event.type.replace(".", "_")
+
         audit_event = AuditEvent(
             event_id=event.id.hex,
             request_id=event.source_data_request_id,
@@ -89,7 +91,7 @@ class AuditEventHandler:
             start_time=event.created_timestamp,
             bk_app_code=event.source_data_app_code,
             access_type=AuditSourceType.to_int(event.source_type),
-            action_id=event.type,
+            action_id=action_id,
             resource_type_id=event.object_type,
             instance_id=event.object_id,
             instance_name=event.object_name,
@@ -109,7 +111,9 @@ class AuditEventHandler:
             AuditType.GROUP_CREATE.value,
             AuditType.TEMPLATE_CREATE.value,
         ]:
-            extend_data.update({"id": event.object_id, "name": event.object_name})
+            extend_data.update({"id": event.object_id, "name": event.object_name, "type": event.object_type})
+
+        action_id = event.type.replace(".", "_")
 
         audit_event = AuditEvent(
             event_id=event.id.hex,
@@ -118,7 +122,7 @@ class AuditEventHandler:
             start_time=event.created_timestamp,
             bk_app_code=event.source_data_app_code,
             access_type=AuditSourceType.to_int(event.source_type),
-            action_id=event.type,
+            action_id=action_id,
             result_code=event.status,
             extend_data=extend_data,
         )
@@ -234,14 +238,14 @@ class AuditEventHandler:
         return [audit_event]
 
     def handle_white_list(self, event: Event) -> List[AuditEvent]:
-        if event.type.startswith("admin_api_allow_list_config"):
+        if event.type.startswith("admin.api.allow.list.config"):
             resource_type_id = "admin_api_white_list"
-        elif event.type.startswith("authorization_api_allow_list_config"):
+        elif event.type.startswith("authorization.api.allow.list.config"):
             resource_type_id = "auth_api_white_list"
-        elif event.type.startswith("management_api_allow_list_config"):
+        elif event.type.startswith("management.api.allow.list.config"):
             resource_type_id = "management_api_white_list"
 
-        action_id = f"{resource_type_id}_" + event.type.split("_")[-1]
+        action_id = f"{resource_type_id}_" + event.type.split(".")[-1]
 
         audit_event = AuditEvent(
             event_id=event.id.hex,
