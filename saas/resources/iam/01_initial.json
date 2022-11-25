@@ -138,6 +138,118 @@
       }
     },
     {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "policy_selection",
+        "name": "权限策略",
+        "name_en": "Policy",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "policy"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "temporary_policy_selection",
+        "name": "临时权限策略",
+        "name_en": "TemporaryPolicy",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "temporary_policy"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "role_selection",
+        "name": "角色",
+        "name_en": "Role",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "role"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "group_selection",
+        "name": "用户组",
+        "name_en": "Group",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "group"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "template_selection",
+        "name": "权限模板",
+        "name_en": "Template",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "template"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "admin_api_white_list_selection",
+        "name": "超级管理类API白名单",
+        "name_en": "AdminApiWhiteList",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "admin_api_white_list"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "auth_api_white_list_selection",
+        "name": "授权类API白名单",
+        "name_en": "AuthApiWhiteList",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "auth_api_white_list"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "management_api_white_list_selection",
+        "name": "管理类API白名单",
+        "name_en": "ManagementApiWhiteList",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_iam",
+            "id": "management_api_white_list"
+          }
+        ]
+      }
+    },
+    {
       "operation": "upsert_action",
       "data": {
         "id": "user_blacklist_member_create",
@@ -202,7 +314,12 @@
           {
             "system_id": "bk_iam",
             "id": "policy",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "policy_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -221,7 +338,12 @@
           {
             "system_id": "bk_iam",
             "id": "policy",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "policy_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -253,7 +375,12 @@
           {
             "system_id": "bk_iam",
             "id": "temporary_policy",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "temporary_policy_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -272,7 +399,12 @@
           {
             "system_id": "bk_iam",
             "id": "temporary_policy",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "temporary_policy_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -304,7 +436,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -323,7 +460,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -342,7 +484,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -361,7 +508,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -380,7 +532,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -399,7 +556,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -418,7 +580,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -437,7 +604,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -456,7 +628,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -475,7 +652,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -507,7 +689,12 @@
           {
             "system_id": "bk_iam",
             "id": "group",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "group_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -526,7 +713,12 @@
           {
             "system_id": "bk_iam",
             "id": "group",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "group_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -545,7 +737,12 @@
             {
               "system_id": "bk_iam",
               "id": "group",
-              "related_instance_selections": []
+              "related_instance_selections": [
+                {
+                  "system_id": "bk_iam",
+                  "id": "group_selection"
+                }
+              ]
             }
           ],
         "version": 1
@@ -564,7 +761,12 @@
           {
             "system_id": "bk_iam",
             "id": "group",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "group_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -583,7 +785,12 @@
           {
             "system_id": "bk_iam",
             "id": "group",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "group_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -602,7 +809,12 @@
             {
               "system_id": "bk_iam",
               "id": "group",
-              "related_instance_selections": []
+              "related_instance_selections": [
+                {
+                  "system_id": "bk_iam",
+                  "id": "group_selection"
+                }
+              ]
             }
           ],
         "version": 1
@@ -634,7 +846,12 @@
           {
             "system_id": "bk_iam",
             "id": "template",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "template_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -653,7 +870,12 @@
           {
             "system_id": "bk_iam",
             "id": "template",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "template_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -672,7 +894,12 @@
           {
             "system_id": "bk_iam",
             "id": "template",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "template_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -691,7 +918,12 @@
           {
             "system_id": "bk_iam",
             "id": "template",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "template_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -710,7 +942,12 @@
           {
             "system_id": "bk_iam",
             "id": "template",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "template_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -729,7 +966,12 @@
           {
             "system_id": "bk_iam",
             "id": "template",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "template_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -761,7 +1003,12 @@
           {
             "system_id": "bk_iam",
             "id": "admin_api_white_list",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "admin_api_white_list_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -793,7 +1040,12 @@
           {
             "system_id": "bk_iam",
             "id": "auth_api_white_list",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "auth_api_white_list_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -825,7 +1077,12 @@
           {
             "system_id": "bk_iam",
             "id": "management_api_white_list",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "management_api_white_list_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -857,7 +1114,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
@@ -876,7 +1138,12 @@
           {
             "system_id": "bk_iam",
             "id": "role",
-            "related_instance_selections": []
+            "related_instance_selections": [
+              {
+                "system_id": "bk_iam",
+                "id": "role_selection"
+              }
+            ]
           }
         ],
         "version": 1
