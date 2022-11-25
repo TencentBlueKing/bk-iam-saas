@@ -83,7 +83,7 @@ class AuditEventHandler:
         默认转换
         """
         audit_event = AuditEvent(
-            event_id=event.id,
+            event_id=event.id.hex,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -112,7 +112,7 @@ class AuditEventHandler:
             extend_data.update({"id": event.object_id, "name": event.object_name})
 
         audit_event = AuditEvent(
-            event_id=event.id,
+            event_id=event.id.hex,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -139,7 +139,7 @@ class AuditEventHandler:
         }
 
         audit_event = AuditEvent(
-            event_id=event.id,
+            event_id=event.id.hex,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -163,7 +163,7 @@ class AuditEventHandler:
 
             return [
                 AuditEvent(
-                    event_id=event.id,
+                    event_id=event.id.hex,
                     request_id=event.source_data_request_id,
                     username=event.username,
                     start_time=event.created_timestamp,
@@ -218,7 +218,7 @@ class AuditEventHandler:
         }
 
         audit_event = AuditEvent(
-            event_id=event.id,
+            event_id=event.id.hex,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -244,7 +244,7 @@ class AuditEventHandler:
         action_id = f"{resource_type_id}_" + event.type.split("_")[-1]
 
         audit_event = AuditEvent(
-            event_id=event.id,
+            event_id=event.id.hex,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
