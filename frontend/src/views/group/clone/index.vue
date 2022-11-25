@@ -341,7 +341,10 @@
                                     conditionItem.instances.forEach((instanceItem) => {
                                         instanceItem.path.forEach((pathItem) => {
                                             pathItem.forEach((v) => {
-                                                row.conditionIds.push(v.id);
+                                                const type = v.type === 'department' ? 'department' : '';
+                                                row.conditionIds.push(
+                                                    { id: v.id, display_name: v.name, child_type: type }
+                                                );
                                             });
                                         });
                                     });
@@ -436,7 +439,10 @@
                                     conditionItem.instances.forEach((instanceItem) => {
                                         instanceItem.path.forEach((pathItem) => {
                                             pathItem.forEach((v) => {
-                                                row.conditionIds.push(v.id);
+                                                const type = v.type === 'department' ? 'department' : '';
+                                                row.conditionIds.push(
+                                                    { id: v.id, display_name: v.name, child_type: type }
+                                                );
                                             });
                                         });
                                     });
