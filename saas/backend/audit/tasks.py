@@ -32,7 +32,7 @@ def pre_create_audit_model():
 
 
 @task(ignore_result=True)
-def log_audit_event(suffix: str, id: int):
+def log_audit_event(suffix: str, id: str):
     """
     记录审计事件到审计中心规范的日志文件
     """
@@ -83,6 +83,7 @@ class AuditEventHandler:
         默认转换
         """
         audit_event = AuditEvent(
+            event_id=event.id,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -111,6 +112,7 @@ class AuditEventHandler:
             extend_data.update({"id": event.object_id, "name": event.object_name})
 
         audit_event = AuditEvent(
+            event_id=event.id,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -137,6 +139,7 @@ class AuditEventHandler:
         }
 
         audit_event = AuditEvent(
+            event_id=event.id,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -160,6 +163,7 @@ class AuditEventHandler:
 
             return [
                 AuditEvent(
+                    event_id=event.id,
                     request_id=event.source_data_request_id,
                     username=event.username,
                     start_time=event.created_timestamp,
@@ -214,6 +218,7 @@ class AuditEventHandler:
         }
 
         audit_event = AuditEvent(
+            event_id=event.id,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,
@@ -239,6 +244,7 @@ class AuditEventHandler:
         action_id = f"{resource_type_id}_" + event.type.split("_")[-1]
 
         audit_event = AuditEvent(
+            event_id=event.id,
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp,

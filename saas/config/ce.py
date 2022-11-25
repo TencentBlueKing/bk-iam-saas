@@ -217,7 +217,7 @@ LOGGING = {
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
-        "bk-audit": {
+        "bk_audit": {
             "class": _LOG_CLASS,
             "formatter": "verbose",
             "filename": os.path.join(_LOG_DIR, "%s-audit.log" % _LOG_NAME_PREFIX),
@@ -277,8 +277,8 @@ LOGGING = {
             "propagate": True,
         },
         # 审计日志文件
-        "bk-audit": {
-            "handlers": ["bk-audit"],
+        "bk_audit": {
+            "handlers": ["bk_audit"],
             "level": "INFO",
             "propagate": True,
         },
