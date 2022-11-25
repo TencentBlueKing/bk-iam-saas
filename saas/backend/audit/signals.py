@@ -26,6 +26,6 @@ def audit_event_handler(sender, instance, created, **kwargs):
 
     # 发送到celery处理
     suffix = sender.__name__.split("_")[1]
-    id = instance.id
+    id = instance.id.hex
 
     log_audit_event.delay(suffix, id)
