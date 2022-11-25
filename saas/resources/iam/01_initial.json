@@ -238,7 +238,7 @@
     {
       "operation": "upsert_instance_selection",
       "data": {
-        "id": "management_api_white_list_selection",
+        "id": "management_api_wl_selection",
         "name": "管理类API白名单",
         "name_en": "ManagementApiWhiteList",
         "resource_type_chain": [
@@ -1080,7 +1080,7 @@
             "related_instance_selections": [
               {
                 "system_id": "bk_iam",
-                "id": "management_api_white_list_selection"
+                "id": "management_api_wl_selection"
               }
             ]
           }
