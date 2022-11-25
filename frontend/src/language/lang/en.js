@@ -483,7 +483,9 @@ export const m = {
         '项目': 'Project',
         '已选用户组': 'Selected user group',
         '请选择项目': 'Please select project',
-        '清空选择': 'Clear Selection'
+        '清空选择': 'Clear Selection',
+        '选择系统': 'Select System',
+        '选择操作': 'Select Action'
     },
     myApply: {
         '申请列表': 'Apply List',

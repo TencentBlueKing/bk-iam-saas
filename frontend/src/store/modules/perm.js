@@ -574,10 +574,10 @@ export default {
          * @return {Promise} promise 对象
          */
         getRoleGroups ({ commit, state, dispatch }, params, config) {
-            console.log(params, '参数');
             const { system_id, role_id } = params;
             delete params.system_id;
             delete params.role_id;
+            delete params.action_id;
             return http.get(
                 // eslint-disable-next-line camelcase
                 `${AJAX_URL_PREFIX}/systems/${system_id}/grade_managers/${role_id}/groups/?${json2Query(params)}`,

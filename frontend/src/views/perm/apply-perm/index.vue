@@ -152,9 +152,10 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    import { sleep, getParamsValue } from '@/common/util';
+    import { sleep } from '@/common/util';
     import { buildURLParams } from '@/common/url';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import Policy from '@/model/policy';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import IamSearchSelect from '@/components/iam-search-select';
     import RenderPermSideSlider from '../../perm/components/render-group-perm-sideslider';
@@ -209,7 +210,22 @@
                     isLoading: false
                 },
                 system_id: '',
-                roleId: ''
+                roleId: '',
+                processesList: [],
+                resourceActionData: [],
+                initSearchData: [
+                    {
+                        id: 'name',
+                        name: this.$t(`m.userGroup['用户组名']`),
+                        default: true
+                    },
+                    {
+                        id: 'system_id',
+                        name: this.$t(`m.permApply['选择系统']`),
+                        remoteMethod: this.handleRemoteSystem
+                    }
+                ],
+                searchData: []
             };
         },
         computed: {
@@ -221,10 +237,15 @@
                     this.isShowReasonError = false;
                 }
             },
-            roleId (value) {
-                if (value) {
-                    this.roleId = Number(value);
-                }
+            '$route': {
+                handler (value) {
+                    if (Object.keys(value.query).length) {
+                        const { system_id: systemId, role_id: roleId } = value.query;
+                        this.systemId = systemId;
+                        this.roleId = +roleId;
+                    }
+                },
+                immediate: true
             },
             'pagination.current' (value) {
                 this.currentBackup = value;
@@ -232,47 +253,19 @@
         },
         created () {
             this.searchParams = this.$route.query;
-            this.systemId = getParamsValue('system_id');
-            this.roleId = getParamsValue('role_id');
             delete this.searchParams.limit;
             delete this.searchParams.current;
             this.curRole = this.user.role.type;
-            this.searchData = [
-                // {
-                //     id: 'id',
-                //     name: 'ID'
-                // },
-                {
-                    id: 'name',
-                    name: this.$t(`m.userGroup['用户组名']`),
-                    default: true
-                },
-                // {
-                //     id: 'description',
-                //     name: this.$t(`m.common['描述']`),
-                //     disabled: true
-                // },
-                {
-                    id: 'system_id',
-                    name: this.$t(`m.common['操作']`),
-                    remoteMethod: this.handleRemoteSystem
-                }
-                // 一级管理空间
-                // {
-                //     id: 'role_id',
-                //     name: this.$t(`m.grading['一级管理空间']`),
-                //     remoteMethod: this.handleGradeAdmin
-                // }
-            ];
+            this.searchData = _.cloneDeep(this.initSearchData);
             this.setCurrentQueryCache(this.refreshCurrentQuery());
             const isObject = payload => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
             const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
-                if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit;
-                    this.pagination.current = currentQueryCache.current;
+                const { current, limit } = this.pagination;
+                if (limit) {
+                    this.pagination = Object.assign(this.pagination, { current, limit });
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
@@ -311,9 +304,7 @@
              * 获取页面数据
              */
             async fetchPageData () {
-                // await this.fetchCurUserGroup();
-                // await this.fetchUserGroupList();
-                await Promise.all([this.fetchProjectData(), this.fetchCurUserGroup()]);
+                await Promise.all([this.fetchProjectData(), this.fetchUserGroupList(), this.fetchCurUserGroup()]);
             },
 
             handleToCustomApply () {
@@ -328,13 +319,15 @@
                 const queryParams = {
                     limit,
                     current,
+                    system_id: this.systemId,
+                    role_id: this.roleId,
                     ...this.searchParams
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-                        if (this.searchList.length > 0) {
+                        if (this.searchList.length) {
                             const tempData = this.searchList.find(item => item.id === key);
                             params[key] = tempData.values[0];
                         }
@@ -365,39 +358,49 @@
                 };
             },
 
-            handleScrollToBottom () {
+            async handleScrollToBottom () {
                 const { current, limit, total } = this.projectPagination;
-                this.scrollLoadingOptions.isLoading = true;
-                console.log(Math.floor((total + limit - 1) / limit), total);
-                sleep(1000).then(() => {
-                    this.scrollLoadingOptions.isLoading = false;
-                    if (Math.floor((total + limit - 1) / limit) > current) {
-                        this.enableScrollLoad = false;
-                        return;
-                    }
-                    this.enableScrollLoad = true;
+                this.enableScrollLoad = true;
+                if (Math.floor((total + limit - 1) / limit) <= current) {
+                    this.enableScrollLoad = false;
+                } else {
+                    this.scrollLoadingOptions.isLoading = true;
                     this.projectPagination.current++;
-                    this.fetchProjectData();
-                });
+                    await this.fetchProjectData();
+                    sleep(1000).then(() => {
+                        this.scrollLoadingOptions.isLoading = false;
+                    });
+                }
             },
 
-            async handleRemoteMethod (value) {
-                this.scrollLoadingOptions.isLoading = false;
-                this.projectKeyWord = value;
-                this.projectList = [];
-                this.projectPagination = Object.assign(this.projectPagination, { current: 1, total: 0 });
-                await this.fetchProjectData();
+            async handleChangeRole (id) {
+                this.currentSelectList = [];
+                this.roleId = id;
+                this.$store.commit('updateCurRoleId', id);
+                this.$store.commit('updateIdentity', { id });
+                this.$store.commit('updateNavId', id);
+                await this.$store.dispatch('role/updateCurrentRole', { id });
+                await this.fetchUserGroupList();
+                this.resetLocalStorage();
             },
 
-            handleChangeRole (value) {
-                this.roleId = value;
-                this.fetchUserGroupList();
+            resetLocalStorage () {
+                window.localStorage.removeItem('customPermProcessList');
+                window.localStorage.removeItem('gradeManagerList');
+                window.localStorage.removeItem('auditList');
+                window.localStorage.removeItem('joinGroupProcessList');
+                window.localStorage.removeItem('groupList');
+                window.localStorage.removeItem('templateList');
+                window.localStorage.removeItem('applyGroupList');
+                window.localStorage.removeItem('iam-header-title-cache');
+                window.localStorage.removeItem('iam-header-name-cache');
             },
 
             handleToggleProject (value) {
-                // if (value) {
-                //     this.projectPage = 1;
-                // }
+                if (value) {
+                    this.projectPagination = Object.assign(this.projectPagination, { current: 1 });
+                    this.fetchProjectData();
+                }
             },
 
             handleCloseTag (value) {
@@ -409,6 +412,81 @@
             handleRemoveChecked () {
                 this.currentSelectList = [];
                 this.$refs.groupTableRef && this.$refs.groupTableRef.clearSelection();
+            },
+         
+            async handleRecursionFunc () {
+                try {
+                    const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: this.systemId });
+                    data && data.forEach(data => {
+                        if (data.actions && data.actions.length) {
+                            data.actions.forEach(e => {
+                                this.resourceActionData.push(e);
+                            });
+                        }
+                        if (data.sub_groups && data.sub_groups.length) {
+                            data.sub_groups.forEach(item => {
+                                if (item.actions && item.actions.length) {
+                                    item.actions.forEach(e => {
+                                        this.resourceActionData.push(e);
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    this.resourceActionData = this.resourceActionData.filter(
+                        (e, index, self) => self.indexOf(e) === index);
+                    this.resourceActionData.forEach(item => {
+                        if (!item.resource_groups || !item.resource_groups.length) {
+                            item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                        }
+                        this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'));
+                    });
+                    return this.processesList;
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText
+                    });
+                }
+            },
+
+            async handleSearch (payload, result) {
+                console.log(payload, result, '选择参数');
+                this.searchData = [];
+                this.currentSelectList = [];
+                this.searchParams = payload;
+                this.searchList = result;
+                if (result.length === 0) {
+                    this.searchData.push(..._.cloneDeep(this.initSearchData));
+                }
+                if (payload.system_id) {
+                    this.systemId = payload.system_id;
+                    this.resourceActionData = [];
+                    this.processesList = [];
+                    if (!this.systemId) return;
+                    this.resourceTypeData = { isEmpty: true };
+                    const searchData = [
+                        {
+                            id: 'action_id',
+                            name: this.$t(`m.permApply['选择操作']`),
+                            remoteMethod: this.handleRecursionFunc
+                        }
+                    ];
+                    this.searchData.push(..._.cloneDeep(searchData));
+                    await this.handleRecursionFunc();
+                }
+                this.resetPagination();
+                await this.fetchUserGroupList();
+            },
+
+            async handleRemoteMethod (value) {
+                this.scrollLoadingOptions.isLoading = false;
+                this.projectKeyWord = value;
+                this.projectList = [];
+                this.projectPagination = Object.assign(this.projectPagination, { current: 1, total: 0 });
+                await this.fetchProjectData();
             },
 
             async fetchRoles (id) {
@@ -440,13 +518,14 @@
 
             async fetchProjectData () {
                 const { current, limit } = this.projectPagination;
+                const params = {
+                    system_id: this.systemId,
+                    page: current,
+                    page_size: limit,
+                    name: this.projectKeyWord
+                };
                 try {
-                    const { data } = await this.$store.dispatch('perm/getPersonalProject', {
-                        system_id: this.systemId,
-                        page: current,
-                        page_size: limit,
-                        name: this.projectKeyWord
-                    });
+                    const { data } = await this.$store.dispatch('perm/getPersonalProject', params);
                     this.projectPagination.total = data.count;
                     this.projectList = [...this.projectList, ...data.results];
                 } catch (e) {
@@ -456,39 +535,38 @@
             },
 
             async fetchUserGroupList () {
-                const { current, limit } = this.pagination;
-                const params = {
-                    ...this.searchParams,
-                    // limit,
-                    // offset: limit * (current - 1)
-                    system_id: this.systemId,
-                    role_id: this.roleId,
-                    page_size: limit,
-                    page: current
-                };
-                try {
-                    this.tableLoading = true;
-                    this.setCurrentQueryCache(this.refreshCurrentQuery());
-                    const res = await this.$store.dispatch('perm/getRoleGroups', params);
-                    // const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    this.pagination.count = res.data.count || 0;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
-                    this.$nextTick(() => {
-                        this.tableList.forEach(item => {
-                            if (this.curUserGroup.includes(item.id.toString())) {
-                                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                            }
+                if (this.systemId && this.roleId) {
+                    const { current, limit } = this.pagination;
+                    const params = {
+                        page_size: limit,
+                        page: current,
+                        ...this.searchParams,
+                        system_id: this.systemId,
+                        role_id: this.roleId
+                    };
+                    try {
+                        this.tableLoading = true;
+                        this.setCurrentQueryCache(this.refreshCurrentQuery());
+                        const res = await this.$store.dispatch('perm/getRoleGroups', params);
+                        this.pagination.count = res.data.count;
+                        this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                        this.$nextTick(() => {
+                            this.tableList.forEach(item => {
+                                if (this.curUserGroup.includes(item.id.toString())) {
+                                    this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                                }
+                            });
                         });
-                    });
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'primary',
-                        message: e.message || e.data.msg || e.statusText
-                    });
-                } finally {
-                    this.tableLoading = false;
+                    } catch (e) {
+                        console.error(e);
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'primary',
+                            message: e.message || e.data.msg || e.statusText
+                        });
+                    } finally {
+                        this.tableLoading = false;
+                    }
                 }
             },
 
@@ -532,14 +610,6 @@
                     current: 1,
                     count: 0
                 });
-            },
-
-            handleSearch (payload, result) {
-                this.currentSelectList = [];
-                this.searchParams = payload;
-                this.searchList = result;
-                this.resetPagination();
-                this.fetchUserGroupList();
             },
 
             handleView (payload) {
@@ -648,8 +718,8 @@
                 const params = {
                     expired_at: this.expiredAtUse,
                     reason: this.reason,
-                    groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
-                    source_system_id: this.systemId
+                    source_system_id: this.systemId,
+                    groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description }))
                 };
                 try {
                     await this.$store.dispatch('permApply/applyJoinGroup', params);
