@@ -11,5 +11,5 @@ specific language governing permissions and limitations under the License.
 from django.apps import AppConfig
 
 
-class AuditConfig(AppConfig):
-    name = "iam"
+class IamConfig(AppConfig):
+    name = "backend.iam"

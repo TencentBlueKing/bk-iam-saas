@@ -12,7 +12,7 @@ from django.apps import AppConfig
 
 
 class AuditConfig(AppConfig):
-    name = "audit"
+    name = "backend.audit"
 
     def ready(self):
         import backend.audit.signals  # noqa
