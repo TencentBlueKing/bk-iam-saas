@@ -799,7 +799,7 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "group_template_create ",
+        "id": "group_template_create",
         "name": "创建用户组权限策略",
         "name_en": "GroupTemplateCreate",
         "description": "",
