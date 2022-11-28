@@ -32,7 +32,7 @@
                 :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
-                :prefix-icon="selectNode && selectNode.level > 0 ? 'icon iam-icon iamcenter-level-two' : 'icon iam-icon iamcenter-level-one'"
+                :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ? 'icon iam-icon iamcenter-level-two' : 'icon iam-icon iamcenter-level-one'"
                 :remote-method="handleRemoteTree"
                 :ext-popover-cls="selectCls"
                 ext-cls="iam-nav-select-cls"
@@ -51,7 +51,7 @@
                     @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
-                            <Icon :type=" node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
+                            <Icon :type="node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
                             <span>{{data.name}}</span>
                         </div>
                         <!-- <bk-star
@@ -195,7 +195,6 @@
                 curRoleId: 0,
                 hoverId: -1,
                 selectValue: '',
-                selectNode: null,
                 isEmpty: false
             };
         },
@@ -239,11 +238,8 @@
             },
             roleList: {
                 handler (value) {
-                    value = value.map((e, i) => {
+                    value = value.map((e) => {
                         e.level = 0;
-                        // if (i === 5) {
-                        //     e.is_member = false;
-                        // }
                         if (e.sub_roles.length) {
                             e.sub_roles.forEach(sub => {
                                 sub.level = 1;
@@ -334,8 +330,6 @@
 
             handleSelectNode (node) {
                 if (!node.data.is_member) return;
-                this.curRoleId = node.id;
-                this.selectNode = node;
                 this.$refs.select.close();
                 this.handleToggle(false);
                 this.handleSwitchRole(node.id);
@@ -398,13 +392,11 @@
 
             // 切换身份
             async handleSwitchRole (id) {
-                const result = this.getTreeNode(id, this.curRoleList);
-                const { type, name } = result;
+                const { type, name } = this.getTreeNode(id, this.curRoleList);
+                [this.curRoleId, this.curRole] = [id, type];
                 try {
                     await this.$store.dispatch('role/updateCurrentRole', { id });
-                    this.curRoleId = id;
-                    this.$store.commit('updateCurRoleId', this.curRoleId);
-                    this.curRole = type;
+                    this.$store.commit('updateCurRoleId', id);
                     this.$store.commit('updateIdentity', { id, type, name });
                     this.$store.commit('updateNavId', id);
                     this.updateRouter(type);
