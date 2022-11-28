@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf import settings
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -18,6 +17,7 @@ from rest_framework.viewsets import GenericViewSet
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
+from backend.api.management.v1.filters import GradeManagerFilter
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import (
     ManagementGradeManagerBasicInfoSLZ,
@@ -57,6 +57,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     lookup_field = "id"
     queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
     pagination_class = CustomPageNumberPagination
+    filterset_class = GradeManagerFilter
 
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
@@ -90,12 +91,8 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         # 兼容member格式
         data["members"] = [{"username": username} for username in data["members"]]
 
-        # NOTE: 兼容v2 api中创建分级管理员记录来源, 是否隐藏
-        data["source_system_id"] = source_system_id
-        data["hidden"] = source_system_id in settings.HIDDEN_SYSTEM_LIST if source_system_id else False
-
         # 转换为RoleInfoBean，用于创建时使用
-        role_info = self.trans.to_role_info(data)
+        role_info = self.trans.to_role_info(data, source_system_id=source_system_id)
 
         with transaction.atomic():
             # 创建角色
@@ -162,12 +159,23 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        # 分页参数
-        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        role_ids = list(
+            RoleSource.objects.filter(
+                source_system_id=data["system"],
+                source_type=RoleSourceTypeEnum.API.value,
+            ).values_list("role_id", flat=True)
+        )
 
-        count, roles = self.biz.list_paging_role_for_system(data["system"], limit, offset)
-        results = ManagementGradeManagerBasicInfoSLZ(roles, many=True).data
-        return Response({"count": count, "results": results})
+        queryset = self.queryset.filter(id__in=role_ids)
+        queryset = self.filter_queryset(queryset)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ManagementGradeManagerBasicInfoSLZ(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ManagementGradeManagerBasicInfoSLZ(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ManagementGradeManagerMemberViewSet(GenericViewSet):

@@ -15,6 +15,7 @@ from .application import (
     ManagementGroupApplicationViewSet,
 )
 from .approval import ManagementApplicationApprovalView
+from .grade_manager import ManagementGradeManagerViewSet
 from .group import (
     ManagementGradeManagerGroupViewSet,
     ManagementGroupActionPolicyViewSet,
@@ -45,4 +46,5 @@ __all__ = [
     "ManagementApplicationApprovalView",
     "ManagementSubsetManagerViewSet",
     "ManagementApplicationCancelView",
+    "ManagementGradeManagerViewSet",
 ]

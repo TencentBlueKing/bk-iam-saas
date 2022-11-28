@@ -543,7 +543,51 @@ export default {
         },
 
         /**
-         *  个人用户的用户组列表
+         *  个人用户的项目列表
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getPersonalProject ({ commit, state, dispatch }, params, config) {
+            const { system_id } = params;
+            delete params.system_id;
+            return http.get(
+                // eslint-disable-next-line camelcase
+                `${AJAX_URL_PREFIX}/systems/${system_id}/grade_managers/?${json2Query(params)}`,
+                {},
+                config
+            );
+        },
+
+        /**
+         *  根据角色id和系统id过滤的用户组
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        getRoleGroups ({ commit, state, dispatch }, params, config) {
+            const { system_id, role_id } = params;
+            delete params.system_id;
+            delete params.role_id;
+            delete params.action_id;
+            return http.get(
+                // eslint-disable-next-line camelcase
+                `${AJAX_URL_PREFIX}/systems/${system_id}/grade_managers/${role_id}/groups/?${json2Query(params)}`,
+                {},
+                config
+            );
+        },
+
+        /**
+         *  个人用户的项目列表
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -553,11 +597,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getPersonalGroups ({ commit, state, dispatch }, params, config) {
-            return http.get(
-                `${AJAX_URL_PREFIX}/users/groups/?${json2Query(params)}`,
-                {},
-                config
-            );
+            return http.get(`${AJAX_URL_PREFIX}/users/groups/?${json2Query(params)}`, {}, config);
         },
 
         /**
@@ -571,11 +611,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getDepartMentsPersonalGroups ({ commit, state, dispatch }, config) {
-            return http.get(
-                `${AJAX_URL_PREFIX}/users/departments/-/groups/`,
-                {},
-                config
-            );
+            return http.get(`${AJAX_URL_PREFIX}/users/departments/-/groups/`, {}, config);
         },
 
         /**

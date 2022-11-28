@@ -13,6 +13,18 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # -------------- 分级管理员 --------------
+    # 分级管理员
+    path(
+        "grade_managers/",
+        views.ManagementGradeManagerViewSet.as_view({"post": "create"}),
+        name="open.management.v2.grade_manager",
+    ),
+    path(
+        "grade_managers/<int:id>/",
+        views.ManagementGradeManagerViewSet.as_view({"put": "update", "get": "retrieve"}),
+        name="open.management.v2.grade_manager",
+    ),
     # -------------- 用户组本身 --------------
     # 系统管理员下创建用户组
     path(

@@ -194,20 +194,26 @@ export function json2Query (param, key) {
     const mappingOperator = '=';
     const separator = '&';
     let paramStr = '';
-
-    if (param instanceof String || typeof param === 'string'
-            || param instanceof Number || typeof param === 'number'
-            || param instanceof Boolean || typeof param === 'boolean'
+    if (
+        param instanceof String
+        || typeof param === 'string'
+        || param instanceof Number
+        || typeof param === 'number'
+        || param instanceof Boolean
+        || typeof param === 'boolean'
     ) {
         paramStr += separator + key + mappingOperator + encodeURIComponent(param);
     } else {
-        Object.keys(param).forEach(p => {
-            const value = param[p];
-            const k = (key === null || key === '' || key === undefined)
-                ? p
-                : key + (param instanceof Array ? '[' + p + ']' : '.' + p);
-            paramStr += separator + json2Query(value, k);
-        });
+        if (param) {
+            Object.keys(param).forEach((p) => {
+                const value = param[p];
+                const k
+                    = key === null || key === '' || key === undefined
+                        ? p
+                        : key + (param instanceof Array ? '[' + p + ']' : '.' + p);
+                paramStr += separator + json2Query(value, k);
+            });
+        }
     }
     return paramStr.substr(1);
 }
@@ -474,4 +480,17 @@ export function getParamsValue (key) {
             return result[j].value;
         }
     }
+}
+
+/**
+ * 根据毫秒生成睡眠函数
+ *
+ * @param number
+ */
+export function sleep (time) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
 }

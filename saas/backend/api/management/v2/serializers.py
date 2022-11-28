@@ -14,6 +14,7 @@ from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.group.models import Group
+from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.biz.role import RoleCheckBiz
 from backend.service.constants import GroupMemberType
@@ -219,7 +220,7 @@ class ManagementApplicationIDSLZ(serializers.Serializer):
 
 
 class ManagementSubjectGroupBelongSLZ(serializers.Serializer):
-    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255)
+    group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255, required=True)
 
 
 class ManagementGradeManagerApplicationResultSLZ(serializers.Serializer):
@@ -264,3 +265,37 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
 
 class ManagementQueryGroupSLZ(serializers.Serializer):
     inherit = serializers.BooleanField(label="是否继承子集管理员的用户组", required=False, default=False)
+
+
+class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
+    members = serializers.ListField(
+        label="成员列表",
+        child=serializers.CharField(label="用户ID", max_length=64),
+        max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
+    )
+    authorization_scopes = serializers.ListField(
+        label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
+    )
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
+
+
+class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField(label="成员列表")
+
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+            "sync_perm",
+        )
+
+    def get_members(self, obj):
+        return [one.username for one in RoleUser.objects.filter(role_id=obj.id)]

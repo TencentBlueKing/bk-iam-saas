@@ -45,7 +45,12 @@ export default {
          * @return {Promise} promise 对象
          */
         getSystems ({ commit, state, dispatch }, params = {}, config) {
-            return http.get(`${AJAX_URL_PREFIX}/systems/?${json2Query(params)}`, config);
+            return http.get(
+                Object.keys(params).length
+                    ? `${AJAX_URL_PREFIX}/systems/?${json2Query(params)}`
+                    : `${AJAX_URL_PREFIX}/systems/`,
+                config
+            );
         }
     }
 };

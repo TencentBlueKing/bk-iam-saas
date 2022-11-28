@@ -7,7 +7,7 @@
             direction="right"
             :flag="showGuide"
             :style="{ top: '5px', right: '125px' }"
-            :content="$t(`m.guide['切换分级管理员']`)" />
+            :content="$t(`m.guide['切换一级管理空间']`)" />
         <div class="breadcrumbs fl"
             :class="backRouter ? 'has-cursor' : ''"
             v-show="!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs"
@@ -175,7 +175,7 @@
         [['applyCustomPerm', 'applyJoinUserGroup'], NORMAL_DOCU_LINK],
         // 我的权限
         [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal'], NORMAL_DOCU_LINK],
-        // 分级管理员
+        // 一级管理空间
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], GRADE_DOCU_LINK],
         // 管理员
         [['administrator'], NORMAL_DOCU_LINK],
@@ -225,11 +225,11 @@
                     'staff': 'personal-user'
                 },
                 identityIconMap: getIdentityIcon(),
-                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 分级管理员
+                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 一级管理空间
                 roleDisplayMap: {
                     'super_manager': this.$t(`m.myApproval['超级管理员']`),
                     'system_manager': this.$t(`m.nav['系统管理员']`),
-                    'rating_manager': this.$t(`m.grading['分级管理员']`),
+                    'rating_manager': this.$t(`m.grading['一级管理空间']`),
                     'staff': this.$t(`m.nav['普通用户']`)
                 },
                 // curHeight: 500,
@@ -365,7 +365,7 @@
                 this.isShowGradingWrapper = false;
             },
 
-            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 分级管理员
+            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 一级管理空间
             isShowSuperManager (value) {
                 if (value.type === 'super_manager') {
                     return true;

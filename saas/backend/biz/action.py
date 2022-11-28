@@ -14,6 +14,7 @@ from pydantic.fields import Field
 from pydantic.main import BaseModel
 from pydantic.tools import parse_obj_as
 
+from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.service.action import ActionList, ActionService
 from backend.service.constants import ACTION_ALL
@@ -93,6 +94,7 @@ class ActionBiz:
     resource_type_svc = ResourceTypeService()
     policy_svc = PolicyQueryService()
 
+    @cachedmethod(timeout=1 * 60)  # 缓存1分钟
     def list(self, system_id: str) -> ActionBeanList:
         actions = self.action_svc.list(system_id)
         action_list = ActionBeanList(parse_obj_as(List[ActionBean], actions))

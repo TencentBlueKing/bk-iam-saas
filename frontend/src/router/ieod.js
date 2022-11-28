@@ -52,6 +52,9 @@ const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 // 我的权限
 const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
+// 申请权限外链页面
+const ApplyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm/apply-perm');
+
 // 我的管理空间
 const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space');
 
@@ -100,19 +103,19 @@ const PermTemplateDifference = () =>
 // 用户
 const User = () => import(/* webpackChunkName: 'user' */ '../views/user');
 
-// 分级管理员
+// 一级管理空间
 const GradingAdmin = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin');
 
-// 分级管理员新建
+// 一级管理空间新建
 const GradingAdminCreate = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
 
-// 分级管理员详情
+// 一级管理空间详情
 const GradingAdminDetail = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/detail');
 
-// 分级管理员编辑
+// 一级管理空间编辑
 const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/edit');
 
-// 分级管理员更新权限模板
+// 一级管理空间更新权限模板
 const GradingAdminUpdateTemplate = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
 
@@ -144,9 +147,9 @@ const SecondaryManageSpace = () =>
 const SecondaryManageSpaceCreate = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
 
-// 二极管理空间克隆
-const SecondaryManageSpaceClone = () =>
-    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/clone');
+// 二极管理空间编辑
+const SecondaryManageSpaceEdit = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
 
 // 二极管理空间详情
 const SecondaryManageSpaceDetail = () =>
@@ -258,6 +261,14 @@ export const routes = [
                 component: MyPerm
             },
             {
+                path: 'my-perm/apply-perm',
+                name: 'applyPerm',
+                meta: {
+                    headerTitle: il8n('nav', '申请权限')
+                },
+                component: ApplyPerm
+            },
+            {
                 path: 'my-manage-space',
                 name: 'myManageSpace',
                 meta: {
@@ -367,22 +378,23 @@ export const routes = [
                 component: SecondaryManageSpace
             },
             {
-                path: 'manage-spaces/secondary-manage-space/create',
+                path: ':id/manage-spaces/secondary-manage-space/create',
                 name: 'secondaryManageSpaceCreate',
                 meta: {
-                    headerTitle: il8n('levelSpace', '新建二级管理空间'),
+                    headerTitle: '',
                     backRouter: -1
                 },
+                props: true,
                 component: SecondaryManageSpaceCreate
             },
             {
-                path: 'manage-spaces/secondary-manage-space/clone',
-                name: 'secondaryManageSpaceClone',
+                path: ':id/manage-spaces/secondary-manage-space/edit',
+                name: 'secondaryManageSpaceEdit',
                 meta: {
-                    headerTitle: il8n('levelSpace', '二级管理空间克隆'),
                     backRouter: -1
                 },
-                component: SecondaryManageSpaceClone
+                props: true,
+                component: SecondaryManageSpaceEdit
             },
             {
                 path: ':id/secondary-space-manager-detail',
@@ -546,7 +558,7 @@ export const routes = [
                 name: 'gradingAdminCreate',
                 meta: {
                     headerTitle: il8n('nav', '新建一级管理空间'),
-                    backRouter: 'ratingManager'
+                    backRouter: -1
                 },
                 props: true,
                 component: GradingAdminCreate
