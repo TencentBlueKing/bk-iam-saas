@@ -129,8 +129,8 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { guid } from '@/common/util';
-    import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
+    import IamGuide from '@/components/iam-guide/index';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
     import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';

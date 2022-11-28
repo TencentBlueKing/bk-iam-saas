@@ -103,7 +103,7 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getSeachOrganizations ({ commit, state, dispatch }, params, config = {}) {
+        getSearchOrganizations ({ commit, state, dispatch }, params, config = {}) {
             return http.get(`${AJAX_URL_PREFIX}/organizations/search/?${json2Query(params)}`, {}, config);
         },
 
