@@ -447,7 +447,7 @@ export const m = {
         '申请自定义权限场景2': 'More flexible permission requirements',
         '申请加入用户组搜索提示': 'Enter group name, description, belonging system, hierarchical administrator, etc. to search',
         '超级管理员申请加入用户组搜索提示': 'Search Tips for Super Administrators Applying to Join User Groups',
-        '空间管理员': 'Space administrator'
+        '请输入条件搜索用户组': 'Please enter criteria to search for user groups'
     },
     permApply: {
         '选择系统': 'Select System',
@@ -479,7 +479,13 @@ export const m = {
         '细粒度权限': 'Fine grained permissions',
         '包含更大范围的权限（运维\开发\测试等角色类权限）': 'Include a wider range of permissions (role permissions such as operation and maintenance development and testing)',
         '只包含当前需要的最小范围权限': 'Only the minimum range permission currently required is included',
-        '推荐': 'recommend'
+        '推荐': 'recommend',
+        '项目': 'Project',
+        '已选用户组': 'Selected user group',
+        '请选择项目': 'Please select project',
+        '清空选择': 'Clear Selection',
+        '选择系统': 'Select System',
+        '选择操作': 'Select Action'
     },
     myApply: {
         '申请列表': 'Apply List',
@@ -731,7 +737,8 @@ export const m = {
         '一级管理空间只能给该范围内的人员授权': 'The first level management space can only be authorized for personnel within the scope',
         '一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界': 'When the primary management space shrinks/modifies the authorization boundary, synchronously modify the authorization boundary of the related secondary management space',
         '二级管理空间扩大自己的授权边界，需要走一级管理空间管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the primary management space administrator',
-        '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the primary administrator space'
+        '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the primary administrator space',
+        '空间管理员': 'Space administrator'
     },
     gradingDetail: {
         '一级管理空间名称': 'Grading  Manager Name：',

@@ -52,6 +52,9 @@ const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 // 我的权限
 const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
+// 申请权限外链页面
+const ApplyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm/apply-perm');
+
 // 我的管理空间
 const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space');
 
@@ -256,6 +259,14 @@ export const routes = [
                     // hasPageTab: true
                 },
                 component: MyPerm
+            },
+            {
+                path: 'my-perm/apply-perm',
+                name: 'applyPerm',
+                meta: {
+                    headerTitle: il8n('nav', '申请权限')
+                },
+                component: ApplyPerm
             },
             {
                 path: 'my-manage-space',
