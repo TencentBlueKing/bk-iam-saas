@@ -419,8 +419,8 @@
                 return this.$route.name === 'userGroupDetail';
             },
             curSelectionCondition () {
-                if (this.curIndex === -1) {
-                    return false;
+                if (this.curIndex === -1 || this.isSuperManager) {
+                    return [];
                 }
                 const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
                 return curSelectionCondition;

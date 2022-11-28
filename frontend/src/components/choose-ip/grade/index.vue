@@ -158,7 +158,6 @@
                 isLoading: false,
                 // 节点数据分页的limit
                 limit: 100,
-                offset: 0,
                 // limit: 11,
                 // 当前选择的链路
                 curChain: [],
@@ -762,13 +761,13 @@
                 }
             },
 
-            async firstFetchResources (offset = 0) {
+            async firstFetchResources () {
                 // debugger
                 this.isLoading = true;
                 this.treeData = [];
                 const params = {
                     limit: this.limit,
-                    offset,
+                    offset: 0,
                     system_id: this.curChain[0].system_id,
                     type: this.curChain[0].id,
                     // parent_type: '',
@@ -779,21 +778,9 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params);
                     if (this.curSelectionCondition.length) {
-                        res.data.results = res.data.results.filter(item => {
-                            return this.curSelectionCondition.includes(item.id);
-                        });
-                        if (!res.data.results.length) {
-                            this.isLoading = true;
-                            this.offset += 200;
-                            this.firstFetchResources(this.offset);
-                            return;
-                        } else {
-                            this.isLoading = false;
-                        }
-                    } else {
-                        this.isLoading = false;
+                        res.data.results = [...this.curSelectionCondition];
+                        res.data.count = res.data.results.length;
                     }
-                    res.data.count = res.data.results.length;
                     const totalPage = Math.ceil(res.data.count / this.limit);
                     const isAsync = this.curChain.length > 1;
                     this.treeData = res.data.results.map(item => {
@@ -854,7 +841,7 @@
                         ellipsisCopy: true
                     });
                 } finally {
-                    // this.isLoading = false;
+                    this.isLoading = false;
                 }
             },
 
