@@ -46,6 +46,11 @@ INSTALLED_APPS = [
     "django_prometheus",
     "djcelery",
     "apigw_manager.apigw",
+    "iam.contrib.iam_migration",
+    "backend.long_task",
+    "backend.audit",
+    "backend.debug",
+    "backend.iam",
     "backend.apps.system",
     "backend.apps.action",
     "backend.apps.policy",
@@ -56,18 +61,15 @@ INSTALLED_APPS = [
     "backend.apps.subject",
     "backend.apps.template",
     "backend.apps.organization",
-    "backend.api.authorization",
-    "backend.api.admin",
-    "backend.api.management",
     "backend.apps.role",
     "backend.apps.user",
     "backend.apps.model_builder",
-    "backend.long_task",
-    "backend.audit",
-    "backend.debug",
     "backend.apps.handover",
     "backend.apps.mgmt",
     "backend.apps.temporary_policy",
+    "backend.api.authorization",
+    "backend.api.admin",
+    "backend.api.management",
 ]
 
 # 登录中间件
@@ -409,3 +411,15 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 
 # disable display systems
 HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=[])
+
+
+# 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置
+BK_IAM_SYSTEM_ID = "bk_iam"
+if BK_IAM_HOST_TYPE == "direct":
+    BK_IAM_USE_APIGATEWAY = False
+    BK_IAM_INNER_HOST = BK_IAM_HOST
+elif BK_IAM_HOST_TYPE == "apigateway":
+    BK_IAM_USE_APIGATEWAY = True
+    BK_IAM_APIGATEWAY_URL = BK_IAM_HOST
+BK_IAM_MIGRATION_APP_NAME = "iam"
+BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"

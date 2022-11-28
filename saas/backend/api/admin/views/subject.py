@@ -24,7 +24,7 @@ from backend.apps.policy.models import Policy
 from backend.apps.role.models import RoleUser
 from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.apps.user.models import UserPermissionCleanupRecord
-from backend.apps.user.tasks import user_permission_cleanup
+from backend.apps.user.tasks import user_permission_clean
 from backend.audit.audit import log_user_blacklist_event, log_user_permission_clean_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
@@ -197,7 +197,7 @@ class AdminSubjectPermissionCleanupViewSet(GenericViewSet):
 
         # 触发清理任务
         for r in records:
-            user_permission_cleanup.delay(r.username)
+            user_permission_clean.delay(r.username)
 
         log_user_permission_clean_event(
             Subject.from_username(request.user.username),

@@ -48,28 +48,11 @@ class BaseSubjectProvider(DataProvider):
         return ""
 
 
-class SubjectGroupDeleteAuditProvider(BaseSubjectProvider):
-    @property
-    def type(self):
-        if self.subject.type == SubjectType.DEPARTMENT.value:
-            return AuditType.DEPARTMENT_GROUP_DELETE.value
-
-        if self.subject.type == SubjectType.USER.value:
-            return AuditType.USER_GROUP_DELETE.value
-
-        return ""
-
-    @property
-    def extra(self):
-        group = audit_context_getter(self.request, "group")
-        return {"group": group.dict()}
-
-
 class SubjectPolicyDeleteAuditProvider(BaseSubjectProvider):
     @property
     def type(self):
         if self.subject.type == SubjectType.USER.value:
-            return AuditType.USER_POLICY_UPDATE.value
+            return AuditType.USER_POLICY_DELETE.value
 
         return ""
 
