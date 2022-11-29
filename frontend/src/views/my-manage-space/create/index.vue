@@ -847,9 +847,7 @@
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
                     this.messageSuccess(this.$t(`m.info['新建一级管理空间成功']`), 1000);
-                    this.$router.push({
-                        name: 'ratingManager'
-                    });
+                    this.$router.go(-1);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -870,9 +868,7 @@
                     cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'ratingManager'
-                    });
+                    this.$router.go(-1);
                 }, _ => _);
             },
 

@@ -1,14 +1,4 @@
 <template>
-    <!-- <bk-dialog
-        v-model="isShowDialog"
-        width="700"
-        title=""
-        :mask-close="false"
-        draggable
-        header-position="left"
-        ext-cls="iam-add-member-dialog"
-        @after-leave="handleAfterLeave"> -->
-    <!-- eslint-disable max-len -->
     <smart-action class="iam-add-member-wrapper">
         <render-horizontal-block :style="contentHeight">
             <div slot="header" class="title">
@@ -42,24 +32,28 @@
                                     :class="['tab-item', { 'has-margin-left': index !== 0 }]"
                                     data-test-id="group_addGroupMemberDialog_tab_switch"
                                     @click.stop="handleTabChange(item)">
-                                    {{ item.label }}
+                                    <div>{{ item.label }}</div>
                                     <span class="active-line" v-if="tabActive === item.name"></span>
                                 </section>
                             </div>
-                            <div :class="['search-input', { 'active': isSearchFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]"
+                            <div :class="['search-input',
+                                          { 'active': isSearchFocus },
+                                          { 'disabled': (isRatingManager || isAll) && !isAllFlag }]"
                                 v-if="isOrganization">
                                 <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
                                     <template slot="dropdown-trigger">
-                                        <Icon class="search-icon"
-                                            :type="searchConditionValue === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
+                                        <Icon class="search-icon" :type="searchConditionValue === 'fuzzy' ?
+                                            'fuzzy-search-allow' : 'exact-search-allow'" />
                                     </template>
                                     <ul class="bk-dropdown-list" slot="dropdown-content">
                                         <li v-for="item in searchConditionList" :key="item.id"
                                             @click.stop="handleConditionSelected(item)">
                                             <a href="javascript:;"
                                                 :class="{ 'active': item.id === searchConditionValue }">
-                                                <Icon class="search-config-icon" style="font-size: 16px;"
-                                                    :type="item.id === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
+                                                <Icon class="search-config-icon"
+                                                    style="font-size: 16px;"
+                                                    :type="item.id === 'fuzzy' ?
+                                                        'fuzzy-search-allow' : 'exact-search-allow'" />
                                                 {{ item.name }}
                                             </a>
                                         </li>
@@ -77,7 +71,8 @@
                                 <template v-if="isShowMemberTree">
                                     <div class="tree">
                                         <infinite-tree ref="memberTreeRef"
-                                            data-test-id="group_addGroupMemberDialog_tree_member" :all-data="treeList"
+                                            data-test-id="group_addGroupMemberDialog_tree_member"
+                                            :all-data="treeList"
                                             :style="{ height: `${contentHeight - 100}px` }"
                                             :is-rating-manager="curIsRatingManager" :key="infiniteTreeKey"
                                             :is-disabled="isAll" @async-load-nodes="handleRemoteLoadNode"
@@ -208,29 +203,6 @@
                 </div>
             </template>
         </render-horizontal-block>
-        <!-- <div slot="footer">
-            <div v-if="showLimit" class="limit-wrapper">
-                <bk-checkbox
-                    :true-value="true"
-                    :false-value="false"
-                    v-model="isAll">
-                    {{ $t(`m.common['全员']`) }}
-                </bk-checkbox>
-            </div>
-            <template v-if="showExpiredAt">
-                <template v-if="isPrev">
-                    <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">{{ $t(`m.common['下一步']`) }}</bk-button>
-                </template>
-                <template v-else>
-                    <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
-                    <bk-button style="margin-left: 10px;" theme="primary" :disabled="isNextSureDisabled" :loading="loading" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
-                </template>
-            </template>
-            <template v-else>
-                <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
-            </template>
-            <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
-        </div> -->
         <div slot="action">
             <div class="footer-action">
                 <div v-if="showLimit" class="limit-wrapper">
@@ -261,7 +233,6 @@
             </div>
         </div>
     </smart-action>
-    <!-- </bk-dialog> -->
 </template>
 <script>
     import _ from 'lodash';
@@ -270,7 +241,7 @@
     import dialogInfiniteList from '@/components/dialog-infinite-list';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import { il8n } from '@/language';
-    import { guid, getWindowHeight } from '@/common/util';
+    import { guid, getWindowHeight, sleep } from '@/common/util';
     import { bus } from '@/common/bus';
 
     // 去除()以及之间的字符
@@ -290,64 +261,50 @@
             dialogInfiniteList,
             IamDeadline
         },
-        // props: {
-        //     show: {
-        //         type: Boolean,
-        //         default: false
-        //     },
-        //     users: {
-        //         type: Array,
-        //         default: () => []
-        //     },
-        //     departments: {
-        //         type: Array,
-        //         default: () => []
-        //     },
-        //     // 已选择的是否需要禁用
-        //     disabled: {
-        //         type: Boolean,
-        //         default: false
-        //     },
-        //     loading: {
-        //         type: Boolean,
-        //         default: false
-        //     },
-        //     showExpiredAt: {
-        //         type: Boolean,
-        //         default: false
-        //     },
-        //     name: {
-        //         type: String,
-        //         default: ''
-        //     },
-        //     id: {
-        //         type: [String, Number],
-        //         default: ''
-        //     },
-        //     title: {
-        //         type: String,
-        //         default: ''
-        //     },
-        //     isRatingManager: {
-        //         type: Boolean,
-        //         default: false
-        //     },
-        //     showLimit: {
-        //         type: Boolean,
-        //         default: false
-        //     },
-        //     allChecked: {
-        //         type: Boolean,
-        //         default: false
-        //     },
-        //     isBatch: {
-        //         type: Boolean,
-        //         default: false
-        //     }
-        // },
+        props: {
+            disabled: {
+                type: Boolean,
+                default: false
+            },
+            loading: {
+                type: Boolean,
+                default: false
+            },
+            showExpiredAt: {
+                type: Boolean,
+                default: false
+            },
+            name: {
+                type: String,
+                default: ''
+            },
+            id: {
+                type: [String, Number],
+                default: ''
+            },
+            title: {
+                type: String,
+                default: ''
+            },
+            isRatingManager: {
+                type: Boolean,
+                default: false
+            },
+            showLimit: {
+                type: Boolean,
+                default: false
+            },
+            allChecked: {
+                type: Boolean,
+                default: false
+            },
+            isBatch: {
+                type: Boolean,
+                default: false
+            }
+        },
         data () {
             return {
-                isShowDialog: false,
                 keyword: '',
                 treeLoading: false,
                 isBeingSearch: false,
@@ -390,17 +347,7 @@
                 isAll: false,
                 isAllFlag: false,
                 users: [],
-                departments: [],
-                disabled: false,
-                loading: false,
-                showExpiredAt: false,
-                name: '',
-                id: 0,
-                title: '',
-                isRatingManager: false,
-                showLimit: false,
-                allChecked: false,
-                isBatch: false
+                departments: []
             };
         },
         computed: {
@@ -445,14 +392,14 @@
                 return this.tabActive === 'organization';
             },
             isManualInputOverLimit () {
-                if (this.manualValue === '') {
+                if (!this.manualValue) {
                     return false;
                 }
                 const MAX_LEN = 100;
                 return this.manualValue.split(';').filter(item => item !== '').length > MAX_LEN;
             },
             isManualDisabled () {
-                return this.manualValue === '' || this.isManualInputOverLimit;
+                return !this.manualValue || this.isManualInputOverLimit;
             },
             manualValueActual () {
                 return this.manualValue.replace(/\n|\s+/g, ';');
@@ -497,48 +444,24 @@
             }
         },
         created () {
-            if (Object.keys(this.$route.params).length) {
-                const {
-                    disabled, loading, showExpiredAt, name,
-                    id, title, isRatingManager,
-                    showLimit, allChecked, isBatch
-                } = this.$route.params;
-
-                this.disabled = disabled || false;
-                this.loading = loading || false;
-                this.showExpiredAt = showExpiredAt || false;
-                this.name = name || '';
-                this.id = id || 0;
-                this.title = title || '';
-                this.isRatingManager = isRatingManager || false;
+            this.$once('hook:beforeDestroy', () => {
+                bus.$off('edit-member-boundary');
+            });
+            bus.$on('edit-member-boundary', (payload) => {
+                const { showLimit, isAll, users, departments } = payload;
+                this.users = _.cloneDeep(users);
+                this.departments = _.cloneDeep(departments);
+                this.isAll = isAll || false;
                 this.showLimit = showLimit || false;
-                this.allChecked = allChecked || false;
-                this.isBatch = isBatch || false;
-            }
+                this.fetchInitData();
+            });
             if (this.$route.name === 'gradingAdminCreate') {
                 this.handleSave();
             }
         },
         methods: {
             async fetchPageData () {
-                this.infiniteTreeKey = new Date().getTime();
-                this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
-                this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
-                if (this.showExpiredAt) {
-                    if (this.isBatch) {
-                        this.fetchCategoriesList();
-                    } else {
-                        this.fetchMemberList();
-                    }
-                } else {
-                    this.requestQueue = ['categories'];
-                    if (this.isRatingManager) {
-                        this.fetchRoleSubjectScope(false, true);
-                    } else {
-                        this.fetchCategories(false, true);
-                    }
-                }
-                if (Number(this.id) > 0) {
+                if (+this.id > 0) {
                     await this.fetchDetail();
                 }
             },
@@ -547,7 +470,7 @@
                     const { data } = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.id });
                     if (data && Object.keys(data).length) {
                         const { members, subject_scopes } = data;
-                        this.formData.members = Object.assign(this.formData, { members });
+                        this.formData = Object.assign(this.formData, { members });
                         this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
                             return {
                                 name: item.name,
@@ -564,31 +487,6 @@
                             };
                         });
                     }
-                // this.isShowMemberAdd = false;
-                // const list = [];
-                // res.data.authorization_scopes.forEach(item => {
-                //     item.actions.forEach(act => {
-                //         const tempResource = _.cloneDeep(act.resource_groups);
-                //         tempResource.forEach(groupItem => {
-                //             groupItem.related_resource_types.forEach(subItem => {
-                //                 subItem.condition = null;
-                //             });
-                //         });
-                //         list.push({
-                //             description: act.description,
-                //             expired_at: act.expired_at,
-                //             id: act.id,
-                //             name: act.name,
-                //             system_id: item.system.id,
-                //             system_name: item.system.name,
-                //             $id: `${item.system.id}&${act.id}`,
-                //             tag: act.tag,
-                //             type: act.type,
-                //             resource_groups: tempResource
-                //         });
-                //     });
-                // });
-                // this.originalList = _.cloneDeep(list);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -598,6 +496,27 @@
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
+                }
+            },
+
+            // 初始化格式数据
+            fetchInitData () {
+                this.infiniteTreeKey = new Date().getTime();
+                this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
+                this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
+                if (this.showExpiredAt) {
+                    if (this.isBatch) {
+                        this.fetchCategoriesList();
+                    } else {
+                        this.fetchMemberList();
+                    }
+                } else {
+                    this.requestQueue = ['categories'];
+                    if (this.isRatingManager) {
+                        this.fetchRoleSubjectScope(false, true);
+                    } else {
+                        this.fetchCategories(false, true);
+                    }
                 }
             },
 
@@ -765,7 +684,7 @@
                 }
             },
 
-            async fetchRoleSubjectScope (isTreeLoading = false, isDialogLoading = false) {
+            async fetchRoleSubjectScope (isTreeLoading = false, isShowLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
                     const res = await this.$store.dispatch('role/getRoleSubjectScope');
@@ -831,18 +750,18 @@
                     });
                 } finally {
                     this.treeLoading = false;
-                    if (isDialogLoading) {
+                    if (isShowLoading) {
                         this.requestQueue.shift();
                     }
                 }
             },
 
-            async fetchCategories (isTreeLoading = false, isDialogLoading = false) {
+            async fetchCategories (isTreeLoading = false, isShowLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
                     const res = await this.$store.dispatch('organization/getCategories');
                     const categories = [...res.data];
-                    categories.forEach((item, index) => {
+                    categories.forEach(item => {
                         item.visiable = true;
                         item.level = 0;
                         item.showRadio = false;
@@ -901,7 +820,7 @@
                     });
                 } finally {
                     this.treeLoading = false;
-                    if (isDialogLoading) {
+                    if (isShowLoading) {
                         this.requestQueue.shift();
                     }
                 }
@@ -1074,7 +993,7 @@
                     const treeList = [];
                     treeList.splice(0, 0, ...this.treeList);
                     if (children.length > 0) {
-                        children.forEach((child, childIndex) => {
+                        children.forEach((child) => {
                             child.visiable = payload.expanded;
                             child.level = payload.level + 1;
                             child.loading = false;
@@ -1105,7 +1024,7 @@
                     }
 
                     if (members.length > 0) {
-                        members.forEach((child, childIndex) => {
+                        members.forEach((child) => {
                             child.visiable = payload.expanded;
                             child.level = payload.level + 1;
                             child.loading = false;
@@ -1162,9 +1081,9 @@
                         message: e.message || e.data.msg || e.statusText
                     });
                 } finally {
-                    setTimeout(() => {
+                    sleep(300).then(() => {
                         payload.loading = false;
-                    }, 300);
+                    });
                 }
             },
             handleDelete (item, type) {
@@ -1238,8 +1157,7 @@
                 this.manualAddLoading = false;
                 this.manualInputError = false;
                 this.manualValueBackup = [];
-                this.$emit('update:show', false);
-                this.$emit('on-after-leave');
+                bus.$emit('on-after-leave');
             },
 
             handleCancel () {
@@ -1269,7 +1187,12 @@
                         params.policy_expired_at = this.expiredAt;
                     }
                 }
-                this.$emit('on-sumbit', params);
+                this.$router.go(-1);
+                // bus的$on的监听位于$emit之前，给个睡眠时间延迟
+                sleep(100).then(() => {
+                    bus.$emit('submit-member-boundary', params);
+                    this.handleAfterLeave();
+                });
             },
 
             evil (fn) {
@@ -1424,11 +1347,14 @@
                     &:hover {
                         .search-icon {
                             color: #3a84ff;
+                            opacity: 1;
+                            cursor: pointer;
                         }
                     }
 
                     .search-icon {
                         font-size: 16px;
+                        opacity: .7;
                     }
                 }
 

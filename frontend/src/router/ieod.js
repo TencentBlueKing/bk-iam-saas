@@ -303,6 +303,7 @@ export const routes = [
                 meta: {
                     backRouter: -1
                 },
+                props: (route) => ({ ...route.query, ...route.params }),
                 component: AddMemberBoundary
             },
             {
