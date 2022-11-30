@@ -7,13 +7,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import uuid
+
 import mock
 from django.test import TestCase
 
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBean, PolicyBean, RelatedResourceBean
 from backend.biz.related_policy import RelatedPolicyBiz
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import SelectionMode
+from backend.service.action import ActionList
+from backend.service.constants import DEFAULT_RESOURCE_GROUP_ID, SelectionMode
 from backend.service.models import Action, Attribute, InstanceSelection, RelatedResourceType
 from backend.service.models.instance_selection import ChainNode
 
@@ -1326,3 +1329,68 @@ class CreateDependingPolicyTests(TestCase):
 
         svc = RelatedPolicyBiz()
         self.assertEqual(svc._create_related_policy(policy, action), None)
+
+    def test_create_recommend_policies(self):
+        policy = PolicyBean(
+            id="edit_host",
+            related_resource_types=[
+                RelatedResourceBean(
+                    system_id="bk_cmdb",
+                    type="host",
+                    condition=[
+                        ConditionBean(
+                            instances=[
+                                InstanceBean(
+                                    type="host",
+                                    path=[
+                                        [
+                                            {"system_id": "bk_cmdb", "type": "host", "id": "host1"},
+                                        ],
+                                    ],
+                                ),
+                            ],
+                            attributes=[],
+                        )
+                    ],
+                )
+            ],
+            environment={},
+            expired_at=PERMANENT_SECONDS,
+        )
+        action = Action(
+            id="view_host",
+            name="test",
+            name_en="test",
+            description="test",
+            description_en="test",
+            type="",
+            related_resource_types=[
+                RelatedResourceType(
+                    id="host",
+                    system_id="bk_cmdb",
+                    name_alias="test",
+                    name_alias_en="test",
+                    instance_selections=[
+                        InstanceSelection(
+                            id="test1",
+                            system_id="bk_cmdb",
+                            name="test1",
+                            name_en="test1",
+                            ignore_iam_path=False,
+                            resource_type_chain=[ChainNode(system_id="bk_cmdb", id="host")],
+                        )
+                    ],
+                )
+            ],
+            related_actions=[],
+        )
+
+        action1 = action.copy(deep=True)
+        action1.id = "edit_host"
+
+        uuid.uuid4 = mock.Mock(return_value=uuid.UUID(DEFAULT_RESOURCE_GROUP_ID))
+
+        svc = RelatedPolicyBiz()
+        recommend_policies = svc.create_recommend_policies(policy, ActionList([action, action1]), ["view_host"])
+
+        self.assertEqual(len(recommend_policies), 1)

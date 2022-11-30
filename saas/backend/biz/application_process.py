@@ -51,7 +51,7 @@ class PolicyProcessHandler(ABC):
         pass
 
 
-class InstanceAproverHandler(PolicyProcessHandler):
+class InstanceApproverHandler(PolicyProcessHandler):
     """
     实例审批人处理管道
     """
