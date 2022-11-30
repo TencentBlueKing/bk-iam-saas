@@ -138,8 +138,9 @@
                         offset: item.pagination.limit * (item.pagination.current - 1),
                         id: item.id
                     });
+                    this.$set(item, 'children', []);
                     item.pagination.count = Math.ceil(res.data.count / item.pagination.limit);
-                    item.children = res.data.results || [];
+                    item.children.splice(0, item.children.length, ...(res.data.results || []));
                     item.children.forEach(sub => {
                         sub.$id = `${item.id}${sub.type}${sub.id}`;
                         sub.parent = item;
