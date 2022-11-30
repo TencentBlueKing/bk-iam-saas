@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from backend.component import iam
 
@@ -40,3 +40,7 @@ class ResourceTypeService:
             for rt in resource_types:
                 resource_type_dict[(system_id, rt["id"])] = rt
         return ResourceTypeDict(data=resource_type_dict)
+
+    def list_by_system(self, system_id: str) -> List[Dict[str, Any]]:
+        system_resource_type_dict = iam.list_resource_type([system_id], "id,name,name_en,parents")
+        return system_resource_type_dict.get(system_id, [])
