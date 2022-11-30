@@ -17,7 +17,7 @@
                     <template slot-scope="{ row, $index }">
                         <template v-if="row.isEdit">
                             <bk-user-selector
-                                :value="getDisPlayMember(row)"
+                                :value="row.members.map(item => item.username)"
                                 :ref="`sysRef${$index}`"
                                 :api="userApi"
                                 :class="row.isError ? 'is-member-empty-cls' : ''"
@@ -33,7 +33,7 @@
                             <div
                                 :class="['user-wrapper', { 'is-hover': row.canEdit }]"
                                 @click.stop="handleOpenSysEdit(row, $index)">
-                                {{ getDisPlayMember(row) | memberFilter }}
+                                {{ formatMemberFilter(row.members) }}
                             </div>
                         </template>
                     </template>
@@ -63,14 +63,6 @@
         components: {
             BkUserSelector,
             RenderItem
-        },
-        filters: {
-            memberFilter (value) {
-                if (value.length) {
-                    return _.isArray(value) ? value.join('；') : value;
-                }
-                return '--';
-            }
         },
         data () {
             return {
@@ -146,8 +138,11 @@
                 });
             },
 
-            getDisPlayMember ({ members }) {
-                return members && members.length ? `${members.map(item => item.username).join(',')}` : '';
+            formatMemberFilter (value) {
+                if (value.length) {
+                    return _.isArray(value) ? value.map(item => item.username).join(';') : value;
+                }
+                return '--';
             },
 
             async handleSystemRtxBlur (payload) {
