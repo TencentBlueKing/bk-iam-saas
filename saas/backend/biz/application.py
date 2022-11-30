@@ -57,7 +57,7 @@ from backend.service.models import (
 from backend.service.role import RoleService
 from backend.service.system import SystemService
 
-from .application_process import InstanceAproverHandler, PolicyProcess, PolicyProcessHandler
+from .application_process import InstanceApproverHandler, PolicyProcess, PolicyProcessHandler
 from .group import GroupBiz, GroupMemberExpiredAtBean
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
@@ -433,7 +433,7 @@ class ApplicationBiz:
             policy_process_list.append(PolicyProcess(policy=policy, process=process))
 
         # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
-        pipeline: List[PolicyProcessHandler] = [InstanceAproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
+        pipeline: List[PolicyProcessHandler] = [InstanceApproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
         for pipe in pipeline:
             policy_process_list = pipe.handle(policy_process_list)
 
