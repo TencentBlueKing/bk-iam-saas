@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from typing import List
 
 from backend.apps.group.models import Group
-from backend.audit.audit import DataProvider, audit_context_getter
+from backend.audit.audit import DataProvider, NoNeedAuditException, audit_context_getter
 from backend.audit.constants import AuditObjectType, AuditSourceType, AuditType
 from backend.audit.models import get_event_model
 from backend.service.models import Subject
@@ -32,6 +32,8 @@ class BaseGroupDataProvider(DataProvider):
 
     @property
     def object_id(self):
+        if not self.group:
+            raise NoNeedAuditException
         return str(self.group.id)
 
     @property

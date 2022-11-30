@@ -41,7 +41,7 @@ from .constants import UserPermissionCleanupRecordStatusEnum
 logger = logging.getLogger("celery")
 
 
-MAX_USER_PERMISSION_CLEANUP_RETRY_COUNT = 3
+MAX_USER_PERMISSION_CLEAN_RETRY_COUNT = 3
 
 
 class SendUserExpireRemindMailTask(Task):
@@ -189,7 +189,7 @@ class UserPermissionCleaner:
         self._record = record
         self._subject = Subject.from_username(username)
 
-    def cleanup(self):
+    def clean(self):
         # 有其他的任务在处理, 忽略
         if self._record.status == UserPermissionCleanupRecordStatusEnum.RUNNING.value:
             return
@@ -201,9 +201,9 @@ class UserPermissionCleaner:
             return
 
         try:
-            self._cleanup_policy()
-            self._cleanup_group()
-            self._cleanup_role()
+            self._clean_policy()
+            self._clean_group()
+            self._clean_role()
         except Exception as e:  # pylint: disable=broad-except
             self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
             self._record.error_info = str(e)
@@ -212,7 +212,7 @@ class UserPermissionCleaner:
             self._record.status = UserPermissionCleanupRecordStatusEnum.SUCCEED.value
             self._record.save(update_fields=["status"])
 
-    def _cleanup_policy(self):
+    def _clean_policy(self):
         """
         清理自定义权限, 临时权限
         """
@@ -234,7 +234,7 @@ class UserPermissionCleaner:
                     system_id, self._subject, [p.policy_id for p in temporary_policies]
                 )
 
-    def _cleanup_group(self):
+    def _clean_group(self):
         """
         清理用户组
         """
@@ -248,7 +248,7 @@ class UserPermissionCleaner:
             if len(groups) < 1000:
                 break
 
-    def _cleanup_role(self):
+    def _clean_role(self):
         """
         清理角色
         """
@@ -273,11 +273,11 @@ class UserPermissionCleaner:
 
 
 @task(ignore_result=True)
-def user_permission_cleanup(username: str):
+def user_permission_clean(username: str):
     """
     清理用户权限
     """
-    UserPermissionCleaner(username).cleanup()
+    UserPermissionCleaner(username).clean()
 
 
 @task(ignore_result=True)
@@ -288,13 +288,13 @@ def check_user_permission_clean_task():
     hour_before = timezone.now() - timedelta(hours=1)
 
     qs = UserPermissionCleanupRecord.objects.filter(
-        created_time__lt=hour_before, retry_count__lte=MAX_USER_PERMISSION_CLEANUP_RETRY_COUNT
+        created_time__lt=hour_before, retry_count__lte=MAX_USER_PERMISSION_CLEAN_RETRY_COUNT
     ).filter(~Q(status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value))
 
     qs.update(status=UserPermissionCleanupRecordStatusEnum.CREATED.value, retry_count=F("retry_count") + 1)  # 重置status
 
     for r in qs:
-        user_permission_cleanup(r.username)
+        user_permission_clean(r.username)
 
 
 @task(ignore_result=True)

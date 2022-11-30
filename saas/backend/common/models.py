@@ -44,6 +44,11 @@ class BaseModel(models.Model):
         # 时间戳
         return int(self.created_time.timestamp())
 
+    @property
+    def updated_timestamp(self):
+        # 时间戳
+        return int(self.updated_time.timestamp())
+
     class Meta:
         abstract = True
 
