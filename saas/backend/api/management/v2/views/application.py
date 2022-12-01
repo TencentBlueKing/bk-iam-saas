@@ -34,6 +34,7 @@ from backend.biz.application import (
 )
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleCheckBiz
+from backend.common.lock import gen_role_upsert_lock
 from backend.service.constants import ApplicationTypeEnum, RoleType
 from backend.service.models import Subject
 from backend.trans.open_management import GradeManagerTrans
@@ -130,23 +131,25 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
 
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"])
-
         # 兼容member格式
         data["members"] = [{"username": username} for username in data["members"]]
 
         # 结构转换
         info = self.trans.to_role_info(data, source_system_id=source_system_id)
-        applications = self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
-            GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
-            source_system_id=source_system_id,
-            callback_id=data["callback_id"],
-            callback_url=data["callback_url"],
-            approval_title=data["title"],
-            approval_content=data["content"],
-        )
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"])
+
+            applications = self.biz.create_for_grade_manager(
+                ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+                GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
+                source_system_id=source_system_id,
+                callback_id=data["callback_id"],
+                callback_url=data["callback_url"],
+                approval_title=data["title"],
+                approval_content=data["content"],
+            )
 
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
@@ -191,22 +194,27 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
         self.verify_system_scope(source_system_id, auth_system_ids)
 
         role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
         # 兼容member格式
         data["members"] = [{"username": username} for username in data["members"]]
 
         info = self.trans.to_role_info(data, source_system_id=source_system_id)
-        applications = self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
-            GradeManagerApplicationDataBean(role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info),
-            source_system_id=source_system_id,
-            callback_id=data["callback_id"],
-            callback_url=data["callback_url"],
-            approval_title=data["title"],
-            approval_content=data["content"],
-        )
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
+
+            applications = self.biz.create_for_grade_manager(
+                ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
+                GradeManagerApplicationDataBean(
+                    role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info
+                ),
+                source_system_id=source_system_id,
+                callback_id=data["callback_id"],
+                callback_url=data["callback_url"],
+                approval_title=data["title"],
+                approval_content=data["content"],
+            )
 
         return Response({"id": applications[0].id, "sn": applications[0].sn})
 
