@@ -35,6 +35,7 @@ from backend.biz.template import (
     TemplatePolicyCloneBiz,
 )
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_template_upsert_lock
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
@@ -171,14 +172,15 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 检查权限模板是否在角色内唯一
-        self.template_check_biz.check_role_template_name_exists(request.role.id, data["name"])
-
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(request.role)
         scope_checker.check_actions(data["system_id"], data["action_ids"])
 
-        template = self.template_biz.create(request.role.id, TemplateCreateBean.parse_obj(data), user_id)
+        with gen_template_upsert_lock(request.role.id, data["name"]):
+            # 检查权限模板是否在角色内唯一
+            self.template_check_biz.check_role_template_name_exists(request.role.id, data["name"])
+
+            template = self.template_biz.create(request.role.id, TemplateCreateBean.parse_obj(data), user_id)
 
         audit_context_setter(template=template)
 
@@ -244,9 +246,12 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 检查权限模板是否在角色内唯一
-        self.template_check_biz.check_role_template_name_exists(request.role.id, data["name"], template_id=template.id)
-        PermTemplate.objects.filter(id=template.id).update(updater=user_id, **data)
+        with gen_template_upsert_lock(request.role.id, data["name"]):
+            # 检查权限模板是否在角色内唯一
+            self.template_check_biz.check_role_template_name_exists(
+                request.role.id, data["name"], template_id=template.id
+            )
+            PermTemplate.objects.filter(id=template.id).update(updater=user_id, **data)
 
         audit_context_setter(template=template)
 

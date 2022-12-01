@@ -22,6 +22,10 @@ class LockTypeEnum(LowerStrEnum):
     LONG_TASK_CREATE = auto()  # 长时任务创建
     INIT_GRADE_MANAGER = auto()
 
+    GROUP_UPSERT = auto()
+    TEMPLATE_UPSERT = auto()
+    ROLE_UPSERT = auto()
+
 
 class RedisLock:
     """
@@ -78,3 +82,16 @@ def gen_long_task_create_lock(key: str) -> RedisLock:
 
 def gen_init_grade_manager_lock() -> RedisLock:
     return RedisLock(LockTypeEnum.INIT_GRADE_MANAGER.value, timeout=120)  # 执行周期是2分钟
+
+
+def gen_group_upsert_lock(role_id: int) -> RedisLock:
+    return RedisLock(LockTypeEnum.GROUP_UPSERT.value, suffix=str(role_id), timeout=10)
+
+
+def gen_template_upsert_lock(role_id: int, name: str) -> RedisLock:
+    key = f"{role_id}:{name}"
+    return RedisLock(LockTypeEnum.TEMPLATE_UPSERT.value, suffix=key, timeout=10)
+
+
+def gen_role_upsert_lock(name: str) -> RedisLock:
+    return RedisLock(LockTypeEnum.TEMPLATE_UPSERT.value, suffix=name, timeout=10)

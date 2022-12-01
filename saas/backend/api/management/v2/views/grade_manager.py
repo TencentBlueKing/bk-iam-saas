@@ -25,6 +25,7 @@ from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
+from backend.common.lock import gen_role_upsert_lock
 from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
@@ -68,8 +69,6 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
         self.verify_system_scope(source_system_id, auth_system_ids)
 
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"])
         # 检查该系统可创建的分级管理员数量是否超限
         self.role_check_biz.check_grade_manager_of_system_limit(source_system_id)
 
@@ -79,18 +78,22 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         # 转换为RoleInfoBean，用于创建时使用
         role_info = self.trans.to_role_info(data, source_system_id=source_system_id)
 
-        with transaction.atomic():
-            # 创建角色
-            role = self.biz.create_grade_manager(role_info, request.user.username)
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
-            # 记录role创建来源信息
-            RoleSource.objects.create(
-                role_id=role.id, source_type=RoleSourceTypeEnum.API.value, source_system_id=source_system_id
-            )
+            with transaction.atomic():
+                # 创建角色
+                role = self.biz.create_grade_manager(role_info, request.user.username)
 
-            # 创建同步权限用户组
-            if role_info.sync_perm:
-                self.group_biz.create_sync_perm_group_by_role(role, request.user.username)
+                # 记录role创建来源信息
+                RoleSource.objects.create(
+                    role_id=role.id, source_type=RoleSourceTypeEnum.API.value, source_system_id=source_system_id
+                )
+
+                # 创建同步权限用户组
+                if role_info.sync_perm:
+                    self.group_biz.create_sync_perm_group_by_role(role, request.user.username)
 
         # 审计
         audit_context_setter(role=role)
@@ -115,8 +118,6 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         data = serializer.validated_data
 
         # 数据校验
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
         # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
         role_source = RoleSource.objects.get(source_type=RoleSourceTypeEnum.API.value, role_id=role.id)
@@ -129,8 +130,12 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         # 转换为RoleInfoBean
         role_info = self.trans.to_role_info(data, source_system_id=kwargs["system_id"])
 
-        # 更新
-        self.biz.update(role, role_info, request.user.username)
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
+
+            # 更新
+            self.biz.update(role, role_info, request.user.username)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(

@@ -57,6 +57,7 @@ from backend.biz.group import (
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.filters import NoCheckModelFilterBackend
+from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import RoleType
 from backend.service.models import Subject
@@ -97,9 +98,6 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         groups_data = serializer.validated_data["groups"]
 
-        # 用户组名称在角色内唯一
-        group_names = [g["name"] for g in groups_data]
-        self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
         # 用户组数量在角色内是否超限
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
@@ -109,7 +107,12 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             one.source_system_id = role.source_system_id
             one.hidden = role.hidden
 
-        groups = self.group_biz.batch_create(role.id, infos, request.user.username)
+        with gen_group_upsert_lock(role.id):
+            # 用户组名称在角色内唯一
+            group_names = [g["name"] for g in groups_data]
+            self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
+
+            groups = self.group_biz.batch_create(role.id, infos, request.user.username)
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
@@ -206,10 +209,12 @@ class ManagementGroupViewSet(GenericViewSet):
 
         # 用户组名称在角色内唯一
         role = self.role_biz.get_role_by_group_id(group.id)
-        self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
 
-        # 更新
-        group = self.biz.update(group, name, description, user_id)
+        with gen_group_upsert_lock(role.id):
+            self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
+
+            # 更新
+            group = self.biz.update(group, name, description, user_id)
 
         # 写入审计上下文
         audit_context_setter(group=group)
