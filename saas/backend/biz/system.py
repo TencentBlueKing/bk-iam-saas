@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
+from backend.common.cache import cachedmethod
 from backend.service.system import SystemService
 
 
@@ -21,6 +22,7 @@ class SystemBiz:
     new_system_list = SystemService.__dict__["new_system_list"]
     list_system_manger = SystemService.__dict__["list_system_manger"]
 
+    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def list_client(self, system_id: str) -> List[str]:
         """查询可访问系统的clients"""
         return self.svc.list_client(system_id)
