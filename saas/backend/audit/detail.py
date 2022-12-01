@@ -101,15 +101,6 @@ class GroupTransferProvider(BaseProvider):
         return objects
 
 
-class SubjectGroupProvider(BaseProvider):
-    @property
-    def sub_objects(self) -> List:
-        extra = self.event.extra
-
-        group = Group.objects.filter(id=extra["group"]["id"]).first()
-        return [{"type": extra["group"]["type"], "id": extra["group"]["id"], "name": group.name if group else ""}]
-
-
 class SubjectPoliciesProvider(BaseProvider):
     biz = SystemBiz()
 
@@ -182,18 +173,6 @@ class RoleUpdateProvider(BaseProvider):
     def description(self) -> str:
         extra = self.event.extra
         return _("名称: {}, 描述: {}").format(extra["name"], extra["description"])
-
-
-class UserRoleDeleteProvider(BaseProvider):
-    @property
-    def sub_objects(self) -> List:
-        extra = self.event.extra
-        role = Role.objects.filter(id=extra["role_id"]).first()
-        return (
-            [{"type": AuditObjectType.ROLE.value, "id": str(role.id), "name": role.name, "name_en": role.name_en}]
-            if role
-            else []
-        )
 
 
 class RoleMemberProvider(BaseProvider):
@@ -323,11 +302,8 @@ class EventDetailExtra:
         AuditType.GROUP_POLICY_DELETE.value: SubjectPoliciesProvider,
         AuditType.GROUP_POLICY_UPDATE.value: SubjectPoliciesUpdateProvider,
         # department/user
-        AuditType.DEPARTMENT_GROUP_DELETE.value: SubjectGroupProvider,
-        AuditType.USER_GROUP_DELETE.value: SubjectGroupProvider,
         AuditType.USER_POLICY_UPDATE.value: SubjectPoliciesProvider,
         AuditType.USER_POLICY_CREATE.value: SubjectPoliciesProvider,
-        AuditType.USER_ROLE_DELETE.value: UserRoleDeleteProvider,
         AuditType.USER_TEMPORARY_POLICY_CREATE.value: SubjectPoliciesProvider,
         AuditType.USER_TEMPORARY_POLICY_DELETE.value: SubjectPoliciesProvider,
         # template

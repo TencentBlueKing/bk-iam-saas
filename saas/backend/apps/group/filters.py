@@ -106,6 +106,7 @@ class SystemGroupFilter(InitialFilterSet):
     resource_type_system_id = filters.CharFilter(label="资源类型系统id", method="resource_type_system_id_filter")
     resource_type_id = filters.CharFilter(label="资源类型id", method="resource_type_id_filter")
     resource_id = filters.CharFilter(label="资源实例id", method="resource_id_filter")
+    bk_iam_path = filters.CharFilter(label="上级资源实例", method="bk_iam_path_filter")
 
     class Meta:
         model = Group
@@ -128,4 +129,7 @@ class SystemGroupFilter(InitialFilterSet):
         return queryset
 
     def resource_type_system_id_filter(self, queryset, name, value):
+        return queryset
+
+    def bk_iam_path_filter(self, queryset, name, value):
         return queryset

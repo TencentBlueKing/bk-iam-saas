@@ -217,6 +217,14 @@ LOGGING = {
             "backupCount": 5,
             "filters": ["request_id_filter"],
         },
+        "bk_audit": {
+            "class": _LOG_CLASS,
+            "formatter": "verbose",
+            "filename": os.path.join(_LOG_DIR, "%s-audit.log" % _LOG_NAME_PREFIX),
+            "maxBytes": 1024 * 1024 * 10,
+            "backupCount": 5,
+            "filters": ["request_id_filter"],
+        },
     },
     "loggers": {
         "django": {
@@ -268,6 +276,12 @@ LOGGING = {
             "level": LOG_LEVEL,
             "propagate": True,
         },
+        # 审计日志文件
+        "bk_audit": {
+            "handlers": ["bk_audit"],
+            "level": "INFO",
+            "propagate": True,
+        },
     },
 }
 
@@ -286,3 +300,6 @@ BK_PAAS_HOST = env.str("BK_PAAS_HOST", default=env.str("BKPAAS_URL", default="")
 
 # 用于 用户认证、用户信息获取 的蓝鲸主机
 BK_PAAS_INNER_HOST = env.str("BK_PAAS2_URL", default=env.str("BK_PAAS_INNER_HOST", default=BK_PAAS_HOST))
+
+# 对接审计中心相关配置
+BK_IAM_RESOURCE_API_HOST = env.str("BK_IAM_RESOURCE_API_HOST", default=APP_URL)
