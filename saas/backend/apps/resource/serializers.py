@@ -60,4 +60,4 @@ class ResourceTypeSLZ(serializers.Serializer):
     parents = serializers.ListField(label="上级资源类型", child=serializers.DictField(label="parent"))
 
     class Meta:
-        ref_name = "SystemResourceTypeSLZ"
+        ref_name = "SystemResourceTypeSerializer"
