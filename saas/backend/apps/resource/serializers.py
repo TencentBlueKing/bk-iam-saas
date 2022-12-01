@@ -58,3 +58,6 @@ class ResourceTypeSLZ(serializers.Serializer):
     id = serializers.CharField(label="ID")
     name = serializers.CharField(label="名称")
     parents = serializers.ListField(label="上级资源类型", child=serializers.DictField(label="parent"))
+
+    class Meta:
+        ref_name = "SystemResourceTypeSLZ"
