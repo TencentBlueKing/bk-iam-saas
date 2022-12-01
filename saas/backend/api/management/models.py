@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from django.db import models
 
 from backend.api.constants import ALLOW_ANY
+from backend.common.cache import cachedmethod
 from backend.common.models import BaseModel
 
 from .constants import ManagementAPIEnum
@@ -29,6 +30,7 @@ class ManagementAPIAllowListConfig(BaseModel):
         unique_together = [["system_id", "api"]]
 
     @classmethod
+    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def is_allowed(cls, system_id: str, api: str):
         """
         检测某个接入系统是否允许调用某个管理类API
@@ -50,3 +52,8 @@ class SystemAllowAuthSystem(BaseModel):
         verbose_name_plural = "系统允许授权的系统"
         ordering = ["-id"]
         index_together = ["system_id", "auth_system_id"]
+
+    @classmethod
+    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
+    def list_auth_system_id(cls, system_id: str):
+        return list(cls.objects.filter(system_id=system_id).values_list("auth_system_id", flat=True))
