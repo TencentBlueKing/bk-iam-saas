@@ -335,12 +335,22 @@ class GroupService:
             offset += limit
 
     def list_rbac_group_by_resource(
-        self, system_id: str, action_id: str, resource_type_system_id: int, resource_type_id: str, resource_id: str
+        self,
+        system_id: str,
+        action_id: str,
+        resource_type_system_id: int,
+        resource_type_id: str,
+        resource_id: str,
+        bk_iam_path: str = "",
     ) -> List[Subject]:
         """
         查询rbac资源权限的用户组
         """
+        attribute = {}
+        if bk_iam_path:
+            attribute["_bk_iam_path_"] = [bk_iam_path]
+
         data = iam.query_rbac_group_by_resource(
-            system_id, action_id, resource_type_system_id, resource_type_id, resource_id
+            system_id, action_id, resource_type_system_id, resource_type_id, resource_id, attribute=attribute
         )
         return parse_obj_as(List[Subject], data)

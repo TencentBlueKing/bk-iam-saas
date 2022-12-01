@@ -957,22 +957,23 @@ class SystemGroupViewSet(mixins.ListModelMixin, GenericViewSet):
         queryset = RoleListQuery(filter_role, user).query_group().filter(source_system_id=system_id)
 
         # 使用操作, 资源实例筛选有权限的用户组
-        action_id = request.query_params.get("action_id")
+        action_id = request.query_params.get("action_id") or ""
         resource_type_system_id = request.query_params.get("resource_type_system_id")
         resource_type_id = request.query_params.get("resource_type_id")
         resource_id = request.query_params.get("resource_id")
+        bk_iam_path = request.query_params.get("bk_iam_path") or ""
 
-        if not action_id:
-            return queryset
-
-        if not resource_type_system_id or not resource_type_id or not resource_id:
+        if action_id and (not resource_type_system_id or not resource_type_id or not resource_id):
             # 只使用action_id筛选
             return self._filter_by_action(queryset, system_id, action_id)
 
-        # 使用操作, 资源实例筛选
-        return self._filter_by_action_resource(
-            queryset, system_id, action_id, resource_type_system_id, resource_type_id, resource_id
-        )
+        if resource_type_system_id and resource_type_id and resource_id:
+            # 使用操作, 资源实例筛选
+            return self._filter_by_action_resource(
+                queryset, system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
+            )
+
+        return queryset
 
     def _filter_by_action(self, queryset, system_id: str, action_id: str):
         """
@@ -996,12 +997,13 @@ class SystemGroupViewSet(mixins.ListModelMixin, GenericViewSet):
         resource_type_system_id: str,
         resource_type_id: str,
         resource_id: str,
+        bk_iam_path: str = "",
     ):
         """
         筛选有实例操作权限的用户组
         """
         subjects = self.group_biz.list_rbac_group_by_resource(
-            system_id, action_id, resource_type_system_id, resource_type_id, resource_id
+            system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
         )
         if not subjects:
             return Group.objects.none()

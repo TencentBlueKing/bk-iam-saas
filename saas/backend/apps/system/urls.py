@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from django.urls import path
 
 from backend.apps.group.views import SystemGroupViewSet
+from backend.apps.resource.views import SystemResourceTypeViewSet
 from backend.apps.role.views.role import SystemGradeManagerViewSet
 
 from . import views
@@ -41,5 +42,11 @@ urlpatterns = [
         "<str:system_id>/custom_frontend_settings/",
         views.SystemCustomFrontendSettingsView.as_view(),
         name="system.custom_frontend_settings",
+    ),
+    # 资源类型列表
+    path(
+        "<str:system_id>/resource_types/",
+        SystemResourceTypeViewSet.as_view({"get": "list"}),
+        name="system.resource_types",
     ),
 ]

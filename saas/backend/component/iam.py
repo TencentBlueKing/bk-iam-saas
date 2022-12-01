@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.conf import settings
 
@@ -676,6 +676,7 @@ def query_rbac_group_by_resource(
     resource_type_system_id: int,
     resource_type_id: str,
     resource_id: str,
+    attribute: Optional[Dict[str, Any]] = None,
 ) -> List:
     """
     查询rbac有实例权限的用户组
@@ -683,7 +684,12 @@ def query_rbac_group_by_resource(
     url_path = f"/api/v2/web/systems/{system_id}/rbac/resource-groups"
     data = {
         "action_id": action_id,
-        "resource": {"system_id": resource_type_system_id, "type": resource_type_id, "id": resource_id},
+        "resource": {
+            "system_id": resource_type_system_id,
+            "type": resource_type_id,
+            "id": resource_id,
+            "attribute": attribute or {},
+        },
     }
     result = _call_iam_api(http_post, url_path, data=data)
     return result
