@@ -698,15 +698,24 @@ class ApplicationBiz:
         if status == ApplicationStatus.PENDING.value:
             return
 
-        with transaction.atomic():
-            # 对于非审批中，都需要将单据状态更新保存
-            # Note: 由于application里的data字段较大，使用save更新时相当所有字段都更新，所以需指定status字段更新
-            application.status = status
-            application.save(update_fields=["status", "updated_time"])
+        # 已处理的单据不需要继续处理
+        if application.status != ApplicationStatus.PENDING.value:
+            return
 
+        # 对于非审批中，都需要将单据状态更新保存
+        # Note: 由于application里的data字段较大，使用save更新时相当所有字段都更新，所以需指定status字段更新
+        application.status = status
+        application.save(update_fields=["status", "updated_time"])
+
+        try:
             # 审批通过，则执行相关授权等
             if status == ApplicationStatus.PASS.value:
                 return self.approved_pass_biz.handle(application)
+        except Exception as e:  # pylint: disable=broad-except
+            # NOTE: 由于以上执行过程中会记录审计信息, 如果发生异常, 事务不能正常回滚, 所以这里手动回滚下
+            application.status = ApplicationStatus.PENDING.value
+            application.save(update_fields=["status", "updated_time"])
+            raise e
 
     def handle_approval_callback_request(self, callback_id: str, request: Request):
         """处理审批回调请求"""
