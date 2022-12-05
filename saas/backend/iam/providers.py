@@ -41,6 +41,9 @@ class BaseResourceProvider(ResourceProvider):
     def search_instance(self, filter, page, **options):
         return ListResult(results=[], count=0)
 
+    def _millisecond_to_second(self, ms: int):
+        return ms // 1000
+
 
 class PolicyResourceProvider(BaseResourceProvider):
     """
@@ -48,9 +51,9 @@ class PolicyResourceProvider(BaseResourceProvider):
     """
 
     def fetch_instance_list(self, filter, page, **options):
-        queryset = Policy.objects.filter(updated_time__gte=datetime.fromtimestamp(filter.start_time)).filter(
-            updated_time__lte=datetime.fromtimestamp(filter.end_time)
-        )
+        queryset = Policy.objects.filter(
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
@@ -109,9 +112,9 @@ class TemporaryPolicyResourceProvider(BaseResourceProvider):
     """
 
     def fetch_instance_list(self, filter, page, **options):
-        queryset = TemporaryPolicy.objects.filter(updated_time__gte=datetime.fromtimestamp(filter.start_time)).filter(
-            updated_time__lte=datetime.fromtimestamp(filter.end_time)
-        )
+        queryset = TemporaryPolicy.objects.filter(
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
@@ -170,9 +173,9 @@ class RoleResourceProvider(BaseResourceProvider):
     """
 
     def fetch_instance_list(self, filter, page, **options):
-        queryset = Role.objects.filter(updated_time__gte=datetime.fromtimestamp(filter.start_time)).filter(
-            updated_time__lte=datetime.fromtimestamp(filter.end_time)
-        )
+        queryset = Role.objects.filter(
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
@@ -226,9 +229,9 @@ class GroupResourceProvider(BaseResourceProvider):
     """
 
     def fetch_instance_list(self, filter, page, **options):
-        queryset = Group.objects.filter(updated_time__gte=datetime.fromtimestamp(filter.start_time)).filter(
-            updated_time__lte=datetime.fromtimestamp(filter.end_time)
-        )
+        queryset = Group.objects.filter(
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
@@ -277,9 +280,9 @@ class TemplateResourceProvider(BaseResourceProvider):
     """
 
     def fetch_instance_list(self, filter, page, **options):
-        queryset = PermTemplate.objects.filter(updated_time__gte=datetime.fromtimestamp(filter.start_time)).filter(
-            updated_time__lte=datetime.fromtimestamp(filter.end_time)
-        )
+        queryset = PermTemplate.objects.filter(
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
@@ -339,8 +342,8 @@ class AdminAPIAllowListConfigResourceProvider(BaseResourceProvider):
 
     def fetch_instance_list(self, filter, page, **options):
         queryset = AdminAPIAllowListConfig.objects.filter(
-            updated_time__gte=datetime.fromtimestamp(filter.start_time)
-        ).filter(updated_time__lte=datetime.fromtimestamp(filter.end_time))
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
@@ -390,8 +393,8 @@ class AuthAPIAllowListConfigResourceProvider(BaseResourceProvider):
 
     def fetch_instance_list(self, filter, page, **options):
         queryset = AuthAPIAllowListConfig.objects.filter(
-            updated_time__gte=datetime.fromtimestamp(filter.start_time)
-        ).filter(updated_time__lte=datetime.fromtimestamp(filter.end_time))
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
@@ -446,8 +449,8 @@ class ManagementAPIAllowListConfigResourceProvider(BaseResourceProvider):
 
     def fetch_instance_list(self, filter, page, **options):
         queryset = ManagementAPIAllowListConfig.objects.filter(
-            updated_time__gte=datetime.fromtimestamp(filter.start_time)
-        ).filter(updated_time__lte=datetime.fromtimestamp(filter.end_time))
+            updated_time__gte=datetime.fromtimestamp(self._millisecond_to_second(filter.start_time))
+        ).filter(updated_time__lte=datetime.fromtimestamp(self._millisecond_to_second(filter.end_time)))
         results = []
 
         data_keys = list(self.fetch_resource_type_schema().properties.keys())
