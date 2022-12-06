@@ -169,6 +169,8 @@
         [['secondaryManageSpace'], 'secondaryManageSpaceNav'],
         // 授权边界
         [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
+        // 最大可授权人员边界
+        [['addMemberBoundary'], 'addMemberBoundaryNav'],
         // 资源权限
         [['resourcePermiss'], 'resourcePermissNav'],
         // 管理员
