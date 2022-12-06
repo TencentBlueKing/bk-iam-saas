@@ -1162,7 +1162,8 @@
             },
 
             handleCancel () {
-                this.$router.go(-1);
+                window.parent.postMessage({ type: 'IAM', code: 'cancel' }, '*');
+                // this.$router.go(-1);
             },
 
             handleNextStep () {
