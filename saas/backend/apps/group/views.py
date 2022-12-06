@@ -39,6 +39,7 @@ from backend.biz.role import AuthScopeAction, AuthScopeSystem, RoleBiz, RoleList
 from backend.biz.template import TemplateBiz
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
+from backend.common.lock import gen_group_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
@@ -158,8 +159,6 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 用户组名称在角色内唯一
-        self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"])
         # 用户组数量在角色内是否超限
         number_of_new_group = 1  # 接口只支持创建一个用户组，不支持批量，所以新增用户组数量为1
         self.group_check_biz.check_role_group_limit(request.role, number_of_new_group)
@@ -168,9 +167,13 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         members = parse_obj_as(List[Subject], data["members"])
         self.group_check_biz.check_role_subject_scope(request.role, members)
 
-        group = self.group_biz.create_and_add_members(
-            request.role.id, data["name"], data["description"], user_id, members, data["expired_at"]
-        )
+        with gen_group_upsert_lock(request.role.id):
+            # 用户组名称在角色内唯一
+            self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"])
+
+            group = self.group_biz.create_and_add_members(
+                request.role.id, data["name"], data["description"], user_id, members, data["expired_at"]
+            )
 
         # 使用长时任务触发多个模板同时授权
         if data["templates"]:
@@ -232,10 +235,11 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 用户组名称在角色内唯一
-        self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"], group.id)
+        with gen_group_upsert_lock(request.role.id):
+            # 用户组名称在角色内唯一
+            self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"], group.id)
 
-        group = self.group_biz.update(group, data["name"], data["description"], user_id)
+            group = self.group_biz.update(group, data["name"], data["description"], user_id)
 
         # 写入审计上下文
         audit_context_setter(group=group)

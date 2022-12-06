@@ -81,6 +81,7 @@ from backend.biz.role import (
 )
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_role_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
@@ -131,12 +132,14 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"])
-
         # 结构转换
         info = self.role_trans.from_role_data(data)
-        role = self.biz.create_grade_manager(info, user_id)
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"])
+
+            role = self.biz.create_grade_manager(info, user_id)
 
         # 创建同步权限用户组
         if info.sync_perm:
@@ -182,8 +185,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
         # 检查成员数量是否满足限制
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
@@ -196,7 +197,12 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         }
 
         info = self.role_trans.from_role_data(data, old_system_policy_list=old_system_policy_list)
-        self.biz.update(role, info, user_id)
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
+
+            self.biz.update(role, info, user_id)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True, sync_prem=True)
@@ -221,8 +227,6 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
         # 检查成员数量是否满足限制
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
@@ -241,7 +245,11 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         ):
             raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True)
 
-        self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
+
+            self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True)

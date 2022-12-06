@@ -499,7 +499,7 @@
                     is_exact: this.searchConditionValue === 'exact'
                 };
                 try {
-                    const res = await this.$store.dispatch('organization/getSeachOrganizations', params);
+                    const res = await this.$store.dispatch('organization/getSearchOrganizations', params);
                     if (res.data.is_too_much) {
                         this.isShowTooMuch = true;
                         return;

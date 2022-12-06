@@ -10,9 +10,11 @@ specific language governing permissions and limitations under the License.
 import json
 from typing import Dict, List, Optional
 
+import pytest
+from blue_krill.web.std_error import APIError
 from django.test import TestCase
 
-from backend.service.utils.translate import ResourceExpressionTranslator
+from backend.service.utils.translate import ResourceExpressionTranslator, valid_path_without_last_node
 
 
 def new_attribute_dict(_id: str, name: str, values: Optional[List[Dict]] = None) -> Dict:
@@ -411,3 +413,19 @@ class TransferResourcesTests(TestCase):
             {"NumericLte": {"bk_cmdb._bk_iam_env_.hms": [120000]}},
             {"NumericEquals": {"bk_cmdb._bk_iam_env_.weekday": [0, 1, 3]}},
         ]
+
+
+class TestValidPathWithoutLastNode:
+    def test_node_any_id(self):
+        nodes = [{"type": "type1", "id": "id1"}, {"type": "type1", "id": "*"}]
+        with pytest.raises(APIError):
+            valid_path_without_last_node(nodes)
+
+    def test_node_repeat(self):
+        nodes = [{"type": "type1", "id": "id1"}, {"type": "type1", "id": "id2"}, {"type": "type1", "id": "id1"}]
+        with pytest.raises(APIError):
+            valid_path_without_last_node(nodes)
+
+    def test_ok(self):
+        nodes = [{"type": "type1", "id": "id1"}, {"type": "type1", "id": "id2"}]
+        valid_path_without_last_node(nodes)

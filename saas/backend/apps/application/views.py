@@ -32,6 +32,7 @@ from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_role_upsert_lock
 from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType
 from backend.service.models import Subject
 from backend.trans.application import ApplicationDataTrans
@@ -257,15 +258,17 @@ class ApplicationByGradeManagerView(views.APIView):
         data = serializer.validated_data
         user_id = request.user.username
 
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"])
-
         # 结构转换
         info = self.role_trans.from_role_data(data)
-        self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
-            GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
-        )
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"])
+
+            self.biz.create_for_grade_manager(
+                ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+                GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
+            )
 
         return Response({}, status=status.HTTP_201_CREATED)
 
@@ -294,8 +297,6 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         user_id = request.user.username
 
         role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=data["id"])
-        # 名称唯一性检查
-        self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
         # 必须是分级管理员的成员才可以申请修改
         if not RoleUser.objects.user_role_exists(user_id=user_id, role_id=role.id):
@@ -310,10 +311,17 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         }
 
         info = self.role_trans.from_role_data(data, old_system_policy_list=old_system_policy_list)
-        self.biz.create_for_grade_manager(
-            ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
-            GradeManagerApplicationDataBean(role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info),
-        )
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
+
+            self.biz.create_for_grade_manager(
+                ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
+                GradeManagerApplicationDataBean(
+                    role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info
+                ),
+            )
 
         return Response({}, status=status.HTTP_201_CREATED)
 

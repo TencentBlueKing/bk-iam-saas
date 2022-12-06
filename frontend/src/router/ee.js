@@ -65,6 +65,10 @@ const MyManageSpaceCreate = () => import(/* webpackChunkName: 'my-manage-space' 
 const MyManageSpaceSubDetail = () =>
     import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/detail');
 
+// 最大可授权人员边界
+const AddMemberBoundary = () =>
+    import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/add-member-boundary');
+
 // 用户组
 const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
 
@@ -288,6 +292,15 @@ export const routes = [
                     backRouter: 'myManageSpace'
                 },
                 component: MyManageSpaceSubDetail
+            },
+            {
+                path: 'add-member-boundary',
+                name: 'addMemberBoundary',
+                meta: {
+                    backRouter: -1
+                },
+                props: (route) => ({ ...route.query, ...route.params }),
+                component: AddMemberBoundary
             },
             {
                 path: 'perm-renewal',

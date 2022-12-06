@@ -278,7 +278,7 @@
                     const primaryKey = this.searchSelect.primaryKey;
                     if (['action_id'].includes(this.currentItem.id)) {
                         return (
-                        <div>
+                        <div style="width: 240px;">
                             <div style="padding: 0 10px; margin-bottom: 10px;">
                                 <bk-input
                                         clearable={true}

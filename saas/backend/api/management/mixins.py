@@ -14,7 +14,6 @@ from rest_framework import exceptions
 
 from backend.api.constants import ALLOW_ANY
 from backend.api.mixins import SystemClientCheckMixin
-from backend.common.cache import cachedmethod
 
 from .constants import ManagementAPIEnum
 from .models import ManagementAPIAllowListConfig, SystemAllowAuthSystem
@@ -27,7 +26,6 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
     3. API数据鉴权：查询系统可管控的授权系统表
     """
 
-    @cachedmethod(timeout=5 * 60)  # 缓存5分钟
     def verify_api_allow_list(self, system_id: str, api: ManagementAPIEnum):
         """
         API鉴权: 查询管理类API白名单表，判断是否允许访问API
@@ -51,9 +49,7 @@ class ManagementAPIPermissionCheckMixin(SystemClientCheckMixin):
             return
 
         #  接入系统可管控的系统表[system_id/auth_system_id]来实现管控更多接入系统权限
-        allowed_auth_system = list(
-            SystemAllowAuthSystem.objects.filter(system_id=system_id).values_list("auth_system_id", flat=True)
-        )
+        allowed_auth_system = SystemAllowAuthSystem.list_auth_system_id(system_id)
         allowed_system_ids = set(allowed_auth_system)
         # 任何系统都允许访问自身
         allowed_system_ids.add(system_id)
