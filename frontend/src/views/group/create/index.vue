@@ -798,15 +798,19 @@
              * handleCancel
              */
             handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
+                if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
+                    window.parent.postMessage('cancel', '*');
+                } else {
+                    let cancelHandler = Promise.resolve();
+                    if (window.changeDialog) {
+                        cancelHandler = leavePageConfirm();
+                    }
+                    cancelHandler.then(() => {
+                        this.$router.push({
+                            name: 'userGroup'
+                        });
+                    }, _ => _);
                 }
-                cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'userGroup'
-                    });
-                }, _ => _);
             },
 
             /**
