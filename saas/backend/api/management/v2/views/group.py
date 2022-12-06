@@ -45,6 +45,7 @@ from backend.apps.group.audit import (
 )
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
+from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import (
@@ -59,7 +60,7 @@ from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
-from backend.service.constants import RoleType
+from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
@@ -136,6 +137,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
         queryset = RoleListQuery(role).query_group(inherit=inherit)
         queryset = self.filter_queryset(queryset)
+        queryset = self._filter(queryset, request)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -144,6 +146,66 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
         serializer = ManagementGroupSLZ(queryset, many=True)
         return Response(serializer.data)
+
+    def _filter(self, request, queryset):
+        """
+        用户组筛选
+        """
+        system_id = self.kwargs["system_id"]
+
+        # 使用操作, 资源实例筛选有权限的用户组
+        action_id = request.query_params.get("action_id") or ""
+        resource_type_system_id = request.query_params.get("resource_type_system_id")
+        resource_type_id = request.query_params.get("resource_type_id")
+        resource_id = request.query_params.get("resource_id")
+        bk_iam_path = request.query_params.get("bk_iam_path") or ""
+
+        if action_id and (not resource_type_system_id or not resource_type_id or not resource_id):
+            # 只使用action_id筛选
+            return self._filter_by_action(queryset, system_id, action_id)
+
+        if resource_type_system_id and resource_type_id and resource_id:
+            # 使用操作, 资源实例筛选
+            return self._filter_by_action_resource(
+                queryset, system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
+            )
+
+        return queryset
+
+    def _filter_by_action(self, queryset, system_id: str, action_id: str):
+        """
+        筛选有自定义权限的用户组
+        """
+        group_ids = list(
+            Policy.objects.filter(
+                subject_type=SubjectType.GROUP.value, system_id=system_id, action_id=action_id
+            ).values_list("subject_id", flat=True)
+        )
+        if not group_ids:
+            return Group.objects.none()
+
+        return queryset.filter(id__in=[int(id) for id in group_ids])
+
+    def _filter_by_action_resource(
+        self,
+        queryset,
+        system_id: str,
+        action_id: str,
+        resource_type_system_id: str,
+        resource_type_id: str,
+        resource_id: str,
+        bk_iam_path: str = "",
+    ):
+        """
+        筛选有实例操作权限的用户组
+        """
+        subjects = self.group_biz.list_rbac_group_by_resource(
+            system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
+        )
+        if not subjects:
+            return Group.objects.none()
+
+        return queryset.filter(id__in=[int(subject.id) for subject in subjects])
 
 
 class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):

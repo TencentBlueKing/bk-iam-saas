@@ -19,8 +19,6 @@ logger = logging.getLogger(__name__)
 class ResourceTypeBiz:
     resource_type_svc = ResourceTypeService()
 
-    list_by_system = ResourceTypeService.__dict__["list_by_system"]
-
     def list_resource_types_by_system_id(self, system_id: str) -> List:
         system_resource_types = self.resource_type_svc.list_resource_type_by_systems([system_id]).get(system_id, [])
         data = [resource_type.dict() for resource_type in system_resource_types]

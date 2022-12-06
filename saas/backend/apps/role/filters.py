@@ -34,11 +34,3 @@ class RoleCommonActionFilter(filters.FilterSet):
     class Meta:
         model = RoleCommonAction
         fields = ["system_id"]
-
-
-class SystemGradeMangerFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr="icontains", label="名称")
-
-    class Meta:
-        model = Role
-        fields = ["name"]

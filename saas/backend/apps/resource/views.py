@@ -14,15 +14,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from backend.biz.resource import ResourceBiz
-from backend.biz.resource_type import ResourceTypeBiz
 
-from .serializers import (
-    BaseInfoSLZ,
-    ResourceAttributeQuerySLZ,
-    ResourceAttributeValueQuerySLZ,
-    ResourceQuerySLZ,
-    ResourceTypeSLZ,
-)
+from .serializers import BaseInfoSLZ, ResourceAttributeQuerySLZ, ResourceAttributeValueQuerySLZ, ResourceQuerySLZ
 
 
 class ResourceViewSet(ViewSet):
@@ -108,18 +101,3 @@ class ResourceViewSet(ViewSet):
         count, results = self.biz.list_attr_value(system_id, resource_type_id, attr, keyword, limit, offset)
 
         return Response({"count": count, "results": [i.dict() for i in results]})
-
-
-class SystemResourceTypeViewSet(ViewSet):
-    biz = ResourceTypeBiz()
-
-    @swagger_auto_schema(
-        operation_description="资源类型列表",
-        responses={status.HTTP_200_OK: ResourceTypeSLZ(many=True)},
-        force_page_response=True,
-        tags=["resource"],
-    )
-    def list(self, request, *args, **kwargs):
-        system_id = self.kwargs["system_id"]
-        data = self.biz.list_by_system(system_id)
-        return Response(data)
