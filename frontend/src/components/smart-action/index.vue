@@ -6,7 +6,8 @@
         <div ref="actionPosition" :style="positionStyles" role="action-position">
             <div ref="dynamicPosition"
                 class="fixed"
-                style="padding-left:284px;margin-top: 52px;" role="dynamic-position">
+                :style="{ paddingLeft: externalSystemId ? '50px' : '284px' }"
+                style="margin-top: 52px;" role="dynamic-position">
                 <div :style="styles">
                     <slot name="action" />
                 </div>
@@ -17,6 +18,7 @@
 <script>
     import _ from 'lodash';
     import { bus } from '@/common/bus';
+    import { mapGetters } from 'vuex';
 
     export default {
         props: {
@@ -36,6 +38,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             classes () {
                 if (this.isHide) {
                     return 'fixed';

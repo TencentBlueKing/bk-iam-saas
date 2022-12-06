@@ -191,7 +191,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             /**
              * isAggregateDisabled
              */
@@ -771,10 +771,14 @@
                     try {
                         await this.$store.dispatch('userGroup/addUserGroup', params);
                         this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
-                        bus.$emit('show-guide', 'process');
-                        this.$router.push({
-                            name: 'userGroup'
-                        });
+                        if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
+                            window.parent.postMessage('success', '*');
+                        } else {
+                            bus.$emit('show-guide', 'process');
+                            this.$router.push({
+                                name: 'userGroup'
+                            });
+                        }
                     } catch (e) {
                         console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
