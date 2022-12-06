@@ -25,7 +25,6 @@ from backend.account.permissions import RolePermission, role_perm_class
 from backend.apps.application.serializers import ConditionCompareSLZ, ConditionTagSLZ
 from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
-from backend.apps.policy.models import Policy
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.template.filters import TemplateFilter
@@ -42,7 +41,7 @@ from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 from backend.trans.group import GroupTrans
 from backend.trans.role import RoleAuthScopeTrans
@@ -60,7 +59,7 @@ from .audit import (
     GroupUpdateAuditProvider,
 )
 from .constants import OperateEnum
-from .filters import GroupFilter, GroupTemplateSystemFilter, SystemGroupFilter
+from .filters import GroupFilter, GroupTemplateSystemFilter
 from .serializers import (
     GradeManagerGroupTransferSLZ,
     GroupAddMemberSLZ,
@@ -81,7 +80,6 @@ from .serializers import (
     GroupUpdateSLZ,
     MemberSLZ,
     SearchMemberSLZ,
-    SystemGroupSLZ,
 )
 
 logger = logging.getLogger("app")
@@ -930,94 +928,3 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
             )
 
         return auth_scope_systems
-
-
-class SystemGroupViewSet(mixins.ListModelMixin, GenericViewSet):
-    """
-    系统创建的用户组列表
-    """
-
-    queryset = Group.objects.all()
-    serializer_class = SystemGroupSLZ
-    filterset_class = SystemGroupFilter
-    lookup_field = "id"
-
-    role_biz = RoleBiz()
-    group_biz = GroupBiz()
-
-    def get_queryset(self):
-        system_id = self.kwargs["system_id"]
-        role_id = self.kwargs["role_id"]
-
-        request = self.request
-        user = request.user
-
-        # 判断当前用户是否在role的授权范围内
-        filter_role = self.role_biz.get_role_scope_include_user(role_id, user.username)
-        if not filter_role:
-            return Group.objects.none()
-
-        # 返回角色的用户组列表
-        queryset = RoleListQuery(filter_role, user).query_group().filter(source_system_id=system_id)
-
-        # 使用操作, 资源实例筛选有权限的用户组
-        action_id = request.query_params.get("action_id") or ""
-        resource_type_system_id = request.query_params.get("resource_type_system_id")
-        resource_type_id = request.query_params.get("resource_type_id")
-        resource_id = request.query_params.get("resource_id")
-        bk_iam_path = request.query_params.get("bk_iam_path") or ""
-
-        if action_id and (not resource_type_system_id or not resource_type_id or not resource_id):
-            # 只使用action_id筛选
-            return self._filter_by_action(queryset, system_id, action_id)
-
-        if resource_type_system_id and resource_type_id and resource_id:
-            # 使用操作, 资源实例筛选
-            return self._filter_by_action_resource(
-                queryset, system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
-            )
-
-        return queryset
-
-    def _filter_by_action(self, queryset, system_id: str, action_id: str):
-        """
-        筛选有自定义权限的用户组
-        """
-        group_ids = list(
-            Policy.objects.filter(
-                subject_type=SubjectType.GROUP.value, system_id=system_id, action_id=action_id
-            ).values_list("subject_id", flat=True)
-        )
-        if not group_ids:
-            return Group.objects.none()
-
-        return queryset.filter(id__in=[int(id) for id in group_ids])
-
-    def _filter_by_action_resource(
-        self,
-        queryset,
-        system_id: str,
-        action_id: str,
-        resource_type_system_id: str,
-        resource_type_id: str,
-        resource_id: str,
-        bk_iam_path: str = "",
-    ):
-        """
-        筛选有实例操作权限的用户组
-        """
-        subjects = self.group_biz.list_rbac_group_by_resource(
-            system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
-        )
-        if not subjects:
-            return Group.objects.none()
-
-        return queryset.filter(id__in=[int(subject.id) for subject in subjects])
-
-    @swagger_auto_schema(
-        operation_description="系统创建的用户组列表",
-        responses={status.HTTP_200_OK: SystemGroupSLZ(label="用户组", many=True)},
-        tags=["group"],
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
