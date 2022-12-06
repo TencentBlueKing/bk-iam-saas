@@ -1188,7 +1188,8 @@
                         params.policy_expired_at = this.expiredAt;
                     }
                 }
-                window.parent.postMessage({ data: params, type: 'success' }, '*');
+                // 组织选择器发送一个postmessage
+                window.parent.postMessage({ type: 'IAM', data: params, code: 'success' }, '*');
             },
 
             evil (fn) {
