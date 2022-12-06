@@ -1188,12 +1188,7 @@
                         params.policy_expired_at = this.expiredAt;
                     }
                 }
-                this.$router.go(-1);
-                // bus的$on的监听位于$emit之前，给个睡眠时间延迟
-                sleep(100).then(() => {
-                    bus.$emit('submit-member-boundary', params);
-                    this.handleAfterLeave();
-                });
+                window.parent.postMessage({ data: params, type: 'success' }, '*');
             },
 
             evil (fn) {

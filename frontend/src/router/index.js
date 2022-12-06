@@ -219,7 +219,11 @@ export const beforeEach = async (to, from, next) => {
                     next({ path: `${SITE_URL}perm-template` });
                     // } else if (['createUserGroup', 'userGroupDetail'].includes(to.name) && noFrom) {
                 } else if (['createUserGroup'].includes(to.name) && noFrom) {
-                    next({ path: `${SITE_URL}user-group` });
+                    if (existValue('externalApp')) { // 如果是外部嵌入的页面
+                        next();
+                    } else {
+                        next({ path: `${SITE_URL}user-group` });
+                    }
                 } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}rating-manager` });
                 } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
