@@ -182,7 +182,7 @@ class AuditEventHandler:
             ]
 
         system_id = extra_data["system_id"]
-        action_ids = [p["action_id"] for p in extra_data["policies"]]
+        action_ids = [p.get("action_id", p.get("id", "")) for p in extra_data["policies"]]
 
         policies = Policy.objects.filter(
             subject_type=event.object_type, subject_id=event.object_id, system_id=system_id, action_id__in=action_ids
