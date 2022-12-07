@@ -258,6 +258,7 @@ class GradeManagerApplicationContent(BaseModel):
     members: List[ApplicationSubject]
     subject_scopes: List[ApplicationSubject]
     authorization_scopes: List[ApplicationAuthorizationScope]
+    sync_perm: bool = False
 
 
 class GradeManagerApplicationData(ApplicationDataBaseInfo):
@@ -274,6 +275,7 @@ class GradeManagerApplicationData(ApplicationDataBaseInfo):
             "members": [member.id for member in self.content.members],
             "subject_scopes": [subject.dict(include={"type", "id"}) for subject in self.content.subject_scopes],
             "authorization_scopes": [scope.dict(by_alias=True) for scope in self.content.authorization_scopes],
+            "sync_perm": self.content.sync_perm,
         }
 
         return data
