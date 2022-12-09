@@ -176,7 +176,7 @@
                         offset: this.pagination.limit * (this.pagination.current - 1)
                     });
                     this.pagination.count = Math.ceil(res.data.count / this.pagination.limit);
-                    this.tableList = res.data.results || [];
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                     this.tableList.forEach(async (item, index) => {
                         this.$set(item, 'children', []);
                         this.$set(item, 'loading', false);
