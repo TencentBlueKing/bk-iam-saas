@@ -137,7 +137,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
         queryset = RoleListQuery(role).query_group(inherit=inherit)
         queryset = self.filter_queryset(queryset)
-        queryset = self._filter(queryset, request)
+        queryset = self._filter(request, queryset)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
