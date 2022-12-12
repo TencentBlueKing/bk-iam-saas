@@ -311,7 +311,7 @@
                         this.showGuide = true;
                     }
                     this.showNavDataLength = newValue.filter(e => e.show).length;
-                    this.haveManager = this.showNavDataLength.length && this.showGuide && newValue.find(item => ['all_manager'].includes(item.type) && item.show);
+                    this.haveManager = this.showNavDataLength && this.showGuide && newValue.find(item => ['all_manager'].includes(item.type) && item.show);
                 },
                 immediate: true,
                 deep: true
