@@ -122,7 +122,7 @@ if REDIS_USE_SENTINEL:
             "SENTINELS": REDIS_SENTINEL_ADDR_LIST,
             # kwargs for redis Sentinel (optional).
             "SENTINEL_KWARGS": {
-                "password": "REDIS_SENTINEL_PASSWORD",
+                "password": REDIS_SENTINEL_PASSWORD,
                 "socket_timeout": 5,
             },
             # You can still override the connection pool (optional).
