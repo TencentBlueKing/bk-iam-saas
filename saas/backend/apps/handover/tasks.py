@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import json
 from typing import Dict, Type
 
-from celery import task
+from celery import shared_task as task
 
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.biz.handover import BaseHandoverHandler, CustomHandoverHandler, GroupHandoverhandler, RoleHandoverHandler

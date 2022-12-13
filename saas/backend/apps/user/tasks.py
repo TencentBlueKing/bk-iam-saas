@@ -13,7 +13,8 @@ from datetime import timedelta
 from itertools import groupby
 from urllib.parse import urlencode
 
-from celery import Task, current_app, task
+from celery import Task, current_app
+from celery import shared_task as task
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import F, Q
@@ -45,6 +46,8 @@ MAX_USER_PERMISSION_CLEAN_RETRY_COUNT = 3
 
 
 class SendUserExpireRemindMailTask(Task):
+    name = "backend.apps.user.tasks.SendUserExpireRemindMailTask"
+
     policy_biz = PolicyQueryBiz()
     group_biz = GroupBiz()
 

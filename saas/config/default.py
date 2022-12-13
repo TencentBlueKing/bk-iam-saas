@@ -11,7 +11,6 @@ specific language governing permissions and limitations under the License.
 """
 import os
 
-import djcelery
 import environ
 from celery.schedules import crontab
 
@@ -44,7 +43,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "mptt",
     "django_prometheus",
-    "djcelery",
+    "django_celery_beat",
     "apigw_manager.apigw",
     "iam.contrib.iam_migration",
     "backend.long_task",
@@ -113,6 +112,9 @@ TEMPLATES = [
     },
 ]
 
+# django 3.2 add
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # DB router
 DATABASE_ROUTERS = ["backend.audit.routers.AuditRouter"]
 
@@ -176,9 +178,9 @@ CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
 # 与周期任务配置的定时相关UTC
 CELERY_ENABLE_UTC = True
 # 周期任务beat生产者来源
-CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
+CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Celery队列名称
-CELERY_TASK_DEFAULT_QUEUE = "bk_iam"
+CELERY_DEFAULT_QUEUE = "bk_iam"
 # close celery hijack root logger
 CELERYD_HIJACK_ROOT_LOGGER = False
 # Celery 消息序列化
@@ -267,10 +269,6 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.user.tasks.clean_user_permission_clean_record",
         "schedule": crontab(minute=0, hour=5),  # 每天凌晨5时执行
     },
-    "init_biz_grade_manager": {
-        "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
-        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
-    },
 }
 
 # 是否开启初始化分级管理员
@@ -294,8 +292,6 @@ if "RABBITMQ_HOST" in env:
     )
 else:
     BROKER_URL = env.str("BK_BROKER_URL", default="")
-# 使用djcelery配合celery，支持周期任务通过DB设置等场景
-djcelery.setup_loader()
 
 # tracing: sentry support
 SENTRY_DSN = env.str("SENTRY_DSN", default="")

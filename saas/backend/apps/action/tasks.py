@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from collections import defaultdict
 from typing import Dict, List, Optional
 
-from celery import task
+from celery import shared_task as task
 from pydantic import parse_obj_as
 
 from backend.apps.action.models import AggregateAction

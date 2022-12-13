@@ -14,7 +14,7 @@ import string
 from urllib.parse import urlparse
 
 from . import RequestIDFilter
-from .default import BASE_DIR, env
+from .default import BASE_DIR, BROKER_URL, env
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -39,9 +39,21 @@ DATABASES = {
 
 # cache
 REDIS_HOST = env.str("REDIS_HOST")
-REDIS_PORT = env.str("REDIS_PORT")
-REDIS_PASSWORD = env.str("REDIS_PASSWORD")
-REDIS_DB = env.int("REDIS_DB", default=0)
+REDIS_PORT = env.int("REDIS_PORT", 6379)
+REDIS_PASSWORD = env.str("REDIS_PASSWORD", "")
+REDIS_MAX_CONNECTIONS = env.int("REDIS_MAX_CONNECTIONS", 100)
+REDIS_DB = env.int("REDIS_DB", 0)
+# sentinel check
+REDIS_USE_SENTINEL = env.bool("REDIS_USE_SENTINEL", False)
+REDIS_SENTINEL_MASTER_NAME = env.str("REDIS_SENTINEL_MASTER_NAME", "mymaster")
+REDIS_SENTINEL_PASSWORD = env.str("REDIS_SENTINEL_PASSWORD", "")
+REDIS_SENTINEL_ADDR_STR = env.str("REDIS_SENTINEL_ADDR", "")
+# parse sentinel address from "host1:port1,host2:port2" to [("host1", port1), ("host2", port2)]
+REDIS_SENTINEL_ADDR_LIST = []
+try:
+    REDIS_SENTINEL_ADDR_LIST = [tuple(addr.split(":")) for addr in REDIS_SENTINEL_ADDR_STR.split(",") if addr]
+except Exception as e:
+    print(f"REDIS_SENTINEL_ADDR {REDIS_SENTINEL_ADDR_STR} is invalid: {e}")
 
 CACHES = {
     # 默认缓存是本地内存，使用最近最少使用（LRU）的淘汰策略，使用pickle 序列化数据
@@ -80,11 +92,63 @@ CACHES = {
             # Redis 连接池配置
             "CONNECTION_POOL_KWARGS": {
                 # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
-                "max_connections": 100
+                "max_connections": REDIS_MAX_CONNECTIONS
             },
         },
     },
 }
+
+# redis sentinel
+if REDIS_USE_SENTINEL:
+    CACHES["redis"] = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        # The hostname in LOCATION is the primary (service / master) name
+        "LOCATION": f"redis://{REDIS_SENTINEL_MASTER_NAME}/{REDIS_DB}",
+        "TIMEOUT": 60 * 30,  # 避免使用时忘记设置过期时间，可设置个长时间的默认值，30分钟，特殊值0表示立刻过期，实际上就是不缓存
+        "KEY_PREFIX": "bk_iam",  # 缓存的Key的前缀
+        "VERSION": 1,  # 避免同一个缓存Key在不同SaaS版本之间存在差异导致读取的值非期望的
+        # "KEY_FUNCTION": "",  # Key的生成函数，默认是 key_prefix:version:key
+        "OPTIONS": {
+            # While the default client will work, this will check you
+            # have configured things correctly, and also create a
+            # primary and replica pool for the service specified by
+            # LOCATION rather than requiring two URLs.
+            "CLIENT_CLASS": "django_redis.client.SentinelClient",
+            "PASSWORD": REDIS_PASSWORD,
+            "SOCKET_CONNECT_TIMEOUT": 5,  # socket 建立连接超时设置，单位秒
+            "SOCKET_TIMEOUT": 5,  # 连接建立后的读写操作超时设置，单位秒
+            "IGNORE_EXCEPTIONS": True,  # redis 只作为缓存使用, 触发异常不能影响正常逻辑，可能只是稍微慢点而已
+            # Sentinels which are passed directly to redis Sentinel.
+            "SENTINELS": REDIS_SENTINEL_ADDR_LIST,
+            # kwargs for redis Sentinel (optional).
+            "SENTINEL_KWARGS": {
+                "password": "REDIS_SENTINEL_PASSWORD",
+                "socket_timeout": 5,
+            },
+            # You can still override the connection pool (optional).
+            "CONNECTION_POOL_CLASS": "redis.sentinel.SentinelConnectionPool",
+            # Redis 连接池配置
+            "CONNECTION_POOL_KWARGS": {
+                # redis-py 默认不会关闭连接, 尽可能重用连接，但可能会造成连接过多，导致Redis无法服务，所以需要设置最大值连接数
+                "max_connections": REDIS_MAX_CONNECTIONS
+            },
+        },
+    }
+
+    # celery broker
+    # https://docs.celeryq.dev/en/v4.3.0/history/whatsnew-4.0.html?highlight=sentinel#redis-support-for-sentinel
+    if not BROKER_URL:
+        BROKER_URL = ";".join(
+            [f"sentinel://:{REDIS_PASSWORD}@" + ":".join(addr) + f"/{REDIS_DB}" for addr in REDIS_SENTINEL_ADDR_LIST]
+        )
+        BROKER_TRANSPORT_OPTIONS = {
+            "master_name": REDIS_SENTINEL_MASTER_NAME,
+            "sentinel_kwargs": {"password": REDIS_SENTINEL_PASSWORD},
+            "socket_timeout": 5,
+            "socket_connect_timeout": 5,
+            "socket_keepalive": True,
+        }
+
 # 当Redis Cache 使用IGNORE_EXCEPTIONS时，设置指定的 logger 输出异常
 DJANGO_REDIS_LOGGER = "app"
 
