@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "apigw_manager.apigw",
     "iam.contrib.iam_migration",
+    "backend.common",
     "backend.long_task",
     "backend.audit",
     "backend.debug",
