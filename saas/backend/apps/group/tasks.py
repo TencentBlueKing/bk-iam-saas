@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, List
 
-from celery import task
+from celery import shared_task as task
 from django.conf import settings
 from django.core.paginator import Paginator
 from pydantic.tools import parse_obj_as

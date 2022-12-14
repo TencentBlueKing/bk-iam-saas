@@ -14,7 +14,8 @@ from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, current_app, task
+from celery import Task, current_app
+from celery import shared_task as task
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -78,6 +79,8 @@ def sync_system_manager():
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
+    name = "backend.apps.role.tasks.SendRoleGroupExpireRemindMailTask"
+
     group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
@@ -151,6 +154,8 @@ def role_group_expire_remind():
 
 
 class InitBizGradeManagerTask(Task):
+    name = "backend.apps.role.tasks.InitBizGradeManagerTask"
+
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()

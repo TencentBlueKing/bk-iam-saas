@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
-from celery import task
+from celery import shared_task as task
 from django.core.paginator import Paginator
 
 from backend.biz.application import ApplicationBiz

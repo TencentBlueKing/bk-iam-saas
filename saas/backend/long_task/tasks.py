@@ -18,7 +18,8 @@ from abc import ABCMeta, abstractmethod
 from datetime import timedelta
 from typing import Any, Dict, List, Type
 
-from celery import Task, task
+from celery import Task, current_app
+from celery import shared_task as task
 from django.db.models import Max
 from django.utils import timezone
 
@@ -120,6 +121,8 @@ class ResultStore:
 
 
 class SubTask(Task):
+    name = "backend.long_task.tasks.SubTask"
+
     def run(self, id: int):
         # 查询任务
         task_detail = TaskDetail.objects.get(pk=id)
@@ -183,7 +186,12 @@ class SubTask(Task):
         ResultStore(task.id).clear()
 
 
+current_app.tasks.register(SubTask())
+
+
 class TaskFactory(Task):
+    name = "backend.long_task.tasks.TaskFactory"
+
     def run(self, id: int):
         # 查询任务
         task_detail = TaskDetail.objects.get(pk=id)
@@ -200,14 +208,16 @@ class TaskFactory(Task):
 
         params = handler.get_params()
 
-        celery_id = self.request.id or ""
         TaskDetail.objects.filter(pk=id).update(
-            celery_id=celery_id,
+            celery_id="",
             status=TaskStatus.RUNNING.value,  # type: ignore[attr-defined]
             _params=json.dumps(params),
         )
 
         SubTask().delay(id)
+
+
+current_app.tasks.register(TaskFactory())
 
 
 def register_handler(_type: str):
@@ -229,4 +239,4 @@ def retry_long_task():
         status__in=[TaskStatus.PENDING.value, TaskStatus.RUNNING.value], created_time__lt=day_before
     )
     for t in qs:
-        TaskFactory()(t.id)
+        TaskFactory().run(t.id)

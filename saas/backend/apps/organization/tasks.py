@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 import traceback
 
-from celery import task
+from celery import shared_task as task
 from django.db import transaction
 from django.utils import timezone
 

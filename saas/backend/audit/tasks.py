@@ -13,7 +13,7 @@ from typing import List
 
 from bk_audit.log.exporters import LoggerExporter
 from bk_audit.log.models import AuditEvent
-from celery import task
+from celery import shared_task as task
 from django.utils import timezone
 
 from backend.apps.policy.models import Policy

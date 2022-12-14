@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 import time
 
-from celery import task
+from celery import shared_task as task
 
 from backend.biz.model_event import ModelEventBiz
 from backend.component import iam
