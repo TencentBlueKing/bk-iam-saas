@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 import traceback
 
-from celery import shared_task as task
+from celery import shared_task
 from django.db import transaction
 from django.utils import timezone
 
@@ -31,7 +31,7 @@ from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     try:
         # 分布式锁，避免同一时间该任务多个worker执行
@@ -109,7 +109,7 @@ def sync_organization(executor: str = SYNC_TASK_DEFAULT_EXECUTOR) -> int:
     return record.id
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def sync_new_users():
     """
     定时同步新增用户

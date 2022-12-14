@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import json
 from typing import Dict, Type
 
-from celery import shared_task as task
+from celery import shared_task
 
 from backend.apps.handover.models import HandoverRecord, HandoverTask
 from backend.biz.handover import BaseHandoverHandler, CustomHandoverHandler, GroupHandoverhandler, RoleHandoverHandler
@@ -25,7 +25,7 @@ EXECUTE_HANDOVER_MAP: Dict[str, Type[BaseHandoverHandler]] = {
 }
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def execute_handover_task(handover_from, handover_to, handover_record_id):
 
     handover_task_list = HandoverTask.objects.filter(handover_record_id=handover_record_id)

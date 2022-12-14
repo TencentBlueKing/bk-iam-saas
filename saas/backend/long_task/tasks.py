@@ -18,8 +18,7 @@ from abc import ABCMeta, abstractmethod
 from datetime import timedelta
 from typing import Any, Dict, List, Type
 
-from celery import Task, current_app
-from celery import shared_task as task
+from celery import Task, current_app, shared_task
 from django.db.models import Max
 from django.utils import timezone
 
@@ -228,7 +227,7 @@ def register_handler(_type: str):
     return decorate
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def retry_long_task():
     """
     重试一天以前一直 PENDING/RUNNING 的任务

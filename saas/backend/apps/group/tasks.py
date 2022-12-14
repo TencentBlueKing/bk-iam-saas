@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, List
 
-from celery import shared_task as task
+from celery import shared_task
 from django.conf import settings
 from django.core.paginator import Paginator
 from pydantic.tools import parse_obj_as
@@ -27,7 +27,7 @@ from backend.service.models import Subject
 from .audit import log_group_cleanup_member_audit_event
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def group_cleanup_expired_member():
     """
     用户组清理长时间过期的成员
