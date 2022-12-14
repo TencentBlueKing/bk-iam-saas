@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
-from celery import shared_task as task
+from celery import shared_task
 from django.core.paginator import Paginator
 
 from backend.biz.application import ApplicationBiz
@@ -21,7 +21,7 @@ from .models import Application
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def check_or_update_application_status():
     """
     检查并更新申请单据状态

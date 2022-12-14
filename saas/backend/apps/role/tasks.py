@@ -14,8 +14,7 @@ from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, current_app
-from celery import shared_task as task
+from celery import Task, current_app, shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -45,7 +44,7 @@ from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffix
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def sync_system_manager():
     """
     创建系统管理员
@@ -118,7 +117,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
 current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def role_group_expire_remind():
     """
     角色管理的用户组过期提醒

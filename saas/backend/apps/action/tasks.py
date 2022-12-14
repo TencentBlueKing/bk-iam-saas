@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from collections import defaultdict
 from typing import Dict, List, Optional
 
-from celery import shared_task as task
+from celery import shared_task
 from pydantic import parse_obj_as
 
 from backend.apps.action.models import AggregateAction
@@ -21,7 +21,7 @@ from backend.service.models.action import Action
 from backend.service.models.instance_selection import ChainNode
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def generate_action_aggregate():
     # 生成操作聚合配置
     systems = SystemBiz().list()
