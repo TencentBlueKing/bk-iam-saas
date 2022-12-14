@@ -98,6 +98,9 @@ CACHES = {
 
 # redis sentinel
 if REDIS_USE_SENTINEL:
+    # Enable the alternate connection factory.
+    DJANGO_REDIS_CONNECTION_FACTORY = "django_redis.pool.SentinelConnectionFactory"
+
     CACHES["redis"] = {
         "BACKEND": "django_redis.cache.RedisCache",
         # The hostname in LOCATION is the primary (service / master) name
