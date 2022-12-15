@@ -34,6 +34,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     GROUP_MEMBER_ADD = auto()
     GROUP_MEMBER_DELETE = auto()
     # 用户组权限
+    GROUP_POLICY_LIST = auto()
     GROUP_POLICY_GRANT = auto()
     GROUP_POLICY_REVOKE = auto()
     GROUP_POLICY_DELETE = auto()
