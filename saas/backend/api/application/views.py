@@ -18,11 +18,18 @@ from rest_framework.response import Response
 from rest_framework.viewsets import views
 
 from backend.api.authentication import ESBAuthentication
+from backend.biz.application import ApplicationBiz
 from backend.biz.open import ApplicationPolicyListCache
+from backend.service.constants import ApplicationTypeEnum
 from backend.trans.open_application import AccessSystemApplicationTrans
 from backend.util.url import url_join
 
-from .serializers import AccessSystemApplicationSLZ, AccessSystemApplicationUrlSLZ
+from .serializers import (
+    AccessSystemApplicationCustomPolicyResultSLZ,
+    AccessSystemApplicationCustomPolicySLZ,
+    AccessSystemApplicationSLZ,
+    AccessSystemApplicationUrlSLZ,
+)
 
 
 class ApplicationView(views.APIView):
@@ -33,7 +40,7 @@ class ApplicationView(views.APIView):
     authentication_classes = [ESBAuthentication]
     permission_classes = [IsAuthenticated]
 
-    access_system_application_biz = AccessSystemApplicationTrans()
+    access_system_application_trans = AccessSystemApplicationTrans()
     application_policy_list_cache = ApplicationPolicyListCache()
 
     @swagger_auto_schema(
@@ -51,7 +58,7 @@ class ApplicationView(views.APIView):
         system_id = data["system"]
 
         # 将申请的数据转换为PolicyBeanList数据结构，同时需要进行数据检查
-        policy_list = self.access_system_application_biz.to_policy_list(data)
+        policy_list = self.access_system_application_trans.to_policy_list(data)
 
         # 保存到cache中
         cache_id = self.application_policy_list_cache.set(policy_list)
@@ -62,3 +69,36 @@ class ApplicationView(views.APIView):
         url = url + "?" + urlencode(params)
 
         return Response({"url": url})
+
+
+class ApplicationCustomPolicyView(views.APIView):
+    """
+    创建自定义权限申请单
+    """
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    access_system_application_trans = AccessSystemApplicationTrans()
+    application_biz = ApplicationBiz()
+
+    @swagger_auto_schema(
+        operation_description="创建自定义权限申请单",
+        request_body=AccessSystemApplicationCustomPolicySLZ(label="创建自定义权限申请单"),
+        responses={status.HTTP_200_OK: AccessSystemApplicationCustomPolicyResultSLZ(label="申请单信息")},
+        tags=["open"],
+    )
+    def post(self, request):
+        # 校验数据
+        serializer = AccessSystemApplicationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        username = data["applicant"]
+
+        # 将Dict数据转换为创建单据所需的数据结构
+        application_data = self.access_system_application_trans.from_grant_policy_application(username, data)
+        # 创建单据
+        applications = self.application_biz.create_for_policy(ApplicationTypeEnum.GRANT_ACTION.value, application_data)
+
+        return Response({"id": applications[0].id, "sn": applications[0].sn})

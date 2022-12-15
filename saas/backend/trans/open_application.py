@@ -12,12 +12,14 @@ from typing import Dict, List
 
 from pydantic.tools import parse_obj_as
 
+from backend.biz.application import ActionApplicationDataBean
 from backend.biz.policy import PolicyBeanList
+from backend.trans.application import ApplicationDataTrans
 
 from .open import OpenCommonTrans, OpenPolicy
 
 
-class AccessSystemApplicationTrans(OpenCommonTrans):
+class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
     """接入系统请求自定义权限的申请链接的请求数据"""
 
     def to_policy_list(self, data: Dict) -> PolicyBeanList:
@@ -80,3 +82,19 @@ class AccessSystemApplicationTrans(OpenCommonTrans):
             open_policy.fill_instance_name()
 
         return self._to_policy_list(system_id, open_policies)
+
+    def from_grant_policy_application(self, applicant: str, data: Dict) -> ActionApplicationDataBean:
+        """来着自定义权限申请的数据转换"""
+
+        # 1. 转换数据结构
+        policy_list = self.to_policy_list(data)
+
+        # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
+        application_policy_list = self._gen_need_apply_policy_list(applicant, data["system"], policy_list)
+
+        # 3. 转换为ApplicationBiz创建申请单所需数据结构
+        application_data = ActionApplicationDataBean(
+            applicant=applicant, policy_list=application_policy_list, reason=data["reason"]
+        )
+
+        return application_data
