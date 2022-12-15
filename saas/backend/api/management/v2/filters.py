@@ -15,10 +15,12 @@ from backend.apps.group.models import Group
 class GroupFilter(filters.FilterSet):
     id = filters.NumberFilter(label="ID")
     name = filters.CharFilter(label="名字", lookup_expr="icontains")
+    description = filters.CharFilter(label="描述", lookup_expr="icontains")
 
     class Meta:
         model = Group
         fields = [
             "name",
             "id",
+            "description",
         ]
