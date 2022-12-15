@@ -1,2 +1,2 @@
 #!/bin/bash
-python manage.py celery worker -l info
+celery -A config worker -l INFO

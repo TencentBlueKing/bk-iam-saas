@@ -16,6 +16,7 @@ from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.open import ApplicationPolicyListCache
 from backend.common.cache import cached
+from backend.common.filters import InitialFilterSet
 from backend.component import iam
 from backend.service.constants import SubjectType
 
@@ -26,7 +27,7 @@ def _list_pre_application_group_ids(cache_id: str):
     return GroupBiz().list_pre_application_groups(policy_list)
 
 
-class GroupFilter(filters.FilterSet):
+class GroupFilter(InitialFilterSet):
     system_id = filters.CharFilter(method="system_id_filter", label="系统id")
     creator = filters.CharFilter(label="创建人")
     username = filters.CharFilter(method="username_filter", label="用户名")
@@ -36,10 +37,21 @@ class GroupFilter(filters.FilterSet):
     description = filters.CharFilter(label="描述", lookup_expr="icontains")
     role_id = filters.NumberFilter(method="role_id_filter", label="角色ID")
     cache_id = filters.CharFilter(label="cache_id", method="cache_id_filter")
+    hidden = filters.BooleanFilter(method="hidden_filter", initial=True)
 
     class Meta:
         model = Group
-        fields = ["system_id", "creator", "username", "department_id", "name", "id", "description", "role_id"]
+        fields = [
+            "system_id",
+            "creator",
+            "username",
+            "department_id",
+            "name",
+            "id",
+            "description",
+            "role_id",
+            "hidden",
+        ]
 
     def system_id_filter(self, queryset, name, value):
         template_group_ids = list(
@@ -72,6 +84,11 @@ class GroupFilter(filters.FilterSet):
     def cache_id_filter(self, queryset, name, value):
         group_ids = _list_pre_application_group_ids(value)
         return queryset.filter(id__in=group_ids)
+
+    def hidden_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(hidden=False)
+        return queryset
 
 
 class GroupTemplateSystemFilter(filters.FilterSet):

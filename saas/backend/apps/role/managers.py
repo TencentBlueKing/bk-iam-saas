@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List
+from typing import List, Optional
 
 from django.db import models
 
@@ -78,3 +78,21 @@ class RoleRelatedObjectManager(models.Manager):
         移除角色与角色创建的用户组关系
         """
         self.delete_object_relation(group_id, RoleRelatedObjectType.GROUP.value)
+
+
+class RoleRelationManager(models.Manager):
+    def list_sub_id(self, role_id: int) -> List[int]:
+        """
+        查询分级管理员的子集管理的id
+        """
+        return list(self.filter(parent_id=role_id).values_list("role_id", flat=True))
+
+    def get_parent_role_id(self, role_id: int) -> Optional[int]:
+        """
+        查询父级role
+        """
+        relation = self.filter(role_id=role_id).first()
+        if not relation:
+            return None
+
+        return relation.parent_id

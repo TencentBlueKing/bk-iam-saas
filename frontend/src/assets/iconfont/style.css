@@ -1,0 +1,400 @@
+@font-face {
+	font-family: "iam";
+	src: url("fonts/iconcool.svg#iconcool") format("svg"),
+url("fonts/iconcool.ttf") format("truetype"),
+url("fonts/iconcool.woff") format("woff"),
+url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+.iam-icon {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'iam' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  text-align: center;
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.iamcenter-time-circle-fill:before {
+	content: "\e20b";
+}
+.iamcenter-check:before {
+	content: "\e19b";
+}
+.iamcenter-circle-close:before {
+	content: "\e19c";
+}
+.iamcenter-details:before {
+	content: "\e1a4";
+}
+.iamcenter-file:before {
+	content: "\e1a1";
+}
+.iamcenter-help:before {
+	content: "\e199";
+}
+.iamcenter-home:before {
+	content: "\e19f";
+}
+.iamcenter-info-new:before {
+	content: "\e19e";
+}
+.iamcenter-internet:before {
+	content: "\e1a5";
+}
+.iamcenter-notice:before {
+	content: "\e1a3";
+}
+.iamcenter-refresh:before {
+	content: "\e198";
+}
+.iamcenter-termination:before {
+	content: "\e19d";
+}
+.iamcenter-warning:before {
+	content: "\e1b8";
+}
+.iamcenter-withdraw:before {
+	content: "\e197";
+}
+.iamcenter-check-fill:before {
+	content: "\e1a9";
+}
+.iamcenter-close-fill:before {
+	content: "\e1aa";
+}
+.iamcenter-error-fill:before {
+	content: "\e1a8";
+}
+.iamcenter-help-fill:before {
+	content: "\e19a";
+}
+.iamcenter-warning-fill:before {
+	content: "\e1a7";
+}
+.iamcenter-application:before {
+	content: "\e1a6";
+}
+.iamcenter-permission-query:before {
+	content: "\e1a0";
+}
+.iamcenter-has-approve:before {
+	content: "\e18f";
+}
+.iamcenter-has-pass:before {
+	content: "\e190";
+}
+.iamcenter-has-pending:before {
+	content: "\e191";
+}
+.iamcenter-has-reject:before {
+	content: "\e192";
+}
+.iamcenter-has-wait:before {
+	content: "\e193";
+}
+.iamcenter-left-arrow:before {
+	content: "\e1b6";
+}
+.iamcenter-expand:before {
+	content: "\e1b7";
+}
+.iamcenter-user-group-fill:before {
+	content: "\e194";
+}
+.iamcenter-user-fill:before {
+	content: "\e195";
+}
+.iamcenter-user:before {
+	content: "\e196";
+}
+.iamcenter-perm-manage:before {
+	content: "\e1ab";
+}
+.iamcenter-perm-apply:before {
+	content: "\e1ac";
+}
+.iamcenter-approval-process-manage:before {
+	content: "\e1ad";
+}
+.iamcenter-my-perm:before {
+	content: "\e1ae";
+}
+.iamcenter-my-apply:before {
+	content: "\e1af";
+}
+.iamcenter-my-approval:before {
+	content: "\e1b1";
+}
+.iamcenter-system-access:before {
+	content: "\e1b0";
+}
+.iamcenter-my-approval-resource:before {
+	content: "\e1b2";
+}
+.iamcenter-resource-approver-manage:before {
+	content: "\e1b3";
+}
+.iamcenter-check-small:before {
+	content: "\e1b4";
+}
+.iamcenter-reource:before {
+	content: "\e1b5";
+}
+.iamcenter-detail:before {
+	content: "\e1b9";
+}
+.iamcenter-status-current:before {
+	content: "\e1ba";
+}
+.iamcenter-status-wait:before {
+	content: "\e1bb";
+}
+.iamcenter-apply-current:before {
+	content: "\e1bc";
+}
+.iamcenter-apply-revoke:before {
+	content: "\e1bd";
+}
+.iamcenter-apply-pass:before {
+	content: "\e1be";
+}
+.iamcenter-approve-wait:before {
+	content: "\e1bf";
+}
+.iamcenter-approve-reject:before {
+	content: "\e1c0";
+}
+.iamcenter-apply-reject:before {
+	content: "\e1c1";
+}
+.iamcenter-close-small:before {
+	content: "\e1c3";
+}
+.iamcenter-reduce-hollow:before {
+	content: "\e1c4";
+}
+.iamcenter-add-hollow:before {
+	content: "\e1c5";
+}
+.iamcenter-resources:before {
+	content: "\e1c6";
+}
+.iamcenter-see-details:before {
+	content: "\e1c8";
+}
+.iamcenter-copy:before {
+	content: "\e1c7";
+}
+.iamcenter-paste:before {
+	content: "\e1c9";
+}
+.iamcenter-changed:before {
+	content: "\e1ca";
+}
+.iamcenter-expired:before {
+	content: "\e1cb";
+}
+.iamcenter-new:before {
+	content: "\e1cc";
+}
+.iamcenter-edit-fill:before {
+	content: "\e1cd";
+}
+.iamcenter-loading-circle:before {
+	content: "\e1ce";
+}
+.iamcenter-organization-fill:before {
+	content: "\e1cf";
+}
+.iamcenter-user-group:before {
+	content: "\e1d0";
+}
+.iamcenter-personal-user:before {
+	content: "\e1d1";
+}
+.iamcenter-revoke:before {
+	content: "\e1d2";
+}
+.iamcenter-user-directory:before {
+	content: "\e1d3";
+}
+.iamcenter-version-log:before {
+	content: "\e1d7";
+}
+.iamcenter-done-en:before {
+	content: "\e1d8";
+}
+.iamcenter-apply-current-en:before {
+	content: "\e1d9";
+}
+.iamcenter-approve-wait-en:before {
+	content: "\e1da";
+}
+.iamcenter-apply-pass-en:before {
+	content: "\e1db";
+}
+.iamcenter-delete-light-en:before {
+	content: "\e1dd";
+}
+.iamcenter-apply-revoke-en:before {
+	content: "\e1dc";
+}
+.iamcenter-approve-reject-en:before {
+	content: "\e1df";
+}
+.iamcenter-new-en:before {
+	content: "\e1e0";
+}
+.iamcenter-expire-en:before {
+	content: "\e1e1";
+}
+.iamcenter-change-en:before {
+	content: "\e1de";
+}
+.iamcenter-delete-en:before {
+	content: "\e1e2";
+}
+.iamcenter-info-fill:before {
+	content: "\e1e3";
+}
+.iamcenter-switch-identity:before {
+	content: "\e1e5";
+}
+.iamcenter-nav-stick:before {
+	content: "\e1e4";
+}
+.iamcenter-grade-admin:before {
+	content: "\e1e6";
+}
+.iamcenter-logout:before {
+	content: "\e1e7";
+}
+.iamcenter-system-admin:before {
+	content: "\e1e8";
+}
+.iamcenter-super-admin:before {
+	content: "\e1e9";
+}
+.iamcenter-up-angle:before {
+	content: "\e1ea";
+}
+.iamcenter-down-angle:before {
+	content: "\e1eb";
+}
+.iamcenter-right-angle:before {
+	content: "\e1ec";
+}
+.iamcenter-left-angle:before {
+	content: "\e1ed";
+}
+.iamcenter-dustbin:before {
+	content: "\e1ee";
+}
+.iamcenter-perm-template:before {
+	content: "\e1f0";
+}
+.iamcenter-pin:before {
+	content: "\e1f1";
+}
+.iamcenter-delete-line:before {
+	content: "\e20a";
+}
+.iamcenter-detail-new:before {
+	content: "\e1f2";
+}
+.iamcenter-shrink-line:before {
+	content: "\e1f3";
+}
+.iamcenter-undo-line:before {
+	content: "\e209";
+}
+.iamcenter-file-close:before {
+	content: "\e1f4";
+}
+.iamcenter-exact-search-allow:before {
+	content: "\e1f5";
+}
+.iamcenter-fuzzy-search:before {
+	content: "\e1f6";
+}
+.iamcenter-fuzzy-search-allow:before {
+	content: "\e1f7";
+}
+.iamcenter-exact-search:before {
+	content: "\e1f8";
+}
+.iamcenter-drag-fill:before {
+	content: "\e1f9";
+}
+.iamcenter-add-small:before {
+	content: "\e1fa";
+}
+.iamcenter-url:before {
+	content: "\e1fc";
+}
+.iamcenter-super-admin-new:before {
+	content: "\e1fd";
+}
+.iamcenter-super-admin-new-en:before {
+	content: "\e1fe";
+}
+.iamcenter-system-admin-new:before {
+	content: "\e1ff";
+}
+.iamcenter-grade-admin-new-en:before {
+	content: "\e200";
+}
+.iamcenter-system-admin-new-en:before {
+	content: "\e201";
+}
+.iamcenter-grade-admin-new:before {
+	content: "\e202";
+}
+.iamcenter-arrows-left:before {
+	content: "\e203";
+}
+.iamcenter-help-fill-2:before {
+	content: "\e204";
+}
+.iamcenter-sync-new:before {
+	content: "\e205";
+}
+.iamcenter-operate-audit:before {
+	content: "\e208";
+}
+.iamcenter-resource-admin:before {
+	content: "\e210";
+}
+.iamcenter-system-api:before {
+	content: "\e211";
+}
+.iamcenter-auth-api:before {
+	content: "\e212";
+}
+.iamcenter-linshishenqingquanxian:before {
+	content: "\e214";
+}
+.iamcenter-admin-api:before {
+	content: "\e213";
+}
+.iamcenter-brush-fill:before {
+	content: "\e215";
+}
+.iamcenter-refresh-2:before {
+	content: "\e216";
+}
+.iamcenter-level-two:before {
+	content: "\e217";
+}
+.iamcenter-level-one:before {
+	content: "\e218";
+}

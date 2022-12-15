@@ -46,6 +46,8 @@ import Icon from './components/icon';
 import VueI18n from 'vue-i18n';
 import { language, il8n as il8nNew } from './language';
 import './common/bkmagic';
+// 全量引入自定义图标
+import './assets/iconfont/style.css';
 
 import { lang, locale } from 'bk-magic-vue';
 

@@ -20,9 +20,11 @@ from .role import (
     RoleGroupRenewViewSet,
     RoleMemberView,
     RoleSubjectScopeView,
+    SubsetManagerViewSet,
     SuperManagerMemberViewSet,
     SystemManagerMemberView,
     SystemManagerViewSet,
+    UserSubsetManagerViewSet,
     UserView,
 )
 
@@ -41,4 +43,6 @@ __all__ = [
     "SystemManagerMemberView",
     "SystemManagerViewSet",
     "UserView",
+    "SubsetManagerViewSet",
+    "UserSubsetManagerViewSet",
 ]

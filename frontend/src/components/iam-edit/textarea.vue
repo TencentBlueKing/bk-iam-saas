@@ -30,7 +30,7 @@
                 ref="input"
                 type="textarea"
                 :placeholder="placeholder"
-                maxlength="255"
+                :maxlength="maxLength"
                 :rows="3"
                 @input="handleInput"
                 @blur="handleBlur" />
@@ -67,6 +67,10 @@
             rules: {
                 type: Array,
                 default: () => []
+            },
+            maxLength: {
+                type: Number,
+                default: 255
             }
         },
         data () {

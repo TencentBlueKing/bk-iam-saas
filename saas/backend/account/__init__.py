@@ -20,5 +20,3 @@ def get_user_model():
 
 
 auth.get_user_model = get_user_model
-
-default_app_config = "backend.account.apps.AccountConfig"

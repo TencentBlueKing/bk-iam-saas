@@ -48,3 +48,7 @@ class GroupSLZ(SubjectGroupSLZ):
 
 class QueryRoleSLZ(serializers.Serializer):
     with_perm = serializers.BooleanField(label="角色是否带权限")
+
+
+class QueryGroupSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统id", required=False, allow_blank=True, default="")

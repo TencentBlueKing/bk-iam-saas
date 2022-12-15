@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Dict, List, Optional, Tuple
 
+from django.conf import settings
 from django.db.models import Count
 
 from backend.apps.policy.models import Policy as PolicyModel
@@ -137,7 +138,11 @@ class PolicyQueryService:
             .annotate(count=Count("system_id"))
         )
 
-        return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
+        return [
+            SystemCounter(id=one["system_id"], count=one["count"])
+            for one in qs
+            if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
+        ]  # NOTE: 屏蔽掉需要隐藏的系统
 
     def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
         """
@@ -149,7 +154,11 @@ class PolicyQueryService:
             .annotate(count=Count("system_id"))
         )
 
-        return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
+        return [
+            SystemCounter(id=one["system_id"], count=one["count"])
+            for one in qs
+            if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
+        ]  # NOTE: 屏蔽掉需要隐藏的系统
 
     def get_policy_system_by_id(self, policy_id: int, subject: Subject) -> str:
         """根据策略ID获取system"""

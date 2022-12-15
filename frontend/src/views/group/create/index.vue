@@ -191,7 +191,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             /**
              * isAggregateDisabled
              */
@@ -771,10 +771,14 @@
                     try {
                         await this.$store.dispatch('userGroup/addUserGroup', params);
                         this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
-                        bus.$emit('show-guide', 'process');
-                        this.$router.push({
-                            name: 'userGroup'
-                        });
+                        if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
+                            window.parent.postMessage({ type: 'IAM', code: 'success' }, '*');
+                        } else {
+                            bus.$emit('show-guide', 'process');
+                            this.$router.push({
+                                name: 'userGroup'
+                            });
+                        }
                     } catch (e) {
                         console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
@@ -794,15 +798,19 @@
              * handleCancel
              */
             handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
+                if (this.externalSystemId) { // 用户组取消也需要发送一个postmessage给外部页面
+                    window.parent.postMessage({ type: 'IAM', code: 'cancel' }, '*');
+                } else {
+                    let cancelHandler = Promise.resolve();
+                    if (window.changeDialog) {
+                        cancelHandler = leavePageConfirm();
+                    }
+                    cancelHandler.then(() => {
+                        this.$router.push({
+                            name: 'userGroup'
+                        });
+                    }, _ => _);
                 }
-                cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'userGroup'
-                    });
-                }, _ => _);
             },
 
             /**

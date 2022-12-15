@@ -551,11 +551,15 @@
                     this.resourceInstances = [];
                 } else {
                     resItem.condition = data;
-                    data.forEach(item => {
-                        item.instance.forEach(e => {
-                            resItem.resourceInstancesPath = e.path[0];
+                    if (data.length) {
+                        data.forEach(item => {
+                            item.instance.forEach(e => {
+                                resItem.resourceInstancesPath = e.path[0];
+                            });
                         });
-                    });
+                    } else {
+                        delete resItem.resourceInstancesPath;
+                    }
                     if (this.curResIndex !== -1) {
                         this.resourceInstances.splice(this.curResIndex, 1, resItem);
                     }

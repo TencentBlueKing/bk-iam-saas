@@ -9,7 +9,7 @@
             <div slot="right">
                 <bk-input
                     v-model="searchValue"
-                    :placeholder="$t(`m.approvalProcess['加入分级管理员流程搜索提示']`)"
+                    :placeholder="$t(`m.approvalProcess['加入一级管理空间流程搜索提示']`)"
                     clearable
                     style="margin-left: 8px; width: 320px;"
                     right-icon="bk-icon icon-search"
@@ -31,7 +31,7 @@
             @row-mouse-enter="handleRowMouseEnter"
             @row-mouse-leave="handleRowMouseLeave">
             <bk-table-column type="selection" align="center" :selectable="getSelectable"></bk-table-column>
-            <bk-table-column :label="$t(`m.approvalProcess['分级管理员名称']`)" width="400">
+            <bk-table-column :label="$t(`m.approvalProcess['一级管理空间名称']`)" width="400">
                 <template slot-scope="{ row }">
                     <span class="rate-manager-name" :title="row.groupName" @click.stop="handleViewDetail(row)">
                         {{ row.groupName }}
@@ -98,7 +98,7 @@
                 currentSelectList: [],
                 tableList: [
                     {
-                        groupName: '测试分级管理员',
+                        groupName: '测试一级管理空间',
                         id: 1,
                         description: 'qqqq',
                         processValue: '1'

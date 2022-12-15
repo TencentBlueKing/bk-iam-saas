@@ -22,7 +22,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import http from '@/api';
 import { json2Query } from '@/common/util';
@@ -35,7 +35,7 @@ export default {
     mutations: {},
     actions: {
         /**
-         * 获取分级管理员列表
+         * 获取一级管理空间列表
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -50,7 +50,7 @@ export default {
         },
 
         /**
-         * 创建分级管理员
+         * 创建一级管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -65,7 +65,7 @@ export default {
         },
 
         /**
-         * 获取分级管理员详情
+         * 获取一级管理空间详情
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -267,7 +267,7 @@ export default {
         },
 
         /**
-         * 编辑分级管理员
+         * 编辑一级管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -285,7 +285,7 @@ export default {
         },
 
         /**
-         * 普通身份创建分级管理员
+         * 普通身份创建一级管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -300,7 +300,7 @@ export default {
         },
 
         /**
-         * 更新分级管理员
+         * 更新一级管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -318,7 +318,7 @@ export default {
         },
 
         /**
-         * 普通用户编辑分级管理员
+         * 普通用户编辑一级管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state

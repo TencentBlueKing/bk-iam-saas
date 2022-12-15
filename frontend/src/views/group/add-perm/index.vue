@@ -43,6 +43,7 @@
             :is-show.sync="isShowAddSideslider"
             :custom-perm="originalList"
             :template="tempalteDetailList"
+            :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
             :aggregation="aggregationData"
             :authorization="authorizationData"
             :group-id="$route.params.id"
@@ -78,6 +79,7 @@
     import GroupPolicy from '@/model/group-policy';
     import GroupAggregationPolicy from '@/model/group-aggregation-policy';
     import Condition from '@/model/condition';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -116,6 +118,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             isAggregateDisabled () {
                 const aggregationIds = this.tableList.reduce((counter, item) => {
                     return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;

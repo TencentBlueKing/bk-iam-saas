@@ -8,19 +8,36 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, views
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.v2.permissions import ManagementAPIPermission
-from backend.api.management.v2.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
-from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
+from backend.api.management.v2.serializers import (
+    ManagementApplicationIDSLZ,
+    ManagementGradeManagerApplicationResultSLZ,
+    ManagementGradeManagerCreateApplicationSLZ,
+    ManagementGroupApplicationCreateSLZ,
+)
+from backend.apps.application.models import Application
+from backend.apps.role.models import Role
+from backend.biz.application import (
+    ApplicationBiz,
+    ApplicationGroupInfoBean,
+    GradeManagerApplicationDataBean,
+    GroupApplicationDataBean,
+)
 from backend.biz.group import GroupBiz
-from backend.service.constants import ApplicationTypeEnum, SubjectType
+from backend.biz.role import RoleCheckBiz
+from backend.common.lock import gen_role_upsert_lock
+from backend.service.constants import ApplicationTypeEnum, RoleType
 from backend.service.models import Subject
+from backend.trans.open_management import GradeManagerTrans
 
 
 class ManagementGroupApplicationViewSet(GenericViewSet):
@@ -55,8 +72,10 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
+        source_system_id = kwargs["system_id"]
+
         # 检查用户组数量是否超限
-        self.group_biz.check_subject_groups_quota(Subject(type=SubjectType.USER.value, id=user_id), data["group_ids"])
+        self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
         # 创建申请
         applications = self.biz.create_for_group(
@@ -69,6 +88,161 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
                     for group_id in data["group_ids"]
                 ],
             ),
+            source_system_id=source_system_id,
         )
 
         return Response({"ids": [a.id for a in applications]})
+
+
+class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+    """分级管理员创建申请单"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+    management_api_permission = {
+        "create": (
+            VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value,
+            ManagementAPIEnum.V2_GRADE_MANAGER_APPLICATION_CREATE.value,
+        ),
+    }
+
+    biz = ApplicationBiz()
+    role_check_biz = RoleCheckBiz()
+    trans = GradeManagerTrans()
+
+    @swagger_auto_schema(
+        operation_description="分级管理员创建申请单",
+        request_body=ManagementGradeManagerCreateApplicationSLZ(label="分级管理员创建申请单"),
+        responses={status.HTTP_200_OK: ManagementGradeManagerApplicationResultSLZ(label="单据信息")},
+        tags=["management.grade_manager.application"],
+    )
+    def create(self, request, *args, **kwargs):
+        """
+        分级管理员创建申请单
+        """
+        serializer = ManagementGradeManagerCreateApplicationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        user_id = data["applicant"]
+
+        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+        source_system_id = kwargs["system_id"]
+        auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
+        self.verify_system_scope(source_system_id, auth_system_ids)
+
+        # 兼容member格式
+        data["members"] = [{"username": username} for username in data["members"]]
+
+        # 结构转换
+        info = self.trans.to_role_info(data, source_system_id=source_system_id)
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"])
+
+            applications = self.biz.create_for_grade_manager(
+                ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+                GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
+                source_system_id=source_system_id,
+                callback_id=data["callback_id"],
+                callback_url=data["callback_url"],
+                approval_title=data["title"],
+                approval_content=data["content"],
+            )
+
+        return Response({"id": applications[0].id, "sn": applications[0].sn})
+
+
+class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionCheckMixin, GenericViewSet):
+    """分级管理员更新申请单"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+    management_api_permission = {
+        "create": (
+            VerifyAPIParamLocationEnum.ROLE_IN_PATH.value,
+            ManagementAPIEnum.V2_GRADE_MANAGER_APPLICATION_UPDATE.value,
+        ),
+    }
+
+    lookup_field = "id"
+
+    biz = ApplicationBiz()
+    role_check_biz = RoleCheckBiz()
+    trans = GradeManagerTrans()
+
+    @swagger_auto_schema(
+        operation_description="分级管理员更新申请单",
+        request_body=ManagementGradeManagerCreateApplicationSLZ(label="分级管理员更新申请单"),
+        responses={status.HTTP_200_OK: ManagementGradeManagerApplicationResultSLZ(label="单据信息")},
+        tags=["management.grade_manager.application"],
+    )
+    def create(self, request, *args, **kwargs):
+        """
+        分级管理员更新申请单
+        """
+        serializer = ManagementGradeManagerCreateApplicationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        user_id = data["applicant"]
+
+        # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
+        source_system_id = kwargs["system_id"]
+        auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
+        self.verify_system_scope(source_system_id, auth_system_ids)
+
+        role = get_object_or_404(Role, type=RoleType.GRADE_MANAGER.value, id=kwargs["id"])
+
+        # 兼容member格式
+        data["members"] = [{"username": username} for username in data["members"]]
+
+        info = self.trans.to_role_info(data, source_system_id=source_system_id)
+
+        with gen_role_upsert_lock(data["name"]):
+            # 名称唯一性检查
+            self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
+
+            applications = self.biz.create_for_grade_manager(
+                ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
+                GradeManagerApplicationDataBean(
+                    role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info
+                ),
+                source_system_id=source_system_id,
+                callback_id=data["callback_id"],
+                callback_url=data["callback_url"],
+                approval_title=data["title"],
+                approval_content=data["content"],
+            )
+
+        return Response({"id": applications[0].id, "sn": applications[0].sn})
+
+
+class ManagementApplicationCancelView(views.APIView):
+    """
+    申请单取消
+    """
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+    management_api_permission = {
+        "put": (
+            VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value,
+            ManagementAPIEnum.V2_APPLICATION_CANCEL.value,
+        ),
+    }
+
+    biz = ApplicationBiz()
+
+    # Note: 这里会回调第三方处理，所以不定义参数
+    def put(self, request, *args, **kwargs):
+        source_system_id = kwargs["system_id"]
+        callback_id = kwargs["callback_id"]
+
+        # 校验系统与callback_id对应的审批存在
+        application = get_object_or_404(Application, source_system_id=source_system_id, callback_id=callback_id)
+
+        self.biz.cancel_application(application, application.applicant)
+
+        return Response({})

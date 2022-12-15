@@ -27,6 +27,7 @@ class AdminAPIAllowListConfig(BaseModel):
         verbose_name_plural = "Admin API允许的应用白名单"
         ordering = ["-id"]
         unique_together = [["app_code", "api"]]
+        db_table = "api.admin_adminapiallowlistconfig"
 
     @classmethod
     def is_allowed(cls, app_code: str, api: str):

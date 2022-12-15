@@ -1,9 +1,9 @@
 <template>
     <render-horizontal-block
-        :label="$t(`m.grading['最大可授权人员范围']`)">
+        :label="$t(`m.levelSpace['最大可授权人员边界']`)">
         <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
             <Icon bk type="plus-circle-shape" />
-            <span>{{ $t(`m.grading['选择可授权人员范围']`) }}</span>
+            <span>{{ $t(`m.levelSpace['选择可授权人员边界']`) }}</span>
         </section>
         <Icon
             type="info-fill"

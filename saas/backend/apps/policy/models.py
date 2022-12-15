@@ -60,3 +60,7 @@ class Policy(BaseModel):
     def delete_by_action(cls, system_id: str, action_id: str):
         """通过操作删除策略"""
         cls.objects.filter(system_id=system_id, action_id=action_id).delete()
+
+    @property
+    def display_name(self):
+        return f"subject: {self.subject_type}/{self.subject_id} system: {self.system_id} action: {self.action_id}"

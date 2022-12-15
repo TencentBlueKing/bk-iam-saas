@@ -19,7 +19,6 @@ from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.open import ApplicationPolicyListCache
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.common.serializers import SystemQuerySLZ
-from backend.service.constants import SubjectType
 from backend.service.models import Subject
 
 
@@ -44,7 +43,7 @@ class TemporaryPolicyViewSet(GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
 
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
         policies = self.policy_query_biz.list_temporary_by_subject(system_id, subject)
 
         return Response([p.dict() for p in policies])
@@ -62,7 +61,7 @@ class TemporaryPolicyViewSet(GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
 
         policies = self.policy_query_biz.list_temporary_by_policy_ids(system_id, subject, ids)
 
@@ -87,7 +86,7 @@ class TemporaryPolicySystemViewSet(GenericViewSet):
         tags=["temporary_policy"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
 
         data = self.biz.list_temporary_system_counter_by_subject(subject)
 

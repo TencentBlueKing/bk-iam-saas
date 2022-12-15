@@ -12,5 +12,5 @@ from django.conf.urls import include, url
 
 urlpatterns = [
     # 管理类API - 对于V2 API，所有管理类API都默认在系统下
-    url(r"^management/systems/(?P<system_id>\w+)/", include("backend.api.management.v2.urls")),
+    url(r"^management/systems/(?P<system_id>[\w|-]+)/", include("backend.api.management.v2.urls")),
 ]

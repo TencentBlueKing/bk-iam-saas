@@ -23,7 +23,7 @@ class ApprovalProcessGlobalConfig(BaseModel):
     class Meta:
         verbose_name = "审批流程全局配置"
         verbose_name_plural = "审批流程全局配置"
-        unique_together = ["application_type"]  # 每一种申请类型只能配置一个默认流程
+        # unique_together = ["application_type"]  # 每一种申请类型只能配置一个默认流程
 
 
 class ActionProcessRelation(BaseModel):
@@ -36,7 +36,7 @@ class ActionProcessRelation(BaseModel):
     class Meta:
         verbose_name = "操作与审批流程关联"
         verbose_name_plural = "操作与审批流程关联"
-        unique_together = ["system_id", "action_id"]  # 任何一个系统的操作只能配置一个审批流程
+        # unique_together = ["system_id", "action_id"]  # 任何一个系统的操作只能配置一个审批流程
 
     @classmethod
     def delete_by_action(cls, system_id: str, action_id: str):

@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
@@ -18,6 +19,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.v2.filters import GroupFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
     ManagementGradeManagerGroupCreateSLZ,
@@ -27,6 +29,8 @@ from backend.api.management.v2.serializers import (
     ManagementGroupMemberSLZ,
     ManagementGroupPolicyDeleteSLZ,
     ManagementGroupRevokeSLZ,
+    ManagementGroupSLZ,
+    ManagementQueryGroupSLZ,
 )
 from backend.apps.group.audit import (
     GroupCreateAuditProvider,
@@ -41,17 +45,20 @@ from backend.apps.group.audit import (
 )
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
+from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import (
     GroupBiz,
     GroupCheckBiz,
-    GroupCreateBean,
+    GroupCreationBean,
     GroupMemberExpiredAtBean,
     GroupTemplateGrantBean,
 )
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz
+from backend.biz.role import RoleBiz, RoleListQuery
+from backend.common.filters import NoCheckModelFilterBackend
+from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
@@ -66,10 +73,15 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
 
     management_api_permission = {
         "create": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
+        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_LIST.value),
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]).order_by(
+        "-updated_time"
+    )
+    filterset_class = GroupFilter
+    filter_backends = [NoCheckModelFilterBackend]
 
     group_biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
@@ -81,21 +93,27 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         tags=["management.role.group"],
     )
     def create(self, request, *args, **kwargs):
-        role = self.get_object()
+        role = get_object_or_404(self.queryset, id=kwargs["id"])
 
         serializer = ManagementGradeManagerGroupCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         groups_data = serializer.validated_data["groups"]
 
-        # 用户组名称在角色内唯一
-        group_names = [g["name"] for g in groups_data]
-        self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
         # 用户组数量在角色内是否超限
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
-        groups = self.group_biz.batch_create(
-            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
-        )
+        infos = parse_obj_as(List[GroupCreationBean], groups_data)
+        # 来源系统是否隐藏与角色保持一致
+        for one in infos:
+            one.source_system_id = role.source_system_id
+            one.hidden = role.hidden
+
+        with gen_group_upsert_lock(role.id):
+            # 用户组名称在角色内唯一
+            group_names = [g["name"] for g in groups_data]
+            self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
+
+            groups = self.group_biz.batch_create(role.id, infos, request.user.username)
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
@@ -103,6 +121,91 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             add_audit(GroupCreateAuditProvider, request, group=g)
 
         return Response([group.id for group in groups])
+
+    @swagger_auto_schema(
+        operation_description="用户组列表",
+        query_serializer=ManagementQueryGroupSLZ(label="query_group"),
+        responses={status.HTTP_200_OK: ManagementGroupSLZ(label="用户组", many=True)},
+        tags=["management.role.group"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = ManagementQueryGroupSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        inherit = slz.validated_data["inherit"]
+
+        role = get_object_or_404(self.queryset, id=kwargs["id"])
+
+        queryset = RoleListQuery(role).query_group(inherit=inherit)
+        queryset = self.filter_queryset(queryset)
+        queryset = self._filter(request, queryset)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ManagementGroupSLZ(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ManagementGroupSLZ(queryset, many=True)
+        return Response(serializer.data)
+
+    def _filter(self, request, queryset):
+        """
+        用户组筛选
+        """
+        system_id = self.kwargs["system_id"]
+
+        # 使用操作, 资源实例筛选有权限的用户组
+        action_id = request.query_params.get("action_id") or ""
+        resource_type_system_id = request.query_params.get("resource_type_system_id")
+        resource_type_id = request.query_params.get("resource_type_id")
+        resource_id = request.query_params.get("resource_id")
+        bk_iam_path = request.query_params.get("bk_iam_path") or ""
+
+        if action_id and (not resource_type_system_id or not resource_type_id or not resource_id):
+            # 只使用action_id筛选
+            return self._filter_by_action(queryset, system_id, action_id)
+
+        if resource_type_system_id and resource_type_id and resource_id:
+            # 使用操作, 资源实例筛选
+            return self._filter_by_action_resource(
+                queryset, system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
+            )
+
+        return queryset
+
+    def _filter_by_action(self, queryset, system_id: str, action_id: str):
+        """
+        筛选有自定义权限的用户组
+        """
+        group_ids = list(
+            Policy.objects.filter(
+                subject_type=SubjectType.GROUP.value, system_id=system_id, action_id=action_id
+            ).values_list("subject_id", flat=True)
+        )
+        if not group_ids:
+            return Group.objects.none()
+
+        return queryset.filter(id__in=[int(id) for id in group_ids])
+
+    def _filter_by_action_resource(
+        self,
+        queryset,
+        system_id: str,
+        action_id: str,
+        resource_type_system_id: str,
+        resource_type_id: str,
+        resource_id: str,
+        bk_iam_path: str = "",
+    ):
+        """
+        筛选有实例操作权限的用户组
+        """
+        subjects = self.group_biz.list_rbac_group_by_resource(
+            system_id, action_id, resource_type_system_id, resource_type_id, resource_id, bk_iam_path
+        )
+        if not subjects:
+            return Group.objects.none()
+
+        return queryset.filter(id__in=[int(subject.id) for subject in subjects])
 
 
 class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):
@@ -168,10 +271,12 @@ class ManagementGroupViewSet(GenericViewSet):
 
         # 用户组名称在角色内唯一
         role = self.role_biz.get_role_by_group_id(group.id)
-        self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
 
-        # 更新
-        group = self.biz.update(group, name, description, user_id)
+        with gen_group_upsert_lock(role.id):
+            self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
+
+            # 更新
+            group = self.biz.update(group, name, description, user_id)
 
         # 写入审计上下文
         audit_context_setter(group=group)
@@ -386,7 +491,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
-        self.policy_biz.alter(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.alter(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -416,7 +521,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"变更权限（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权的回收，直接使用policy_biz提供的方法即可
-        self.policy_biz.revoke(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.revoke(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -459,15 +564,11 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         action_ids = [a["id"] for a in data["actions"]]
 
         # 查询将要被删除PolicyID列表
-        policies = self.policy_query_biz.list_by_subject(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), action_ids
-        )
+        policies = self.policy_query_biz.list_by_subject(system_id, Subject.from_group_id(group.id), action_ids)
 
         # 根据PolicyID删除策略
         policy_ids = [p.policy_id for p in policies]
-        self.policy_operation_biz.delete_by_ids(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_ids
-        )
+        self.policy_operation_biz.delete_by_ids(system_id, Subject.from_group_id(group.id), policy_ids)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policies)
@@ -500,7 +601,7 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
         group = self.get_object()
 
         system_id = kwargs["system_id"]
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group.id))
+        subject = Subject.from_group_id(group.id)
 
         # 查询用户组Policy列表
         policies = self.policy_query_biz.list_by_subject(system_id, subject)

@@ -10,12 +10,12 @@ specific language governing permissions and limitations under the License.
 """
 from django.db import models
 
-from backend.common.models import BaseModel, CompressedJSONField, TimestampedModel
+from backend.common.models import BaseModel, BaseSystemHiddenModel, CompressedJSONField, TimestampedModel
 
 from .managers import GroupAuthorizeLockManager
 
 
-class Group(BaseModel):
+class Group(BaseModel, BaseSystemHiddenModel):
     """
     用户组
     """

@@ -22,12 +22,13 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
 import { bus } from '@/common/bus';
+import { existValue, getParamsValue } from '@/common/util';
 import store from '@/store';
 import http from '@/api';
 import preload from '@/common/preload';
@@ -43,7 +44,7 @@ if (NODE_ENV === 'development') {
     routes = require('./ieod').routes;
 } else {
     // eslint-disable-next-line
-    routes = require(`./${VERSION}`).routes
+    routes = require(`./${VERSION}`).routes;
 }
 
 const router = new VueRouter({
@@ -53,8 +54,8 @@ const router = new VueRouter({
 
 const cancelRequest = async () => {
     const allRequest = http.queue.get();
-    const requestQueue = allRequest.filter(request => request.cancelWhenRouteChange);
-    await http.cancel(requestQueue.map(request => request.requestId));
+    const requestQueue = allRequest.filter((request) => request.cancelWhenRouteChange);
+    await http.cancel(requestQueue.map((request) => request.requestId));
 };
 
 let preloading = true;
@@ -65,6 +66,13 @@ let pageMethodExecuting = true;
  * beforeEach 钩子函数
  */
 export const beforeEach = async (to, from, next) => {
+    // 外部嵌入页面需要请求配置项
+    if (existValue('externalApp')) {
+        const externalSystemId = getParamsValue('system_id');
+        store.commit('updateSystemId', externalSystemId);
+        fetchExternalSystemsLayout(externalSystemId);
+    }
+
     bus.$emit('close-apply-perm-modal');
 
     canceling = true;
@@ -91,7 +99,7 @@ export const beforeEach = async (to, from, next) => {
                 cancelWhenRouteChange: false,
                 cancelPrevious: false
             });
-            const currentRole = roleList.find(item => String(item.id) === currentRoleId);
+            const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
             if (currentRole) {
                 await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
                 await store.dispatch('userInfo');
@@ -104,7 +112,11 @@ export const beforeEach = async (to, from, next) => {
             const noFrom = !from.name;
             // 说明是刷新页面
             if (noFrom) {
-                next({ path: `${SITE_URL}user-group` });
+                if (to.query.source === 'externalApp') {
+                    next();
+                } else {
+                    next({ path: `${SITE_URL}user-group` });
+                }
             } else {
                 next();
             }
@@ -116,7 +128,7 @@ export const beforeEach = async (to, from, next) => {
                 cancelWhenRouteChange: false,
                 cancelPrevious: false
             });
-            const currentRole = roleList.find(item => String(item.id) === currentRoleId);
+            const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
             if (currentRole) {
                 await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
                 await store.dispatch('userInfo');
@@ -126,10 +138,14 @@ export const beforeEach = async (to, from, next) => {
                 next({ path: `${SITE_URL}user-group` });
             }
         } else {
-            if (curRole === 'staff') {
-                next({ path: `${SITE_URL}my-perm` });
-            } else {
+            if (to.query.source === 'externalApp') { // 外部嵌入页面
                 next();
+            } else {
+                if (curRole === 'staff') {
+                    next({ path: `${SITE_URL}my-perm` });
+                } else {
+                    next();
+                }
             }
         }
     } else {
@@ -174,9 +190,7 @@ export const beforeEach = async (to, from, next) => {
         } else {
             difference = getNavRouterDiff(navIndex);
         }
-        
         if (difference.length) {
-            console.log('to', to);
             store.dispatch('versionLogInfo');
             if (difference.includes(to.name)) {
                 store.commit('setHeaderTitle', '');
@@ -188,6 +202,10 @@ export const beforeEach = async (to, from, next) => {
                     if (to.name === 'groupPermRenewal') {
                         store.commit('updateIndex', 1);
                         window.localStorage.setItem('index', 1);
+                        next();
+                    } if (to.name === 'apply') {
+                        store.commit('updateIndex', 0);
+                        window.localStorage.setItem('index', 0);
                         next();
                     } else {
                         next({ path: `${SITE_URL}user-group` });
@@ -201,10 +219,12 @@ export const beforeEach = async (to, from, next) => {
                     next({ path: `${SITE_URL}perm-template` });
                     // } else if (['createUserGroup', 'userGroupDetail'].includes(to.name) && noFrom) {
                 } else if (['createUserGroup'].includes(to.name) && noFrom) {
-                    next({ path: `${SITE_URL}user-group` });
-                } else if (
-                    ['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom
-                ) {
+                    if (existValue('externalApp')) { // 如果是外部嵌入的页面
+                        next();
+                    } else {
+                        next({ path: `${SITE_URL}user-group` });
+                    }
+                } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}rating-manager` });
                 } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
                     next();
@@ -225,7 +245,7 @@ export const beforeEach = async (to, from, next) => {
     /* eslint-disable */
     let setClass = ' ' + node.className + ' ';
 
-    classNames.forEach(cl => {
+    classNames.forEach((cl) => {
         /* eslint-disable */
         setClass = setClass.replace(' ' + cl + ' ', ' ');
     });
@@ -241,11 +261,14 @@ export const afterEach = async (to, from) => {
     store.commit('setMainContentLoading', true && to.name !== 'permTemplateDetail' && to.name !== 'permTransfer');
     store.commit('setBackRouter', '');
     preloading = true;
+    if (to.query.role_id) {
+        await store.dispatch('role/updateCurrentRole', { id: Number(to.query.role_id) });
+    }
     await preload();
     preloading = false;
     const pageDataMethods = [];
     const routerList = to.matched;
-    routerList.forEach(r => {
+    routerList.forEach((r) => {
         const fetchPageData = r.instances.default && r.instances.default.fetchPageData;
         if (fetchPageData && typeof fetchPageData === 'function') {
             pageDataMethods.push(r.instances.default.fetchPageData());
@@ -256,15 +279,9 @@ export const afterEach = async (to, from) => {
 
     const headerTitle = window.localStorage.getItem('iam-header-title-cache');
 
-    store.commit(
-        'setHeaderTitle',
-        (to.meta && to.meta.headerTitle) || store.getters.headerTitle || headerTitle || ''
-    );
+    store.commit('setHeaderTitle', (to.meta && to.meta.headerTitle) || store.getters.headerTitle || headerTitle || '');
 
-    store.commit(
-        'setBackRouter',
-        (to.meta && to.meta.backRouter) || store.getters.backRouter || ''
-    );
+    store.commit('setBackRouter', (to.meta && to.meta.backRouter) || store.getters.backRouter || '');
 
     await Promise.all(pageDataMethods);
 
@@ -274,6 +291,10 @@ export const afterEach = async (to, from) => {
         store.commit('setMainContentLoading', false);
     }
 };
+
+const fetchExternalSystemsLayout = async (externalSystemId) => {
+    await store.dispatch('getExternalSystemsLayout', {externalSystemId});
+}
 
 router.beforeEach(beforeEach);
 router.afterEach(afterEach);

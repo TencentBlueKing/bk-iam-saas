@@ -57,7 +57,7 @@
                             :title="$t(`m.common['详情']`)"
                             v-if="isShowView(row)"
                             @click.stop="handleViewResource(row)" />
-                        <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
+                        <template v-if="!isUserGroupDetail ? false : true && row.showDelete && !externalDelete">
                             <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
                         </template>
                     </template>
@@ -286,6 +286,10 @@
                 default: false
             },
             isGroup: {
+                type: Boolean,
+                default: false
+            },
+            externalDelete: {
                 type: Boolean,
                 default: false
             }

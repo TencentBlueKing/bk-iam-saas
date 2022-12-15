@@ -51,6 +51,7 @@
     import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import RenderTable from '../components/render-renewal-table';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -76,13 +77,18 @@
         },
         computed: {
             getTableList () {
-                return this.panels.find(item => item.name === this.active).data || [];
+                const panelData = this.panels.find(item => item.name === this.active);
+                if (panelData) {
+                    return panelData.data;
+                }
+                return [];
             },
             curBadgeTheme () {
                 return payload => {
                     return payload === this.active ? '#e1ecff' : '#f0f1f5';
                 };
-            }
+            },
+            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
         },
         watch: {
             panels: {
@@ -94,7 +100,7 @@
                             this.isEmpty = true;
                         }
                     } else if (this.active === 'custom') {
-                        if (value[1].total > 0) {
+                        if (value[1] && value[1].total > 0) {
                             this.isEmpty = false;
                         } else {
                             this.isEmpty = true;
@@ -102,6 +108,16 @@
                     }
                 },
                 immediate: true
+            },
+            externalSystemsLayout: {
+                handler (value) {
+                    if (value.myPerm.renewal.hideCustomTab) {
+                        this.panels.splice(1, 1);
+                        this.active = 'group';
+                    }
+                },
+                immediate: true,
+                deep: true
             }
         },
         async created () {
@@ -114,17 +130,23 @@
         methods: {
             async fetchData () {
                 this.tableLoading = true;
-                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                const userGroupParams = {
                     page_size: 10,
                     page: 1
-                }), this.$store.dispatch('renewal/getExpireSoonPerm')];
+                };
+                if (this.externalSystemId) {
+                    userGroupParams.system_id = this.externalSystemId;
+                }
+                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams), this.$store.dispatch('renewal/getExpireSoonPerm')];
                 const resultList = await Promise.all(promiseList).finally(() => {
                     this.tableLoading = false;
                 });
                 this.panels[0].total = resultList[0].data.count;
                 this.panels[0].data = resultList[0].data.results;
-                this.panels[1].total = resultList[1].data.length;
-                this.panels[1].data = resultList[1].data;
+                if (this.panels[1]) {
+                    this.panels[1].total = resultList[1].data.length;
+                    this.panels[1].data = resultList[1].data;
+                }
                 this.tabKey = +new Date();
             },
             // async fetchPageData () {
@@ -167,8 +189,10 @@
                     this.panels[0].count = this.panels[0].total;
                     this.curSelectedList = value;
                 } else {
-                    this.panels[1].count = value.length;
-                    this.curSelectedList = value;
+                    if (this.panels[1]) {
+                        this.panels[1].count = value.length;
+                        this.curSelectedList = value;
+                    }
                 }
                 this.isShowErrorTips = false;
                 this.$nextTick(() => {

@@ -1924,6 +1924,60 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v2/open/management/systems/{system_id}/applications/{callback_id}/approve/:
+    post:
+      operationId: v2_management_application_approve
+      description: 申请单审批回调
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/approve/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/:
+    put:
+      operationId: v2_management_application_cancel
+      description: 取消申请单
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/applications/{callback_id}/cancel/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v2/open/management/systems/{system_id}/departments/{department_id}/groups/belong/:
     get:
       operationId: v2_management_check_department_group_belong
@@ -1951,7 +2005,167 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/:
+    post:
+      operationId: v2_management_grade_manager_create
+      description: 创建分级管理员
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/:
+    post:
+      operationId: v2_management_grade_manager_applications
+      description: 创建分级管理员申请
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/-/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/{id}/:
+    get:
+      operationId: v2_management_grade_manager_detail
+      description: 分级管理员详情
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    put:
+      operationId: v2_management_update_grade_manager
+      description: 更新分级管理员
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/{id}/applications/:
+    post:
+      operationId: v2_management_update_grade_manager_application
+      description: 创建更新分级管理员申请
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/:
+    get:
+      operationId: v2_management_grade_manager_list_groups
+      description: 分级管理员用户组列表
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
     post:
       operationId: v2_management_grade_manager_create_groups
       description: 分级管理员批量创建用户组
@@ -1969,6 +2183,33 @@ paths:
           type: HTTP
           method: post
           path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/:
+    post:
+      operationId: v2_management_grade_manager_create_subset_manager
+      description: 分级管理员创建二级管理员
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -2262,6 +2503,59 @@ paths:
           type: HTTP
           method: get
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/:
+    get:
+      operationId: v2_management_subset_manager_list_groups
+      description: 二级管理员用户组列表
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: v2_management_subset_manager_create_groups
+      description: 二级管理员批量创建用户组
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/groups/
           matchSubpath: false
           timeout: 0
           upstreams: {}

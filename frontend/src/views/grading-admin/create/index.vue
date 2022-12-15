@@ -18,7 +18,7 @@
                 :content="$t(`m.guide['操作和资源实例']`)" />
         </render-action> -->
         <render-horizontal-block
-            :label="$t(`m.grading['最大可授权资源范围']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -77,7 +77,7 @@
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
-                :title="$t(`m.grading['最大可授权人员范围']`)"
+                :title="$t(`m.levelSpace['最大可授权人员边界']`)"
                 :tips="addMemberTips"
                 @on-click="handleAddMember"
                 style="margin-bottom: 16px;">
@@ -207,7 +207,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    syncPerm: true
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
@@ -221,7 +222,7 @@
                 reasonEmptyError: false,
                 isExpanded: false,
                 curActionValue: [],
-                addMemberTitle: this.$t(`m.grading['最大可授权人员范围']`),
+                addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
                 isShowReasonDialog: false,
@@ -302,13 +303,12 @@
                 deep: true
             }
         },
-        mounted () {
-            this.formData.members = [this.user.username];
-        },
         methods: {
             async fetchPageData () {
                 if (Number(this.id) > 0) {
                     await this.fetchDetail();
+                } else {
+                    this.formData.members = [{ username: this.user.username, readonly: true }];
                 }
             },
 
@@ -793,14 +793,15 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, syncPerm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    reason: this.reason
+                    reason: this.reason,
+                    sync_perm: syncPerm
                 };
                 try {
                     await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
@@ -891,7 +892,7 @@
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['新建一级管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'ratingManager'
                     });
@@ -915,9 +916,7 @@
                     cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'ratingManager'
-                    });
+                    this.$router.go(-1);
                 }, _ => _);
             },
 
@@ -934,7 +933,7 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
+            top: -45px;
             left: 150px;
             font-size: 12px;
             color: #ff4d4d;

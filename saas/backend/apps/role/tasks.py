@@ -14,7 +14,7 @@ from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, current_app, task
+from celery import Task, current_app, shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -32,7 +32,7 @@ from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
 from backend.service.role import AuthScopeAction, AuthScopeSystem
@@ -44,7 +44,7 @@ from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffix
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def sync_system_manager():
     """
     创建系统管理员
@@ -70,14 +70,16 @@ def sync_system_manager():
             "name": f"{system.name}",
             "name_en": f"{system.name_en}",
             "description": "",
-            "members": members,
+            "members": [{"username": username} for username in members],
             "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
             "subject_scopes": [{"type": "*", "id": "*"}],
         }
-        RoleBiz().create(RoleInfoBean.parse_obj(data), "admin")
+        RoleBiz().create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
+    name = "backend.apps.role.tasks.SendRoleGroupExpireRemindMailTask"
+
     group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
@@ -115,7 +117,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
 current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def role_group_expire_remind():
     """
     角色管理的用户组过期提醒
@@ -151,6 +153,8 @@ def role_group_expire_remind():
 
 
 class InitBizGradeManagerTask(Task):
+    name = "backend.apps.role.tasks.InitBizGradeManagerTask"
+
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()
@@ -195,7 +199,7 @@ class InitBizGradeManagerTask(Task):
             return
 
         try:
-            self.role_check_biz.check_unique_name(biz_name)
+            self.role_check_biz.check_grade_manager_unique_name(biz_name)
         except APIError:
             # 缓存结果
             self._exist_names.add(biz_name)
@@ -203,7 +207,7 @@ class InitBizGradeManagerTask(Task):
 
         role_info = self._init_role_info(project, maintainers)
 
-        role = self.biz.create(role_info, ADMIN_USER)
+        role = self.biz.create_grade_manager(role_info, ADMIN_USER)
 
         # 创建用户组并授权
         expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
@@ -221,7 +225,7 @@ class InitBizGradeManagerTask(Task):
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,
-                subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
+                subjects=[Subject.from_username(u.username) for u in users],
                 expired_at=expired_at,  # 过期时间半年
             )
 

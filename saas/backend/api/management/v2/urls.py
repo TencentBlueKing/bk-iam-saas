@@ -13,6 +13,18 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # -------------- 分级管理员 --------------
+    # 分级管理员
+    path(
+        "grade_managers/",
+        views.ManagementGradeManagerViewSet.as_view({"post": "create"}),
+        name="open.management.v2.grade_manager",
+    ),
+    path(
+        "grade_managers/<int:id>/",
+        views.ManagementGradeManagerViewSet.as_view({"put": "update", "get": "retrieve"}),
+        name="open.management.v2.grade_manager",
+    ),
     # -------------- 用户组本身 --------------
     # 系统管理员下创建用户组
     path(
@@ -23,7 +35,7 @@ urlpatterns = [
     # 分级管理员下创建用户组
     path(
         "grade_managers/<int:id>/groups/",
-        views.ManagementGradeManagerGroupViewSet.as_view({"post": "create"}),
+        views.ManagementGradeManagerGroupViewSet.as_view({"post": "create", "get": "list"}),
         name="open.management.v2.grade_manager_group",
     ),
     # 用户组基本信息更新 & 删除
@@ -70,6 +82,17 @@ urlpatterns = [
         views.ManagementGroupApplicationViewSet.as_view({"post": "create"}),
         name="open.management.v2.group_application",
     ),
+    # 分级管理员申请单
+    path(
+        "grade_managers/-/applications/",
+        views.ManagementGradeManagerApplicationViewSet.as_view({"post": "create"}),
+        name="open.management.v2.grade_manager_application",
+    ),
+    path(
+        "grade_managers/<int:id>/applications/",
+        views.ManagementGradeManagerUpdatedApplicationViewSet.as_view({"post": "create"}),
+        name="open.management.v2.grade_manager_updated_application",
+    ),
     # -------------- Subject --------------
     # 用户 - 所属用户组判定
     path(
@@ -82,5 +105,31 @@ urlpatterns = [
         "departments/<int:id>/groups/belong/",
         views.ManagementDepartmentGroupBelongViewSet.as_view({"get": "check"}),
         name="open.management.v2.department_group_belong",
+    ),
+    # -------------- Approval --------------
+    # 审批回调
+    path(
+        "applications/<str:callback_id>/approve/",
+        views.ManagementApplicationApprovalView.as_view(),
+        name="open.management.v2.application_approve",
+    ),
+    # 申请单取消
+    path(
+        "applications/<str:callback_id>/cancel/",
+        views.ManagementApplicationCancelView.as_view(),
+        name="open.management.v2.application_cancel",
+    ),
+    # -------------- Subset Manager --------------
+    # 创建二级管理员
+    path(
+        "grade_managers/<int:id>/subset_managers/",
+        views.ManagementSubsetManagerViewSet.as_view({"post": "create"}),
+        name="open.management.v2.grade_manager_create_subset_manager",
+    ),
+    # 二级管理员下用户组
+    path(
+        "subset_managers/<int:id>/groups/",
+        views.ManagementGradeManagerGroupViewSet.as_view({"post": "create", "get": "list"}),
+        name="open.management.v2.subset_manager_group",
     ),
 ]

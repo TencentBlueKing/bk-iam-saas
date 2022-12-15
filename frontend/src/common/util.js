@@ -194,20 +194,26 @@ export function json2Query (param, key) {
     const mappingOperator = '=';
     const separator = '&';
     let paramStr = '';
-
-    if (param instanceof String || typeof param === 'string'
-            || param instanceof Number || typeof param === 'number'
-            || param instanceof Boolean || typeof param === 'boolean'
+    if (
+        param instanceof String
+        || typeof param === 'string'
+        || param instanceof Number
+        || typeof param === 'number'
+        || param instanceof Boolean
+        || typeof param === 'boolean'
     ) {
         paramStr += separator + key + mappingOperator + encodeURIComponent(param);
     } else {
-        Object.keys(param).forEach(p => {
-            const value = param[p];
-            const k = (key === null || key === '' || key === undefined)
-                ? p
-                : key + (param instanceof Array ? '[' + p + ']' : '.' + p);
-            paramStr += separator + json2Query(value, k);
-        });
+        if (param) {
+            Object.keys(param).forEach((p) => {
+                const value = param[p];
+                const k
+                    = key === null || key === '' || key === undefined
+                        ? p
+                        : key + (param instanceof Array ? '[' + p + ']' : '.' + p);
+                paramStr += separator + json2Query(value, k);
+            });
+        }
     }
     return paramStr.substr(1);
 }
@@ -415,4 +421,76 @@ export function deepEquals (x, y) {
         }
     }
     return true;
+}
+
+/**
+ * 查找地址栏是否有传入的值
+ *
+ * @param {number/string/object} x
+ */
+export function existValue (value) {
+    // 1、url截取?之后的字符串(不包含?)
+    const pathSearch = window.location.search.substr(1);
+    const result = [];
+    // 2、以&为界截取参数键值对
+    const paramItems = pathSearch.split('&');
+    // 3、将键值对形式的参数存入数组
+    for (let i = 0; i < paramItems.length; i++) {
+        const paramKey = paramItems[i].split('=')[0];
+        const paramValue = paramItems[i].split('=')[1];
+        result.push({
+            key: paramKey,
+            value: paramValue
+        });
+    }
+
+    // 4、遍历value值
+    for (let j = 0; j < result.length; j++) {
+        if (result[j].value === value) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * 根据参数key获取地址栏的value
+ *
+ * @param {number/string/object} x
+ */
+export function getParamsValue (key) {
+    // 1、url截取?之后的字符串(不包含?)
+    const pathSearch = window.location.search.substr(1);
+    const result = [];
+    // 2、以&为界截取参数键值对
+    const paramItems = pathSearch.split('&');
+    // 3、将键值对形式的参数存入数组
+    for (let i = 0; i < paramItems.length; i++) {
+        const paramKey = paramItems[i].split('=')[0];
+        const paramValue = paramItems[i].split('=')[1];
+        result.push({
+            key: paramKey,
+            value: paramValue
+        });
+    }
+
+    // 4、遍历value值
+    for (let j = 0; j < result.length; j++) {
+        if (result[j].key === key) {
+            return result[j].value;
+        }
+    }
+}
+
+/**
+ * 根据毫秒生成睡眠函数
+ *
+ * @param number
+ */
+export function sleep (time) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
 }

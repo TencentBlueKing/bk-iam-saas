@@ -25,7 +25,7 @@ from backend.common.error_codes import error_codes
 from backend.common.lock import gen_policy_alter_lock
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
-from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
+from backend.service.constants import ANY_ID, DEFAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
 from backend.service.models import (
     Action,
     BackendThinPolicy,
@@ -855,7 +855,7 @@ class PolicyBean(Policy):
                 data["resource_groups"] = [
                     # NOTE: 固定resource_group_id方便删除逻辑
                     {
-                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "id": DEFAULT_RESOURCE_GROUP_ID,
                         "related_resource_types": data.pop("related_resource_types"),
                     }
                 ]
