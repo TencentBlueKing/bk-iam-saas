@@ -90,7 +90,7 @@ class ApplicationCustomPolicyView(views.APIView):
     )
     def post(self, request):
         # 校验数据
-        serializer = AccessSystemApplicationSLZ(data=request.data)
+        serializer = AccessSystemApplicationCustomPolicySLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
