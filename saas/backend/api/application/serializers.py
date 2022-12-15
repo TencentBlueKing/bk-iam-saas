@@ -98,3 +98,15 @@ class AccessSystemApplicationSLZ(serializers.Serializer):
 
 class AccessSystemApplicationUrlSLZ(serializers.Serializer):
     url = serializers.URLField()
+
+
+class AccessSystemApplicationCustomPolicySLZ(AccessSystemApplicationSLZ):
+    """接入系统创建自定义申请单"""
+
+    applicant = serializers.CharField(label="申请者的用户名", max_length=32)
+    reason = serializers.CharField(label="申请理由", max_length=255)
+
+
+class AccessSystemApplicationCustomPolicyResultSLZ(serializers.Serializer):
+    id = serializers.CharField(label="申请单据ID")
+    sn = serializers.CharField(label="ITSM审批单SN")
