@@ -7,8 +7,6 @@ from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.utils import OperationalError
 
-logger = logging.getLogger(__name__)
-
 
 class Migration(migrations.Migration):
 
