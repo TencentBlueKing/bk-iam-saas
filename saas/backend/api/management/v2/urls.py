@@ -61,7 +61,7 @@ urlpatterns = [
     # 用户组自定义权限
     path(
         "groups/<int:id>/policies/",
-        views.ManagementGroupPolicyViewSet.as_view({"post": "create", "delete": "destroy"}),
+        views.ManagementGroupPolicyViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.v2.group_policy",
     ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
