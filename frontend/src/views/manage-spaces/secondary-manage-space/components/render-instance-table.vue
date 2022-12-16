@@ -1732,7 +1732,7 @@
                     }
                 }
                 this.tableList.forEach(item => {
-                    const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id);
+                    const curSystemData = actionList.find(subItem => subItem.system_id === item.detail.system.id);
                     if (!item.isAggregate) {
                         const groupResourceTypes = [];
                         if (item.resource_groups.length > 0) {
@@ -1841,86 +1841,6 @@
                         }
                     }
                 });
-
-                // const isExistBackList = this.tableList.filter(
-                //     item => item.isAggregate && item.instances.length < 1 && item.selectValueDisplay !== ''
-                // )
-                // if (isExistBackList.length > 0) {
-                //     const actions = isExistBackList.map(
-                //         item => item.actions.map(subItem => `${subItem.system_id}&${subItem.id}`)
-                //     ).flat()
-                //     const backupList = this.backupList.filter(
-                //         item => actions.includes(`${item.system_id}&${item.id}`)
-                //     )
-                //     backupList.forEach(item => {
-                //         const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id)
-                //         if (!item.isAggregate) {
-                //             const relatedResourceTypes = []
-                //             if (item.related_resource_types.length > 0) {
-                //                 item.related_resource_types.forEach(resItem => {
-                //                     if (resItem.empty) {
-                //                         resItem.isError = true
-                //                         flag = true
-                //                     }
-                //                     const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-                //                         ? resItem.condition.map(conItem => {
-                //                             const { id, instance, attribute } = conItem
-                //                             const attributeList = (attribute && attribute.length > 0)
-                //                                 ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                //                                 : []
-
-                //                             const instanceList = (instance && instance.length > 0)
-                //                                 ? instance.map(({ name, type, path }) => {
-                //                                     const tempPath = _.cloneDeep(path)
-                //                                     tempPath.forEach(pathItem => {
-                //                                         pathItem.forEach(pathSubItem => {
-                //                                             delete pathSubItem.disabled
-                //                                         })
-                //                                     })
-                //                                     return {
-                //                                         name,
-                //                                         type,
-                //                                         path: tempPath
-                //                                     }
-                //                                 })
-                //                                 : []
-                //                             return {
-                //                                 id,
-                //                                 instances: instanceList,
-                //                                 attributes: attributeList
-                //                             }
-                //                         })
-                //                         : []
-                //                     relatedResourceTypes.push({
-                //                         type: resItem.type,
-                //                         system_id: resItem.system_id,
-                //                         name: resItem.name,
-                //                         condition: conditionList
-                //                     })
-                //                 })
-                //             }
-                //             const params = {
-                //                 system_id: item.system_id,
-                //                 actions: [
-                //                     {
-                //                         id: item.id,
-                //                         related_resource_types: relatedResourceTypes
-                //                     }
-                //                 ],
-                //                 aggregations: []
-                //             }
-                //             if (curSystemData) {
-                //                 curSystemData.actions.push({
-                //                     id: item.id,
-                //                     related_resource_types: relatedResourceTypes
-                //                 })
-                //             } else {
-                //                 actionList.push(params)
-                //             }
-                //         }
-                //     })
-                // }
-
                 return {
                     flag,
                     actions: actionList
