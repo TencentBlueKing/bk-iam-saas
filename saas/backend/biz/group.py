@@ -556,7 +556,7 @@ class GroupBiz:
             task = TaskDetail.create(TaskType.GROUP_AUTHORIZATION.value, [subject.dict(), uuid])
 
         # 执行授权流程
-        TaskFactory()(task.id)
+        TaskFactory().run(task.id)
 
     def get_group_role_dict_by_ids(self, group_ids: List[int]) -> GroupRoleDict:
         """

@@ -46,6 +46,7 @@ from backend.apps.group.audit import (
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.policy.models import Policy
+from backend.apps.policy.serializers import PolicySLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.biz.group import (
@@ -442,7 +443,10 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
 
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
     management_api_permission = {
+        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_LIST.value),
         "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_GRANT.value),
         "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_REVOKE.value),
     }
@@ -452,7 +456,8 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
     group_biz = GroupBiz()
     role_biz = RoleBiz()
-    policy_biz = PolicyOperationBiz()
+    policy_operation_biz = PolicyOperationBiz()
+    policy_query_biz = PolicyQueryBiz()
     trans = ManagementCommonTrans()
 
     @swagger_auto_schema(
@@ -491,7 +496,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
-        self.policy_biz.alter(system_id, Subject.from_group_id(group.id), policy_list.policies)
+        self.policy_operation_biz.alter(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -521,12 +526,30 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"变更权限（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权的回收，直接使用policy_biz提供的方法即可
-        self.policy_biz.revoke(system_id, Subject.from_group_id(group.id), policy_list.policies)
+        self.policy_operation_biz.revoke(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
 
         return Response({})
+
+    @swagger_auto_schema(
+        operation_description="用户组自定义权限列表",
+        responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
+        tags=["management.role.group.policy"],
+    )
+    def list(self, request, *args, **kwargs):
+        system_id = kwargs["system_id"]
+        group = self.get_object()
+
+        subject = Subject.from_group_id(group.id)
+
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
+
+        # ResourceNameAutoUpdate
+        updated_policies = self.policy_operation_biz.update_due_to_renamed_resource(system_id, subject, policies)
+
+        return Response([p.dict() for p in updated_policies])
 
 
 class ManagementGroupActionPolicyViewSet(GenericViewSet):

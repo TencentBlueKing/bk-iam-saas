@@ -8,3 +8,25 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
+import sys
+
+from celery.__main__ import main
+from django.core.management.base import BaseCommand
+
+
+class Command(BaseCommand):
+    help = "celery start wrapper command"
+
+    def add_arguments(self, parser):
+        parser.add_argument("args", nargs="*")
+        parser.add_argument("-n")
+        parser.add_argument("-l")
+        parser.add_argument("--autoscale")
+
+    def handle(self, *args, **options):
+        sys.argv.pop(0)
+        sys.argv.insert(1, "-A")
+        sys.argv.insert(2, "config")
+
+        sys.exit(main())

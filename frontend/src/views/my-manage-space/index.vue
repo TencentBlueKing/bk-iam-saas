@@ -74,12 +74,6 @@
                                     :remote-hander="handleUpdateSubManageSpace" />
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
-                        <bk-table-column :label="$t(`m.common['创建时间']`)">
-                            <template slot-scope="child">
-                                <span :title="row.created_time">{{ child.row.created_time }}</span>
-                            </template>
-                        </bk-table-column>
                         <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
                         <bk-table-column prop="updated_time">
                             <template slot-scope="child">
