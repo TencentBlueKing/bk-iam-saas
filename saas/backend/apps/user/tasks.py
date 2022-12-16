@@ -13,7 +13,7 @@ from datetime import timedelta
 from itertools import groupby
 from urllib.parse import urlencode
 
-from celery import Task, current_app, task
+from celery import Task, current_app, shared_task
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import F, Q
@@ -45,6 +45,8 @@ MAX_USER_PERMISSION_CLEAN_RETRY_COUNT = 3
 
 
 class SendUserExpireRemindMailTask(Task):
+    name = "backend.apps.user.tasks.SendUserExpireRemindMailTask"
+
     policy_biz = PolicyQueryBiz()
     group_biz = GroupBiz()
 
@@ -83,7 +85,7 @@ class SendUserExpireRemindMailTask(Task):
 current_app.tasks.register(SendUserExpireRemindMailTask())
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def user_group_policy_expire_remind():
     """
     用户的用户组, 自定义权限过期检查
@@ -120,7 +122,7 @@ def user_group_policy_expire_remind():
         SendUserExpireRemindMailTask().delay(username, expired_at)
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def user_cleanup_expired_policy():
     """
     清理用户的长时间过期策略
@@ -272,7 +274,7 @@ class UserPermissionCleaner:
                 self.role_biz.modify_system_manager_members(role_id=role.id, members=members)
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def user_permission_clean(username: str):
     """
     清理用户权限
@@ -280,7 +282,7 @@ def user_permission_clean(username: str):
     UserPermissionCleaner(username).clean()
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def check_user_permission_clean_task():
     """
     检查用户权限清理任务
@@ -297,7 +299,7 @@ def check_user_permission_clean_task():
         user_permission_clean(r.username)
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def clean_user_permission_clean_record():
     # 删除3天之前已完成的记录
     day_before = timezone.now() - timedelta(days=30)

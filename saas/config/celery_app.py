@@ -7,20 +7,21 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django_filters import rest_framework as filters
 
-from backend.apps.group.models import Group
+import os
 
+from celery import Celery
 
-class GroupFilter(filters.FilterSet):
-    id = filters.NumberFilter(label="ID")
-    name = filters.CharFilter(label="名字", lookup_expr="icontains")
-    description = filters.CharFilter(label="描述", lookup_expr="icontains")
+# Set the default Django settings module for the 'celery' program.
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 
-    class Meta:
-        model = Group
-        fields = [
-            "name",
-            "id",
-            "description",
-        ]
+app = Celery("bkiam")
+
+# Using a string here means the worker doesn't have to serialize
+# the configuration object to child processes.
+# - namespace='CELERY' means all celery-related configuration keys
+#   should have a `CELERY_` prefix.
+app.config_from_object("django.conf:settings")
+
+# Load task modules from all registered Django apps.
+app.autodiscover_tasks()

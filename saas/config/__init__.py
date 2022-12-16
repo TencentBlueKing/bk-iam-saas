@@ -11,6 +11,8 @@ import logging
 
 from backend.common.local import local
 
+from .celery_app import app as celery_app  # noqa
+
 
 class RequestIDFilter(logging.Filter):
     """

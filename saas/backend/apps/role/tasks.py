@@ -14,7 +14,7 @@ from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, current_app, task
+from celery import Task, current_app, shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -44,7 +44,7 @@ from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffix
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def sync_system_manager():
     """
     创建系统管理员
@@ -78,6 +78,8 @@ def sync_system_manager():
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
+    name = "backend.apps.role.tasks.SendRoleGroupExpireRemindMailTask"
+
     group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
@@ -115,7 +117,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
 current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def role_group_expire_remind():
     """
     角色管理的用户组过期提醒
@@ -151,6 +153,8 @@ def role_group_expire_remind():
 
 
 class InitBizGradeManagerTask(Task):
+    name = "backend.apps.role.tasks.InitBizGradeManagerTask"
+
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()

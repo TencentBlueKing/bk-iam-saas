@@ -24,6 +24,7 @@ from rest_framework.exceptions import (
     NotFound,
     ParseError,
     PermissionDenied,
+    UnsupportedMediaType,
     ValidationError,
 )
 from rest_framework.fields import ListField
@@ -97,6 +98,9 @@ def _exception_to_error(request, exc) -> Optional[APIError]:
 
     if isinstance(exc, ParseError):
         return error_codes.JSON_FORMAT_ERROR.format(message=exc.detail)
+
+    if isinstance(exc, UnsupportedMediaType):
+        return error_codes.UNSUPPORTED_MEDIA_TYPE.format(message=exc.detail)
 
     if isinstance(exc, ValidationError):
         if is_open_api_request_path(request.path):

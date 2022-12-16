@@ -535,7 +535,7 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
 
         # 使用长时任务实现用户组授权更新
         task = TaskDetail.create(TaskType.TEMPLATE_UPDATE.value, [template.id])
-        TaskFactory()(task.id)
+        TaskFactory().run(task.id)
 
         audit_context_setter(template=template)
 

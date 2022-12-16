@@ -685,7 +685,7 @@ def query_rbac_group_by_resource(
     data = {
         "action_id": action_id,
         "resource": {
-            "system_id": resource_type_system_id,
+            "system": resource_type_system_id,
             "type": resource_type_id,
             "id": resource_id,
             "attribute": attribute or {},

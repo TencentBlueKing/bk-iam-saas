@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 TencentBlueKing is pleased to support the open source community by making 蓝鲸智云-权限中心(BlueKing-IAM) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
@@ -7,20 +8,25 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django_filters import rest_framework as filters
 
-from backend.apps.group.models import Group
+import sys
+
+from celery.__main__ import main
+from django.core.management.base import BaseCommand
 
 
-class GroupFilter(filters.FilterSet):
-    id = filters.NumberFilter(label="ID")
-    name = filters.CharFilter(label="名字", lookup_expr="icontains")
-    description = filters.CharFilter(label="描述", lookup_expr="icontains")
+class Command(BaseCommand):
+    help = "celery start wrapper command"
 
-    class Meta:
-        model = Group
-        fields = [
-            "name",
-            "id",
-            "description",
-        ]
+    def add_arguments(self, parser):
+        parser.add_argument("args", nargs="*")
+        parser.add_argument("-n")
+        parser.add_argument("-l")
+        parser.add_argument("--autoscale")
+
+    def handle(self, *args, **options):
+        sys.argv.pop(0)
+        sys.argv.insert(1, "-A")
+        sys.argv.insert(2, "config")
+
+        sys.exit(main())
