@@ -4,9 +4,10 @@
             :sub-title="subTitle"
             expanded>
             <bk-table
-                :data="systemUserList"
                 size="small"
                 ext-cls="system-user-table-cls"
+                :max-height="tableHeight"
+                :data="systemUserList"
                 :outer-border="false"
                 :header-border="false"
                 @row-mouse-enter="handleSysRowMouseEnter"
@@ -16,7 +17,7 @@
                     <template slot-scope="{ row, $index }">
                         <template v-if="row.isEdit">
                             <bk-user-selector
-                                :value="row.members"
+                                :value="row.members.map(item => item.username)"
                                 :ref="`sysRef${$index}`"
                                 :api="userApi"
                                 :class="row.isError ? 'is-member-empty-cls' : ''"
@@ -32,7 +33,7 @@
                             <div
                                 :class="['user-wrapper', { 'is-hover': row.canEdit }]"
                                 @click.stop="handleOpenSysEdit(row, $index)">
-                                {{ row.members | memberFilter }}
+                                {{ formatMemberFilter(row.members) }}
                             </div>
                         </template>
                     </template>
@@ -56,19 +57,12 @@
     import _ from 'lodash';
     import BkUserSelector from '@blueking/user-selector';
     import RenderItem from '../common/render-item';
+    import { getWindowHeight } from '@/common/util';
     export default {
         name: '',
         components: {
             BkUserSelector,
             RenderItem
-        },
-        filters: {
-            memberFilter (value) {
-                if (value.length > 0) {
-                    return value.join('；');
-                }
-                return '--';
-            }
         },
         data () {
             return {
@@ -76,6 +70,11 @@
                 systemUserList: [],
                 userApi: window.BK_USER_API
             };
+        },
+        computed: {
+            tableHeight () {
+                return getWindowHeight() - 297;
+            }
         },
         created () {
             this.fetchSystemManager();
@@ -137,6 +136,13 @@
                 this.$nextTick(() => {
                     this.$refs[`sysRef${index}`].focus();
                 });
+            },
+
+            formatMemberFilter (value) {
+                if (value.length) {
+                    return _.isArray(value) ? value.map(item => item.username).join(';') : value;
+                }
+                return '--';
             },
 
             async handleSystemRtxBlur (payload) {
