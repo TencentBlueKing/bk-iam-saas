@@ -18,6 +18,8 @@ from collections import OrderedDict
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from backend.common.error_codes import error_codes
+
 
 class CustomPageNumberPagination(PageNumberPagination):
     """该分页器继承PageNumberPagination后只对用于Open API返回的数据里去除previous和next参数"""
@@ -29,9 +31,13 @@ class CustomPageNumberPagination(PageNumberPagination):
         Cast a string to a strictly positive integer.
         copied from https://github.com/encode/django-rest-framework/blob/master/rest_framework/pagination.py#L22
         """
-        ret = int(integer_string)
+        try:
+            ret = int(integer_string)
+        except ValueError:
+            raise error_codes.VALIDATE_ERROR.format("wrong page {}".format(integer_string))
+
         if ret < 0 or (ret == 0 and strict):
-            raise ValueError()
+            raise error_codes.VALIDATE_ERROR.format("wrong page {}".format(ret))
         if cutoff:
             return min(ret, cutoff)
         return ret
