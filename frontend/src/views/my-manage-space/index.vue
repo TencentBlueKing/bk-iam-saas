@@ -595,15 +595,21 @@
         }
     }
 
-    /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
+     /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
         .cell {
-            padding-left: 0;
+            padding-left: 2px;
         }
     }
 
     /deep/ .iam-tag-table-cell-subset-cls {
         .cell {
-            padding-left: 0;
+            padding-left: 2px;
+        }
+    }
+
+    /deep/ .bk-table-header-wrapper {
+        .cell {
+            padding-left: 2px;
         }
     }
 }
