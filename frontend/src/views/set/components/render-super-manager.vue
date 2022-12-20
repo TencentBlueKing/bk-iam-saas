@@ -131,11 +131,9 @@
                     return false;
                 };
             },
-            computed: {
             tableHeight () {
                 return getWindowHeight() - 297;
             }
-        }
         },
         created () {
             this.fetchSuperManager();
