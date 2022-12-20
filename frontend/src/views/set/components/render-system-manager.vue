@@ -223,8 +223,6 @@
                     };
                     this.$store.dispatch('role/editSystemManagerMember', params);
                     this.$set(this.systemUserList[index], 'memberBackup', _.cloneDeep(members));
-                    this.$set(this.systemUserList[index], 'isEdit', !!this.systemUserList[index].isEdit);
-                    this.$refs[`sysRef${index}`].isEditable = !!this.$refs[`sysRef${index}`].isEditable;
                     this.messageSuccess(this.$t(`m.common['操作成功']`));
                 } catch (e) {
                     console.error(e);
