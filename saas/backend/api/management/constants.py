@@ -73,6 +73,8 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GRADE_MANAGER_APPLICATION_UPDATE = auto()
     # 子集管理员
     V2_SUBSET_MANAGER_CREATE = auto()
+    V2_SUBSET_MANAGER_DETAIL = auto()
+    V2_SUBSET_MANAGER_UPDATE = auto()
     # 审批
     V2_APPLICATION_APPROVAL = auto()
     V2_APPLICATION_CANCEL = auto()
