@@ -211,6 +211,7 @@
                 if (!members.length) {
                     this.$refs[`sysRef${index}`].isEditable = false;
                     this.$set(this.systemUserList[index], 'isEdit', false);
+                    this.$set(this.systemUserList[index], 'members', []);
                 }
                 if (JSON.stringify(members) === JSON.stringify(memberBackup)) {
                     return;
