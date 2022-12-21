@@ -34,6 +34,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     GROUP_MEMBER_ADD = auto()
     GROUP_MEMBER_DELETE = auto()
     # 用户组权限
+    GROUP_POLICY_LIST = auto()
     GROUP_POLICY_GRANT = auto()
     GROUP_POLICY_REVOKE = auto()
     GROUP_POLICY_DELETE = auto()
@@ -72,6 +73,8 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GRADE_MANAGER_APPLICATION_UPDATE = auto()
     # 子集管理员
     V2_SUBSET_MANAGER_CREATE = auto()
+    V2_SUBSET_MANAGER_DETAIL = auto()
+    V2_SUBSET_MANAGER_UPDATE = auto()
     # 审批
     V2_APPLICATION_APPROVAL = auto()
     V2_APPLICATION_CANCEL = auto()

@@ -31,9 +31,14 @@
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column type="expand" width="30">
                 <template slot-scope="{ row }">
-                    <bk-table size="small" ext-cls="children-expand-cls"
-                        :data="row.children" :row-key="row.id"
-                        :show-header="false" :border="false"
+                    <bk-table
+                        size="small"
+                        ext-cls="children-expand-cls"
+                        :data="row.children"
+                        :row-key="row.id"
+                        :show-header="false"
+                        :border="false"
+                        :cell-class-name="getSubCellClass"
                         v-bkloading="{ isLoading: subLoading, opacity: 1 }"
                         :pagination="subPagination"
                         @page-change="handleSubPageChange"
@@ -72,12 +77,6 @@
                                     :value="child.row.description"
                                     :index="child.$index"
                                     :remote-hander="handleUpdateSubManageSpace" />
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
-                        <bk-table-column :label="$t(`m.common['创建时间']`)">
-                            <template slot-scope="child">
-                                <span :title="row.created_time">{{ child.row.created_time }}</span>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
@@ -242,10 +241,17 @@
                 if (!row.has_subset_manager) {
                     return 'iam-tag-table-cell-cls iam-tag-table-cell-subset-cls';
                 }
+                if (columnIndex === 1 || column.type === 'default') {
+                    return 'iam-table-cell-1-cls';
+                }
                 if (columnIndex === 2) {
                     return 'iam-tag-table-cell-cls';
                 }
                 return '';
+            },
+
+            getSubCellClass ({ row, column, rowIndex, columnIndex }) {
+                return 'iam-table-cell-1-cls';
             },
 
             // 通过子集id找父级数据
@@ -586,6 +592,24 @@
             .bk-table-expand-icon  {
                 display: none;
             }
+        }
+    }
+
+     /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
+        .cell {
+            padding-left: 2px;
+        }
+    }
+
+    /deep/ .iam-tag-table-cell-subset-cls {
+        .cell {
+            padding-left: 2px;
+        }
+    }
+
+    /deep/ .bk-table-header-wrapper {
+        .cell {
+            padding-left: 2px;
         }
     }
 }

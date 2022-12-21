@@ -13,7 +13,7 @@ from typing import List
 
 from bk_audit.log.exporters import LoggerExporter
 from bk_audit.log.models import AuditEvent
-from celery import task
+from celery import shared_task
 from django.utils import timezone
 
 from backend.apps.policy.models import Policy
@@ -22,7 +22,7 @@ from backend.audit.models import Event, get_event_model
 from .constants import AuditSourceType, AuditType
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def pre_create_audit_model():
     """
     预创建下一个月的审计模型
@@ -31,7 +31,7 @@ def pre_create_audit_model():
     get_event_model(next_month)
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def log_audit_event(suffix: str, id: str):
     """
     记录审计事件到审计中心规范的日志文件
@@ -182,7 +182,7 @@ class AuditEventHandler:
             ]
 
         system_id = extra_data["system_id"]
-        action_ids = [p["action_id"] for p in extra_data["policies"]]
+        action_ids = [p.get("action_id", p.get("id", "")) for p in extra_data["policies"]]
 
         policies = Policy.objects.filter(
             subject_type=event.object_type, subject_id=event.object_id, system_id=system_id, action_id__in=action_ids

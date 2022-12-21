@@ -5,11 +5,24 @@
 |---|---|---|---|---|
 | system_id | string | path | 是 | 接入系统唯一标识 |
 | grade_manager_id| int | 是 | path  | 分级管理员id |
-| inherit | bool | query | 否 | 分级管理员是否继承查询子集管理员的用户组, 默认否 |
+| inherit | bool | query | 否 | 分级管理员是否继承查询子集管理员的用户组, 默认是 |
+| action_id | string | query | 否 | 操作id筛选, 只支持自定义操作 |
+| resource_type_system_id | string | query | 否 | RBAC资源实例筛选 |
+| resource_type_id | string | query | 否 | RBAC资源实例筛选 |
+| resource_id | string | query | 否 | RBAC资源实例筛选 |
+| bk_iam_path | string | query | 否 | RBAC资源实例筛选, 可选传资源实例的上级路径信息 |
 | name | string | query | 否 | 用户组名称筛选 |
 | id | int | query | 否 | 用户组id筛选 |
+| description | string | query | 否 | 用户组描述筛选 |
 | page_size | int | query | 是 | 分页大小, 最大500 |
 | page | int | query | 是 | 分页 |
+
+`注意`:
+
+- 只传action_id, 不传resource时, 筛选的是有自定义权限对应操作权限的用户组, 不支持模板操作权限的筛选
+- 如果有资源实例筛选, resource_type_system_id, resource_type_id, resource_id 必须同时传, 只支持RBAC资源实例权限的筛选, 不支持ABAC权限的筛选
+- action_id, resource 同时传时, 筛选的是RBAC有操作权限的用户组
+- 筛选资源实例的时候可选传 bk_iam_path 指定资源实例上级资源路径, 如: `/system_id,resource_type_id,resource_id/`
 
 #### Request
 ```json

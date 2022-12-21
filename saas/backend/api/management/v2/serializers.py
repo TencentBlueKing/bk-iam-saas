@@ -264,7 +264,7 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
 
 
 class ManagementQueryGroupSLZ(serializers.Serializer):
-    inherit = serializers.BooleanField(label="是否继承子集管理员的用户组", required=False, default=False)
+    inherit = serializers.BooleanField(label="是否继承子集管理员的用户组", required=False, default=True)
 
 
 class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):

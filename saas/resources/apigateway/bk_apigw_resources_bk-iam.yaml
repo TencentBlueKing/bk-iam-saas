@@ -806,6 +806,32 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v1/open/application/policies/:
+    post:
+      operationId: application_grant_policy
+      description: 创建自定义权限申请单
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/application/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/authorization/batch_instance/:
     post:
       operationId: authorization_batch_instance
@@ -2459,6 +2485,32 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+    get:
+      operationId: v2_management_groups_policies_list
+      description: 查询用户组自定义权限
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
     post:
       operationId: v2_management_groups_policies_grant
       description: 用户组授权
@@ -2503,6 +2555,59 @@ paths:
           type: HTTP
           method: get
           path: /api/v2/open/management/systems/{system_id}/groups/{id}/policies/-/actions/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/open/management/systems/{system_id}/subset_managers/{id}/:
+    get:
+      operationId: v2_management_subset_manager_detail
+      description: 二级管理员详情
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: v2_management_subset_manager_update
+      description: 二级管理员更新
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/subset_managers/{id}/
           matchSubpath: false
           timeout: 0
           upstreams: {}

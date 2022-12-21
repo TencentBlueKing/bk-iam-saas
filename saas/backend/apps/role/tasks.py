@@ -14,14 +14,13 @@ from typing import Set
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, current_app, task
+from celery import Task, current_app, shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
 
 from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
-from backend.biz.action import ActionBiz
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.resource import ResourceBiz
@@ -32,7 +31,9 @@ from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
+from backend.service.action import ActionService
 from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
+from backend.service.models import Action, PathResourceType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
 from backend.service.role import AuthScopeAction, AuthScopeSystem
@@ -44,7 +45,7 @@ from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffix
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def sync_system_manager():
     """
     创建系统管理员
@@ -78,6 +79,8 @@ def sync_system_manager():
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
+    name = "backend.apps.role.tasks.SendRoleGroupExpireRemindMailTask"
+
     group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
@@ -115,7 +118,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
 current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def role_group_expire_remind():
     """
     角色管理的用户组过期提醒
@@ -151,11 +154,13 @@ def role_group_expire_remind():
 
 
 class InitBizGradeManagerTask(Task):
+    name = "backend.apps.role.tasks.InitBizGradeManagerTask"
+
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()
-    action_biz = ActionBiz()
     resource_biz = ResourceBiz()
+    action_svc = ActionService()
 
     _exist_names: Set[str] = set()
 
@@ -282,7 +287,7 @@ class InitBizGradeManagerTask(Task):
                 continue
 
             # 2. 查询操作信息
-            action_list = self.action_biz.list(system_id)
+            action_list = self.action_svc.new_action_list(system_id)
 
             # 3. 生成授权范围
             for action_id in common_action.action_ids:
@@ -312,11 +317,19 @@ class InitBizGradeManagerTask(Task):
                     policy_data = self._gen_nodeman_cloud_view_policy(action)
                     auth_scope_action = AuthScopeAction.parse_obj(policy_data)
 
+                elif system_id in ["bk_log_search", "bk_monitorv3"]:
+                    policy_data = self._space_policy(
+                        system_id, action, resource_type, resource_system, resource_id, resource_name
+                    )
+                    if policy_data:
+                        auth_scope_action = AuthScopeAction.parse_obj(policy_data)
+
                 else:
                     policy_data = self._action_policy(
                         action, resource_type, resource_system, resource_id, resource_name
                     )
-                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
+                    if policy_data:
+                        auth_scope_action = AuthScopeAction.parse_obj(policy_data)
 
                 auth_scope.actions.append(auth_scope_action)
 
@@ -326,7 +339,28 @@ class InitBizGradeManagerTask(Task):
 
         return role_info
 
-    def _action_policy(self, action, resource_type, resource_system, resource_id, resource_name):
+    def _space_policy(self, system_id, action: Action, resource_type, resource_system, resource_id, resource_name):
+        """
+        bk_log_search, bk_monitorv3 兼容新版本 space
+        """
+        policy_data = self._action_policy(action, resource_type, resource_system, resource_id, resource_name)
+        if policy_data:
+            return policy_data
+
+        resource_system = system_id
+        resource_type = "space"
+        resource_name = "[业务] " + resource_name
+        return self._action_policy(action, resource_type, resource_system, resource_id, resource_name)
+
+    def _action_policy(self, action: Action, resource_type, resource_system, resource_id, resource_name):
+        # 校验实例视图, 如果校验不过, 需要跳过, 避免错误数据
+        for rrt in action.related_resource_types:
+            for selection in rrt.instance_selections:
+                if selection.match_path([PathResourceType(system_id=resource_system, id=resource_type)]):
+                    break
+            else:
+                return None
+
         return {
             "id": action.id,
             "resource_groups": [

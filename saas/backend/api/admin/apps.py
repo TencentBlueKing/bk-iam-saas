@@ -13,4 +13,4 @@ from django.apps import AppConfig
 
 class AdminAPIConfig(AppConfig):
     name = "backend.api.admin"
-    label = "api.admin"
+    label = "api_admin"

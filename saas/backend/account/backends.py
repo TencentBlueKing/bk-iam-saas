@@ -124,7 +124,7 @@ class TokenBackend(ModelBackend):
         try:
             data = login.verify_bk_token(bk_token)
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Abnormal error in verify_bk_token...")
+            logger.warn("Abnormal error in verify_bk_token...", exc_info=True)
             return False, None
 
         return True, data["username"]

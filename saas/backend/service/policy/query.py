@@ -163,9 +163,7 @@ class PolicyQueryService:
     def get_policy_system_by_id(self, policy_id: int, subject: Subject) -> str:
         """根据策略ID获取system"""
         try:
-            p = PolicyModel.objects.get(id=policy_id, subject_type=subject.type, subject_id=subject.id).only(
-                "system_id"
-            )
+            p = PolicyModel.objects.get(id=policy_id, subject_type=subject.type, subject_id=subject.id)
         except PolicyModel.DoesNotExist:
             raise error_codes.NOT_FOUND_ERROR.format("saas policy not found, id=%d", policy_id)
 

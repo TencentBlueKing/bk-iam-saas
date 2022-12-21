@@ -4,9 +4,10 @@
             :sub-title="subTitle"
             expanded>
             <bk-table
-                :data="superUserList"
                 size="small"
                 ext-cls="super-user-table-cls"
+                :max-height="tableHeight"
+                :data="superUserList"
                 :outer-border="false"
                 :header-border="false"
                 @row-mouse-enter="handleSuperRowMouseEnter"
@@ -88,10 +89,12 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { bus } from '@/common/bus';
+    import { getWindowHeight } from '@/common/util';
     import IamPopoverConfirm from '@/components/iam-popover-confirm';
     import BkUserSelector from '@blueking/user-selector';
     import RenderItem from '../common/render-item';
     import RenderAction from '../common/render-action';
+    
     export default {
         name: '',
         components: {
@@ -127,6 +130,9 @@
                     }
                     return false;
                 };
+            },
+            tableHeight () {
+                return getWindowHeight() - 297;
             }
         },
         created () {

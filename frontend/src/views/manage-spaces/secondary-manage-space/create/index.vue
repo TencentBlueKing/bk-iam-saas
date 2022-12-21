@@ -737,6 +737,9 @@
                 const hasDeleteIds = payload.map(item => item.id);
                 const hasDeleteIdsTemp = this.hasDeleteCustomList.map(_ => _.$id);
                 const tempData = {};
+                if (!this.curMap) {
+                    this.curMap = new Map();
+                }
                 for (const [key, value] of this.curMap.entries()) {
                     tempData[key] = value;
                 }
@@ -795,9 +798,8 @@
                     this.curMap.set(key, _.cloneDeep(tempDataBackup[key]));
                 }
 
-                console.warn('curMap: ');
-                console.warn(this.curMap);
-                console.warn(this.policyList);
+                console.warn('curMap:', this.curMap);
+                console.warn('policyList:', this.policyList);
             },
 
             async fetchAggregationAction (payload) {

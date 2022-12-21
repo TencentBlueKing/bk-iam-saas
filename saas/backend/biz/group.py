@@ -532,12 +532,13 @@ class GroupBiz:
         lock.data = {"actions": [p.dict() for p in template.policies]}  # type: ignore
         return lock
 
-    def grant(self, role: Role, group: Group, templates: List[GroupTemplateGrantBean]):
+    def grant(self, role: Role, group: Group, templates: List[GroupTemplateGrantBean], need_check: bool = True):
         """
         用户组授权
         """
-        # 检查数据正确性
-        self.check_before_grant(group, templates, role)
+        if need_check:
+            # 检查数据正确性
+            self.check_before_grant(group, templates, role)
 
         # 检查用户组是否满足授权条件，即是否可添加锁
         self._check_lock_before_grant(group, templates)
@@ -556,7 +557,7 @@ class GroupBiz:
             task = TaskDetail.create(TaskType.GROUP_AUTHORIZATION.value, [subject.dict(), uuid])
 
         # 执行授权流程
-        TaskFactory()(task.id)
+        TaskFactory().run(task.id)
 
     def get_group_role_dict_by_ids(self, group_ids: List[int]) -> GroupRoleDict:
         """
@@ -629,7 +630,7 @@ class GroupBiz:
         # 转换成group授权的自定义权限
         templates = self._trans_auth_scope_to_grant_templates(auth_scopes)
 
-        self.grant(role, group, templates)
+        self.grant(role, group, templates, need_check=False)  # 分级管理员同步的数据不需要再次校验
 
     def update_sync_perm_group_by_role(
         self, role: Role, user_id: str, sync_members: bool = False, sync_prem: bool = False

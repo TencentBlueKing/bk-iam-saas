@@ -202,7 +202,7 @@ def _get_resource_types_from_action(data: Dict) -> List[Tuple[str, str]]:
 
     resource_types = []
     for action in actions:
-        for rrt in action.get("related_resource_types", []):
+        for rrt in action.get("related_resource_types", None) or []:
             resource_types.append((rrt["system_id"], rrt["id"]))
 
     return resource_types
@@ -215,8 +215,8 @@ def _get_instance_selections_from_action(data: Dict) -> List[Tuple[str, str]]:
 
     instance_selections = []
     for action in actions:
-        for rrt in action.get("related_resource_types", []):
-            for ris in rrt.get("related_instance_selections", []):
+        for rrt in action.get("related_resource_types", None) or []:
+            for ris in rrt.get("related_instance_selections", None) or []:
                 instance_selections.append((ris["system_id"], ris["id"]))
 
     return instance_selections

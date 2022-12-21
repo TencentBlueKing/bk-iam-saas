@@ -44,13 +44,16 @@ class ErrorCodes:
     )
     FORBIDDEN = ErrorCode(_("没有访问权限"), code_num=1902403, status_code=status.HTTP_403_FORBIDDEN)
     NOT_FOUND_ERROR = ErrorCode(_("数据不存在"), code_num=1902404, status_code=status.HTTP_404_NOT_FOUND)
+    METHOD_NOT_ALLOWED = ErrorCode(_("不支持当前的请求方法"), code_num=1902405, status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
     # 通用错误
     COMMON_ERROR = ErrorCode(_("请求失败"), code_num=1902400, status_code=status.HTTP_400_BAD_REQUEST)
     CONFLICT_ERROR = ErrorCode(_("与已有资源冲突(重名等)"), code_num=1902409, status_code=status.HTTP_409_CONFLICT)
     VALIDATE_ERROR = ErrorCode(_("参数校验失败"), code_num=1902412, status_code=status.HTTP_400_BAD_REQUEST)
     COMPONENT_ERROR = ErrorCode(_("请求第三方接口失败"), code_num=1902413, status_code=status.HTTP_200_OK)
     JSON_FORMAT_ERROR = ErrorCode(_("Json格式错误"), code_num=1902414, status_code=status.HTTP_400_BAD_REQUEST)
-    METHOD_NOT_ALLOWED = ErrorCode(_("不支持当前的请求方法"), code_num=1902415, status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    UNSUPPORTED_MEDIA_TYPE = ErrorCode(
+        _("不支持的media type"), code_num=1902415, status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
+    )
     INVALID_ARGS = ErrorCode(_("参数错误"), code_num=1902416, status_code=status.HTTP_400_BAD_REQUEST)
     ACTION_VALIDATE_ERROR = ErrorCode(_("操作检查错误"), code_num=1902417, status_code=status.HTTP_400_BAD_REQUEST)
     GROUP_TRANSFER_ERROR = ErrorCode(_("用户组转出错误"), code_num=1902418, status_code=status.HTTP_400_BAD_REQUEST)

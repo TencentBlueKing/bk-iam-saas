@@ -11,16 +11,20 @@ specific language governing permissions and limitations under the License.
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
 from backend.api.management.v2.permissions import ManagementAPIPermission
-from backend.api.management.v2.serializers import ManagementGradeManagerBasicSLZ, ManagementSubsetMangerCreateSLZ
-from backend.apps.role.audit import RoleCreateAuditProvider
-from backend.apps.role.models import Role, RoleSource
+from backend.api.management.v2.serializers import (
+    ManagementGradeManagerBasicSLZ,
+    ManagementGradeMangerDetailSLZ,
+    ManagementSubsetMangerCreateSLZ,
+)
+from backend.apps.role.audit import RoleCreateAuditProvider, RoleUpdateAuditProvider
+from backend.apps.role.models import Role, RoleRelation, RoleSource
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
@@ -28,8 +32,8 @@ from backend.service.constants import RoleSourceTypeEnum, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementSubsetManagerViewSet(GenericViewSet):
-    """二级管理员"""
+class ManagementSubsetManagerCreateViewSet(GenericViewSet):
+    """二级管理员创建"""
 
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
@@ -101,3 +105,89 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
         audit_context_setter(role=role)
 
         return Response({"id": role.id})
+
+
+class ManagementSubsetManagerViewSet(GenericViewSet):
+    """子集管理员详情"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+    management_api_permission = {
+        "retrieve": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_DETAIL.value),
+        "update": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_UPDATE.value),
+    }
+
+    lookup_field = "id"
+    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
+
+    biz = RoleBiz()
+    group_biz = GroupBiz()
+    role_check_biz = RoleCheckBiz()
+    trans = GradeManagerTrans()
+
+    @swagger_auto_schema(
+        operation_description="子集管理员详情",
+        responses={status.HTTP_200_OK: ManagementGradeMangerDetailSLZ(label="子集管理员详情")},
+        filter_inspectors=[],
+        paginator_inspectors=[],
+        tags=["management.subset_manager"],
+    )
+    def retrieve(self, request, *args, **kwargs):
+        role = self.get_object()
+        serializer = ManagementGradeMangerDetailSLZ(instance=role)
+        data = serializer.data
+        return Response(data)
+
+    @swagger_auto_schema(
+        operation_description="更新二级管理员",
+        request_body=ManagementSubsetMangerCreateSLZ(label="更新二级管理员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["management.subset_manager"],
+    )
+    @view_audit_decorator(RoleUpdateAuditProvider)
+    def update(self, request, *args, **kwargs):
+        """
+        更新二级管理员
+        """
+        role = self.get_object()
+
+        serializer = ManagementSubsetMangerCreateSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # 1. 查询二级管理员的上级分级管理员
+        parent_role_id = RoleRelation.objects.get_parent_role_id(role.id)
+        grade_manager = Role.objects.get(id=parent_role_id)
+
+        # 名称唯一性检查
+        self.role_check_biz.check_subset_manager_unique_name(grade_manager, data["name"], role.name)
+        # 检查成员数量是否满足限制
+        self.role_check_biz.check_member_count(role.id, len(data["members"]))
+
+        # 兼容member格式
+        data["members"] = [{"username": username} for username in data["members"]]
+
+        # 转换为RoleInfoBean
+        role_info = self.trans.to_role_info(data, source_system_id=kwargs["system_id"])
+
+        # 检查授权范围
+        self.role_check_biz.check_subset_manager_auth_scope(grade_manager, role_info.authorization_scopes)
+
+        # 如果配置使用上级的人员选择范围直接使用上级的相关信息覆盖
+        if not role_info.inherit_subject_scope:
+            # 检查人员范围
+            self.role_check_biz.check_subset_manager_subject_scope(grade_manager, role_info.subject_scopes)
+        else:
+            subject_scopes = self.biz.list_subject_scope(grade_manager.id)
+            role_info.subject_scopes = subject_scopes
+
+        self.biz.update(role, role_info, request.user.username)
+
+        # 更新同步权限用户组信息
+        self.group_biz.update_sync_perm_group_by_role(
+            self.get_object(), request.user.username, sync_members=True, sync_prem=True
+        )
+
+        audit_context_setter(role=role)
+
+        return Response({})

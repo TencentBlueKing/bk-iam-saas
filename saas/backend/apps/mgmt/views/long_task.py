@@ -62,6 +62,6 @@ class LongTaskViewSet(mixins.ListModelMixin, GenericViewSet):
         task_id = kwargs["id"]
         task = TaskDetail.objects.filter(id=task_id).first()
         if task.status == TaskStatus.FAILURE.value:
-            TaskFactory()(task.id)
+            TaskFactory().run(task.id)
 
         return Response({})

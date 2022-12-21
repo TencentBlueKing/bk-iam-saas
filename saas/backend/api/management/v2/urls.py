@@ -61,7 +61,7 @@ urlpatterns = [
     # 用户组自定义权限
     path(
         "groups/<int:id>/policies/",
-        views.ManagementGroupPolicyViewSet.as_view({"post": "create", "delete": "destroy"}),
+        views.ManagementGroupPolicyViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.v2.group_policy",
     ),
     # 用户组自定义权限 - 操作级别的变更，不涉及Resources
@@ -123,7 +123,7 @@ urlpatterns = [
     # 创建二级管理员
     path(
         "grade_managers/<int:id>/subset_managers/",
-        views.ManagementSubsetManagerViewSet.as_view({"post": "create"}),
+        views.ManagementSubsetManagerCreateViewSet.as_view({"post": "create"}),
         name="open.management.v2.grade_manager_create_subset_manager",
     ),
     # 二级管理员下用户组
@@ -131,5 +131,11 @@ urlpatterns = [
         "subset_managers/<int:id>/groups/",
         views.ManagementGradeManagerGroupViewSet.as_view({"post": "create", "get": "list"}),
         name="open.management.v2.subset_manager_group",
+    ),
+    # 二级管理员详情
+    path(
+        "subset_managers/<int:id>/",
+        views.ManagementSubsetManagerViewSet.as_view({"get": "retrieve", "post": "update"}),
+        name="open.management.v2.subset_manager",
     ),
 ]
