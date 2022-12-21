@@ -155,6 +155,10 @@ const SecondaryManageSpaceCreate = () =>
 const SecondaryManageSpaceEdit = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
 
+// 二极管理空间详情
+const SecondaryManageSpaceDetail = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/detail');
+
 // 资源权限管理
 const ResourcePermiss = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
 
@@ -404,6 +408,14 @@ export const routes = [
                 },
                 props: true,
                 component: SecondaryManageSpaceEdit
+            },
+            {
+                path: ':id/secondary-space-manager-detail',
+                name: 'secondaryManageSpaceDetail',
+                meta: {
+                    backRouter: -1
+                },
+                component: SecondaryManageSpaceDetail
             },
             {
                 path: 'user-group',
