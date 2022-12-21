@@ -599,7 +599,7 @@ class TestPolicyBean:
             policy_bean.resource_groups[0].remove_related_resource_types(
                 policy_bean.resource_groups[0].related_resource_types
             )
-            assert False
+            raise AssertionError()
         except PolicyEmptyException:
             assert True
 
@@ -608,7 +608,7 @@ class TestPolicyBean:
             policy_bean.resource_groups[0].remove_related_resource_types(
                 policy_bean.resource_groups[0].related_resource_types
             )
-            assert False
+            raise AssertionError()
         except PolicyEmptyException:
             assert True
 
@@ -941,7 +941,7 @@ class TestResourceGroupBeanList:
     def test_sub(self, policy_bean: PolicyBean):
         try:
             policy_bean.resource_groups - policy_bean.resource_groups
-            assert False
+            raise AssertionError()
         except PolicyEmptyException:
             assert True
 

@@ -33,21 +33,21 @@ class TransferAttributeTests(TestCase):
         """空值属性"""
         attribute = new_attribute_dict("id", "name")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_attribute("system", "type", attribute)
 
     def test_multi_bool_err(self):
         """多值bool"""
         attribute = new_attribute_dict("id", "name", [{"id": True, "name": ""}, {"id": False, "name": ""}])
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_attribute("system", "type", attribute)
 
     def test_wrong_type_err(self):
         """错误的值类型"""
         attribute = new_attribute_dict("id", "name", [{"id": set(), "name": ""}])
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_attribute("system", "type", attribute)
 
     def test_string_ok(self):
@@ -95,7 +95,7 @@ class TransferInstanceTests(TestCase):
         """
         instance = new_instance_dict("host", "主机")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_instance("system", "host", instance)
 
     def test_id_ok(self):

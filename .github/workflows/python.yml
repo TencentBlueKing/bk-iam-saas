@@ -29,6 +29,8 @@ jobs:
           pip install -r saas/requirements_dev.txt
     - name: Lint with flake8
       run: pflake8 --config=saas/pyproject.toml saas
+    - name: Lint with bandit
+      run: bandit -c saas/pyproject.toml -r saas
     - name: Lint with mypy
       run:  mypy --config-file=saas/pyproject.toml saas
     - name: Test with pytest
