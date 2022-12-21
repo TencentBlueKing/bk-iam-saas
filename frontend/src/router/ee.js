@@ -410,7 +410,7 @@ export const routes = [
                 component: SecondaryManageSpaceEdit
             },
             {
-                path: ':id/secondary-space-manager-detail',
+                path: ':id/manage-spaces/secondary-manage-space/detail',
                 name: 'secondaryManageSpaceDetail',
                 meta: {
                     backRouter: -1

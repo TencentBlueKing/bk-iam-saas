@@ -287,19 +287,10 @@
             },
             routeName: {
                 handler (value) {
-                    if (value === 'addGroupPerm') {
-                        this.fetchUserGroup();
-                    }
-
-                    if (value === 'myPerm') {
-                        this.$store.commit('updateIndex', 0);
-                    } else if (value === 'userGroup') {
-                        this.$store.commit('updateIndex', 1);
-                        // this.updateRouter(this.user.role.type);
-                    } else if (value === 'audit') {
-                        this.$store.commit('updateIndex', 2);
-                    } else if (value === 'user') {
-                        this.$store.commit('updateIndex', 3);
+                    const routeList = ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'];
+                    const index = routeList.findIndex(item => item === value);
+                    if (index > -1) {
+                        ['addGroupPerm'].includes(value) ? this.fetchUserGroup() : this.$store.commit('updateIndex', index);
                     }
                 },
                 immediate: true
