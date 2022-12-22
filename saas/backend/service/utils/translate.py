@@ -280,11 +280,7 @@ def valid_path_without_last_node(path_nodes: List[Dict]):
     node_set = set()
 
     for n in path_nodes:
-        # 1. 校验节点id不能为 *
-        if n["id"] == ANY_ID:
-            raise error_codes.INVALID_ARGS.format("path: {} must not has node id *".format(translate_path(path_nodes)))
-
-        # 2. 校验节点数据不能重复
+        # 校验节点数据不能重复
         ns = "{},{}".format(n["type"], n["id"])
         if ns in node_set:
             raise error_codes.INVALID_ARGS.format("path: {} nodes must not repeat".format(translate_path(path_nodes)))

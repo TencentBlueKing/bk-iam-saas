@@ -416,11 +416,6 @@ class TransferResourcesTests(TestCase):
 
 
 class TestValidPathWithoutLastNode:
-    def test_node_any_id(self):
-        nodes = [{"type": "type1", "id": "id1"}, {"type": "type1", "id": "*"}]
-        with pytest.raises(APIError):
-            valid_path_without_last_node(nodes)
-
     def test_node_repeat(self):
         nodes = [{"type": "type1", "id": "id1"}, {"type": "type1", "id": "id2"}, {"type": "type1", "id": "id1"}]
         with pytest.raises(APIError):
