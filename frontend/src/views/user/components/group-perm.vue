@@ -11,6 +11,7 @@
                 :size="'small'"
                 :pagination="pageConf"
                 :ext-cls="tableLoading ? 'is-be-loading' : ''"
+                :max-height="tableHeight"
                 v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
                 @page-change="handlePageChange"
                 @page-limit-change="pageLimitChange">
@@ -78,10 +79,11 @@
                         </div>
                         <bk-table
                             ref="groupTableRef"
-                            :data="tableList"
                             size="small"
-                            :class="{ 'set-border': tableLoading }"
                             ext-cls="user-group-table"
+                            :data="tableList"
+                            :max-height="400"
+                            :class="{ 'set-border': tableLoading }"
                             :pagination="pagination"
                             :cell-attributes="handleCellAttributes"
                             @page-change="pageChange"
@@ -146,10 +148,11 @@
 </template>
 <script>
     import { mapGetters } from 'vuex';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { getWindowHeight } from '@/common/util';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import IamSearchSelect from '@/components/iam-search-select';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
-    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
 
     export default {
@@ -211,6 +214,9 @@
             ...mapGetters(['user']),
             curSelectIds () {
                 return this.currentSelectList.map(item => item.id);
+            },
+            tableHeight () {
+                return getWindowHeight() - 290;
             }
         },
         watch: {
