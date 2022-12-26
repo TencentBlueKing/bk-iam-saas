@@ -393,14 +393,14 @@
                             this.$set(item, 'add_actions', _.cloneDeep(this.addAction));
                             item.add_actions = item.add_actions.map(act => {
                                 if (!act.resource_groups || !act.resource_groups.length) {
-                                    act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
+                                    act.resource_groups = act.related_resource_types && act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
                                 }
                                 return new SyncPolicy({ ...act, tag: 'add' }, 'add');
                             });
                         }
                         item.delete_actions = item.delete_actions.map(act => {
                             if (!act.resource_groups || !act.resource_groups.length) {
-                                act.resource_groups = act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
+                                act.resource_groups = act.related_resource_types && act.related_resource_types.length ? [{ id: '', related_resource_types: act.related_resource_types }] : [];
                             }
                             return new SyncPolicy({ ...act, tag: 'add' }, 'add');
                         });

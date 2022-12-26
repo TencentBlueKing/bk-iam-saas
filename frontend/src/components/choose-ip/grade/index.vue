@@ -778,9 +778,7 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getResources', params);
                     if (this.curSelectionCondition.length) {
-                        res.data.results = res.data.results.filter(item => {
-                            return this.curSelectionCondition.includes(item.id);
-                        });
+                        res.data.results = [...this.curSelectionCondition];
                         res.data.count = res.data.results.length;
                     }
                     const totalPage = Math.ceil(res.data.count / this.limit);
