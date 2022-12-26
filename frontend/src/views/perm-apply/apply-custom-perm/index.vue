@@ -539,6 +539,7 @@
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+
     export default {
         name: '',
         components: {
@@ -841,16 +842,22 @@
              */
             async fetchPageData () {
                 await this.fetchSystems();
-                await this.fetchPolicies(this.systemValue);
-                await this.fetchAggregationAction(this.systemValue);
-                await this.fetchCommonActions(this.systemValue);
+                if (this.systemValue) {
+                    await Promise.all([
+                        this.fetchPolicies(this.systemValue),
+                        this.fetchAggregationAction(this.systemValue),
+                        this.fetchCommonActions(this.systemValue)
+                    ]);
+                }
                 if (this.sysAndtid) {
-                    // 获取用户组数据
-                    await this.fetchUserGroupList();
-                    // 获取个人用户的用户组列表
-                    await this.fetchCurUserGroup();
-                    // 获取推荐操作
-                    await this.fetchRecommended();
+                    await Promise.all([
+                        // 获取用户组数据
+                        this.fetchUserGroupList(),
+                        // 获取个人用户的用户组列表
+                        this.fetchCurUserGroup(),
+                        // 获取推荐操作
+                        this.fetchRecommended()
+                    ]);
                 }
             },
 
@@ -1954,17 +1961,18 @@
              */
             async fetchSystems () {
                 try {
+                    if (this.routerQuery.system_id) {
+                        this.systemValue = this.routerQuery.system_id;
+                    }
                     const res = await this.$store.dispatch('system/getSystems')
                     ;(res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
                     this.systemList = res.data || [];
-                    if (this.routerQuery.system_id) {
-                        this.systemValue = this.routerQuery.system_id;
-                    } else {
-                        this.systemValue = res.data[0].id || '';
+                    if (!this.systemValue && this.systemList.length) {
+                        this.systemValue = this.systemList[0].id;
                     }
-                    await this.fetchActions(this.systemValue);
+                    this.systemValue ? await this.fetchActions(this.systemValue) : this.fetchResetData();
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -2125,14 +2133,7 @@
                 this.reason = '';
                 this.isShowReasonError = false;
                 this.isShowActionError = false;
-                this.isAllExpanded = false;
-                this.sysAndtid = false;
-                this.aggregationMap = [];
-                this.aggregations = [];
-                this.aggregationsBackup = [];
-                this.aggregationsTableData = [];
-                this.actionSearchValue = '';
-                this.requestQueue = ['action', 'policy', 'aggregate', 'commonAction'];
+                this.fetchResetData();
                 await this.fetchActions(value);
                 await this.fetchPolicies(value);
                 await this.fetchAggregationAction(value);
@@ -2312,6 +2313,17 @@
                     this.isShowIndependent = true;
                     this.isShowUserGroup = false;
                 }
+            },
+
+            fetchResetData () {
+                this.isAllExpanded = false;
+                this.sysAndtid = false;
+                this.aggregationMap = [];
+                this.aggregations = [];
+                this.aggregationsBackup = [];
+                this.aggregationsTableData = [];
+                this.actionSearchValue = '';
+                this.requestQueue = ['action', 'policy', 'aggregate', 'commonAction'];
             }
         }
     };
