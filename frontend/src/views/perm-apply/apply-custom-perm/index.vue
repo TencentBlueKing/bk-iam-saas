@@ -1960,19 +1960,25 @@
              * 获取系统列表
              */
             async fetchSystems () {
+                if (this.routerQuery.system_id) {
+                    this.systemValue = this.routerQuery.system_id;
+                }
                 try {
-                    if (this.routerQuery.system_id) {
-                        this.systemValue = this.routerQuery.system_id;
-                    }
-                    const res = await this.$store.dispatch('system/getSystems')
-                    ;(res.data || []).forEach(item => {
+                    const res = await this.$store.dispatch('system/getSystems');
+                    (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
                     this.systemList = res.data || [];
-                    if (!this.systemValue && this.systemList.length) {
-                        this.systemValue = this.systemList[0].id;
+                    if (!this.systemValue) {
+                        if (this.systemList.length) {
+                            this.systemValue = this.systemList[0].id;
+                        } else {
+                            this.fetchResetData();
+                            this.requestQueue = [];
+                            return;
+                        }
                     }
-                    this.systemValue ? await this.fetchActions(this.systemValue) : this.fetchResetData();
+                    await this.fetchActions(this.systemValue);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -2134,10 +2140,12 @@
                 this.isShowReasonError = false;
                 this.isShowActionError = false;
                 this.fetchResetData();
-                await this.fetchActions(value);
-                await this.fetchPolicies(value);
-                await this.fetchAggregationAction(value);
-                await this.fetchCommonActions(value);
+                await Promise.all([
+                    this.fetchActions(value),
+                    this.fetchPolicies(value),
+                    this.fetchAggregationAction(value),
+                    this.fetchCommonActions(value)
+                ]);
             },
 
             /**
