@@ -40,7 +40,9 @@
                                 v-if="commonActions.length > 0 && !customLoading"
                                 mode="detail"
                                 :data="commonActions"
-                                @on-change="handleActionTagChange" />
+                                @on-change="handleActionTagChange"
+                                @on-mouse-enter="handleActionTagEnter"
+                                @on-mouse-leave="handleActionTagLeave" />
                             <template v-if="originalCustomTmplList.length > 0 && !customLoading">
                                 <div class="action-empty-error" v-if="isShowActionError">{{ $t(`m.verify['请选择操作']`) }}</div>
                                 <div class="actions-wrapper">
@@ -51,7 +53,9 @@
                                         <p style="cursor: pointer;" @click.stop="handleExpanded(item)" v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))">
                                             <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
                                                 <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
-                                                <span>{{ item.name }}</span>
+                                                <span :class="[{ 'action-hover': handleFormatTitleHover(item) }]">
+                                                    {{ item.name }}
+                                                </span>
                                                 <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
                                             </section>
                                             <span :class="['check-all', { 'is-disabled': item.actionsAllDisabled }]" @click.stop="handleCheckAll(item)">
@@ -69,7 +73,7 @@
                                                     :false-value="false"
                                                     v-model="act.checked"
                                                     :disabled="act.disabled"
-                                                    ext-cls="iam-action-cls"
+                                                    :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
                                                     @change="handleActionChecked(...arguments, act, item)">
                                                     <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                                         <template v-if="act.disabled">
@@ -115,7 +119,7 @@
                                                                 :false-value="false"
                                                                 v-model="act.checked"
                                                                 :disabled="act.disabled"
-                                                                ext-cls="iam-action-cls"
+                                                                :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
                                                                 @change="handleSubActionChecked(...arguments, act, subAct, item)">
                                                                 <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                                                     <template v-if="act.disabled">
@@ -608,7 +612,10 @@
                     { title: this.$t(`m.permApply['用户组推荐']`), desc: this.$t(`m.permApply['包含更大范围的权限（运维\开发\测试等角色类权限）']`), key: 'userGroup' },
                     { title: this.$t(`m.permApply['细粒度权限']`), desc: this.$t(`m.permApply['只包含当前需要的最小范围权限']`), key: 'independent' }
                 ],
-                tabIndex: 0
+                tabIndex: 0,
+                hoverActionData: {
+                    actions: []
+                }
             };
         },
         computed: {
@@ -1108,6 +1115,27 @@
                     });
                     this.tableData = this.tableData.filter(item => !(item.isAggregate && item.actions.length < 1));
                 }
+            },
+
+            handleActionTagEnter (payload) {
+                this.hoverActionData = payload;
+            },
+
+            handleActionTagLeave (payload) {
+                this.hoverActionData = Object.assign(payload, { actions: [] });
+            },
+
+            handleFormatTitleHover (payload) {
+                let subGroupId = [];
+                const originIds = payload.actions.map(item => item.id);
+                payload.sub_groups.forEach(item => {
+                    item.actions.forEach((subItem) => {
+                        subGroupId = [...new Set(subGroupId.concat(subItem.id))];
+                    });
+                });
+                const list = [...new Set(subGroupId.concat(originIds))];
+                const result = this.hoverActionData.actions.filter(item => list.includes(item));
+                return !!result.length;
             },
 
             handleActionMatchChecked (flag, payload) {
@@ -2338,4 +2366,17 @@
 </script>
 <style>
     @import './index.css';
+</style>
+<style lang="postcss" scoped>
+.action-hover {
+    color: #3a84ff;
+}
+.iam-action-cls {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+.iam-action-hover {
+    background: #E7EFFE;
+    color: #3a84ff;
+}
 </style>
