@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import views
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.apps.application.models import Application
 from backend.apps.role.models import Role
@@ -29,7 +29,7 @@ class ManagementApplicationApprovalView(views.APIView):
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "post": (
-            VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value,
+            VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value,
             ManagementAPIEnum.V2_APPLICATION_APPROVAL.value,
         ),
     }

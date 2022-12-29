@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v2.filters import GroupFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
@@ -73,8 +73,8 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "create": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
-        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_LIST.value),
+        "create": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
+        "list": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GROUP_LIST.value),
     }
 
     lookup_field = "id"
@@ -215,7 +215,7 @@ class ManagementSystemManagerGroupViewSet(ManagementGradeManagerGroupViewSet):
 
     management_api_permission = {
         # 对于在系统管理员下创建用户组，可以忽略参数里的权限校验来源
-        "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
+        "create": (VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value, ManagementAPIEnum.V2_GROUP_BATCH_CREATE.value),
     }
 
     lookup_field = "code"
@@ -239,8 +239,8 @@ class ManagementGroupViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "update": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_UPDATE.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_DELETE.value),
+        "update": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_UPDATE.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_DELETE.value),
     }
 
     lookup_field = "id"
@@ -308,9 +308,9 @@ class ManagementGroupMemberViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_LIST.value),
-        "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_ADD.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_DELETE.value),
+        "list": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_LIST.value),
+        "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_ADD.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_MEMBER_DELETE.value),
     }
 
     lookup_field = "id"
@@ -399,7 +399,7 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
 
     management_api_permission = {
         "update": (
-            VerifyAPIParamLocationEnum.GROUP_IN_PATH.value,
+            VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
             ManagementAPIEnum.V2_GROUP_MEMBER_EXPIRED_AT_UPDATE.value,
         ),
     }
@@ -446,9 +446,9 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
     pagination_class = None  # 去掉swagger中的limit offset参数
 
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_LIST.value),
-        "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_GRANT.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_REVOKE.value),
+        "list": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_LIST.value),
+        "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_GRANT.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_REVOKE.value),
     }
 
     lookup_field = "id"
@@ -559,7 +559,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_DELETE.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_DELETE.value),
     }
 
     lookup_field = "id"
@@ -606,7 +606,7 @@ class ManagementGroupPolicyActionViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_ACTION_LIST.value),
+        "list": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.V2_GROUP_POLICY_ACTION_LIST.value),
     }
 
     lookup_field = "id"

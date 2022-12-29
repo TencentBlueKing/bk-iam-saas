@@ -17,7 +17,7 @@ from .models import ResourceType, ResourceTypeDict
 
 
 class ResourceTypeService:
-    def list_resource_type_by_systems(self, system_ids: List[str]) -> Dict[str, List[ResourceType]]:
+    def get_system_resource_type_list_map(self, system_ids: List[str]) -> Dict[str, List[ResourceType]]:
         """批量获取多个系统的资源类别"""
         system_resource_type_dict = iam.list_resource_type(system_ids)
 
@@ -27,7 +27,7 @@ class ResourceTypeService:
 
         return system_resource_types
 
-    def get_resource_type_dict(self, system_ids: List[str]) -> ResourceTypeDict:
+    def get_system_resource_type_dict(self, system_ids: List[str]) -> ResourceTypeDict:
         """
         获取resource type name provider
         """

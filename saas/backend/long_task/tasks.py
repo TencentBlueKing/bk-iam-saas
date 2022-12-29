@@ -22,6 +22,8 @@ from celery import Task, current_app, shared_task
 from django.db.models import Max
 from django.utils import timezone
 
+from backend.metrics import long_task_run_counter
+
 from .constants import TaskStatus
 from .models import SubTaskState, TaskDetail
 
@@ -212,6 +214,8 @@ class TaskFactory(Task):
             status=TaskStatus.RUNNING.value,  # type: ignore[attr-defined]
             _params=json.dumps(params),
         )
+
+        long_task_run_counter.labels(id, task_detail.type).inc(1)
 
         SubTask().delay(id)
 

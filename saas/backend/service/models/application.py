@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from backend.util.model import ListModel
 
-from ..constants import ApplicationStatus, ApplicationTypeEnum, SubjectType
+from ..constants import ApplicationStatus, ApplicationType, SubjectType
 
 
 class ApplicationTicket(BaseModel):
@@ -41,7 +41,7 @@ class ApplicantInfo(BaseModel):
 
 
 class ApplicationDataBaseInfo(BaseModel):
-    type: ApplicationTypeEnum
+    type: ApplicationType
     # 申请者信息
     applicant_info: ApplicantInfo
     # 申请原因

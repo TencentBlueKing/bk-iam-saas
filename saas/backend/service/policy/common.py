@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from typing import Dict, Iterable, List, Tuple
 
 from backend.component import iam
-from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum
+from backend.service.constants import AbacPolicyChangeType, AuthType
 from backend.service.models import (
     AbacPolicyChangeContent,
     Policy,
@@ -30,7 +30,7 @@ class UniversalPolicyChangedContentAnalyzer:
         """查询操作的AuthType"""
         actions = iam.list_action(system_id, fields=self.action_fields)
         # 只返回要查询的操作的Auth，同时对于auth_type为空的，则默认为ABAC
-        return {i["id"]: i["auth_type"] or AuthTypeEnum.ABAC.value for i in actions if i["id"] in action_ids}
+        return {i["id"]: i["auth_type"] or AuthType.ABAC.value for i in actions if i["id"] in action_ids}
 
     def cal_for_created(self, system_id: str, create_policies: List[Policy]) -> List[UniversalPolicyChangedContent]:
         """根据新增的策略，组装计算出要变更的策略内容"""
@@ -70,7 +70,7 @@ class UniversalPolicyChangedContentAnalyzer:
             up = UniversalPolicy.from_policy(p, action_auth_types[p.action_id])
             # Note: 删除策略，默认auth_type为None
             policy_changed_content = UniversalPolicyChangedContent(
-                action_id=p.action_id, auth_type=AuthTypeEnum.NONE.value
+                action_id=p.action_id, auth_type=AuthType.NONE.value
             )
             # 有ABAC策略需要删除，只需要PolicyID即可
             if up.has_abac():

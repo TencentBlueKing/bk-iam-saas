@@ -234,6 +234,12 @@ class ResourceProvider:
         # Dict转为struct
         instance_results = []
         for i in results:
+            if "id" not in i:
+                raise error_codes.RESOURCE_PROVIDER_VALIDATE_ERROR.format(
+                    f"fetch_instance_info[system:{self.system_id} resource_type_id:{self.resource_type_id}"
+                    + f" resource:{i}] id must not be empty"
+                )
+
             instance_results.append(
                 ResourceInstanceInfo(
                     id=i["id"],

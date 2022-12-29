@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
     ManagementGradeManagerBasicSLZ,
@@ -28,7 +28,7 @@ from backend.apps.role.models import Role, RoleRelation, RoleSource
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
-from backend.service.constants import RoleSourceTypeEnum, RoleType
+from backend.service.constants import RoleSourceType, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
 
@@ -39,7 +39,7 @@ class ManagementSubsetManagerCreateViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (
-            VerifyAPIParamLocationEnum.ROLE_IN_PATH.value,
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
             ManagementAPIEnum.V2_SUBSET_MANAGER_CREATE.value,
         ),
     }
@@ -95,7 +95,7 @@ class ManagementSubsetManagerCreateViewSet(GenericViewSet):
 
             # 记录role创建来源信息
             RoleSource.objects.create(
-                role_id=role.id, source_type=RoleSourceTypeEnum.API.value, source_system_id=source_system_id
+                role_id=role.id, source_type=RoleSourceType.API.value, source_system_id=source_system_id
             )
 
             # 创建同步权限用户组
@@ -113,8 +113,8 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "retrieve": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_DETAIL.value),
-        "update": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_UPDATE.value),
+        "retrieve": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_DETAIL.value),
+        "update": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_UPDATE.value),
     }
 
     lookup_field = "id"

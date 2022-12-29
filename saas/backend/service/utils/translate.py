@@ -12,15 +12,15 @@ from collections import defaultdict
 from typing import Any, Dict, List, Type
 
 from backend.common.error_codes import error_codes
-from backend.service.constants import ANY_ID, PolicyEnvConditionTypeEnum
+from backend.service.constants import ANY_ID, PolicyEnvConditionType
 from backend.util.json import json_dumps
 
 from .environment import BaseEnvCondition, HMSEnvCondition, TZEnvCondition, WeekdayEnvCondition
 
 ENV_TYPE_CONDITION_MAP: Dict[str, Type[BaseEnvCondition]] = {
-    PolicyEnvConditionTypeEnum.TZ.value: TZEnvCondition,
-    PolicyEnvConditionTypeEnum.HMS.value: HMSEnvCondition,
-    PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvCondition,
+    PolicyEnvConditionType.TZ.value: TZEnvCondition,
+    PolicyEnvConditionType.HMS.value: HMSEnvCondition,
+    PolicyEnvConditionType.WEEKDAY.value: WeekdayEnvCondition,
 }
 
 

@@ -15,7 +15,7 @@ from django.db import models
 from django.utils.functional import cached_property
 
 from backend.common.models import BaseModel, BaseSystemHiddenModel
-from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleSourceType, RoleType, SubjectType
 from backend.util.json import json_dumps
 
 from .constants import DEFAULT_ROLE_PERMISSIONS
@@ -276,7 +276,7 @@ class RoleSource(BaseModel):
     """
 
     role_id = models.IntegerField("角色ID", unique=True)
-    source_type = models.CharField("来源类型", max_length=32, choices=RoleSourceTypeEnum.get_choices())
+    source_type = models.CharField("来源类型", max_length=32, choices=RoleSourceType.get_choices())
     source_system_id = models.CharField("来源系统", max_length=32, default="")
 
 

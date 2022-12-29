@@ -14,12 +14,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
 from backend.biz.group import GroupBiz
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 from backend.service.models import Subject
 
 
@@ -30,7 +30,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (
-            VerifyAPIParamLocationEnum.GROUP_IDS_IN_BODY.value,
+            VerifyApiParamLocationEnum.GROUP_IDS_IN_BODY.value,
             ManagementAPIEnum.GROUP_APPLICATION_CREATE.value,
         ),
     }
@@ -60,7 +60,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
 
         # 创建申请
         applications = self.biz.create_for_group(
-            ApplicationTypeEnum.JOIN_GROUP.value,
+            ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,
                 reason=data["reason"],

@@ -321,7 +321,7 @@ def _list_all_resource_types(model: MockSystemModel, system_id: str, mock_system
         data = model.data[ModelSectionEnum.RESOURCE_TYPE.value]
     else:
         svc = ResourceTypeService()
-        rtsd = svc.list_resource_type_by_systems([system_id])
+        rtsd = svc.get_system_resource_type_list_map([system_id])
         rts = rtsd.get(system_id, [])
         data = [rt.dict() for rt in rts]
 
@@ -389,7 +389,7 @@ def _list_all_instance_selections(
     ]
     # 查询资源类型
     if system_ids:
-        ext_resource_type_dict = ResourceTypeService().get_resource_type_dict(system_ids)
+        ext_resource_type_dict = ResourceTypeService().get_system_resource_type_dict(system_ids)
         resource_type_dict.update(ext_resource_type_dict.data)
 
     resource_type_name_provider = ResourceTypeDict(data=resource_type_dict)
