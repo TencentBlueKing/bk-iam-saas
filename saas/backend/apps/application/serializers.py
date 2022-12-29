@@ -58,6 +58,7 @@ class ApplicationSLZ(ReasonSLZ):
     aggregations = serializers.ListField(
         label="聚合操作", child=AggActionListSLZ(label="聚合操作"), required=False, default=list
     )
+    usernames = serializers.ListField(label="权限获得者", child=serializers.CharField(), required=False, default=list)
 
     def validate(self, data):
 

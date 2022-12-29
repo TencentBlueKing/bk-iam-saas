@@ -88,6 +88,9 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if process.has_instance_approver_node():
             params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
+        # 在params中加上权限获得者
+        params["users"] = ", ".join(["{}({})".format(u.username, u.display_name) for u in data.content.users])
+
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 

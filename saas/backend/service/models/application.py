@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 
+from backend.service.models.subject import User
 from backend.util.model import ListModel
 
 from ..constants import ApplicationStatus, ApplicationTypeEnum, SubjectType
@@ -167,6 +168,7 @@ class GrantActionApplicationContent(BaseModel):
 
     system: ApplicationSystem
     policies: List[ApplicationPolicyInfo] = Field(alias="actions")
+    users: List[User]
 
     class Config:
         # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名

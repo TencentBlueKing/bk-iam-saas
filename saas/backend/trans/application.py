@@ -15,10 +15,11 @@ from typing import Dict
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from backend.apps.organization.models import User as UserModel
 from backend.biz.application import ActionApplicationDataBean
 from backend.biz.policy import PolicyBeanList, PolicyQueryBiz
 from backend.common.error_codes import error_codes
-from backend.service.models import Subject
+from backend.service.models import Subject, User
 
 from .policy import PolicyTrans
 
@@ -168,12 +169,26 @@ class ApplicationDataTrans:
         # 1. 转换数据结构
         policy_list = self.policy_trans.from_aggregate_actions_and_actions(system_id, data)
 
-        # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
-        application_policy_list = self._gen_need_apply_policy_list(applicant, system_id, policy_list)
+        if "usernames" in data and data["usernames"]:
+            application_policy_list = policy_list
+            usernames = data["usernames"]
+            application_policy_list.fill_empty_fields()
+        else:
+            # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
+            application_policy_list = self._gen_need_apply_policy_list(applicant, system_id, policy_list)
+            usernames = [applicant]
 
         # 3. 转换为ApplicationBiz创建申请单所需数据结构
+        users = [
+            User(username=u.username, display_name=u.display_name)
+            for u in UserModel.objects.filter(username__in=usernames)
+        ]
+
         application_data = ActionApplicationDataBean(
-            applicant=applicant, policy_list=application_policy_list, reason=data["reason"]
+            applicant=applicant,
+            policy_list=application_policy_list,
+            users=users,
+            reason=data["reason"],
         )
 
         return application_data

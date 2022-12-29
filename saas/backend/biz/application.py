@@ -22,7 +22,7 @@ from rest_framework.request import Request
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.constants import StaffStatus
-from backend.apps.organization.models import User
+from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.template.models import PermTemplatePolicyAuthorized
@@ -53,6 +53,7 @@ from backend.service.models import (
     GroupApplicationContent,
     GroupApplicationData,
     Subject,
+    User,
 )
 from backend.service.role import RoleService
 from backend.service.system import SystemService
@@ -78,6 +79,7 @@ class ActionApplicationDataBean(BaseApplicationDataBean):
     """自定义权限申请或续期"""
 
     policy_list: PolicyBeanList
+    users: List[User]
 
     class Config:
         # 由于PolicyBeanList并非继承于BaseModel，而是普通的类，所以需要声明允许"随意"类型
@@ -154,7 +156,7 @@ class ApprovedPassApplicationBiz:
         检查subject是否在职
         """
         assert subject.type == SubjectType.USER.value  # 只有用户类型的subject才需要检查
-        user = User.objects.filter(username=subject.id).first()
+        user = UserModel.objects.filter(username=subject.id).first()
         if not user:
             return False, f"user [{subject.id}] not exists"
 
@@ -167,19 +169,21 @@ class ApprovedPassApplicationBiz:
         self, subject: Subject, application: Application, audit_type: str = AuditType.USER_POLICY_CREATE.value
     ):
         """用户自定义权限授权"""
-        ok, msg = self._check_subject_exists(subject)
-        if not ok:
-            logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
-            return
-
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
+        users = application.data["users"] if "users" in application.data else [{"username": subject.id}]
 
-        self.policy_operation_biz.alter(
-            system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
-        )
+        for user in users:
+            subject = Subject(type=SubjectType.USER.value, id=user["username"])
+            ok, msg = self._check_subject_exists(subject)
+            if not ok:
+                logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
+                continue
 
-        log_user_event(audit_type, subject, system_id, actions, sn=application.sn)
+            policies = parse_obj_as(List[PolicyBean], actions)
+            self.policy_operation_biz.alter(system_id=system_id, subject=subject, policies=policies)
+
+            log_user_event(audit_type, subject, system_id, actions, sn=application.sn)
 
     def _renew_action(self, subject: Subject, application: Application):
         """用户自定义权限续期"""
@@ -389,7 +393,7 @@ class ApplicationBiz:
     def _get_applicant_info(self, applicant: str) -> ApplicantInfo:
         """获取申请者相关信息"""
         # 查询用户的部门信息
-        user = User.objects.filter(username=applicant).first()
+        user = UserModel.objects.filter(username=applicant).first()
         if not user:
             raise error_codes.INVALID_ARGS.format(f"user: {applicant} not exists")
 
@@ -451,6 +455,7 @@ class ApplicationBiz:
                 content=GrantActionApplicationContent(
                     system=system_info,
                     policies=parse_obj_as(List[ApplicationPolicyInfo], policy_list.policies),
+                    users=data.users,
                 ),
             )
             new_data_list.append((application_data, process))
