@@ -13,7 +13,7 @@ import json
 from django.db import models
 
 from backend.common.models import BaseModel, BaseSystemHiddenModel
-from backend.service.constants import ApplicationStatus, ApplicationTypeEnum
+from backend.service.constants import ApplicationStatus, ApplicationType
 from backend.util.json import json_dumps
 
 
@@ -23,7 +23,7 @@ class Application(BaseModel, BaseSystemHiddenModel):
     """
 
     sn = models.CharField("申请单号", max_length=64)
-    type = models.CharField("申请单类型", max_length=64, choices=ApplicationTypeEnum.get_choices())
+    type = models.CharField("申请单类型", max_length=64, choices=ApplicationType.get_choices())
     applicant = models.CharField("申请人", max_length=64)
     reason = models.CharField("申请理由", max_length=255, default="")
     _data = models.TextField("申请数据", db_column="data")  # json

@@ -37,6 +37,10 @@ class ActionGroupBean(BaseModel):
             actions.extend(ag.all_actions)
         return actions
 
+    @classmethod
+    def new_uncategorized(cls, actions: List[ActionBean]) -> "ActionGroupBean":
+        return cls.parse_obj({"name": "未分类", "name_en": "uncategorized", "actions": actions})
+
 
 ActionGroupBean.update_forward_refs()
 
@@ -62,7 +66,7 @@ class ActionGroupBiz:
 
         action_groups = self.action_group_svc.list(system_id)
         if not action_groups:
-            return [self._new_uncategorized(actions)]
+            return [ActionGroupBean.new_uncategorized(actions)]
 
         action_list = ActionBeanList(actions)
         action_group_beans = self._gen_action_group_beans(action_groups, action_list)
@@ -82,11 +86,8 @@ class ActionGroupBiz:
 
         uncategorized_actions = [a for a in actions if a.id not in set(group_action_ids)]
         if uncategorized_actions:
-            return self._new_uncategorized(uncategorized_actions)
+            return ActionGroupBean.new_uncategorized(uncategorized_actions)
         return None
-
-    def _new_uncategorized(self, actions: List[ActionBean]) -> ActionGroupBean:
-        return ActionGroupBean.parse_obj({"name": "未分类", "name_en": "uncategorized", "actions": actions})
 
     def _gen_action_group_bean(self, action_group: ActionGroup, action_list: ActionBeanList) -> ActionGroupBean:
         """

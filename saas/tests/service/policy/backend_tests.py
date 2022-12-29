@@ -14,7 +14,7 @@ from mock import Mock, patch
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum, SubjectType
+from backend.service.constants import AbacPolicyChangeType, AuthType, SubjectType
 from backend.service.models import (
     AbacPolicyChangeContent,
     PathNode,
@@ -338,46 +338,46 @@ class TestBackendPolicyOperationService:
             # params all
             (
                 # changed_policy_auth_types
-                {"test1": AuthTypeEnum.ALL.value, "test2": AuthTypeEnum.ALL.value},
+                {"test1": AuthType.ALL.value, "test2": AuthType.ALL.value},
                 # custom_policy_auth_types
                 None,
                 # template_policy_auth_types
                 None,
                 # excepted
-                AuthTypeEnum.ALL.value,
+                AuthType.ALL.value,
             ),
             # custom policy all
             (
                 # changed_policy_auth_types
-                {"test1": AuthTypeEnum.ABAC.value},
+                {"test1": AuthType.ABAC.value},
                 # custom_policy_auth_types
-                [{"action_id": "test3", "auth_type": AuthTypeEnum.ALL.value}],
+                [{"action_id": "test3", "auth_type": AuthType.ALL.value}],
                 # template_policy_auth_types
                 None,
                 # excepted
-                AuthTypeEnum.ALL.value,
+                AuthType.ALL.value,
             ),
             # template policy all
             (
                 # changed_policy_auth_types
-                {"test1": AuthTypeEnum.ABAC.value},
+                {"test1": AuthType.ABAC.value},
                 # custom_policy_auth_types
-                [{"action_id": "test3", "auth_type": AuthTypeEnum.ABAC.value}],
+                [{"action_id": "test3", "auth_type": AuthType.ABAC.value}],
                 # template_policy_auth_types
                 [{"template_id": 1, "_auth_types": '{"test1": "all"}'}],
                 # excepted
-                AuthTypeEnum.ALL.value,
+                AuthType.ALL.value,
             ),
             # abac
             (
                 # changed_policy_auth_types
-                {"test1": AuthTypeEnum.ABAC.value},
+                {"test1": AuthType.ABAC.value},
                 # custom_policy_auth_types
-                [{"action_id": "test3", "auth_type": AuthTypeEnum.ABAC.value}],
+                [{"action_id": "test3", "auth_type": AuthType.ABAC.value}],
                 # template_policy_auth_types
                 [{"template_id": 1, "_auth_types": '{"test1": "abac"}'}],
                 # excepted
-                AuthTypeEnum.ABAC.value,
+                AuthType.ABAC.value,
             ),
         ],
     )
@@ -415,7 +415,7 @@ class TestBackendPolicyOperationService:
 
     def test_alter_backend_policies_ok(self):
         svc = BackendPolicyOperationService()
-        with patch.object(svc, "_calculate_auth_type", return_value=AuthTypeEnum.ABAC.value), patch(
+        with patch.object(svc, "_calculate_auth_type", return_value=AuthType.ABAC.value), patch(
             "backend.component.iam.alter_group_policies_v2"
         ) as mock_alter_group_policies_v2:
             svc.alter_backend_policies(

@@ -817,6 +817,25 @@ class ResourceGroupBeanList(ResourceGroupList):
 
         return -1
 
+    def check_instance_selection(self, action: Action):
+        """
+        检查资源的实例视图是否匹配
+        """
+        for rg in self:
+            rg.check_instance_selection(action)
+
+    def update_resource_name(self, renamed_resources: Dict[PathNodeBean, str]) -> bool:
+        """
+        更新资源实例名称
+        """
+        is_changed = False
+        for rg in self:
+            # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
+            if rg.update_resource_name(renamed_resources):
+                is_changed = True
+
+        return is_changed
+
 
 class ResourceTypeInstanceCount(BaseModel):
     type: str
@@ -940,8 +959,7 @@ class PolicyBean(Policy):
         """
         检查资源的实例视图是否匹配
         """
-        for rg in self.resource_groups:
-            rg.check_instance_selection(action)
+        self.resource_groups.check_instance_selection(action)
 
     def list_resource_type_instance_count(self) -> List[ResourceTypeInstanceCount]:
         """
@@ -964,13 +982,7 @@ class PolicyBean(Policy):
         """
         更新资源实例名称
         """
-        is_changed = False
-        for rg in self.resource_groups:
-            # 重命名，并记录是否真的修改了数据，便于后续直接修改DB数据
-            if rg.update_resource_name(renamed_resources):
-                is_changed = True
-
-        return is_changed
+        return self.resource_groups.update_resource_name(renamed_resources)
 
 
 class PolicyBeanListMixin:
@@ -997,7 +1009,7 @@ class PolicyBeanListMixin:
         填充PolicyBean中默认为空的字段
         """
         system_id_set = self.get_system_id_set()
-        resource_type_dict = self.resource_type_svc.get_resource_type_dict(list(system_id_set))
+        resource_type_dict = self.resource_type_svc.get_system_resource_type_dict(list(system_id_set))
         action_list = self.action_svc.new_action_list(self.system_id)
 
         for policy in self.policies:

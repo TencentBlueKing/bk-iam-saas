@@ -12,7 +12,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from backend.service.constants import PolicyEnvConditionTypeEnum, PolicyEnvTypeEnum, SubjectType, WeekDayEnum
+from backend.service.constants import PolicyEnvConditionType, PolicyEnvType, SubjectType, WeekDayEnum
 from backend.service.models import (
     ApplicationAuthorizationScope,
     ApplicationEnvironment,
@@ -227,17 +227,17 @@ class EnvironmentColumnValue(BaseModel):
 
     @classmethod
     def from_environment(cls, environment: ApplicationEnvironment) -> "EnvironmentColumnValue":
-        type = BaseDictStrValue(value=dict(PolicyEnvTypeEnum.get_choices())[environment.type])
+        type = BaseDictStrValue(value=dict(PolicyEnvType.get_choices())[environment.type])
         condition = BaseDictListValue(value=[])
 
-        cond_type_dict = dict(PolicyEnvConditionTypeEnum.get_choices())
+        cond_type_dict = dict(PolicyEnvConditionType.get_choices())
         for cond in environment.condition:
             text = f"{cond_type_dict[cond.type]}: "
-            if cond.type == PolicyEnvConditionTypeEnum.TZ.value:
+            if cond.type == PolicyEnvConditionType.TZ.value:
                 text += cond.values[0].value
-            elif cond.type == PolicyEnvConditionTypeEnum.HMS.value:
+            elif cond.type == PolicyEnvConditionType.HMS.value:
                 text += f"{cond.values[0].value} -- {cond.values[1].value}"
-            elif cond.type == PolicyEnvConditionTypeEnum.WEEKDAY.value:
+            elif cond.type == PolicyEnvConditionType.WEEKDAY.value:
                 week_day_dict = dict(WeekDayEnum.get_choices())
                 text += ", ".join([week_day_dict[int(v.value)] for v in cond.values])
 

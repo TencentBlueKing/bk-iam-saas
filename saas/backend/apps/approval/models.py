@@ -11,13 +11,13 @@ specific language governing permissions and limitations under the License.
 from django.db import models
 
 from backend.common.models import BaseModel
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 
 
 class ApprovalProcessGlobalConfig(BaseModel):
     """审批流程的全局配置：默认流程配置"""
 
-    application_type = models.CharField("申请类型", max_length=32, choices=ApplicationTypeEnum.get_choices(), unique=True)
+    application_type = models.CharField("申请类型", max_length=32, choices=ApplicationType.get_choices(), unique=True)
     process_id = models.IntegerField("审批流程ID")
 
     class Meta:

@@ -33,7 +33,7 @@ from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
-from backend.service.constants import ADMIN_USER, ApplicationTypeEnum, RoleType
+from backend.service.constants import ADMIN_USER, ApplicationType, RoleType
 from backend.service.models import Subject
 from backend.trans.application import ApplicationDataTrans
 from backend.trans.role import RoleTrans
@@ -94,7 +94,7 @@ class ApplicationViewSet(GenericViewSet):
         # 将Dict数据转换为创建单据所需的数据结构
         application_data = self.trans.from_grant_policy_application(user_id, data)
         # 创建单据
-        self.biz.create_for_policy(ApplicationTypeEnum.GRANT_ACTION.value, application_data)
+        self.biz.create_for_policy(ApplicationType.GRANT_ACTION.value, application_data)
 
         return Response({}, status=status.HTTP_201_CREATED)
 
@@ -224,7 +224,7 @@ class ApplicationByGroupView(views.APIView):
 
         # 创建申请
         self.biz.create_for_group(
-            ApplicationTypeEnum.JOIN_GROUP.value,
+            ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,
                 reason=data["reason"],
@@ -266,7 +266,7 @@ class ApplicationByGradeManagerView(views.APIView):
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
             self.biz.create_for_grade_manager(
-                ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+                ApplicationType.CREATE_GRADE_MANAGER.value,
                 GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
             )
 
@@ -317,7 +317,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
             self.biz.create_for_grade_manager(
-                ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
+                ApplicationType.UPDATE_GRADE_MANAGER,
                 GradeManagerApplicationDataBean(
                     role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info
                 ),
@@ -347,7 +347,7 @@ class ApplicationByRenewGroupView(views.APIView):
 
         # 创建申请
         self.biz.create_for_group(
-            ApplicationTypeEnum.RENEW_GROUP.value,
+            ApplicationType.RENEW_GROUP.value,
             GroupApplicationDataBean(
                 applicant=request.user.username,
                 reason=data["reason"],
@@ -410,6 +410,6 @@ class ApplicationByTemporaryPolicyView(views.APIView):
         # 将Dict数据转换为创建单据所需的数据结构
         application_data = self.trans.from_grant_temporary_policy_application(user_id, data)
         # 创建单据
-        self.biz.create_for_policy(ApplicationTypeEnum.GRANT_TEMPORARY_ACTION.value, application_data)
+        self.biz.create_for_policy(ApplicationType.GRANT_TEMPORARY_ACTION.value, application_data)
 
         return Response({}, status=status.HTTP_201_CREATED)
