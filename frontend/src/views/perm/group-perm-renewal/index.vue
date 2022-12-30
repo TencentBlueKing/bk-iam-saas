@@ -40,6 +40,19 @@
                                         :cur-time="row.expired_at" />
                                 </template>
                             </bk-table-column>
+                            <bk-table-column resizable="false" :label="$t(`m.common['操作']`)">
+                                <template slot-scope="{ $index }">
+                                    <bk-popconfirm
+                                        :content="$t(`m.renewal['确定要移除该用户或组织吗？']`)"
+                                        width="288"
+                                        trigger="click"
+                                        @confirm="handleDelete(tableList[index].children, $index)">
+                                        <bk-button theme="primary" text>
+                                            {{ $t(`m.common['删除']`) }}
+                                        </bk-button>
+                                    </bk-popconfirm>
+                                </template>
+                            </bk-table-column>
                         </bk-table>
                     </div>
                 </render-perm>
@@ -128,6 +141,11 @@
 
             getIsSelect (item, index) {
                 return item.parent.children.length > 0;
+            },
+
+            handleDelete (payload, index) {
+                payload.splice(index, 1);
+                this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
             },
 
             async fetchMembers (item) {
