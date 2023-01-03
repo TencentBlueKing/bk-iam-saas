@@ -19,11 +19,12 @@ from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLo
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import ManagementGradeManagerCreateSLZ, ManagementGradeMangerDetailSLZ
-from backend.apps.role.audit import RoleCreateAuditProvider, RoleUpdateAuditProvider
+from backend.apps.role.audit import RoleCreateAuditProvider, RoleDeleteAuditProvider, RoleUpdateAuditProvider
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
+from backend.biz.helper import RoleDeleteHelper
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.lock import gen_role_upsert_lock
 from backend.service.constants import RoleSourceType, RoleType
@@ -39,6 +40,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         "create": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.V2_GRADE_MANAGER_CREATE.value),
         "update": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GRADE_MANAGER_UPDATE.value),
         "retrieve": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GRADE_MANAGER_DETAIL.value),
+        "destroy": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_GRADE_MANAGER_DELETE.value),
     }
 
     lookup_field = "id"
@@ -159,3 +161,20 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         serializer = ManagementGradeMangerDetailSLZ(instance=role)
         data = serializer.data
         return Response(data)
+
+    @swagger_auto_schema(
+        operation_description="删除分级管理员",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        filter_inspectors=[],
+        paginator_inspectors=[],
+        tags=["management.role"],
+    )
+    @view_audit_decorator(RoleDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        role = self.get_object()
+        RoleDeleteHelper(role.id).delete()
+
+        # 审计
+        audit_context_setter(role=role)
+
+        return Response({})
