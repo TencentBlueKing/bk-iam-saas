@@ -63,7 +63,8 @@
         }
         .content {
             flex: 1;
-            max-width: calc(100% - 134px);
+            /* max-width: calc(100% - 134px); */
+            min-width: calc(100% - 134px);
         }
     }
 </style>
