@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.component import iam
-from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum, SubjectType
+from backend.service.constants import AbacPolicyChangeType, AuthType, SubjectType
 from backend.service.models import PathNode, Subject, UniversalPolicyChangedContent
 
 
@@ -31,9 +31,9 @@ class AuthTypeStatistics(BaseModel):
     def accumulate(self, auth_types: Iterable[str]):
         """累加"""
         counter = Counter(auth_types)
-        self.abac_count += counter.get(AuthTypeEnum.ABAC.value, 0)
-        self.rbac_count += counter.get(AuthTypeEnum.RBAC.value, 0)
-        self.all_count += counter.get(AuthTypeEnum.ALL.value, 0)
+        self.abac_count += counter.get(AuthType.ABAC.value, 0)
+        self.rbac_count += counter.get(AuthType.RBAC.value, 0)
+        self.all_count += counter.get(AuthType.ALL.value, 0)
 
     def is_all_auth_type(self) -> bool:
         return self.all_count > 0 or (self.abac_count > 0 and self.rbac_count > 0)
@@ -41,15 +41,15 @@ class AuthTypeStatistics(BaseModel):
     def auth_type(self) -> str:
         """根据统计结果，分析出最终auth_type"""
         if self.is_all_auth_type():
-            return AuthTypeEnum.ALL.value
+            return AuthType.ALL.value
 
         if self.rbac_count > 0:
-            return AuthTypeEnum.RBAC.value
+            return AuthType.RBAC.value
 
         if self.abac_count > 0:
-            return AuthTypeEnum.ABAC.value
+            return AuthType.ABAC.value
 
-        return AuthTypeEnum.NONE.value
+        return AuthType.NONE.value
 
 
 class BackendPolicyOperationService:
@@ -152,7 +152,7 @@ class BackendPolicyOperationService:
 
         # 如果是all，可以提前判断
         if auth_type_statistics.is_all_auth_type():
-            return AuthTypeEnum.ALL.value
+            return AuthType.ALL.value
 
         # 2. 查询用户组自定义权限里每条策略类型
         custom_perm_auth_types = PolicyModel.objects.filter(
@@ -170,7 +170,7 @@ class BackendPolicyOperationService:
 
         # 如果是all，可以提前判断
         if auth_type_statistics.is_all_auth_type():
-            return AuthTypeEnum.ALL.value
+            return AuthType.ALL.value
 
         # 3. 查询用户组每个权限模板的策略类型
         template_auth_types = PermTemplatePolicyAuthorized.objects.filter(
@@ -192,6 +192,6 @@ class BackendPolicyOperationService:
 
             # 如果是all，可以提前判断
             if auth_type_statistics.is_all_auth_type():
-                return AuthTypeEnum.ALL.value
+                return AuthType.ALL.value
 
         return auth_type_statistics.auth_type()

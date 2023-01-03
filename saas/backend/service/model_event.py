@@ -14,7 +14,7 @@ from pydantic import parse_obj_as
 
 from backend.component import iam
 
-from .constants import ModelChangeEventStatusEnum
+from .constants import ModelChangeEventStatus
 from .models import ModelEvent
 
 
@@ -32,4 +32,4 @@ class ModelEventService:
         删除已结束的事件
         before_updated_at 表示删除多久之前的，时间戳字段，单位秒
         """
-        iam.delete_model_change_event(ModelChangeEventStatusEnum.Finished.value, before_updated_at, limit)
+        iam.delete_model_change_event(ModelChangeEventStatus.Finished.value, before_updated_at, limit)

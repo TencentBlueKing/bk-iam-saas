@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.v1.filters import GradeManagerFilter
 from backend.api.management.v1.permissions import ManagementAPIPermission
@@ -40,7 +40,7 @@ from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.common.lock import gen_role_upsert_lock
 from backend.common.pagination import CustomPageNumberPagination
-from backend.service.constants import RoleSourceTypeEnum, RoleType
+from backend.service.constants import RoleSourceType, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
 
@@ -50,9 +50,9 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "create": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.GRADE_MANAGER_CREATE.value),
-        "update": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GRADE_MANAGER_UPDATE.value),
-        "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.GRADE_MANAGER_LIST.value),
+        "create": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, ManagementAPIEnum.GRADE_MANAGER_CREATE.value),
+        "update": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GRADE_MANAGER_UPDATE.value),
+        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.GRADE_MANAGER_LIST.value),
     }
 
     lookup_field = "id"
@@ -103,7 +103,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 
                 # 记录role创建来源信息
                 RoleSource.objects.create(
-                    role_id=role.id, source_type=RoleSourceTypeEnum.API.value, source_system_id=source_system_id
+                    role_id=role.id, source_type=RoleSourceType.API.value, source_system_id=source_system_id
                 )
 
         # 审计
@@ -131,7 +131,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 
         if "authorization_scopes" in data:
             # API里数据鉴权: 不可超过接入系统可管控的授权系统范围
-            role_source = RoleSource.objects.get(source_type=RoleSourceTypeEnum.API.value, role_id=role.id)
+            role_source = RoleSource.objects.get(source_type=RoleSourceType.API.value, role_id=role.id)
             auth_system_ids = list({i["system"] for i in data["authorization_scopes"]})
             self.verify_system_scope(role_source.source_system_id, auth_system_ids)
 
@@ -169,7 +169,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
         role_ids = list(
             RoleSource.objects.filter(
                 source_system_id=data["system"],
-                source_type=RoleSourceTypeEnum.API.value,
+                source_type=RoleSourceType.API.value,
             ).values_list("role_id", flat=True)
         )
 
@@ -193,10 +193,10 @@ class ManagementGradeManagerMemberViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "create": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GRADE_MANAGER_MEMBER_ADD.value),
-        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GRADE_MANAGER_MEMBER_LIST.value),
+        "create": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GRADE_MANAGER_MEMBER_ADD.value),
+        "list": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GRADE_MANAGER_MEMBER_LIST.value),
         "destroy": (
-            VerifyAPIParamLocationEnum.ROLE_IN_PATH.value,
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
             ManagementAPIEnum.GRADE_MANAGER_MEMBER_DELETE.value,
         ),
     }

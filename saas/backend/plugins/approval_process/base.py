@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import abc
 from typing import List
 
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 from backend.service.models import ApprovalProcess, ApprovalProcessNode, ApprovalProcessWithNode
 
 
@@ -24,12 +24,12 @@ class ApprovalProcessProvider(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def list_with_nodes(self, application_type: ApplicationTypeEnum) -> List[ApprovalProcessWithNode]:
+    def list_with_nodes(self, application_type: ApplicationType) -> List[ApprovalProcessWithNode]:
         """审批流程列表，查询指定申请类型的流程列表，并附带流程节点"""
         pass
 
     @abc.abstractmethod
-    def get_default_process(self, application_type: ApplicationTypeEnum) -> ApprovalProcess:
+    def get_default_process(self, application_type: ApplicationType) -> ApprovalProcess:
         """获取某种申请类型的默认流程
         application_type只需要实现两种，（1）加入用户组（2）申请自定义权限
         """

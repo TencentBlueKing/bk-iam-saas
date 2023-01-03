@@ -19,7 +19,7 @@ from backend.service.models import Subject
 from backend.trans.open_authorization import AuthorizationTrans
 
 from ..audit import SubjectPolicyGrantOrRevokeAuditProvider
-from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyAPIParamLocationEnum
+from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
 from ..mixins import AuthViewMixin
 from ..permissions import AuthorizationAPIPermission
 from ..serializers import BatchResourceCreatorActionSLZ, ResourceCreatorActionAttributeSLZ, ResourceCreatorActionSLZ
@@ -34,7 +34,7 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
         "post": (
-            VerifyAPIParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
+            VerifyApiParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
             AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
         ),
     }
@@ -85,7 +85,7 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
         "post": (
-            VerifyAPIParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
+            VerifyApiParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
             AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
         ),
     }
@@ -136,7 +136,7 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
         "post": (
-            VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value,
+            VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value,
             AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
         ),
     }

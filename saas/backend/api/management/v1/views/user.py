@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import (
     ManagementGradeManagerBasicSLZ,
@@ -38,7 +38,7 @@ class ManagementUserGradeManagerViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.USER_ROLE_LIST.value),
+        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.USER_ROLE_LIST.value),
     }
 
     role_biz = RoleBiz()
@@ -68,7 +68,7 @@ class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.USER_ROLE_GROUP_LIST.value),
+        "list": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.USER_ROLE_GROUP_LIST.value),
     }
 
     lookup_field = "id"

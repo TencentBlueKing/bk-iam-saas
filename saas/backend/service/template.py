@@ -20,7 +20,7 @@ from backend.common.lock import gen_policy_alter_lock
 from backend.common.time import PERMANENT_SECONDS
 
 from .action import ActionList
-from .constants import AuthTypeEnum
+from .constants import AuthType
 from .models import Policy, Subject, SystemCounter, UniversalPolicyChangedContent
 from .policy.backend import BackendPolicyOperationService
 from .policy.common import UniversalPolicyChangedContentAnalyzer
@@ -166,7 +166,7 @@ class TemplateService:
                 cp.action_id: cp.auth_type
                 for cp in changed_policies
                 # Note: 变更后策略的AuthType为None，说明是策略变删除，不需要记录了，只取未被删除的
-                if cp.auth_type != AuthTypeEnum.NONE.value
+                if cp.auth_type != AuthType.NONE.value
             }
         )
 

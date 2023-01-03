@@ -101,7 +101,7 @@ def _system_id_resource_type_id_exists(model: MockSystemModel, system_id: str, r
     # external system
     else:
         svc = ResourceTypeService()
-        data = svc.list_resource_type_by_systems([system_id])
+        data = svc.get_system_resource_type_list_map([system_id])
 
         resource_type_dict: Dict[Tuple[str, str], Dict] = defaultdict(dict)
         for _system_id, resource_types in data.items():

@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import ManagementSubjectGroupBelongSLZ
 from backend.biz.group import GroupBiz
@@ -29,7 +29,7 @@ class ManagementUserGroupBelongViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "check": (
-            VerifyAPIParamLocationEnum.GROUP_IDS_IN_QUERY.value,
+            VerifyApiParamLocationEnum.GROUP_IDS_IN_QUERY.value,
             ManagementAPIEnum.V2_USER_GROUPS_BELONG_CHECK.value,
         ),
     }
@@ -72,7 +72,7 @@ class ManagementDepartmentGroupBelongViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "check": (
-            VerifyAPIParamLocationEnum.GROUP_IDS_IN_QUERY.value,
+            VerifyApiParamLocationEnum.GROUP_IDS_IN_QUERY.value,
             ManagementAPIEnum.V2_DEPARTMENT_GROUPS_BELONG_CHECK.value,
         ),
     }

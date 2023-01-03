@@ -18,7 +18,7 @@ from backend.service.models import Subject
 from backend.trans.open_authorization import AuthorizationTrans
 
 from ..audit import SubjectPolicyGrantOrRevokeAuditProvider
-from ..constants import AuthorizationAPIEnum, VerifyAPIParamLocationEnum
+from ..constants import AuthorizationAPIEnum, VerifyApiParamLocationEnum
 from ..mixins import AuthViewMixin
 from ..permissions import AuthorizationAPIPermission
 from ..serializers import AuthBatchInstanceSLZ, AuthBatchPathSLZ, AuthInstanceSLZ, AuthPathSLZ
@@ -32,7 +32,7 @@ class AuthInstanceView(AuthViewMixin, APIView):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
-        "post": (VerifyAPIParamLocationEnum.ACTION_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
+        "post": (VerifyApiParamLocationEnum.ACTION_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
 
     trans = AuthorizationTrans()
@@ -76,7 +76,7 @@ class AuthPathView(AuthViewMixin, APIView):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
-        "post": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
+        "post": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
 
     trans = AuthorizationTrans()
@@ -120,7 +120,7 @@ class AuthBatchInstanceView(AuthViewMixin, APIView):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
-        "post": (VerifyAPIParamLocationEnum.ACTIONS_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
+        "post": (VerifyApiParamLocationEnum.ACTIONS_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
 
     trans = AuthorizationTrans()
@@ -164,7 +164,7 @@ class AuthBatchPathView(AuthViewMixin, APIView):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
-        "post": (VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
+        "post": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, AuthorizationAPIEnum.AUTHORIZATION_INSTANCE.value),
     }
 
     trans = AuthorizationTrans()

@@ -51,7 +51,7 @@ class TestInstanceSelectionList:
 
         with patch.object(
             ResourceTypeService,
-            "get_resource_type_dict",
+            "get_system_resource_type_dict",
             MagicMock(
                 side_effect=lambda *args: ResourceTypeDict(
                     data={

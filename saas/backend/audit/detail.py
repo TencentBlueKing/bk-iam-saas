@@ -22,7 +22,7 @@ from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.service.action import ActionService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 from backend.service.models import Subject
 from backend.util.time import timestamp_to_local
 
@@ -247,7 +247,7 @@ class ApprovalGlobalProvider(ApprovalNameMixin, BaseProvider):
     @property
     def description(self) -> str:
         type_ = self.event.extra["type"]
-        type_name = dict(ApplicationTypeEnum.get_choices()).get(type_)
+        type_name = dict(ApplicationType.get_choices()).get(type_)
         process_id = self.event.extra["process_id"]
         process_name = self.get_process_name(process_id)
         return f"设置 [{type_name}] 类型全局审批流程: {process_name}(#{process_id})"
