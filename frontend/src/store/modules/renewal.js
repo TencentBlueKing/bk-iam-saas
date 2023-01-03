@@ -152,7 +152,7 @@ export default {
          * @return {Promise} promise 对象
          */
         getExpiredGroups ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/groups_renew/`, params, config);
+            return http.get(`${AJAX_URL_PREFIX}/roles/groups_renew/?${json2Query(params)}`, config);
         },
 
         /**

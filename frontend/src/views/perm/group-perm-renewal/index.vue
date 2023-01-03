@@ -40,6 +40,19 @@
                                         :cur-time="row.expired_at" />
                                 </template>
                             </bk-table-column>
+                            <bk-table-column resizable="false" :label="$t(`m.common['操作']`)">
+                                <template slot-scope="{ $index }">
+                                    <bk-popconfirm
+                                        :content="$t(`m.renewal['确定要移除该用户或组织吗？']`)"
+                                        width="288"
+                                        trigger="click"
+                                        @confirm="handleDelete(tableList[index].children, $index)">
+                                        <bk-button theme="primary" text>
+                                            {{ $t(`m.common['删除']`) }}
+                                        </bk-button>
+                                    </bk-popconfirm>
+                                </template>
+                            </bk-table-column>
                         </bk-table>
                     </div>
                 </render-perm>
@@ -130,6 +143,11 @@
                 return item.parent.children.length > 0;
             },
 
+            handleDelete (payload, index) {
+                payload.splice(index, 1);
+                this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            },
+
             async fetchMembers (item) {
                 item.loading = true;
                 try {
@@ -138,8 +156,9 @@
                         offset: item.pagination.limit * (item.pagination.current - 1),
                         id: item.id
                     });
+                    this.$set(item, 'children', []);
                     item.pagination.count = Math.ceil(res.data.count / item.pagination.limit);
-                    item.children = res.data.results || [];
+                    item.children.splice(0, item.children.length, ...(res.data.results || []));
                     item.children.forEach(sub => {
                         sub.$id = `${item.id}${sub.type}${sub.id}`;
                         sub.parent = item;
@@ -175,7 +194,7 @@
                         offset: this.pagination.limit * (this.pagination.current - 1)
                     });
                     this.pagination.count = Math.ceil(res.data.count / this.pagination.limit);
-                    this.tableList = res.data.results || [];
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                     this.tableList.forEach(async (item, index) => {
                         this.$set(item, 'children', []);
                         this.$set(item, 'loading', false);
