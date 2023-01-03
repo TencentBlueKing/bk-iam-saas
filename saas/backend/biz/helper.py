@@ -10,13 +10,13 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
-from django.core.paginator import Paginator
 from django.db import transaction
 
 from backend.apps.group.models import GroupAuthorizeLock
 from backend.apps.role.models import (
     Role,
     RoleCommonAction,
+    RoleRelatedObject,
     RoleRelation,
     RoleScope,
     RoleSource,
@@ -26,10 +26,10 @@ from backend.apps.role.models import (
 )
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.common.error_codes import error_codes
-from backend.service.constants import ADMIN_USER, RoleType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
 
 from .group import GroupBiz
-from .role import RoleBiz, RoleListQuery
+from .role import RoleBiz
 from .template import TemplateBiz
 
 
@@ -112,26 +112,29 @@ class RoleDeleteHelper:
         """
         删除角色创建的用户组
         """
-        qs = RoleListQuery(self._role, None).query_group()
-        paginator = Paginator(qs, 100)
+        group_ids = list(
+            RoleRelatedObject.objects.filter(
+                role_id=self._role.id, object_type=RoleRelatedObjectType.GROUP.value
+            ).values_list("object_id", flat=True)
+        )
 
-        for i in paginator.page_range:
-            for group in paginator.page(i):
-                GroupAuthorizeLock.objects.filter(group_id=group.id).delete()
-                self.group_biz.delete(group.id)
+        for group_id in group_ids:
+            GroupAuthorizeLock.objects.filter(group_id=group_id).delete()
+            self.group_biz.delete(group_id)
 
     def _delete_role_template(self):
         """
         删除角色创建的权限模板
         """
-        qs = RoleListQuery(self._role, None).query_template()
+        template_ids = list(
+            RoleRelatedObject.objects.filter(
+                role_id=self._role.id, object_type=RoleRelatedObjectType.TEMPLATE.value
+            ).values_list("object_id", flat=True)
+        )
 
-        paginator = Paginator(qs, 100)
-
-        for i in paginator.page_range:
-            for template in paginator.page(i):
-                PermTemplatePolicyAuthorized.objects.filter(template_id=template.id).delete()
-                self.template_biz.delete(template.id)
+        for template in template_ids:
+            PermTemplatePolicyAuthorized.objects.filter(template_id=template.id).delete()
+            self.template_biz.delete(template.id)
 
     def _delete_subset_manager(self):
         """
@@ -140,8 +143,8 @@ class RoleDeleteHelper:
         role_ids = list(RoleRelation.objects.filter(parent_id=self._role.id).values_list("role_id", flat=True))
 
         for role_id in role_ids:
-            RoleRelation.objects.filter(parent_id=self._role.id, role_id=role_id).delete()
             RoleDeleteHelper(role_id).delete()
+            RoleRelation.objects.filter(parent_id=self._role.id, role_id=role_id).delete()
 
     def _delete_role(self):
         """
