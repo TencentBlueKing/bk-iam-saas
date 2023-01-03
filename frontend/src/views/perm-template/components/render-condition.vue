@@ -234,7 +234,8 @@
         display: flex;
         justify-content: flex-start;
         position: relative;
-        padding: 0 6px;
+        /* padding: 0 6px; */
+        padding: 0 12px;
         width: 100%;
         line-height: 1;
         vertical-align: middle;

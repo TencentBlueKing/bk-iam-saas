@@ -77,6 +77,9 @@
                                                 {{ resItem.name }}
                                             </p>
                                         </template>
+                                        <template v-if="!isShowBatchRefer(row.add_actions[index]) && batchReferAction(row.add_actions[index]).length === 0">
+                                            {{ $t(`m.common['暂无数据']`) }}
+                                        </template>
                                     </div>
                                 </bk-popover>
                             </template>
