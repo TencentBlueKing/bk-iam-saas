@@ -23,10 +23,11 @@ from backend.api.management.v2.serializers import (
     ManagementGradeMangerDetailSLZ,
     ManagementSubsetMangerCreateSLZ,
 )
-from backend.apps.role.audit import RoleCreateAuditProvider, RoleUpdateAuditProvider
+from backend.apps.role.audit import RoleCreateAuditProvider, RoleDeleteAuditProvider, RoleUpdateAuditProvider
 from backend.apps.role.models import Role, RoleRelation, RoleSource
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
+from backend.biz.helper import RoleDeleteHelper
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.service.constants import RoleSourceType, RoleType
 from backend.trans.open_management import GradeManagerTrans
@@ -115,6 +116,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
     management_api_permission = {
         "retrieve": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_DETAIL.value),
         "update": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_UPDATE.value),
+        "destroy": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.V2_SUBSET_MANAGER_DELETE.value),
     }
 
     lookup_field = "id"
@@ -188,6 +190,23 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
             self.get_object(), request.user.username, sync_members=True, sync_prem=True
         )
 
+        audit_context_setter(role=role)
+
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="删除子集管理员",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        filter_inspectors=[],
+        paginator_inspectors=[],
+        tags=["management.subset_manager"],
+    )
+    @view_audit_decorator(RoleDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        role = self.get_object()
+        RoleDeleteHelper(role.id).delete()
+
+        # 审计
         audit_context_setter(role=role)
 
         return Response({})

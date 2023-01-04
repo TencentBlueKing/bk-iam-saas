@@ -48,6 +48,10 @@ class RoleUpdateAuditProvider(BaseRoleDataProvider):
         return {key: value for key, value in self.request.data.items() if key in {"name", "description"}}
 
 
+class RoleDeleteAuditProvider(BaseRoleDataProvider):
+    type = AuditType.ROLE_DELETE.value
+
+
 class RoleMemberUpdateAuditProvider(BaseRoleDataProvider):
     type = AuditType.ROLE_MEMBER_UPDATE.value
 
