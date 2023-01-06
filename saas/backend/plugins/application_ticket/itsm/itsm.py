@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 from rest_framework.request import Request
 
 from backend.component import itsm
-from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, ProcessorSourceEnum
+from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
 from backend.service.models import (
     ApplicationTicket,
     ApprovalProcessWithNodeProcessor,
@@ -54,7 +54,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         node_processors_dict = {
             node.id: ",".join(node.processors)
             for node in process.nodes
-            if node.processor_source == ProcessorSourceEnum.IAM.value
+            if node.processor_source == ProcessorSource.IAM.value
         }
 
         # 申请人的组织架构
@@ -67,7 +67,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             "creator": data.applicant_info.username,
             "callback_url": callback_url,
             "node_processors": node_processors_dict,
-            "application_type_display": ApplicationTypeEnum.get_choice_label(data.type),
+            "application_type_display": ApplicationType.get_choice_label(data.type),
             "organization_names": organization_names,
             "reason": data.reason,
         }
@@ -102,7 +102,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
 
         title_prefix = (
             f"申请加入 {len(data.content.groups)} 个用户组"
-            if data.type == ApplicationTypeEnum.JOIN_GROUP
+            if data.type == ApplicationType.JOIN_GROUP
             else f"申请续期 {len(data.content.groups)} 个用户组"
         )
         params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
@@ -128,7 +128,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if approval_title:
             params["title"] = approval_title
         else:
-            title_prefix = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_GRADE_MANAGER.value else "申请编辑分级管理员"
+            title_prefix = "申请创建分级管理员" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑分级管理员"
             params["title"] = f"{title_prefix}：{data.content.name}"
 
         if approval_content:

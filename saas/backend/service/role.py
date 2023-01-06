@@ -36,7 +36,7 @@ from .constants import (
     DEFAULT_RESOURCE_GROUP_ID,
     RoleRelatedObjectType,
     RoleScopeType,
-    RoleSourceTypeEnum,
+    RoleSourceType,
     RoleType,
     SubjectType,
 )
@@ -616,7 +616,7 @@ class RoleService:
         role_ids = [r.id for r in all_roles]
         system_role_ids = set(
             RoleSource.objects.filter(
-                source_system_id=system_id, source_type=RoleSourceTypeEnum.API.value, role_id__in=role_ids
+                source_system_id=system_id, source_type=RoleSourceType.API.value, role_id__in=role_ids
             ).values_list("role_id", flat=True)
         )
 

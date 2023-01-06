@@ -33,7 +33,7 @@ from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, RoleSourceTypeEnum, RoleType, SubjectType
+from backend.service.constants import ApplicationStatus, ApplicationType, RoleSourceType, RoleType, SubjectType
 from backend.service.models import (
     ApplicantDepartment,
     ApplicantInfo,
@@ -279,7 +279,7 @@ class ApprovedPassApplicationBiz:
                 # 记录role创建来源信息
                 RoleSource.objects.create(
                     role_id=role.id,
-                    source_type=RoleSourceTypeEnum.API.value,
+                    source_type=RoleSourceType.API.value,
                     source_system_id=application.source_system_id,
                 )
 
@@ -411,7 +411,7 @@ class ApplicationBiz:
         return parse_obj_as(ApplicationSystem, system)
 
     def create_for_policy(
-        self, application_type: ApplicationTypeEnum, data: ActionApplicationDataBean
+        self, application_type: ApplicationType, data: ActionApplicationDataBean
     ) -> List[Application]:
         """自定义权限"""
         # 1. 提前查询部分信息
@@ -519,7 +519,7 @@ class ApplicationBiz:
         # 循环创建申请单
         applications = []
         for data in data_list:
-            applications.extend(self.create_for_policy(ApplicationTypeEnum.RENEW_ACTION.value, data))
+            applications.extend(self.create_for_policy(ApplicationType.RENEW_ACTION.value, data))
 
         return applications
 
@@ -587,7 +587,7 @@ class ApplicationBiz:
         return GroupApplicationContent(groups=group_infos)
 
     def create_for_group(
-        self, application_type: ApplicationTypeEnum, data: GroupApplicationDataBean, source_system_id: str = ""
+        self, application_type: ApplicationType, data: GroupApplicationDataBean, source_system_id: str = ""
     ) -> List[Application]:
         """申请加入用户组"""
         # 1. 查询申请者信息
@@ -659,7 +659,7 @@ class ApplicationBiz:
 
     def create_for_grade_manager(
         self,
-        application_type: ApplicationTypeEnum,
+        application_type: ApplicationType,
         data: GradeManagerApplicationDataBean,
         source_system_id: str = "",
         callback_id: str = "",
@@ -673,7 +673,7 @@ class ApplicationBiz:
 
         # 2. 查询对应的审批流程(所有分级管理员的申请都使用同一个流程)
         grade_manager_process = self.approval_process_svc.get_default_process(
-            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value
+            ApplicationType.CREATE_GRADE_MANAGER.value
         )
 
         # 3. 实例化流程

@@ -27,8 +27,9 @@
         <bk-table
             :data="tableList"
             size="small"
-            :class="{ 'set-border': tableLoading }"
             ext-cls="grading-admin-table"
+            :max-height="tableHeight"
+            :class="{ 'set-border': tableLoading }"
             :cell-class-name="getCellClass"
             :pagination="pagination"
             @page-change="handlePageChange"
@@ -115,8 +116,9 @@
 </template>
 <script>
     import { mapGetters } from 'vuex';
-    import ConfirmDialog from '@/components/iam-confirm-dialog/index.vue';
     import { buildURLParams } from '@/common/url';
+    import { getWindowHeight } from '@/common/util';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index';
     import ApplyDialog from './components/apply-join-dialog';
     export default {
         name: '',
@@ -154,6 +156,9 @@
             ...mapGetters(['user']),
             isStaff () {
                 return this.user.role.type === 'staff';
+            },
+            tableHeight () {
+                return getWindowHeight() - 185;
             }
         },
         watch: {

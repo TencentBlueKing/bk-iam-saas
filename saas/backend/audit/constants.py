@@ -92,6 +92,7 @@ class AuditType(ChoicesEnum, StrEnum):
 
     ROLE_CREATE = auto()
     ROLE_UPDATE = auto()
+    ROLE_DELETE = auto()
     ROLE_MEMBER_CREATE = auto()
     ROLE_MEMBER_DELETE = auto()
     ROLE_MEMBER_UPDATE = auto()

@@ -22,7 +22,7 @@ from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 from backend.service.models import Subject
 
 from .base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
@@ -140,14 +140,14 @@ class ApplicationListSLZ(serializers.ModelSerializer):
         extra_info = {}
         # 自定义需要返回system_name、system_name_en
         if obj.type in [
-            ApplicationTypeEnum.GRANT_ACTION.value,
-            ApplicationTypeEnum.RENEW_ACTION.value,
-            ApplicationTypeEnum.GRANT_TEMPORARY_ACTION.value,
+            ApplicationType.GRANT_ACTION.value,
+            ApplicationType.RENEW_ACTION.value,
+            ApplicationType.GRANT_TEMPORARY_ACTION.value,
         ]:
             system = obj.data["system"]
             extra_info["system_name"] = system.get("name")
             extra_info["system_name_en"] = system.get("name_en")
-        elif obj.type in [ApplicationTypeEnum.JOIN_GROUP.value, ApplicationTypeEnum.RENEW_GROUP.value]:
+        elif obj.type in [ApplicationType.JOIN_GROUP.value, ApplicationType.RENEW_GROUP.value]:
             extra_info["group_count"] = len(obj.data["groups"])
         return extra_info
 
@@ -187,22 +187,22 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
         """
         data = obj.data
         # 对于自定义权限申请
-        if obj.type in [ApplicationTypeEnum.GRANT_ACTION.value, ApplicationTypeEnum.RENEW_ACTION.value]:
+        if obj.type in [ApplicationType.GRANT_ACTION.value, ApplicationType.RENEW_ACTION.value]:
             # 兼容老数据，老数据只有expired_at，而没有expired_display
             for p in data["actions"]:
                 if not p.get("expired_display"):
                     p["expired_display"] = expired_at_display(p["expired_at"], obj.created_timestamp)
 
         # 对于加入用户组权限申请
-        if obj.type == ApplicationTypeEnum.JOIN_GROUP.value:
+        if obj.type == ApplicationType.JOIN_GROUP.value:
             # 兼容老数据，老数据只有expired_at，而没有expired_display
             if not data.get("expired_display"):
                 data["expired_display"] = expired_at_display(data["expired_at"], obj.created_timestamp)
 
         # 对于申请创建分级管理员
         if obj.type in [
-            ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
-            ApplicationTypeEnum.UPDATE_GRADE_MANAGER.value,
+            ApplicationType.CREATE_GRADE_MANAGER.value,
+            ApplicationType.UPDATE_GRADE_MANAGER.value,
         ]:
             # 兼容老数据，老数据只有system_id，而不是完整的system
             # 授权范围处理

@@ -16,12 +16,12 @@ from backend.api.management.constants import (
     IGNORE_VERIFY_API_CONFIG,
     ManagementAPIEnum,
     VerifyAPIObjectTypeEnum,
-    VerifyAPIParamLocationEnum,
+    VerifyApiParamLocationEnum,
     VerifyAPIParamSourceToObjectTypeMap,
 )
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.apps.role.models import RoleRelatedObject, RoleSource
-from backend.service.constants import RoleRelatedObjectType, RoleSourceTypeEnum
+from backend.service.constants import RoleRelatedObjectType, RoleSourceType
 
 from .serializers import ManagementGroupIDsSLZ, ManagementSourceSystemSLZ
 
@@ -78,8 +78,8 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
 
         # 参数来自URL
         if param_source in [
-            VerifyAPIParamLocationEnum.ROLE_IN_PATH.value,
-            VerifyAPIParamLocationEnum.GROUP_IN_PATH.value,
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
+            VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
         ]:
             # 取URL中的参数值
             object_id_key = view.lookup_url_kwarg or view.lookup_field
@@ -92,13 +92,13 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
 
         # 参数system来自Body Data或Query
         if param_source in [
-            VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value,
-            VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value,
+            VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value,
+            VerifyApiParamLocationEnum.SYSTEM_IN_QUERY.value,
         ]:
             # 确定参数是在body还是在query里
             request_params = (
                 request.data
-                if param_source == VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value
+                if param_source == VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value
                 else request.query_params
             )
             # 取request body/param参数值, TODO: 后续考虑是否约定传入所需参数的Key列表
@@ -111,7 +111,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
             return
 
         # 参数来自body data - group_ids
-        if param_source == VerifyAPIParamLocationEnum.GROUP_IDS_IN_BODY:
+        if param_source == VerifyApiParamLocationEnum.GROUP_IDS_IN_BODY:
             slz = ManagementGroupIDsSLZ(data=request.data)
             slz.is_valid(raise_exception=True)
             group_ids = slz.validated_data["group_ids"]
@@ -125,7 +125,7 @@ class ManagementAPIPermission(permissions.IsAuthenticated, ManagementAPIPermissi
         所以该方法主要是封装了对角色下的API校验
         """
         # 查询分级管理员的来源系统
-        role_source = RoleSource.objects.filter(source_type=RoleSourceTypeEnum.API.value, role_id=role_id).first()
+        role_source = RoleSource.objects.filter(source_type=RoleSourceType.API.value, role_id=role_id).first()
         # 角色来源不存在，说明页面创建或默认初始化的，非API创建，所以任何系统都无法操作
         if role_source is None:
             raise exceptions.PermissionDenied(

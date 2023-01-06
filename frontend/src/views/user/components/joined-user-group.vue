@@ -7,11 +7,12 @@
         </bk-button>
         <div>
             <bk-table
+                v-if="!pageLoading"
                 :data="curPageData"
                 :size="'small'"
-                v-if="!pageLoading"
                 :pagination="pageConf"
                 :ext-cls="tableLoading ? 'is-be-loading' : ''"
+                :max-height="tableHeight"
                 v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange">
@@ -73,11 +74,12 @@
                                 :quick-search-method="quickSearchMethod" />
                         </div>
                         <bk-table
-                            ref="groupTableRef"
-                            :data="tableList"
                             size="small"
-                            :class="{ 'set-border': tableLoading }"
+                            ref="groupTableRef"
                             ext-cls="user-group-table"
+                            :max-height="400"
+                            :data="tableList"
+                            :class="{ 'set-border': tableLoading }"
                             :pagination="pagination"
                             :cell-attributes="handleCellAttributes"
                             @page-change="pageChange"
@@ -141,10 +143,11 @@
 </template>
 <script>
     import { mapGetters } from 'vuex';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { getWindowHeight } from '@/common/util';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import IamSearchSelect from '@/components/iam-search-select';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
-    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
 
     export default {
@@ -208,6 +211,9 @@
             ...mapGetters(['user']),
             curSelectIds () {
                 return this.currentSelectList.map(item => item.id);
+            },
+            tableHeight () {
+                return getWindowHeight() - 290;
             }
         },
         watch: {

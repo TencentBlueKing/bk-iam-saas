@@ -43,10 +43,10 @@ from backend.service.constants import (
     SUBJECT_TYPE_ALL,
     SYSTEM_ALL,
     ApplicationStatus,
-    ApplicationTypeEnum,
+    ApplicationType,
     RoleRelatedObjectType,
     RoleScopeSubjectType,
-    RoleSourceTypeEnum,
+    RoleSourceType,
     RoleType,
     SubjectType,
 )
@@ -482,8 +482,8 @@ class RoleCheckBiz:
         # 检测是否已经有正在申请中的
         applications = Application.objects.filter(
             type__in=[
-                ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
-                ApplicationTypeEnum.UPDATE_GRADE_MANAGER.value,
+                ApplicationType.CREATE_GRADE_MANAGER.value,
+                ApplicationType.UPDATE_GRADE_MANAGER.value,
             ],
             status=ApplicationStatus.PENDING.value,
         )
@@ -581,7 +581,7 @@ class RoleCheckBiz:
         limit = system_limits[system_id] if system_id in system_limits else default_limit
 
         exists_count = RoleSource.objects.filter(
-            source_type=RoleSourceTypeEnum.API.value, source_system_id=system_id
+            source_type=RoleSourceType.API.value, source_system_id=system_id
         ).count()
         if exists_count >= limit:
             raise serializers.ValidationError(_("系统({}): 创建的分级管理员数量已超过最大值 {}").format(system_id, limit))

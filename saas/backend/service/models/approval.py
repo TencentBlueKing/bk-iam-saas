@@ -12,12 +12,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from ..constants import (
-    APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP,
-    ApplicationTypeEnum,
-    ProcessorNodeTypeEnum,
-    ProcessorSourceEnum,
-)
+from ..constants import APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP, ApplicationType, ProcessorNodeType, ProcessorSource
 
 
 class ApprovalProcess(BaseModel):
@@ -50,7 +45,7 @@ class ApprovalProcessNode(BaseModel):
             and self.processor_type == other.processor_type
         )
 
-    def is_application_type_supported(self, application_type: ApplicationTypeEnum) -> bool:
+    def is_application_type_supported(self, application_type: ApplicationType) -> bool:
         """是否支持配置为某种申请类型的流程节点"""
         # 非IAM来源的默认支持被所有类型的申请配置为审批流程的节点
         if not self.is_iam_source():
@@ -63,7 +58,7 @@ class ApprovalProcessNode(BaseModel):
         return True
 
     def is_iam_source(self) -> bool:
-        return self.processor_source == ProcessorSourceEnum.IAM.value
+        return self.processor_source == ProcessorSource.IAM.value
 
 
 class ApprovalProcessWithNode(ApprovalProcess):
@@ -71,7 +66,7 @@ class ApprovalProcessWithNode(ApprovalProcess):
 
     nodes: List[ApprovalProcessNode] = []
 
-    def is_match_application_type(self, application_type: ApplicationTypeEnum) -> bool:
+    def is_match_application_type(self, application_type: ApplicationType) -> bool:
         """判断流程与审批类型是否匹配"""
         # 检查所有节点是否都支持当前的申请类型，只要有一个节点不支持，则表示整个流程都不能匹配该申请类型
         for node in self.nodes:
@@ -127,7 +122,7 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
 
     def set_instance_approver(self, approver: List[str]):
         for node in self.nodes:
-            if node.is_iam_source() and node.processor_type == ProcessorNodeTypeEnum.INSTANCE_APPROVER.value:
+            if node.is_iam_source() and node.processor_type == ProcessorNodeType.INSTANCE_APPROVER.value:
                 node.processors = approver
 
     def has_instance_approver_node(self, judge_empty=False) -> bool:
@@ -137,7 +132,7 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
         judge_empty: 是否判断节点的审批人为空
         """
         for node in self.nodes:
-            if node.is_iam_source() and node.processor_type == ProcessorNodeTypeEnum.INSTANCE_APPROVER.value:
+            if node.is_iam_source() and node.processor_type == ProcessorNodeType.INSTANCE_APPROVER.value:
                 # 判断节点审批人是否为空
                 if judge_empty and len(node.processors) == 0:
                     return False
