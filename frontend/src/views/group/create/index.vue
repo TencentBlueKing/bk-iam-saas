@@ -725,7 +725,9 @@
                 } else {
                     this.hasAddCustomList = payload;
                 }
-
+                if (!payload.length) {
+                    this.curActionValue = [];
+                }
                 this.originalList = _.cloneDeep(payload);
                 this.aggregationDataByCustom = _.cloneDeep(aggregation);
                 this.authorizationDataByCustom = _.cloneDeep(authorization);
