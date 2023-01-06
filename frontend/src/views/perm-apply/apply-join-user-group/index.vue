@@ -188,7 +188,8 @@
             this.searchData = [
                 {
                     id: 'id',
-                    name: 'ID'
+                    name: 'ID',
+                    default: true
                     // validate (values, item) {
                     //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
                     //     return !validate ? '' : true
@@ -285,9 +286,11 @@
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-                        if (this.searchList.length > 0) {
+                        if (this.searchList.length) {
                             const tempData = this.searchList.find(item => item.id === key);
-                            params[key] = tempData.values[0];
+                            if (tempData) {
+                                params[key] = tempData.values[0];
+                            }
                         }
                     } else {
                         params[key] = this.searchParams[key];

@@ -805,7 +805,8 @@ export const m = {
         '暂无将过期的权限': 'No permission will expire',
         '续期申请提交成功': 'Renewal application submitted',
         '即将过期的用户/组织': 'Users/organizations about to expire',
-        '请选择即将过期的用户/组织': 'Please select the user/organization that will expire soon'
+        '请选择即将过期的用户/组织': 'Please select the user/organization that will expire soon',
+        '确定要移除该用户或组织吗？': 'Are you sure you want to remove this user or organization? '
     },
     audit: {
         '时间': 'Time',

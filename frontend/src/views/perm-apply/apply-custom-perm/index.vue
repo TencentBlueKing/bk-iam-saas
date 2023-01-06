@@ -40,7 +40,9 @@
                                 v-if="commonActions.length > 0 && !customLoading"
                                 mode="detail"
                                 :data="commonActions"
-                                @on-change="handleActionTagChange" />
+                                @on-change="handleActionTagChange"
+                                @on-mouse-enter="handleActionTagEnter"
+                                @on-mouse-leave="handleActionTagLeave" />
                             <template v-if="originalCustomTmplList.length > 0 && !customLoading">
                                 <div class="action-empty-error" v-if="isShowActionError">{{ $t(`m.verify['请选择操作']`) }}</div>
                                 <div class="actions-wrapper">
@@ -51,7 +53,9 @@
                                         <p style="cursor: pointer;" @click.stop="handleExpanded(item)" v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))">
                                             <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
                                                 <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
-                                                <span>{{ item.name }}</span>
+                                                <span :class="[{ 'action-hover': handleFormatTitleHover(item) }]">
+                                                    {{ item.name }}
+                                                </span>
                                                 <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
                                             </section>
                                             <span :class="['check-all', { 'is-disabled': item.actionsAllDisabled }]" @click.stop="handleCheckAll(item)">
@@ -69,7 +73,7 @@
                                                     :false-value="false"
                                                     v-model="act.checked"
                                                     :disabled="act.disabled"
-                                                    ext-cls="iam-action-cls"
+                                                    :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
                                                     @change="handleActionChecked(...arguments, act, item)">
                                                     <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                                         <template v-if="act.disabled">
@@ -115,7 +119,7 @@
                                                                 :false-value="false"
                                                                 v-model="act.checked"
                                                                 :disabled="act.disabled"
-                                                                ext-cls="iam-action-cls"
+                                                                :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
                                                                 @change="handleSubActionChecked(...arguments, act, subAct, item)">
                                                                 <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                                                     <template v-if="act.disabled">
@@ -539,6 +543,7 @@
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+
     export default {
         name: '',
         components: {
@@ -607,7 +612,10 @@
                     { title: this.$t(`m.permApply['用户组推荐']`), desc: this.$t(`m.permApply['包含更大范围的权限（运维\开发\测试等角色类权限）']`), key: 'userGroup' },
                     { title: this.$t(`m.permApply['细粒度权限']`), desc: this.$t(`m.permApply['只包含当前需要的最小范围权限']`), key: 'independent' }
                 ],
-                tabIndex: 0
+                tabIndex: 0,
+                hoverActionData: {
+                    actions: []
+                }
             };
         },
         computed: {
@@ -841,16 +849,22 @@
              */
             async fetchPageData () {
                 await this.fetchSystems();
-                await this.fetchPolicies(this.systemValue);
-                await this.fetchAggregationAction(this.systemValue);
-                await this.fetchCommonActions(this.systemValue);
+                if (this.systemValue) {
+                    await Promise.all([
+                        this.fetchPolicies(this.systemValue),
+                        this.fetchAggregationAction(this.systemValue),
+                        this.fetchCommonActions(this.systemValue)
+                    ]);
+                }
                 if (this.sysAndtid) {
-                    // 获取用户组数据
-                    await this.fetchUserGroupList();
-                    // 获取个人用户的用户组列表
-                    await this.fetchCurUserGroup();
-                    // 获取推荐操作
-                    await this.fetchRecommended();
+                    await Promise.all([
+                        // 获取用户组数据
+                        this.fetchUserGroupList(),
+                        // 获取个人用户的用户组列表
+                        this.fetchCurUserGroup(),
+                        // 获取推荐操作
+                        this.fetchRecommended()
+                    ]);
                 }
             },
 
@@ -1101,6 +1115,27 @@
                     });
                     this.tableData = this.tableData.filter(item => !(item.isAggregate && item.actions.length < 1));
                 }
+            },
+
+            handleActionTagEnter (payload) {
+                this.hoverActionData = payload;
+            },
+
+            handleActionTagLeave (payload) {
+                this.hoverActionData = Object.assign(payload, { actions: [] });
+            },
+
+            handleFormatTitleHover (payload) {
+                let subGroupId = [];
+                const originIds = payload.actions.map(item => item.id);
+                payload.sub_groups.forEach(item => {
+                    item.actions.forEach((subItem) => {
+                        subGroupId = [...new Set(subGroupId.concat(subItem.id))];
+                    });
+                });
+                const list = [...new Set(subGroupId.concat(originIds))];
+                const result = this.hoverActionData.actions.filter(item => list.includes(item));
+                return !!result.length;
             },
 
             handleActionMatchChecked (flag, payload) {
@@ -1953,16 +1988,23 @@
              * 获取系统列表
              */
             async fetchSystems () {
+                if (this.routerQuery.system_id) {
+                    this.systemValue = this.routerQuery.system_id;
+                }
                 try {
-                    const res = await this.$store.dispatch('system/getSystems')
-                    ;(res.data || []).forEach(item => {
+                    const res = await this.$store.dispatch('system/getSystems');
+                    (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
                     this.systemList = res.data || [];
-                    if (this.routerQuery.system_id) {
-                        this.systemValue = this.routerQuery.system_id;
-                    } else {
-                        this.systemValue = res.data[0].id || '';
+                    if (!this.systemValue) {
+                        if (this.systemList.length) {
+                            this.systemValue = this.systemList[0].id;
+                        } else {
+                            this.fetchResetData();
+                            this.requestQueue = [];
+                            return;
+                        }
                     }
                     await this.fetchActions(this.systemValue);
                 } catch (e) {
@@ -2125,18 +2167,13 @@
                 this.reason = '';
                 this.isShowReasonError = false;
                 this.isShowActionError = false;
-                this.isAllExpanded = false;
-                this.sysAndtid = false;
-                this.aggregationMap = [];
-                this.aggregations = [];
-                this.aggregationsBackup = [];
-                this.aggregationsTableData = [];
-                this.actionSearchValue = '';
-                this.requestQueue = ['action', 'policy', 'aggregate', 'commonAction'];
-                await this.fetchActions(value);
-                await this.fetchPolicies(value);
-                await this.fetchAggregationAction(value);
-                await this.fetchCommonActions(value);
+                this.fetchResetData();
+                await Promise.all([
+                    this.fetchActions(value),
+                    this.fetchPolicies(value),
+                    this.fetchAggregationAction(value),
+                    this.fetchCommonActions(value)
+                ]);
             },
 
             /**
@@ -2312,10 +2349,34 @@
                     this.isShowIndependent = true;
                     this.isShowUserGroup = false;
                 }
+            },
+
+            fetchResetData () {
+                this.isAllExpanded = false;
+                this.sysAndtid = false;
+                this.aggregationMap = [];
+                this.aggregations = [];
+                this.aggregationsBackup = [];
+                this.aggregationsTableData = [];
+                this.actionSearchValue = '';
+                this.requestQueue = ['action', 'policy', 'aggregate', 'commonAction'];
             }
         }
     };
 </script>
 <style>
     @import './index.css';
+</style>
+<style lang="postcss" scoped>
+.action-hover {
+    color: #3a84ff;
+}
+.iam-action-cls {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+.iam-action-hover {
+    background: #E7EFFE;
+    color: #3a84ff;
+}
 </style>
