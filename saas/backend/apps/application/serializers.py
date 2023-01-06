@@ -22,7 +22,7 @@ from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
-from backend.service.constants import ApplicationType
+from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Subject
 
 from .base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
@@ -237,9 +237,17 @@ class ApplicationGroupInfoSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="用户组ID")
 
 
+class ApplicantSLZ(serializers.Serializer):
+    type = serializers.ChoiceField(
+        label="申请者类型", choices=[one for one in SubjectType.get_choices() if one[0] in ["user", "department"]]
+    )
+    id = serializers.CharField(label="申请者id")
+
+
 class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
     groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False)
     source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
+    applicants = serializers.ListField(label="权限获得者", child=ApplicantSLZ("获得者"), required=False, default=list)
 
 
 class GradeManagerCreatedApplicationSLZ(GradeMangerCreateSLZ, ReasonSLZ):

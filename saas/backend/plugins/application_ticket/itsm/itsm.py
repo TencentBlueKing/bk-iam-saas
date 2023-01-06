@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 from rest_framework.request import Request
 
 from backend.component import itsm
-from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
+from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource, SubjectType
 from backend.service.models import (
     ApplicationTicket,
     ApprovalProcessWithNodeProcessor,
@@ -89,7 +89,12 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
         # 在params中加上权限获得者
-        params["users"] = ", ".join(["{}({})".format(u.username, u.display_name) for u in data.content.users])
+        params["applicants"] = ", ".join(
+            [
+                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                for u in data.content.applicants
+            ]
+        )
 
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
@@ -108,6 +113,14 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
 
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
+
+        # 在params中加上权限获得者
+        params["applicants"] = ", ".join(
+            [
+                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                for u in data.content.applicants
+            ]
+        )
 
         params["tag"] = tag
         ticket = itsm.create_ticket(**params)

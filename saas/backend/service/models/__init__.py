@@ -76,7 +76,7 @@ from .resource import (
 )
 from .resource_creator_action import ResourceCreatorActionConfig, ResourceCreatorActionConfigItem
 from .resource_type import ResourceType, ResourceTypeDict
-from .subject import Subject, User
+from .subject import Applicant, Subject
 from .system import System
 
 __all__ = [
@@ -148,5 +148,5 @@ __all__ = [
     "UniversalPolicyChangedContent",
     "RbacPolicyChangeContent",
     "AbacPolicyChangeContent",
-    "User",
+    "Applicant",
 ]

@@ -15,7 +15,8 @@ from pydantic.tools import parse_obj_as
 from backend.apps.organization.models import User as UserModel
 from backend.biz.application import ActionApplicationDataBean
 from backend.biz.policy import PolicyBeanList
-from backend.service.models import User
+from backend.service.constants import SubjectType
+from backend.service.models import Applicant
 from backend.trans.application import ApplicationDataTrans
 
 from .open import OpenCommonTrans, OpenPolicy
@@ -100,7 +101,7 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
         application_data = ActionApplicationDataBean(
             applicant=applicant,
             policy_list=application_policy_list,
-            users=[User(username=user.username, display_name=user.display_name)],
+            users=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             reason=data["reason"],
         )
 

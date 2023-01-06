@@ -42,6 +42,9 @@ class Subject(BaseModel):
         return [cls.from_username(username) for username in usernames]
 
 
-class User(BaseModel):
-    username: str
+class Applicant(Subject):
+    """
+    权限申请人
+    """
+
     display_name: str

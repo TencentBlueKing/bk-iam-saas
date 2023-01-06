@@ -19,7 +19,8 @@ from backend.apps.organization.models import User as UserModel
 from backend.biz.application import ActionApplicationDataBean
 from backend.biz.policy import PolicyBeanList, PolicyQueryBiz
 from backend.common.error_codes import error_codes
-from backend.service.models import Subject, User
+from backend.service.constants import SubjectType
+from backend.service.models import Applicant, Subject
 
 from .policy import PolicyTrans
 
@@ -179,15 +180,15 @@ class ApplicationDataTrans:
             usernames = [applicant]
 
         # 3. 转换为ApplicationBiz创建申请单所需数据结构
-        users = [
-            User(username=u.username, display_name=u.display_name)
+        applicants = [
+            Applicant(type=SubjectType.USER.value, id=u.username, display_name=u.display_name)
             for u in UserModel.objects.filter(username__in=usernames)
         ]
 
         application_data = ActionApplicationDataBean(
             applicant=applicant,
             policy_list=application_policy_list,
-            users=users,
+            applicants=applicants,
             reason=data["reason"],
         )
 

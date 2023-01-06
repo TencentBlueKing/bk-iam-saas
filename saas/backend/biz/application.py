@@ -35,6 +35,7 @@ from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
 from backend.service.constants import ApplicationStatus, ApplicationType, RoleSourceType, RoleType, SubjectType
 from backend.service.models import (
+    Applicant,
     ApplicantDepartment,
     ApplicantInfo,
     ApplicationAuthorizationScope,
@@ -53,7 +54,6 @@ from backend.service.models import (
     GroupApplicationContent,
     GroupApplicationData,
     Subject,
-    User,
 )
 from backend.service.role import RoleService
 from backend.service.system import SystemService
@@ -79,7 +79,7 @@ class ActionApplicationDataBean(BaseApplicationDataBean):
     """自定义权限申请或续期"""
 
     policy_list: PolicyBeanList
-    users: List[User]
+    applicants: List[Applicant]
 
     class Config:
         # 由于PolicyBeanList并非继承于BaseModel，而是普通的类，所以需要声明允许"随意"类型
@@ -105,6 +105,7 @@ class GroupApplicationDataBean(BaseApplicationDataBean):
     """用户组申请或续期"""
 
     groups: List[ApplicationGroupInfoBean]
+    applicants: List[Applicant]
 
 
 class GradeManagerApplicationDataBean(BaseApplicationDataBean):
@@ -171,10 +172,20 @@ class ApprovedPassApplicationBiz:
         """用户自定义权限授权"""
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
-        users = application.data["users"] if "users" in application.data else [{"username": subject.id}]
+        applicants = (
+            application.data["applicants"]
+            if "applicants" in application.data
+            else [{"type": subject.type, "id": subject.id}]
+        )
 
-        for user in users:
-            subject = Subject(type=SubjectType.USER.value, id=user["username"])
+        for applicant in applicants:
+            if applicant["type"] != SubjectType.USER.value:
+                logger.warn(
+                    "application [%d] grant action approve fail: %s", application.id, f"{subject} type is not user"
+                )
+                continue
+
+            subject = Subject.parse_obj(applicant)
             ok, msg = self._check_subject_exists(subject)
             if not ok:
                 logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
@@ -201,6 +212,14 @@ class ApprovedPassApplicationBiz:
             logger.warn("application [%d] join group approve fail: %s", application.id, msg)
             return
 
+        applicants = (
+            application.data["applicants"]
+            if "applicants" in application.data
+            else [{"type": subject.type, "id": subject.id}]
+        )
+
+        subjects = [Subject.parse_obj(one) for one in applicants]
+
         # 兼容，新老数据在data都存在expired_at
         default_expired_at = application.data["expired_at"]
         # 加入用户组
@@ -208,7 +227,7 @@ class ApprovedPassApplicationBiz:
             # 新数据才有，老数据则使用data外层的expired_at
             expired_at = group.get("expired_at", default_expired_at)
             try:
-                self.group_biz.add_members(group["id"], [subject], expired_at)
+                self.group_biz.add_members(group["id"], subjects, expired_at)
             except Group.DoesNotExist:
                 # 若审批通过时，用户组已经被删除，则直接忽略
                 logger.error(
@@ -455,7 +474,7 @@ class ApplicationBiz:
                 content=GrantActionApplicationContent(
                     system=system_info,
                     policies=parse_obj_as(List[ApplicationPolicyInfo], policy_list.policies),
-                    users=data.users,
+                    applicants=data.applicants,
                 ),
             )
             new_data_list.append((application_data, process))
@@ -566,7 +585,9 @@ class ApplicationBiz:
 
         return application_templates
 
-    def _gen_group_application_content(self, group_infos: List[ApplicationGroupInfoBean]) -> GroupApplicationContent:
+    def _gen_group_application_content(
+        self, group_infos: List[ApplicationGroupInfoBean], applicants: List[Applicant]
+    ) -> GroupApplicationContent:
         """生成用户组单据所需内容"""
         # 1. 用户组基本信息
         groups = Group.objects.filter(id__in=[g.id for g in group_infos])
@@ -584,7 +605,7 @@ class ApplicationBiz:
             for group in groups
         ]
 
-        return GroupApplicationContent(groups=group_infos)
+        return GroupApplicationContent(groups=group_infos, applicants=applicants)
 
     def create_for_group(
         self, application_type: ApplicationType, data: GroupApplicationDataBean, source_system_id: str = ""
@@ -615,7 +636,9 @@ class ApplicationBiz:
                 type=application_type,
                 applicant_info=applicant_info,
                 reason=data.reason,
-                content=self._gen_group_application_content([g for g in data.groups if g.id in group_ids]),
+                content=self._gen_group_application_content(
+                    [g for g in data.groups if g.id in group_ids], data.applicants
+                ),
             )
             new_data_list.append((application_data, process))
 
