@@ -486,13 +486,18 @@ export const m = {
         '请选择项目': 'Please select project',
         '清空选择': 'Clear Selection',
         '选择系统': 'Select System',
-        '选择操作': 'Select Action'
+        '选择操作': 'Select Action',
+        '选择权限获得者': 'Select a permission recipient',
+        '请选择权限获得者': 'Please select a permission recipient',
+        '请输入权限获得者': 'Please enter the authority recipient',
+        '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others'
     },
     myApply: {
         '申请列表': 'Apply List',
         '申请类型': 'Type',
         '申请单号': 'ID',
         '申请人': 'Applicant',
+        '权限获得者': 'Permission Acquirer',
         '所在组织': 'Organization',
         '申请内容': 'Details',
         '审批流程': 'Approval Process',

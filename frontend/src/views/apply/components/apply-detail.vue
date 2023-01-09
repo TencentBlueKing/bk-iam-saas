@@ -98,7 +98,7 @@
                     const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
                     const {
                         sn, type, applicant, organizations, reason, data,
-                        status, created_time, ticket_url
+                        status, created_time, ticket_url, applicants
                     } = res.data;
                     this.basicInfo = {
                         sn,
@@ -107,7 +107,8 @@
                         applicant,
                         reason,
                         created_time,
-                        ticket_url
+                        ticket_url,
+                        applicants
                     };
                     this.systemName = data.system.name;
                     this.systemId = data.system.id;

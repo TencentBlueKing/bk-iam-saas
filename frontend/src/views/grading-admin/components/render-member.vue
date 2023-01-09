@@ -1,9 +1,9 @@
 <template>
     <render-horizontal-block
-        :label="$t(`m.levelSpace['最大可授权人员边界']`)">
+        :label="renderTitle">
         <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
             <Icon bk type="plus-circle-shape" />
-            <span>{{ $t(`m.levelSpace['选择可授权人员边界']`) }}</span>
+            <span>{{ renderText }}</span>
         </section>
         <Icon
             type="info-fill"
@@ -11,20 +11,29 @@
             v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
         <div style="margin-top: 9px;" v-if="isAll">
             <div class="all-item">
-                <span class="member-name">{{ $t(`m.common['全员']`) }}</span>
+                <span class="member-name">{{ allText }}</span>
                 <span class="display-name">(All)</span>
                 <Icon type="close-fill" class="remove-icon" @click="handleDelete" />
             </div>
         </div>
         <template v-else>
-            <render-member-item :data="users" @on-delete="handleDeleteUser" v-if="isHasUser" />
-            <render-member-item :data="departments" type="department" v-if="isHasDepartment"
-                @on-delete="handleDeleteDepartment" />
+            <render-member-item
+                v-if="isHasUser"
+                :data="users"
+                @on-delete="handleDeleteUser"
+            />
+            <render-member-item
+                v-if="isHasDepartment"
+                type="department"
+                :data="departments"
+                @on-delete="handleDeleteDepartment"
+            />
         </template>
     </render-horizontal-block>
 </template>
 <script>
     import RenderMemberItem from '../../group/common/render-member-display';
+    import { il8n } from '@/language';
     export default {
         name: '',
         components: {
@@ -39,6 +48,22 @@
                 type: Array,
                 default: () => []
             },
+            renderTitle: {
+                type: String,
+                default: () => il8n('levelSpace', '最大可授权人员边界')
+            },
+            renderText: {
+                type: String,
+                default: () => il8n('levelSpace', '选择可授权人员边界')
+            },
+            allText: {
+                type: String,
+                default: () => il8n('common', '全员')
+            },
+            tips: {
+                type: String,
+                default: () => il8n('grading', '添加成员提示')
+            },
             isAll: {
                 type: Boolean,
                 default: false
@@ -46,7 +71,7 @@
         },
         data () {
             return {
-                tips: this.$t(`m.grading['添加成员提示']`)
+               
             };
         },
         computed: {
