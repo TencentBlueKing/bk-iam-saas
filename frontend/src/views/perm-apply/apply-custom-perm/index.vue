@@ -9,7 +9,8 @@
                         v-model="systemValue"
                         style="width: 480px;"
                         :popover-min-width="480"
-                        searchable
+                        :searchable="true"
+                        :search-with-pinyin="true"
                         :clearable="false"
                         @selected="handleSysSelected">
                         <bk-option v-for="option in systemList"
@@ -188,6 +189,21 @@
                         </bk-switcher>
                         <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['逐项编辑']`) : $t(`m.grading['批量编辑']`) }}</span>
                     </div>
+                </section>
+            </render-horizontal-block>
+            <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="false">
+                <section ref="permRecipientRef">
+                    <bk-user-selector
+                        :value="permMembers"
+                        :api="userApi"
+                        :placeholder="$t(`m.permApply['请输入权限获得者']`)"
+                        :style="{ width: '60%' }"
+                        :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        data-test-id="grading_userSelector_member"
+                        @focus="handleRtxFocus"
+                        @blur="handleRtxBlur"
+                        @change="handleRtxChange" />
+                    <!-- <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p> -->
                 </section>
             </render-horizontal-block>
             <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
@@ -535,14 +551,15 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { guid } from '@/common/util';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderActionTag from '@/components/common-action';
     import ResourceInstanceTable from '../components/resource-instance-table';
     import Policy from '@/model/policy';
     import AggregationPolicy from '@/model/aggregation-policy';
     import Condition from '@/model/condition';
     import IamDeadline from '@/components/iam-deadline/horizontal';
-    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import BkUserSelector from '@blueking/user-selector';
 
     export default {
         name: '',
@@ -550,10 +567,12 @@
             RenderActionTag,
             ResourceInstanceTable,
             IamDeadline,
-            RenderPermSideslider
+            RenderPermSideslider,
+            BkUserSelector
         },
         data () {
             return {
+                userApi: window.BK_USER_API,
                 systemValue: '',
                 systemList: [],
                 buttonLoading: false,
@@ -567,7 +586,6 @@
                 isShowReasonError: false,
                 routerQuery: {},
                 linearActionList: [],
-
                 requestQueue: ['action', 'policy', 'aggregate', 'commonAction'],
                 isAllExpanded: false,
                 aggregationMap: [],
@@ -587,8 +605,9 @@
                 isShowIndependent: false,
                 isShowExpiredError: false,
                 isShowGroupError: false,
-                sliderLoading: false,
                 isShowHasUserGroup: false,
+                isShowMemberError: false,
+                sliderLoading: false,
                 currentSelectList: [],
                 curUserGroup: [],
                 expiredAt: 15552000,
@@ -597,7 +616,6 @@
                 checkRadio: 'userGroup',
                 tableLoading: false,
                 gradeMembers: [],
-
                 // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
@@ -615,7 +633,9 @@
                 tabIndex: 0,
                 hoverActionData: {
                     actions: []
-                }
+                },
+                // permMembers: [{ username: 'poloohuang', readonly: false }, { username: 'gc_lihao', readonly: false }].map(item => item.username)
+                permMembers: []
             };
         },
         computed: {
@@ -803,6 +823,18 @@
                     return {};
                 }
                 return {};
+            },
+            handleRtxFocus () {
+                this.isShowMemberError = false;
+            },
+
+            handleRtxBlur () {
+                this.isShowMemberError = this.permMembers.length < 1;
+            },
+
+            handleRtxChange (payload) {
+                this.isShowMemberError = false;
+                this.permMembers = [...payload];
             },
             setDefaultSelect (payload) {
                 return !this.curUserGroup.includes(payload.id.toString());
@@ -2206,13 +2238,18 @@
                     }
                     const tableRef = this.$refs.instanceTableRef;
                     const reasonRef = this.$refs.resInstanceReasonRef;
-                    if (!flag && this.reason === '') {
+                    if (!flag && !this.reason) {
                         this.scrollToLocation(reasonRef);
                     } else {
                         this.scrollToLocation(tableRef);
                     }
                     return;
                 }
+                // if (!this.permMembers.length) {
+                // this.isShowMemberError = true;
+                // this.scrollToLocation(this.$refs.permRecipientRef);
+                // return;
+                // }
                 const systemName = this.systemList.find(item => item.id === this.systemValue).name;
                 const params = {
                     system: {
@@ -2222,7 +2259,8 @@
                     templates: [],
                     actions,
                     aggregations,
-                    reason: this.reason
+                    reason: this.reason,
+                    usernames: this.permMembers.length ? this.permMembers : [this.user.username]
                 };
                 this.buttonLoading = true;
                 try {
