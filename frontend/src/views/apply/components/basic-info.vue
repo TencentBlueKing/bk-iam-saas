@@ -19,7 +19,8 @@
         </div>
         <div class="item">
             <label class="label">{{ $t(`m.myApply['权限获得者']`) }}：</label>
-            <div class="content">{{ data.usernames && data.usernames.length > 0 ? data.usernames.join(';') : '' }}</div>
+            <div class="content">{{ data.applicants && data.applicants .length > 0 ?
+                data.applicants .map(item => item.display_name) : '' }}</div>
         </div>
         <div class="item" v-if="isShowExpired">
             <label class="label">{{ $t(`m.common['申请期限']`) }}：</label>

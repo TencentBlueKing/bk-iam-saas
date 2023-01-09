@@ -79,7 +79,7 @@
                     const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
                     const {
                         sn, type, applicant, organizations, reason, data,
-                        status, created_time, ticket_url, usernames
+                        status, created_time, ticket_url, applicants
                     } = res.data;
                     this.basicInfo = {
                         sn,
@@ -90,7 +90,7 @@
                         expiredDisplay: data.expired_display,
                         created_time,
                         ticket_url,
-                        usernames
+                        applicants
                     }
                     ;(data.groups || []).forEach(item => {
                         item.display_id = `#${item.id}`;
