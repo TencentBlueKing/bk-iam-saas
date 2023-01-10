@@ -196,7 +196,7 @@ class ABACPolicyOperationService(PolicyCommonDBOperationService):
         """
         # 查询要删除的策略对应的后台PolicyID
         policy_id_map = self._query_backend_policy_id(system_id, subject, policy_ids)
-        backend_policy_ids = [policy_id_map[_id] for _id in policy_ids]
+        backend_policy_ids = [policy_id_map[_id] for _id in policy_ids if _id in policy_id_map]
 
         # 4. 过滤出要删除策略的
         with transaction.atomic():
