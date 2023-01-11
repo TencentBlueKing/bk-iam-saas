@@ -132,9 +132,9 @@ class RoleDeleteHelper:
             ).values_list("object_id", flat=True)
         )
 
-        for template in template_ids:
-            PermTemplatePolicyAuthorized.objects.filter(template_id=template.id).delete()
-            self.template_biz.delete(template.id)
+        for template_id in template_ids:
+            PermTemplatePolicyAuthorized.objects.filter(template_id=template_id).delete()
+            self.template_biz.delete(template_id)
 
     def _delete_subset_manager(self):
         """
