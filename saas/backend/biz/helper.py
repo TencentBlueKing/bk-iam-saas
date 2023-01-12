@@ -103,7 +103,9 @@ class RoleDeleteHelper:
         """
         删除role
         """
-        self._delete_subset_manager()
+        if self._role.type == RoleType.GRADE_MANAGER.value:
+            self._delete_subset_manager()
+
         self._delete_role_group()
         self._delete_role_template()
         self._delete_role()
@@ -144,7 +146,6 @@ class RoleDeleteHelper:
 
         for role_id in role_ids:
             RoleDeleteHelper(role_id).delete()
-            RoleRelation.objects.filter(parent_id=self._role.id, role_id=role_id).delete()
 
     def _delete_role(self):
         """
@@ -164,3 +165,6 @@ class RoleDeleteHelper:
             RoleUser.objects.filter(role_id=self._role.id).delete()
             RoleSource.objects.filter(role_id=self._role.id).delete()
             Role.objects.filter(id=self._role.id).delete()
+
+            if self._role.type == RoleType.SUBSET_MANAGER.value:
+                RoleRelation.objects.filter(role_id=self._role.id).delete()
