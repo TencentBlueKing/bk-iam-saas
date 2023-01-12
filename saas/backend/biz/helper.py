@@ -95,7 +95,7 @@ class RoleDeleteHelper:
             id=role_id, type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]
         ).first()
         if not role:
-            raise error_codes.NOT_FOUND_ERROR.message(f"role[{role_id}] not exists")
+            raise error_codes.NOT_FOUND_ERROR.format(f"role[{role_id}] not exists")
 
         self._role = role
 
