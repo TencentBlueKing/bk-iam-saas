@@ -15,7 +15,7 @@ from django.utils.translation import gettext as _
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.component import itsm
-from backend.service.constants import IAM_SUPPORT_PROCESSOR_TYPES, ApplicationTypeEnum, ProcessorSourceEnum
+from backend.service.constants import IAM_SUPPORT_PROCESSOR_TYPES, ApplicationType, ProcessorSource
 from backend.service.models import ApprovalProcess, ApprovalProcessNode, ApprovalProcessWithNode
 from backend.util.enum import ChoicesEnum
 
@@ -30,8 +30,8 @@ class DefaultProcessNameEnum(ChoicesEnum):
 
 
 APPLICATION_TYPE_DEFAULT_PROCESS_DICT = {
-    ApplicationTypeEnum.GRANT_ACTION.value: DefaultProcessNameEnum.DEFAULT.value,  # type: ignore[attr-defined]
-    ApplicationTypeEnum.JOIN_GROUP.value: DefaultProcessNameEnum.GROUP.value,  # type: ignore[attr-defined]
+    ApplicationType.GRANT_ACTION.value: DefaultProcessNameEnum.DEFAULT.value,  # type: ignore[attr-defined]
+    ApplicationType.JOIN_GROUP.value: DefaultProcessNameEnum.GROUP.value,  # type: ignore[attr-defined]
 }
 
 
@@ -45,7 +45,7 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
         return [ApprovalProcess(**p) for p in processes]
 
     @cachedmethod(timeout=60)  # 缓存1分钟
-    def list_with_nodes(self, application_type: ApplicationTypeEnum) -> List[ApprovalProcessWithNode]:
+    def list_with_nodes(self, application_type: ApplicationType) -> List[ApprovalProcessWithNode]:
         """审批流程列表，查询指定申请类型的流程列表，并附带流程节点
         1. 对于ITSM, 不支持通过条件过滤出指定申请类型的，只能手动匹配
         2. 对于ITSM，不支持查询流程时附带节点名称，所有都需要单独查询
@@ -61,7 +61,7 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
         # 过滤出满足对应申请类型的流程
         return [p for p in process_list if p.is_match_application_type(application_type)]
 
-    def get_default_process(self, application_type: ApplicationTypeEnum) -> ApprovalProcess:
+    def get_default_process(self, application_type: ApplicationType) -> ApprovalProcess:
         """获取某种申请类型的默认流程
         application_type只需要实现两种，（1）加入用户组（2）申请自定义权限
         """
@@ -87,9 +87,9 @@ class ITSMApprovalProcessProvider(ApprovalProcessProvider):
         nodes = itsm.get_process_nodes(process_id)
         for node in nodes:
             # 转换为IAM规定的结构所需要流程处理者来源和类型
-            source, _type = ProcessorSourceEnum.OTHER.value, node["processors"]  # NOTE: other的节点iam无需处理
+            source, _type = ProcessorSource.OTHER.value, node["processors"]  # NOTE: other的节点iam无需处理
             if node["processors_type"] == "IAM":
-                source = ProcessorSourceEnum.IAM.value
+                source = ProcessorSource.IAM.value
                 # 对于来源于IAM，需要检查角色是否满足
                 if _type not in IAM_SUPPORT_PROCESSOR_TYPES:
                     raise error_codes.ITSM_PROCESSOR_NOT_SUPPORT.format(f"process_id: {process_id}, node:{node}")

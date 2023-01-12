@@ -64,7 +64,7 @@ class GroupSaaSAttributeEnum(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((READONLY, "只读"),))
 
 
-class GroupAttributeValueTypeEnum(ChoicesEnum, LowerStrEnum):
+class GroupAttributeValueType(ChoicesEnum, LowerStrEnum):
     """用户组SaaS属性值的数据类型"""
 
     String = auto()
@@ -73,9 +73,7 @@ class GroupAttributeValueTypeEnum(ChoicesEnum, LowerStrEnum):
 
 
 # 每个属性的值类型
-GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP = {
-    GroupSaaSAttributeEnum.READONLY.value: GroupAttributeValueTypeEnum.Boolean.value
-}
+GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP = {GroupSaaSAttributeEnum.READONLY.value: GroupAttributeValueType.Boolean.value}
 # 每个属性的默认值
 GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP = {GroupSaaSAttributeEnum.READONLY.value: False}
 
@@ -134,7 +132,7 @@ class RoleScopeSubjectType(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门"), (ANY, "任意")))
 
 
-class RoleSourceTypeEnum(ChoicesEnum, LowerStrEnum):
+class RoleSourceType(ChoicesEnum, LowerStrEnum):
     """角色创建来源"""
 
     API = auto()
@@ -181,7 +179,7 @@ class TemplatePreUpdateStatus(ChoicesEnum, LowerStrEnum):
 # ---------------------------------------------------------------------------------------------- #
 # Application & Approval Constants
 # ---------------------------------------------------------------------------------------------- #
-class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
+class ApplicationType(ChoicesEnum, LowerStrEnum):
     GRANT_ACTION = auto()
     RENEW_ACTION = auto()
     JOIN_GROUP = auto()
@@ -206,7 +204,7 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
 
 
 # IAM支持的审批流程节点类型
-class ProcessorNodeTypeEnum(LowerStrEnum):
+class ProcessorNodeType(LowerStrEnum):
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
     GRADE_MANAGER: enum = "rating_manager"
@@ -215,25 +213,25 @@ class ProcessorNodeTypeEnum(LowerStrEnum):
 
 # 每一种申请单据，对应的审批流程节点可以支持的ROLE
 APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
-    ApplicationTypeEnum.GRANT_ACTION.value: (
-        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.SYSTEM_MANAGER.value,
-        ProcessorNodeTypeEnum.INSTANCE_APPROVER.value,
+    ApplicationType.GRANT_ACTION.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.SYSTEM_MANAGER.value,
+        ProcessorNodeType.INSTANCE_APPROVER.value,
     ),
-    ApplicationTypeEnum.JOIN_GROUP.value: (
-        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.GRADE_MANAGER.value,
+    ApplicationType.JOIN_GROUP.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.GRADE_MANAGER.value,
     ),
-    ApplicationTypeEnum.JOIN_GRADE_MANAGER.value: (
-        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.GRADE_MANAGER.value,
+    ApplicationType.JOIN_GRADE_MANAGER.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.GRADE_MANAGER.value,
     ),
-    ApplicationTypeEnum.CREATE_GRADE_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
-    ApplicationTypeEnum.UPDATE_GRADE_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
+    ApplicationType.CREATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
+    ApplicationType.UPDATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
 }
 
 
-class ProcessorSourceEnum(ChoicesEnum, StrEnum):
+class ProcessorSource(ChoicesEnum, StrEnum):
     """审批流程节点里的处理者来源"""
 
     IAM = auto()
@@ -242,18 +240,18 @@ class ProcessorSourceEnum(ChoicesEnum, StrEnum):
 
 # 对于IAM来源的处理者，IAM有固定支持的处理者类型
 IAM_SUPPORT_PROCESSOR_TYPES = [
-    ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-    ProcessorNodeTypeEnum.SYSTEM_MANAGER.value,
-    ProcessorNodeTypeEnum.GRADE_MANAGER.value,
-    ProcessorNodeTypeEnum.INSTANCE_APPROVER.value,
+    ProcessorNodeType.SUPER_MANAGER.value,
+    ProcessorNodeType.SYSTEM_MANAGER.value,
+    ProcessorNodeType.GRADE_MANAGER.value,
+    ProcessorNodeType.INSTANCE_APPROVER.value,
 ]
 
 
 # 支持配置默认流程的申请审批类型
 DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
-    ApplicationTypeEnum.GRANT_ACTION.value,
-    ApplicationTypeEnum.JOIN_GROUP.value,
-    ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+    ApplicationType.GRANT_ACTION.value,
+    ApplicationType.JOIN_GROUP.value,
+    ApplicationType.CREATE_GRADE_MANAGER.value,
 ]
 
 
@@ -274,13 +272,13 @@ DEFAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
 # ---------------------------------------------------------------------------------------------- #
 # Policy environment
 # ---------------------------------------------------------------------------------------------- #
-class PolicyEnvTypeEnum(ChoicesEnum, LowerStrEnum):
+class PolicyEnvType(ChoicesEnum, LowerStrEnum):
     PERIOD_DAILY = auto()
 
     _choices_labels = skip(((PERIOD_DAILY, _("时间")),))
 
 
-class PolicyEnvConditionTypeEnum(ChoicesEnum, LowerStrEnum):
+class PolicyEnvConditionType(ChoicesEnum, LowerStrEnum):
     TZ = auto()
     HMS = auto()
     WEEKDAY = auto()
@@ -319,12 +317,12 @@ class WeekDayEnum(ChoicesEnum):
 # ---------------------------------------------------------------------------------------------- #
 # Model Change Event
 # ---------------------------------------------------------------------------------------------- #
-class ModelChangeEventTypeEnum(ChoicesEnum, LowerStrEnum):
+class ModelChangeEventType(ChoicesEnum, LowerStrEnum):
     ActionPolicyDeleted = "action_policy_deleted"
     ActionDeleted = "action_deleted"
 
 
-class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
+class ModelChangeEventStatus(ChoicesEnum, LowerStrEnum):
     Pending = auto()
     Finished = auto()
 
@@ -332,7 +330,7 @@ class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
 # ---------------------------------------------------------------------------------------------- #
 # UniversalPolicy
 # ---------------------------------------------------------------------------------------------- #
-class AuthTypeEnum(ChoicesEnum, LowerStrEnum):
+class AuthType(ChoicesEnum, LowerStrEnum):
     RBAC = auto()
     ABAC = auto()
     ALL = auto()

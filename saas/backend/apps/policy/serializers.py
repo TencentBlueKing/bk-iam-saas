@@ -17,7 +17,7 @@ from rest_framework import serializers
 from backend.apps.action.serializers import ActionSLZ
 from backend.common.serializers import BaseAction
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import PolicyEnvConditionTypeEnum, PolicyEnvTypeEnum
+from backend.service.constants import PolicyEnvConditionType, PolicyEnvType
 from backend.util.uuid import gen_uuid
 
 
@@ -130,7 +130,7 @@ class TZEnvValueSLZ(EnvConditionValueSLZ):
 
 
 class EnvConditionSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="环境属性条件类型", choices=PolicyEnvConditionTypeEnum.get_choices())
+    type = serializers.ChoiceField(label="环境属性条件类型", choices=PolicyEnvConditionType.get_choices())
     values = serializers.ListField(label="条件的值", child=EnvConditionValueSLZ(label="VALUE"))
 
 
@@ -167,14 +167,14 @@ class TZEnvConditionSLZ(EnvConditionSLZ):
 
 
 class EnvironmentSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="环境属性类型", choices=PolicyEnvTypeEnum.get_choices())
+    type = serializers.ChoiceField(label="环境属性类型", choices=PolicyEnvType.get_choices())
     condition = serializers.ListField(label="生效条件", child=EnvConditionSLZ(label="条件"))
 
 
 ENV_COND_TYPE_SLZ_MAP = {
-    PolicyEnvConditionTypeEnum.TZ.value: TZEnvConditionSLZ,
-    PolicyEnvConditionTypeEnum.HMS.value: HMSEnvConditionSLZ,
-    PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvConditionSLZ,
+    PolicyEnvConditionType.TZ.value: TZEnvConditionSLZ,
+    PolicyEnvConditionType.HMS.value: HMSEnvConditionSLZ,
+    PolicyEnvConditionType.WEEKDAY.value: WeekdayEnvConditionSLZ,
 }
 
 
@@ -190,8 +190,8 @@ class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
 
         # TZ与HMS必填, WeekDay选填
         if not (
-            PolicyEnvConditionTypeEnum.TZ.value in condition_type_set
-            and PolicyEnvConditionTypeEnum.HMS.value in condition_type_set
+            PolicyEnvConditionType.TZ.value in condition_type_set
+            and PolicyEnvConditionType.HMS.value in condition_type_set
         ):
             raise serializers.ValidationError({"condition": ["tz and hms must be exists"]})
 
@@ -204,7 +204,7 @@ class PeriodDailyEnvironmentSLZ(EnvironmentSLZ):
         return data
 
 
-ENV_TYPE_SLZ_MAP = {PolicyEnvTypeEnum.PERIOD_DAILY.value: PeriodDailyEnvironmentSLZ}
+ENV_TYPE_SLZ_MAP = {PolicyEnvType.PERIOD_DAILY.value: PeriodDailyEnvironmentSLZ}
 
 
 class ResourceGroupSLZ(serializers.Serializer):
@@ -247,11 +247,11 @@ class PolicySLZ(serializers.Serializer):
         tz_set = set()
         for rg in data["resource_groups"]:
             for env in rg["environments"]:
-                if env["type"] != PolicyEnvTypeEnum.PERIOD_DAILY.value:
+                if env["type"] != PolicyEnvType.PERIOD_DAILY.value:
                     continue
 
                 for c in env["condition"]:
-                    if c["type"] != PolicyEnvConditionTypeEnum.TZ.value:
+                    if c["type"] != PolicyEnvConditionType.TZ.value:
                         continue
 
                     tz_set.add(c["values"][0]["value"])

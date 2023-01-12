@@ -213,6 +213,7 @@
                     { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
                     { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],
+                defaultRouteList: ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'],
                 isRatingChange: false,
                 haveManager: false,
                 showNavDataLength: 0,
@@ -288,19 +289,9 @@
             },
             routeName: {
                 handler (value) {
-                    if (value === 'addGroupPerm') {
-                        this.fetchUserGroup();
-                    }
-
-                    if (value === 'myPerm') {
-                        this.$store.commit('updateIndex', 0);
-                    } else if (value === 'userGroup') {
-                        this.$store.commit('updateIndex', 1);
-                        // this.updateRouter(this.user.role.type);
-                    } else if (value === 'audit') {
-                        this.$store.commit('updateIndex', 2);
-                    } else if (value === 'user') {
-                        this.$store.commit('updateIndex', 3);
+                    const index = this.defaultRouteList.findIndex(item => item === value);
+                    if (index > -1) {
+                        ['addGroupPerm'].includes(value) ? this.fetchUserGroup() : this.$store.commit('updateIndex', index);
                     }
                 },
                 immediate: true
@@ -440,20 +431,8 @@
                         this.$store.commit('setHeaderTitle', '');
                         window.localStorage.removeItem('iam-header-title-cache');
                         window.localStorage.removeItem('iam-header-name-cache');
-                        let name = 'myPerm';
-                        if (this.isRatingChange) {
-                            // name = 'ratingManager';
-                            name = 'myManageSpace';
-                        }
-                        if (navIndex === 1) {
-                            name = 'userGroup';
-                        } else if (navIndex === 2) {
-                            name = 'audit';
-                        } else if (navIndex === 3) {
-                            name = 'user';
-                        }
                         this.$router.push({
-                            name
+                            name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex]
                         });
                     } else {
                         if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {

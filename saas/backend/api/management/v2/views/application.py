@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.mixins import ManagementAPIPermissionCheckMixin
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
@@ -35,7 +35,7 @@ from backend.biz.application import (
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleCheckBiz
 from backend.common.lock import gen_role_upsert_lock
-from backend.service.constants import ApplicationTypeEnum, RoleType
+from backend.service.constants import ApplicationType, RoleType
 from backend.service.models import Subject
 from backend.trans.open_management import GradeManagerTrans
 
@@ -47,7 +47,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (
-            VerifyAPIParamLocationEnum.GROUP_IDS_IN_BODY.value,
+            VerifyApiParamLocationEnum.GROUP_IDS_IN_BODY.value,
             ManagementAPIEnum.V2_GROUP_APPLICATION_CREATE.value,
         ),
     }
@@ -79,7 +79,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
 
         # 创建申请
         applications = self.biz.create_for_group(
-            ApplicationTypeEnum.JOIN_GROUP.value,
+            ApplicationType.JOIN_GROUP.value,
             GroupApplicationDataBean(
                 applicant=user_id,
                 reason=data["reason"],
@@ -101,7 +101,7 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (
-            VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value,
+            VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value,
             ManagementAPIEnum.V2_GRADE_MANAGER_APPLICATION_CREATE.value,
         ),
     }
@@ -142,7 +142,7 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
             self.role_check_biz.check_grade_manager_unique_name(data["name"])
 
             applications = self.biz.create_for_grade_manager(
-                ApplicationTypeEnum.CREATE_GRADE_MANAGER.value,
+                ApplicationType.CREATE_GRADE_MANAGER.value,
                 GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
                 source_system_id=source_system_id,
                 callback_id=data["callback_id"],
@@ -161,7 +161,7 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "create": (
-            VerifyAPIParamLocationEnum.ROLE_IN_PATH.value,
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
             ManagementAPIEnum.V2_GRADE_MANAGER_APPLICATION_UPDATE.value,
         ),
     }
@@ -205,7 +205,7 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
             applications = self.biz.create_for_grade_manager(
-                ApplicationTypeEnum.UPDATE_GRADE_MANAGER,
+                ApplicationType.UPDATE_GRADE_MANAGER,
                 GradeManagerApplicationDataBean(
                     role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info
                 ),
@@ -228,7 +228,7 @@ class ManagementApplicationCancelView(views.APIView):
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
         "put": (
-            VerifyAPIParamLocationEnum.SYSTEM_IN_PATH.value,
+            VerifyApiParamLocationEnum.SYSTEM_IN_PATH.value,
             ManagementAPIEnum.V2_APPLICATION_CANCEL.value,
         ),
     }

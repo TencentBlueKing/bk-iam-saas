@@ -12,8 +12,11 @@ from typing import Dict, List
 
 from pydantic.tools import parse_obj_as
 
+from backend.apps.organization.models import User as UserModel
 from backend.biz.application import ActionApplicationDataBean
 from backend.biz.policy import PolicyBeanList
+from backend.service.constants import SubjectType
+from backend.service.models import Applicant
 from backend.trans.application import ApplicationDataTrans
 
 from .open import OpenCommonTrans, OpenPolicy
@@ -93,8 +96,13 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
         application_policy_list = self._gen_need_apply_policy_list(applicant, data["system"], policy_list)
 
         # 3. 转换为ApplicationBiz创建申请单所需数据结构
+        user = UserModel.objects.get(username=applicant)
+
         application_data = ActionApplicationDataBean(
-            applicant=applicant, policy_list=application_policy_list, reason=data["reason"]
+            applicant=applicant,
+            policy_list=application_policy_list,
+            users=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
+            reason=data["reason"],
         )
 
         return application_data

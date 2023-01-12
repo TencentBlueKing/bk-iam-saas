@@ -246,6 +246,7 @@ export const m = {
         '描述必填': 'Description is required',
         '输入审批意见': 'Input approval comments',
         '请输入审批意见': 'Please give your approval comments',
+        '模板名称最长不超过32个字符': 'The template name can be no longer than 32 characters',
         '模板名称最长不超过128个字符': 'The template name can be no longer than 128 characters',
         '请添加授权成员': 'Please add authorized members',
         '用户组名不允许空格': 'Group name does not allow spaces',
@@ -485,13 +486,18 @@ export const m = {
         '请选择项目': 'Please select project',
         '清空选择': 'Clear Selection',
         '选择系统': 'Select System',
-        '选择操作': 'Select Action'
+        '选择操作': 'Select Action',
+        '选择权限获得者': 'Select a permission recipient',
+        '请选择权限获得者': 'Please select a permission recipient',
+        '请输入权限获得者': 'Please enter the authority recipient',
+        '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others'
     },
     myApply: {
         '申请列表': 'Apply List',
         '申请类型': 'Type',
         '申请单号': 'ID',
         '申请人': 'Applicant',
+        '权限获得者': 'Permission Acquirer',
         '所在组织': 'Organization',
         '申请内容': 'Details',
         '审批流程': 'Approval Process',

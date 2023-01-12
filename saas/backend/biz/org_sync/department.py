@@ -51,7 +51,7 @@ class DBDepartmentSyncService(BaseSyncDBService):
 
         # 1. 使用BFS转换出可顺序插入的列表，使用mptt进行插入
         id_parent_ids = [(i.id, i.parent_id) for i in created_departments]
-        sorted_departments = convert_list_for_mptt(id_parent_ids)
+        sorted_departments = convert_list_for_mptt(id_parent_ids)  # 把父级部门排到前面, 保证父级部门会被先创建
 
         # 2. 以mptt方式添加部门，不可批量添加，因为存在依赖，添加时parent可能未存在
         created_department_dict = {i.id: i for i in created_departments}
@@ -80,7 +80,7 @@ class DBDepartmentSyncService(BaseSyncDBService):
 
         # 1. 使用BFS转换出可顺序删除的列表，使用mptt进行删除
         id_parent_ids = [(i.id, i.parent_id) for i in deleted_departments]
-        sorted_departments = convert_list_for_mptt(id_parent_ids, reverse=True)
+        sorted_departments = convert_list_for_mptt(id_parent_ids, reverse=True)  # 把子级部门排到前面, 保证先删除的是子级部门
 
         # 2. 以mptt方式删除部门，不可批量删除，因为存在依赖，删除时可能前一个parent也在删除中，树无法变更
         created_department_dict = {i.id: i for i in deleted_departments}

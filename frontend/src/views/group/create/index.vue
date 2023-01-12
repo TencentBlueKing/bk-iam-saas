@@ -389,7 +389,7 @@
              * handleResSelect
              */
             handleResSelect (index, resIndex, condition, groupIndex, resItem) {
-                debugger;
+                // debugger;
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];

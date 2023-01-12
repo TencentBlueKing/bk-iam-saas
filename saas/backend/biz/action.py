@@ -58,7 +58,7 @@ class ActionBeanList:
 
     def fill_related_resource_type_name(self):
         system_ids = self._list_related_resource_type_system()
-        name_provider = ResourceTypeService().get_resource_type_dict(system_ids)
+        name_provider = ResourceTypeService().get_system_resource_type_dict(system_ids)
         for action in self.actions:
             self._fill_action_related_resource_type_name(action, name_provider)
 

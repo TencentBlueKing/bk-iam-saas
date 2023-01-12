@@ -1,9 +1,11 @@
 <template>
-    <div :class="[
-        'iam-apply-basic-info-wrapper',
-        { 'is-en-large': !curLanguageIsCn && isShowExpired },
-        { 'is-en-middle': !curLanguageIsCn && !isShowExpired }
-    ]">
+    <div
+        :class="[
+            'iam-apply-basic-info-wrapper',
+            { 'is-en-large': !curLanguageIsCn && isShowExpired },
+            { 'is-en-middle': !curLanguageIsCn && !isShowExpired }
+        ]"
+    >
         <div class="title">{{ $t(`m.common['基本信息']`) }}</div>
         <div class="item">
             <label class="label">{{ $t(`m.myApply['申请单号']`) }}：</label>
@@ -17,6 +19,16 @@
             <label class="label">{{ $t(`m.myApply['申请人']`) }}：</label>
             <div class="content">{{ data.applicant }}</div>
         </div>
+        <div class="item">
+            <label class="label">{{ $t(`m.myApply['权限获得者']`) }}：</label>
+            <div class="content">
+                {{
+                    data.applicants && data.applicants.length > 0
+                        ? data.applicants.map((item) => item.display_name).join(';')
+                        : ''
+                }}
+            </div>
+        </div>
         <div class="item" v-if="isShowExpired">
             <label class="label">{{ $t(`m.common['申请期限']`) }}：</label>
             <div class="content">{{ data.expiredDisplay }}</div>
@@ -29,14 +41,18 @@
             <label class="label">{{ $t(`m.myApply['所在组织']`) }}：</label>
             <div class="content">
                 <template v-if="isHasOrg">
-                    <p v-for="(org, orgIndex) in data.organizations" :key="orgIndex">{{ org.full_name }}</p>
+                    <p v-for="(org, orgIndex) in data.organizations" :key="orgIndex">
+                        {{ org.full_name }}
+                    </p>
                 </template>
                 <template v-else>--</template>
             </div>
         </div>
         <div class="item">
             <label class="label">{{ $t(`m.common['理由']`) }}：</label>
-            <div class="content" :title="data.reason !== '' ? data.reason : ''">{{ data.reason || '--' }}</div>
+            <div class="content" :title="data.reason !== '' ? data.reason : ''">
+                {{ data.reason || '--' }}
+            </div>
         </div>
     </div>
 </template>
@@ -107,5 +123,5 @@
     };
 </script>
 <style lang="postcss" scoped>
-    @import './basic-info.css';
+@import './basic-info.css';
 </style>

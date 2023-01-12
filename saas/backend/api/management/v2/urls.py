@@ -22,7 +22,7 @@ urlpatterns = [
     ),
     path(
         "grade_managers/<int:id>/",
-        views.ManagementGradeManagerViewSet.as_view({"put": "update", "get": "retrieve"}),
+        views.ManagementGradeManagerViewSet.as_view({"put": "update", "get": "retrieve", "delete": "destroy"}),
         name="open.management.v2.grade_manager",
     ),
     # -------------- 用户组本身 --------------
@@ -135,7 +135,7 @@ urlpatterns = [
     # 二级管理员详情
     path(
         "subset_managers/<int:id>/",
-        views.ManagementSubsetManagerViewSet.as_view({"get": "retrieve", "post": "update"}),
+        views.ManagementSubsetManagerViewSet.as_view({"get": "retrieve", "post": "update", "delete": "destroy"}),
         name="open.management.v2.subset_manager",
     ),
 ]

@@ -68,6 +68,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 分级管理员
     V2_GRADE_MANAGER_CREATE = auto()
     V2_GRADE_MANAGER_UPDATE = auto()
+    V2_GRADE_MANAGER_DELETE = auto()
     V2_GRADE_MANAGER_DETAIL = auto()
     V2_GRADE_MANAGER_APPLICATION_CREATE = auto()
     V2_GRADE_MANAGER_APPLICATION_UPDATE = auto()
@@ -75,6 +76,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_SUBSET_MANAGER_CREATE = auto()
     V2_SUBSET_MANAGER_DETAIL = auto()
     V2_SUBSET_MANAGER_UPDATE = auto()
+    V2_SUBSET_MANAGER_DELETE = auto()
     # 审批
     V2_APPLICATION_APPROVAL = auto()
     V2_APPLICATION_CANCEL = auto()
@@ -150,7 +152,7 @@ class VerifyAPIObjectTypeEnum(ChoicesEnum, LowerStrEnum):
     GROUP = auto()
 
 
-class VerifyAPIParamLocationEnum(ChoicesEnum, LowerStrEnum):
+class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
     ROLE_IN_PATH = auto()
     GROUP_IN_PATH = auto()
     SYSTEM_IN_BODY = auto()
@@ -173,8 +175,8 @@ class VerifyAPIParamLocationEnum(ChoicesEnum, LowerStrEnum):
 
 
 VerifyAPIParamSourceToObjectTypeMap = {
-    VerifyAPIParamLocationEnum.ROLE_IN_PATH.value: VerifyAPIObjectTypeEnum.ROLE.value,
-    VerifyAPIParamLocationEnum.GROUP_IN_PATH.value: VerifyAPIObjectTypeEnum.GROUP.value,
+    VerifyApiParamLocationEnum.ROLE_IN_PATH.value: VerifyAPIObjectTypeEnum.ROLE.value,
+    VerifyApiParamLocationEnum.GROUP_IN_PATH.value: VerifyAPIObjectTypeEnum.GROUP.value,
 }
 
 # 主要用于ViewSet里配置了ManagementAPIPermission，但是对于一些请求不需要对API鉴权的，可在management_api_permission里配置忽略鉴权

@@ -13,7 +13,7 @@ from typing import Dict, List
 from pydantic import BaseModel
 
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 from backend.service.models import ApprovalProcess
 
 
@@ -48,7 +48,7 @@ class GroupApprovalProcessRelationDictBean(BaseModel):
 class ApprovalProcessBiz:
     svc = ApprovalProcessService()
 
-    def list_with_node_names(self, application_type: ApplicationTypeEnum) -> List[ApprovalProcessWithNodeNamesBean]:
+    def list_with_node_names(self, application_type: ApplicationType) -> List[ApprovalProcessWithNodeNamesBean]:
         """查询某个类型可配置的流程，用于展示，需要带上流程节点名称"""
         processes_with_nodes = self.svc.list_with_nodes(application_type)
         processes = [
@@ -65,7 +65,7 @@ class ApprovalProcessBiz:
             for dp in processes
         ]
 
-    def create_or_update_default_process(self, application_type: ApplicationTypeEnum, process_id: int, operator: str):
+    def create_or_update_default_process(self, application_type: ApplicationType, process_id: int, operator: str):
         """更新或创建默认流程配置"""
         self.svc.create_or_update_default_process(application_type, process_id, operator)
 
