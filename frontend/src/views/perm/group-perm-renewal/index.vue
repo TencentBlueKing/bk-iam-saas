@@ -9,9 +9,17 @@
                     :ext-cls="index > 0 ? 'group-perm-renewal-ext-cls' : ''"
                     :class="index === tableList.length - 1 ? 'group-perm-renewal-cls' : ''"
                     :title="item.name"
-                    @on-expanded="handleExpanded(...arguments, item)">
-                    <div class="group-member-renewal-table-wrapper"
-                        v-bkloading="{ isLoading: item.loading, opacity: 1 }">
+                    @on-expanded="handleExpanded(...arguments, item)"
+                >
+                    <render-search>
+                        <bk-button :disabled="formatDisabled(item)" @click="handleBatchDelete(item, index)">
+                            {{ $t(`m.common['批量移除']`) }}
+                        </bk-button>
+                    </render-search>
+                    <div
+                        class="group-member-renewal-table-wrapper"
+                        v-bkloading="{ isLoading: item.loading, opacity: 1 }"
+                    >
                         <bk-table
                             v-if="!item.loading"
                             :data="item.children"
@@ -23,10 +31,10 @@
                             :pagination="item.pagination"
                             @page-change="pageChange(...arguments, item)"
                             @page-limit-change="limitChange(...arguments, item)"
-                            @select="handlerChange"
-                            @select-all="handlerAllChange">
-                            <bk-table-column type="selection" align="center"
-                                :selectable="getIsSelect"></bk-table-column>
+                            @select="handlerChange(...arguments, index)"
+                            @select-all="handlerAllChange(...arguments, index)"
+                        >
+                            <bk-table-column type="selection" align="center" :selectable="getIsSelect" />
                             <bk-table-column :label="$t(`m.renewal['即将过期的用户/组织']`)">
                                 <template slot-scope="{ row }">
                                     <span>{{ row.name }}({{ row.id }})</span>
@@ -35,22 +43,17 @@
                             <bk-table-column :label="$t(`m.common['到期时间']`)">
                                 <template slot-scope="{ row }">
                                     <render-expire-display
-                                        :selected="currentSelectList.map(v => v.$id).includes(row.$id)"
+                                        :selected="currentSelectList.map((v) => v.$id).includes(row.$id)"
                                         :renewal-time="expiredAt"
-                                        :cur-time="row.expired_at" />
+                                        :cur-time="row.expired_at"
+                                    />
                                 </template>
                             </bk-table-column>
                             <bk-table-column resizable="false" :label="$t(`m.common['操作']`)">
-                                <template slot-scope="{ $index }">
-                                    <bk-popconfirm
-                                        :content="$t(`m.renewal['确定要移除该用户或组织吗？']`)"
-                                        width="288"
-                                        trigger="click"
-                                        @confirm="handleDelete(tableList[index].children, $index)">
-                                        <bk-button theme="primary" text>
-                                            {{ $t(`m.common['删除']`) }}
-                                        </bk-button>
-                                    </bk-popconfirm>
+                                <template slot-scope="{ row }">
+                                    <bk-button theme="primary" @click.stop="handleDelete(row, index)" text>
+                                        {{ $t(`m.common['删除']`) }}
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -59,11 +62,11 @@
             </template>
             <template v-if="tableList.length < 1 && !tableLoading">
                 <div class="empty-wrapper">
-                    <img src="@/images/empty-display.svg" alt="">
+                    <img src="@/images/empty-display.svg" alt="" />
                 </div>
             </template>
         </div>
-        <div v-if="pagination.count" style="margin: 20px 0;">
+        <div v-if="pagination.count" style="margin: 20px 0">
             <bk-pagination
                 size="small"
                 align="right"
@@ -71,24 +74,42 @@
                 :count="pagination.count"
                 :limit="pagination.limit"
                 @change="handlePageChange"
-                @limit-change="handleLimitChange">
+                @limit-change="handleLimitChange"
+            >
             </bk-pagination>
         </div>
-        <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择即将过期的用户/组织']`) }}</p>
+        <p class="error-tips" v-if="isShowErrorTips">
+            {{ $t(`m.renewal['请选择即将过期的用户/组织']`) }}
+        </p>
         <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
         </render-horizontal-block>
         <div slot="action">
             <bk-button theme="primary" disabled v-if="isEmpty">
-                <span v-bk-tooltips="{ content: $t(`m.renewal['暂无将过期的权限']`), extCls: 'iam-tooltips-cls' }">
+                <span
+                    v-bk-tooltips="{
+                        content: $t(`m.renewal['暂无将过期的权限']`),
+                        extCls: 'iam-tooltips-cls'
+                    }"
+                >
                     {{ $t(`m.common['提交']`) }}
                 </span>
             </bk-button>
             <bk-button theme="primary" :loading="submitLoading" v-else @click="handleSubmit">
                 {{ $t(`m.common['提交']`) }}
             </bk-button>
-            <bk-button style="margin-left: 6px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            <bk-button style="margin-left: 6px" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
+
+        <delete-dialog
+            :show.sync="deleteDialog.visible"
+            :loading="deleteDialog.loading"
+            :title="deleteDialog.title"
+            :sub-title="deleteDialog.subTitle"
+            @on-after-leave="handleAfterDeleteLeave"
+            @on-cancel="hideCancelDelete"
+            @on-submit="handleSubmitDelete" />
+            
     </smart-action>
 </template>
 <script>
@@ -98,13 +119,15 @@
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import renderExpireDisplay from '@/components/render-renewal-dialog/display';
     import renderPerm from '@/components/render-perm';
+    import DeleteDialog from '@/views/perm/components/iam-confirm-dialog';
 
     export default {
         name: '',
         components: {
             IamDeadline,
             renderExpireDisplay,
-            renderPerm
+            renderPerm,
+            DeleteDialog
         },
         data () {
             return {
@@ -120,7 +143,15 @@
                     limit: 10
                 },
                 currentBackup: 1,
-                pageLoading: false
+                pageLoading: false,
+                deleteDialog: {
+                    visible: false,
+                    title: this.$t(`m.dialog['确认移除']`),
+                    subTitle: '',
+                    loading: false
+                },
+                tableIndex: -1,
+                curDelMember: {}
             };
         },
         computed: {
@@ -143,9 +174,67 @@
                 return item.parent.children.length > 0;
             },
 
+            formatDisabled (payload) {
+                const { checkList, children } = payload;
+                return !(checkList.length && children.length);
+            },
+
+            handleBatchDelete (payload, index) {
+                const { checkList } = payload;
+                const deleteContent = checkList.length === 1
+                    ? `【${checkList[0].id}(${checkList[0].name})】，${this.$t(`m.renewal['该成员在该用户组将不再存在续期']`)}`
+                    : `${checkList.length} ${this.$t(`m.common['位成员']`)}，${this.$t(`m.renewal['这些成员在该用户组将不再存在续期']`)}`;
+                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${deleteContent}`;
+                this.tableIndex = index;
+                this.curDelMember = {};
+                this.deleteDialog.visible = true;
+            },
+
             handleDelete (payload, index) {
-                payload.splice(index, 1);
-                this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.renewal['该成员将不再继承该组的权限']`)}`;
+                this.curDelMember = Object.assign({}, {
+                    id: payload.id,
+                    type: payload.type
+                });
+                this.tableIndex = index;
+                this.deleteDialog.visible = true;
+            },
+
+            handleAfterDeleteLeave () {
+                this.deleteDialog.subTitle = '';
+                this.curDelMember = {};
+            },
+
+            hideCancelDelete () {
+                this.deleteDialog.visible = false;
+            },
+
+            async handleSubmitDelete () {
+                this.deleteDialog.loading = true;
+                try {
+                    const { id, checkList } = this.tableList[this.tableIndex];
+                    const params = {
+                        id,
+                        members: Object.keys(this.curDelMember).length > 0
+                            ? [this.curDelMember]
+                            : checkList.map(({ id, type }) => ({ id, type }))
+                    };
+                    const { code } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
+                    if (code === 0) {
+                        this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+                        this.currentSelectList = [];
+                        this.tableList[this.tableIndex].checkList = [];
+                        this.pagination.current = 1;
+                        this.tableIndex = -1;
+                        await this.fetchData(true);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.fetchErrorMsg(e);
+                } finally {
+                    this.deleteDialog.loading = false;
+                    this.deleteDialog.visible = false;
+                }
             },
 
             async fetchMembers (item) {
@@ -159,7 +248,7 @@
                     this.$set(item, 'children', []);
                     item.pagination.count = Math.ceil(res.data.count / item.pagination.limit);
                     item.children.splice(0, item.children.length, ...(res.data.results || []));
-                    item.children.forEach(sub => {
+                    item.children.forEach((sub) => {
                         sub.$id = `${item.id}${sub.type}${sub.id}`;
                         sub.parent = item;
                         sub.parent_id = item.id;
@@ -167,13 +256,7 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     item.loading = false;
                 }
@@ -196,6 +279,7 @@
                     this.pagination.count = Math.ceil(res.data.count / this.pagination.limit);
                     this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
                     this.tableList.forEach(async (item, index) => {
+                        this.$set(item, 'checkList', []);
                         this.$set(item, 'children', []);
                         this.$set(item, 'loading', false);
                         this.$set(item, 'expanded', false);
@@ -212,13 +296,7 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.tableLoading = false;
                 }
@@ -233,8 +311,7 @@
             },
 
             handleLimitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit;
-                this.pagination.current = 1;
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
                 this.fetchData(true);
             },
 
@@ -248,13 +325,12 @@
             },
 
             limitChange (currentLimit, prevLimit, payload) {
-                payload.pagination.limit = currentLimit;
-                payload.pagination.current = 1;
+                payload.pagination = Object.assign(payload.pagination, { current: 1, limit: currentLimit });
                 this.fetchMembers(payload);
             },
 
             setExpiredAt () {
-                const getTimestamp = payload => {
+                const getTimestamp = (payload) => {
                     if (this.expiredAt === PERMANENT_TIMESTAMP) {
                         return this.expiredAt;
                     }
@@ -263,20 +339,24 @@
                     }
                     return payload + this.expiredAt;
                 };
-                this.currentSelectList.forEach(item => {
+                this.currentSelectList.forEach((item) => {
                     item.expired_at = getTimestamp(item.expired_at);
                 });
             },
 
-            handlerAllChange (selection) {
+            handlerAllChange (selection, index) {
                 this.isShowErrorTips = false;
                 this.currentSelectList = _.cloneDeep(selection);
+                this.tableList[index].checkList = _.cloneDeep(selection);
                 this.setExpiredAt();
+                console.log(this.tableList[index].checkList);
             },
 
-            handlerChange (selection, row) {
+            handlerChange (selection, row, index) {
+                console.log(selection, index);
                 this.isShowErrorTips = false;
                 this.currentSelectList = _.cloneDeep(selection);
+                this.tableList[index].checkList = _.cloneDeep(selection);
                 this.setExpiredAt();
             },
 
@@ -292,11 +372,13 @@
                 }
                 this.submitLoading = true;
                 const params = {
-                    members: this.currentSelectList.map(
-                        ({ type, id, parent_type, parent_id, expired_at }) => ({
-                            type, id, parent_type, parent_id, expired_at
-                        })
-                    )
+                    members: this.currentSelectList.map(({ type, id, parent_type, parent_id, expired_at }) => ({
+                        type,
+                        id,
+                        parent_type,
+                        parent_id,
+                        expired_at
+                    }))
                 };
                 try {
                     await this.$store.dispatch('renewal/roleGroupsRenewal', params);
@@ -306,16 +388,20 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.submitLoading = false;
                 }
+            },
+
+            fetchErrorMsg (payload) {
+                this.bkMessageInstance = this.$bkMessage({
+                    limit: 1,
+                    theme: 'error',
+                    message: payload.message || payload.data.msg || payload.statusText,
+                    ellipsisLine: 2,
+                    ellipsisCopy: true
+                });
             },
 
             handleCancel () {
@@ -327,37 +413,38 @@
     };
 </script>
 <style lang="postcss">
-    .iam-role-group-perm-renewal-wrapper {
-        .group-content-wrapper {
-            position: relative;
-            min-height: 100px;
-            .empty-wrapper {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                img {
-                    width: 60px;
-                }
-            }
-        }
-        .group-perm-renewal-ext-cls {
-            margin-top: 16px;
-        }
-        .group-perm-renewal-cls {
-            margin-bottom: 16px;
-        }
-        .group-member-renewal-table-wrapper {
-            min-height: 200px;
-            .perm-renewal-table {
-                border: none;
-            }
-        }
-        .error-tips {
-            position: relative;
-            top: -10px;
-            font-size: 12px;
-            color: #ea3636;
-        }
+.iam-role-group-perm-renewal-wrapper {
+  .group-content-wrapper {
+    position: relative;
+    min-height: 100px;
+    .empty-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      img {
+        width: 60px;
+      }
     }
+  }
+  .group-perm-renewal-ext-cls {
+    margin-top: 16px;
+  }
+  .group-perm-renewal-cls {
+    margin-bottom: 16px;
+  }
+  .group-member-renewal-table-wrapper {
+    min-height: 200px;
+    margin-top: 16px;
+    .perm-renewal-table {
+      border: none;
+    }
+  }
+  .error-tips {
+    position: relative;
+    top: -10px;
+    font-size: 12px;
+    color: #ea3636;
+  }
+}
 </style>

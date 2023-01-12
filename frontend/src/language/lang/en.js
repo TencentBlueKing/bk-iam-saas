@@ -811,7 +811,8 @@ export const m = {
         '续期申请提交成功': 'Renewal application submitted',
         '即将过期的用户/组织': 'Users/organizations about to expire',
         '请选择即将过期的用户/组织': 'Please select the user/organization that will expire soon',
-        '确定要移除该用户或组织吗？': 'Are you sure you want to remove this user or organization? '
+        '该成员在该用户组将不再存在续期': 'This member will no longer have a renewal in this user group',
+        '这些成员在该用户组将不再存在续期': 'These members will no longer have renewals in this user group'
     },
     audit: {
         '时间': 'Time',
