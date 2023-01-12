@@ -283,7 +283,7 @@
                                         <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                                             <template slot-scope="{ row }">
                                                 <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
-                                                <template v-if="!setDefaultSelect(row)">
+                                                <template v-if="row.expired_at && user.timestamp > row.expired_at">
                                                     <Icon type="error-fill" class="error-icon" />
                                                     <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
                                                     <bk-button
@@ -635,7 +635,8 @@
                     actions: []
                 },
                 // permMembers: [{ username: 'poloohuang', readonly: false }, { username: 'gc_lihao', readonly: false }].map(item => item.username)
-                permMembers: []
+                permMembers: [],
+                personalUserGroup: []
             };
         },
         computed: {
@@ -746,38 +747,6 @@
             this.isActionsFilter = false;
         },
         methods: {
-            // 用户组数据
-            async fetchUserGroupList () {
-                this.tableLoading = true;
-                const params = {
-                    cache_id: this.routerQuery.cache_id
-                };
-                try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    if (res.data.count > 0) {
-                        this.isShowHasUserGroup = true;
-                    }
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
-                    this.$nextTick(() => {
-                        this.tableList.forEach(item => {
-                            if (this.curUserGroup.includes(item.id.toString())) {
-                                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                            }
-                        });
-                    });
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.tableLoading = false;
-                }
-            },
             handleView (payload) {
                 this.curGroupName = payload.name;
                 this.curGroupId = payload.id;
@@ -839,13 +808,52 @@
             setDefaultSelect (payload) {
                 return !this.curUserGroup.includes(payload.id.toString());
             },
+            // 用户组数据
+            async fetchUserGroupList () {
+                this.tableLoading = true;
+                const params = {
+                    cache_id: this.routerQuery.cache_id
+                };
+                try {
+                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    if (res.data.count > 0) {
+                        this.isShowHasUserGroup = true;
+                    }
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.$nextTick(() => {
+                        this.tableList.forEach(item => {
+                            this.personalUserGroup.forEach(v => {
+                                if (String(item.id) === v.id) {
+                                    this.$set(item, 'expired_at', v.expired_at);
+                                    this.$set(item, 'expired_at_display', v.expired_at_display);
+                                    this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                                }
+                            });
+                        });
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.tableLoading = false;
+                }
+            },
             async fetchCurUserGroup () {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const { data } = await this.$store.dispatch('perm/getPersonalGroups', {
                         page_size: 100,
                         page: 1
                     });
-                    this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);
+                    if (data.results && data.results.length) {
+                        this.curUserGroup = data.results.filter(item => item.department_id === 0).map(item => item.id);
+                        this.personalUserGroup = data.results.filter(item => item.department_id === 0);
+                    }
                 } catch (e) {
                     this.$emit('toggle-loading', false);
                     console.error(e);
