@@ -282,18 +282,20 @@
                                         <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
                                         <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                                             <template slot-scope="{ row }">
-                                                <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
-                                                <template v-if="row.expired_at && user.timestamp > row.expired_at">
-                                                    <Icon type="error-fill" class="error-icon" />
-                                                    <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
-                                                    <bk-button
-                                                        text
-                                                        theme="primary"
-                                                        style="font-size: 12px;"
-                                                        @click="handleBatchRenewal">
-                                                        {{ $t(`m.permApply['去续期']`) }}
-                                                    </bk-button>
-                                                </template>
+                                                <div class="user-group-name-column">
+                                                    <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                                                    <div v-if="row.expired_at && user.timestamp > row.expired_at">
+                                                        <Icon type="error-fill" class="error-icon" />
+                                                        <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                                                        <bk-button
+                                                            text
+                                                            theme="primary"
+                                                            style="font-size: 12px;"
+                                                            @click="handleBatchRenewal">
+                                                            {{ $t(`m.permApply['去续期']`) }}
+                                                        </bk-button>
+                                                    </div>
+                                                </div>
                                             </template>
                                         </bk-table-column>
                                         <bk-table-column :label="$t(`m.userGroup['描述']`)">
@@ -2424,5 +2426,16 @@
 .iam-action-hover {
     background: #E7EFFE;
     color: #3a84ff;
+}
+
+.user-group-name-column {
+    display: flex;
+    align-items: center;
+    .user-group-name {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 </style>
