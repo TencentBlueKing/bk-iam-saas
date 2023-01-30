@@ -191,7 +191,7 @@
             },
 
             handleDelete (payload, index) {
-                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.renewal['该成员将不再继承该组的权限']`)}`;
+                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.renewal['该成员在该用户组将不再存在续期']`)}`;
                 this.curDelMember = Object.assign({}, {
                     id: payload.id,
                     type: payload.type
