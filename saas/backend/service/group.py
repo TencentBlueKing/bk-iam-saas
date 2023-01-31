@@ -129,6 +129,10 @@ class GroupService:
         """
         用户组添加成员
         """
+        # 如果用户只传了admin, 这里会为空报错, 兼容下
+        if not members:
+            return
+
         type_count = iam.add_subject_members(
             SubjectType.GROUP.value, str(group_id), expired_at, [m.dict() for m in members]
         )
