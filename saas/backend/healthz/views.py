@@ -66,7 +66,7 @@ class HealthChecker:
                         return False, f"mysql connection {name} `Select 1` Not Return Row"
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("mysql query fail")
-            return False, f"mysql connection {name} query fail, error: {str(e)}"
+            return False, f"mysql query fail, error: {str(e)}"
 
         return True, "ok"
 
