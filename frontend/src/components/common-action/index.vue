@@ -4,9 +4,15 @@
         <section
             v-for="(item, index) in tagList"
             :key="item.$id"
-            :class="['tag-item', { 'is-active': active.includes(item.$id) && item.allCheck }]"
+            :class="[
+                'tag-item',
+                { 'is-active': active.includes(item.$id) && item.allCheck },
+                { 'is-hover': item.hover ? item.hover.$id === item.$id : false }
+            ]"
             :title="item.name"
-            @click.stop="handleSelectTag(item, index)">
+            @click.stop="handleSelectTag(item, index)"
+            @mouseenter="handleMouseEnter($event, item, index)"
+            @mouseleave="handleMouseLeave($event, item, index)">
             <span class="text">{{ item.name }}</span>
             <Icon
                 type="close-fill"
@@ -73,9 +79,10 @@
         },
         data () {
             return {
-                active: [],
                 isEdit: false,
                 tagName: '',
+                active: [],
+                hoverList: [],
                 tagList: []
             };
         },
@@ -93,6 +100,7 @@
         watch: {
             systemId () {
                 this.active = [];
+                this.hoverList = [];
                 this.isEdit = false;
                 this.tagName = '';
             },
@@ -157,6 +165,37 @@
                     ? [...curActions.filter(item => !tempActions.includes(item))]
                     : [...new Set(curActions.concat(tempActions))];
                 this.$emit('on-change', flag, curActions);
+            },
+
+            handleMouseEnter (e, payload, index) {
+                const { $id } = payload;
+                const curActions = this.tagList.find(_ => _.$id === $id).action_ids;
+                const tempActions = [];
+                this.tagList.forEach((item) => {
+                    if (item.$id !== $id && this.active.includes(item.$id)) {
+                        tempActions.push(...item.action_ids);
+                    }
+                });
+                const result = [...new Set(curActions.concat(tempActions))];
+                const backData = { $id, index, actions: result };
+                this.$set(payload, 'hover', backData);
+                this.$emit('on-mouse-enter', backData);
+            },
+
+            handleMouseLeave (e, payload, index) {
+                const { $id } = payload;
+                const curActions = this.tagList.find(_ => _.$id === $id).action_ids;
+                const tempActions = [];
+                this.tagList.forEach((item) => {
+                    if (item.$id !== $id && this.active.includes(item.$id)) {
+                        const existActionIds = curActions.filter(v => item.action_ids.includes(v));
+                        tempActions.push(...existActionIds);
+                    }
+                });
+                const result = [...curActions.filter(item => !tempActions.includes(item))];
+                const backData = { $id, index, actions: result };
+                this.$delete(payload, 'hover', backData);
+                this.$emit('on-mouse-leave', backData);
             },
 
             handleAddTag () {
@@ -233,6 +272,10 @@
                 .remove-icon {
                     display: inline-block;
                 }
+            }
+            &.is-hover {
+                background: #eff5fe;
+                border-color: #3a84ff;
             }
             &.is-active {
                 background: #eff5fe;

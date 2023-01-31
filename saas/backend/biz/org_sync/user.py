@@ -93,6 +93,9 @@ class DBUserSyncService(BaseSyncDBService):
         User.objects.filter(id__in=deleted_user_ids).delete()
         # TODO: DB里其他表存在了被删的记录如何处理？不处理可能展示有些问题，比如权限模板授权表等等
 
+        # TODO 删除用户所属角色的成员
+        # TODO 删除用户属于角色的授权范围
+
     def sync_to_db(self):
         """SaaS DB 相关变更"""
         # 新增用户

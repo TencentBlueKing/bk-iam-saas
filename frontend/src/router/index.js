@@ -91,7 +91,6 @@ export const beforeEach = async (to, from, next) => {
         store.commit('updateIndex', 1);
         window.localStorage.setItem('index', 1);
     }
-
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
         if (currentRoleId) {
@@ -197,7 +196,11 @@ export const beforeEach = async (to, from, next) => {
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
                 if (curRole === 'staff' || curRole === '') {
-                    next({ path: `${SITE_URL}my-perm` });
+                    if (to.query.source === 'externalApp') { // 外部嵌入页面
+                        next();
+                    } else {
+                        next({ path: `${SITE_URL}my-perm` });
+                    }
                 } else {
                     if (to.name === 'groupPermRenewal') {
                         store.commit('updateIndex', 1);

@@ -2,7 +2,7 @@
     <smart-action class="iam-join-user-group-wrapper">
         <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
             <div class="user-group-table">
-                <div class="serch-wrapper">
+                <div class="search-wrapper">
                     <iam-search-select
                         @on-change="handleSearch"
                         :data="searchData"
@@ -23,12 +23,13 @@
                 </div>
                 <bk-table
                     ref="groupTableRef"
-                    :data="tableList"
                     size="small"
-                    :class="{ 'set-border': tableLoading }"
                     ext-cls="user-group-table"
-                    :pagination="pagination"
+                    :data="tableList"
+                    :class="{ 'set-border': tableLoading }"
+                    :max-height="500"
                     :cell-attributes="handleCellAttributes"
+                    :pagination="pagination"
                     @page-change="pageChange"
                     @page-limit-change="limitChange"
                     @select="handlerChange"
@@ -60,6 +61,35 @@
             </div>
             <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
         </render-horizontal-block>
+        <section>
+            <template v-if="isShowMemberAdd">
+                <render-action
+                    ref="memberRef"
+                    :title="addMemberText"
+                    :tips="addMemberTips"
+                    @on-click="handleAddMember"
+                    style="margin-bottom: 16px;">
+                    <iam-guide
+                        type="rating_manager_authorization_scope"
+                        direction="left"
+                        :style="{ top: '-25px', left: '440px' }"
+                        :content="$t(`m.guide['授权人员范围']`)" />
+                </render-action>
+            </template>
+            <template v-else>
+                <render-member
+                    :users="users"
+                    :departments="departments"
+                    :is-all="isAll"
+                    :render-title="addMemberTitle"
+                    :render-text="addMemberText"
+                    :tips="addMemberTips"
+                    @on-add="handleAddMember"
+                    @on-delete="handleMemberDelete"
+                    @on-delete-all="handleDeleteAll" />
+            </template>
+        </section>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
         <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
             <section ref="expiredAtRef">
                 <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
@@ -91,12 +121,22 @@
             <!-- <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button> -->
         </div>
 
-        <render-perm-sideslider
-            :show="isShowPermSidesilder"
+        <render-perm-side-slider
+            :show="isShowPermSideSlider"
             :name="curGroupName"
             :group-id="curGroupId"
             :show-member="false"
             @animation-end="handleAnimationEnd" />
+
+        <add-member-dialog
+            :show.sync="isShowAddMemberDialog"
+            :users="users"
+            :departments="departments"
+            :title="addMemberTitle"
+            :all-checked="isAll"
+            :show-limit="true"
+            @on-cancel="handleCancelAdd"
+            @on-sumbit="handleSubmitAdd" />
 
         <bk-sideslider
             :is-show.sync="isShowGradeSlider"
@@ -128,24 +168,37 @@
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import IamSearchSelect from '@/components/iam-search-select';
-    import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import IamGuide from '@/components/iam-guide/index.vue';
+    import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
+    import RenderAction from '@/views/grading-admin/common/render-action';
+    import RenderMember from '@/views/grading-admin/components/render-member';
+    import AddMemberDialog from '@/views/group/components/iam-add-member';
+    // import BkUserSelector from '@blueking/user-selector';
     export default {
         name: '',
         components: {
+            IamGuide,
             IamDeadline,
             IamSearchSelect,
-            RenderPermSideslider
+            RenderPermSideSlider,
+            RenderAction,
+            RenderMember,
+            AddMemberDialog
+            // BkUserSelector
         },
         data () {
             return {
+                userApi: window.BK_USER_API,
                 reason: '',
                 expiredAt: 15552000,
                 expiredAtUse: 15552000,
                 isShowReasonError: false,
                 submitLoading: false,
+                isShowAddMemberDialog: false,
                 isShowExpiredError: false,
                 isShowGroupError: false,
-
+                isShowMemberError: false,
+                isShowMemberAdd: false,
                 tableList: [],
                 currentSelectList: [],
                 curUserGroup: [],
@@ -159,14 +212,20 @@
                     limit: 10
                 },
                 currentBackup: 1,
-                isShowPermSidesilder: false,
+                isShowPermSideSlider: false,
                 curGroupName: '',
                 curGroupId: '',
                 isShowGradeSlider: false,
                 sliderLoading: false,
                 gradeMembers: [],
                 gradeSliderTitle: '',
-                curRole: ''
+                curRole: '',
+                users: [],
+                departments: [],
+                isAll: true,
+                addMemberTitle: this.$t(`m.myApply['权限获得者']`),
+                addMemberText: this.$t(`m.permApply['选择权限获得者']`),
+                addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`)
             };
         },
         computed: {
@@ -188,7 +247,8 @@
             this.searchData = [
                 {
                     id: 'id',
-                    name: 'ID'
+                    name: 'ID',
+                    default: true
                     // validate (values, item) {
                     //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
                     //     return !validate ? '' : true
@@ -285,9 +345,11 @@
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-                        if (this.searchList.length > 0) {
+                        if (this.searchList.length) {
                             const tempData = this.searchList.find(item => item.id === key);
-                            params[key] = tempData.values[0];
+                            if (tempData) {
+                                params[key] = tempData.values[0];
+                            }
                         }
                     } else {
                         params[key] = this.searchParams[key];
@@ -378,6 +440,36 @@
                 return {};
             },
 
+            handleAddMember () {
+                this.isShowAddMemberDialog = true;
+            },
+
+            handleCancelAdd () {
+                this.isShowAddMemberDialog = false;
+            },
+
+            handleMemberDelete (type, payload) {
+                window.changeDialog = true;
+                type === 'user' ? this.users.splice(payload, 1) : this.departments.splice(payload, 1);
+                this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
+            },
+
+            handleDeleteAll () {
+                this.isAll = false;
+                this.isShowMemberAdd = true;
+            },
+
+            handleSubmitAdd (payload) {
+                window.changeDialog = true;
+                const { users, departments } = payload;
+                this.isAll = payload.isAll;
+                this.users = _.cloneDeep(users);
+                this.departments = _.cloneDeep(departments);
+                this.isShowMemberAdd = false;
+                this.isShowAddMemberDialog = false;
+                this.isShowMemberEmptyError = false;
+            },
+
             setDefaultSelect (payload) {
                 return !this.curUserGroup.includes(payload.id.toString());
             },
@@ -389,6 +481,7 @@
                     count: 0
                 });
             },
+
             // 系统包含数据
             handleRemoteSystem (value) {
                 return this.$store.dispatch('system/getSystems')
@@ -396,6 +489,7 @@
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });
             },
+
             // 一级管理空间数据
             handleGradeAdmin (value) {
                 return this.$store.dispatch('role/getScopeHasUser')
@@ -408,6 +502,7 @@
                             );
                     });
             },
+
             handleSearch (payload, result) {
                 this.currentSelectList = [];
                 this.searchParams = payload;
@@ -419,7 +514,7 @@
             handleView (payload) {
                 this.curGroupName = payload.name;
                 this.curGroupId = payload.id;
-                this.isShowPermSidesilder = true;
+                this.isShowPermSideSlider = true;
             },
 
             handleViewDetail (payload) {
@@ -433,7 +528,7 @@
             handleAnimationEnd () {
                 this.curGroupName = '';
                 this.curGroupId = '';
-                this.isShowPermSidesilder = false;
+                this.isShowPermSideSlider = false;
             },
 
             pageChange (page) {
@@ -517,15 +612,15 @@
 
             async handleSubmit () {
                 let validateFlag = true;
-                if (this.reason === '') {
+                if (!this.reason) {
                     this.isShowReasonError = true;
                     validateFlag = false;
                     this.scrollToLocation(this.$refs.reasonRef);
                 }
                 if (this.expiredAtUse === 0) {
                     this.isShowExpiredError = true;
-                    this.scrollToLocation(this.$refs.expiredAtRef);
                     validateFlag = false;
+                    this.scrollToLocation(this.$refs.expiredAtRef);
                 }
                 if (this.currentSelectList.length < 1) {
                     this.isShowGroupError = true;
@@ -538,10 +633,31 @@
                 if (this.expiredAtUse === 15552000) {
                     this.expiredAtUse = this.handleExpiredAt();
                 }
+                const subjects = [];
+                if (this.isAll) {
+                    subjects.push({
+                        id: '*',
+                        type: '*'
+                    });
+                } else {
+                    this.users.forEach(item => {
+                        subjects.push({
+                            type: 'user',
+                            id: item.username
+                        });
+                    });
+                    this.departments.forEach(item => {
+                        subjects.push({
+                            type: 'department',
+                            id: item.id
+                        });
+                    });
+                }
                 const params = {
                     expired_at: this.expiredAtUse,
                     reason: this.reason,
-                    groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description }))
+                    groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
+                    applicants: subjects
                 };
                 try {
                     await this.$store.dispatch('permApply/applyJoinGroup', params);
@@ -598,7 +714,7 @@
                 }
             }
         }
-        .serch-wrapper {
+        .search-wrapper {
             .info {
                 line-height: 30px;
                 font-size: 12px;
@@ -616,11 +732,17 @@
             }
         }
         .user-group-error,
+        .perm-recipient-error,
         .expired-at-error,
         .reason-empty-wrapper {
             margin-top: 5px;
             font-size: 12px;
             color: #ff4d4d;
+        }
+        .is-member-empty-cls {
+            .user-selector-container {
+                border-color: #ff4d4d;
+            }
         }
     }
     .grade-memebers-content {

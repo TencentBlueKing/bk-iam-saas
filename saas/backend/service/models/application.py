@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 
+from backend.service.models.subject import Applicant
 from backend.util.model import ListModel
 
 from ..constants import ApplicationStatus, ApplicationType, SubjectType
@@ -167,6 +168,7 @@ class GrantActionApplicationContent(BaseModel):
 
     system: ApplicationSystem
     policies: List[ApplicationPolicyInfo] = Field(alias="actions")
+    applicants: List[Applicant]
 
     class Config:
         # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
@@ -211,6 +213,7 @@ class GroupApplicationContent(BaseModel):
     """加入用户组的申请内容"""
 
     groups: List[ApplicationGroupInfo]
+    applicants: List[Applicant]
 
 
 class GroupApplicationData(ApplicationDataBaseInfo):
@@ -228,6 +231,7 @@ class GroupApplicationData(ApplicationDataBaseInfo):
             "groups": [
                 group.dict(include={"id", "name", "description", "expired_at"}) for group in self.content.groups
             ],
+            "applicants": [one.dict() for one in self.content.applicants],
         }
         return data
 

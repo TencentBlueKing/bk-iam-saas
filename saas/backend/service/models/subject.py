@@ -40,3 +40,11 @@ class Subject(BaseModel):
     @classmethod
     def from_usernames(cls, usernames: str) -> List["Subject"]:
         return [cls.from_username(username) for username in usernames]
+
+
+class Applicant(Subject):
+    """
+    权限申请人
+    """
+
+    display_name: str

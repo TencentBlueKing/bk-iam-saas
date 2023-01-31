@@ -9,7 +9,8 @@
                         v-model="systemValue"
                         style="width: 480px;"
                         :popover-min-width="480"
-                        searchable
+                        :searchable="true"
+                        :search-with-pinyin="true"
                         :clearable="false"
                         @selected="handleSysSelected">
                         <bk-option v-for="option in systemList"
@@ -40,7 +41,9 @@
                                 v-if="commonActions.length > 0 && !customLoading"
                                 mode="detail"
                                 :data="commonActions"
-                                @on-change="handleActionTagChange" />
+                                @on-change="handleActionTagChange"
+                                @on-mouse-enter="handleActionTagEnter"
+                                @on-mouse-leave="handleActionTagLeave" />
                             <template v-if="originalCustomTmplList.length > 0 && !customLoading">
                                 <div class="action-empty-error" v-if="isShowActionError">{{ $t(`m.verify['请选择操作']`) }}</div>
                                 <div class="actions-wrapper">
@@ -51,7 +54,9 @@
                                         <p style="cursor: pointer;" @click.stop="handleExpanded(item)" v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))">
                                             <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
                                                 <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
-                                                <span>{{ item.name }}</span>
+                                                <span :class="[{ 'action-hover': handleFormatTitleHover(item) }]">
+                                                    {{ item.name }}
+                                                </span>
                                                 <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
                                             </section>
                                             <span :class="['check-all', { 'is-disabled': item.actionsAllDisabled }]" @click.stop="handleCheckAll(item)">
@@ -69,7 +74,7 @@
                                                     :false-value="false"
                                                     v-model="act.checked"
                                                     :disabled="act.disabled"
-                                                    ext-cls="iam-action-cls"
+                                                    :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
                                                     @change="handleActionChecked(...arguments, act, item)">
                                                     <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                                         <template v-if="act.disabled">
@@ -115,7 +120,7 @@
                                                                 :false-value="false"
                                                                 v-model="act.checked"
                                                                 :disabled="act.disabled"
-                                                                ext-cls="iam-action-cls"
+                                                                :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
                                                                 @change="handleSubActionChecked(...arguments, act, subAct, item)">
                                                                 <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
                                                                     <template v-if="act.disabled">
@@ -184,6 +189,21 @@
                         </bk-switcher>
                         <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['逐项编辑']`) : $t(`m.grading['批量编辑']`) }}</span>
                     </div>
+                </section>
+            </render-horizontal-block>
+            <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="false">
+                <section ref="permRecipientRef">
+                    <bk-user-selector
+                        :value="permMembers"
+                        :api="userApi"
+                        :placeholder="$t(`m.permApply['请输入权限获得者']`)"
+                        :style="{ width: '60%' }"
+                        :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        data-test-id="grading_userSelector_member"
+                        @focus="handleRtxFocus"
+                        @blur="handleRtxBlur"
+                        @change="handleRtxChange" />
+                    <!-- <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p> -->
                 </section>
             </render-horizontal-block>
             <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
@@ -262,18 +282,20 @@
                                         <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
                                         <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                                             <template slot-scope="{ row }">
-                                                <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
-                                                <template v-if="!setDefaultSelect(row)">
-                                                    <Icon type="error-fill" class="error-icon" />
-                                                    <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
-                                                    <bk-button
-                                                        text
-                                                        theme="primary"
-                                                        style="font-size: 12px;"
-                                                        @click="handleBatchRenewal">
-                                                        {{ $t(`m.permApply['去续期']`) }}
-                                                    </bk-button>
-                                                </template>
+                                                <div class="user-group-name-column">
+                                                    <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                                                    <div v-if="row.expired_at && user.timestamp > row.expired_at">
+                                                        <Icon type="error-fill" class="error-icon" />
+                                                        <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                                                        <bk-button
+                                                            text
+                                                            theme="primary"
+                                                            style="font-size: 12px;"
+                                                            @click="handleBatchRenewal">
+                                                            {{ $t(`m.permApply['去续期']`) }}
+                                                        </bk-button>
+                                                    </div>
+                                                </div>
                                             </template>
                                         </bk-table-column>
                                         <bk-table-column :label="$t(`m.userGroup['描述']`)">
@@ -531,24 +553,28 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { guid } from '@/common/util';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderActionTag from '@/components/common-action';
     import ResourceInstanceTable from '../components/resource-instance-table';
     import Policy from '@/model/policy';
     import AggregationPolicy from '@/model/aggregation-policy';
     import Condition from '@/model/condition';
     import IamDeadline from '@/components/iam-deadline/horizontal';
-    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import BkUserSelector from '@blueking/user-selector';
+
     export default {
         name: '',
         components: {
             RenderActionTag,
             ResourceInstanceTable,
             IamDeadline,
-            RenderPermSideslider
+            RenderPermSideslider,
+            BkUserSelector
         },
         data () {
             return {
+                userApi: window.BK_USER_API,
                 systemValue: '',
                 systemList: [],
                 buttonLoading: false,
@@ -562,7 +588,6 @@
                 isShowReasonError: false,
                 routerQuery: {},
                 linearActionList: [],
-
                 requestQueue: ['action', 'policy', 'aggregate', 'commonAction'],
                 isAllExpanded: false,
                 aggregationMap: [],
@@ -582,8 +607,9 @@
                 isShowIndependent: false,
                 isShowExpiredError: false,
                 isShowGroupError: false,
-                sliderLoading: false,
                 isShowHasUserGroup: false,
+                isShowMemberError: false,
+                sliderLoading: false,
                 currentSelectList: [],
                 curUserGroup: [],
                 expiredAt: 15552000,
@@ -592,7 +618,6 @@
                 checkRadio: 'userGroup',
                 tableLoading: false,
                 gradeMembers: [],
-
                 // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
@@ -607,7 +632,13 @@
                     { title: this.$t(`m.permApply['用户组推荐']`), desc: this.$t(`m.permApply['包含更大范围的权限（运维\开发\测试等角色类权限）']`), key: 'userGroup' },
                     { title: this.$t(`m.permApply['细粒度权限']`), desc: this.$t(`m.permApply['只包含当前需要的最小范围权限']`), key: 'independent' }
                 ],
-                tabIndex: 0
+                tabIndex: 0,
+                hoverActionData: {
+                    actions: []
+                },
+                // permMembers: [{ username: 'poloohuang', readonly: false }, { username: 'gc_lihao', readonly: false }].map(item => item.username)
+                permMembers: [],
+                personalUserGroup: []
             };
         },
         computed: {
@@ -718,38 +749,6 @@
             this.isActionsFilter = false;
         },
         methods: {
-            // 用户组数据
-            async fetchUserGroupList () {
-                this.tableLoading = true;
-                const params = {
-                    cache_id: this.routerQuery.cache_id
-                };
-                try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    if (res.data.count > 0) {
-                        this.isShowHasUserGroup = true;
-                    }
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
-                    this.$nextTick(() => {
-                        this.tableList.forEach(item => {
-                            if (this.curUserGroup.includes(item.id.toString())) {
-                                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                            }
-                        });
-                    });
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.tableLoading = false;
-                }
-            },
             handleView (payload) {
                 this.curGroupName = payload.name;
                 this.curGroupId = payload.id;
@@ -796,16 +795,67 @@
                 }
                 return {};
             },
+            handleRtxFocus () {
+                this.isShowMemberError = false;
+            },
+
+            handleRtxBlur () {
+                this.isShowMemberError = this.permMembers.length < 1;
+            },
+
+            handleRtxChange (payload) {
+                this.isShowMemberError = false;
+                this.permMembers = [...payload];
+            },
             setDefaultSelect (payload) {
                 return !this.curUserGroup.includes(payload.id.toString());
             },
+            // 用户组数据
+            async fetchUserGroupList () {
+                this.tableLoading = true;
+                const params = {
+                    cache_id: this.routerQuery.cache_id
+                };
+                try {
+                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    if (res.data.count > 0) {
+                        this.isShowHasUserGroup = true;
+                    }
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.$nextTick(() => {
+                        this.tableList.forEach(item => {
+                            this.personalUserGroup.forEach(v => {
+                                if (String(item.id) === v.id) {
+                                    this.$set(item, 'expired_at', v.expired_at);
+                                    this.$set(item, 'expired_at_display', v.expired_at_display);
+                                    this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                                }
+                            });
+                        });
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.tableLoading = false;
+                }
+            },
             async fetchCurUserGroup () {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const { data } = await this.$store.dispatch('perm/getPersonalGroups', {
                         page_size: 100,
                         page: 1
                     });
-                    this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);
+                    if (data.results && data.results.length) {
+                        this.curUserGroup = data.results.filter(item => item.department_id === 0).map(item => item.id);
+                        this.personalUserGroup = data.results.filter(item => item.department_id === 0);
+                    }
                 } catch (e) {
                     this.$emit('toggle-loading', false);
                     console.error(e);
@@ -841,16 +891,22 @@
              */
             async fetchPageData () {
                 await this.fetchSystems();
-                await this.fetchPolicies(this.systemValue);
-                await this.fetchAggregationAction(this.systemValue);
-                await this.fetchCommonActions(this.systemValue);
+                if (this.systemValue) {
+                    await Promise.all([
+                        this.fetchPolicies(this.systemValue),
+                        this.fetchAggregationAction(this.systemValue),
+                        this.fetchCommonActions(this.systemValue)
+                    ]);
+                }
                 if (this.sysAndtid) {
-                    // 获取用户组数据
-                    await this.fetchUserGroupList();
-                    // 获取个人用户的用户组列表
-                    await this.fetchCurUserGroup();
-                    // 获取推荐操作
-                    await this.fetchRecommended();
+                    await Promise.all([
+                        // 获取用户组数据
+                        this.fetchUserGroupList(),
+                        // 获取个人用户的用户组列表
+                        this.fetchCurUserGroup(),
+                        // 获取推荐操作
+                        this.fetchRecommended()
+                    ]);
                 }
             },
 
@@ -1101,6 +1157,27 @@
                     });
                     this.tableData = this.tableData.filter(item => !(item.isAggregate && item.actions.length < 1));
                 }
+            },
+
+            handleActionTagEnter (payload) {
+                this.hoverActionData = payload;
+            },
+
+            handleActionTagLeave (payload) {
+                this.hoverActionData = Object.assign(payload, { actions: [] });
+            },
+
+            handleFormatTitleHover (payload) {
+                let subGroupId = [];
+                const originIds = payload.actions.map(item => item.id);
+                payload.sub_groups.forEach(item => {
+                    item.actions.forEach((subItem) => {
+                        subGroupId = [...new Set(subGroupId.concat(subItem.id))];
+                    });
+                });
+                const list = [...new Set(subGroupId.concat(originIds))];
+                const result = this.hoverActionData.actions.filter(item => list.includes(item));
+                return !!result.length;
             },
 
             handleActionMatchChecked (flag, payload) {
@@ -1953,16 +2030,23 @@
              * 获取系统列表
              */
             async fetchSystems () {
+                if (this.routerQuery.system_id) {
+                    this.systemValue = this.routerQuery.system_id;
+                }
                 try {
-                    const res = await this.$store.dispatch('system/getSystems')
-                    ;(res.data || []).forEach(item => {
+                    const res = await this.$store.dispatch('system/getSystems');
+                    (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
                     this.systemList = res.data || [];
-                    if (this.routerQuery.system_id) {
-                        this.systemValue = this.routerQuery.system_id;
-                    } else {
-                        this.systemValue = res.data[0].id || '';
+                    if (!this.systemValue) {
+                        if (this.systemList.length) {
+                            this.systemValue = this.systemList[0].id;
+                        } else {
+                            this.fetchResetData();
+                            this.requestQueue = [];
+                            return;
+                        }
                     }
                     await this.fetchActions(this.systemValue);
                 } catch (e) {
@@ -2125,18 +2209,13 @@
                 this.reason = '';
                 this.isShowReasonError = false;
                 this.isShowActionError = false;
-                this.isAllExpanded = false;
-                this.sysAndtid = false;
-                this.aggregationMap = [];
-                this.aggregations = [];
-                this.aggregationsBackup = [];
-                this.aggregationsTableData = [];
-                this.actionSearchValue = '';
-                this.requestQueue = ['action', 'policy', 'aggregate', 'commonAction'];
-                await this.fetchActions(value);
-                await this.fetchPolicies(value);
-                await this.fetchAggregationAction(value);
-                await this.fetchCommonActions(value);
+                this.fetchResetData();
+                await Promise.all([
+                    this.fetchActions(value),
+                    this.fetchPolicies(value),
+                    this.fetchAggregationAction(value),
+                    this.fetchCommonActions(value)
+                ]);
             },
 
             /**
@@ -2169,13 +2248,18 @@
                     }
                     const tableRef = this.$refs.instanceTableRef;
                     const reasonRef = this.$refs.resInstanceReasonRef;
-                    if (!flag && this.reason === '') {
+                    if (!flag && !this.reason) {
                         this.scrollToLocation(reasonRef);
                     } else {
                         this.scrollToLocation(tableRef);
                     }
                     return;
                 }
+                // if (!this.permMembers.length) {
+                // this.isShowMemberError = true;
+                // this.scrollToLocation(this.$refs.permRecipientRef);
+                // return;
+                // }
                 const systemName = this.systemList.find(item => item.id === this.systemValue).name;
                 const params = {
                     system: {
@@ -2185,7 +2269,8 @@
                     templates: [],
                     actions,
                     aggregations,
-                    reason: this.reason
+                    reason: this.reason,
+                    usernames: this.permMembers.length ? this.permMembers : [this.user.username]
                 };
                 this.buttonLoading = true;
                 try {
@@ -2312,10 +2397,45 @@
                     this.isShowIndependent = true;
                     this.isShowUserGroup = false;
                 }
+            },
+
+            fetchResetData () {
+                this.isAllExpanded = false;
+                this.sysAndtid = false;
+                this.aggregationMap = [];
+                this.aggregations = [];
+                this.aggregationsBackup = [];
+                this.aggregationsTableData = [];
+                this.actionSearchValue = '';
+                this.requestQueue = ['action', 'policy', 'aggregate', 'commonAction'];
             }
         }
     };
 </script>
 <style>
     @import './index.css';
+</style>
+<style lang="postcss" scoped>
+.action-hover {
+    color: #3a84ff;
+}
+.iam-action-cls {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+.iam-action-hover {
+    background: #E7EFFE;
+    color: #3a84ff;
+}
+
+.user-group-name-column {
+    display: flex;
+    align-items: center;
+    .user-group-name {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
 </style>

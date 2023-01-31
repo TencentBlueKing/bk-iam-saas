@@ -77,7 +77,7 @@
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
-                :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :title="addMemberTitle"
                 :tips="addMemberTips"
                 @on-click="handleAddMember"
                 style="margin-bottom: 16px;">
@@ -89,10 +89,11 @@
             </render-action>
         </section>
         <render-member
+            v-else
             :users="users"
             :departments="departments"
             :is-all="isAll"
-            v-else
+            :tips="addMemberTips"
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
@@ -210,13 +211,13 @@
                     members: [],
                     syncPerm: true
                 },
-                submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
                 addMemberTips: this.$t(`m.grading['添加成员提示']`),
-                isShowAddMemberDialog: false,
                 users: [],
                 departments: [],
+                submitLoading: false,
                 isShowMemberAdd: true,
+                isShowAddMemberDialog: false,
                 isShowAddActionSideslider: false,
                 isShowActionEmptyError: false,
                 reasonEmptyError: false,

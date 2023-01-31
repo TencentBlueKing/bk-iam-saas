@@ -31,10 +31,11 @@ from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz
+from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
-from backend.service.constants import ADMIN_USER, ApplicationType, RoleType
-from backend.service.models import Subject
+from backend.service.constants import ADMIN_USER, ApplicationType, RoleType, SubjectType
+from backend.service.models import Applicant, Subject
 from backend.trans.application import ApplicationDataTrans
 from backend.trans.role import RoleTrans
 
@@ -222,6 +223,12 @@ class ApplicationByGroupView(views.APIView):
         # 检查用户组数量是否超限
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), [g["id"] for g in data["groups"]])
 
+        applicants = data["applicants"]
+        if not applicants:
+            applicants = [{"type": SubjectType.USER.value, "id": user_id}]
+
+        applicant_infos = SubjectInfoList([Subject.parse_obj(one) for one in applicants]).subjects
+
         # 创建申请
         self.biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
@@ -229,6 +236,7 @@ class ApplicationByGroupView(views.APIView):
                 applicant=user_id,
                 reason=data["reason"],
                 groups=[ApplicationGroupInfoBean(id=g["id"], expired_at=data["expired_at"]) for g in data["groups"]],
+                applicants=[Applicant(type=one.type, id=one.id, display_name=one.name) for one in applicant_infos],
             ),
             source_system_id=data["source_system_id"],
         )

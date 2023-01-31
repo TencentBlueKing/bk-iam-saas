@@ -584,7 +584,10 @@
     }
 
     /deep/ .iam-tag-table-cell-opacity-cls {
-        opacity: 0.4
+        opacity: 0.4;
+        .cell {
+            padding-left: 0;
+        }
     }
 
     /deep/ .iam-tag-table-cell-subset-cls {

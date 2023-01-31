@@ -389,7 +389,7 @@
              * handleResSelect
              */
             handleResSelect (index, resIndex, condition, groupIndex, resItem) {
-                debugger;
+                // debugger;
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
@@ -725,7 +725,9 @@
                 } else {
                     this.hasAddCustomList = payload;
                 }
-
+                if (!payload.length) {
+                    this.curActionValue = [];
+                }
                 this.originalList = _.cloneDeep(payload);
                 this.aggregationDataByCustom = _.cloneDeep(aggregation);
                 this.authorizationDataByCustom = _.cloneDeep(authorization);
