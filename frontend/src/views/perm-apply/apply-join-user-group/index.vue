@@ -62,7 +62,7 @@
             <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
         </render-horizontal-block>
         <section>
-            <template v-if="isShowMemberAdd">
+            <!-- <template v-if="isShowMemberAdd">
                 <render-action
                     ref="memberRef"
                     :title="addMemberText"
@@ -75,19 +75,19 @@
                         :style="{ top: '-25px', left: '440px' }"
                         :content="$t(`m.guide['授权人员范围']`)" />
                 </render-action>
-            </template>
-            <template v-else>
-                <render-member
-                    :users="users"
-                    :departments="departments"
-                    :is-all="isAll"
-                    :render-title="addMemberTitle"
-                    :render-text="addMemberText"
-                    :tips="addMemberTips"
-                    @on-add="handleAddMember"
-                    @on-delete="handleMemberDelete"
-                    @on-delete-all="handleDeleteAll" />
-            </template>
+            </template> -->
+            <!-- <template v-else> -->
+            <render-member
+                :users="users"
+                :departments="departments"
+                :is-all="isAll"
+                :render-title="addMemberTitle"
+                :render-text="addMemberText"
+                :tips="addMemberTips"
+                @on-add="handleAddMember"
+                @on-delete="handleMemberDelete"
+            />
+            <!-- </template> -->
         </section>
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
         <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
@@ -134,7 +134,7 @@
             :departments="departments"
             :title="addMemberTitle"
             :all-checked="isAll"
-            :show-limit="true"
+            :show-limit="false"
             @on-cancel="handleCancelAdd"
             @on-sumbit="handleSubmitAdd" />
 
@@ -168,20 +168,20 @@
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import IamSearchSelect from '@/components/iam-search-select';
-    import IamGuide from '@/components/iam-guide/index.vue';
+    // import IamGuide from '@/components/iam-guide/index.vue';
     import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
-    import RenderAction from '@/views/grading-admin/common/render-action';
+    // import RenderAction from '@/views/grading-admin/common/render-action';
     import RenderMember from '@/views/grading-admin/components/render-member';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     // import BkUserSelector from '@blueking/user-selector';
     export default {
         name: '',
         components: {
-            IamGuide,
+            // IamGuide,
             IamDeadline,
             IamSearchSelect,
             RenderPermSideSlider,
-            RenderAction,
+            // RenderAction,
             RenderMember,
             AddMemberDialog
             // BkUserSelector
@@ -222,7 +222,7 @@
                 curRole: '',
                 users: [],
                 departments: [],
-                isAll: true,
+                isAll: false,
                 addMemberTitle: this.$t(`m.myApply['权限获得者']`),
                 addMemberText: this.$t(`m.permApply['选择权限获得者']`),
                 addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`)
@@ -283,8 +283,8 @@
             const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit;
-                    this.pagination.current = currentQueryCache.current;
+                    const { current, limit } = currentQueryCache;
+                    this.pagination = Object.assign(this.pagination, { current, limit });
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
@@ -381,19 +381,22 @@
             async fetchUserGroupList () {
                 this.tableLoading = true;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
+                const { current, limit } = this.pagination;
                 const params = {
                     ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+                    limit,
+                    offset: limit * (current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    this.pagination.count = res.data.count || 0;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    const { count, results } = data;
+                    this.pagination.count = count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(results || []));
                     this.$nextTick(() => {
                         this.tableList.forEach(item => {
                             if (this.curUserGroup.includes(item.id.toString())) {
                                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                                this.currentSelectList.push(item);
                             }
                         });
                     });
@@ -451,21 +454,16 @@
             handleMemberDelete (type, payload) {
                 window.changeDialog = true;
                 type === 'user' ? this.users.splice(payload, 1) : this.departments.splice(payload, 1);
-                this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
-            },
-
-            handleDeleteAll () {
-                this.isAll = false;
-                this.isShowMemberAdd = true;
+                // this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
             },
 
             handleSubmitAdd (payload) {
                 window.changeDialog = true;
                 const { users, departments } = payload;
-                this.isAll = payload.isAll;
+                this.isAll = false;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
-                this.isShowMemberAdd = false;
+                // this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
                 this.isShowMemberEmptyError = false;
             },
@@ -541,8 +539,7 @@
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit;
-                this.pagination.current = 1;
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
                 this.fetchUserGroupList(true);
             },
 
@@ -634,25 +631,25 @@
                     this.expiredAtUse = this.handleExpiredAt();
                 }
                 const subjects = [];
-                if (this.isAll) {
+                // if (this.isAll) {
+                //     subjects.push({
+                //         id: '*',
+                //         type: '*'
+                //     });
+                // } else {
+                this.users.forEach(item => {
                     subjects.push({
-                        id: '*',
-                        type: '*'
+                        type: 'user',
+                        id: item.username
                     });
-                } else {
-                    this.users.forEach(item => {
-                        subjects.push({
-                            type: 'user',
-                            id: item.username
-                        });
+                });
+                this.departments.forEach(item => {
+                    subjects.push({
+                        type: 'department',
+                        id: item.id
                     });
-                    this.departments.forEach(item => {
-                        subjects.push({
-                            type: 'department',
-                            id: item.id
-                        });
-                    });
-                }
+                });
+                // }
                 const params = {
                     expired_at: this.expiredAtUse,
                     reason: this.reason,
@@ -662,9 +659,9 @@
                 try {
                     await this.$store.dispatch('permApply/applyJoinGroup', params);
                     this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
-                    // this.$router.push({
-                    //     name: 'apply'
-                    // });
+                    this.$router.push({
+                        name: 'apply'
+                    });
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({

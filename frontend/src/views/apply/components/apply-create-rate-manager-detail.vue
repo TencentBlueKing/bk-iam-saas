@@ -127,7 +127,7 @@
                     const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
                     const {
                         sn, type, applicant, organizations, reason, data,
-                        status, created_time, ticket_url, applicants
+                        status, created_time, ticket_url
                     } = res.data;
                     this.basicInfo = {
                         sn,
@@ -137,7 +137,7 @@
                         reason,
                         created_time,
                         ticket_url,
-                        applicants
+                        applicants: data.applicants || []
                     };
                     this.status = status;
                     this.name = data.name;
