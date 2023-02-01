@@ -530,7 +530,7 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         group = get_object_or_404(self.queryset, pk=kwargs["id"])
         template_id = kwargs["template_id"]
-        template = get_object_or_404(PermTemplatePolicyAuthorized.objects.all(), pk=template_id)
+        template = get_object_or_404(PermTemplate.objects.all(), pk=template_id)
 
         PermTemplatePreUpdateLock.objects.raise_if_exists(template_id)
 
