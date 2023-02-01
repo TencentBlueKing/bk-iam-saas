@@ -168,7 +168,7 @@ class BaseAuthScopeActionHandler(ABC):
         pass
 
 
-class DefaultAuthScopeActionGenerator(BaseAuthScopeActionHandler):
+class DefaultAuthScopeActionHandler(BaseAuthScopeActionHandler):
     def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
         # 校验实例视图, 如果校验不过, 需要跳过, 避免错误数据
         for rrt in action.related_resource_types:
@@ -317,7 +317,7 @@ class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
         return "*"  # NOTE: 不应该出现的场景
 
 
-class LogSpaceAuthScopeActionGenerator(DefaultAuthScopeActionGenerator):
+class LogSpaceAuthScopeActionHandler(DefaultAuthScopeActionHandler):
     def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
         auth_scope_action = super().handle(system_id, action, instance)
         if auth_scope_action:
@@ -329,7 +329,7 @@ class LogSpaceAuthScopeActionGenerator(DefaultAuthScopeActionGenerator):
         return super().handle(system_id, action, space_instance)
 
 
-class JobExecutePublicScriptAuthScopeActionHandler(DefaultAuthScopeActionGenerator):
+class JobExecutePublicScriptAuthScopeActionHandler(BaseAuthScopeActionHandler):
     def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
         return AuthScopeAction.parse_obj(
             {
@@ -374,7 +374,7 @@ class JobExecutePublicScriptAuthScopeActionHandler(DefaultAuthScopeActionGenerat
         )
 
 
-class SopsCommonFlowCreateTaskAuthScopeActionHandler(DefaultAuthScopeActionGenerator):
+class SopsCommonFlowCreateTaskAuthScopeActionHandler(BaseAuthScopeActionHandler):
     def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
         return AuthScopeAction.parse_obj(
             {
@@ -419,7 +419,7 @@ class SopsCommonFlowCreateTaskAuthScopeActionHandler(DefaultAuthScopeActionGener
         )
 
 
-class ActionWithoutResourceAuthScopeActionGenerator(DefaultAuthScopeActionGenerator):
+class ActionWithoutResourceAuthScopeActionHandler(BaseAuthScopeActionHandler):
     def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
         return AuthScopeAction(id=action.id, resource_groups=ResourceGroupList(__root__=[]))
 
@@ -440,16 +440,16 @@ class AuthScopeActionGenerator:
         self._instance = instance
 
     def generate(self) -> Optional[AuthScopeAction]:
-        handler = self._get_generator_class()
+        handler = self._get_handler()
         return handler.handle(self._system_id, self._action, self._instance)
 
-    def _get_generator_class(self) -> BaseAuthScopeActionHandler:
+    def _get_handler(self) -> BaseAuthScopeActionHandler:
         if len(self._action.related_resource_types) == 0:
-            return ActionWithoutResourceAuthScopeActionGenerator()
+            return ActionWithoutResourceAuthScopeActionHandler()
         elif self._system_id in ["bk_log_search", "bk_monitorv3"]:
-            return LogSpaceAuthScopeActionGenerator()
+            return LogSpaceAuthScopeActionHandler()
 
-        return self.handler_map.get((self._system_id, self._action.id), DefaultAuthScopeActionGenerator)()
+        return self.handler_map.get((self._system_id, self._action.id), DefaultAuthScopeActionHandler)()
 
 
 class InitBizGradeManagerTask(Task):
@@ -458,7 +458,6 @@ class InitBizGradeManagerTask(Task):
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()
-    resource_biz = ResourceBiz()
     action_svc = ActionService()
 
     _exist_names: Set[str] = set()
