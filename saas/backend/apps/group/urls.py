@@ -45,7 +45,7 @@ urlpatterns = [
     path("<str:id>/templates/", views.GroupTemplateViewSet.as_view({"get": "list"}), name="group.templates"),
     path(
         "<str:id>/templates/<int:template_id>/",
-        views.GroupTemplateViewSet.as_view({"get": "retrieve"}),
+        views.GroupTemplateViewSet.as_view({"get": "retrieve", "delete": "destroy"}),
         name="group.template_detail",
     ),
     # 用户组对应的角色的模板列表
