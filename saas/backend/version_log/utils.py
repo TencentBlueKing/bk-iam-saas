@@ -9,7 +9,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import os
-import re
 from typing import Dict, List
 
 from django.conf import settings
@@ -17,16 +16,7 @@ from django.utils import translation
 
 from backend.common.constants import DjangoLanguageEnum
 
-from .constants import MD_FILE_NAME_PATTERN, MD_FILE_NAME_PATTERN_EN
-
-
-def _is_filename_legal(filename: str) -> bool:
-    """判断文件名是否存在/合法，"""
-    re_pattern = MD_FILE_NAME_PATTERN
-    # 根据语言选择文件
-    if translation.get_language() == DjangoLanguageEnum.EN.value:
-        re_pattern = MD_FILE_NAME_PATTERN_EN
-    return False if re.match(re_pattern, filename) is None else True
+from .constants import MD_FILE_DATE_PATTERN, MD_FILE_NAME, MD_FILE_NAME_EN, MD_FILE_VERSION_PATTERN
 
 
 def _read_file_content(file_path: str) -> str:
@@ -38,6 +28,13 @@ def _read_file_content(file_path: str) -> str:
     return content
 
 
+def _get_chang_log_file_name() -> str:
+    """获取日志文件名称"""
+    if translation.get_language() == DjangoLanguageEnum.EN.value:
+        return MD_FILE_NAME_EN
+    return MD_FILE_NAME
+
+
 def get_version_list() -> List[Dict[str, str]]:
     """
     获取md日志版本列表
@@ -46,21 +43,25 @@ def get_version_list() -> List[Dict[str, str]]:
     file_dir = settings.VERSION_LOG_MD_FILES_DIR
     if not os.path.isdir(file_dir):  # md文件夹不存在
         return []
-    version_list = []
-    file_content_dict = {}
-    for filename in os.listdir(file_dir):
-        if _is_filename_legal(filename):
-            version_date = os.path.splitext(filename)[0]
-            version_date_list = version_date.split("_")
-            version, date = version_date_list[0], version_date_list[1]
-            version_list.append((version, date))
-            # Note: 不要将文件内容与版本列表一起，因为版本列表需要排序，会影响效率
-            # 读取文件内容
-            file_content_dict[(version, date)] = _read_file_content(os.path.join(file_dir, filename))
-    # 根据版本号按照从新版本到旧版本排序
-    version_list.sort(key=lambda x: tuple(int(v) for v in x[0][1:].split(".")), reverse=True)
 
-    return [
-        {"version": version, "date": date, "content": file_content_dict[(version, date)]}
-        for version, date in version_list
-    ]
+    file_name = _get_chang_log_file_name()
+    if not os.path.isfile(os.path.join(file_dir, file_name)):
+        return []
+
+    text = _read_file_content(os.path.join(file_dir, file_name))
+
+    data = []
+    for log in text.split("---"):
+        try:
+            parts = log.strip().split("\n")
+
+            date = MD_FILE_DATE_PATTERN.findall(parts[0])[0]  # 从第一行提取日期
+            version = MD_FILE_VERSION_PATTERN.findall(parts[1])[0]  # 从第二行提取版本号
+
+            content = "\n".join(parts[1:])  # 去除日期注释, 重新组合
+
+            data.append({"version": version, "date": date, "content": content})
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+    return data

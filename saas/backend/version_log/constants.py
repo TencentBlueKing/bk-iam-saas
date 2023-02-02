@@ -10,5 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 import re
 
-MD_FILE_NAME_PATTERN = re.compile(r"[vV](\d+\.){2}\d+_(\d+){4}-(\d+){2}-(\d+){2}.md")
-MD_FILE_NAME_PATTERN_EN = re.compile(r"[vV](\d+\.){2}\d+_(\d+){4}-(\d+){2}-(\d+){2}_en.md")
+MD_FILE_VERSION_PATTERN = re.compile(r"[vV]\d+\.\d+\.\d+")
+MD_FILE_DATE_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+MD_FILE_NAME = "change_log.md"
+MD_FILE_NAME_EN = "change_log_en.md"
