@@ -17,10 +17,11 @@ from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import ManagementApplicationIDSLZ, ManagementGroupApplicationCreateSLZ
+from backend.apps.organization.models import User as UserModel
 from backend.biz.application import ApplicationBiz, ApplicationGroupInfoBean, GroupApplicationDataBean
 from backend.biz.group import GroupBiz
-from backend.service.constants import ApplicationType
-from backend.service.models import Subject
+from backend.service.constants import ApplicationType, SubjectType
+from backend.service.models import Applicant, Subject
 
 
 class ManagementGroupApplicationViewSet(GenericViewSet):
@@ -58,6 +59,9 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         # 检查用户组数量是否超限
         self.group_biz.check_subject_groups_quota(Subject.from_username(user_id), data["group_ids"])
 
+        # 转换为ApplicationBiz创建申请单所需数据结构
+        user = UserModel.objects.get(username=user_id)
+
         # 创建申请
         applications = self.biz.create_for_group(
             ApplicationType.JOIN_GROUP.value,
@@ -68,6 +72,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
                     ApplicationGroupInfoBean(id=group_id, expired_at=data["expired_at"])
                     for group_id in data["group_ids"]
                 ],
+                applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
         )
 
