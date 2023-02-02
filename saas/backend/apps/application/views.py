@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
 from backend.apps.application.models import Application
+from backend.apps.organization.models import User as UserModel
 from backend.apps.role.models import Role, RoleUser
 from backend.biz.application import (
     ApplicationBiz,
@@ -353,13 +354,17 @@ class ApplicationByRenewGroupView(views.APIView):
 
         data = serializer.validated_data
 
+        # 转换为ApplicationBiz创建申请单所需数据结构
+        user = UserModel.objects.get(username=request.user.username)
+
         # 创建申请
         self.biz.create_for_group(
             ApplicationType.RENEW_GROUP.value,
             GroupApplicationDataBean(
-                applicant=request.user.username,
+                applicant=user.username,
                 reason=data["reason"],
                 groups=parse_obj_as(List[ApplicationGroupInfoBean], data["groups"]),
+                applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
             source_system_id=data["source_system_id"],
         )

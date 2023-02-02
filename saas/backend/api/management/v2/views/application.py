@@ -25,6 +25,7 @@ from backend.api.management.v2.serializers import (
     ManagementGroupApplicationCreateSLZ,
 )
 from backend.apps.application.models import Application
+from backend.apps.organization.models import User as UserModel
 from backend.apps.role.models import Role
 from backend.biz.application import (
     ApplicationBiz,
@@ -35,8 +36,8 @@ from backend.biz.application import (
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleCheckBiz
 from backend.common.lock import gen_role_upsert_lock
-from backend.service.constants import ApplicationType, RoleType
-from backend.service.models import Subject
+from backend.service.constants import ApplicationType, RoleType, SubjectType
+from backend.service.models import Applicant, Subject
 from backend.trans.open_management import GradeManagerTrans
 
 
@@ -72,6 +73,9 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         # 判断用户加入的用户组数与申请的数是否超过最大限制
         user_id = data["applicant"]
 
+        # 转换为ApplicationBiz创建申请单所需数据结构
+        user = UserModel.objects.get(username=user_id)
+
         source_system_id = kwargs["system_id"]
 
         # 检查用户组数量是否超限
@@ -87,6 +91,7 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
                     ApplicationGroupInfoBean(id=group_id, expired_at=data["expired_at"])
                     for group_id in data["group_ids"]
                 ],
+                applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
             source_system_id=source_system_id,
         )

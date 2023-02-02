@@ -210,9 +210,20 @@ class ApplicationDataTrans:
         # 3. 检查每个操作新增的资源实例数量不超过限制
         self._check_application_policy_instance_count_limit(policy_list)
 
+        if "usernames" in data and data["usernames"]:
+            usernames = data["usernames"]
+        else:
+            usernames = [applicant]
+
+        # 4. 转换为ApplicationBiz创建申请单所需数据结构
+        applicants = [
+            Applicant(type=SubjectType.USER.value, id=u.username, display_name=u.display_name)
+            for u in UserModel.objects.filter(username__in=usernames)
+        ]
+
         # 4. 转换为ApplicationBiz创建申请单所需数据结构
         application_data = ActionApplicationDataBean(
-            applicant=applicant, policy_list=policy_list, reason=data["reason"]
+            applicant=applicant, policy_list=policy_list, applicants=applicants, reason=data["reason"]
         )
 
         return application_data
