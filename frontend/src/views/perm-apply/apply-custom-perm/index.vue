@@ -747,6 +747,7 @@
                 return false;
             };
             this.isActionsFilter = false;
+            this.permMembers = [this.user.username];
         },
         methods: {
             handleView (payload) {
@@ -2270,7 +2271,7 @@
                     actions,
                     aggregations,
                     reason: this.reason,
-                    usernames: this.permMembers.length ? this.permMembers : [this.user.username]
+                    usernames: this.permMembers
                 };
                 this.buttonLoading = true;
                 try {
