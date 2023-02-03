@@ -41,12 +41,12 @@ class TokenBackend(ModelBackend):
             # 判断是否获取到用户信息,获取不到则返回None
             if not get_user_info_result:
                 return None
-            user.set_property(key="qq", value=user_info.get("qq", ""))
+            # user.set_property(key="qq", value=user_info.get("qq", ""))
             user.set_property(key="language", value=user_info.get("language", ""))
             user.set_property(key="time_zone", value=user_info.get("time_zone", ""))
             user.set_property(key="role", value=user_info.get("role", ""))
-            user.set_property(key="phone", value=user_info.get("phone", ""))
-            user.set_property(key="email", value=user_info.get("email", ""))
+            # user.set_property(key="phone", value=user_info.get("phone", ""))
+            # user.set_property(key="email", value=user_info.get("email", ""))
             user.set_property(key="wx_userid", value=user_info.get("wx_userid", ""))
             user.set_property(key="chname", value=user_info.get("chname", ""))
 
