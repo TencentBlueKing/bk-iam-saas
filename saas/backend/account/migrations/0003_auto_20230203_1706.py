@@ -10,6 +10,8 @@ def delete_sensitive_user_property(apps, schema_editor):
     UserProperty.objects.filter(key="qq").delete()
     UserProperty.objects.filter(key="phone").delete()
     UserProperty.objects.filter(key="email").delete()
+    UserProperty.objects.filter(key="wx_userid").delete()
+    UserProperty.objects.filter(key="chname").delete()
 
 
 class Migration(migrations.Migration):
