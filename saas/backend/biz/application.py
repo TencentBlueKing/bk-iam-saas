@@ -777,13 +777,15 @@ class ApplicationBiz:
 
         return ApplicationIDStatusDict(data={sn_id_dict[t.sn]: t.status for t in tickets})
 
-    def cancel_application(self, application: Application, operator: str):
+    def cancel_application(self, application: Application, operator: str, need_cancel_ticket: bool = True):
         """撤销申请单"""
         if application.applicant != operator:
             raise error_codes.INVALID_ARGS.format(_("只有申请人能取消"))  # 只能取消自己的申请单
 
-        # 撤销单据
-        self.svc.cancel_ticket(application.sn, application.applicant)
+        if need_cancel_ticket:
+            # 撤销单据
+            self.svc.cancel_ticket(application.sn, application.applicant)
+
         # 更新状态
         self.handle_application_result(application, ApplicationStatus.CANCELLED.value)
 
