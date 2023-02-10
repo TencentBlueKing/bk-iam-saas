@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import os
 
 from celery import Celery
+from kombu import Exchange, Queue
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
@@ -25,3 +26,9 @@ app.config_from_object("django.conf:settings")
 
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
+
+# set queue ha policy if use rabbitmq
+# default queue name is bk_iam
+app.conf.task_queues = [
+    Queue("bk_iam", Exchange("bk_iam"), routing_key="bk_iam", queue_arguments={"x-ha-policy": "all"}),
+]
