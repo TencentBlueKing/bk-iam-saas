@@ -27,8 +27,9 @@ from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
 from backend.apps.role.models import Role, RoleRelatedObject
+from backend.apps.template.audit import TemplateMemberDeleteAuditProvider
 from backend.apps.template.filters import TemplateFilter
-from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
+from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
 from backend.audit.audit import audit_context_setter, log_api_event, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupMemberExpiredAtBean
@@ -43,6 +44,7 @@ from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
+from backend.service.models.subject import SubjectType
 from backend.trans.group import GroupTrans
 from backend.trans.role import RoleAuthScopeTrans
 
@@ -518,6 +520,27 @@ class GroupTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         subject = Subject.from_group_id(group.id)
         authorized_template = PermTemplatePolicyAuthorized.objects.get_by_subject_template(subject, int(template_id))
         return Response(GroupTemplateDetailSLZ(authorized_template).data)
+
+    @swagger_auto_schema(
+        operation_description="删除用户组模板授权",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    @view_audit_decorator(TemplateMemberDeleteAuditProvider)
+    def destroy(self, request, *args, **kwargs):
+        group = get_object_or_404(self.queryset, pk=kwargs["id"])
+        template_id = kwargs["template_id"]
+        template = get_object_or_404(PermTemplate.objects.all(), pk=template_id)
+
+        PermTemplatePreUpdateLock.objects.raise_if_exists(template_id)
+
+        members = [{"type": SubjectType.GROUP.value, "id": int(group.id)}]
+
+        self.template_biz.revoke_subjects(template.system_id, template.id, parse_obj_as(List[Subject], members))
+
+        audit_context_setter(template=template, members=members)
+
+        return Response({})
 
 
 class GroupPolicyViewSet(GroupPermissionMixin, GenericViewSet):

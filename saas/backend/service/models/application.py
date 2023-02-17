@@ -247,10 +247,15 @@ class ApplicationSubject(BaseModel):
     full_name: str = ""  # 仅仅部门有全名
 
 
-class ApplicationAuthorizationScope(GrantActionApplicationContent):
+class ApplicationAuthorizationScope(BaseModel):
     """分级管理员可授权范围"""
 
-    pass
+    system: ApplicationSystem
+    policies: List[ApplicationPolicyInfo] = Field(alias="actions")
+
+    class Config:
+        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
+        allow_population_by_field_name = True
 
 
 class GradeManagerApplicationContent(BaseModel):

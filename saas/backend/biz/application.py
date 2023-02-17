@@ -524,6 +524,9 @@ class ApplicationBiz:
             .order_by("system_id")
         )
 
+        # 转换为ApplicationBiz创建申请单所需数据结构
+        user = UserModel.objects.get(username=applicant)
+
         # 按系统分组
         data_list = []
         for system_id, policies in groupby(db_policies, lambda p: p.system_id):
@@ -533,7 +536,16 @@ class ApplicationBiz:
             for p in policy_list.policies:
                 p.set_expired_at(policy_expired_at_dict[p.policy_id])
 
-            data_list.append(ActionApplicationDataBean(applicant=applicant, policy_list=policy_list, reason=reason))
+            data_list.append(
+                ActionApplicationDataBean(
+                    applicant=applicant,
+                    policy_list=policy_list,
+                    applicants=[
+                        Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)
+                    ],
+                    reason=reason,
+                )
+            )
 
         # 循环创建申请单
         applications = []
@@ -765,13 +777,15 @@ class ApplicationBiz:
 
         return ApplicationIDStatusDict(data={sn_id_dict[t.sn]: t.status for t in tickets})
 
-    def cancel_application(self, application: Application, operator: str):
+    def cancel_application(self, application: Application, operator: str, need_cancel_ticket: bool = True):
         """撤销申请单"""
         if application.applicant != operator:
             raise error_codes.INVALID_ARGS.format(_("只有申请人能取消"))  # 只能取消自己的申请单
 
-        # 撤销单据
-        self.svc.cancel_ticket(application.sn, application.applicant)
+        if need_cancel_ticket:
+            # 撤销单据
+            self.svc.cancel_ticket(application.sn, application.applicant)
+
         # 更新状态
         self.handle_application_result(application, ApplicationStatus.CANCELLED.value)
 

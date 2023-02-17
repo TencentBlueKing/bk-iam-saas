@@ -101,7 +101,7 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
         application_data = ActionApplicationDataBean(
             applicant=applicant,
             policy_list=application_policy_list,
-            users=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
+            applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             reason=data["reason"],
         )
 
