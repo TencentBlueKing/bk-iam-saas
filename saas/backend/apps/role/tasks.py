@@ -227,7 +227,7 @@ class InitBizGradeManagerTask(Task):
             )
 
             templates = self._init_group_auth_info(authorization_scopes, name_suffix)
-            self.group_biz.grant(role, group, templates)
+            self.group_biz.grant(role, group, templates, need_check=False)
 
         self._exist_names.add(biz_name)
 
