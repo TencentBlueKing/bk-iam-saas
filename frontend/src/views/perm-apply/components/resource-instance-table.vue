@@ -1677,6 +1677,36 @@
                         });
                     }
                 });
+            },
+
+            handleDeadlineChange (payload) {
+                if (payload) {
+                    this.isShowExpiredError = false;
+                }
+                if (payload !== PERMANENT_TIMESTAMP && payload) {
+                    const nowTimestamp = +new Date() / 1000;
+                    const tempArr = String(nowTimestamp).split('');
+                    const dotIndex = tempArr.findIndex(item => item === '.');
+                    const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
+                    this.expiredAtUse = payload + nowSecond;
+                    return;
+                }
+                this.expiredAtUse = payload;
+            },
+
+            handleExpiredAt () {
+                const nowTimestamp = +new Date() / 1000;
+                const tempArr = String(nowTimestamp).split('');
+                const dotIndex = tempArr.findIndex(item => item === '.');
+                const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
+                const expiredAt = this.expiredAtUse + nowSecond;
+                return expiredAt;
+            },
+
+            handleCancel () {
+                this.$router.push({
+                    name: 'permApply'
+                });
             }
 
         }
