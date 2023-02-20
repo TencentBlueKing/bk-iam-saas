@@ -1,3 +1,9 @@
+<!-- 2023-02-20 -->
+# V1.9.9 ChangeLog
+
+### Bug Fixes
+* Management api user group authorization is not associated with resource instance conversion bug
+
 <!-- 2023-01-31 -->
 # V1.9.8 ChangeLog
 
