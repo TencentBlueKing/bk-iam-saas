@@ -165,7 +165,9 @@ class OpenCommonTrans:
             policy = PolicyBean.parse_obj(
                 {
                     "action_id": open_policy.action_id,
-                    "resource_groups": [{"id": gen_uuid(), "related_resource_types": related_resource_types}],
+                    "resource_groups": [{"id": gen_uuid(), "related_resource_types": related_resource_types}]
+                    if related_resource_types
+                    else [],
                 }
             )
             policies.append(policy)
