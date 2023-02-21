@@ -75,6 +75,7 @@ class ManagementGradeManagerCreateApplicationSLZ(GradeMangerBaseInfoSLZ, ReasonS
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
+    group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
     callback_id = serializers.CharField(label="回调ID", max_length=32, required=False, allow_blank=True, default="")
     callback_url = serializers.CharField(label="回调URL", required=False, allow_blank=True, default="")
@@ -240,6 +241,7 @@ class ManagementSubsetMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
     inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围", required=False, default=False)
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
+    group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
 
     def validate(self, data):
         data = super().validate(data)
@@ -278,6 +280,7 @@ class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
+    group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
 
 
 class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):

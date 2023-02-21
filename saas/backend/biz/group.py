@@ -590,7 +590,7 @@ class GroupBiz:
 
         return hit_members
 
-    def create_sync_perm_group_by_role(self, role: Role, creator: str):
+    def create_sync_perm_group_by_role(self, role: Role, creator: str, group_name: str = ""):
         """
         创建与分级管理员授权范围同步的用户组
 
@@ -601,11 +601,9 @@ class GroupBiz:
 
         # 创建用户组, 加成员
         with transaction.atomic():
-
-            # TODO 用户组的名字需要定义
             group = self.group_svc.create(
                 GroupCreation(
-                    name=role.name,
+                    name=group_name or role.name,
                     description=role.description,
                     readonly=True,
                     source_system_id=role.source_system_id,
@@ -633,7 +631,7 @@ class GroupBiz:
         self.grant(role, group, templates, need_check=False)  # 分级管理员同步的数据不需要再次校验
 
     def update_sync_perm_group_by_role(
-        self, role: Role, user_id: str, sync_members: bool = False, sync_prem: bool = False
+        self, role: Role, user_id: str, sync_members: bool = False, sync_prem: bool = False, group_name: str = ""
     ):
         """
         同步用户组的成员或权限
@@ -654,7 +652,7 @@ class GroupBiz:
 
         # 2. 如果role sync_perm 被修改为True, 同时不存在同步权限用户组, 需要创建同步权限用户组
         if not relation and role.sync_perm:
-            self.create_sync_perm_group_by_role(role, user_id)
+            self.create_sync_perm_group_by_role(role, user_id, group_name=group_name)
             return
 
         # 3. 不存在同步权限用户组, 不需要处理
@@ -662,7 +660,8 @@ class GroupBiz:
             return
 
         # 更新用户组名称
-        Group.objects.filter(id=relation.object_id).update(name=role.name, description=role.description)
+        if group_name:
+            Group.objects.filter(id=relation.object_id).update(name=group_name, description=role.description)
 
         # 4. 更新用户组的成员
         if sync_members:
