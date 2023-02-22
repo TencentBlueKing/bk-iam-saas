@@ -113,6 +113,7 @@ class GradeManagerApplicationDataBean(BaseApplicationDataBean):
 
     role_id: int = 0
     role_info: RoleInfo
+    group_name: str = ""
 
 
 class ApplicationIDStatusDict(BaseModel):
@@ -292,7 +293,9 @@ class ApprovedPassApplicationBiz:
 
             # 创建同步权限用户组
             if info.sync_perm:
-                self.group_biz.create_sync_perm_group_by_role(role, application.applicant)
+                self.group_biz.create_sync_perm_group_by_role(
+                    role, application.applicant, group_name=application.data.get("group_name", "")
+                )
 
             if application.source_system_id:
                 # 记录role创建来源信息
@@ -314,7 +317,13 @@ class ApprovedPassApplicationBiz:
 
         role = Role.objects.get(id=role.id)
         # 更新同步权限用户组信息
-        self.group_biz.update_sync_perm_group_by_role(role, application.applicant, sync_members=True, sync_prem=True)
+        self.group_biz.update_sync_perm_group_by_role(
+            role,
+            application.applicant,
+            sync_members=True,
+            sync_prem=True,
+            group_name=application.data.get("group_name", ""),
+        )
 
         log_role_event(
             AuditType.ROLE_UPDATE.value,
@@ -663,7 +672,7 @@ class ApplicationBiz:
         return applications
 
     def _gen_grade_manager_application_content(
-        self, role_info: RoleInfo, role_id: int
+        self, role_info: RoleInfo, role_id: int, group_name: str = ""
     ) -> GradeManagerApplicationContent:
         """生成申请单据所需内容"""
         # 成员需要显示名称
@@ -690,6 +699,7 @@ class ApplicationBiz:
             subject_scopes=parse_obj_as(List[ApplicationSubject], subject_scopes.subjects),
             authorization_scopes=authorization_scopes,
             sync_perm=role_info.sync_perm,
+            group_name=group_name,
         )
 
     def create_for_grade_manager(
@@ -720,7 +730,9 @@ class ApplicationBiz:
                 type=application_type,
                 applicant_info=applicant_info,
                 reason=data.reason,
-                content=self._gen_grade_manager_application_content(data.role_info, data.role_id),
+                content=self._gen_grade_manager_application_content(
+                    data.role_info, data.role_id, group_name=data.group_name
+                ),
             ),
             process,
             source_system_id=source_system_id,
