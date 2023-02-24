@@ -148,7 +148,9 @@ class ManagementGradeManagerApplicationViewSet(ManagementAPIPermissionCheckMixin
 
             applications = self.biz.create_for_grade_manager(
                 ApplicationType.CREATE_GRADE_MANAGER.value,
-                GradeManagerApplicationDataBean(applicant=user_id, reason=data["reason"], role_info=info),
+                GradeManagerApplicationDataBean(
+                    applicant=user_id, reason=data["reason"], role_info=info, group_name=data["group_name"]
+                ),
                 source_system_id=source_system_id,
                 callback_id=data["callback_id"],
                 callback_url=data["callback_url"],
@@ -212,7 +214,11 @@ class ManagementGradeManagerUpdatedApplicationViewSet(ManagementAPIPermissionChe
             applications = self.biz.create_for_grade_manager(
                 ApplicationType.UPDATE_GRADE_MANAGER,
                 GradeManagerApplicationDataBean(
-                    role_id=role.id, applicant=user_id, reason=data["reason"], role_info=info
+                    role_id=role.id,
+                    applicant=user_id,
+                    reason=data["reason"],
+                    role_info=info,
+                    group_name=data["group_name"],
                 ),
                 source_system_id=source_system_id,
                 callback_id=data["callback_id"],

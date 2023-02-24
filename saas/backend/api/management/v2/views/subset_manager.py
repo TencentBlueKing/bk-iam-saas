@@ -101,7 +101,9 @@ class ManagementSubsetManagerCreateViewSet(GenericViewSet):
 
             # 创建同步权限用户组
             if info.sync_perm:
-                self.group_biz.create_sync_perm_group_by_role(role, request.user.username)
+                self.group_biz.create_sync_perm_group_by_role(
+                    role, request.user.username, group_name=data["group_name"]
+                )
 
         audit_context_setter(role=role)
 
@@ -187,7 +189,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(
-            self.get_object(), request.user.username, sync_members=True, sync_prem=True
+            self.get_object(), request.user.username, sync_members=True, sync_prem=True, group_name=data["group_name"]
         )
 
         audit_context_setter(role=role)
