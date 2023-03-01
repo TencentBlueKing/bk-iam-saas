@@ -70,16 +70,24 @@
                 </div>
             </div>
         </template>
-        <!-- <template v-if="!isLoading && isEmpty">
+        <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
+                <!-- <iam-svg />
+                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
-        </template> -->
+        </template>
     </div>
 </template>
 <script>
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -95,7 +103,13 @@
                 groupNotTransferCount: 0,
                 isSelectAllChecked: false,
                 groupSelectData: [],
-                pageContainer: null
+                pageContainer: null,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -116,8 +130,8 @@
                     if (this.externalSystemId) {
                         userGroupParams.system_id = this.externalSystemId;
                     }
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', userGroupParams);
-                    const groupList = res.data.results || [];
+                    const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', userGroupParams);
+                    const groupList = data.results || [];
                     groupList.forEach(item => {
                         if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
                             this.groupNotTransferCount += 1;
@@ -126,10 +140,11 @@
                     });
 
                     this.groupList.splice(0, this.groupList.length, ...groupList);
-
                     this.isEmpty = groupList.length < 1;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -140,6 +155,10 @@
                 } finally {
                     this.isLoading = false;
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.fetchData();
             },
 
             handleGroupExpanded () {

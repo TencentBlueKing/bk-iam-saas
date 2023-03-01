@@ -82,6 +82,16 @@
                         </section>
                     </template>
                 </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-clear="handleEmptyClear"
+                        @on-refresh="handleEmptyRefresh"
+                    />
+                </template>
             </bk-table>
         </section>
 
@@ -99,6 +109,7 @@
     import _ from 'lodash';
     import editProcessDialog from './edit-process-dialog';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -134,7 +145,13 @@
                 requestQueue: ['list', 'system'],
                 searchValue: [],
                 procssValue: '',
-                tips: this.$t(`m.common['暂未开放']`)
+                tips: this.$t(`m.common['暂未开放']`),
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -244,15 +261,18 @@
                     action_group_id: actionGroupId
                 };
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getActionProcessesList', params);
-                    this.tableList = res.data.results;
-                    this.pagination.count = res.data.count;
+                    const { code, data } = await this.$store.dispatch('approvalProcess/getActionProcessesList', params);
+                    this.tableList = data.results;
+                    this.pagination.count = data.count;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -270,6 +290,7 @@
                 };
                 if (this.searchKeyword !== '') {
                     queryParams.keyword = this.searchKeyword;
+                    this.emptyData.tipType = 'search';
                 }
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 return queryParams;
@@ -290,6 +311,26 @@
 
             handleCascadeChange (payload) {
                 this.requestQueue = ['list'];
+                this.pagination = Object.assign({}, {
+                    current: 1,
+                    count: 1,
+                    limit: 10
+                });
+                this.fetchActionProcessesList();
+            },
+
+            handleEmptyClear () {
+                this.searchKeyword = '';
+                this.emptyData.tipType = '';
+                this.pagination = Object.assign({}, {
+                    current: 1,
+                    count: 1,
+                    limit: 10
+                });
+                this.fetchActionProcessesList();
+            },
+
+            handleEmptyRefresh () {
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 1,

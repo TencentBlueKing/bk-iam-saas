@@ -24,8 +24,9 @@
             </template>
             <template v-else>
                 <div class="empty-wrapper">
-                    <iam-svg />
-                    <div class="empty-tip">{{ $t(`m.common['暂无数据']`) }}</div>
+                    <!-- <iam-svg />
+                    <div class="empty-tip">{{ $t(`m.common['暂无数据']`) }}</div> -->
+                    <ExceptionEmpty />
                 </div>
             </template>
         </div>
@@ -57,6 +58,17 @@
                     return {
                         'all': il8n('common', '全部'),
                         'wait': il8n('myApproval', '待审批')
+                    };
+                }
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
                     };
                 }
             },

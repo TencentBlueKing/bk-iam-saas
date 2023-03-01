@@ -51,13 +51,23 @@
                     </template>
                 </bk-table-column>
             </template>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyRenewalData.type"
+                    :empty-text="emptyRenewalData.text"
+                    :tip-text="emptyRenewalData.tip"
+                    :tip-type="emptyRenewalData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
     </div>
 </template>
 <script>
     import { mapGetters } from 'vuex';
-    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { formatCodeData } from '@/common/util';
+    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
 
     // 过期时间的天数区间
     const EXPIRED_DISTRICT = 15;
@@ -87,6 +97,17 @@
             count: {
                 type: Number,
                 default: () => 0
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -102,7 +123,13 @@
                 currentBackup: 1,
                 tableProps: [],
                 systemFilter: [],
-                isLoading: false
+                isLoading: false,
+                emptyRenewalData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -194,6 +221,12 @@
                 handler (value) {
                     this.pagination.count = value;
                 }
+            },
+            emptyData: {
+                handler (value) {
+                    this.emptyRenewalData = value;
+                },
+                immediate: true
             }
         },
         methods: {
@@ -254,23 +287,32 @@
             async fetchTableData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                        page_size: this.pagination.limit,
-                        page: this.pagination.current
+                    const { current, limit } = this.pagination;
+                    const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                        page_size: limit,
+                        page: current
                     });
-                    this.tableList = res.data || [];
+                    this.tableList = data || [];
+                    this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.isLoading = false;
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+                this.fetchTableData();
             }
 
         }

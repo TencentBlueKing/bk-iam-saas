@@ -52,7 +52,8 @@
                 <iam-search-select
                     style="width: 420px;"
                     :placeholder="$t(`m.userGroup['搜索用户组名、描述、管理空间、创建人']`)"
-                    :data="searchData" :value="searchValue"
+                    :data="searchData"
+                    :value="searchValue"
                     :quick-search-method="quickSearchMethod"
                     @on-change="handleSearch" />
             </div>
@@ -145,6 +146,16 @@
                     </div>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -197,7 +208,7 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { il8n } from '@/language';
-    import { getWindowHeight } from '@/common/util';
+    import { getWindowHeight, formatCodeData } from '@/common/util';
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
@@ -208,6 +219,7 @@
     import DistributeToDialog from './components/distribute-to-dialog';
     import NoviceGuide from '@/components/iam-novice-guide';
     import IamEditInput from '@/components/iam-edit/input';
+
     export default {
         name: '',
         components: {
@@ -273,7 +285,13 @@
                         roles: ['super_manager']
                     }
                 ],
-                distributeDetail: null
+                distributeDetail: null,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -357,10 +375,10 @@
                     disabled: true
                 }
             ];
+            this.setCurrentQueryCache(this.refreshCurrentQuery());
             const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
-
             const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
@@ -419,25 +437,28 @@
                 const queryParams = {
                     limit,
                     current,
-                ...this.searchParams,
-                ...this.$route.query
+                    ...this.searchParams,
+                    ...this.$route.query
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find((item) => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-                        if (this.searchList.length > 0) {
+                        if (this.searchList.length) {
                             const tempData = this.searchList.find((item) => item.id === key);
-                            params[key] = tempData.values[0];
+                            if (tempData) {
+                                params[key] = tempData.values[0];
+                            }
                         }
                     } else {
                         params[key] = this.searchParams[key];
                     }
                 }
+                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
-                ...params,
-                limit,
-                current
+                    ...params,
+                    limit,
+                    current
                 };
             },
 
@@ -461,26 +482,29 @@
                 this.tableLoading = isLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
-                ...this.searchParams,
-                limit: this.pagination.limit,
-                offset: this.pagination.limit * (this.pagination.current - 1)
+                    ...this.searchParams,
+                    limit: this.pagination.limit,
+                    offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    this.pagination.count = res.data.count || 0;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    this.pagination.count = data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.currentSelectList = this.currentSelectList.filter((item) => {
                         return this.tableList.map((_) => _.id).includes(item.id);
                     });
                     if (this.currentSelectList.length < 1) {
                         this.$refs.tableRef && this.$refs.tableRef.clearSelection();
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -508,13 +532,14 @@
                 });
             },
 
-            handleClone (data) {
+            handleClone (payload) {
+                const { name, description, id } = payload;
                 this.$router.push({
                     name: 'cloneUserGroup',
                     query: {
-                        name: data.name,
-                        description: data.description,
-                        id: data.id
+                        name,
+                        description,
+                        id
                     }
                 });
             },
@@ -560,6 +585,20 @@
             handleSearch (payload, result) {
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleEmptyRefresh () {
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },

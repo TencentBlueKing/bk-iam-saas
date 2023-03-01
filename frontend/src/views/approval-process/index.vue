@@ -35,6 +35,7 @@
     import JoinGroupProcess from './components/join-group-process';
     import CustomPermProcess from './components/custom-perm-process';
     import CreateRateManagerProcess from './components/create-rate-manager-process';
+    import { formatCodeData } from '@/common/util';
 
     /**
      * ACTIVE_COMPONENT_MAP
@@ -88,7 +89,13 @@
                     'create_rating_manager': []
                     // 'alter_rating_manager': []
                 },
-                activeMap: ACTIVE_COMPONENT_MAP
+                activeMap: ACTIVE_COMPONENT_MAP,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -143,14 +150,17 @@
              */
             async fetchProcesses (type) {
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getProcessesList', { type });
-                    this.processData[type] = Object.freeze(res.data);
+                    const { code, data } = await this.$store.dispatch('approvalProcess/getProcessesList', { type });
+                    this.processData[type] = Object.freeze(data);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -162,8 +172,8 @@
              */
             async fetchDefaultProcesses () {
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getDefaultProcesses');
-                    const defaultProcesses = res.data || [];
+                    const { code, data } = await this.$store.dispatch('approvalProcess/getDefaultProcesses');
+                    const defaultProcesses = data || [];
                     const grantAction = defaultProcesses.find(item => item.type === 'grant_action');
                     if (grantAction) {
                         this.processSetList[0].process_id = grantAction.process_id;
@@ -176,12 +186,15 @@
                     if (createRatingManager) {
                         this.processSetList[2].process_id = createRatingManager.process_id;
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

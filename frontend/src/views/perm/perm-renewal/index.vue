@@ -27,9 +27,10 @@
                 :type="active"
                 :data="getTableList"
                 :loading="tableLoading"
+                :empty-data="curEmptyData"
                 @on-select="handleSelected" />
         </render-horizontal-block>
-        <p class="error-tips" v-if="isShowErrorTips">请选择过期权限</p>
+        <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
         <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
         </render-horizontal-block>
@@ -47,7 +48,9 @@
     </smart-action>
 </template>
 <script>
+    import _ from 'lodash';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData } from '@/common/util';
     import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import RenderTable from '../components/render-renewal-table';
@@ -62,8 +65,32 @@
         data () {
             return {
                 panels: [
-                    { name: 'group', label: this.$t(`m.perm['用户组权限']`), count: 0, total: 0, data: [] },
-                    { name: 'custom', label: this.$t(`m.perm['自定义权限']`), count: 0, total: 0, data: [] }
+                    {
+                        name: 'group',
+                        label: this.$t(`m.perm['用户组权限']`),
+                        count: 0,
+                        total: 0,
+                        data: [],
+                        emptyData: {
+                            type: '',
+                            text: '',
+                            tip: '',
+                            tipType: ''
+                        }
+                    },
+                    {
+                        name: 'custom',
+                        label: this.$t(`m.perm['自定义权限']`),
+                        count: 0,
+                        total: 0,
+                        data: [],
+                        emptyData: {
+                            type: '',
+                            text: '',
+                            tip: '',
+                            tipType: ''
+                        }
+                    }
                 ],
                 active: 'group',
                 expiredAt: SIX_MONTH_TIMESTAMP,
@@ -72,13 +99,20 @@
                 tableLoading: false,
                 isShowErrorTips: false,
                 tabKey: 'tab-key',
-                isEmpty: false
+                isEmpty: false,
+                curEmptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
             getTableList () {
                 const panelData = this.panels.find(item => item.name === this.active);
                 if (panelData) {
+                    this.curEmptyData = _.cloneDeep(panelData.emptyData);
                     return panelData.data;
                 }
                 return [];
@@ -125,29 +159,48 @@
             this.curSelectedList = [];
             const query = this.$route.query;
             this.active = query.tab || 'group';
-            this.fetchData();
+            await this.fetchData();
         },
         methods: {
             async fetchData () {
                 this.tableLoading = true;
-                const userGroupParams = {
-                    page_size: 10,
-                    page: 1
-                };
-                if (this.externalSystemId) {
-                    userGroupParams.system_id = this.externalSystemId;
+                try {
+                    const userGroupParams = {
+                        page_size: 10,
+                        page: 1
+                    };
+                    if (this.externalSystemId) {
+                        userGroupParams.system_id = this.externalSystemId;
+                    }
+                    const resultList = await Promise.all([
+                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
+                        this.$store.dispatch('renewal/getExpireSoonPerm')
+                    ]).finally(() => {
+                        this.tableLoading = false;
+                    });
+                    const { code, data } = resultList[0];
+                    const { code: code2, data: data2 } = resultList[1];
+                    this.panels[0].emptyData
+                        = formatCodeData(code, this.panels[0].emptyData, data.results.length === 0);
+                    this.panels[0] = Object.assign(this.panels[0], { data: data.results, total: data.count });
+                    if (this.panels[1]) {
+                        this.panels[1] = Object.assign(this.panels[1], {
+                            data: data2,
+                            total: data2.length,
+                            emptyData: formatCodeData(code2, this.panels[1].emptyData, data2.length === 0)
+                        });
+                    }
+                    this.tabKey = +new Date();
+                } catch (e) {
+                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.curEmptyData = formatCodeData(code, this.curEmptyData);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: message || data.msg || statusText
+                    });
                 }
-                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams), this.$store.dispatch('renewal/getExpireSoonPerm')];
-                const resultList = await Promise.all(promiseList).finally(() => {
-                    this.tableLoading = false;
-                });
-                this.panels[0].total = resultList[0].data.count;
-                this.panels[0].data = resultList[0].data.results;
-                if (this.panels[1]) {
-                    this.panels[1].total = resultList[1].data.length;
-                    this.panels[1].data = resultList[1].data;
-                }
-                this.tabKey = +new Date();
             },
             // async fetchPageData () {
             //     await this.fetchData()

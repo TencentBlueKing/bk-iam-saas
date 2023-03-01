@@ -38,6 +38,7 @@ import AuthComponent from './components/auth/index.vue';
 import iamFormItem from './components/iam-form/item.vue';
 import SmartAction from './components/smart-action/index.vue';
 import IamSvg from './components/iam-svg/index.vue';
+import ExceptionEmpty from './components/exception-empty';
 import IamSpinLoading from './components/iam-spin-loading/index.vue';
 import RenderHorizontalBlock from './components/render-block/horizontal.vue';
 import RenderVerticalBlock from './components/render-block/vertical.vue';
@@ -63,6 +64,7 @@ Vue.component('RenderHorizontalBlock', RenderHorizontalBlock);
 Vue.component('RenderVerticalBlock', RenderVerticalBlock);
 Vue.component('RenderSearch', RenderSearch);
 Vue.component('Icon', Icon);
+Vue.component('ExceptionEmpty', ExceptionEmpty);
 
 Vue.prototype.scrollToLocation = function ($ref) {
     const distance = ($ref && $ref.getBoundingClientRect().top) || 0;

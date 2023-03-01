@@ -135,6 +135,9 @@
                     </template>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty />
+            </template>
         </bk-table>
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
@@ -217,6 +220,7 @@
     import PreviewResourceDialog from './preview-resource-dialog';
     import RenderResourcePopover from '@/components/iam-view-resource-popover';
     import RenderDetail from '../common/render-detail';
+
     // import store from '@/store'
     export default {
         name: 'resource-instance-table',
@@ -594,6 +598,7 @@
                 }
                 this.previewData = _.cloneDeep(params);
                 this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                console.log(66555);
                 this.isShowSideslider = true;
             },
             handleAnimationEnd () {

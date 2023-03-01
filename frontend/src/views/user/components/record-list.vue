@@ -61,7 +61,15 @@
                     </section>
                 </template>
             </bk-table-column>
-
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <bk-sideslider
@@ -80,15 +88,19 @@
                             <div v-html="exceptionMsg"></div>
                             <div v-html="tracebackMsg"></div>
                         </div>
-                        <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div>
+                        <!-- <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div> -->
+                        <div v-else>
+                            <ExceptionEmpty />
+                        </div>
                     </div>
                 </section>
             </div>
         </bk-sideslider>
     </div>
 </template>
+
 <script>
-    import { timestampToTime } from '@/common/util';
+    import { formatCodeData, timestampToTime } from '@/common/util';
     import RenderStatus from './render-status';
     import moment from 'moment';
 
@@ -157,7 +169,13 @@
                         }
                     }
                 ],
-                dateRange: { startTime: '', endTime: '' }
+                dateRange: { startTime: '', endTime: '' },
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         watch: {
@@ -182,18 +200,21 @@
                     end_time: this.dateRange.endTime
                 };
                 try {
-                    const res = await this.$store.dispatch('organization/getRecordsList', params);
-                    this.pagination.count = res.data.count;
-                    res.data.results = res.data.results.length && res.data.results.sort(
+                    const { code, data } = await this.$store.dispatch('organization/getRecordsList', params);
+                    this.pagination.count = data.count;
+                    data.results = data.results.length && data.results.sort(
                         (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
                         
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

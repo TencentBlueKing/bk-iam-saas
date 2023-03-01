@@ -23,7 +23,13 @@
             </template>
             <template v-if="!orgTemplateList.length && !isLoading">
                 <div class="iam-my-perm-empty-wrapper">
-                    <iam-svg />
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-refresh="handleEmptyRefresh"
+                    />
                 </div>
             </template>
         </div>
@@ -31,6 +37,7 @@
 </template>
 <script>
     // import _ from 'lodash'
+    import { formatCodeData } from '@/common/util';
     import RenderPermItem from '../organization-perm/render-perm';
     import DetailTable from '../organization-perm/detail-table';
     export default {
@@ -57,7 +64,13 @@
             return {
                 orgTemplateList: [],
                 isShowSideslider: false,
-                requestQueue: ['list']
+                requestQueue: ['list'],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -79,28 +92,34 @@
         methods: {
             async fetchData () {
                 try {
-                    const res = await this.$store.dispatch('perm/getOrgTemplates', {
+                    const { code, data } = await this.$store.dispatch('perm/getOrgTemplates', {
                         subjectId: this.departId,
                         subjectType: 'department'
                     });
-                    const data = res.data || [];
-                    data.forEach(item => {
+                    (data || []).forEach(item => {
                         item.displayName = `${item.name}（${item.system.name}）`;
                         item.expanded = false;
                     });
                     this.orgTemplateList.splice(0, this.orgTemplateList.length, ...data);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.orgTemplateList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.requestQueue.shift();
                 }
+            },
+
+            async handleEmptyRefresh () {
+                await this.fetchData();
             },
 
             handleAnimationEnd () {

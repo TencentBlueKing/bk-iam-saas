@@ -25,16 +25,17 @@
                     ref="groupTableRef"
                     size="small"
                     ext-cls="user-group-table"
-                    :data="tableList"
                     :class="{ 'set-border': tableLoading }"
-                    :max-height="500"
+                    :data="tableList"
+                    :max-height="pagination.count > 0 ? 500 : 280"
                     :cell-attributes="handleCellAttributes"
                     :pagination="pagination"
                     @page-change="pageChange"
                     @page-limit-change="limitChange"
                     @select="handlerChange"
                     @select-all="handlerAllChange"
-                    v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
+                    v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+                >
                     <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
                     <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                         <template slot-scope="{ row }">
@@ -52,11 +53,24 @@
                     </bk-table-column>
                     <bk-table-column :label="$t(`m.common['所属一级管理空间']`)">
                         <template slot-scope="{ row }">
-                            <span :class="row.role && row.role.name ? 'can-view' : ''"
+                            <span
+                                :class="row.role && row.role.name ? 'can-view' : ''"
                                 :title="row.role && row.role.name ? row.role.name : ''"
-                                @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
+                                @click.stop="handleViewDetail(row)"
+                            >{{ row.role ? row.role.name : '--' }}</span
+                            >
                         </template>
                     </bk-table-column>
+                    <template slot="empty">
+                        <ExceptionEmpty
+                            :type="emptyData.type"
+                            :empty-text="emptyData.text"
+                            :tip-text="emptyData.tip"
+                            :tip-type="emptyData.tipType"
+                            @on-clear="handleEmptyClear"
+                            @on-refresh="handleEmptyRefresh"
+                        />
+                    </template>
                 </bk-table>
             </div>
             <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
@@ -100,7 +114,8 @@
             ext-cls="reason-wrapper"
             :styles="{ marginBottom: '50px' }"
             :label="$t(`m.common['理由']`)"
-            :required="true">
+            :required="true"
+        >
             <section ref="reasonRef">
                 <bk-input
                     type="textarea"
@@ -109,7 +124,8 @@
                     :placeholder="$t(`m.verify['请输入']`)"
                     :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
                     @input="handleReasonInput"
-                    @blur="handleReasonBlur">
+                    @blur="handleReasonBlur"
+                >
                 </bk-input>
                 <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
             </section>
@@ -126,7 +142,8 @@
             :name="curGroupName"
             :group-id="curGroupId"
             :show-member="false"
-            @animation-end="handleAnimationEnd" />
+            @animation-end="handleAnimationEnd"
+        />
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
@@ -165,6 +182,7 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData } from '@/common/util';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import IamSearchSelect from '@/components/iam-search-select';
@@ -174,6 +192,7 @@
     import RenderMember from '@/views/grading-admin/components/render-member';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     // import BkUserSelector from '@blueking/user-selector';
+
     export default {
         name: '',
         components: {
@@ -225,14 +244,20 @@
                 isAll: false,
                 addMemberTitle: this.$t(`m.myApply['权限获得者']`),
                 addMemberText: this.$t(`m.permApply['选择权限获得者']`),
-                addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`)
+                addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`),
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
             ...mapGetters(['user'])
         },
         watch: {
-            reason (value) {
+            reason () {
                 this.isShowReasonError = false;
             },
             'pagination.current' (value) {
@@ -277,7 +302,7 @@
                 }
             ];
             this.setCurrentQueryCache(this.refreshCurrentQuery());
-            const isObject = payload => {
+            const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
             const currentQueryCache = this.getCurrentQueryCache();
@@ -289,7 +314,7 @@
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
                         const curData = currentQueryCache[key];
-                        const tempData = this.searchData.find(item => item.id === key);
+                        const tempData = this.searchData.find((item) => item.id === key);
                         if (isObject(curData)) {
                             if (tempData) {
                                 this.searchValue.push({
@@ -304,10 +329,12 @@
                             this.searchValue.push({
                                 id: key,
                                 name: tempData.name,
-                                values: [{
-                                    id: curData,
-                                    name: curData
-                                }]
+                                values: [
+                                    {
+                                        id: curData,
+                                        name: curData
+                                    }
+                                ]
                             });
                             this.searchList.push(..._.cloneDeep(this.searchValue));
                             this.searchParams[key] = curData;
@@ -333,6 +360,19 @@
                 });
             },
 
+            handleEmptyRefresh () {
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
             refreshCurrentQuery () {
                 const { limit, current } = this.pagination;
                 const params = {};
@@ -343,10 +383,10 @@
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
-                    const tempObj = this.searchData.find(item => key === item.id);
+                    const tempObj = this.searchData.find((item) => key === item.id);
                     if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length) {
-                            const tempData = this.searchList.find(item => item.id === key);
+                            const tempData = this.searchList.find((item) => item.id === key);
                             if (tempData) {
                                 params[key] = tempData.values[0];
                             }
@@ -355,6 +395,7 @@
                         params[key] = this.searchParams[key];
                     }
                 }
+                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
                     ...params,
                     limit,
@@ -388,20 +429,22 @@
                     offset: limit * (current - 1)
                 };
                 try {
-                    const { data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
                     const { count, results } = data;
                     this.pagination.count = count || 0;
                     this.tableList.splice(0, this.tableList.length, ...(results || []));
                     this.$nextTick(() => {
-                        this.tableList.forEach(item => {
+                        this.tableList.forEach((item) => {
                             if (this.curUserGroup.includes(item.id.toString())) {
                                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                                 this.currentSelectList.push(item);
                             }
                         });
                     });
+                    this.emptyData = formatCodeData(code, this.emptyData, count === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'primary',
@@ -473,38 +516,39 @@
             },
 
             resetPagination () {
-                this.pagination = Object.assign({}, {
-                    limit: 10,
-                    current: 1,
-                    count: 0
-                });
+                this.pagination = Object.assign(
+                    {},
+                    {
+                        limit: 10,
+                        current: 1,
+                        count: 0
+                    }
+                );
             },
 
             // 系统包含数据
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
-                    .then(({ data }) => {
-                        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
-                    });
+                return this.$store.dispatch('system/getSystems').then(({ data }) => {
+                    return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
+                });
             },
 
             // 一级管理空间数据
             handleGradeAdmin (value) {
-                return this.$store.dispatch('role/getScopeHasUser')
-                    .then(({ data }) => {
-                        const val = value.toLowerCase();
-                        return !val
-                            ? data.map(({ id, name }) => ({ id, name }))
-                            : data.map(({ id, name }) => ({ id, name })).filter(
-                                item => item.name.toLowerCase().indexOf(val) > -1
-                            );
-                    });
+                return this.$store.dispatch('role/getScopeHasUser').then(({ data }) => {
+                    const val = value.toLowerCase();
+                    return !val
+                        ? data.map(({ id, name }) => ({ id, name }))
+                        : data.map(({ id, name }) => ({ id, name })).filter(
+                            (item) => item.name.toLowerCase().indexOf(val) > -1);
+                });
             },
 
             handleSearch (payload, result) {
                 this.currentSelectList = [];
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },
@@ -555,13 +599,16 @@
 
             async fetchCurUserGroup () {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const { data, code } = await this.$store.dispatch('perm/getPersonalGroups', {
                         page_size: 100,
                         page: 1
                     });
-                    this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);
+                    this.curUserGroup = data.results && data.results.filter(
+                        (item) => item.department_id === 0).map((item) => item.id);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
                 } catch (e) {
                     this.$emit('toggle-loading', false);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -590,7 +637,7 @@
                 if (payload !== PERMANENT_TIMESTAMP && payload) {
                     const nowTimestamp = +new Date() / 1000;
                     const tempArr = String(nowTimestamp).split('');
-                    const dotIndex = tempArr.findIndex(item => item === '.');
+                    const dotIndex = tempArr.findIndex((item) => item === '.');
                     const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
                     this.expiredAtUse = payload + nowSecond;
                     return;
@@ -601,7 +648,7 @@
             handleExpiredAt () {
                 const nowTimestamp = +new Date() / 1000;
                 const tempArr = String(nowTimestamp).split('');
-                const dotIndex = tempArr.findIndex(item => item === '.');
+                const dotIndex = tempArr.findIndex((item) => item === '.');
                 const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
                 const expiredAt = this.expiredAtUse + nowSecond;
                 return expiredAt;

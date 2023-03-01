@@ -79,6 +79,17 @@
                     </section>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    style="background: #f5f6fa"
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
         <bk-dialog
             v-model="helpDialog"
@@ -109,6 +120,7 @@
 </template>
 <script>
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: 'system-access-index',
@@ -179,7 +191,13 @@
                             }
                         ]
                     }
-                ]
+                ],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         watch: {
@@ -236,18 +254,21 @@
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('access/getModelingList', params);
-                    this.pagination.count = res.data.count;
-                    res.data.results = res.data.results.length && res.data.results.sort(
+                    const { code, data } = await this.$store.dispatch('access/getModelingList', params);
+                    this.pagination.count = data.count;
+                    data.results = data.results.length && data.results.sort(
                         (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
                         
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
