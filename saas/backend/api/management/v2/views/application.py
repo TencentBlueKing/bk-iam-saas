@@ -287,7 +287,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
     )
     def create(self, request, *args, **kwargs):
         """
-        创建用户组申请单
+        用户组续期申请单
         """
         serializer = ManagementGroupApplicationRenewSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
