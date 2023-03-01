@@ -82,6 +82,12 @@ urlpatterns = [
         views.ManagementGroupApplicationViewSet.as_view({"post": "create"}),
         name="open.management.v2.group_application",
     ),
+    # 用户组续期申请单
+    path(
+        "groups/renew/applications/",
+        views.ManagementGroupRenewApplicationViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_renew_application",
+    ),
     # 分级管理员申请单
     path(
         "grade_managers/-/applications/",
