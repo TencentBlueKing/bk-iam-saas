@@ -48,6 +48,16 @@
                     </section>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
     </div>
 </template>
@@ -55,7 +65,7 @@
 <script>
     import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
-    import { getWindowHeight } from '@/common/util';
+    import { formatCodeData, getWindowHeight } from '@/common/util';
     export default {
         name: 'firstManageSpace',
         data () {
@@ -80,7 +90,13 @@
                 applyLoading: false,
                 curName: '',
                 showImageDialog: false,
-                noFooter: false
+                noFooter: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -125,22 +141,26 @@
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const { current, limit } = this.pagination;
                 try {
-                    const res = await this.$store.dispatch('spaceManage/getSecondManager', {
+                    const { code, data } = await this.$store.dispatch('spaceManage/getSecondManager', {
                         limit,
                         offset: (current - 1) * limit,
                         name: this.searchValue
                     });
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     if (this.isStaff) {
                         this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.tableList = [];
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -180,6 +200,7 @@
                     current
                 };
                 if (this.searchValue) {
+                    this.emptyData.tipType = 'search';
                     queryParams.name = this.searchValue;
                 }
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
@@ -199,6 +220,7 @@
                     return;
                 }
                 this.isFilter = true;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchGradingAdmin(true);
             },
@@ -209,6 +231,19 @@
                     this.resetPagination();
                     this.fetchGradingAdmin(true);
                 }
+            },
+
+            handleEmptyClear () {
+                this.isFilter = false;
+                this.searchValue = '';
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchGradingAdmin(true);
+            },
+
+            handleEmptyRefresh () {
+                this.resetPagination();
+                this.fetchGradingAdmin(true);
             },
 
             handlePageChange (page) {

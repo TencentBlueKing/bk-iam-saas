@@ -57,6 +57,15 @@
                     </bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="groupPermEmptyData.type"
+                    :empty-text="groupPermEmptyData.text"
+                    :tip-text="groupPermEmptyData.tip"
+                    :tip-type="groupPermEmptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -95,8 +104,10 @@
         </bk-sideslider>
     </div>
 </template>
+
 <script>
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
 
@@ -110,6 +121,17 @@
             personalGroupList: {
                 type: Array,
                 default: () => []
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -136,7 +158,13 @@
                 isShowGradeSlider: false,
                 sliderLoading: false,
                 gradeSliderTitle: '',
-                isLoading: false
+                isLoading: false,
+                groupPermEmptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -153,9 +181,12 @@
                     }
                 },
                 immediate: true
+            },
+            emptyData: {
+                handler (value) {
+                    this.groupPermEmptyData = value;
+                }
             }
-        },
-        async created () {
         },
         methods: {
             /**
@@ -211,18 +242,22 @@
             async getDataByPage () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', {
                         page_size: this.pageConf.limit,
                         page: this.pageConf.current
                     });
-                    this.pageConf.count = res.data.count;
-                    this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
+                    this.pageConf.count = data.count;
+                    this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
+                    this.groupPermEmptyData
+                        = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -253,6 +288,11 @@
                 this.pageConf.limit = currentLimit;
                 this.pageConf.current = 1;
                 this.handlePageChange(this.pageConf.current);
+            },
+
+            handleEmptyRefresh () {
+                this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+                this.getDataByPage();
             },
 
             /**

@@ -66,8 +66,15 @@
         </template>
         <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
+                <!-- <iam-svg />
+                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
@@ -75,6 +82,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
     import GroupPolicy from '@/model/group-policy';
     import RenderPermItem from '../common/render-perm-item-new.vue';
     import RenderTemplateItem from '../common/render-template-item.vue';
@@ -109,7 +117,13 @@
                 groupSystemListLength: '',
                 removingSingle: false,
                 isPermTemplateDetail: false,
-                role: ''
+                role: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -147,20 +161,23 @@
                 this.isLoading = true;
                 this.$emit('on-init', true);
                 try {
-                    const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId })
-                    ;(res.data || []).forEach(item => {
+                    const { code, data } = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    (data || []).forEach(item => {
                         item.expanded = false; // 此处会在子组件更新为true
                         item.loading = false;
                         item.templates = []; // 在getGroupTemplateList方法赋值
                     });
-                    this.groupSystemList = res.data; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
-                    this.groupSystemListLength = res.data.length;
+                    this.groupSystemList = data; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
+                    this.groupSystemListLength = data.length;
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

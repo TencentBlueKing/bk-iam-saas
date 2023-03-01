@@ -30,7 +30,7 @@
                         </div>
                     </div>
                     <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
-                        <template v-if="curSystemList.length > 0">
+                        <template v-if="curSystemList.length">
                             <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
                                 <div class="system-item"
                                     v-for="item in curSystemList"
@@ -55,6 +55,16 @@
                                     {{ $t(`m.grading['修改一级管理空间授权范围']`) }}
                                 </div> -->
                             </div>
+                        </template>
+                        <template v-else>
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="refreshList"
+                                @on-refresh="refreshList"
+                            />
                         </template>
                         <!-- <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
@@ -147,11 +157,20 @@
                     </template>
                     <template v-if="systemData[curSystem].list.length < 1 && !isRightLoading">
                         <div class="empty-wrapper">
-                            <iam-svg />
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="refreshList"
+                            />
                         </div>
                     </template>
                 </div>
             </template>
+            <div v-else style="margin: 0 auto;">
+                <ExceptionEmpty />
+            </div>
         </div>
         <div slot="footer" style="padding-left: 30px;">
             <bk-button theme="primary" @click="handleSubmit">{{ $t(`m.common['确定']`) }}</bk-button>
@@ -163,7 +182,7 @@
 <script>
     import _ from 'lodash';
     import { leaveConfirm } from '@/common/leave-confirm';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
     import { mapGetters } from 'vuex';
     import { bus } from '@/common/bus';
@@ -223,7 +242,13 @@
                 authorizationData: {},
                 linearAction: [],
                 tagActionList: [],
-                systemListIsLoading: false
+                systemListIsLoading: false,
+                emptyData: {
+                    type: 'empty',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -451,20 +476,14 @@
              */
             async fetchCommonActions (systemId) {
                 try {
-                    const res = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
-                    this.commonActions.splice(0, this.commonActions.length, ...(res.data || []));
+                    const { code, data } = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
+                    this.commonActions.splice(0, this.commonActions.length, ...(data || []));
                     this.commonActions.forEach(item => {
                         item.$id = guid();
                     });
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.initRequestQueue.shift();
                 }
@@ -476,39 +495,45 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
-                    this.systemList = _.cloneDeep(res.data);
-                    this.curSystemList = _.cloneDeep(res.data);
-                    this.curSystem = this.defaultSystem || this.systemList[0].id;
-                    this.systemList.forEach(item => {
-                        this.$set(this.systemData, item.id, {});
-                        this.systemData[item.id].system_name = item.name;
-                        this.$set(this.systemData[item.id], 'count', 0);
-                        this.$set(this.systemData[item.id], 'list', []);
-                        const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
-                        if (isExistSys) {
-                            isExistSys.list.forEach(act => {
-                                this.$set(act, 'checked', this.defaultValue.includes(act.$id));
-                            });
-                            this.systemData[item.id].list.push({
-                                name: '',
-                                actions: _.cloneDeep(isExistSys.list)
-                            });
+                    const { code, data } = await this.$store.dispatch('system/getSystems');
+                    this.systemList = _.cloneDeep(data);
+                    this.curSystemList = _.cloneDeep(data);
+                    this.curSystem = this.defaultSystem;
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    if (this.systemList.length) {
+                        if (!this.curSystem) {
+                            this.curSystem = this.systemList[0].id;
                         }
-
-                        if (this.defaultValue.length > 0) {
-                            const curAllActionIds = [];
-                            this.systemData[item.id].list.forEach(subItem => {
-                                subItem.actions.forEach(act => {
-                                    curAllActionIds.push(act.$id);
+                        this.systemList.forEach(item => {
+                            this.$set(this.systemData, item.id, {});
+                            this.systemData[item.id].system_name = item.name;
+                            this.$set(this.systemData[item.id], 'count', 0);
+                            this.$set(this.systemData[item.id], 'list', []);
+                            const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
+                            if (isExistSys) {
+                                isExistSys.list.forEach(act => {
+                                    this.$set(act, 'checked', this.defaultValue.includes(act.$id));
                                 });
-                            });
-                            const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
-                            this.systemData[item.id].count = intersection.length;
-                        }
-                    });
-                    // this.fetchCommonActions(this.curSystem)
-                    // this.fetchActions(this.curSystem, false)
+                                this.systemData[item.id].list.push({
+                                    name: '',
+                                    actions: _.cloneDeep(isExistSys.list)
+                                });
+                            }
+
+                            if (this.defaultValue.length > 0) {
+                                const curAllActionIds = [];
+                                this.systemData[item.id].list.forEach(subItem => {
+                                    subItem.actions.forEach(act => {
+                                        curAllActionIds.push(act.$id);
+                                    });
+                                });
+                                const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
+                                this.systemData[item.id].count = intersection.length;
+                            }
+                        });
+                        // this.fetchCommonActions(this.curSystem)
+                        // this.fetchActions(this.curSystem, false)
+                    }
                     await Promise.all([
                         this.fetchCommonActions(this.curSystem),
                         this.fetchActions(this.curSystem)
@@ -516,14 +541,7 @@
                     this.handleCommonAction();
                     this.isRightLoading = false;
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.initRequestQueue.shift();
                     this.systemListIsLoading = false;
@@ -535,17 +553,11 @@
                     return;
                 }
                 try {
-                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: this.curSystem });
-                    this.aggregationData[this.curSystem] = res.data.aggregations;
+                    const { code, data } = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: this.curSystem });
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    this.aggregationData[this.curSystem] = data.aggregations;
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 }
             },
 
@@ -554,17 +566,11 @@
                     return;
                 }
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.curSystem });
-                    this.authorizationData[this.curSystem] = res.data.filter(item => item.id !== '*');
+                    const { code, data } = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.curSystem });
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    this.authorizationData[this.curSystem] = data.filter(item => item.id !== '*');
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 }
             },
 
@@ -585,17 +591,11 @@
                     params.group_id = this.groupId;
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', params);
-                    this.handleDefaultData(systemId, res.data);
+                    const { code, data } = await this.$store.dispatch('permApply/getActions', params);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    this.handleDefaultData(systemId, data);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.isRightLoading = false;
                     this.initRequestQueue.length > 0 && this.initRequestQueue.shift();
@@ -909,6 +909,7 @@
                 this.isFilter = true;
                 const filterList = this.systemList.filter(item => item.name.indexOf(this.keyword) > -1);
                 this.curSystemList.splice(0, this.curSystemList.length, ...filterList);
+                this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: 'search' } });
             },
 
             resetData () {
@@ -920,6 +921,19 @@
                 this.isFilter = false;
                 this.curSystem = '';
                 this.curSelectValue = [];
+            },
+
+            fetchErrorMsg (payload) {
+                console.error(payload);
+                const { code, data, message, statusText } = payload;
+                this.emptyData = formatCodeData(code, this.emptyData);
+                this.bkMessageInstance = this.$bkMessage({
+                    limit: 1,
+                    theme: 'error',
+                    message: message || data.msg || statusText,
+                    ellipsisLine: 2,
+                    ellipsisCopy: true
+                });
             },
 
             handleCancel () {

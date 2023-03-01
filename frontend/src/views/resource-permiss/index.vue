@@ -157,6 +157,16 @@
                     {{row.type === 'user' ? $t(`m.nav['用户']`) : $t(`m.nav['用户组']`)}}
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <bk-sideslider
@@ -193,6 +203,7 @@
     import RenderResource from './components/render-resource.vue';
     import { leaveConfirm } from '@/common/leave-confirm';
     import { fuzzyRtxSearch } from '@/common/rtx';
+    import { formatCodeData } from '@/common/util';
     // import iamCascade from '@/components/cascade'
 
     // 单次申请的最大实例数
@@ -247,7 +258,13 @@
                     count: 0,
                     limit: 10
                 },
-                currentBackup: 1
+                currentBackup: 1,
+                emptyData: {
+                    type: 'empty',
+                    text: '暂无数据',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -420,18 +437,23 @@
                             });
                         }
                     } else {
-                        this.tableList = res.data;
+                        this.tableList = res.data || [];
                         this.tableListClone = _.cloneDeep(this.tableList);
                         this.pagination.count = res.data.length;
                         const data = this.getDataByPage();
                         this.tableList.splice(0, this.tableList.length, ...data);
+                        this.emptyData.tipType = 'search';
+                        this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
                     }
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.tableList = [];
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -574,6 +596,7 @@
             // 搜索
             handleSearch () {
                 if (this.searchValue) {
+                    this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
                     this.tableList = _.cloneDeep(this.tableListClone).filter(item =>
                         item.name.indexOf(this.searchValue) !== -1);
                 }
@@ -585,6 +608,16 @@
                     id: 'keyword',
                     values: [value]
                 };
+            },
+
+            handleEmptyClear () {
+                this.searchValue = '';
+                this.handleReset();
+                this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { type: 'empty', text: '', tipType: '' }));
+            },
+
+            handleEmptyRefresh () {
+                this.handleSearchAndExport();
             },
 
             handleRemoteRtx (value) {

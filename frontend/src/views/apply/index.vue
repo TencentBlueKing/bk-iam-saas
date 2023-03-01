@@ -6,6 +6,7 @@
             :filter-data="filterData"
             :is-loading="isApplyLoading"
             :can-scroll-load="canScrollLoad"
+            :empty-data="emptyData"
             @on-change="handleChange"
             @on-filter-change="handleFilterChange"
             @on-load="handleLoadMore" />
@@ -27,6 +28,7 @@
     import RenderGroupDetail from './components/apply-group-detail';
     import RenderRatingManager from './components/apply-create-rate-manager-detail';
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
 
     const COM_MAP = new Map([
         [['grant_action', 'renew_action', 'grant_temporary_action'], 'RenderDetail'],
@@ -69,7 +71,13 @@
                 },
                 currentApplyData: {},
                 cancelLoading: false,
-                comKey: -1
+                comKey: -1,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -112,28 +120,32 @@
                     params.source_system_id = this.externalSystemId;
                 }
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyList', params);
+                    const { code, data } = await this.$store.dispatch('myApply/getApplyList', params);
                     if (!isScrollLoad) {
-                        this.applyList = [...res.data.results];
+                        this.applyList = [...data.results];
                         if (this.applyList.length < 1) {
                             this.currentApplyData = {};
                         } else {
                             this.currentApplyData = this.applyList[0];
                         }
-                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+                        this.pagination.totalPage = Math.ceil(data.count / this.pagination.limit);
                     } else {
                         this.currentBackup++;
-                        (res.data.results || []).forEach(item => {
+                        (data.results || []).forEach(item => {
                             item.is_read = false;
                         });
-                        this.applyList.push(...res.data.results);
+                        this.applyList.push(...data.results);
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.applyList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.applyList = [];
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

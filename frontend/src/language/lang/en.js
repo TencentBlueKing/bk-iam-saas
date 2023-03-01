@@ -230,7 +230,20 @@ export const m = {
         '选择一级管理空间': 'Select rating administrator',
         '选择管理空间': 'Select management Space',
         '管理我的一级管理空间': 'Manage My Level Administrators',
-        '搜索管理空间': 'Search Management Space'
+        '搜索管理空间': 'Search Management Space',
+        '搜索结果为空': 'Search result is empty',
+        '数据结果异常': 'Abnormal data result',
+        可以尝试: 'Can try',
+        调整关键词: 'adjust keywords',
+        或: 'or',
+        清空筛选条件: 'Clear Filter Criteria',
+        没有权限: 'No permission',
+        '搜索过于频繁': '搜索过于频繁',
+        数据获取异常: 'Search too often',
+        数据不存在: 'Data does not exist',
+        '搜索结果太多': 'There are too many search results, please improve the search criteria',
+        '暂不支持搜索': 'Search is not supported temporarily. We will go online as soon as possible',
+        '去编辑': 'To edit'
     },
     // 校验
     verify: {
@@ -581,7 +594,8 @@ export const m = {
         '同步成功': 'Successed',
         '关联的组': 'Associated Group',
         '有关联的组时不能删除': 'Cannot delete when there is an associated group',
-        '编辑中': 'Edit'
+        '编辑中': 'Edit',
+        '该模板无法选择的原因是：一级管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason why this template cannot be selected is that the primary management space reduces the scope of authorization, but does not synchronously delete the operations in the template. If you need to select, please edit the template again or create a new template.'
     },
     permTemplateDetail: {
         '模板名称': 'Template Name：',
@@ -712,6 +726,7 @@ export const m = {
    levelSpace : {
         '请输入空间名称': 'Please enter the space name',
         '空间名': 'Space name',
+        '空间名称': 'Space name',
         '创建人': 'Creator',
         '创建时间': 'Created Time',
         '更新人': 'Updater',

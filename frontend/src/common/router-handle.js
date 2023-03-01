@@ -89,7 +89,6 @@ export const getRouterDiff = (payload) => {
             'myManageSpace',
             'myManageSpaceCreate',
             'permTransfer',
-            'cloneUserGroup',
             'myManageSpaceSubDetail'
         ];
     }

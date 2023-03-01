@@ -57,6 +57,15 @@
                     </bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -110,6 +119,17 @@
             departmentGroupList: {
                 type: Array,
                 default: () => []
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -332,6 +352,12 @@
                     this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.$store.dispatch('perm/getDepartMentsPersonalGroups');
+                this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+                this.handlePageChange(1);
             }
         }
     };

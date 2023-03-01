@@ -32,41 +32,47 @@
                 v-bk-tooltips="'您还没有权限，无需交接'"></div>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
-        <template v-if="isEmpty">
-            <div class="empty-wrapper">
-                <iam-svg />
-                <div class="empty-tips">{{ $t(`m.common['您还没有任何权限']`) }}</div>
-            </div>
-        </template>
-        <bk-tab
-            v-else
-            :active="active"
-            type="unborder-card"
-            ext-cls="iam-my-perm-tab-cls"
-            @tab-change="handleTabChange">
-            <bk-tab-panel
-                v-for="(panel, index) in panels"
-                :data-test-id="`myPerm_tabPanel_${panel.name}`"
-                v-bind="panel"
-                :key="index">
-                <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
-                    <component
-                        v-if="!componentLoading && active === panel.name"
-                        :is="active"
-                        :personal-group-list="personalGroupList"
-                        :system-list="systemList"
-                        :tep-system-list="teporarySystemList"
-                        :department-group-list="departmentGroupList"
-                        :ref="panel.name"
-                        @refresh="fetchData"
-                    ></component>
+        <template>
+            <template v-if="isEmpty">
+                <div class="empty-wrapper">
+                    <ExceptionEmpty
+                        style="background: #f5f6fa"
+                    />
                 </div>
-            </bk-tab-panel>
-        </bk-tab>
+            </template>
+            <bk-tab
+                v-else
+                :active="active"
+                type="unborder-card"
+                ext-cls="iam-my-perm-tab-cls"
+                @tab-change="handleTabChange">
+                <bk-tab-panel
+                    v-for="(panel, index) in panels"
+                    :data-test-id="`myPerm_tabPanel_${panel.name}`"
+                    v-bind="panel"
+                    :key="index">
+                    <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
+                        <component
+                            v-if="!componentLoading && active === panel.name"
+                            :is="active"
+                            :personal-group-list="personalGroupList"
+                            :system-list="systemList"
+                            :tep-system-list="teporarySystemList"
+                            :department-group-list="departmentGroupList"
+                            :ref="panel.name"
+                            :empty-data="curEmptyData"
+                            @refresh="fetchData"
+                        ></component>
+                    </div>
+                </bk-tab-panel>
+            </bk-tab>
+        </template>
     </div>
 </template>
 <script>
+    import _ from 'lodash';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData } from '@/common/util';
     import CustomPerm from './custom-perm/index.vue';
     import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
     import GroupPerm from './group-perm/index.vue';
@@ -86,13 +92,19 @@
                 componentLoading: true,
                 panels: [
                     {
-                        name: 'GroupPerm', label: this.$t(`m.perm['用户组权限']`)
+                        name: 'GroupPerm',
+                        label: this.$t(`m.perm['用户组权限']`),
+                        empty: 'emptyData'
                     },
                     {
-                        name: 'DepartmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`)
+                        name: 'DepartmentGroupPerm',
+                        label: this.$t(`m.perm['所属部门用户组权限']`),
+                        empty: 'emptyData6'
                     },
                     {
-                        name: 'CustomPerm', label: this.$t(`m.approvalProcess['自定义权限']`)
+                        name: 'CustomPerm',
+                        label: this.$t(`m.approvalProcess['自定义权限']`),
+                        empty: 'emptyData2'
                     }
                     // {
                     //     name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
@@ -107,7 +119,19 @@
                 systemList: [],
                 teporarySystemList: [],
                 departmentGroupList: [],
-                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
+                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                },
+                curEmptyData: {
+                    type: 'empty',
+                    text: '暂无数据',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -122,9 +146,19 @@
                 },
                 immediate: true,
                 deep: true
+            },
+            active (value) {
+                // 因为同时调了很多接口，所以需要对应的空配置内容
+                const emptyField = this.panels.find(item => item.name === value);
+                if (emptyField) {
+                    this.curEmptyData = this[emptyField.empty];
+                }
             }
         },
         created () {
+            this.emptyData2 = _.cloneDeep(this.emptyData);
+            this.emptyData5 = _.cloneDeep(this.emptyData);
+            this.emptyData6 = _.cloneDeep(this.emptyData);
             const query = this.$route.query;
             if (query.tab) {
                 this.active = query.tab;
@@ -151,7 +185,14 @@
                     if (this.externalSystemId) {
                         userGroupParams.system_id = this.externalSystemId;
                     }
-                    const [res1, res2, res3, res4, res5, res6] = await Promise.all([
+                    const [
+                        { code: code1, data: data1 },
+                        { code: code2, data: data2 },
+                        { data: data3 },
+                        { data: data4 },
+                        { code: code5, data: data5 },
+                        { code: code6, data: data6 }
+                    ] = await Promise.all([
                         this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
                         this.$store.dispatch('permApply/getHasPermSystem'),
                         this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
@@ -166,29 +207,36 @@
                         // this.fetchSoonGroupWithUser(),
                         // this.fetchSoonPerm()
                     ]);
-                    const personalGroupList = res1.data.results || [];
+                    
+                    const personalGroupList = data1.results || [];
                     this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
-
-                    const systemList = res2.data || [];
+                    this.emptyData = formatCodeData(code1, this.emptyData, this.personalGroupList.length === 0);
+                    
+                    const systemList = data2 || [];
                     this.systemList.splice(0, this.systemList.length, ...systemList);
+                    this.emptyData2 = formatCodeData(code2, this.emptyData2, this.systemList.length === 0);
 
-                    const teporarySystemList = res5.data || [];
+                    const teporarySystemList = data5 || [];
                     this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
+                    this.emptyData5 = formatCodeData(code5, this.emptyData5, this.teporarySystemList.length === 0);
 
-                    const departmentGroupList = res6.data || [];
+                    const departmentGroupList = data6 || [];
                     this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
+                    this.emptyData6 = formatCodeData(code6, this.emptyData6, this.departmentGroupList.length === 0);
 
                     this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
                         && teporarySystemList.length < 1 && departmentGroupList.length < 1;
-                    this.soonGroupLength = res3.data.results.length;
-                    this.soonPermLength = res4.data.length;
+                    this.soonGroupLength = data3.results.length;
+                    this.soonPermLength = data4.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

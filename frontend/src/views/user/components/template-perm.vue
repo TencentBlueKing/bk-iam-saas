@@ -35,6 +35,15 @@
                             @click="showQuitTemplates(row)">{{ $t(`m.common['移除']`) }}</bk-button>
                     </template>
                 </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-refresh="handleEmptyRefresh"
+                    />
+                </template>
             </bk-table>
         </div>
 
@@ -102,6 +111,7 @@
     import PreviewResourceSideslider from '../../perm-template/components/preview-resource-sideslider';
     import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider';
     import RenderDetail from '../../perm/components/render-detail';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -155,7 +165,13 @@
                 renderDetailCom: 'RenderDetail',
 
                 pageLoading: false,
-                tableLoading: false
+                tableLoading: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -173,19 +189,22 @@
                 this.pageLoading = isPageLoading;
                 const { type } = this.data;
                 try {
-                    const res = await this.$store.dispatch('perm/getPermTemplates', {
+                    const { code, data } = await this.$store.dispatch('perm/getPermTemplates', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id
                     });
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []));
+                    this.dataList.splice(0, this.dataList.length, ...(data || []));
                     this.initPageConf();
                     this.curPageData = this.getDataByPage(this.pageConf.current);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -202,6 +221,10 @@
                 this.pageConf.current = 1;
                 const total = this.dataList.length;
                 this.pageConf.count = total;
+            },
+
+            async handleEmptyRefresh () {
+                await this.fetchPermTemplates(false, true);
             },
 
             handleCheckUpdate (payload) {

@@ -46,12 +46,7 @@
                     </template>
                 </bk-table-column>
                 <template v-if="['rating_manager'].includes(user.role.type)">
-                    <bk-table-column
-                        :label="$t(`m.nav['管理空间']`)"
-                        :filters="spaceFiltersList"
-                        :filter-method="handleSpaceFilter"
-                        :filter-multiple="true"
-                    >
+                    <bk-table-column :label="$t(`m.nav['管理空间']`)">
                         <!-- <template slot-scope="{ row }">
                             <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
                                 {{ row.role.name || '--' }}
@@ -93,6 +88,16 @@
                         </section>
                     </template>
                 </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-clear="handleEmptyClear"
+                        @on-refresh="handleEmptyRefresh"
+                    />
+                </template>
             </bk-table>
         </section>
         <edit-process-dialog
@@ -116,6 +121,7 @@
     import { buildURLParams } from '@/common/url';
     import editProcessDialog from './edit-process-dialog';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -154,7 +160,13 @@
                 batchEditLoading: false,
                 procssValue: '',
                 tips: this.$t(`m.common['暂未开放']`),
-                spaceFiltersList: []
+                spaceFiltersList: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -227,6 +239,7 @@
                     current
                 };
                 if (this.searchValue !== '') {
+                    this.emptyData.tipType = 'search';
                     queryParams.keyword = this.searchValue;
                 }
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
@@ -267,15 +280,18 @@
                     keyword: this.searchValue
                 };
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getGroupProcessesList', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList = res.data.results;
+                    const { code, data } = await this.$store.dispatch('approvalProcess/getGroupProcessesList', params);
+                    this.pagination.count = data.count;
+                    this.tableList = data.results;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -300,22 +316,37 @@
                 }
             },
 
-            handleOpenCreateLink () {
-                // const url = `${window.BK_ITSM_APP_URL}/#/process/home`
-                // window.open(url)
-            },
-
-            handleSearch () {
-                if (this.searchValue === '') {
-                    return;
-                }
-                this.isFilter = true;
+            resetPagination () {
                 this.pagination = Object.assign({}, {
                     current: 1,
                     count: 1,
                     limit: 10
                 });
                 this.fetchGroupProcessesList();
+            },
+
+            handleOpenCreateLink () {
+                // const url = `${window.BK_ITSM_APP_URL}/#/process/home`
+                // window.open(url)
+            },
+
+            handleSearch () {
+                if (!this.searchValue) {
+                    return;
+                }
+                this.isFilter = true;
+                this.resetPagination();
+            },
+
+            handleEmptyClear () {
+                this.searchValue = '';
+                this.emptyData.tipType = '';
+                this.resetPagination();
+            },
+
+            handleEmptyRefresh () {
+                this.isFilter = false;
+                this.resetPagination();
             },
 
             limitChange (currentLimit, prevLimit) {

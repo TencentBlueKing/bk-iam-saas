@@ -137,8 +137,16 @@
                                     <td colspan="3">
                                         <div class="search-empty-wrapper">
                                             <div class="empty-wrapper">
-                                                <iam-svg />
-                                                <p class="empty-tips">{{ isSearch ? $t(`m.common['搜索无结果']`) : $t(`m.common['暂无数据']`) }}</p>
+                                                <!-- <iam-svg />
+                                                <p class="empty-tips">{{ isSearch ? $t(`m.common['搜索无结果']`) : $t(`m.common['暂无数据']`) }}</p> -->
+                                                <ExceptionEmpty
+                                                    :type="emptyData.type"
+                                                    :empty-text="emptyData.text"
+                                                    :tip-text="emptyData.tip"
+                                                    :tip-type="emptyData.tipType"
+                                                    @on-clear="handleEmptyClear"
+                                                    @on-refresh="handleEmptyRefresh"
+                                                />
                                             </div>
                                         </div>
                                     </td>
@@ -175,6 +183,7 @@
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -234,7 +243,13 @@
 
                 isPrev: true,
                 expiredAt: 15552000,
-                isSearch: false
+                isSearch: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -429,6 +444,19 @@
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });
             },
+            
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: 7, totalPage: 1 });
+                this.fetchData(true);
+            },
+
+            handleEmptyRefresh () {
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: 7, totalPage: 1 });
+                this.fetchData(true);
+            },
 
             async fetchData (isTableLoading = false) {
                 this.tableLoading = isTableLoading;
@@ -439,9 +467,9 @@
                 };
                 const ids = this.hasChekedList.map(item => item.id);
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
-                    this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
-                    ;(res.data.results || []).forEach(item => {
+                    const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.totalPage = Math.ceil(data.count / this.pagination.limit);
+                    (data.results || []).forEach(item => {
                         if (ids.includes(item.id)) {
                             this.$set(item, 'checked', true);
                         } else {
@@ -467,12 +495,16 @@
                     //     this.allCheked = false
                     //     this.indeterminate = false
                     // }
-                    this.permTemplateList.splice(0, this.permTemplateList.length, ...(res.data.results || []));
+                    this.permTemplateList.splice(0, this.permTemplateList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.resetData();
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.requestQueue.shift();

@@ -8,6 +8,7 @@
                     @on-select="handleResourceSelect" />
             </div>
             <topology-input
+                ref="headerInput"
                 :is-filter="isFilter"
                 :placeholder="curPlaceholder"
                 @on-search="handleSearch" />
@@ -25,7 +26,15 @@
                 </template>
                 <template v-if="treeData.length < 1 && !isLoading">
                     <div class="empty-wrapper">
-                        <iam-svg />
+                        <ExceptionEmpty
+                            style="background: #fafbfd"
+                            :type="emptyData.type"
+                            :empty-text="emptyData.text"
+                            :tip-text="emptyData.tip"
+                            :tip-type="emptyData.tipType"
+                            @on-clear="handleEmptyClear"
+                            @on-refresh="handleEmptyRefresh"
+                        />
                     </div>
                 </template>
             </div>
@@ -34,7 +43,7 @@
 </template>
 <script>
     import _ from 'lodash';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import il8n from '@/language';
     import ResourceSelect from '../resource-select';
     import TopologyInput from '../topology-input';
@@ -173,7 +182,14 @@
                 curKeyword: '',
                 isFilter: false,
                 curSearchObj: {},
-                curPlaceholder: ''
+                curPlaceholder: '',
+                // 空数据或异常数据配置项
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -249,12 +265,29 @@
 
             handleSearch (payload) {
                 this.curKeyword = payload;
+                this.emptyData.tipType = 'search';
                 if (this.isFilter && payload === '') {
                     this.isFilter = false;
                 } else {
                     this.isFilter = true;
                 }
                 if (this.isExistLimitValue) {
+                    this.emptyData.tipType = 'search';
+                    this.handleFrontendSearch();
+                    return;
+                }
+                this.firstFetchResources();
+            },
+
+            handleEmptyRefresh () {
+                this.firstFetchResources();
+            },
+
+            handleEmptyClear () {
+                this.$refs.headerInput.value = '';
+                this.emptyData.tipType = '';
+                if (this.isExistLimitValue) {
+                    this.curKeyword = '';
                     this.handleFrontendSearch();
                     return;
                 }
@@ -271,6 +304,9 @@
                 this.treeData = treeData.filter(
                     item => item.name.toLowerCase().indexOf(this.curKeyword.toLowerCase()) !== -1
                 );
+                if (!this.treeData.length) {
+                    this.emptyData = formatCodeData(0, this.emptyData);
+                }
             },
 
             getLimitResourceData () {
@@ -514,30 +550,31 @@
                 const searchLoadingData = new Node(searchLoadingItem, node.level, false, 'search-loading');
                 this.treeData.splice((index + 1), 0, searchLoadingData);
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
                     this.treeData = this.treeData.filter(item => {
                         const flag = item.type === 'search' && item.parentId === node.parentId;
                         return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId);
                     });
 
-                    if (res.data.results.length < 1) {
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+                    if (data.results.length < 1) {
                         const searchEmptyItem = {
                             ...SEARCH_EMPTY_ITEM,
                             parentId: node.parentId,
                             parentSyncId: node.id,
                             parentChain: _.cloneDeep(node.parentChain),
                             level: node.level,
-                            display_name: RESULT_TIP[res.code]
+                            display_name: RESULT_TIP[code]
                         };
                         const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
                         this.treeData.splice((index + 1), 0, searchEmptyData);
                         return;
                     }
 
-                    const totalPage = Math.ceil(res.data.count / this.limit);
+                    const totalPage = Math.ceil(data.count / this.limit);
 
                     let isAsync = this.curChain.length > (node.level + 1);
-                    const loadNodes = res.data.results.map(item => {
+                    const loadNodes = data.results.map(item => {
                         let tempItem = _.cloneDeep(item);
 
                         let checked = false;
@@ -654,6 +691,7 @@
                         level: node.level,
                         display_name: message
                     };
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
                     this.treeData.splice((index + 1), 0, searchEmptyData);
                 } finally {
@@ -776,14 +814,14 @@
                     keyword: this.curKeyword
                 };
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
                     if (this.curSelectionCondition.length) {
-                        res.data.results = [...this.curSelectionCondition];
-                        res.data.count = res.data.results.length;
+                        data.results = [...this.curSelectionCondition];
+                        data.count = data.results.length;
                     }
-                    const totalPage = Math.ceil(res.data.count / this.limit);
+                    const totalPage = Math.ceil(data.count / this.limit);
                     const isAsync = this.curChain.length > 1;
-                    this.treeData = res.data.results.map(item => {
+                    this.treeData = data.results.map(item => {
                         let checked = false;
                         let disabled = false;
                         let isRemote = false;
@@ -823,7 +861,7 @@
                         const isAsyncFlag = isAsync || item.child_type !== '';
                         return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
                     });
-                    if (totalPage > 1 && res.data.results.length > 0) {
+                    if (totalPage > 1 && data.results.length > 0) {
                         const loadItem = {
                             ...LOAD_ITEM,
                             totalPage: totalPage,
@@ -831,12 +869,16 @@
                         };
                         this.treeData.push(new Node(loadItem, 0, isAsync, 'load'));
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.treeData.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.treeData = [];
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -1206,15 +1248,16 @@
                 this.treeData.splice((index + 1), 0, asyncData);
 
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
-                    if (res.data.results.length < 1) {
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+                    if (data.results.length < 1) {
                         this.removeAsyncNode();
                         node.expanded = false;
                         node.async = false;
                         return;
                     }
-                    const totalPage = Math.ceil(res.data.count / this.limit);
-                    const childNodes = res.data.results.map(item => {
+                    const totalPage = Math.ceil(data.count / this.limit);
+                    const childNodes = data.results.map(item => {
                         let checked = false;
                         let disabled = false;
                         let isRemote = false;
@@ -1286,7 +1329,7 @@
                         return new Node(childItem, curLevel, isAsyncFlag);
                     });
                     this.treeData.splice((index + 1), 0, ...childNodes);
-                    node.children = [...res.data.results.map(item => new Node(item, curLevel, false))];
+                    node.children = [...data.results.map(item => new Node(item, curLevel, false))];
                     if (totalPage > 1) {
                         const loadItem = {
                             ...LOAD_ITEM,
@@ -1320,12 +1363,14 @@
                     }
                     this.removeAsyncNode();
                 } catch (e) {
-                    this.removeAsyncNode();
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.removeAsyncNode();
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -1376,9 +1421,9 @@
                     params.ancestors.push(...parentData);
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
                     let isAsync = this.curChain.length > (node.level + 1);
-                    const loadNodes = res.data.results.map(item => {
+                    const loadNodes = data.results.map(item => {
                         let tempItem = _.cloneDeep(item);
 
                         let checked = false;
@@ -1470,8 +1515,10 @@
                             parentNode.children.push(...loadNodes);
                         }
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',

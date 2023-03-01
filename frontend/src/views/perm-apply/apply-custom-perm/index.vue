@@ -160,8 +160,15 @@
                             </template>
                             <template v-if="originalCustomTmplList.length < 1 && !customLoading">
                                 <div class="empty-wrapper">
-                                    <Icon type="warning" />
-                                    {{ isActionsFilter ? $t(`m.common['搜索无结果']`) : $t(`m.permApply['暂无可申请的操作']`) }}
+                                    <ExceptionEmpty
+                                        :type="emptyData.type"
+                                        :empty-text="emptyData.text"
+                                        :tip-text="emptyData.tip"
+                                        :tip-type="emptyData.tipType"
+                                        @on-clear="handleEmptyClear"
+                                    />
+                                    <!-- <Icon type="warning" />
+                                    {{ isActionsFilter ? $t(`m.common['搜索无结果']`) : $t(`m.permApply['暂无可申请的操作']`) }} -->
                                 </div>
                             </template>
                         </div>
@@ -638,7 +645,13 @@
                 },
                 // permMembers: [{ username: 'poloohuang', readonly: false }, { username: 'gc_lihao', readonly: false }].map(item => item.username)
                 permMembers: [],
-                personalUserGroup: []
+                personalUserGroup: [],
+                emptyData: {
+                    type: 'search-empty',
+                    text: '',
+                    tip: '',
+                    tipType: 'search'
+                }
             };
         },
         computed: {
@@ -1091,6 +1104,11 @@
                 tempList = tempList.filter(item => item.actions.length > 0 || item.sub_groups.length > 0);
                 this.originalCustomTmplList = _.cloneDeep(tempList);
                 this.handleActionLinearData(true);
+            },
+
+            handleEmptyClear () {
+                this.actionSearchValue = '';
+                this.emptyData.tipType = '';
             },
 
             /**

@@ -12,7 +12,13 @@
         </template>
         <template v-if="isEmpty">
             <div class="apply-content-empty-wrapper">
-                <iam-svg />
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
@@ -22,6 +28,7 @@
     import PermTable from './perm-table';
     import PermPolicy from '@/model/my-perm-policy';
     import RenderProcess from '../common/render-process';
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -48,7 +55,13 @@
                 initRequestQueue: ['detail'],
                 systemName: '',
                 systemId: '',
-                status: ''
+                status: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -114,8 +127,10 @@
                     this.systemId = data.system.id;
                     this.status = status;
                     this.tableList = data.actions.map(item => new PermPolicy(item));
+                    this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -126,6 +141,11 @@
                 } finally {
                     this.initRequestQueue.shift();
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.initRequestQueue = ['detail'];
+                this.fetchData(this.params.id);
             },
 
             handleCancel () {

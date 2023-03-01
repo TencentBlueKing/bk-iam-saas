@@ -3,7 +3,8 @@
         <div class="ghost-wrapper" :style="ghostStyle"></div>
         <div class="render-wrapper" ref="content">
             <div
-                v-for="item in renderData" :key="item.id"
+                v-for="item in renderData"
+                :key="item.id"
                 :style="getNodeStyle(item)"
                 :class="['node-item', { 'active': item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
                 :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
@@ -44,9 +45,18 @@
                     </span>
                 </div>
             </div>
+            <template v-if="renderData.length === 0">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </div>
     </div>
 </template>
+
 <script>
     import _ from 'lodash';
 
@@ -93,6 +103,18 @@
             isDisabled: {
                 type: Boolean,
                 default: false
+            },
+            // 根据状态码渲染落地空内容
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: 'empty',
+                        text: '暂无数据',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -336,6 +358,10 @@
                         item.is_selected = isSelected;
                     }
                 });
+            },
+
+            handleEmptyRefresh () {
+                this.$emit('on-refresh', {});
             }
         }
     };

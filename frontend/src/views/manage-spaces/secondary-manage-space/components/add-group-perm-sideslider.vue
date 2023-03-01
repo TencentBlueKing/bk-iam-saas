@@ -61,12 +61,12 @@
                                         <Icon v-if="row.need_to_update" type="error-fill" class="error-icon" />
                                     </template>
                                     <div slot="content" class="iam-perm-apply-action-popover-content">
-                                        该模板无法选择的原因是：一级管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。
+                                        {{ $t(`m.permTemplate['该模板无法选择的原因是：一级管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。']`) }}
                                         <bk-button
                                             text
                                             :loading="editLoading"
                                             @click="handleEdit(row)">
-                                            去编辑
+                                            {{ $t(`m.common['去编辑']`) }}
                                         </bk-button>
                                     </div>
                                 </bk-popover>
@@ -83,6 +83,16 @@
                                 <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                             </template>
                         </bk-table-column>
+                        <template slot="empty">
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                                @on-refresh="handleRefresh"
+                            />
+                        </template>
                     </bk-table>
                 </div>
                 <div class="custom-perm-wrapper">
@@ -122,6 +132,7 @@
     import IamSearchSelect from '@/components/iam-search-select';
     import { leaveConfirm } from '@/common/leave-confirm';
     import { fuzzyRtxSearch } from '@/common/rtx';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -187,7 +198,13 @@
                 requestQueueBySys: [],
                 requestQueueByTemplate: [],
                 selectLength: '',
-                selection: []
+                selection: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -286,9 +303,10 @@
                     params.group_id = this.groupId;
                 }
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                     this.$nextTick(() => {
                         this.tableList.forEach(item => {
                             if (this.currentSelectList.includes(item.id)) {
@@ -298,10 +316,12 @@
                     });
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -513,6 +533,7 @@
                 window.changeAlert = true;
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchData(true);
             },

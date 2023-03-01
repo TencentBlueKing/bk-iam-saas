@@ -78,6 +78,17 @@
                         @click="handleCopy(row)">{{ $t(`m.grading['克隆']`) }}</bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    style="background: #f5f6fa"
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <confirm-dialog
@@ -117,9 +128,10 @@
 <script>
     import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
-    import { getWindowHeight } from '@/common/util';
+    import { getWindowHeight, formatCodeData } from '@/common/util';
     import ConfirmDialog from '@/components/iam-confirm-dialog/index';
     import ApplyDialog from './components/apply-join-dialog';
+
     export default {
         name: '',
         components: {
@@ -149,7 +161,13 @@
                 applyLoading: false,
                 curName: '',
                 showImageDialog: false,
-                noFooter: false
+                noFooter: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -241,22 +259,25 @@
                 this.tableLoading = isTableLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', {
+                    const { code, data } = await this.$store.dispatch('role/getRatingManagerList', {
                         limit: this.pagination.limit,
                         offset: (this.pagination.current - 1) * this.pagination.limit,
                         name: this.searchValue
                     });
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.pagination.count = data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     if (this.isStaff) {
                         this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -283,10 +304,23 @@
             },
 
             handleSearch () {
-                if (this.searchValue === '') {
+                if (!this.searchValue) {
                     return;
                 }
                 this.isFilter = true;
+                this.emptyData.tipType = 'search';
+                this.resetPagination();
+                this.fetchGradingAdmin(true);
+            },
+            
+            handleEmptyRefresh () {
+                this.resetPagination();
+                this.fetchGradingAdmin(true);
+            },
+
+            handleEmptyClear () {
+                this.emptyData.tipType = '';
+                this.searchValue = '';
                 this.resetPagination();
                 this.fetchGradingAdmin(true);
             },
