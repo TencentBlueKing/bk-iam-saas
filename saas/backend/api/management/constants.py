@@ -62,6 +62,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GROUP_POLICY_ACTION_LIST = auto()
     # 用户组申请单
     V2_GROUP_APPLICATION_CREATE = auto()
+    V2_GROUP_APPLICATION_RENEW = auto()
     # 用户组归属
     V2_USER_GROUPS_BELONG_CHECK = auto()
     V2_DEPARTMENT_GROUPS_BELONG_CHECK = auto()
@@ -126,6 +127,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_GROUP_POLICY_ACTION_LIST, "[V2]用户组策略对应操作列表"),
             # 用户组申请单
             (V2_GROUP_APPLICATION_CREATE, "[V2]创建用户组申请单"),
+            (V2_GROUP_APPLICATION_RENEW, "[V2]用户组续期申请单"),
             # 用户组归属
             (V2_USER_GROUPS_BELONG_CHECK, "[V2]判断用户与用户组归属"),
             (V2_DEPARTMENT_GROUPS_BELONG_CHECK, "[V2]判断部门与用户组归属"),
