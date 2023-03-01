@@ -46,6 +46,15 @@
                                     {{row.description || '--'}}
                                 </template>
                             </bk-table-column>
+                            <template slot="empty">
+                                <ExceptionEmpty
+                                    :type="emptyData.type"
+                                    :empty-text="emptyData.text"
+                                    :tip-text="emptyData.tip"
+                                    :tip-type="emptyData.tipType"
+                                    @on-refresh="handleEmptyRefresh"
+                                />
+                            </template>
                         </bk-table>
                     </div>
                     <p class="expand-action" @click="handleManagerShowAll" v-if="managerList.length > 5">
@@ -65,6 +74,7 @@
     </div>
 </template>
 <script>
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -78,7 +88,13 @@
                 managerShowAll: false,
                 isSelectAllChecked: false,
                 managerSelectData: [],
-                pageContainer: null
+                pageContainer: null,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         mounted () {
@@ -92,14 +108,16 @@
                     const res = await this.$store.dispatch('roleList');
                     const managerList = res || [];
                     this.managerList.splice(0, this.managerList.length, ...managerList);
-
                     this.isEmpty = managerList.length < 1;
+                    this.emptyData = formatCodeData(0, this.emptyData, this.isEmpty);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

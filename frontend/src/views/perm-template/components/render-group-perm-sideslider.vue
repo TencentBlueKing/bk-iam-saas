@@ -57,7 +57,13 @@
                 </template>
                 <template v-if="!isLoading && isEmpty">
                     <div class="empty-wrapper">
-                        <iam-svg />
+                        <ExceptionEmpty
+                            :type="emptyData.type"
+                            :empty-text="emptyData.text"
+                            :tip-text="emptyData.tip"
+                            :tip-type="emptyData.tipType"
+                            @on-refresh="handleEmptyRefresh"
+                        />
                     </div>
                 </template>
             </div>
@@ -69,6 +75,7 @@
     import RenderPermItem from '@/views/group/common/render-perm-item-new';
     import RenderTemplateItem from '@/views/group/common/render-template-item';
     import ResourceInstanceTable from '@/views/group/components/render-instance-table';
+    import { formatCodeData } from '@/common/util';
 
     const CUSTOM_CUSTOM_TEMPLATE_ID = 0;
     export default {
@@ -93,7 +100,13 @@
                 visible: false,
                 isLoading: false,
                 groupSystemList: [],
-                groupSystemListLength: ''
+                groupSystemListLength: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -120,20 +133,23 @@
             async handleInit () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId })
-                    ;(res.data || []).forEach(item => {
+                    const { code, data } = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    (data || []).forEach(item => {
                         item.expanded = false;
                         item.loading = false;
                         item.templates = [];
                     });
-                    this.groupSystemList = res.data;
-                    this.groupSystemListLength = res.data.length;
+                    this.groupSystemList = data;
+                    this.groupSystemListLength = data.length;
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -150,12 +166,13 @@
                         id: this.groupId,
                         systemId: payload.id
                     });
-                    res.data.forEach(item => {
+                    const { code, data } = res;
+                    data.forEach(item => {
                         item.loading = false;
                         item.tableData = [];
                         item.count = 0;
                     });
-                    payload.templates = res.data;
+                    payload.templates = [...data];
                     if (payload.custom_policy_count) {
                         payload.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
@@ -169,12 +186,15 @@
                             tableData: []
                         });
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

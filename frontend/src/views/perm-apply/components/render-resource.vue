@@ -65,7 +65,7 @@
                                 </template>
                                 <template v-else>
                                     <div class="empty-wrapper">
-                                        <iam-svg />
+                                        <ExceptionEmpty style="background: #fafbfd" />
                                     </div>
                                 </template>
                             </div>

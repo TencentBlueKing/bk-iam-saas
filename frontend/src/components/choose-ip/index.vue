@@ -8,6 +8,7 @@
                     @on-select="handleResourceSelect" />
             </div>
             <topology-input
+                ref="headerInput"
                 :is-filter="isFilter"
                 :placeholder="curPlaceholder"
                 @on-search="handleSearch" />
@@ -25,10 +26,19 @@
                 </template>
                 <template v-if="treeData.length < 1 && !isLoading">
                     <div class="empty-wrapper">
-                        <iam-svg />
+                        <!-- <iam-svg />
                         <section class="search-text-wrapper" v-if="searchDisplayText !== ''">
                             {{ searchDisplayText }}
-                        </section>
+                        </section> -->
+                        <ExceptionEmpty
+                            style="background: #fafbfd"
+                            :type="emptyData.type"
+                            :empty-text="emptyData.text"
+                            :tip-text="emptyData.tip"
+                            :tip-type="emptyData.tipType"
+                            @on-clear="handleEmptyClear"
+                            @on-refresh="handleEmptyRefresh"
+                        />
                     </div>
                 </template>
             </div>
@@ -37,7 +47,7 @@
 </template>
 <script>
     import _ from 'lodash';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import il8n from '@/language';
     import ResourceSelect from './resource-select';
     import TopologyInput from './topology-input';
@@ -76,7 +86,7 @@
     };
 
     const RESULT_TIP = {
-        '0': il8n('common', '搜索无结果'),
+        '0': il8n('common', '搜索结果为空'),
         '1902204': il8n('common', '暂不支持搜索'),
         '1902229': il8n('info', '搜索过于频繁'),
         '1902222': il8n('info', '搜索结果太多')
@@ -167,7 +177,20 @@
                 curPlaceholder: '',
                 searchDisplayText: '',
                 resourceNeedDisable: false,
-                resourceNode: {}
+                resourceNode: {},
+                // 空数据或异常数据配置项
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                },
+                emptyTreeData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         watch: {
@@ -213,6 +236,17 @@
                 } else {
                     this.isFilter = true;
                 }
+                this.emptyData.tipType = 'search';
+                this.firstFetchResources();
+            },
+
+            handleEmptyRefresh () {
+                this.firstFetchResources();
+            },
+
+            handleEmptyClear () {
+                this.$refs.headerInput.value = '';
+                this.emptyData.tipType = '';
                 this.firstFetchResources();
             },
 
@@ -277,37 +311,34 @@
                     params.ancestors.push(...parentData);
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
-
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
                     const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
-
                     if (parentNode || !parentNode.children) {
                         parentNode.children = [];
                     }
-
                     this.treeData = this.treeData.filter(item => {
                         const flag = item.type === 'search' && item.parentId === node.parentId;
                         return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId);
                     });
-
-                    if (res.data.results.length < 1) {
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+                    if (data.results.length < 1) {
                         const searchEmptyItem = {
                             ...SEARCH_EMPTY_ITEM,
                             parentId: node.parentId,
                             parentSyncId: node.id,
                             parentChain: _.cloneDeep(node.parentChain),
                             level: node.level,
-                            display_name: RESULT_TIP[res.code]
+                            display_name: RESULT_TIP[code]
                         };
                         const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
                         this.treeData.splice((index + 1), 0, searchEmptyData);
                         return;
                     }
 
-                    const totalPage = Math.ceil(res.data.count / this.limit);
+                    const totalPage = Math.ceil(data.count / this.limit);
 
                     let isAsync = this.curChain.length > (node.level + 1);
-                    const loadNodes = res.data.results.map(item => {
+                    const loadNodes = data.results.map(item => {
                         let tempItem = _.cloneDeep(item);
 
                         let checked = false;
@@ -428,6 +459,7 @@
                         level: node.level,
                         display_name: message
                     };
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
                     this.treeData.splice((index + 1), 0, searchEmptyData);
                 } finally {
@@ -556,14 +588,15 @@
                     keyword: this.curKeyword
                 };
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
-                    if (res.data.results.length < 1) {
-                        this.searchDisplayText = RESULT_TIP[res.code];
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+                    if (data.results.length < 1) {
+                        this.searchDisplayText = RESULT_TIP[code];
                         return;
                     }
-                    const totalPage = Math.ceil(res.data.count / this.limit);
+                    const totalPage = Math.ceil(data.count / this.limit);
                     const isAsync = this.curChain.length > 1;
-                    this.treeData = res.data.results.map(item => {
+                    this.treeData = data.results.map(item => {
                         let checked = false;
                         let disabled = false;
                         let isRemote = false;
@@ -604,7 +637,7 @@
                         const isAsyncFlag = isAsync || item.child_type !== '';
                         return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
                     });
-                    if (totalPage > 1 && res.data.results.length > 0) {
+                    if (totalPage > 1 && data.results.length > 0) {
                         const loadItem = {
                             ...LOAD_ITEM,
                             totalPage: totalPage,
@@ -628,6 +661,7 @@
                         });
                     }
                     const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message;
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.searchDisplayText = message;
                 } finally {
                     this.isLoading = false;
@@ -822,15 +856,16 @@
                 params.ancestors.push(...parentData, ancestorItem);
 
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
-                    if (res.data.results.length < 1) {
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+                    if (data.results.length < 1) {
                         this.removeAsyncNode();
                         node.expanded = false;
                         node.async = false;
                         return;
                     }
                     const curLevel = node.level + 1;
-                    const totalPage = Math.ceil(res.data.count / this.limit);
+                    const totalPage = Math.ceil(data.count / this.limit);
                     let isAsync = this.curChain.length > (curLevel + 1);
                     const parentChain = _.cloneDeep(node.parentChain);
                     parentChain.push({
@@ -840,7 +875,7 @@
                         system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level].system_id,
                         child_type: node.childType || ''
                     });
-                    const childNodes = res.data.results.map(item => {
+                    const childNodes = data.results.map(item => {
                         let checked = false;
                         let disabled = false;
                         let isRemote = false;
@@ -912,7 +947,7 @@
                         return new Node(childItem, curLevel, isAsyncFlag);
                     });
                     this.treeData.splice((index + 1), 0, ...childNodes);
-                    node.children = [...res.data.results.map(item => new Node(item, curLevel, false))];
+                    node.children = [...data.results.map(item => new Node(item, curLevel, false))];
                     if (totalPage > 1) {
                         const loadItem = {
                             ...LOAD_ITEM,
@@ -946,12 +981,14 @@
                     }
                     this.removeAsyncNode();
                 } catch (e) {
-                    this.removeAsyncNode();
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.removeAsyncNode();
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -1004,9 +1041,9 @@
                     params.ancestors.push(...parentData);
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
                     let isAsync = this.curChain.length > (node.level + 1);
-                    const loadNodes = res.data.results.map(item => {
+                    const loadNodes = data.results.map(item => {
                         let tempItem = _.cloneDeep(item);
 
                         let checked = false;
@@ -1108,8 +1145,10 @@
                             }
                         });
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -1140,14 +1179,14 @@
                     img {
                         width: 120px;
                     }
-                    .search-text-wrapper {
+                    /* .search-text-wrapper {
                         position: relative;
                         top: -20px;
                         font-size: 12px;
                         color: #c4c6cc;
                         word-break: break-all;
                         text-align: center;
-                    }
+                    } */
                 }
                 .bk-loading {
                     background: #fafbfd !important;

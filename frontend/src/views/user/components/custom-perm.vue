@@ -19,12 +19,20 @@
         </template>
         <template v-if="isEmpty">
             <div class="iam-custom-perm-empty-wrapper">
-                <iam-svg />
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
 </template>
+
 <script>
+    import { formatCodeData } from '@/common/util';
     import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue';
     import PermTable from './perm-table-edit';
     import PermSystem from '@/model/my-perm-system';
@@ -51,7 +59,13 @@
                 },
                 systemList: [],
                 onePerm: '',
-                pageLoading: false
+                pageLoading: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -80,18 +94,21 @@
                 this.pageLoading = true;
                 const { type } = this.data;
                 try {
-                    const res = await this.$store.dispatch('organization/getSubjectHasPermSystem', {
+                    const { code, data } = await this.$store.dispatch('organization/getSubjectHasPermSystem', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id
                     });
-                    this.systemList = (res.data || []).map(item => new PermSystem(item));
+                    this.systemList = (data || []).map(item => new PermSystem(item));
                     this.onePerm = this.systemList.length;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.onePerm === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -108,6 +125,10 @@
                 if (this.systemList[sysIndex].count < 1) {
                     this.systemList.splice(sysIndex, 1);
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.fetchSystems();
             }
         }
     };

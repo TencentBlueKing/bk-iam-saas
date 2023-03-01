@@ -34,7 +34,7 @@
                     <section class="audit-detail-wrapper" v-bkloading="{ isLoading: row.loading, opacity: 1 }">
                         <template v-if="noDetailType.includes(row.type) || row.type === 'role.group.renew'">
                             <div class="empty-wrapper">
-                                <iam-svg />
+                                <ExceptionEmpty />
                             </div>
                         </template>
                         <template v-if="onlyDescriptionType.includes(row.detail.type)">
@@ -62,6 +62,9 @@
                                         <span>{{ props.row.name }}</span>
                                     </template>
                                 </bk-table-column>
+                                <template slot="empty">
+                                    <ExceptionEmpty />
+                                </template>
                             </bk-table>
                         </template>
                         <template v-if="deType.includes(row.detail.type)">
@@ -93,6 +96,9 @@
                                         <span :title="props.row.description">{{ props.row.description || '--' }}</span>
                                     </template>
                                 </bk-table-column>
+                                <template slot="empty">
+                                    <ExceptionEmpty />
+                                </template>
                             </bk-table>
                         </template>
                         <template v-if="seType.includes(row.detail.type)">
@@ -118,6 +124,9 @@
                                         <span>{{ props.row.version || '--' }}</span>
                                     </template>
                                 </bk-table-column>
+                                <template slot="empty">
+                                    <ExceptionEmpty />
+                                </template>
                             </bk-table>
                         </template>
                         <template v-if="onlyExtraInfoType.includes(row.detail.type)">
@@ -165,6 +174,16 @@
                     <render-status :status="row.status" />
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
     </div>
 </template>
@@ -173,7 +192,7 @@
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
-    import { getWindowHeight } from '@/common/util';
+    import { formatCodeData, getWindowHeight } from '@/common/util';
     import RenderStatus from './components/render-status-item';
     import renderDetailTable from './components/render-instance-detail-table';
 
@@ -350,7 +369,13 @@
                 deType: DE_TYPR,
                 seType: SE_TYPE,
                 dsType: DS_TYPE,
-                onlyRoleType: ONLY_ROLE_TYPE
+                onlyRoleType: ONLY_ROLE_TYPE,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -491,6 +516,7 @@
                     const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
+                            this.emptyData.tipType = 'search';
                             const tempData = this.searchList.find(item => item.id === key);
                             params[key] = tempData.values[0];
                         }
@@ -529,20 +555,24 @@
                     ...this.searchParams
                 };
                 try {
-                    const res = await this.$store.dispatch('audit/getAuditList', params);
-                    this.pagination.count = res.data.count || 0
-                    ;(res.data.results || []).forEach(item => {
+                    const { code, data } = await this.$store.dispatch('audit/getAuditList', params);
+                    this.pagination.count = data.count || 0;
+                    (data.results || []).forEach(item => {
                         item.loading = false;
                         item.expanded = false;
                         item.detail = {};
                     });
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.tableList = [];
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -651,6 +681,19 @@
             handleSearch (payload, result) {
                 this.searchParams = payload;
                 this.searchList = result;
+                this.resetPagination();
+                this.fetchAuditList(true);
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchAuditList(true);
+            },
+
+            handleEmptyRefresh () {
                 this.resetPagination();
                 this.fetchAuditList(true);
             },

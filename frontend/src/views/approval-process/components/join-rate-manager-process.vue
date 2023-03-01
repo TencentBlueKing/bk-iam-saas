@@ -64,6 +64,16 @@
                     </section>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <edit-process-dialog
@@ -112,7 +122,13 @@
                 currentBackup: 1,
                 searchValue: '',
                 tableLoading: false,
-                isProcessDialogShow: false
+                isProcessDialogShow: false,
+                emptyData: {
+                    type: 'empty',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
