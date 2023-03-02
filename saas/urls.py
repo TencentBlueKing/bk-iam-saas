@@ -74,7 +74,7 @@ urlpatterns = [
     # healthz
     url("", include("backend.healthz.urls")),
     # prometheus
-    url("", include("django_prometheus.urls")),
+    url("", include("backend.metrics.urls")),
 ]
 
 # add swagger api document

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "backend.audit",
     "backend.debug",
     "backend.iam",
+    "backend.metrics",
     "backend.apps.system",
     "backend.apps.action",
     "backend.apps.policy",
@@ -422,3 +423,7 @@ elif BK_IAM_HOST_TYPE == "apigateway":
     BK_IAM_APIGATEWAY_URL = BK_IAM_HOST
 BK_IAM_MIGRATION_APP_NAME = "iam"
 BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
+
+
+# IAM metric 接口密码
+BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="D@or!J4jNJ4LInub")
