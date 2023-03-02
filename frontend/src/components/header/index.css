@@ -22,6 +22,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
     &.hide-bread {
         padding-left: 0px !important;
         height: 0px !important;
+        border: none;
     }
 
     .page-tab-wrapper {

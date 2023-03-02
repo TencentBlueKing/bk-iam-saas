@@ -4,7 +4,9 @@
             <render-horizontal-block :label="$t(`m.common['基本信息']`)" ext-cls="basic-info-wrapper">
                 <detail-layout mode="see">
                     <render-layout>
-                        <detail-item :label="$t(`m.userGroupDetail['用户组名']`)">
+                        <detail-item
+                            :label="$t(`m.userGroupDetail['用户组名']`)"
+                            v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupName">
                             <iam-edit-input
                                 field="name"
                                 :placeholder="$t(`m.verify['用户组名输入提示']`)"
@@ -15,13 +17,23 @@
                         <detail-item :label="$t(`m.userGroupDetail['ID']`)">{{ basicInfo.id }}</detail-item>
                         <detail-item :label="$t(`m.userGroupDetail['创建时间']`)">{{ basicInfo.created_time }}</detail-item>
                         <detail-item :label="$t(`m.userGroupDetail['描述']`)">
-                            <iam-edit-textarea
-                                field="description"
-                                width="600px"
-                                :placeholder="$t(`m.verify['用户组描述提示']`)"
-                                :rules="descRules"
-                                :value="basicInfo.description"
-                                :remote-hander="handleUpdateGroup" />
+                            <template v-if="externalSystemsLayout.userGroup.groupDetail.hideGroupDescEdit">
+                                <div
+                                    :title="basicInfo.description"
+                                    class="single-hide"
+                                    style="max-width: 100%">
+                                    {{ basicInfo.description }}
+                                </div>
+                            </template>
+                            <template v-else>
+                                <iam-edit-textarea
+                                    field="description"
+                                    width="600px"
+                                    :placeholder="$t(`m.verify['用户组描述提示']`)"
+                                    :rules="descRules"
+                                    :value="basicInfo.description"
+                                    :remote-hander="handleUpdateGroup" />
+                            </template>
                         </detail-item>
                     </render-layout>
                 </detail-layout>
@@ -37,12 +49,14 @@
     </div>
 </template>
 <script>
+    import { mapGetters } from 'vuex';
     import DetailLayout from '@/components/detail-layout';
     import DetailItem from '@/components/detail-layout/item';
     import IamEditInput from '@/components/iam-edit/input';
     import IamEditTextarea from '@/components/iam-edit/textarea';
     import RenderLayout from '../common/render-layout';
     import MemberTable from '../components/member-table';
+    
     export default {
         name: '',
         components: {
@@ -80,6 +94,9 @@
                 memberList: [],
                 groupId: ''
             };
+        },
+        computed: {
+            ...mapGetters(['externalSystemsLayout'])
         },
         watch: {
             id: {
