@@ -1274,7 +1274,7 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
-  /api/v2/open/management/systems/{system_id}/groups/renew/applications/:
+  /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/:
     post:
       operationId: v2_management_groups_renew_applications
       description: 用户组续期申请单
@@ -1291,7 +1291,7 @@ paths:
         backend:
           type: HTTP
           method: post
-          path: /api/v2/open/management/systems/{system_id}/groups/renew/applications/
+          path: /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/
           matchSubpath: false
           timeout: 0
           upstreams: {}
