@@ -22,6 +22,7 @@
                         :policy-count="item.custom_policy_count"
                         :template-count="item.template_count"
                         :group-system-list-length="groupSystemListLength"
+                        :external-custom="externalSystemsLayout.userGroup.groupDetail.hideCustomPerm"
                         @on-expanded="handleExpanded(...arguments, item)">
                         <div style="min-height: 60px;"
                             v-bkloading="{ isLoading: item.loading, opacity: 1 }">
@@ -76,6 +77,7 @@
     import RenderTemplateItem from '@/views/group/common/render-template-item';
     import ResourceInstanceTable from '@/views/group/components/render-instance-table';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
 
     const CUSTOM_CUSTOM_TEMPLATE_ID = 0;
     export default {
@@ -110,6 +112,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             isEmpty () {
                 return this.groupSystemList.length < 1;
             }
@@ -173,7 +176,8 @@
                         item.count = 0;
                     });
                     payload.templates = [...data];
-                    if (payload.custom_policy_count) {
+                    if (payload.custom_policy_count
+                        && !this.externalSystemsLayout.userGroup.groupDetail.hideCustomPerm) {
                         payload.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
                             id: CUSTOM_CUSTOM_TEMPLATE_ID,

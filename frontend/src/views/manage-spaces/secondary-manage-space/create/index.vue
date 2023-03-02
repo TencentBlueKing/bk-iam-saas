@@ -121,6 +121,7 @@
             :template="templateDetailList"
             :aggregation="aggregationData"
             :authorization="authorizationData"
+            :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
             @on-view="handleViewDetail"
             @on-add-custom="handleAddCustom"
             @on-edit-custom="handleEditCustom"
@@ -227,7 +228,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemsLayout']),
             /**
              * isAggregateDisabled
              */

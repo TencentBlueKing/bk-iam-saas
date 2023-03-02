@@ -19,6 +19,7 @@
                 :policy-count="item.custom_policy_count"
                 :template-count="item.template_count"
                 :group-system-list-length="groupSystemListLength"
+                :external-custom="externalSystemsLayout.userGroup.groupDetail.hideCustomPerm"
                 @on-expanded="handleExpanded(...arguments, item)">
                 <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
                     <div v-if="!item.loading">
@@ -223,7 +224,8 @@
                         item.deleteLoading = false;
                     });
                     groupSystem.templates = res.data; // 赋值给展开项
-                    if (groupSystem.custom_policy_count) {
+                    if (groupSystem.custom_policy_count
+                        && !this.externalSystemsLayout.userGroup.groupDetail.hideCustomPerm) {
                         groupSystem.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
                             id: CUSTOM_CUSTOM_TEMPLATE_ID, // 自定义权限 id 为 0

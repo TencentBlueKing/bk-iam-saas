@@ -443,7 +443,7 @@
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find((item) => key === item.id);
-                    if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
+                    if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length) {
                             const tempData = this.searchList.find((item) => item.id === key);
                             if (tempData) {

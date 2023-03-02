@@ -1,6 +1,6 @@
 <template>
     <smart-action class="iam-add-member-wrapper">
-        <render-horizontal-block :style="contentHeight">
+        <render-horizontal-block>
             <div slot="header" class="title">
                 <template v-if="showExpiredAt">
                     <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
@@ -24,7 +24,7 @@
                 </template>
             </div>
             <template v-bkloading="{ isLoading, opacity: 1 }">
-                <div v-show="!isLoading" class="add-member-content-wrapper" :style="{ height: `${contentHeight}px` }">
+                <div v-show="!isLoading" class="add-member-content-wrapper">
                     <template v-if="isPrev">
                         <div class="left">
                             <div class="tab-wrapper">
@@ -36,10 +36,14 @@
                                     <span class="active-line" v-if="tabActive === item.name"></span>
                                 </section>
                             </div>
-                            <div :class="['search-input',
-                                          { 'active': isSearchFocus },
-                                          { 'disabled': (isRatingManager || isAll) && !isAllFlag }]"
-                                v-if="isOrganization">
+                            <div
+                                v-if="isOrganization"
+                                :class="[
+                                    'search-input',
+                                    { 'active': isSearchFocus },
+                                    { 'disabled': (isRatingManager || isAll) && !isAllFlag }
+                                ]"
+                            >
                                 <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
                                     <template slot="dropdown-trigger">
                                         <Icon class="search-icon" :type="searchConditionValue === 'fuzzy' ?
@@ -66,7 +70,9 @@
                                     @keyup.up.native="handleKeyup" @keyup.down.native="handleKeydown">
                                 </bk-input>
                             </div>
-                            <div class="member-tree-wrapper" v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
+                            <div
+                                class="member-tree-wrapper"
+                                v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
                                 v-if="isOrganization">
                                 <template v-if="isShowMemberTree">
                                     <div class="tree">
@@ -75,7 +81,7 @@
                                             data-test-id="group_addGroupMemberDialog_tree_member"
                                             :all-data="treeList"
                                             :empty-data="emptyData"
-                                            :style="{ height: `${contentHeight - 100}px` }"
+                                            :style="{ height: `${contentHeight - 52}px` }"
                                             :is-rating-manager="curIsRatingManager"
                                             :key="infiniteTreeKey"
                                             :is-disabled="isAll"
@@ -147,11 +153,14 @@
                                     <template v-if="curLanguageIsCn">
                                         {{ $t(`m.common['已选择']`) }}
                                         <template v-if="isShowSelectedText">
-                                            <span class="organization-count">{{ hasSelectedDepartments.length
-                                            }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
-                                            <span class="user-count">{{ hasSelectedUsers.length }}</span>{{
-                                                $t(`m.common['个']`)
-                                            }} {{ $t(`m.common['用户']`) }}
+                                            <span class="organization-count">
+                                                {{ hasSelectedDepartments.length}}
+                                            </span>
+                                            {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
+                                            <span class="user-count">
+                                                {{ hasSelectedUsers.length }}
+                                            </span>
+                                            {{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
                                         </template>
                                         <template v-else>
                                             <span class="user-count">0</span>
@@ -172,16 +181,18 @@
                                 <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll"
                                     @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
                             </div>
-                            <div class="content" :style="{ height: `${contentHeight - 20}px` }">
+                            <div class="content" :style="{ height: `${contentHeight}px` }">
                                 <div class="organization-content" v-if="isDepartSelectedEmpty">
                                     <div class="organization-item" v-for="item in hasSelectedDepartments"
                                         :key="item.id">
                                         <div>
                                             <Icon type="file-close" class="folder-icon" />
-                                            <span class="organization-name" :title="item.fullName">{{ item.name
-                                            }}</span><span class="user-count" v-if="item.showCount">{{ '(' +
-                                                item.count + `)`
-                                            }}</span>
+                                            <span class="organization-name" :title="item.full_name">
+                                                {{ item.name }}
+                                            </span>
+                                            <span class="user-count" v-if="item.count">
+                                                {{ '(' + item.count + `)`}}
+                                            </span>
                                         </div>
                                         <Icon bk type="close-circle-shape" class="delete-depart-icon"
                                             @click="handleDelete(item, 'organization')" />
@@ -193,8 +204,10 @@
                                             <Icon type="personal-user" class="user-icon" />
                                             <span class="user-name"
                                                 :title="item.name ? `${item.username}(${item.name})` : item.username">
-                                                {{ item.username }}<template v-if="item.name !== ''">({{ item.name
-                                                }})</template>
+                                                {{ item.username }}
+                                                <template v-if="item.name">
+                                                    ({{ item.name}})
+                                                </template>
                                             </span>
                                         </div>
                                         <Icon bk type="close-circle-shape" class="delete-icon"
@@ -215,6 +228,7 @@
                 </div>
             </template>
         </render-horizontal-block>
+        <div style="height: 50px;"></div>
         <div slot="action">
             <div class="footer-action">
                 <div v-if="showLimit" class="limit-wrapper">
@@ -274,46 +288,46 @@
             IamDeadline
         },
         props: {
-            disabled: {
-                type: Boolean,
-                default: false
-            },
-            loading: {
-                type: Boolean,
-                default: false
-            },
-            showExpiredAt: {
-                type: Boolean,
-                default: false
-            },
-            name: {
-                type: String,
-                default: ''
-            },
-            id: {
-                type: [String, Number],
-                default: ''
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            isRatingManager: {
-                type: Boolean,
-                default: false
-            },
-            showLimit: {
-                type: Boolean,
-                default: false
-            },
-            allChecked: {
-                type: Boolean,
-                default: false
-            },
-            isBatch: {
-                type: Boolean,
-                default: false
-            }
+            // disabled: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // loading: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // showExpiredAt: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // name: {
+            //     type: String,
+            //     default: ''
+            // },
+            // id: {
+            //     type: [String, Number],
+            //     default: ''
+            // },
+            // title: {
+            //     type: String,
+            //     default: ''
+            // },
+            // isRatingManager: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // showLimit: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // allChecked: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // isBatch: {
+            //     type: Boolean,
+            //     default: false
+            // }
         },
         data () {
             return {
@@ -358,6 +372,16 @@
                 manualValueBackup: [],
                 isAll: false,
                 isAllFlag: false,
+                showLimit: false,
+                showExpiredAt: false,
+                disabled: false,
+                loading: false,
+                id: '',
+                title: '',
+                name: '',
+                isRatingManager: false,
+                allChecked: false,
+                isBatch: false,
                 users: [],
                 departments: [],
                 emptyData: {
@@ -432,7 +456,7 @@
                 return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
             },
             contentHeight () {
-                return getWindowHeight() - 260;
+                return getWindowHeight() - 120;
             }
         },
         watch: {
@@ -467,56 +491,52 @@
                 bus.$off('edit-member-boundary');
             });
             bus.$on('edit-member-boundary', (payload) => {
-                const { showLimit, isAll, users, departments } = payload;
-                this.users = _.cloneDeep(users);
-                this.departments = _.cloneDeep(departments);
-                this.isAll = isAll || false;
-                this.showLimit = showLimit || false;
-                this.fetchInitData();
+                this.fetchResetData(payload);
             });
             if (this.$route.name === 'gradingAdminCreate') {
                 this.handleSave();
             }
+            window.addEventListener('message', this.fetchReceiveData);
         },
         methods: {
-            async fetchPageData () {
-                if (+this.id > 0) {
-                    await this.fetchDetail();
-                }
-            },
-            async fetchDetail () {
-                try {
-                    const { data } = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.id });
-                    if (data && Object.keys(data).length) {
-                        const { members, subject_scopes } = data;
-                        this.formData = Object.assign(this.formData, { members });
-                        this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
-                            return {
-                                name: item.name,
-                                username: item.id,
-                                type: item.type
-                            };
-                        });
-                        this.departments = subject_scopes.filter(item => item.type === 'department').map(item => {
-                            return {
-                                name: item.name,
-                                count: item.member_count,
-                                type: item.type,
-                                id: item.id
-                            };
-                        });
-                    }
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                }
-            },
+            // async fetchPageData () {
+            //     if (+this.id > 0) {
+            //         await this.fetchDetail();
+            //     }
+            // },
+            // async fetchDetail () {
+            //     try {
+            //         const { data } = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.id });
+            //         if (data && Object.keys(data).length) {
+            //             const { members, subject_scopes } = data;
+            //             this.formData = Object.assign(this.formData, { members });
+            //             this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
+            //                 return {
+            //                     name: item.name,
+            //                     username: item.id,
+            //                     type: item.type
+            //                 };
+            //             });
+            //             this.departments = subject_scopes.filter(item => item.type === 'department').map(item => {
+            //                 return {
+            //                     name: item.name,
+            //                     count: item.member_count,
+            //                     type: item.type,
+            //                     id: item.id
+            //                 };
+            //             });
+            //         }
+            //     } catch (e) {
+            //         console.error(e);
+            //         this.bkMessageInstance = this.$bkMessage({
+            //             limit: 1,
+            //             theme: 'error',
+            //             message: e.message || e.data.msg || e.statusText,
+            //             ellipsisLine: 2,
+            //             ellipsisCopy: true
+            //         });
+            //     }
+            // },
 
             // 初始化格式数据
             fetchInitData () {
@@ -537,6 +557,47 @@
                         this.fetchCategories(false, true);
                     }
                 }
+            },
+
+            // 接收iframe父页面传递的message
+            fetchReceiveData (payload) {
+                const { data } = payload.data;
+                if (data && Object.keys(data).length) {
+                    this.fetchResetData(data);
+                }
+            },
+
+            fetchResetData (payload) {
+                const {
+                    id,
+                    title,
+                    name,
+                    showLimit,
+                    showExpiredAt,
+                    isAll,
+                    subject_scopes: subjectScopes,
+                    disabled,
+                    loading,
+                    isRatingManager,
+                    allChecked,
+                    isBatch
+                } = payload;
+                if (subjectScopes.length) {
+                    this.users = subjectScopes.filter(item => item.type === 'user');
+                    this.departments = subjectScopes.filter(item => item.type === 'depart');
+                }
+                this.isAll = isAll || false;
+                this.showLimit = showLimit || false;
+                this.showExpiredAt = showExpiredAt || false;
+                this.disabled = disabled || false;
+                this.loading = loading || false;
+                this.id = id || '';
+                this.title = title || '';
+                this.name = name || '';
+                this.isRatingManager = isRatingManager || false;
+                this.allChecked = allChecked || false;
+                this.isBatch = isBatch || false;
+                this.fetchInitData();
             },
 
             handleSearchInput () {
@@ -1217,11 +1278,33 @@
             },
 
             handleSave () {
+                const list = [...this.hasSelectedUsers, ...this.hasSelectedDepartments];
+                // eslint-disable-next-line camelcase
+                const subject_scopes = list.map(item => {
+                    if (item.type === 'depart') {
+                        return {
+                            id: Number(item.id),
+                            type: 'depart',
+                            name: item.name,
+                            full_name: item.full_name,
+                            count: item.count
+                        };
+                    }
+                    if (item.type === 'user') {
+                        return {
+                            id: item.id,
+                            type: 'user',
+                            name: item.name,
+                            username: item.username || item.id,
+                            full_name: item.username,
+                            count: item.count
+                        };
+                    }
+                });
                 const params = {
-                    users: this.hasSelectedUsers,
-                    departments: this.hasSelectedDepartments,
-                    expiredAt: this.expiredAt,
-                    isAll: this.isAll
+                    subject_scopes
+                    // expiredAt: this.expiredAt,
+                    // isAll: this.isAll
                 };
                 if (this.showExpiredAt) {
                     if (this.expiredAt !== 4102444800) {
@@ -1256,6 +1339,8 @@
 </script>
 <style lang='postcss' scoped>
 .iam-add-member-wrapper {
+    padding: 0;
+    overflow: hidden;
     .title {
         line-height: 26px;
         color: #313238;
@@ -1334,7 +1419,8 @@
 
             .tree {
                 /* max-height: 309px; */
-                overflow: auto;
+                /* height: calc(100% - 50px);
+                overflow: auto; */
 
                 &::-webkit-scrollbar {
                     width: 4px;
@@ -1599,6 +1685,9 @@
 }
 
 .horizontal-item {
+    height: calc(100% - 50px);
+    margin-bottom: 0;
+    padding-bottom: 50px;
     .label {
         width: 0;
     }

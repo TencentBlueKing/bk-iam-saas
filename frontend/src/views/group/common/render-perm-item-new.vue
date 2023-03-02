@@ -9,9 +9,9 @@
                 {{ $t(`m.common['个']`) }}
                 {{ $t(`m.nav['权限模板']`) }}
             </div>
-            <template v-if="templateCount > 0 && policyCount > 0">，</template>
+            <template v-if="templateCount > 0 && policyCount > 0 && !externalCustom">，</template>
             <div :class="['sub-title', { 'no-margin': templateCount }, { 'set-margin': !templateCount }]"
-                v-if="policyCount > 0">
+                v-if="policyCount > 0 && !externalCustom">
                 <span class="number">{{ policyCount }}</span>
                 {{ $t(`m.common['个']`) }}
                 {{ $t(`m.perm['自定义权限']`) }}
@@ -55,6 +55,10 @@
             groupSystemListLength: {
                 type: Number,
                 default: 0
+            },
+            externalCustom: {
+                type: Boolean,
+                default: false
             }
         },
         data () {

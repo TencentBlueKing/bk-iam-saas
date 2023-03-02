@@ -381,7 +381,11 @@ const store = new Vuex.Store({
                 groupDetail: { // 用户组 - 组详情
                     hideAddBtn: false, // 用户组-组权限-添加权限按钮-6
                     hideEditBtn: false, // 用户组-组权限-编辑权限按钮-6
-                    hideDeleteBtn: false // 用户组-组权限-删除权限按钮-6
+                    hideDeleteBtn: false, // 用户组-组权限-删除权限按钮-6
+                    hideGroupName: false, // 用户组-组详情-组名称-6
+                    hideGroupDescEdit: false, // 用户组-组详情-组描述编辑-6
+                    hideCustomPerm: false, // 用户组-组权限-自定义权限相关信息-6
+                    setMainLayoutHeight: false // 用户组-详情页面-区分主体高度
                 }
             }
         }
@@ -791,7 +795,11 @@ const store = new Vuex.Store({
                     groupDetail: { // 用户组 - 组详情
                         hideAddBtn: true, // 用户组-组权限-添加权限按钮-6
                         hideEditBtn: true, // 用户组-组权限-编辑权限按钮-6
-                        hideDeleteBtn: true // 用户组-组权限-删除权限按钮-6
+                        hideDeleteBtn: true, // 用户组-组权限-删除权限按钮-6
+                        hideGroupName: true, // 用户组-组详情-隐藏组名称
+                        hideGroupDescEdit: true, // 用户组-组详情-隐藏组描述编辑
+                        hideCustomPerm: true, // 用户组-组权限-隐藏自定义权限相关信息
+                        setMainLayoutHeight: true // 用户组-详情页面-区分主体高度
                     }
                 }
             };
