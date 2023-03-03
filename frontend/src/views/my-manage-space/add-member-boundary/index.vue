@@ -384,6 +384,7 @@
                 isBatch: false,
                 users: [],
                 departments: [],
+                subject_scopes: [],
                 emptyData: {
                     type: '',
                     text: '',
@@ -561,10 +562,9 @@
 
             // 接收iframe父页面传递的message
             fetchReceiveData (payload) {
-                const { data } = payload.data;
-                if (data && Object.keys(data).length) {
-                    this.fetchResetData(data);
-                }
+                const { data } = payload;
+                console.log(data, '接受传递过来的数据');
+                this.fetchResetData(data);
             },
 
             fetchResetData (payload) {
@@ -1687,6 +1687,8 @@
 .horizontal-item {
     height: calc(100% - 50px);
     margin-bottom: 0;
+    padding: 0;
+    padding-top: 10px;
     padding-bottom: 50px;
     .label {
         width: 0;

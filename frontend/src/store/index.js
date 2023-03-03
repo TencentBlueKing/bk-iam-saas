@@ -387,6 +387,12 @@ const store = new Vuex.Store({
                     hideCustomPerm: false, // 用户组-组权限-自定义权限相关信息-6
                     setMainLayoutHeight: false // 用户组-详情页面-区分主体高度
                 }
+            },
+            // 我的申请
+            myApply: {
+                leftLayoutHeight: false, // 设置外部嵌套我的申请页面左侧主体内容高度
+                rightLayoutHeight: false, // 设置外部嵌套我的申请页面右侧主体内容高度
+                externalSystemParams: false // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
             }
         }
     },
@@ -798,9 +804,15 @@ const store = new Vuex.Store({
                         hideDeleteBtn: true, // 用户组-组权限-删除权限按钮-6
                         hideGroupName: true, // 用户组-组详情-隐藏组名称
                         hideGroupDescEdit: true, // 用户组-组详情-隐藏组描述编辑
-                        hideCustomPerm: true, // 用户组-组权限-隐藏自定义权限相关信息
+                        hideCustomPerm: false, // 用户组-组权限-隐藏自定义权限相关信息
                         setMainLayoutHeight: true // 用户组-详情页面-区分主体高度
                     }
+                },
+                // 我的申请
+                myApply: {
+                    leftLayoutHeight: true, // 设置外部嵌套我的申请页面左侧主体内容高度
+                    rightLayoutHeight: true, // 设置外部嵌套我的申请页面右侧主体内容高度
+                    externalSystemParams: true // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
                 }
             };
             commit('setExternalSystemsLayout', externalSystemsLayout);

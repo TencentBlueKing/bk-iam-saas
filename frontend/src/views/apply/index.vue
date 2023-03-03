@@ -1,8 +1,12 @@
 <template>
-    <layout>
+    <layout
+        :external-left-layout-height="externalSystemsLayout.myApply.leftLayoutHeight"
+        :external-right-layout-height="externalSystemsLayout.myApply.rightLayoutHeight"
+    >
         <left-layout
             :data="applyList"
-            :active="currentActive"
+            :filter-active="filterActive"
+            :current-active="currentActive"
             :filter-data="filterData"
             :is-loading="isApplyLoading"
             :can-scroll-load="canScrollLoad"
@@ -50,7 +54,8 @@
             return {
                 applyList: [],
                 // 默认显示3天内的单据
-                currentActive: 3,
+                filterActive: '',
+                currentActive: -1,
                 filterData: {
                     3: this.$t(`m.myApply['3天']`),
                     7: this.$t(`m.myApply['一周']`),
@@ -81,11 +86,11 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemId']),
+            ...mapGetters(['externalSystemId', 'externalSystemsLayout']),
             curCom () {
                 let com = '';
                 for (const [key, value] of this.comMap.entries()) {
-                    if (key.includes(this.currentApplyData.type)) { // 根据后台返回值渲染动态组件
+                    if (Object.keys(this.currentApplyData).length && key.includes(this.currentApplyData.type)) { // 根据后台返回值渲染动态组件
                         com = value;
                         break;
                     }
@@ -102,13 +107,14 @@
         methods: {
             async fetchPageData () {
                 await this.fetchApplyList();
+                this.fetchUrlParams();
             },
 
             async fetchApplyList (isLoading = false, isScrollLoad = false) {
                 this.isApplyLoading = isLoading;
                 const params = {
                     ...this.searchParams,
-                    period: this.currentActive,
+                    period: this.filterActive,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
@@ -154,6 +160,18 @@
                 }
             },
 
+            fetchUrlParams () {
+                if (this.externalSystemsLayout.myApply.externalSystemParams) {
+                    const query = this.$route.query;
+                    if (Object.keys(query).length && query.hasOwnProperty('id')) {
+                        this.currentApplyData = this.applyList.find(item => item.id === +query.id) || {};
+                        if (Object.keys(this.currentApplyData).length) {
+                            this.currentActive = this.currentApplyData.id;
+                        }
+                    }
+                }
+            },
+
             handleLoadMore () {
                 this.pagination.current++;
                 this.fetchApplyList(false, true);
@@ -162,10 +180,11 @@
             handleChange (payload) {
                 this.comKey = +new Date();
                 this.currentApplyData = payload;
+                this.currentActive = payload.id;
             },
 
             handleFilterChange (payload) {
-                this.currentActive = payload;
+                this.filterActive = payload;
                 this.pagination.current = 1;
                 this.currentBackup = 1;
                 this.fetchApplyList(true);
