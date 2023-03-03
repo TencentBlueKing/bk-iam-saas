@@ -12,7 +12,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
-from backend.apps.application.serializers import ApplicationGroupExpiredAtSLZ, ExpiredAtSLZ, ReasonSLZ
+from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
@@ -302,8 +302,3 @@ class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
 
     def get_members(self, obj):
         return [one.username for one in RoleUser.objects.filter(role_id=obj.id)]
-
-
-class ManagementGroupApplicationRenewSLZ(ReasonSLZ):
-    groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupExpiredAtSLZ(label="用户组"), allow_empty=False)
-    applicant = serializers.CharField(label="申请者的用户名", max_length=32)

@@ -26,7 +26,6 @@ from backend.api.management.v2.serializers import (
     ManagementGradeManagerApplicationResultSLZ,
     ManagementGradeManagerCreateApplicationSLZ,
     ManagementGroupApplicationCreateSLZ,
-    ManagementGroupApplicationRenewSLZ,
 )
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
@@ -281,7 +280,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组续期申请单",
-        request_body=ManagementGroupApplicationRenewSLZ(label="用户组续期申请单"),
+        request_body=ManagementGroupApplicationCreateSLZ(label="用户组续期申请单"),
         responses={status.HTTP_200_OK: ManagementApplicationIDSLZ(label="单据ID列表")},
         tags=["management.group.application"],
     )
@@ -289,7 +288,7 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         """
         用户组续期申请单
         """
-        serializer = ManagementGroupApplicationRenewSLZ(data=request.data)
+        serializer = ManagementGroupApplicationCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
@@ -310,7 +309,10 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
             GroupApplicationDataBean(
                 applicant=user.username,
                 reason=data["reason"],
-                groups=parse_obj_as(List[ApplicationGroupInfoBean], data["groups"]),
+                groups=parse_obj_as(
+                    List[ApplicationGroupInfoBean],
+                    [{"id": _id, "expired_at": data["expired_at"]} for _id in data["group_ids"]],
+                ),
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
             source_system_id=source_system_id,
