@@ -387,6 +387,11 @@ const store = new Vuex.Store({
                     hideCustomPerm: false, // 用户组-组权限-自定义权限相关信息-6
                     setMainLayoutHeight: false // 用户组-详情页面-区分主体高度
                 }
+            },
+            // 我的申请
+            myApply: {
+                leftLayoutHeight: false, // 设置外部嵌套我的申请页面左侧主体内容高度
+                rightLayoutHeight: false // 设置外部嵌套我的申请页面右侧主体内容高度
             }
         }
     },
@@ -801,6 +806,11 @@ const store = new Vuex.Store({
                         hideCustomPerm: true, // 用户组-组权限-隐藏自定义权限相关信息
                         setMainLayoutHeight: true // 用户组-详情页面-区分主体高度
                     }
+                },
+                // 我的申请
+                myApply: {
+                    leftLayoutHeight: true, // 设置外部嵌套我的申请页面左侧主体内容高度
+                    rightLayoutHeight: true // 设置外部嵌套我的申请页面右侧主体内容高度
                 }
             };
             commit('setExternalSystemsLayout', externalSystemsLayout);

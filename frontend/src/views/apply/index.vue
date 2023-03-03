@@ -1,5 +1,8 @@
 <template>
-    <layout>
+    <layout
+        :external-left-layout-height="externalSystemsLayout.myApply.leftLayoutHeight"
+        :external-right-layout-height="externalSystemsLayout.myApply.rightLayoutHeight"
+    >
         <left-layout
             :data="applyList"
             :active="currentActive"
@@ -81,7 +84,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemId']),
+            ...mapGetters(['externalSystemId', 'externalSystemsLayout']),
             curCom () {
                 let com = '';
                 for (const [key, value] of this.comMap.entries()) {

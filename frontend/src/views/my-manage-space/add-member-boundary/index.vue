@@ -384,6 +384,7 @@
                 isBatch: false,
                 users: [],
                 departments: [],
+                subject_scopes: [],
                 emptyData: {
                     type: '',
                     text: '',
@@ -562,9 +563,10 @@
             // 接收iframe父页面传递的message
             fetchReceiveData (payload) {
                 const { data } = payload.data;
-                if (data && Object.keys(data).length) {
-                    this.fetchResetData(data);
-                }
+                console.log(data, '接受传递过来的数据');
+                // if (data && Object.keys(data).length) {
+                this.fetchResetData(data);
+                // }
             },
 
             fetchResetData (payload) {
@@ -582,6 +584,7 @@
                     allChecked,
                     isBatch
                 } = payload;
+                console.log(subjectScopes, '传递数据');
                 if (subjectScopes.length) {
                     this.users = subjectScopes.filter(item => item.type === 'user');
                     this.departments = subjectScopes.filter(item => item.type === 'depart');
@@ -1687,6 +1690,8 @@
 .horizontal-item {
     height: calc(100% - 50px);
     margin-bottom: 0;
+    padding: 0;
+    padding-top: 10px;
     padding-bottom: 50px;
     .label {
         width: 0;
