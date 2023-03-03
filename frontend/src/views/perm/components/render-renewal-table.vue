@@ -188,6 +188,7 @@
             data: {
                 handler (value) {
                     this.allData = value;
+                    this.pagination = Object.assign(this.pagination, { count: value.length });
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
                     const getDays = payload => {
@@ -220,7 +221,8 @@
             count: {
                 handler (value) {
                     this.pagination.count = value;
-                }
+                },
+                immediate: true
             },
             emptyData: {
                 handler (value) {
@@ -292,7 +294,8 @@
                         page_size: limit,
                         page: current
                     });
-                    this.tableList = data || [];
+                    this.tableList = data.results || [];
+                    this.pagination.count = data.count;
                     this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
