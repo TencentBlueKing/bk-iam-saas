@@ -3,7 +3,7 @@
         <filter-item
             :title="title"
             :data="filterData"
-            :active="active"
+            :active="filterActive"
             @on-change="handleFilterChange" />
         <div
             :class="['apply-wrapper', { 'set-right-border': isEmpty || isLoading }]"
@@ -15,7 +15,7 @@
                     :key="item.id"
                     :data="item"
                     :has-bottom-border="index !== data.length - 1"
-                    :active="currentActive"
+                    :active="selectActive"
                     @on-change="handleChange"></apply-item>
                 <div class="load-more-wrapper"
                     v-bkloading="{ isLoading: isScrollLoading, opacity: 1, color: '#fff' }"
@@ -72,9 +72,14 @@
                     };
                 }
             },
-            active: {
-                type: String,
+            // 当前筛选日期
+            filterActive: {
+                type: [String, Number],
                 default: 'wait'
+            },
+            // 当前选中id
+            currentActive: {
+                type: Number
             },
             isLoading: {
                 type: Boolean,
@@ -87,7 +92,7 @@
         },
         data () {
             return {
-                currentActive: '',
+                selectActive: -1,
                 isScrollLoading: false,
                 isShowNoDataTips: false
             };
@@ -102,10 +107,10 @@
                 handler (value) {
                     if (value.length) {
                         if (!value.some(item => item.id === this.currentActive)) {
-                            this.currentActive = value[0].id;
+                            this.selectActive = value[0].id;
                         }
                     } else {
-                        this.currentActive = '';
+                        this.selectActive = -1;
                         this.isShowNoDataTips = false;
                     }
                 },
@@ -113,11 +118,14 @@
             },
             isLoading () {
                 this.isShowNoDataTips = false;
+            },
+            currentActive (value) {
+                this.selectActive = value;
             }
         },
         methods: {
             handleChange (payload) {
-                this.currentActive = payload.id;
+                this.selectActive = payload.id;
                 this.$emit('on-change', payload);
             },
             handleFilterChange (payload) {

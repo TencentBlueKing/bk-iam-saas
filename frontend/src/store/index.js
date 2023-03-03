@@ -391,7 +391,8 @@ const store = new Vuex.Store({
             // 我的申请
             myApply: {
                 leftLayoutHeight: false, // 设置外部嵌套我的申请页面左侧主体内容高度
-                rightLayoutHeight: false // 设置外部嵌套我的申请页面右侧主体内容高度
+                rightLayoutHeight: false, // 设置外部嵌套我的申请页面右侧主体内容高度
+                externalSystemParams: false // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
             }
         }
     },
@@ -810,7 +811,8 @@ const store = new Vuex.Store({
                 // 我的申请
                 myApply: {
                     leftLayoutHeight: true, // 设置外部嵌套我的申请页面左侧主体内容高度
-                    rightLayoutHeight: true // 设置外部嵌套我的申请页面右侧主体内容高度
+                    rightLayoutHeight: true, // 设置外部嵌套我的申请页面右侧主体内容高度
+                    externalSystemParams: true // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
                 }
             };
             commit('setExternalSystemsLayout', externalSystemsLayout);
