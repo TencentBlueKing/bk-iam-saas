@@ -4,10 +4,16 @@
             <slot />
         </div>
         <div ref="actionPosition" :style="positionStyles" role="action-position">
-            <div ref="dynamicPosition"
-                class="fixed"
+            <div
+                ref="dynamicPosition"
+                :class="[
+                    'fixed',
+                    customClass
+                ]"
                 :style="{ paddingLeft: externalSystemId ? '50px' : '284px' }"
-                style="margin-top: 52px;" role="dynamic-position">
+                style="margin-top: 52px;"
+                role="dynamic-position"
+            >
                 <div :style="styles">
                     <slot name="action" />
                 </div>
@@ -38,7 +44,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemId']),
+            ...mapGetters(['externalSystemId', 'externalSystemsLayout']),
             classes () {
                 if (this.isHide) {
                     return 'fixed';
@@ -70,6 +76,12 @@
                     };
                 }
                 return {};
+            },
+            customClass () {
+                if (this.$route.name === 'addMemberBoundary' && this.externalSystemsLayout.addMemberBoundary.customFooterClass) {
+                    return 'fixed-custom';
+                }
+                return '';
             }
         },
         mounted () {
@@ -141,6 +153,11 @@
             height: 52px;
             background: #fff;
             box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
+        }
+
+        .fixed-custom {
+           box-shadow: none;
+           border-top: 1px solid #dcdee5;
         }
     }
 </style>

@@ -498,6 +498,7 @@
                 this.handleSave();
             }
             window.addEventListener('message', this.fetchReceiveData);
+            window.parent.postMessage({ type: 'IAM', code: 'load' }, '*');
         },
         methods: {
             // async fetchPageData () {
@@ -582,7 +583,7 @@
                     allChecked,
                     isBatch
                 } = payload;
-                if (subjectScopes.length) {
+                if (subjectScopes && subjectScopes.length) {
                     this.users = subjectScopes.filter(item => item.type === 'user');
                     this.departments = subjectScopes.filter(item => item.type === 'depart');
                 }

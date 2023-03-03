@@ -393,6 +393,10 @@ const store = new Vuex.Store({
                 leftLayoutHeight: false, // 设置外部嵌套我的申请页面左侧主体内容高度
                 rightLayoutHeight: false, // 设置外部嵌套我的申请页面右侧主体内容高度
                 externalSystemParams: false // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
+            },
+            // 设置项目最大可授权范围
+            addMemberBoundary: {
+                customFooterClass: false // 设置项目最大可授权范围, 底部插槽自定义样式
             }
         }
     },
@@ -813,6 +817,10 @@ const store = new Vuex.Store({
                     leftLayoutHeight: true, // 设置外部嵌套我的申请页面左侧主体内容高度
                     rightLayoutHeight: true, // 设置外部嵌套我的申请页面右侧主体内容高度
                     externalSystemParams: true // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
+                },
+                // 设置项目最大可授权范围
+                addMemberBoundary: {
+                    customFooterClass: true // 设置项目最大可授权范围, 底部插槽自定义样式
                 }
             };
             commit('setExternalSystemsLayout', externalSystemsLayout);
