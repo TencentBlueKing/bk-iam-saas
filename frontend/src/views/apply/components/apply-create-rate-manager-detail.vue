@@ -86,7 +86,13 @@
                 authorizationScopes: [],
                 name: '',
                 users: [],
-                departments: []
+                departments: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
