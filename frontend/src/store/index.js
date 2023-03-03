@@ -803,7 +803,7 @@ const store = new Vuex.Store({
                         hideDeleteBtn: true, // 用户组-组权限-删除权限按钮-6
                         hideGroupName: true, // 用户组-组详情-隐藏组名称
                         hideGroupDescEdit: true, // 用户组-组详情-隐藏组描述编辑
-                        hideCustomPerm: true, // 用户组-组权限-隐藏自定义权限相关信息
+                        hideCustomPerm: false, // 用户组-组权限-隐藏自定义权限相关信息
                         setMainLayoutHeight: true // 用户组-详情页面-区分主体高度
                     }
                 },
