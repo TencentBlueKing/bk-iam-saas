@@ -1,9 +1,17 @@
-<template functional>
+<template>
     <div class="page-layout">
-        <div class="left-layout">
+        <div
+            :class="[
+                'left-layout',
+                { 'external-left-height': externalLeftLayoutHeight }
+            ]">
             <slot />
         </div>
-        <div class="right-layout">
+        <div
+            :class="[
+                'right-layout',
+                { 'external-right-height': externalRightLayoutHeight }
+            ]">
             <slot name="right" />
         </div>
     </div>
@@ -16,6 +24,16 @@
      */
     export default {
         name: '',
+        props: {
+            externalLeftLayoutHeight: {
+                type: Boolean,
+                default: false
+            },
+            externalRightLayoutHeight: {
+                type: Boolean,
+                default: false
+            }
+        },
         data () {
             return {};
         }
@@ -47,6 +65,15 @@
                 border-radius: 2px;
                 background-color: #e6e9ea;
             }
+        }
+
+        .external-left-height {
+            height: calc(100vh);
+        }
+
+        .external-right-height {
+            padding: 30px 30px 0;
+            height: calc(100vh - 5px);
         }
     }
 </style>
