@@ -562,11 +562,9 @@
 
             // 接收iframe父页面传递的message
             fetchReceiveData (payload) {
-                const { data } = payload.data;
+                const { data } = payload;
                 console.log(data, '接受传递过来的数据');
-                // if (data && Object.keys(data).length) {
                 this.fetchResetData(data);
-                // }
             },
 
             fetchResetData (payload) {
@@ -584,7 +582,6 @@
                     allChecked,
                     isBatch
                 } = payload;
-                console.log(subjectScopes, '传递数据');
                 if (subjectScopes.length) {
                     this.users = subjectScopes.filter(item => item.type === 'user');
                     this.departments = subjectScopes.filter(item => item.type === 'depart');
