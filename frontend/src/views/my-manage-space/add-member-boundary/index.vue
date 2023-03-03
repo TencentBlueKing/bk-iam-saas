@@ -498,6 +498,7 @@
                 this.handleSave();
             }
             window.addEventListener('message', this.fetchReceiveData);
+            window.parent.postMessage({ type: 'IAM', code: 'load' }, '*');
         },
         methods: {
             // async fetchPageData () {
