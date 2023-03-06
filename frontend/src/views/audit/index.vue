@@ -10,9 +10,10 @@
             </bk-date-picker>
             <div class="audit-search-select">
                 <iam-search-select
+                    ref="iamSearchSelect"
+                    style="width: 380px;"
                     :data="searchData"
                     :value="searchValue"
-                    style="width: 380px;"
                     @on-change="handleSearch" />
             </div>
         </render-search>
@@ -689,6 +690,7 @@
                 this.searchParams = {};
                 this.searchValue = [];
                 this.emptyData.tipType = '';
+                this.$refs.iamSearchSelect.$refs.searchSelect.isTagMultLine = false;
                 this.resetPagination();
                 this.fetchAuditList(true);
             },
