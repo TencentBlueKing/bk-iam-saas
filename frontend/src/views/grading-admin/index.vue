@@ -42,9 +42,12 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
                 <template slot-scope="{ row }">
-                    <bk-tag v-for="(tag, index) of row.members" :key="index">
-                        {{tag.username}}
-                    </bk-tag>
+                    <span
+                        :title="row.members && row.members.length ? row.members.map(tag => tag.username) : ''">
+                        <bk-tag v-for="(tag, index) of row.members" :key="index">
+                            {{tag.username}}
+                        </bk-tag>
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>

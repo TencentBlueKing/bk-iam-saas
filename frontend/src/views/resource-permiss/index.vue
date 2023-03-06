@@ -149,7 +149,9 @@
             @page-limit-change="limitChange">
             <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
                 <template slot-scope="{ row }">
-                    {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
+                    <span :title="row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`">
+                        {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.resourcePermiss['用户类型']`)">
