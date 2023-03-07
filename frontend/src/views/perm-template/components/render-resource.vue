@@ -137,6 +137,11 @@
 
     export default {
         name: '',
+        provide: function () {
+            return {
+                getDragDynamicWidth: () => this.dragWidth
+            };
+        },
         components: {
             renderResourceInstance,
             renderOrderNumber,
