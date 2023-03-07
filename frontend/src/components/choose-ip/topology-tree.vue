@@ -181,6 +181,7 @@
                     const flag = !payload.async && isSameLevelExistSync;
                     const asyncIconWidth = 5;
                     const asyncLevelWidth = 30;
+                    const searchIconWidth = 12;
                     if (!payload.level) {
                         if (flag) {
                             return {
@@ -194,7 +195,7 @@
                         }
                         if (payload.async) {
                             return {
-                                maxWidth: `${offsetWidth - asyncLevelWidth}px`
+                                maxWidth: `${offsetWidth - asyncLevelWidth - searchIconWidth}px`
                             };
                         }
                         return {
@@ -203,7 +204,7 @@
                     }
                     if (payload.async) {
                         return {
-                            maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent) - asyncLevelWidth + 'px'
+                            maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent) - asyncLevelWidth - searchIconWidth + 'px'
                         };
                     }
                     if (isSameLevelExistSync && ['search', 'search-empty'].includes(payload.type)) {
