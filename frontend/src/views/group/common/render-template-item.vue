@@ -3,7 +3,7 @@
         <div
             :class="[
                 'header',
-                'external-header'
+                { 'external-header': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle }
             ]"
             @click="handleExpanded"
             @mousemove="isShowEditFill"
