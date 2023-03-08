@@ -31,8 +31,13 @@
                     :style="nameStyle(item)"
                     :class="['node-title', { 'node-selected': item.selected }]"
                     :title="item.type === 'user' ? item.name !== '' ? `${item.username}(${item.name})` : item.username : item.name">
-                    {{ item.type === 'user' ? item.username : item.name }}<template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
-                </span><span class="red-dot" v-if="item.isNewMember"></span><span class="node-user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                    {{ item.type === 'user' ? item.username : item.name }}
+                    <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
+                </span>
+                <span class="red-dot" v-if="item.isNewMember"></span>
+                <span class="node-user-count" v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount">
+                    {{ '(' + item.count + `)` }}
+                </span>
                 <spin-loading ext-cls="loading" v-if="item.loading" />
                 <div class="node-radio" v-if="item.showRadio">
                     <span class="node-checkbox"
@@ -59,6 +64,7 @@
 
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'infinite-tree',
@@ -125,6 +131,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             ghostStyle () {
                 return {
                     height: this.visiableData.length * this.itemHeight + 'px'

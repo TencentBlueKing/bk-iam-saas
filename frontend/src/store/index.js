@@ -385,6 +385,7 @@ const store = new Vuex.Store({
                     hideGroupName: false, // 用户组-组详情-组名称-6
                     hideGroupDescEdit: false, // 用户组-组详情-组描述编辑-6
                     hideCustomPerm: false, // 用户组-组权限-自定义权限相关信息-6
+                    hideGroupPermExpandTitle: false, // 用户组-组权限-隐藏自定义权限标题
                     setMainLayoutHeight: false // 用户组-详情页面-区分主体高度
                 }
             },
@@ -396,7 +397,8 @@ const store = new Vuex.Store({
             },
             // 设置项目最大可授权范围
             addMemberBoundary: {
-                customFooterClass: false // 设置项目最大可授权范围, 底部插槽自定义样式
+                customFooterClass: false, // 设置项目最大可授权范围, 底部插槽自定义样式
+                hideInfiniteTreeCount: false // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
             }
         }
     },
@@ -809,6 +811,7 @@ const store = new Vuex.Store({
                         hideGroupName: true, // 用户组-组详情-隐藏组名称
                         hideGroupDescEdit: true, // 用户组-组详情-隐藏组描述编辑
                         hideCustomPerm: false, // 用户组-组权限-隐藏自定义权限相关信息
+                        hideGroupPermExpandTitle: true, // 用户组-组权限-隐藏自定义权限标题
                         setMainLayoutHeight: true // 用户组-详情页面-区分主体高度
                     }
                 },
@@ -820,7 +823,8 @@ const store = new Vuex.Store({
                 },
                 // 设置项目最大可授权范围
                 addMemberBoundary: {
-                    customFooterClass: true // 设置项目最大可授权范围, 底部插槽自定义样式
+                    customFooterClass: true, // 设置项目最大可授权范围, 底部插槽自定义样式
+                    hideInfiniteTreeCount: true// 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
                 }
             };
             commit('setExternalSystemsLayout', externalSystemsLayout);

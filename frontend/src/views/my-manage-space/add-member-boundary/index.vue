@@ -6,7 +6,8 @@
                     <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
                     <div v-else>
                         <div v-if="isPrev">
-                            {{ $t(`m.common['添加成员至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
+                            {{ $t(`m.common['添加成员至']`) }}
+                            【<span class="member-title" :title="name">{{ name }}</span>】
                         </div>
                         <div v-else :title="`${$t(`m.common['设置新用户加入']`)}【${name}】${$t(`m.common['用户组的有效期']`)}`">
                             {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">【{{ name
@@ -128,8 +129,9 @@
                                     data-test-id="group_addGroupMemberDialog_input_manualUser" type="textarea"
                                     :rows="14" v-model="manualValue" :disabled="isAll" @input="handleManualInput">
                                 </bk-input>
-                                <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`)
-                                }}</p>
+                                <p class="manual-error-text" v-if="isManualInputOverLimit">
+                                    {{ $t(`m.common['手动输入提示1']`)}}
+                                </p>
                                 <p class="manual-error-text pr10" v-if="manualInputError">
                                     {{ $t(`m.common['手动输入提示2']`) }}
                                     <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
@@ -185,12 +187,18 @@
                                 <div class="organization-content" v-if="isDepartSelectedEmpty">
                                     <div class="organization-item" v-for="item in hasSelectedDepartments"
                                         :key="item.id">
-                                        <div>
+                                        <div class="organization-info">
                                             <Icon type="file-close" class="folder-icon" />
-                                            <span class="organization-name" :title="item.full_name">
+                                            <span class="organization-name"
+                                                :title="item.full_name || item.name"
+                                            >
                                                 {{ item.name }}
                                             </span>
-                                            <span class="user-count" v-if="item.count">
+                                            <span
+                                                class="user-count"
+                                                v-if="item.count &&
+                                                    !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount"
+                                            >
                                                 {{ '(' + item.count + `)`}}
                                             </span>
                                         </div>
@@ -200,10 +208,13 @@
                                 </div>
                                 <div class="user-content" v-if="isUserSelectedEmpty">
                                     <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
-                                        <div>
+                                        <div class="user-info">
                                             <Icon type="personal-user" class="user-icon" />
-                                            <span class="user-name"
-                                                :title="item.name ? `${item.username}(${item.name})` : item.username">
+                                            <span
+                                                class="user-name"
+                                                :title="item.name ? `${item.username}(${item.name})`
+                                                    : item.username"
+                                            >
                                                 {{ item.username }}
                                                 <template v-if="item.name">
                                                     ({{ item.name}})
@@ -254,8 +265,9 @@
                     <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave"
                         data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
                 </template>
-                <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">{{ $t(`m.common['取消']`)
-                }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">
+                    {{ $t(`m.common['取消']`)}}
+                </bk-button>
             </div>
         </div>
     </smart-action>
@@ -269,6 +281,7 @@
     import { il8n } from '@/language';
     import { formatCodeData, guid, getWindowHeight, sleep } from '@/common/util';
     import { bus } from '@/common/bus';
+    import { mapGetters } from 'vuex';
 
     // 去除()以及之间的字符
     const getUsername = (str) => {
@@ -382,6 +395,7 @@
                 isRatingManager: false,
                 allChecked: false,
                 isBatch: false,
+                isShowDialog: true,
                 users: [],
                 departments: [],
                 subject_scopes: [],
@@ -394,6 +408,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             isLoading () {
                 return this.requestQueue.length > 0;
             },
@@ -1365,6 +1380,12 @@
         }
     }
 
+    .user-info, .organization-info {
+        display: flex;
+        align-items: center;
+        max-width: calc(100% - 40px);
+    }
+
     .footer-action {
         display: flex;
         align-items: center;
@@ -1602,7 +1623,7 @@
                         justify-content: space-between;
 
                         .organization-name {
-                            max-width: calc(100% - 100px);
+                            /* max-width: calc(100% - 100px); */
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
@@ -1628,6 +1649,7 @@
                     .folder-icon {
                         font-size: 17px;
                         color: #a3c5fd;
+                        margin-right: 10px;
                     }
                 }
 
@@ -1639,7 +1661,7 @@
                         justify-content: space-between;
 
                         .user-name {
-                            max-width: calc(100% - 50px);
+                            /* max-width: calc(100% - 50px); */
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
@@ -1661,6 +1683,7 @@
                     .user-icon {
                         font-size: 16px;
                         color: #a3c5fd;
+                        margin-right: 10px;
                     }
                 }
 
@@ -1686,6 +1709,7 @@
 }
 
 .horizontal-item {
+    max-width: 900px;
     height: calc(100% - 50px);
     margin-bottom: 0;
     padding: 0;
