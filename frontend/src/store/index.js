@@ -359,6 +359,7 @@ const store = new Vuex.Store({
             hideIamHeader: false, // 第一层级头部导航
             hideIamSlider: false, // 第一层级侧边导航
             hideIamBreadCrumbs: false, // 第一层级面包屑
+            hideIamGuide: false, // 隐藏所有guide的tooltip
             myPerm: { // 我的权限
                 hideCustomTab: false, // 自定义权限tab - 1
                 hideApplyBtn: false, // 申请权限按钮 - 1
@@ -732,11 +733,13 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         getNoviceGuide ({ commit, state, dispatch }, config) {
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
-            return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then((response) => {
-                commit('setNoviceGuide', response.data);
-                return response.data;
-            });
+            if (!store.getters.externalSystemsLayout.hideIamGuide) {
+                const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
+                return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then((response) => {
+                    commit('setNoviceGuide', response.data);
+                    return response.data;
+                });
+            }
         },
 
         /**
@@ -785,6 +788,7 @@ const store = new Vuex.Store({
                 hideIamHeader: true, // 第一层级头部导航
                 hideIamSlider: true, // 第一层级侧边导航
                 hideIamBreadCrumbs: true, // 第一层级面包屑
+                hideIamGuide: true, // 隐藏所有guide的tooltip
                 myPerm: { // 我的权限
                     hideCustomTab: true, // 自定义权限tab - 1
                     hideApplyBtn: true, // 申请权限按钮 - 1
