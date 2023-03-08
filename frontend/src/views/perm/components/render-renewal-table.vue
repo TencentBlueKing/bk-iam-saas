@@ -24,7 +24,9 @@
                     :label="item.label"
                     :prop="item.prop">
                     <template slot-scope="{ row }">
-                        <span>{{ row.system ? row.system.name || '' : '' }}</span>
+                        <span :title="row.system ? row.system.name || '' : ''">
+                            {{ row.system ? row.system.name || '' : '' }}
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column

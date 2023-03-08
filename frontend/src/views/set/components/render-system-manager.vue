@@ -12,7 +12,11 @@
                 :header-border="false"
                 @row-mouse-enter="handleSysRowMouseEnter"
                 @row-mouse-leave="handleSysRowMouseLeave">
-                <bk-table-column :label="$t(`m.set['系统名称']`)" prop="name"></bk-table-column>
+                <bk-table-column :label="$t(`m.set['系统名称']`)" prop="name">
+                    <template slot-scope="{ row }">
+                        <span :title="row.name">{{ row.name }}</span>
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t(`m.set['成员列表']`)">
                     <template slot-scope="{ row, $index }">
                         <template v-if="row.isEdit || row.members.length">

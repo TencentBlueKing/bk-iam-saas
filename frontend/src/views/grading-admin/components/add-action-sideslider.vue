@@ -33,7 +33,7 @@
                         <template>
                             <template v-if="curSystemList.length > 0">
                                 <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                                    <div class="system-item"
+                                    <div class="system-item single-hide"
                                         v-for="item in curSystemList"
                                         :key="item.id"
                                         :class="item.id === curSystem ? 'active' : ''"
@@ -95,7 +95,9 @@
                         <div class="custom-tmpl-wrapper" v-for="(customTmpl, index) in systemData[curSystem].list" :key="index">
                             <label class="bk-label" style="line-height: 20px;">
                                 <span class="name">{{ customTmpl.name }}</span>
-                                <span class="select-all" data-test-id="grading_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">（{{ customTmpl.text }}）</span>
+                                <span class="select-all" data-test-id="grading_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
+                                    （{{ customTmpl.text }}）
+                                </span>
                             </label>
                             <div
                                 :class="['choose-perm-tmpl', { 'set-style': index !== systemData[curSystem].list.length - 1 }]">

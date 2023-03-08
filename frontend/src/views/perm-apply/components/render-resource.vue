@@ -136,6 +136,12 @@
 
     export default {
         name: '',
+        // 这里用箭头函数会改变this
+        provide: function () {
+            return {
+                getDragDynamicWidth: () => this.dragWidth
+            };
+        },
         components: {
             renderResourceInstance,
             renderOrderNumber,

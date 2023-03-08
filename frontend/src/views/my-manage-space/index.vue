@@ -118,7 +118,7 @@
                 <template slot-scope="{ row }">
                     <div>
                         <Icon type="level-one" :style="{ color: iconColor[0] }" />
-                        <span v-bk-tooltips.right="row.name" class="right-start">
+                        <span :title="row.name" class="right-start">
                             {{ row.name }}
                         </span>
                     </div>
@@ -155,8 +155,7 @@
             <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新时间']`)">
                 <template slot-scope="{ row }">
-                    <span v-bk-tooltips.top="{ content: row.updated_time, extCls: 'iam-tooltips-cls' }"
-                        :title="row.updated_time">{{ row.updated_time }}</span>
+                    <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">

@@ -252,9 +252,15 @@
                     });
                 } finally {
                     groupSystem.loading = false;
-                    if (res.data.length === 1) {
+                    if (!this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                        if (res.data.length === 1) {
+                            this.$nextTick(() => {
+                                this.$refs[`rTemplateItem${groupSystem.id}`] && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+                            });
+                        }
+                    } else {
                         this.$nextTick(() => {
-                            this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+                            this.$refs[`rTemplateItem${groupSystem.id}`] && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
                         });
                     }
                 }

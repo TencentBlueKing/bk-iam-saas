@@ -598,7 +598,6 @@
                 }
                 this.previewData = _.cloneDeep(params);
                 this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
-                console.log(66555);
                 this.isShowSideslider = true;
             },
             handleAnimationEnd () {

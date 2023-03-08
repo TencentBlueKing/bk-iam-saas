@@ -35,7 +35,13 @@
                             data-test-id="topology_checkbox_chooseip"
                             @change="handleNodeChange(...arguments, item, index)"
                         >
-                            {{ item.name }}
+                            <span
+                                class="tree-node-name single-hide"
+                                :style="dragDynamicWidth(item)"
+                                :title="item.name"
+                            >
+                                {{ item.name }}
+                            </span>
                         </bk-checkbox>
                     </div>
                     <div
@@ -72,11 +78,12 @@
                 <template v-else-if="item.type === 'search-empty'">
                     <div class="search-empty-wrapper">
                         <ExceptionEmpty
-                            type="search-empty"
                             style="background: #fafbfd"
-                            tip-type="search"
-                            :empty-text="item.name"
+                            :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
+                            :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
+                            :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
                             @on-clear="handleEmptyClear(...arguments, item, index)"
+                            @on-refresh="handleEmptyRefresh(...arguments, item, index)"
                         />
                     </div>
                 </template>
@@ -110,6 +117,7 @@
 
     export default {
         name: '',
+        inject: ['getDragDynamicWidth'],
         components: {
             TopologyInput
         },
@@ -141,7 +149,8 @@
                 isShiftBeingPress: false,
                 pressIndex: -1,
                 pressLevels: [],
-                levelIndex: -1 // 获取当前搜索焦点的位置索引
+                levelIndex: -1, // 获取当前搜索焦点的位置索引
+                offsetWidth: 180
             };
         },
         computed: {
@@ -162,6 +171,56 @@
             },
             isExistNodeLoadMore () {
                 return this.allData.some((item) => item.id === -1 && item.loadingMore);
+            },
+            dragDynamicWidth () {
+                return (payload) => {
+                    const offsetWidth = this.getDragDynamicWidth() > 220 ? 180 + this.getDragDynamicWidth() - 220 : 180;
+                    const isSameLevelExistSync = this.allData
+                        .filter((item) => item.level === payload.level)
+                        .some((item) => item.type === 'node' && item.async);
+                    const flag = !payload.async && isSameLevelExistSync;
+                    const asyncIconWidth = 5;
+                    const asyncLevelWidth = 30;
+                    const searchIconWidth = 12;
+                    if (!payload.level) {
+                        if (flag) {
+                            return {
+                                maxWidth: `${offsetWidth - this.leftBaseIndent + asyncIconWidth}px`
+                            };
+                        }
+                        if (payload.loading) {
+                            return {
+                                maxWidth: `${offsetWidth - 20}px`
+                            };
+                        }
+                        if (payload.async) {
+                            return {
+                                maxWidth: `${offsetWidth - asyncLevelWidth - searchIconWidth}px`
+                            };
+                        }
+                        return {
+                            maxWidth: `${offsetWidth}px`
+                        };
+                    }
+                    if (payload.async) {
+                        return {
+                            maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent) - asyncLevelWidth - searchIconWidth + 'px'
+                        };
+                    }
+                    if (isSameLevelExistSync && ['search', 'search-empty'].includes(payload.type)) {
+                        return {
+                            maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent) + 'px'
+                        };
+                    }
+                    if (flag) {
+                        return {
+                            maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent + asyncIconWidth) + 'px'
+                        };
+                    }
+                    return {
+                        maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent + 14) + 'px'
+                    };
+                };
             }
         },
         watch: {
@@ -244,6 +303,12 @@
             },
 
             handleEmptyClear (payload, item) {
+                this.$nextTick(() => {
+                    this.$refs[`topologyInputRef${this.levelIndex}`][0].value = '';
+                });
+            },
+
+            handleEmptyRefresh () {
                 this.$nextTick(() => {
                     this.$refs[`topologyInputRef${this.levelIndex}`][0].value = '';
                 });
@@ -554,8 +619,15 @@
       top: 9px;
     }
     .bk-checkbox-text {
-      font-size: 12px;
-      white-space: nowrap;
+        font-size: 12px;
+        /* width: 180px; */
+        /* white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden; */
+    }
+    .tree-node-name {
+        display: inline-block;
+        line-height: 1;
     }
   }
 
@@ -567,6 +639,9 @@
       padding: 0;
       top: -2px;
     }
+     /* .bk-checkbox-text {
+        max-width: 200px;
+     } */
   }
 
   .node-loading {

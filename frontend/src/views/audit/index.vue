@@ -10,9 +10,10 @@
             </bk-date-picker>
             <div class="audit-search-select">
                 <iam-search-select
+                    ref="iamSearchSelect"
+                    style="width: 380px;"
                     :data="searchData"
                     :value="searchValue"
-                    style="width: 380px;"
                     @on-change="handleSearch" />
             </div>
         </render-search>
@@ -39,7 +40,7 @@
                         </template>
                         <template v-if="onlyDescriptionType.includes(row.detail.type)">
                             <section v-if="!row.loading">
-                                <p class="description" :title="row.detail.description">
+                                <p class="description single-hide" :title="row.detail.description">
                                     {{ row.detail.description || '--' }}
                                 </p>
                             </section>
@@ -83,12 +84,14 @@
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
                                 <bk-table-column prop="name" label="对象实例">
                                     <template slot-scope="props">
-                                        <span>{{ objectMap[props.row.type] || props.row.type }}</span>
+                                        <span :title="objectMap[props.row.type] || props.row.type">
+                                            {{ objectMap[props.row.type] || props.row.type }}
+                                        </span>
                                     </template>
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.audit['操作对象']`)">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.name }}</span>
+                                        <span :title="props.row.name">{{ props.row.name }}</span>
                                     </template>
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.common['描述']`)">
@@ -116,7 +119,7 @@
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.audit['实例']`)">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.name }}</span>
+                                        <span :title="props.row.name">{{ props.row.name }}</span>
                                     </template>
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.audit['版本号']`)">
@@ -151,22 +154,26 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作类型']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ typeMap[row.type] || row.type }}</span>
+                    <span :title="typeMap[row.type] || row.type">{{ typeMap[row.type] || row.type }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['对象及类型']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ objectMap[row.object_type] || row.object_type }}：{{ row.object_name }}</span>
+                    <span :title="`${objectMap[row.object_type] || row.object_type}：${row.object_name}`">
+                        {{ objectMap[row.object_type] || row.object_type }}：{{ row.object_name }}
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作者']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ row.username }}</span>
+                    <span :title="row.username">{{ row.username }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作来源']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ sourceMap[row.source_type] || row.source_type }}</span>
+                    <span :title="sourceMap[row.source_type] || row.source_type">
+                        {{ sourceMap[row.source_type] || row.source_type }}
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作状态']`)" width="100">
@@ -689,6 +696,7 @@
                 this.searchParams = {};
                 this.searchValue = [];
                 this.emptyData.tipType = '';
+                this.$refs.iamSearchSelect.$refs.searchSelect.isTagMultLine = false;
                 this.resetPagination();
                 this.fetchAuditList(true);
             },

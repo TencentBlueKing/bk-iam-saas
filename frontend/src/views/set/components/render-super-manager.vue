@@ -28,6 +28,7 @@
                         <template v-else>
                             <div
                                 :class="['user-wrapper', { 'is-hover': row.canEdit && row.user[0] !== 'admin' }]"
+                                :title="row.user.join('；')"
                             >
                                 {{ row.user.join('；') }}
                             </div>

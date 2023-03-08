@@ -27,6 +27,7 @@
                                 </bk-button>
                             </div>
                             <iam-search-select
+                                ref="iamSearchSelect"
                                 @on-change="handleSearch"
                                 :data="searchData"
                                 :value="searchValue"
@@ -340,6 +341,7 @@
                 this.searchValue = [];
                 this.searchList = [];
                 this.emptyData.tipType = '';
+                this.$refs.iamSearchSelect.$refs.searchSelect.isTagMultLine = false;
                 this.resetPagination();
                 this.fetchData(true);
             },
