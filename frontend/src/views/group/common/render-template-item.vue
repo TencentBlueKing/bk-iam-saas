@@ -1,9 +1,20 @@
 <template>
     <div :class="['iam-template-item', extCls, { 'is-not-expanded': !isExpanded }]">
-        <div class="header" @click="handleExpanded" @mousemove="isShowEditFill" @mouseleave="cancelShowEditFill">
+        <div
+            :class="[
+                'header',
+                'external-header'
+            ]"
+            @click="handleExpanded"
+            @mousemove="isShowEditFill"
+            @mouseleave="cancelShowEditFill">
             <section>
-                <Icon class="expanded-icon" :type="isExpanded ? 'down-angle' : 'right-angle'" />
-                <span>
+                <Icon
+                    v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle"
+                    class="expanded-icon"
+                    :type="isExpanded ? 'down-angle' : 'right-angle'"
+                />
+                <span v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
                     {{ title }}
                     <template v-if="count > 0">
                         ({{ count }})
@@ -52,6 +63,7 @@
 </template>
 <script>
     import store from '@/store';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         props: {
@@ -105,6 +117,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             isDetail () {
                 return this.mode === 'detail';
             },
@@ -194,6 +207,9 @@
                 line-height: 40px;
                 font-size: 14px;
             }
+        }
+        .external-header {
+            height: 0;
         }
         .edit-action,
         .delete-action{

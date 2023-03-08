@@ -1649,7 +1649,7 @@
                     .folder-icon {
                         font-size: 17px;
                         color: #a3c5fd;
-                        margin-right: 10px;
+                        margin-right: 5px;
                     }
                 }
 
@@ -1683,7 +1683,7 @@
                     .user-icon {
                         font-size: 16px;
                         color: #a3c5fd;
-                        margin-right: 10px;
+                        margin-right: 5px;
                     }
                 }
 
