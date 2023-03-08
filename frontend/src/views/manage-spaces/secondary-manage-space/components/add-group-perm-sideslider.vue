@@ -27,6 +27,7 @@
                                 </bk-button>
                             </div>
                             <iam-search-select
+                                ref="iamSearchSelect"
                                 @on-change="handleSearch"
                                 :data="searchData"
                                 :value="searchValue"
@@ -333,6 +334,16 @@
 
             getIsSelect (row, index) {
                 return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled;
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.searchList = [];
+                this.emptyData.tipType = '';
+                this.$refs.iamSearchSelect.$refs.searchSelect.isTagMultLine = false;
+                this.resetPagination();
+                this.fetchData(true);
             },
 
             handleRefresh () {
