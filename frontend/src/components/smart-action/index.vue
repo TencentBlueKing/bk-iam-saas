@@ -158,6 +158,7 @@
         .fixed-custom {
            box-shadow: none;
            border-top: 1px solid #dcdee5;
+           padding-left: 0px !important;
         }
     }
 </style>
