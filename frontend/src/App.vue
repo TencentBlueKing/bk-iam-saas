@@ -2,7 +2,8 @@
     <div id="app"
         :class="[
             systemCls,
-            { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
+            { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
+            { 'external-app-layout': $route.name === 'addMemberBoundary' }
         ]">
         <iam-guide
             v-if="groupGuideShow"
@@ -336,6 +337,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .external-app-layout {
+        min-width: 0 !important;
+        max-width: 900px !important;
     }
 
 </style>
