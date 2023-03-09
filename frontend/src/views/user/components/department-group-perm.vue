@@ -57,6 +57,15 @@
                     </bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -91,6 +100,15 @@
                     </div>
                     <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
                 </template>
+                <div v-if="gradeMembers.length === 0">
+                    <ExceptionEmpty
+                        :type="emptySliderData.type"
+                        :empty-text="emptySliderData.text"
+                        :tip-text="emptySliderData.tip"
+                        :tip-type="emptySliderData.tipType"
+                        @on-refresh="handleEmptySliderRefresh"
+                    />
+                </div>
             </div>
         </bk-sideslider>
     </div>
@@ -99,6 +117,7 @@
     import { mapGetters } from 'vuex';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -136,7 +155,21 @@
                 // 控制侧边弹出层显示
                 isShowGradeSlider: false,
                 sliderLoading: false,
-                gradeSliderTitle: ''
+                gradeSliderTitle: '',
+                gradeMembers: [],
+                curRoleId: -1,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                },
+                emptySliderData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -150,25 +183,43 @@
                 this.pageLoading = true;
                 const { type } = this.data;
                 try {
-                    const res = await this.$store.dispatch('perm/getDepartPermGroups', {
+                    const { code, data } = await this.$store.dispatch('perm/getDepartPermGroups', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id
                     });
-                    this.dataList = res.data || [];
+                    this.dataList = data || [];
                     this.pageConf.count = this.dataList.length;
                     this.curPageData = this.getDataByPage(this.pageConf.current);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.dataList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.pageLoading = false;
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.pageConf = Object.assign(
+                    {},
+                    {
+                        current: 1,
+                        count: 0,
+                        limit: 10
+                    });
+                this.fetchSystems();
+            },
+
+            handleEmptySliderRefresh () {
+                this.fetchRoles(this.curRoleId);
             },
 
             handleAnimationEnd () {
@@ -306,14 +357,17 @@
             async fetchRoles (id) {
                 this.sliderLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getGradeMembers', { id });
-                    this.gradeMembers = [...res.data];
+                    const { code, data } = await this.$store.dispatch('role/getGradeMembers', { id });
+                    this.gradeMembers = [...data];
+                    this.emptySliderData = formatCodeData(code, this.emptySliderData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptySliderData = formatCodeData(code, this.emptySliderData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -326,9 +380,11 @@
             */
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
+                    const { name, id } = payload.role;
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
-                    this.fetchRoles(payload.role.id);
+                    this.gradeSliderTitle = `【${name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.curRoleId = id;
+                    this.fetchRoles(id);
                 }
             }
         }

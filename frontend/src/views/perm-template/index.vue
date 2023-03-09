@@ -15,11 +15,11 @@
                 </bk-button> -->
             <div slot="right">
                 <iam-search-select
-                    @on-change="handleSearch"
+                    style="width: 420px"
                     :data="searchData"
                     :value="searchValue"
                     :quick-search-method="quickSearchMethod"
-                    style="width: 420px"
+                    @on-change="handleSearch"
                 />
             </div>
         </render-search>
@@ -28,6 +28,7 @@
             size="small"
             :class="{ 'set-border': tableLoading }"
             ext-cls="perm-template-table"
+            :max-height="tableHeight"
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
@@ -107,6 +108,16 @@
                     </section>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <user-group-dialog
@@ -127,6 +138,7 @@
     import IamGuide from '@/components/iam-guide/index.vue';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData, getWindowHeight } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -155,7 +167,13 @@
                 curTempalteId: '',
                 addGroupLoading: false,
                 spaceFiltersList: [],
-                curRole: 'staff'
+                curRole: 'staff',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -165,6 +183,9 @@
             },
             isRatingManager () {
                 return this.curRole === 'rating_manager';
+            },
+            tableHeight () {
+                return getWindowHeight() - 185;
             }
         },
         watch: {
@@ -202,6 +223,7 @@
                     disabled: true
                 }
             ];
+            this.setCurrentQueryCache(this.refreshCurrentQuery());
             const isObject = payload => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
@@ -254,12 +276,12 @@
                 const queryParams = {
                     limit,
                     current,
-                ...this.searchParams
+                    ...this.searchParams
                 };
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find(item => key === item.id);
-                    if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
+                    if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
                             const tempData = this.searchList.find(item => item.id === key);
                             params[key] = tempData.values[0];
@@ -268,10 +290,11 @@
                         params[key] = this.searchParams[key];
                     }
                 }
+                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
-                ...params,
-                limit,
-                current
+                    ...params,
+                    limit,
+                    current
                 };
             },
 
@@ -299,6 +322,19 @@
                 });
             },
 
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchTemplateList(true);
+            },
+
+            handleEmptyRefresh () {
+                this.resetPagination();
+                this.fetchTemplateList(true);
+            },
+
             handleTemplateDelete ({ id }) {
                 this.$bkInfo({
                     title: this.$t(`m.dialog['确认删除']`),
@@ -322,22 +358,25 @@
                 this.tableLoading = isLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
-                ...this.searchParams,
-                limit: this.pagination.limit,
-                offset: this.pagination.limit * (this.pagination.current - 1)
+                    ...this.searchParams,
+                    limit: this.pagination.limit,
+                    offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.$store.commit('setGuideShowByField', { field: 'template', flag: !this.tableList.length > 0 });
                     this.$store.commit('setGuideShowByField', { field: 'group', flag: this.tableList.length > 0 });
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -419,6 +458,7 @@
             handleSearch (payload, result) {
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchTemplateList(true);
             },

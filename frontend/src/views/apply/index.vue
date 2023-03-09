@@ -1,11 +1,16 @@
 <template>
-    <layout>
+    <layout
+        :external-left-layout-height="externalSystemsLayout.myApply.leftLayoutHeight"
+        :external-right-layout-height="externalSystemsLayout.myApply.rightLayoutHeight"
+    >
         <left-layout
             :data="applyList"
-            :active="currentActive"
+            :filter-active="filterActive"
+            :current-active="currentActive"
             :filter-data="filterData"
             :is-loading="isApplyLoading"
             :can-scroll-load="canScrollLoad"
+            :empty-data="emptyData"
             @on-change="handleChange"
             @on-filter-change="handleFilterChange"
             @on-load="handleLoadMore" />
@@ -27,6 +32,7 @@
     import RenderGroupDetail from './components/apply-group-detail';
     import RenderRatingManager from './components/apply-create-rate-manager-detail';
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
 
     const COM_MAP = new Map([
         [['grant_action', 'renew_action', 'grant_temporary_action'], 'RenderDetail'],
@@ -48,7 +54,8 @@
             return {
                 applyList: [],
                 // 默认显示3天内的单据
-                currentActive: 3,
+                filterActive: '',
+                currentActive: -1,
                 filterData: {
                     3: this.$t(`m.myApply['3天']`),
                     7: this.$t(`m.myApply['一周']`),
@@ -69,15 +76,21 @@
                 },
                 currentApplyData: {},
                 cancelLoading: false,
-                comKey: -1
+                comKey: -1,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
-            ...mapGetters(['externalSystemId']),
+            ...mapGetters(['externalSystemId', 'externalSystemsLayout']),
             curCom () {
                 let com = '';
                 for (const [key, value] of this.comMap.entries()) {
-                    if (key.includes(this.currentApplyData.type)) { // 根据后台返回值渲染动态组件
+                    if (Object.keys(this.currentApplyData).length && key.includes(this.currentApplyData.type)) { // 根据后台返回值渲染动态组件
                         com = value;
                         break;
                     }
@@ -94,13 +107,14 @@
         methods: {
             async fetchPageData () {
                 await this.fetchApplyList();
+                this.fetchUrlParams();
             },
 
             async fetchApplyList (isLoading = false, isScrollLoad = false) {
                 this.isApplyLoading = isLoading;
                 const params = {
                     ...this.searchParams,
-                    period: this.currentActive,
+                    period: this.filterActive,
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
@@ -112,33 +126,49 @@
                     params.source_system_id = this.externalSystemId;
                 }
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyList', params);
+                    const { code, data } = await this.$store.dispatch('myApply/getApplyList', params);
                     if (!isScrollLoad) {
-                        this.applyList = [...res.data.results];
+                        this.applyList = [...data.results];
                         if (this.applyList.length < 1) {
                             this.currentApplyData = {};
                         } else {
                             this.currentApplyData = this.applyList[0];
                         }
-                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+                        this.pagination.totalPage = Math.ceil(data.count / this.pagination.limit);
                     } else {
                         this.currentBackup++;
-                        (res.data.results || []).forEach(item => {
+                        (data.results || []).forEach(item => {
                             item.is_read = false;
                         });
-                        this.applyList.push(...res.data.results);
+                        this.applyList.push(...data.results);
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.applyList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.applyList = [];
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.isApplyLoading = false;
+                }
+            },
+
+            fetchUrlParams () {
+                if (this.externalSystemsLayout.myApply.externalSystemParams) {
+                    const query = this.$route.query;
+                    if (Object.keys(query).length && query.hasOwnProperty('id')) {
+                        this.currentApplyData = this.applyList.find(item => item.id === +query.id) || {};
+                        if (Object.keys(this.currentApplyData).length) {
+                            this.currentActive = this.currentApplyData.id;
+                        }
+                    }
                 }
             },
 
@@ -150,10 +180,11 @@
             handleChange (payload) {
                 this.comKey = +new Date();
                 this.currentApplyData = payload;
+                this.currentActive = payload.id;
             },
 
             handleFilterChange (payload) {
-                this.currentActive = payload;
+                this.filterActive = payload;
                 this.pagination.current = 1;
                 this.currentBackup = 1;
                 this.fetchApplyList(true);

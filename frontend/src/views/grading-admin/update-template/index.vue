@@ -30,14 +30,24 @@
                         </template>
                         <template v-if="isEmpty && !leftLoading">
                             <div class="empty-wrapper">
-                                <iam-svg />
+                                <!-- <iam-svg /> -->
+                                <ExceptionEmpty
+                                    :type="emptyData.type"
+                                    :empty-text="emptyData.text"
+                                    :tip-text="emptyData.tip"
+                                    :tip-type="emptyData.tipType"
+                                    @on-clear="handleEmptyClear"
+                                    @on-refresh="handleEmptyRefresh"
+                                />
                             </div>
                         </template>
                     </div>
                 </div>
                 <div class="right-wrapper" v-bkloading="{ isLoading: rightLoading, opacity: 1 }">
                     <render-resource-instance-table
-                        :data="policyList" />
+                        :empty-data="emptyInstanceData"
+                        :data="policyList"
+                        :on-refresh="handleEmptyInstanceRefresh" />
                 </div>
             </section>
         </render-horizontal-block>
@@ -54,6 +64,7 @@
     import _ from 'lodash';
     import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
     import renderResourceInstanceTable from '../components/render-template-resource-instance-table';
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -111,7 +122,19 @@
                 leftLoading: false,
                 rightLoading: false,
                 isFilter: false,
-                policyList: []
+                policyList: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                },
+                emptyInstanceData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -140,6 +163,10 @@
                 this.handleCancel();
             },
 
+            handleEmptyInstanceRefresh () {
+                this.fetchPageData();
+            },
+
             handleSubmit () {},
 
             handleCancel () {
@@ -150,22 +177,36 @@
             },
 
             handleSearch () {
-                if (this.searchKey === '') {
+                if (!this.searchKey) {
                     return;
                 }
+                this.emptyData.tipType = 'search';
                 this.templateList = this.templateListBackup.filter(item => item.name.indexOf(this.searchKey) > -1);
                 this.isFilter = true;
                 this.curTemplateId = -1;
+                if (!this.templateList.length) {
+                    this.emptyData = formatCodeData(0, this.emptyData);
+                }
                 // this.leftLoading = true
+            },
+
+            handleEmptyClear () {
+                this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: '' } }, this.templateListBackup.length === 0);
+                this.templateList = _.cloneDeep(this.templateListBackup);
+            },
+
+            handleEmptyRefresh () {
+                this.templateList = _.cloneDeep(this.templateListBackup);
             },
 
             async fetchRatingManagerDetail (payload) {
                 this.rightLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: payload });
-                    this.handleDetailData(res.data);
+                    const { data } = await this.$store.dispatch('role/getRatingManagerDetail', { id: payload });
+                    this.handleDetailData(data);
                 } catch (e) {
                     console.error(e);
+                    this.emptyInstanceData = formatCodeData(e.code || e.response.data.code, this.emptyInstanceData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -194,6 +235,7 @@
                     });
                 });
                 this.policyList = _.cloneDeep(tempActions);
+                this.emptyInstanceData = formatCodeData(0, this.emptyInstanceData, this.policyList.length === 0);
             },
 
             handleSelectTempalte ({ id, gradingId }) {

@@ -44,13 +44,23 @@
         </template>
         <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
+                <!-- <iam-svg />
+                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
 </template>
+
 <script>
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -63,7 +73,13 @@
                 rateListAll: [], // 一级管理空间权限交接
                 rateExpanded: true,
                 isSelectAllChecked: false,
-                rateSelectData: []
+                rateSelectData: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         mounted () {
@@ -73,29 +89,36 @@
             async fetchData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', {
+                    const { code, data } = await this.$store.dispatch('role/getRatingManagerList', {
                         limit: 1024, // 接口是分页接口...需要确认
                         offset: '',
                         name: ''
                     });
-                    const rateListAll = res.data.results || [];
+                    const rateListAll = data.results || [];
                     this.rateListAll.splice(0, this.rateListAll.length, ...rateListAll);
-                    const rateListRender = res.data.results.length > 5
-                        ? res.data.results.slice(0, 5) : res.data.results;
+                    const rateListRender = data.results.length > 5
+                        ? data.results.slice(0, 5) : data.results;
                     this.rateListRender.splice(0, this.rateListRender.length, ...rateListRender);
                     this.isEmpty = rateListAll.length < 1;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.isLoading = false;
                 }
+            },
+            
+            handleEmptyRefresh () {
+                this.fetchData();
             },
 
             handlerateExpanded () {

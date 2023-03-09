@@ -51,6 +51,15 @@
                     </div>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -84,6 +93,7 @@
 <script>
     import { mapGetters } from 'vuex';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { formatCodeData } from '@/common/util';
     import renderRenewalDialog from '@/components/render-renewal-dialog';
     import DeleteDialog from '../common/iam-confirm-dialog';
     import AddMemberDialog from './iam-add-member';
@@ -136,7 +146,13 @@
 
                 isShowRenewalDialog: false,
                 curData: {},
-                renewalLoading: false
+                renewalLoading: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -170,6 +186,7 @@
         },
         created () {
             this.PERMANENT_TIMESTAMP = PERMANENT_TIMESTAMP;
+            this.fetchMemberList();
         },
         methods: {
             async fetchMemberList () {
@@ -180,21 +197,34 @@
                         limit: this.pagination.limit,
                         offset: this.pagination.limit * (this.pagination.current - 1)
                     };
-                    const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.tableLoading = false;
                 }
+            },
+
+            async handleEmptyRefresh () {
+                this.pagination = Object.assign(
+                    this.pagination,
+                    {
+                        offset: 0,
+                        limit: 10
+                    });
+                await this.fetchMemberList();
             },
 
             handleShowRenewal (payload) {

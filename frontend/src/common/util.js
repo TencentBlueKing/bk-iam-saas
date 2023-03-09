@@ -494,3 +494,57 @@ export function sleep (time) {
         }, time);
     });
 }
+
+/**
+ * 根据状态码生成不同提示
+ *
+ * @param {number/string} type
+ * @param {object} payload
+ * @param {boolean} isEmpty 为了处理异常数据刷新一次正常，执行正常code，这时候需要清空字段
+ */
+export function formatCodeData (type, payload, isEmpty = true) {
+    type = +type;
+    const codeData = {
+        0: () => {
+            const operateEmpty = {
+                true: () => {
+                    return payload.tipType === 'search'
+                        ? Object.assign(payload, { type: 'search-empty', text: '搜索结果为空', tipType: 'search' })
+                        : Object.assign(payload, { type: 'empty', text: '暂无数据', tipType: '' });
+                },
+                false: () => {
+                    return Object.assign(payload, { type: '', text: '', tipType: '' });
+                }
+            };
+            return operateEmpty[isEmpty]();
+        },
+        401: () => {
+            return Object.assign(payload, { type: 403, text: '没有权限', tipType: 'refresh' });
+        },
+        403: () => {
+            return Object.assign(payload, { type: 403, text: '没有权限', tipType: 'refresh' });
+        },
+        404: () => {
+            return Object.assign(payload, { type: 404, text: '数据不存在', tipType: 'refresh' });
+        },
+        500: () => {
+            return Object.assign(payload, { type: 500, text: '数据获取异常', tipType: 'refresh' });
+        },
+        1902000: () => {
+            return Object.assign(payload, { type: 500, text: '数据获取异常', tipType: 'refresh' });
+        },
+        1902200: () => {
+            return Object.assign(payload, { type: 500, text: '数据获取异常', tipType: 'refresh' });
+        },
+        1902204: () => {
+            return Object.assign(payload, { type: 500, text: '暂不支持搜索', tipType: 'refresh' });
+        },
+        1902229: () => {
+            return Object.assign(payload, { type: 500, text: '搜索过于频繁', tipType: 'refresh' });
+        },
+        1902222: () => {
+            return Object.assign(payload, { type: 500, text: '搜索结果太多', tipType: 'refresh' });
+        }
+    };
+    return codeData[type] ? codeData[type]() : codeData[500]();
+}

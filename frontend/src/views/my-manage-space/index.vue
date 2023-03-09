@@ -100,6 +100,17 @@
                                 </div>
                             </template>
                         </bk-table-column>
+                        <template slot="empty">
+                            <ExceptionEmpty
+                                style="background: #f5f6fa"
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                                @on-refresh="handleEmptyRefresh"
+                            />
+                        </template>
                     </bk-table>
                 </template>
             </bk-table-column>
@@ -107,7 +118,7 @@
                 <template slot-scope="{ row }">
                     <div>
                         <Icon type="level-one" :style="{ color: iconColor[0] }" />
-                        <span v-bk-tooltips.right="row.name" class="right-start">
+                        <span :title="row.name" class="right-start">
                             {{ row.name }}
                         </span>
                     </div>
@@ -144,8 +155,7 @@
             <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新时间']`)">
                 <template slot-scope="{ row }">
-                    <span v-bk-tooltips.top="{ content: row.updated_time, extCls: 'iam-tooltips-cls' }"
-                        :title="row.updated_time">{{ row.updated_time }}</span>
+                    <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
@@ -162,17 +172,29 @@
                     </div>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    style="background: #f5f6fa"
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
     </div>
 </template>
 
 <script>
     import { mapGetters } from 'vuex';
-    import { getWindowHeight } from '@/common/util';
+    import { getWindowHeight, formatCodeData } from '@/common/util';
     import IamEditInput from './components/iam-edit/input';
     import IamEditMemberSelector from './components/iam-edit/member-selector';
     import IamEditTextarea from './components/iam-edit/textarea';
     import { buildURLParams } from '@/common/url';
+
     export default {
         name: 'myManageSpace',
         components: {
@@ -208,6 +230,12 @@
                     name: '',
                     description: '',
                     members: []
+                },
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
                 }
             };
         },
@@ -280,6 +308,7 @@
                     return;
                 }
                 this.isFilter = true;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchGradingAdmin(true);
             },
@@ -363,20 +392,23 @@
             async fetchSubManagerList (row) {
                 this.subLoading = true;
                 try {
-                    const res = await this.$store.dispatch('spaceManage/getStaffSubManagerList', {
+                    const { code, data } = await this.$store.dispatch('spaceManage/getStaffSubManagerList', {
                         limit: this.subPagination.limit,
                         offset: (this.subPagination.current - 1) * this.subPagination.limit,
                         id: row.id
                     });
-                    this.subPagination.count = res.data.count;
-                    this.subTableList.splice(0, this.subTableList.length, ...(res.data.results || []));
+                    this.subPagination.count = data.count;
+                    this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
                     row.children = this.subTableList;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.subTableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -464,26 +496,28 @@
                 this.tableLoading = isTableLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', {
+                    const { code, data } = await this.$store.dispatch('role/getRatingManagerList', {
                         limit: this.pagination.limit,
                         offset: (this.pagination.current - 1) * this.pagination.limit,
                         name: this.searchValue
                     });
-                    this.pagination.count = res.data.count;
-                    res.data.results = res.data.results.map(e => {
+                    this.pagination.count = data.count;
+                    data.results = data.results.map(e => {
                         e.children = [];
                         return e;
                     });
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     if (this.isStaff) {
                         this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
-                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -513,6 +547,18 @@
             handleLimitChange (limit) {
                 this.pagination = Object.assign(this.pagination, { limit, current: 1 });
                 this.fetchGradingAdmin(true);
+            },
+
+            handleEmptyClear () {
+                this.searchValue = '';
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchGradingAdmin();
+            },
+
+            handleEmptyRefresh () {
+                this.resetPagination();
+                this.fetchGradingAdmin();
             },
             
             resetPagination () {

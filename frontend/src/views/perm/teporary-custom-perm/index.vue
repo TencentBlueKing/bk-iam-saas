@@ -19,8 +19,13 @@
         </template>
         <template v-else>
             <div class="my-perm-custom-perm-empty-wrapper">
-                <iam-svg />
-                <div class="empty-tips">{{ $t(`m.common['暂无数据']`) }}</div>
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
@@ -40,6 +45,17 @@
             tepSystemList: {
                 type: Array,
                 default: () => []
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -80,6 +96,10 @@
                 if (this.systemPolicyList[sysIndex].count < 1) {
                     this.systemPolicyList.splice(sysIndex, 1);
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.$store.dispatch('permApply/getTeporHasPermSystem');
             }
         }
     };

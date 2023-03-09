@@ -105,6 +105,12 @@ class Instance(BaseModel):
         """
         for i in range(len(self.path)):
             node_list = self.path[i]
+
+            last_node = node_list.get_last_node_without_any()
+            # 只有最后一层的资源类型与资源实例一致才需要忽略路径
+            if last_node.system_id != resource_system_id or last_node.type != resource_type_id:
+                continue
+
             for selection in selections:
                 if node_list.match_selection(resource_system_id, resource_type_id, selection):
                     self.path[i] = node_list.ignore_path(selection)

@@ -26,6 +26,16 @@
                     <bk-button theme="primary" text @click="handleRemove(row)">{{ $t(`m.perm['解除关联']`) }}</bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -45,6 +55,8 @@
 <script>
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import PermSideslider from '../components/render-group-perm-sideslider';
+    import { formatCodeData } from '@/common/util';
+
     export default {
         name: '',
         components: {
@@ -74,7 +86,13 @@
                 currentMember: [],
 
                 isShowPermSlider: false,
-                curGroupId: ''
+                curGroupId: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         watch: {
@@ -99,15 +117,18 @@
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateMember', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('permTemplate/getTemplateMember', params);
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

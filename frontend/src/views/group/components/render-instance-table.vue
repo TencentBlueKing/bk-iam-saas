@@ -135,6 +135,9 @@
                     </template>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty />
+            </template>
         </bk-table>
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
@@ -217,6 +220,7 @@
     import PreviewResourceDialog from './preview-resource-dialog';
     import RenderResourcePopover from '@/components/iam-view-resource-popover';
     import RenderDetail from '../common/render-detail';
+
     // import store from '@/store'
     export default {
         name: 'resource-instance-table',

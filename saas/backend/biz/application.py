@@ -249,6 +249,14 @@ class ApprovedPassApplicationBiz:
         qs = Group.objects.filter(id__in=[group["id"] for group in groups]).values_list("id", flat=True)
         group_id_set = set(qs)
 
+        applicants = (
+            application.data["applicants"]
+            if "applicants" in application.data
+            else [{"type": subject.type, "id": subject.id}]
+        )
+
+        subjects = [Subject.parse_obj(one) for one in applicants]
+
         for group in groups:
             if group["id"] not in group_id_set:
                 logger.error(
@@ -259,7 +267,10 @@ class ApprovedPassApplicationBiz:
 
             self.group_biz.update_members_expired_at(
                 group["id"],
-                [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, expired_at=group["expired_at"])],
+                [
+                    GroupMemberExpiredAtBean(type=subject.type, id=subject.id, expired_at=group["expired_at"])
+                    for subject in subjects
+                ],
             )
 
         log_group_event(

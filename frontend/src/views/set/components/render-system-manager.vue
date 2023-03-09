@@ -12,7 +12,11 @@
                 :header-border="false"
                 @row-mouse-enter="handleSysRowMouseEnter"
                 @row-mouse-leave="handleSysRowMouseLeave">
-                <bk-table-column :label="$t(`m.set['系统名称']`)" prop="name"></bk-table-column>
+                <bk-table-column :label="$t(`m.set['系统名称']`)" prop="name">
+                    <template slot-scope="{ row }">
+                        <span :title="row.name">{{ row.name }}</span>
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t(`m.set['成员列表']`)">
                     <template slot-scope="{ row, $index }">
                         <template v-if="row.isEdit || row.members.length">
@@ -63,6 +67,16 @@
                         </bk-checkbox>
                     </template>
                 </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-clear="handleEmptyClear"
+                        @on-refresh="handleEmptyRefresh"
+                    />
+                </template>
             </bk-table>
         </render-item>
     </div>
@@ -73,7 +87,8 @@
     import IamEditInput from '@/components/iam-edit/input';
     import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
     import RenderItem from '../common/render-item';
-    import { getWindowHeight } from '@/common/util';
+    import { getWindowHeight, formatCodeData } from '@/common/util';
+    
     export default {
         name: '',
         components: {
@@ -86,7 +101,13 @@
             return {
                 subTitle: this.$t(`m.set['系统管理员提示']`),
                 systemUserList: [],
-                userApi: window.BK_USER_API
+                userApi: window.BK_USER_API,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -108,9 +129,9 @@
             async fetchSystemManager () {
                 this.$emit('data-ready', false);
                 try {
-                    const res = await this.$store.dispatch('role/getSystemManager');
+                    const { code, data } = await this.$store.dispatch('role/getSystemManager');
                     const tempArr = [];
-                    res.data.forEach(item => {
+                    data.forEach(item => {
                         tempArr.push({
                             ...item,
                             memberBackup: _.cloneDeep(item.members),
@@ -119,12 +140,15 @@
                         });
                     });
                     this.systemUserList.splice(0, this.systemUserList.length, ...tempArr);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.systemUserList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

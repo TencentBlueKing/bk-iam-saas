@@ -1,5 +1,10 @@
 <template>
-    <div id="app" :class="systemCls">
+    <div id="app"
+        :class="[
+            systemCls,
+            { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
+            { 'external-app-layout': $route.name === 'addMemberBoundary' }
+        ]">
         <iam-guide
             v-if="groupGuideShow"
             type="create_group"
@@ -29,9 +34,18 @@
             @reload-page="reloadCurPage"
             v-if="!externalSystemsLayout.hideIamSlider">
         </the-nav>
-        <main class="main-layout" :class="layoutCls"
+        <main class="main-layout"
+            :class="[
+                layoutCls,
+                { 'external-main-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
+            ]"
             v-bkloading="{ isLoading: mainContentLoading, opacity: 1, zIndex: 1000 }">
-            <div ref="mainScroller" class="main-scroller" v-if="isShowPage">
+            <div ref="mainScroller"
+                :class="[
+                    'main-scroller',
+                    { 'external-main-scroller': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
+                ]"
+                v-if="isShowPage">
                 <router-view class="views-layout" :key="routerKey" v-show="!mainContentLoading"></router-view>
             </div>
         </main>
@@ -305,10 +319,29 @@
         padding: 24px;
     }
 
+    .external-system-layout {
+        height: calc(100% - 1px) !important;
+    }
+
+    .external-main-scroller, .external-main-layout {
+        height: 100%;
+    }
+
+    .add-member-boundary-container {
+        .external-main-scroller {
+            overflow: hidden;
+        }
+    }
+    
     .single-hide {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .external-app-layout {
+        min-width: 0 !important;
+        max-width: 900px !important;
     }
 
 </style>

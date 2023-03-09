@@ -1,12 +1,13 @@
 <template>
     <smart-action class="iam-add-member-wrapper">
-        <render-horizontal-block :style="contentHeight">
+        <render-horizontal-block>
             <div slot="header" class="title">
                 <template v-if="showExpiredAt">
                     <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
                     <div v-else>
                         <div v-if="isPrev">
-                            {{ $t(`m.common['添加成员至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
+                            {{ $t(`m.common['添加成员至']`) }}
+                            【<span class="member-title" :title="name">{{ name }}</span>】
                         </div>
                         <div v-else :title="`${$t(`m.common['设置新用户加入']`)}【${name}】${$t(`m.common['用户组的有效期']`)}`">
                             {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">【{{ name
@@ -24,7 +25,7 @@
                 </template>
             </div>
             <template v-bkloading="{ isLoading, opacity: 1 }">
-                <div v-show="!isLoading" class="add-member-content-wrapper" :style="{ height: `${contentHeight}px` }">
+                <div v-show="!isLoading" class="add-member-content-wrapper">
                     <template v-if="isPrev">
                         <div class="left">
                             <div class="tab-wrapper">
@@ -36,10 +37,14 @@
                                     <span class="active-line" v-if="tabActive === item.name"></span>
                                 </section>
                             </div>
-                            <div :class="['search-input',
-                                          { 'active': isSearchFocus },
-                                          { 'disabled': (isRatingManager || isAll) && !isAllFlag }]"
-                                v-if="isOrganization">
+                            <div
+                                v-if="isOrganization"
+                                :class="[
+                                    'search-input',
+                                    { 'active': isSearchFocus },
+                                    { 'disabled': (isRatingManager || isAll) && !isAllFlag }
+                                ]"
+                            >
                                 <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
                                     <template slot="dropdown-trigger">
                                         <Icon class="search-icon" :type="searchConditionValue === 'fuzzy' ?
@@ -66,18 +71,26 @@
                                     @keyup.up.native="handleKeyup" @keyup.down.native="handleKeydown">
                                 </bk-input>
                             </div>
-                            <div class="member-tree-wrapper" v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
+                            <div
+                                class="member-tree-wrapper"
+                                v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
                                 v-if="isOrganization">
                                 <template v-if="isShowMemberTree">
                                     <div class="tree">
-                                        <infinite-tree ref="memberTreeRef"
+                                        <infinite-tree
+                                            ref="memberTreeRef"
                                             data-test-id="group_addGroupMemberDialog_tree_member"
                                             :all-data="treeList"
-                                            :style="{ height: `${contentHeight - 100}px` }"
-                                            :is-rating-manager="curIsRatingManager" :key="infiniteTreeKey"
-                                            :is-disabled="isAll" @async-load-nodes="handleRemoteLoadNode"
-                                            @expand-node="handleExpanded" @on-select="handleOnSelected">
-                                        </infinite-tree>
+                                            :empty-data="emptyData"
+                                            :style="{ height: `${contentHeight - 52}px` }"
+                                            :is-rating-manager="curIsRatingManager"
+                                            :key="infiniteTreeKey"
+                                            :is-disabled="isAll"
+                                            @async-load-nodes="handleRemoteLoadNode"
+                                            @expand-node="handleExpanded"
+                                            @on-select="handleOnSelected"
+                                            @on-refresh="handleEmptyRefresh"
+                                        />
                                     </div>
                                 </template>
                                 <template v-if="isShowSearchResult">
@@ -98,8 +111,14 @@
                                         </template>
                                         <template v-if="isSearchResultEmpty">
                                             <div class="search-empty-wrapper">
-                                                <iam-svg />
-                                                <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p>
+                                                <ExceptionEmpty
+                                                    :type="emptyData.type"
+                                                    :empty-text="emptyData.text"
+                                                    :tip-text="emptyData.tip"
+                                                    :tip-type="emptyData.tipType"
+                                                    @on-clear="handleEmptyClear"
+                                                    @on-refresh="handleEmptyRefresh"
+                                                />
                                             </div>
                                         </template>
                                     </div>
@@ -110,8 +129,9 @@
                                     data-test-id="group_addGroupMemberDialog_input_manualUser" type="textarea"
                                     :rows="14" v-model="manualValue" :disabled="isAll" @input="handleManualInput">
                                 </bk-input>
-                                <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`)
-                                }}</p>
+                                <p class="manual-error-text" v-if="isManualInputOverLimit">
+                                    {{ $t(`m.common['手动输入提示1']`)}}
+                                </p>
                                 <p class="manual-error-text pr10" v-if="manualInputError">
                                     {{ $t(`m.common['手动输入提示2']`) }}
                                     <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
@@ -135,11 +155,14 @@
                                     <template v-if="curLanguageIsCn">
                                         {{ $t(`m.common['已选择']`) }}
                                         <template v-if="isShowSelectedText">
-                                            <span class="organization-count">{{ hasSelectedDepartments.length
-                                            }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
-                                            <span class="user-count">{{ hasSelectedUsers.length }}</span>{{
-                                                $t(`m.common['个']`)
-                                            }} {{ $t(`m.common['用户']`) }}
+                                            <span class="organization-count">
+                                                {{ hasSelectedDepartments.length}}
+                                            </span>
+                                            {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
+                                            <span class="user-count">
+                                                {{ hasSelectedUsers.length }}
+                                            </span>
+                                            {{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
                                         </template>
                                         <template v-else>
                                             <span class="user-count">0</span>
@@ -160,16 +183,24 @@
                                 <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll"
                                     @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
                             </div>
-                            <div class="content" :style="{ height: `${contentHeight - 20}px` }">
+                            <div class="content" :style="{ height: `${contentHeight}px` }">
                                 <div class="organization-content" v-if="isDepartSelectedEmpty">
                                     <div class="organization-item" v-for="item in hasSelectedDepartments"
                                         :key="item.id">
-                                        <div>
+                                        <div class="organization-info">
                                             <Icon type="file-close" class="folder-icon" />
-                                            <span class="organization-name" :title="item.fullName">{{ item.name
-                                            }}</span><span class="user-count" v-if="item.showCount">{{ '(' +
-                                                item.count + `)`
-                                            }}</span>
+                                            <span class="organization-name"
+                                                :title="item.full_name || item.name"
+                                            >
+                                                {{ item.name }}
+                                            </span>
+                                            <span
+                                                class="user-count"
+                                                v-if="item.count &&
+                                                    !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount"
+                                            >
+                                                {{ '(' + item.count + `)`}}
+                                            </span>
                                         </div>
                                         <Icon bk type="close-circle-shape" class="delete-depart-icon"
                                             @click="handleDelete(item, 'organization')" />
@@ -177,12 +208,17 @@
                                 </div>
                                 <div class="user-content" v-if="isUserSelectedEmpty">
                                     <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
-                                        <div>
+                                        <div class="user-info">
                                             <Icon type="personal-user" class="user-icon" />
-                                            <span class="user-name"
-                                                :title="item.name ? `${item.username}(${item.name})` : item.username">
-                                                {{ item.username }}<template v-if="item.name !== ''">({{ item.name
-                                                }})</template>
+                                            <span
+                                                class="user-name"
+                                                :title="item.name ? `${item.username}(${item.name})`
+                                                    : item.username"
+                                            >
+                                                {{ item.username }}
+                                                <template v-if="item.name">
+                                                    ({{ item.name}})
+                                                </template>
                                             </span>
                                         </div>
                                         <Icon bk type="close-circle-shape" class="delete-icon"
@@ -190,7 +226,7 @@
                                     </div>
                                 </div>
                                 <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
-                                    <iam-svg />
+                                    <ExceptionEmpty />
                                 </div>
                             </div>
                         </div>
@@ -203,6 +239,7 @@
                 </div>
             </template>
         </render-horizontal-block>
+        <div style="height: 50px;"></div>
         <div slot="action">
             <div class="footer-action">
                 <div v-if="showLimit" class="limit-wrapper">
@@ -228,8 +265,9 @@
                     <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave"
                         data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
                 </template>
-                <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">{{ $t(`m.common['取消']`)
-                }}</bk-button>
+                <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">
+                    {{ $t(`m.common['取消']`)}}
+                </bk-button>
             </div>
         </div>
     </smart-action>
@@ -241,8 +279,9 @@
     import dialogInfiniteList from '@/components/dialog-infinite-list';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import { il8n } from '@/language';
-    import { guid, getWindowHeight, sleep } from '@/common/util';
+    import { formatCodeData, guid, getWindowHeight, sleep } from '@/common/util';
     import { bus } from '@/common/bus';
+    import { mapGetters } from 'vuex';
 
     // 去除()以及之间的字符
     const getUsername = (str) => {
@@ -262,46 +301,46 @@
             IamDeadline
         },
         props: {
-            disabled: {
-                type: Boolean,
-                default: false
-            },
-            loading: {
-                type: Boolean,
-                default: false
-            },
-            showExpiredAt: {
-                type: Boolean,
-                default: false
-            },
-            name: {
-                type: String,
-                default: ''
-            },
-            id: {
-                type: [String, Number],
-                default: ''
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            isRatingManager: {
-                type: Boolean,
-                default: false
-            },
-            showLimit: {
-                type: Boolean,
-                default: false
-            },
-            allChecked: {
-                type: Boolean,
-                default: false
-            },
-            isBatch: {
-                type: Boolean,
-                default: false
-            }
+            // disabled: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // loading: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // showExpiredAt: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // name: {
+            //     type: String,
+            //     default: ''
+            // },
+            // id: {
+            //     type: [String, Number],
+            //     default: ''
+            // },
+            // title: {
+            //     type: String,
+            //     default: ''
+            // },
+            // isRatingManager: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // showLimit: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // allChecked: {
+            //     type: Boolean,
+            //     default: false
+            // },
+            // isBatch: {
+            //     type: Boolean,
+            //     default: false
+            // }
         },
         data () {
             return {
@@ -346,11 +385,30 @@
                 manualValueBackup: [],
                 isAll: false,
                 isAllFlag: false,
+                showLimit: false,
+                showExpiredAt: false,
+                disabled: false,
+                loading: false,
+                id: '',
+                title: '',
+                name: '',
+                isRatingManager: false,
+                allChecked: false,
+                isBatch: false,
+                isShowDialog: true,
                 users: [],
-                departments: []
+                departments: [],
+                subject_scopes: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             isLoading () {
                 return this.requestQueue.length > 0;
             },
@@ -414,7 +472,7 @@
                 return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
             },
             contentHeight () {
-                return getWindowHeight() - 260;
+                return getWindowHeight() - 120;
             }
         },
         watch: {
@@ -449,56 +507,53 @@
                 bus.$off('edit-member-boundary');
             });
             bus.$on('edit-member-boundary', (payload) => {
-                const { showLimit, isAll, users, departments } = payload;
-                this.users = _.cloneDeep(users);
-                this.departments = _.cloneDeep(departments);
-                this.isAll = isAll || false;
-                this.showLimit = showLimit || false;
-                this.fetchInitData();
+                this.fetchResetData(payload);
             });
             if (this.$route.name === 'gradingAdminCreate') {
                 this.handleSave();
             }
+            window.addEventListener('message', this.fetchReceiveData);
+            window.parent.postMessage({ type: 'IAM', code: 'load' }, '*');
         },
         methods: {
-            async fetchPageData () {
-                if (+this.id > 0) {
-                    await this.fetchDetail();
-                }
-            },
-            async fetchDetail () {
-                try {
-                    const { data } = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.id });
-                    if (data && Object.keys(data).length) {
-                        const { members, subject_scopes } = data;
-                        this.formData = Object.assign(this.formData, { members });
-                        this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
-                            return {
-                                name: item.name,
-                                username: item.id,
-                                type: item.type
-                            };
-                        });
-                        this.departments = subject_scopes.filter(item => item.type === 'department').map(item => {
-                            return {
-                                name: item.name,
-                                count: item.member_count,
-                                type: item.type,
-                                id: item.id
-                            };
-                        });
-                    }
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                }
-            },
+            // async fetchPageData () {
+            //     if (+this.id > 0) {
+            //         await this.fetchDetail();
+            //     }
+            // },
+            // async fetchDetail () {
+            //     try {
+            //         const { data } = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.id });
+            //         if (data && Object.keys(data).length) {
+            //             const { members, subject_scopes } = data;
+            //             this.formData = Object.assign(this.formData, { members });
+            //             this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
+            //                 return {
+            //                     name: item.name,
+            //                     username: item.id,
+            //                     type: item.type
+            //                 };
+            //             });
+            //             this.departments = subject_scopes.filter(item => item.type === 'department').map(item => {
+            //                 return {
+            //                     name: item.name,
+            //                     count: item.member_count,
+            //                     type: item.type,
+            //                     id: item.id
+            //                 };
+            //             });
+            //         }
+            //     } catch (e) {
+            //         console.error(e);
+            //         this.bkMessageInstance = this.$bkMessage({
+            //             limit: 1,
+            //             theme: 'error',
+            //             message: e.message || e.data.msg || e.statusText,
+            //             ellipsisLine: 2,
+            //             ellipsisCopy: true
+            //         });
+            //     }
+            // },
 
             // 初始化格式数据
             fetchInitData () {
@@ -519,6 +574,46 @@
                         this.fetchCategories(false, true);
                     }
                 }
+            },
+
+            // 接收iframe父页面传递的message
+            fetchReceiveData (payload) {
+                const { data } = payload;
+                console.log(data, '接受传递过来的数据');
+                this.fetchResetData(data);
+            },
+
+            fetchResetData (payload) {
+                const {
+                    id,
+                    title,
+                    name,
+                    showLimit,
+                    showExpiredAt,
+                    isAll,
+                    subject_scopes: subjectScopes,
+                    disabled,
+                    loading,
+                    isRatingManager,
+                    allChecked,
+                    isBatch
+                } = payload;
+                if (subjectScopes && subjectScopes.length) {
+                    this.users = subjectScopes.filter(item => item.type === 'user');
+                    this.departments = subjectScopes.filter(item => item.type === 'depart');
+                }
+                this.isAll = isAll || false;
+                this.showLimit = showLimit || false;
+                this.showExpiredAt = showExpiredAt || false;
+                this.disabled = disabled || false;
+                this.loading = loading || false;
+                this.id = id || '';
+                this.title = title || '';
+                this.name = name || '';
+                this.isRatingManager = isRatingManager || false;
+                this.allChecked = allChecked || false;
+                this.isBatch = isBatch || false;
+                this.fetchInitData();
             },
 
             handleSearchInput () {
@@ -688,14 +783,14 @@
             async fetchRoleSubjectScope (isTreeLoading = false, isShowLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
-                    const res = await this.$store.dispatch('role/getRoleSubjectScope');
-
-                    const departments = [...res.data];
+                    const { code, data } = await this.$store.dispatch('role/getRoleSubjectScope');
+                    const departments = [...data];
                     this.isAllFlag = departments.some(item => item.type === '*' && item.id === '*');
                     if (this.isAllFlag) {
                         this.fetchCategories(false, true);
                         return;
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, departments.length === 0);
                     departments.forEach(child => {
                         child.visiable = true;
                         child.level = 0;
@@ -742,10 +837,12 @@
                     this.treeList = _.cloneDeep(departments);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -760,8 +857,8 @@
             async fetchCategories (isTreeLoading = false, isShowLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
-                    const res = await this.$store.dispatch('organization/getCategories');
-                    const categories = [...res.data];
+                    const { code, data } = await this.$store.dispatch('organization/getCategories');
+                    const categories = [...data];
                     categories.forEach(item => {
                         item.visiable = true;
                         item.level = 0;
@@ -813,11 +910,14 @@
                         }
                     });
                     this.treeList = _.cloneDeep(categories);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.treeLoading = false;
@@ -896,14 +996,15 @@
                     is_exact: this.searchConditionValue === 'exact'
                 };
                 try {
-                    const res = await this.$store.dispatch('organization/getSearchOrganizations', params);
-                    if (res.data.is_too_much) {
+                    const { code, data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+                    if (data.is_too_much) {
                         this.isShowTooMuch = true;
                         return;
                     }
                     this.isShowTooMuch = false;
-                    if (res.data.departments.length > 0) {
-                        res.data.departments.forEach(depart => {
+                    const { users, departments } = data;
+                    if (departments.length > 0) {
+                        departments.forEach(depart => {
                             depart.showRadio = true;
                             depart.type = 'depart';
                             if (departIds.length && departIds.includes(depart.id)) {
@@ -918,10 +1019,10 @@
                             depart.count = depart.recursive_member_count;
                             depart.showCount = true;
                         });
-                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...res.data.departments);
+                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...departments);
                     }
-                    if (res.data.users.length > 0) {
-                        res.data.users.forEach(user => {
+                    if (users.length > 0) {
+                        users.forEach(user => {
                             user.id = guid();
                             user.showRadio = true;
                             user.type = 'user';
@@ -935,22 +1036,39 @@
                                 this.$set(user, 'disabled', true);
                             }
                         });
-                        this.searchedUsers.splice(0, this.searchedUsers.length, ...res.data.users);
+                        this.searchedUsers.splice(0, this.searchedUsers.length, ...users);
                     }
                     this.searchedResult.splice(
                         0,
                         this.searchedResult.length,
                         ...this.searchedDepartment.concat(this.searchedUsers)
                     );
+                    const isEmpty = users.length === 0 && departments.length === 0;
+                    this.emptyData.tipType = 'search';
+                    this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.treeLoading = false;
                 }
+            },
+
+            handleEmptyClear () {
+                this.keyword = '';
+                this.emptyData.tipType = '';
+                this.fetchInitData();
+                this.requestQueue = [];
+            },
+
+            handleEmptyRefresh () {
+                this.fetchInitData();
+                this.requestQueue = [];
             },
 
             handleExpanded (payload) {
@@ -1176,11 +1294,33 @@
             },
 
             handleSave () {
+                const list = [...this.hasSelectedUsers, ...this.hasSelectedDepartments];
+                // eslint-disable-next-line camelcase
+                const subject_scopes = list.map(item => {
+                    if (item.type === 'depart') {
+                        return {
+                            id: Number(item.id),
+                            type: 'depart',
+                            name: item.name,
+                            full_name: item.full_name,
+                            count: item.count
+                        };
+                    }
+                    if (item.type === 'user') {
+                        return {
+                            id: item.id,
+                            type: 'user',
+                            name: item.name,
+                            username: item.username || item.id,
+                            full_name: item.username,
+                            count: item.count
+                        };
+                    }
+                });
                 const params = {
-                    users: this.hasSelectedUsers,
-                    departments: this.hasSelectedDepartments,
-                    expiredAt: this.expiredAt,
-                    isAll: this.isAll
+                    subject_scopes
+                    // expiredAt: this.expiredAt,
+                    // isAll: this.isAll
                 };
                 if (this.showExpiredAt) {
                     if (this.expiredAt !== 4102444800) {
@@ -1215,6 +1355,8 @@
 </script>
 <style lang='postcss' scoped>
 .iam-add-member-wrapper {
+    padding: 0;
+    overflow: hidden;
     .title {
         line-height: 26px;
         color: #313238;
@@ -1236,6 +1378,12 @@
             white-space: nowrap;
             vertical-align: top;
         }
+    }
+
+    .user-info, .organization-info {
+        display: flex;
+        align-items: center;
+        max-width: calc(100% - 40px);
     }
 
     .footer-action {
@@ -1293,7 +1441,8 @@
 
             .tree {
                 /* max-height: 309px; */
-                overflow: auto;
+                /* height: calc(100% - 50px);
+                overflow: auto; */
 
                 &::-webkit-scrollbar {
                     width: 4px;
@@ -1474,7 +1623,7 @@
                         justify-content: space-between;
 
                         .organization-name {
-                            max-width: calc(100% - 100px);
+                            /* max-width: calc(100% - 100px); */
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
@@ -1500,6 +1649,7 @@
                     .folder-icon {
                         font-size: 17px;
                         color: #a3c5fd;
+                        margin-right: 5px;
                     }
                 }
 
@@ -1511,7 +1661,7 @@
                         justify-content: space-between;
 
                         .user-name {
-                            max-width: calc(100% - 50px);
+                            /* max-width: calc(100% - 50px); */
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
@@ -1533,6 +1683,7 @@
                     .user-icon {
                         font-size: 16px;
                         color: #a3c5fd;
+                        margin-right: 5px;
                     }
                 }
 
@@ -1558,6 +1709,12 @@
 }
 
 .horizontal-item {
+    max-width: 900px;
+    height: calc(100% - 50px);
+    margin-bottom: 0;
+    padding: 0;
+    padding-top: 10px;
+    padding-bottom: 50px;
     .label {
         width: 0;
     }

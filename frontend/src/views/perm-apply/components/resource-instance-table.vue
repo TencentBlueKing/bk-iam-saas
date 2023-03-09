@@ -4,6 +4,7 @@
         <bk-table
             v-if="!isLoading"
             :data="tableList"
+            :max-height="tableList.length > 0 ? 500 : 280"
             border
             :row-class-name="handleRowClass"
             :cell-class-name="getCellClass"
@@ -209,6 +210,9 @@
                     </template>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty />
+            </template>
         </bk-table>
 
         <bk-sideslider

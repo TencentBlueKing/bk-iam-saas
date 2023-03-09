@@ -154,7 +154,6 @@
                         curData.list.push(item);
                     }
                 });
-
                 return tempList;
             },
             curAuthorizationData () {

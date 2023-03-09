@@ -24,7 +24,9 @@
                     :label="item.label"
                     :prop="item.prop">
                     <template slot-scope="{ row }">
-                        <span>{{ row.system ? row.system.name || '' : '' }}</span>
+                        <span :title="row.system ? row.system.name || '' : ''">
+                            {{ row.system ? row.system.name || '' : '' }}
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -51,13 +53,23 @@
                     </template>
                 </bk-table-column>
             </template>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyRenewalData.type"
+                    :empty-text="emptyRenewalData.text"
+                    :tip-text="emptyRenewalData.tip"
+                    :tip-type="emptyRenewalData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
     </div>
 </template>
 <script>
     import { mapGetters } from 'vuex';
-    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { formatCodeData } from '@/common/util';
+    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
 
     // 过期时间的天数区间
     const EXPIRED_DISTRICT = 15;
@@ -87,6 +99,17 @@
             count: {
                 type: Number,
                 default: () => 0
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -102,7 +125,13 @@
                 currentBackup: 1,
                 tableProps: [],
                 systemFilter: [],
-                isLoading: false
+                isLoading: false,
+                emptyRenewalData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -161,6 +190,7 @@
             data: {
                 handler (value) {
                     this.allData = value;
+                    this.pagination = Object.assign(this.pagination, { count: value.length });
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
                     const getDays = payload => {
@@ -193,7 +223,14 @@
             count: {
                 handler (value) {
                     this.pagination.count = value;
-                }
+                },
+                immediate: true
+            },
+            emptyData: {
+                handler (value) {
+                    this.emptyRenewalData = value;
+                },
+                immediate: true
             }
         },
         methods: {
@@ -254,23 +291,33 @@
             async fetchTableData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                        page_size: this.pagination.limit,
-                        page: this.pagination.current
+                    const { current, limit } = this.pagination;
+                    const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                        page_size: limit,
+                        page: current
                     });
-                    this.tableList = res.data || [];
+                    this.tableList = data.results || [];
+                    this.pagination.count = data.count;
+                    this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.isLoading = false;
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+                this.fetchTableData();
             }
 
         }

@@ -56,6 +56,16 @@
                                 @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
                         </template>
                     </bk-table-column>
+                    <template slot="empty">
+                        <ExceptionEmpty
+                            :type="emptyData.type"
+                            :empty-text="emptyData.text"
+                            :tip-text="emptyData.tip"
+                            :tip-type="emptyData.tipType"
+                            @on-clear="handleEmptyClear"
+                            @on-refresh="handleEmptyRefresh"
+                        />
+                    </template>
                 </bk-table>
             </div>
             <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
@@ -122,6 +132,7 @@
     import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { formatCodeData } from '@/common/util';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import IamSearchSelect from '@/components/iam-search-select';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
@@ -162,7 +173,13 @@
                 sliderLoading: false,
                 gradeMembers: [],
                 gradeSliderTitle: '',
-                curRole: ''
+                curRole: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -269,6 +286,19 @@
                 });
             },
 
+            handleEmptyRefresh () {
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
             refreshCurrentQuery () {
                 const { limit, current } = this.pagination;
                 const params = {};
@@ -280,7 +310,7 @@
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find(item => key === item.id);
-                    if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
+                    if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
                             const tempData = this.searchList.find(item => item.id === key);
                             params[key] = tempData.values[0];
@@ -289,6 +319,7 @@
                         params[key] = this.searchParams[key];
                     }
                 }
+                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
                     ...params,
                     limit,
@@ -321,9 +352,9 @@
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    this.pagination.count = res.data.count || 0;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    this.pagination.count = data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.$nextTick(() => {
                         this.tableList.forEach(item => {
                             if (this.curUserGroup.includes(item.id.toString())) {
@@ -331,8 +362,10 @@
                             }
                         });
                     });
+                    this.emptyData = formatCodeData(code, this.emptyData, data.count === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'primary',
@@ -408,6 +441,7 @@
                 this.currentSelectList = [];
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },
@@ -459,13 +493,15 @@
 
             async fetchCurUserGroup () {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', {
                         page_size: 100,
                         page: 1
                     });
-                    this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);
+                    this.curUserGroup = data.results.filter(item => item.department_id === 0).map(item => item.id);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
                 } catch (e) {
                     this.$emit('toggle-loading', false);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,

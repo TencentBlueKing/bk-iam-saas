@@ -92,6 +92,21 @@ class TestPathNodeList:
         assert new_path_node_list[0].type == "type1"
 
 
+class TestInstance:
+    def test_ignore_path_true(self, path_node_list: PathNodeList, instance_selection: InstanceSelection):
+        instance = Instance(type="type1", path=[path_node_list])
+        instance_selection.ignore_iam_path = True
+        instance.ignore_path("system_id", "type1", [instance_selection])
+        assert len(instance.path[0]) == 1
+        assert instance.path[0][0].type == "type1"
+
+    def test_ignore_path_diff_type(self, path_node_list: PathNodeList, instance_selection: InstanceSelection):
+        instance = Instance(type="type1", path=[path_node_list])
+        instance_selection.ignore_iam_path = True
+        instance.ignore_path("system_id", "type2", [instance_selection])
+        assert len(instance.path[0]) == 2
+
+
 class TestDataGenerator:
     @classmethod
     def gen_only_attr_related_resource_data(cls):

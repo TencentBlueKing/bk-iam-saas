@@ -1274,6 +1274,33 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/:
+    post:
+      operationId: v2_management_groups_renew_applications
+      description: 用户组续期申请单
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/management/groups/{id}/:
     delete:
       operationId: management_grade_manager_delete_group

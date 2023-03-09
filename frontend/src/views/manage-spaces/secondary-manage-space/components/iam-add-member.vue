@@ -88,14 +88,16 @@
                                         ref="memberTreeRef"
                                         data-test-id="group_addGroupMemberDialog_tree_member"
                                         :all-data="treeList"
+                                        :empty-data="emptyData"
                                         style="height: 309px;"
                                         :is-rating-manager="curIsRatingManager"
                                         :key="infiniteTreeKey"
                                         :is-disabled="isAll"
                                         @async-load-nodes="handleRemoteLoadNode"
                                         @expand-node="handleExpanded"
-                                        @on-select="handleOnSelected">
-                                    </infinite-tree>
+                                        @on-select="handleOnSelected"
+                                        @on-refresh="handleEmptyRefresh"
+                                    />
                                 </div>
                             </template>
                             <template v-if="isShowSearchResult">
@@ -119,8 +121,16 @@
                                     </template>
                                     <template v-if="isSeachResultEmpty">
                                         <div class="search-empty-wrapper">
-                                            <iam-svg />
-                                            <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p>
+                                            <!-- <iam-svg />
+                                            <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p> -->
+                                            <ExceptionEmpty
+                                                :type="emptyData.type"
+                                                :empty-text="emptyData.text"
+                                                :tip-text="emptyData.tip"
+                                                :tip-type="emptyData.tipType"
+                                                @on-clear="handleEmptyClear"
+                                                @on-refresh="handleEmptyRefresh"
+                                            />
                                         </div>
                                     </template>
                                 </div>
@@ -197,7 +207,7 @@
                                 </div>
                             </div>
                             <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
-                                <iam-svg />
+                                <ExceptionEmpty />
                             </div>
                         </div>
                     </div>
@@ -239,7 +249,7 @@
     import InfiniteTree from '@/components/infinite-tree';
     import dialogInfiniteList from '@/components/dialog-infinite-list';
     import IamDeadline from '@/components/iam-deadline/horizontal';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import { bus } from '@/common/bus';
 
     // 去除()以及之间的字符
@@ -359,7 +369,13 @@
                 manualInputError: false,
                 manualValueBackup: [],
                 isAll: false,
-                isAllFlag: false
+                isAllFlag: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -449,20 +465,7 @@
                         this.infiniteTreeKey = new Date().getTime();
                         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
                         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
-                        if (this.showExpiredAt) {
-                            if (this.isBatch) {
-                                this.fetchCategoriesList();
-                            } else {
-                                this.fetchMemberList();
-                            }
-                        } else {
-                            this.requestQueue = ['categories'];
-                            if (this.isRatingManager) {
-                                this.fetchRoleSubjectScope(false, true);
-                            } else {
-                                this.fetchCategories(false, true);
-                            }
-                        }
+                        this.fetchInitData();
                     }
                 },
                 immediate: true
@@ -498,12 +501,41 @@
             }
         },
         methods: {
+            fetchInitData () {
+                if (this.showExpiredAt) {
+                    if (this.isBatch) {
+                        this.fetchCategoriesList();
+                    } else {
+                        this.fetchMemberList();
+                    }
+                } else {
+                    this.requestQueue = ['categories'];
+                    if (this.isRatingManager) {
+                        this.fetchRoleSubjectScope(false, true);
+                    } else {
+                        this.fetchCategories(false, true);
+                    }
+                }
+            },
+            
             handleSearchInput () {
                 this.isSerachFocus = true;
             },
 
             handleSearchBlur () {
                 this.isSerachFocus = false;
+            },
+            
+            handleEmptyClear () {
+                this.keyword = '';
+                this.emptyData.tipType = '';
+                this.fetchInitData();
+                this.requestQueue = [];
+            },
+
+            handleEmptyRefresh () {
+                this.fetchInitData();
+                this.requestQueue = [];
             },
 
             handleTabChange ({ name }) {
@@ -665,14 +697,14 @@
             async fetchRoleSubjectScope (isTreeLoading = false, isDialogLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
-                    const res = await this.$store.dispatch('role/getRoleSubjectScope');
-
-                    const departments = [...res.data];
+                    const { code, data } = await this.$store.dispatch('role/getRoleSubjectScope');
+                    const departments = [...data];
                     this.isAllFlag = departments.some(item => item.type === '*' && item.id === '*');
                     if (this.isAllFlag) {
                         this.fetchCategories(false, true);
                         return;
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, departments.length === 0);
                     departments.forEach(child => {
                         child.visiable = true;
                         child.level = 0;
@@ -719,10 +751,12 @@
                     this.treeList = _.cloneDeep(departments);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -737,8 +771,9 @@
             async fetchCategories (isTreeLoading = false, isDialogLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
-                    const res = await this.$store.dispatch('organization/getCategories');
-                    const categories = [...res.data];
+                    const { code, data } = await this.$store.dispatch('organization/getCategories');
+                    const categories = [...data];
+                    this.emptyData = formatCodeData(code, this.emptyData, categories.length === 0);
                     categories.forEach((item, index) => {
                         item.visiable = true;
                         item.level = 0;
@@ -792,9 +827,11 @@
                     this.treeList = _.cloneDeep(categories);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.treeLoading = false;
@@ -886,14 +923,14 @@
                     is_exact: this.searchConditionValue === 'exact'
                 };
                 try {
-                    const res = await this.$store.dispatch('organization/getSeachOrganizations', params);
-                    if (res.data.is_too_much) {
+                    const { code, data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+                    if (data.is_too_much) {
                         this.isShowTooMuch = true;
                         return;
                     }
                     this.isShowTooMuch = false;
-                    if (res.data.departments.length > 0) {
-                        res.data.departments.forEach(depart => {
+                    if (data.departments.length > 0) {
+                        data.departments.forEach(depart => {
                             depart.showRadio = true;
                             depart.type = 'depart';
                             if (departIds.length && departIds.includes(depart.id)) {
@@ -908,10 +945,10 @@
                             depart.count = depart.recursive_member_count;
                             depart.showCount = true;
                         });
-                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...res.data.departments);
+                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...data.departments);
                     }
-                    if (res.data.users.length > 0) {
-                        res.data.users.forEach(user => {
+                    if (data.users.length > 0) {
+                        data.users.forEach(user => {
                             user.id = guid();
                             user.showRadio = true;
                             user.type = 'user';
@@ -925,15 +962,21 @@
                                 this.$set(user, 'disabled', true);
                             }
                         });
-                        this.searchedUsers.splice(0, this.searchedUsers.length, ...res.data.users);
+                        this.searchedUsers.splice(0, this.searchedUsers.length, ...data.users);
                     }
                     this.searchedResult.splice(
                         0,
                         this.searchedResult.length,
                         ...this.searchedDepartment.concat(this.searchedUsers)
                     );
+                    const isEmpty = data.users.length === 0 && data.departments.length === 0;
+                    if (isEmpty) {
+                        this.emptyData.tipType = 'search';
+                    }
+                    this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
                         message: e.message || e.data.msg || e.statusText

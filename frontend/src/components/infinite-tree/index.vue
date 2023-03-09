@@ -3,7 +3,8 @@
         <div class="ghost-wrapper" :style="ghostStyle"></div>
         <div class="render-wrapper" ref="content">
             <div
-                v-for="item in renderData" :key="item.id"
+                v-for="item in renderData"
+                :key="item.id"
                 :style="getNodeStyle(item)"
                 :class="['node-item', { 'active': item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
                 :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
@@ -30,8 +31,13 @@
                     :style="nameStyle(item)"
                     :class="['node-title', { 'node-selected': item.selected }]"
                     :title="item.type === 'user' ? item.name !== '' ? `${item.username}(${item.name})` : item.username : item.name">
-                    {{ item.type === 'user' ? item.username : item.name }}<template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
-                </span><span class="red-dot" v-if="item.isNewMember"></span><span class="node-user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                    {{ item.type === 'user' ? item.username : item.name }}
+                    <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
+                </span>
+                <span class="red-dot" v-if="item.isNewMember"></span>
+                <span class="node-user-count" v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount">
+                    {{ '(' + item.count + `)` }}
+                </span>
                 <spin-loading ext-cls="loading" v-if="item.loading" />
                 <div class="node-radio" v-if="item.showRadio">
                     <span class="node-checkbox"
@@ -44,11 +50,21 @@
                     </span>
                 </div>
             </div>
+            <template v-if="renderData.length === 0">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </div>
     </div>
 </template>
+
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'infinite-tree',
@@ -93,6 +109,18 @@
             isDisabled: {
                 type: Boolean,
                 default: false
+            },
+            // 根据状态码渲染落地空内容
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: 'empty',
+                        text: '暂无数据',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -103,6 +131,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             ghostStyle () {
                 return {
                     height: this.visiableData.length * this.itemHeight + 'px'
@@ -336,6 +365,10 @@
                         item.is_selected = isSelected;
                     }
                 });
+            },
+
+            handleEmptyRefresh () {
+                this.$emit('on-refresh', {});
             }
         }
     };

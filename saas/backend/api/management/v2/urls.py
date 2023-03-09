@@ -76,6 +76,12 @@ urlpatterns = [
         name="open.management.v2.group_action",
     ),
     # -------------- 申请 --------------
+    # 用户组续期申请单
+    path(
+        "groups/-/renew/applications/",
+        views.ManagementGroupRenewApplicationViewSet.as_view({"post": "create"}),
+        name="open.management.v2.group_renew_application",
+    ),
     # 用户组申请单
     path(
         "groups/-/applications/",

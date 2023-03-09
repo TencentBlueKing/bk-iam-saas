@@ -35,7 +35,13 @@
         </template>
         <template v-if="isEmpty">
             <div class="apply-content-empty-wrapper">
-                <iam-svg />
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
@@ -48,6 +54,7 @@
     import PermPolicy from '@/model/my-perm-policy';
     import RenderProcess from '../common/render-process';
     import RenderMemberItem from '../common/render-member-display';
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -79,7 +86,13 @@
                 authorizationScopes: [],
                 name: '',
                 users: [],
-                departments: []
+                departments: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -148,8 +161,10 @@
                     this.authorizationScopes = _.cloneDeep(data.authorization_scopes);
                     this.users = data.subject_scopes.filter(item => item.type === 'user');
                     this.departments = data.subject_scopes.filter(item => item.type === 'department');
+                    this.emptyData = formatCodeData(res.code, this.emptyData, this.authorizationScopes.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
