@@ -93,31 +93,41 @@ export const beforeEach = async (to, from, next) => {
     }
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
-        if (currentRoleId) {
-            const roleList = await store.dispatch('roleList', {
-                cancelWhenRouteChange: false,
-                cancelPrevious: false
-            });
-            const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
-            if (currentRole) {
-                await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
-                await store.dispatch('userInfo');
-                curRole = currentRole.type;
-                next();
-            } else {
-                next({ path: `${SITE_URL}user-group` });
-            }
+        const roleList = await store.dispatch('roleList', {
+            cancelWhenRouteChange: false,
+            cancelPrevious: false
+        });
+
+        if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
+            const { role_id: externalRoleId } = to.query;
+            const currentRole = roleList.find((item) => String(item.id) === externalRoleId);
+            await store.dispatch('role/updateCurrentRole', { id: externalRoleId });
+            await store.dispatch('userInfo');
+            curRole = currentRole.type;
+            next();
         } else {
-            const noFrom = !from.name;
-            // 说明是刷新页面
-            if (noFrom) {
-                if (to.query.source === 'externalApp') {
+            if (currentRoleId) {
+                const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
+                if (currentRole) {
+                    await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
+                    await store.dispatch('userInfo');
+                    curRole = currentRole.type;
                     next();
                 } else {
                     next({ path: `${SITE_URL}user-group` });
                 }
             } else {
-                next();
+                const noFrom = !from.name;
+                // 说明是刷新页面
+                if (noFrom) {
+                    if (to.query.source === 'externalApp') {
+                        next();
+                    } else {
+                        next({ path: `${SITE_URL}user-group` });
+                    }
+                } else {
+                    next();
+                }
             }
         }
     } else if (to.name === 'userGroup') {
