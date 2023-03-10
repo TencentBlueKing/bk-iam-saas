@@ -112,6 +112,7 @@
 <script>
     import { mapGetters } from 'vuex';
     import { bus } from '@/common/bus';
+    import { getTreeNode } from '@/common/util';
     import { getRouterDiff } from '@/common/router-handle';
 
     const routerMap = new Map([
@@ -379,23 +380,9 @@
                 this.selectCls = value ? 'iam-nav-select-dropdown-content' : 'hide-iam-nav-select-cls';
             },
 
-            // 获取当前选中节点
-            getTreeNode (id, list) {
-                for (let i = 0; i < list.length; i++) {
-                    if (list[i].id === id) {
-                        return list[i];
-                    } else if (list[i].children && list[i].children.length) {
-                        const result = this.getTreeNode(id, list[i].children);
-                        if (result) {
-                            return result;
-                        }
-                    }
-                }
-            },
-
             // 切换身份
             async handleSwitchRole (id) {
-                const { type, name } = this.getTreeNode(id, this.curRoleList);
+                const { type, name } = getTreeNode(id, this.curRoleList);
                 [this.curRoleId, this.curRole] = [id, type];
                 try {
                     await this.$store.dispatch('role/updateCurrentRole', { id });
