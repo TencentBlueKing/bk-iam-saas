@@ -17,8 +17,13 @@
                 @click="handleBatchRenewal">
                 {{ $t(`m.renewal['权限续期']`) }}
             </bk-button>
-            <div v-if="isEmpty || isNoRenewal" class="info-renewal" style="background: #000"
-                v-bk-tooltips="'没有需要续期的权限'"></div>
+            <div :class="[
+                     'info-renewal',
+                     { 'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn }
+                 ]"
+                style="background: #000"
+                v-bk-tooltips="'没有需要续期的权限'">
+            </div>
             <bk-button
                 v-if="enablePermissionHandover.toLowerCase() === 'true'"
                 :disabled="!systemList.length && !teporarySystemList.length"
@@ -28,10 +33,23 @@
                 @click="handleGoPermTransfer">
                 {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
-            <div v-if="!systemList.length && !teporarySystemList.length" class="info-sys" style="background: #000"
-                v-bk-tooltips="'您还没有权限，无需交接'"></div>
+            <div
+                v-if="!systemList.length && !teporarySystemList.length"
+                :class="[
+                    'info-sys',
+                    { 'external-info-sys': externalSystemsLayout.myPerm.hideApplyBtn }
+                ]"
+                style="background: #000"
+                v-bk-tooltips="$t(`m.permTransfer['您还没有权限，无需交接']`)">
+            </div>
         </div>
-        <div class="redCircle" v-if="!isNoRenewal"></div>
+        <div
+            v-if="!isNoRenewal"
+            :class="[
+                'redCircle',
+                { 'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn }
+            ]"
+        />
         <template>
             <template v-if="isEmpty">
                 <div class="empty-wrapper">
@@ -331,7 +349,9 @@
             height:10px;
             background-color: red;
             border-radius: 50%;
-
+            &.external-redCircle {
+                right: -90px;
+            }
         }
     }
     .iam-my-perm-tab-cls {
@@ -359,5 +379,13 @@
         height: 40px;
         opacity: 0;
         cursor:no-drop;
+    }
+
+    .external-info-renewal {
+        left: 0;
+    }
+
+    .external-info-sys {
+        left: 100px;
     }
 </style>
