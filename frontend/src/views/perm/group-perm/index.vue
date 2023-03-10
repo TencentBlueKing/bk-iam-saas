@@ -185,7 +185,8 @@
             emptyData: {
                 handler (value) {
                     this.groupPermEmptyData = value;
-                }
+                },
+                immediate: true
             }
         },
         methods: {
