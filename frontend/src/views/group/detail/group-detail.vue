@@ -21,7 +21,7 @@
                                 <div
                                     :title="basicInfo.description"
                                     class="single-hide"
-                                    style="max-width: 100%">
+                                    style="max-width: 600px;">
                                     {{ basicInfo.description }}
                                 </div>
                             </template>
