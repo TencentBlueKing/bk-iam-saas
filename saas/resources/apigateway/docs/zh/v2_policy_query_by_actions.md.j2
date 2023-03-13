@@ -1,0 +1,123 @@
+### 批量拉取一批操作的权限策略
+
+场景: 接入系统需要对同一资源类型的一批资源实例的多个操作鉴权, 比如资源实例列表页显示多个操作是否有权限
+
+约束:
+
+1. 一批资源的资源类型必须是一样的
+2. action 如果对 cmdb 资源有依赖, 依赖的 cmdb 资源实例必须是同一个
+
+SDK 实现:
+
+1. 批量拉取一批操作的权限策略
+2. 本地遍历计算资源实例是否有权限
+
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| subject | string | 是 | subject |
+| actions | Array(action) | 是 | 操作列表 |
+| resources | Array(resource_node) | 是 | 资源实例, 资源类型的顺序必须操作注册时的顺序一致 |
+
+action
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id    |  字符串  | 是   | 操作 ID |
+
+subject
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| type    |  字符串  | 是   | 授权对象类型, 当前只支持 user |
+| id    |  字符串  | 是   | 授权对象 ID |
+
+resource_node
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system |  字符串  | 是   | 资源系统 ID |
+| type |  字符串  | 是   | 资源类型 ID |
+| id | 字符串 | 是 | 资源实例 ID |
+| attribute | 对象 | 是 | 资源属性 |
+
+#### Request
+
+##### 无 cmdb 依赖
+
+```json
+{
+    "subject":
+    {
+        "type": "user",
+        "id": "admin"
+    },
+    "actions": [
+        {
+            "id": "edit"
+        },
+        {
+            "id": "view"
+        }
+    ],
+    "resources": []
+}
+```
+
+##### 无 cmdb 依赖
+
+```json
+{
+    "subject":
+    {
+        "type": "user",
+        "id": "admin"
+    },
+    "actions": [
+        {
+            "id": "execute"
+        },
+        {
+            "id": "quick_execute"
+        }
+    ],
+    "resources": [
+    {
+        "system": "bk_cmdb",
+        "type": "host",
+        "id": "192.168.1.1"
+    }]
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [ // action的顺序与请求中的acitons顺序一致
+        {
+            "action":{
+                "id":"edit"
+            },
+            "condition": {  // 条件表达式
+                "field": "host.id",
+                "op": "any",
+                "value": []
+            }
+        },
+        {
+            "action":{
+                "id":"view"
+            },
+            "condition": {  // 条件表达式
+                "field": "host.id",
+                "op": "any",
+                "value": []
+            }
+        }
+    ]
+}
+```
