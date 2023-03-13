@@ -1274,33 +1274,6 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
-  /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/:
-    post:
-      operationId: v2_management_groups_renew_applications
-      description: 用户组续期申请单
-      tags:
-      - open
-      - v2
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: false
-          resourcePermissionRequired: false
-        disabledStages: []
-        descriptionEn:
   /api/v1/open/management/groups/{id}/:
     delete:
       operationId: management_grade_manager_delete_group
@@ -2325,6 +2298,33 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/:
+    post:
+      operationId: v2_management_groups_renew_applications
+      description: 用户组续期申请单
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/open/management/systems/{system_id}/groups/-/renew/applications/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v2/open/management/systems/{system_id}/groups/{id}/:
     delete:
       operationId: v2_management_grade_manager_delete_group
@@ -2807,6 +2807,37 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v2/policy/systems/{system_id}/auth_by_actions/:
+    post:
+      operationId: v2_policy_auth_by_actions
+      description: 批量操作鉴权
+      tags:
+      - policy
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/policy/systems/{system_id}/auth_by_actions/
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v2/policy/systems/{system_id}/query/:
     post:
       operationId: v2_policy_query
@@ -2825,6 +2856,37 @@ paths:
           type: HTTP
           method: post
           path: /api/v2/policy/systems/{system_id}/query/
+          matchSubpath: false
+          timeout: 0
+          upstreams:
+            loadbalance: roundrobin
+            hosts:
+            - host: http://{env.backend}
+              weight: 100
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v2/policy/systems/{system_id}/query_by_actions/:
+    post:
+      operationId: v2_policy_query_by_actions
+      description: 批量操作策略查询
+      tags:
+      - policy
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v2/policy/systems/{system_id}/query_by_actions/
           matchSubpath: false
           timeout: 0
           upstreams:
