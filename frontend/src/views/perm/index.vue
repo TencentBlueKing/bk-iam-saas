@@ -159,18 +159,21 @@
             externalSystemsLayout: {
                 handler (value) {
                     if (value.myPerm.hideCustomTab) {
-                        this.panels.splice(1, 1);
+                        this.panels.splice(2, 1);
                     }
                 },
                 immediate: true,
                 deep: true
             },
-            active (value) {
-                // 因为同时调了很多接口，所以需要对应的空配置内容
-                const emptyField = this.panels.find(item => item.name === value);
-                if (emptyField) {
-                    this.curEmptyData = this[emptyField.empty];
-                }
+            active: {
+                handler (value) {
+                    // 因为同时调了很多接口，所以需要对应的空配置内容
+                    const emptyField = this.panels.find(item => item.name === value);
+                    if (emptyField) {
+                        this.curEmptyData = this[emptyField.empty];
+                    }
+                },
+                immediate: true
             }
         },
         created () {
@@ -190,19 +193,38 @@
             async handleTabChange (tabName) {
                 this.active = tabName;
                 await this.fetchData();
-                window.history.replaceState({}, '', `?${buildURLParams({ tab: tabName })}`);
+                const searchParams = {
+                    ...this.$route.query,
+                    tab: tabName
+                };
+                window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
             },
 
             async fetchData () {
                 this.componentLoading = true;
-                try {
-                    const userGroupParams = {
+                const userGroupParams = {
+                    page_size: 10,
+                    page: 1
+                };
+                if (this.externalSystemId) {
+                    userGroupParams.system_id = this.externalSystemId;
+                }
+                const requestList = [
+                    this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
+                    this.$store.dispatch('permApply/getHasPermSystem'),
+                    this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
                         page_size: 10,
                         page: 1
-                    };
-                    if (this.externalSystemId) {
-                        userGroupParams.system_id = this.externalSystemId;
-                    }
+                    }),
+                    this.$store.dispatch('renewal/getExpireSoonPerm'),
+                    this.$store.dispatch('permApply/getTeporHasPermSystem'),
+                    this.$store.dispatch('perm/getDepartMentsPersonalGroups')
+                    // this.fetchPermGroups(),
+                    // this.fetchSystems(),
+                    // this.fetchSoonGroupWithUser(),
+                    // this.fetchSoonPerm()
+                ];
+                try {
                     const [
                         { code: code1, data: data1 },
                         { code: code2, data: data2 },
@@ -210,21 +232,7 @@
                         { data: data4 },
                         { code: code5, data: data5 },
                         { code: code6, data: data6 }
-                    ] = await Promise.all([
-                        this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
-                        this.$store.dispatch('permApply/getHasPermSystem'),
-                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                            page_size: 10,
-                            page: 1
-                        }),
-                        this.$store.dispatch('renewal/getExpireSoonPerm'),
-                        this.$store.dispatch('permApply/getTeporHasPermSystem'),
-                        this.$store.dispatch('perm/getDepartMentsPersonalGroups')
-                        // this.fetchPermGroups(),
-                        // this.fetchSystems(),
-                        // this.fetchSoonGroupWithUser(),
-                        // this.fetchSoonPerm()
-                    ]);
+                    ] = await Promise.all(requestList);
                     
                     const personalGroupList = data1.results || [];
                     this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
@@ -250,7 +258,6 @@
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
-                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -258,8 +265,35 @@
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
+                    // 获取非阻塞且未报错列表接口信息
+                    await this.fetchAsyncTable(requestList);
+                    const emptyField = this.panels.find(item => item.name === this.active);
+                    if (emptyField) {
+                        this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
+                    }
                 } finally {
                     this.componentLoading = false;
+                }
+            },
+            
+            async fetchAsyncTable (payload) {
+                const errorList = [];
+                const res = await Promise.all(payload.map((item, index) => item.catch((e) => {
+                    errorList.push(index);
+                })));
+                if (res[0]) {
+                    const personalGroupList = res[0].data.results || [];
+                    this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
+                }
+
+                if (res[1]) {
+                    const systemList = res[1].data || [];
+                    this.systemList.splice(0, this.systemList.length, ...systemList);
+                }
+                    
+                if (res[5]) {
+                    const departmentGroupList = res[5].data || [];
+                    this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
                 }
             },
             // fetchSoonGroupWithUser () {
