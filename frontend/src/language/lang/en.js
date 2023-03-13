@@ -532,7 +532,8 @@ export const m = {
         '查看审批详情': 'View approval detail',
         '创建一级管理空间': 'Create rate administrator',
         '可授权人员范围': 'Scope of authorized personnel',
-        '编辑一级管理空间': 'Edit rate administrator'
+        '编辑一级管理空间': 'Edit rate administrator',
+        '申请创建项目': 'Apply to create project'
     },
     myApproval: {
         '审批列表': 'Approval List',

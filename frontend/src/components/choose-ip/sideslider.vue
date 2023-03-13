@@ -125,8 +125,8 @@
                 isScrollBottom: false,
                 curSelectedIds: [],
                 emptyData: {
-                    type: '',
-                    text: '',
+                    type: 'empty',
+                    text: '暂无数据',
                     tip: '',
                     tipType: ''
                 }
@@ -205,7 +205,7 @@
                     this.selectList.forEach(item => {
                         item.checked = this.curSelectedIds.includes(item.id);
                     });
-                    this.emptyData = formatCodeData(code, this.emptyData, this.selectList.length === 0);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
