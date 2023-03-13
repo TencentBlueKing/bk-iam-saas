@@ -243,7 +243,8 @@ export const m = {
         数据不存在: 'Data does not exist',
         '搜索结果太多': 'There are too many search results, please improve the search criteria',
         '暂不支持搜索': 'Search is not supported temporarily. We will go online as soon as possible',
-        '去编辑': 'To edit'
+        '去编辑': 'To edit',
+        '您没有该角色权限，无法切换到该角色': 'You do not have permission to switch to this role'
     },
     // 校验
     verify: {

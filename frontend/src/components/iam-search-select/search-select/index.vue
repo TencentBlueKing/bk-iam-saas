@@ -221,11 +221,19 @@
                 }
                 return this.chipList.slice(0, this.maxRenderTagNums);
             },
-            isTagMultLine () {
-                if (this.focused) {
-                    return false;
+            isTagMultLine: {
+                get () {
+                    if (this.focused) {
+                        return false;
+                    }
+                    return this.maxRenderTagNums > 0;
+                },
+                set (value) {
+                    if (!value) {
+                        this.maxRenderTagNums = -1;
+                    }
+                    return value;
                 }
-                return this.maxRenderTagNums > 0;
             },
 
             tagGroupStyles () {

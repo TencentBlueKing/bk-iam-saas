@@ -2,13 +2,14 @@
     <div class="iam-edit-selector" :style="styles">
         <template v-if="!isEditable">
             <div class="edit-wrapper">
-                <div class="edit-content">
+                <div class="edit-content" :title="displayValue.map(item => item.username) || ''">
                     <slot>
                         <span
                             v-for="(item, i) in displayValue"
                             :key="i"
                             class="member-item"
-                            :class="item.readonly ? 'member-readonly' : ''">
+                            :class="item.readonly ? 'member-readonly' : ''"
+                        >
                             {{ item.username }}
                             <!-- <Icon v-if="!isShowRole" type="close-small"
                                 @click.stop="handleDelete(index)" />

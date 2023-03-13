@@ -76,8 +76,8 @@
 
 <style lang="postcss" scoped>
 .exception-wrap {
+  width: 200px;
   margin-top: 0;
-  /* background: #ffffff; */
   &.exception-gray {
     background-color: #f5f6fa;
   }
