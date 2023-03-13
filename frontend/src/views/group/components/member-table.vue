@@ -1,7 +1,7 @@
 <template>
     <div class="iam-user-group-member">
         <render-search>
-            <bk-button @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
+            <bk-button :disabled="readOnly" @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
             <bk-button :disabled="!isCanBatchDelete" @click="handleBatchDelete">{{ $t(`m.common['批量移除']`) }}</bk-button>
         </render-search>
         <bk-table
@@ -121,6 +121,10 @@
             data: {
                 type: Array,
                 default: () => []
+            },
+            readOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
