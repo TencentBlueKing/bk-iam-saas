@@ -532,7 +532,8 @@ export const m = {
         '查看审批详情': 'View approval detail',
         '创建一级管理空间': 'Create rate administrator',
         '可授权人员范围': 'Scope of authorized personnel',
-        '编辑一级管理空间': 'Edit rate administrator'
+        '编辑一级管理空间': 'Edit rate administrator',
+        '申请创建项目': 'Apply to create project'
     },
     myApproval: {
         '审批列表': 'Approval List',
@@ -1047,7 +1048,8 @@ export const m = {
         '（已过期的自定义权限无法交接）': '(Expired custom permissions cannot be handed over)',
         '管理员交接': 'Admin handover',
         '将以上权限交接给': 'hand permissions to',
-        '交接人': 'transfer person'
+        '交接人': 'transfer person',
+        '您还没有权限，无需交接': "You don't have permission and don't need to hand over"
     },
 
     resourcePermiss: {

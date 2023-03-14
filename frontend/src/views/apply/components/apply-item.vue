@@ -1,5 +1,5 @@
 <template>
-    <div :class="['item', { 'has-bottom-border': hasBottomborder }, { 'is-active': isActive }]"
+    <div :class="['item', { 'has-bottom-border': hasBottomBorder }, { 'is-active': isActive }]"
         @click.stop="handleClick">
         <div class="up-info">
             <span class="title" :title="getApplyTitle(data)">{{ getApplyTitle(data) }}</span>
@@ -43,7 +43,7 @@
                 type: Number,
                 required: true
             },
-            hasBottomborder: {
+            hasBottomBorder: {
                 type: Boolean,
                 default: true
             }

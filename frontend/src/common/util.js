@@ -548,3 +548,22 @@ export function formatCodeData (type, payload, isEmpty = true) {
     };
     return codeData[type] ? codeData[type]() : codeData[500]();
 }
+
+/**
+ * 递归查询匹配角色id
+ *
+ * @param {number} id
+ * @param {Array} list
+ */
+export function getTreeNode (id, list) {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+            return list[i];
+        } else if (list[i].sub_roles && list[i].sub_roles.length) {
+            const result = getTreeNode(id, list[i].sub_roles);
+            if (result) {
+                return result;
+            }
+        }
+    }
+}

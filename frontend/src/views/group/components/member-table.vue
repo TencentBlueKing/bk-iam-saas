@@ -1,7 +1,7 @@
 <template>
     <div class="iam-user-group-member">
         <render-search>
-            <bk-button @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
+            <bk-button :disabled="readOnly" @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
             <bk-button :disabled="!isCanBatchDelete" @click="handleBatchDelete">{{ $t(`m.common['批量移除']`) }}</bk-button>
         </render-search>
         <bk-table
@@ -34,7 +34,7 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['加入时间']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
+                    <span :title="row.created_time.replace(/T/, ' ')">{{ row.created_time.replace(/T/, ' ') }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
@@ -121,6 +121,10 @@
             data: {
                 type: Array,
                 default: () => []
+            },
+            readOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
