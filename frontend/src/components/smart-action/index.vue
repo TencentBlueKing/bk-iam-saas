@@ -156,7 +156,8 @@
             box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
         }
 
-        .external-dialog-fixed-custom {
+        .external-dialog-fixed-custom,
+        .external-page-fixed-custom {
            box-shadow: none;
            border-top: 1px solid #dcdee5;
            padding-left: 0px !important;
