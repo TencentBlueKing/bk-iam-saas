@@ -45,7 +45,14 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
+                        <div
+                            :class="[
+                                'search-input',
+                                { 'active': isSearchFocus },
+                                { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
+                            ]"
+                            v-if="isOrganization"
+                        >
                             <bk-dropdown-menu
                                 align="left"
                                 ref="dropdown"
@@ -70,7 +77,7 @@
                                 :placeholder="$t(`m.common['搜索提示1']`)"
                                 maxlength="64"
                                 clearable
-                                :disabled="(isRatingManager || isAll) && !isAllFlag"
+                                :disabled="externalSource ? false : (isRatingManager || isAll) && !isAllFlag"
                                 ext-cls="iam-add-member-search-input-cls"
                                 @focus="handleSearchInput"
                                 @blur="handleSearchBlur"
@@ -357,7 +364,7 @@
                     }
                 ],
                 searchConditionValue: 'fuzzy',
-                isSerachFocus: false,
+                isSearchFocus: false,
 
                 panels: [
                     { name: 'organization', label: this.$t(`m.common['组织架构']`) },
@@ -370,6 +377,7 @@
                 manualValueBackup: [],
                 isAll: false,
                 isAllFlag: false,
+                externalSource: '',
                 emptyData: {
                     type: '',
                     text: '',
@@ -496,8 +504,12 @@
             }
         },
         created () {
-            if (this.$route.name === 'gradingAdminCreate') {
+            const { name, query } = this.$route;
+            if (name === 'gradingAdminCreate') {
                 this.handleSave();
+            }
+            if (query.source && query.source === 'externalApp') {
+                this.externalSource = query.source;
             }
         },
         methods: {
@@ -519,11 +531,11 @@
             },
             
             handleSearchInput () {
-                this.isSerachFocus = true;
+                this.isSearchFocus = true;
             },
 
             handleSearchBlur () {
-                this.isSerachFocus = false;
+                this.isSearchFocus = false;
             },
             
             handleEmptyClear () {

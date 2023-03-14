@@ -27,12 +27,14 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
-import { bus } from '@/common/bus';
-import { existValue, getParamsValue } from '@/common/util';
 import store from '@/store';
 import http from '@/api';
+import il8n from '@/language';
 import preload from '@/common/preload';
+import { bus } from '@/common/bus';
+import { existValue, getParamsValue, getTreeNode } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
+import { messageError } from '@/common/bkmagic';
 
 const SITE_URL = window.SITE_URL;
 
@@ -86,6 +88,25 @@ export const beforeEach = async (to, from, next) => {
     // if (curRole === 'staff') {
     //     await store.dispatch('role/updateCurrentRole', { id: 0 });
     // }
+    const roleList = await store.dispatch('roleList', {
+        cancelWhenRouteChange: false,
+        cancelPrevious: false
+    });
+
+    async function getExternalRole () {
+        const { role_id: externalRoleId } = to.query;
+        // const currentRole = roleList.find((item) => String(item.id) === externalRoleId);
+        const currentRole = getTreeNode(+externalRoleId, roleList);
+        if (currentRole) {
+            await store.dispatch('role/updateCurrentRole', { id: +externalRoleId });
+            await store.dispatch('userInfo');
+            curRole = currentRole.type;
+            next();
+        } else {
+            messageError(il8n('common', '您没有该角色权限，无法切换到该角色'));
+        }
+    }
+
     if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
         await store.dispatch('role/updateCurrentRole', { id: curRoleId });
         store.commit('updateIndex', 1);
@@ -93,23 +114,14 @@ export const beforeEach = async (to, from, next) => {
     }
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
-        const roleList = await store.dispatch('roleList', {
-            cancelWhenRouteChange: false,
-            cancelPrevious: false
-        });
-
         if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
-            const { role_id: externalRoleId } = to.query;
-            const currentRole = roleList.find((item) => String(item.id) === externalRoleId);
-            await store.dispatch('role/updateCurrentRole', { id: externalRoleId });
-            await store.dispatch('userInfo');
-            curRole = currentRole.type;
-            next();
+            getExternalRole();
         } else {
             if (currentRoleId) {
-                const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
+                // const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
+                const currentRole = getTreeNode(+currentRoleId, roleList);
                 if (currentRole) {
-                    await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
+                    await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
                     await store.dispatch('userInfo');
                     curRole = currentRole.type;
                     next();
@@ -133,13 +145,14 @@ export const beforeEach = async (to, from, next) => {
     } else if (to.name === 'userGroup') {
         store.dispatch('versionLogInfo');
         if (currentRoleId) {
-            const roleList = await store.dispatch('roleList', {
-                cancelWhenRouteChange: false,
-                cancelPrevious: false
-            });
-            const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
+            // const roleList = await store.dispatch('roleList', {
+            //     cancelWhenRouteChange: false,
+            //     cancelPrevious: false
+            // });
+            // const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
+            const currentRole = getTreeNode(+currentRoleId, roleList);
             if (currentRole) {
-                await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
+                await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
                 await store.dispatch('userInfo');
                 curRole = currentRole.type;
                 next();
@@ -160,7 +173,7 @@ export const beforeEach = async (to, from, next) => {
     } else {
         // 邮件点击续期跳转过来的链接需要做身份的前置判断
         if (to.name === 'groupPermRenewal' && to.query.source === 'email' && currentRoleId) {
-            await store.dispatch('role/updateCurrentRole', { id: currentRoleId });
+            await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
             await store.dispatch('userInfo');
             curRole = to.query.role_type;
         }
@@ -180,6 +193,10 @@ export const beforeEach = async (to, from, next) => {
         if (curRole === 'staff') {
             store.commit('updateIndex', 0);
             window.localStorage.setItem('index', 0);
+        }
+
+        if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
+            getExternalRole();
         }
 
         // if (to.name === 'gradingAdminEdit') {

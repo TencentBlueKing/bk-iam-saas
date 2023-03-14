@@ -21,7 +21,7 @@
                                 <div
                                     :title="basicInfo.description"
                                     class="single-hide"
-                                    style="max-width: 100%">
+                                    style="max-width: 600px;">
                                     {{ basicInfo.description }}
                                 </div>
                             </template>
@@ -42,6 +42,7 @@
                 <member-table
                     :id="groupId"
                     :name="basicInfo.name"
+                    :read-only="readOnly"
                     :data="memberList"
                     :count="pagination.count" />
             </render-horizontal-block>
@@ -92,7 +93,8 @@
                     limit: 10
                 },
                 memberList: [],
-                groupId: ''
+                groupId: '',
+                readOnly: false // 当前用户组是否可编辑成员
             };
         },
         computed: {
@@ -158,13 +160,14 @@
                 this.$emit('on-init', true);
                 try {
                     const { data } = await this.fetchDetail(payload);
-                    const { id, name, created_time, description } = data;
+                    const { id, name, created_time, description, readonly } = data;
                     this.basicInfo = Object.assign({}, {
                         id,
                         name,
                         created_time,
                         description
                     });
+                    this.readOnly = readonly;
                     // this.pagination.count = data.count || 0;
                     // this.memberList.splice(0, this.memberList.length, ...(data.results || []));
                     window.localStorage.setItem('iam-header-title-cache', name);
