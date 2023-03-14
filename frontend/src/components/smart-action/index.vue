@@ -78,8 +78,9 @@
                 return {};
             },
             customClass () {
-                if (this.$route.name === 'addMemberBoundary' && this.externalSystemsLayout.addMemberBoundary.customFooterClass) {
-                    return 'fixed-custom';
+                if (this.externalSystemsLayout.addMemberBoundary.customFooterClass) {
+                    const externalClass = !['addMemberBoundary'].includes(this.$route.name) ? 'external-page-fixed-custom' : 'external-dialog-fixed-custom';
+                    return externalClass;
                 }
                 return '';
             }
@@ -155,10 +156,14 @@
             box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
         }
 
-        .fixed-custom {
+        .external-dialog-fixed-custom {
            box-shadow: none;
            border-top: 1px solid #dcdee5;
            padding-left: 0px !important;
+        }
+
+        .external-page-fixed-custom {
+            padding-left: 24px !important;
         }
     }
 </style>
