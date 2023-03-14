@@ -238,7 +238,12 @@ export const beforeEach = async (to, from, next) => {
                         window.localStorage.setItem('index', 0);
                         next();
                     } else {
-                        next({ path: `${SITE_URL}user-group` });
+                        if (existValue('externalApp')) {
+                            next();
+                        } else {
+                            next({ path: `${SITE_URL}user-group` });
+                        }
+                        // next({ path: `${SITE_URL}user-group` });
                     }
                 }
                 // next();
@@ -248,12 +253,23 @@ export const beforeEach = async (to, from, next) => {
                 if (['permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}perm-template` });
                     // } else if (['createUserGroup', 'userGroupDetail'].includes(to.name) && noFrom) {
-                } else if (['createUserGroup'].includes(to.name) && noFrom) {
-                    if (existValue('externalApp')) { // 如果是外部嵌入的页面
-                        next();
+                // } else if (['createUserGroup'].includes(to.name) && noFrom) {
+                } else if (['createUserGroup'].includes(to.name)) {
+                    if (noFrom) {
+                        if (existValue('externalApp')) {
+                            next();
+                        } else {
+                            next({ path: `${SITE_URL}user-group` });
+                        }
                     } else {
-                        next({ path: `${SITE_URL}user-group` });
+                        next();
                     }
+                    // if (existValue('externalApp')) { // 如果是外部嵌入的页面
+                    //     console.log(5555, curRole, difference);
+                    //     next();
+                    // } else {
+                    //     next({ path: `${SITE_URL}user-group` });
+                    // }
                 } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom) {
                     next({ path: `${SITE_URL}rating-manager` });
                 } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
