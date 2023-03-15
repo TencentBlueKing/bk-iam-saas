@@ -179,7 +179,6 @@ export const getRouterDiff = (payload) => {
             'systemAccessOptimize',
             'systemAccessComplete',
             'resourcePermiss',
-            'userGroupDetail',
             'secondaryManageSpace',
             'firstManageSpace',
             'myManageSpace'

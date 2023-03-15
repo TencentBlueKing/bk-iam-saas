@@ -126,6 +126,7 @@ export const beforeEach = async (to, from, next) => {
                     curRole = currentRole.type;
                     next();
                 } else {
+                    console.log('userGroupDetail', navIndex);
                     next({ path: `${SITE_URL}user-group` });
                 }
             } else {
@@ -135,6 +136,7 @@ export const beforeEach = async (to, from, next) => {
                     if (to.query.source === 'externalApp') {
                         next();
                     } else {
+                        console.log('userGroupDetail-noForm', navIndex);
                         next({ path: `${SITE_URL}user-group` });
                     }
                 } else {
@@ -200,7 +202,6 @@ export const beforeEach = async (to, from, next) => {
             if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
                 store.commit('updateIndex', 1);
                 window.localStorage.setItem('index', 1);
-                next();
             }
             getExternalRole();
         }
@@ -292,6 +293,7 @@ export const beforeEach = async (to, from, next) => {
                 }
             }
         } else {
+            console.log(111111111111);
             next();
         }
     }
