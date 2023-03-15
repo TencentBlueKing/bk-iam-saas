@@ -880,6 +880,18 @@
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
             }
+        },
+        beforeRouteLeave (to, from, next) {
+            window.parent.postMessage({ type: 'IAM', code: 'cancel' }, '*');
+            let cancelHandler = Promise.resolve();
+            if (window.changeDialog) {
+                cancelHandler = leavePageConfirm();
+                cancelHandler.then(() => {
+                    next({ path: to.fullPath });
+                }, _ => _);
+            } else {
+                next();
+            }
         }
     };
 </script>

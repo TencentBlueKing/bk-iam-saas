@@ -371,7 +371,8 @@ const store = new Vuex.Store({
                     hideTextBtn: false, // 交接历史文本按钮 - 3
                     hideCustomData: false, // 自定义权限交接-3
                     hideManagerData: false, // 管理员交接数据-3
-                    showUserGroupSearch: false // 显示权限交接用户组查询-3
+                    showUserGroupSearch: false, // 显示权限交接用户组查询-3
+                    setFooterBtnPadding: false // 设置内嵌页面权限交接底部按钮你编剧
                 }
             },
             userGroup: { // 用户组
@@ -800,7 +801,8 @@ const store = new Vuex.Store({
                         hideTextBtn: true, // 交接历史文本按钮 - 3
                         hideCustomData: true, // 自定义权限交接-3
                         hideManagerData: true, // 管理员交接数据-3
-                        showUserGroupSearch: true // 显示权限交接用户组查询-3
+                        showUserGroupSearch: true, // 显示权限交接用户组查询-3
+                        setFooterBtnPadding: true // 设置内嵌页面权限交接底部按钮你编剧
                     }
                 },
                 userGroup: { // 用户组
