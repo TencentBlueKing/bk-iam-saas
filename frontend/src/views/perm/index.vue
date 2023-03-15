@@ -22,7 +22,8 @@
                      { 'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn }
                  ]"
                 style="background: #000"
-                v-bk-tooltips="'没有需要续期的权限'">
+                v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
+                v-if="isEmpty || isNoRenewal">
             </div>
             <bk-button
                 v-if="enablePermissionHandover.toLowerCase() === 'true'"

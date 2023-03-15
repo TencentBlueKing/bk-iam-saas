@@ -829,7 +829,8 @@ export const m = {
         '即将过期的用户/组织': 'Users/organizations about to expire',
         '请选择即将过期的用户/组织': 'Please select the user/organization that will expire soon',
         '该成员在该用户组将不再存在续期': 'This member will no longer have a renewal in this user group',
-        '这些成员在该用户组将不再存在续期': 'These members will no longer have renewals in this user group'
+        '这些成员在该用户组将不再存在续期': 'These members will no longer have renewals in this user group',
+        '没有需要续期的权限': 'No permission to renew'
     },
     audit: {
         '时间': 'Time',

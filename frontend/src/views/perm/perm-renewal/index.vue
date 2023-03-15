@@ -127,19 +127,7 @@
         watch: {
             panels: {
                 handler (value) {
-                    if (this.active === 'group') {
-                        if (value[0].total > 0) {
-                            this.isEmpty = false;
-                        } else {
-                            this.isEmpty = true;
-                        }
-                    } else if (this.active === 'custom') {
-                        if (value[1] && value[1].total > 0) {
-                            this.isEmpty = false;
-                        } else {
-                            this.isEmpty = true;
-                        }
-                    }
+                    this.fetchActiveTabData(value);
                 },
                 immediate: true
             },
@@ -191,6 +179,7 @@
                         });
                     }
                     this.tabKey = +new Date();
+                    this.fetchActiveTabData(this.panels);
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
@@ -201,6 +190,18 @@
                         message: message || data.msg || statusText
                     });
                 }
+            },
+
+            fetchActiveTabData (payload) {
+                const activeItem = {
+                    group: () => {
+                        this.isEmpty = payload[0].total === 0;
+                    },
+                    custom: () => {
+                        this.isEmpty = payload[1] && payload[1].total === 0;
+                    }
+                };
+                return activeItem[this.active];
             },
             // async fetchPageData () {
             //     await this.fetchData()
@@ -301,8 +302,8 @@
         }
     };
 </script>
-<style lang="postcss">
-    .iam-perm-renewal-wrapper {
+<style lang="postcss" scoped>
+    /deep/ .iam-perm-renewal-wrapper {
         .iam-renewal-tab-cls {
             .bk-tab-section {
                 padding: 0;
