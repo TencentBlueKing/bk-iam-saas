@@ -1,6 +1,10 @@
 <template>
     <!-- eslint-disable max-len -->
-    <header :class="['header-layout', { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs }]">
+    <header :class="[
+        'header-layout',
+        { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs && !externalRouter.includes($route.name) },
+        { 'external-nav-sticked': externalRouter.includes($route.name) }
+    ]">
         <iam-guide
             v-if="showGuide"
             type="switch_role"
@@ -10,7 +14,7 @@
             :content="$t(`m.guide['切换一级管理空间']`)" />
         <div class="breadcrumbs fl"
             :class="backRouter ? 'has-cursor' : ''"
-            v-show="!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs"
+            v-show="externalRouter.includes($route.name) || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
             @click="back">
             <div v-if="!isHide">
                 <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
@@ -247,7 +251,8 @@
                 showGuide: false,
                 isShowHeader: false,
                 placeholderValue: '',
-                userGroupName: ''
+                userGroupName: '',
+                externalRouter: ['permTransfer'] // 开放内嵌页面需要面包屑的页面
             };
         },
         computed: {

@@ -1234,6 +1234,7 @@
                         params.policy_expired_at = this.expiredAt;
                     }
                 }
+                window.parent.postMessage({ type: 'IAM', data: params, code: 'success' }, '*');
                 this.$emit('on-sumbit', params);
             },
 

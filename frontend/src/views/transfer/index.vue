@@ -68,7 +68,14 @@
         </div>
 
         <!-- <div style="background: red; height: 800px;"></div> -->
-        <div class="fixed-action" style="height: 50px;" :style="{ paddingLeft: fixedActionPaddingLeft }">
+        <div
+            class="fixed-action"
+            style="height: 50px;"
+            :style="{
+                paddingLeft: externalSystemsLayout.myPerm.transfer.setFooterBtnPadding ?
+                    '24px' : fixedActionPaddingLeft
+            }"
+        >
             <bk-button theme="primary" @click="submit">
                 {{ $t(`m.common['提交']`) }}
             </bk-button>

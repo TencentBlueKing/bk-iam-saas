@@ -168,7 +168,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         watch: {
             personalGroupList: {
@@ -243,10 +243,14 @@
             async getDataByPage () {
                 this.isLoading = true;
                 try {
-                    const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const params = {
                         page_size: this.pageConf.limit,
                         page: this.pageConf.current
-                    });
+                    };
+                    if (this.externalSystemId) {
+                        params.system_id = this.externalSystemId;
+                    }
+                    const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', params);
                     this.pageConf.count = data.count;
                     this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
                     this.groupPermEmptyData
