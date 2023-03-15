@@ -196,6 +196,12 @@ export const beforeEach = async (to, from, next) => {
         }
 
         if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
+            console.log('内嵌页面', navIndex);
+            if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
+                store.commit('updateIndex', 1);
+                window.localStorage.setItem('index', 1);
+                next();
+            }
             getExternalRole();
         }
 
@@ -212,8 +218,10 @@ export const beforeEach = async (to, from, next) => {
 
         let difference = [];
         if (navIndex === 1) {
+            console.log('走了角色', curRole);
             difference = getRouterDiff(curRole);
         } else {
+            console.log('走了导航索引', curRole);
             difference = getNavRouterDiff(navIndex);
         }
         if (difference.length) {
@@ -229,16 +237,19 @@ export const beforeEach = async (to, from, next) => {
                         next({ path: `${SITE_URL}my-perm` });
                     }
                 } else {
-                    if (to.name === 'groupPermRenewal') {
+                    if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
                         store.commit('updateIndex', 1);
                         window.localStorage.setItem('index', 1);
                         next();
-                    } if (to.name === 'apply') {
+                    }
+                    
+                    if (to.name === 'apply') {
                         store.commit('updateIndex', 0);
                         window.localStorage.setItem('index', 0);
                         next();
                     } else {
                         if (existValue('externalApp')) {
+                            console.log('走了difference');
                             next();
                         } else {
                             next({ path: `${SITE_URL}user-group` });
@@ -257,11 +268,13 @@ export const beforeEach = async (to, from, next) => {
                 } else if (['createUserGroup'].includes(to.name)) {
                     if (noFrom) {
                         if (existValue('externalApp')) {
+                            console.log('走了其他');
                             next();
                         } else {
                             next({ path: `${SITE_URL}user-group` });
                         }
                     } else {
+                        console.log('走了其他next');
                         next();
                     }
                     // if (existValue('externalApp')) { // 如果是外部嵌入的页面
