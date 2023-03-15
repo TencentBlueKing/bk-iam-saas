@@ -302,8 +302,8 @@
         }
     };
 </script>
-<style lang="postcss" scoped>
-    /deep/ .iam-perm-renewal-wrapper {
+<style lang="postcss">
+    .iam-perm-renewal-wrapper {
         .iam-renewal-tab-cls {
             .bk-tab-section {
                 padding: 0;
