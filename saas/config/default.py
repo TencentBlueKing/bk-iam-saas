@@ -383,6 +383,7 @@ MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=3
 ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
     "enable_permission_handover": env.bool("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", default=True),
+    "enable_temporary_policy": env.bool("BKAPP_ENABLE_FRONT_END_TEMPORARY_POLICY", default=False),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
