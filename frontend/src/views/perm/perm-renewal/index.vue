@@ -312,6 +312,9 @@
                 padding: 0;
             }
         }
+        .iam-renewal-tab-cls {
+            margin-top: -15px;
+        }
         .panel-name {
             margin: 0 3px;
             display: inline-block;
