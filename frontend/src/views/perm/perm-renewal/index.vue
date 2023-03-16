@@ -140,6 +140,9 @@
                 },
                 immediate: true,
                 deep: true
+            },
+            active () {
+                this.fetchActiveTabData(this.panels);
             }
         },
         async created () {
@@ -195,13 +198,13 @@
             fetchActiveTabData (payload) {
                 const activeItem = {
                     group: () => {
-                        this.isEmpty = payload[0].total === 0;
+                        return !(payload[0].total > 0);
                     },
                     custom: () => {
-                        this.isEmpty = payload[1] && payload[1].total === 0;
+                        return !(payload[1] && payload[1].total > 0);
                     }
                 };
-                return activeItem[this.active];
+                this.isEmpty = activeItem[this.active]();
             },
             // async fetchPageData () {
             //     await this.fetchData()
