@@ -109,10 +109,10 @@
                         str = this.$t(`m.myApply['加入用户组']`);
                         break;
                     case 'create_rating_manager':
-                        str = this.$t(source && source === 'externalApp' ? `m.myApply['申请创建项目']` : `m.myApply['创建一级管理空间']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['创建项目']` : `m.myApply['创建一级管理空间']`);
                         break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.myApply['编辑一级管理空间']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['编辑项目']` : `m.myApply['编辑一级管理空间']`);
                         break;
                     default:
                         str = '';
