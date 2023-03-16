@@ -24,7 +24,7 @@
             <div class="content">
                 {{
                     data.applicants && data.applicants.length > 0
-                        ? data.applicants.map((item) => item.display_name).join(';')
+                        ? data.applicants.map((item) => `${item.display_name}(${item.id})`).join(';')
                         : ''
                 }}
             </div>
