@@ -73,6 +73,7 @@
              * getApplyTitle
              */
             getApplyTitle (data) {
+                const { source } = this.$route.query;
                 let str = '';
                 switch (data.type) {
                     case 'grant_action':
@@ -91,10 +92,10 @@
                         str = `${this.$t(`m.info['申请续期']`)} ${data.extra_info.group_count} ${this.$t(`m.common['个用户组#']`)}`;
                         break;
                     case 'create_rating_manager':
-                        str = this.$t(`m.info['申请创建一级管理空间']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['申请创建项目']` : `m.myApply['申请创建一级管理空间']`);
                         break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.info['申请编辑一级管理空间']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['申请编辑项目']` : `m.myApply['申请编辑一级管理空间']`);
                         break;
                     default:
                         str = '';

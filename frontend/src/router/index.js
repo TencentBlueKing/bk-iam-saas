@@ -322,7 +322,7 @@ export const afterEach = async (to, from) => {
     store.commit('setMainContentLoading', true && to.name !== 'permTemplateDetail' && to.name !== 'permTransfer');
     store.commit('setBackRouter', '');
     preloading = true;
-    if (to.query.role_id) {
+    if (to.query.role_id && !existValue('externalApp')) {
         await store.dispatch('role/updateCurrentRole', { id: Number(to.query.role_id) });
     }
     await preload();
