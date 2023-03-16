@@ -52,6 +52,7 @@
                             ref="resourceInstanceRef"
                             :data="policyList"
                             :list="policyList"
+                            :group-id="$route.params.id"
                             :backup-list="aggregationsTableData"
                             @on-delete="handleDelete"
                             @on-aggregate-delete="handleAggregateDelete"

@@ -63,6 +63,7 @@
                         :original-list="tableListBackup"
                         :is-all-expanded="isAllExpanded"
                         :backup-list="aggregationsTableData"
+                        :group-id="$route.params.id"
                         @on-delete="handleDelete"
                         @on-aggregate-delete="handleAggregateDelete"
                         @handleAggregateAction="handleAggregateAction"

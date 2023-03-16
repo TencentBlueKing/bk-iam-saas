@@ -28,6 +28,7 @@
                     :list="tableList"
                     :authorization="curAuthorizationData"
                     :original-list="tableListBackup"
+                    :group-id="$route.params.id"
                     @on-select="handleAttrValueSelected"
                     @on-resource-select="handleResSelect" />
             </div>
