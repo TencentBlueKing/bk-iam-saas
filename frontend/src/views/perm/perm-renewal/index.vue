@@ -33,6 +33,23 @@
         <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
         </render-horizontal-block>
+        <render-horizontal-block
+            ext-cls="reason-wrapper"
+            :label="$t(`m.common['理由']`)"
+            :required="true">
+            <section ref="reasonRef">
+                <bk-input
+                    type="textarea"
+                    v-model="reason"
+                    :maxlength="255"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :ext-cls="isShowReasonError ? 'renewal-reason-error' : ''"
+                    @input="handleReasonInput"
+                    @blur="handleReasonBlur">
+                </bk-input>
+                <p class="error-tips reason-error-tips" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
+            </section>
+        </render-horizontal-block>
         <div slot="action">
             <bk-button theme="primary" disabled v-if="isEmpty">
                 <span v-bk-tooltips="{ content: $t(`m.renewal['暂无将过期的权限']`), extCls: 'iam-tooltips-cls' }">
@@ -66,12 +83,14 @@
                 ],
                 active: 'group',
                 expiredAt: SIX_MONTH_TIMESTAMP,
-                submitLoading: false,
                 tableList: [],
+                tabKey: 'tab-key',
+                reason: '权限续期',
+                submitLoading: false,
                 tableLoading: false,
                 isShowErrorTips: false,
-                tabKey: 'tab-key',
-                isEmpty: false
+                isEmpty: false,
+                isShowReasonError: false
             };
         },
         computed: {
@@ -158,6 +177,16 @@
                 window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
             },
 
+            handleReasonInput () {
+                this.isShowReasonError = false;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
+            },
+
             handleDeadlineChange (payload) {
                 this.expiredAt = payload || ONE_DAY_TIMESTAMP;
             },
@@ -183,10 +212,14 @@
                     this.isShowErrorTips = true;
                     return;
                 }
+                if (!this.reason) {
+                    this.isShowReasonError = true;
+                    return;
+                }
                 this.submitLoading = true;
                 const isGroup = this.active === 'group';
                 const params = {
-                    reason: '续期'
+                    reason: this.reason
                 };
                 if (isGroup) {
                     params.groups = this.curSelectedList.map(
@@ -241,6 +274,19 @@
             top: -10px;
             font-size: 12px;
             color: #ea3636;
+        }
+        
+        .reason-error-tips {
+            top: 0;
+        }
+
+        .reason-wrapper {
+            margin-top: 16px;
+            .renewal-reason-error {
+                .bk-textarea-wrapper {
+                    border-color: #ea3636;
+                }
+            }
         }
     }
 </style>
