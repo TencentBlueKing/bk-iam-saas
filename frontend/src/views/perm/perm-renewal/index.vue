@@ -29,7 +29,7 @@
                 :loading="tableLoading"
                 @on-select="handleSelected" />
         </render-horizontal-block>
-        <p class="error-tips" v-if="isShowErrorTips">请选择过期权限</p>
+        <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
         <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
         </render-horizontal-block>
@@ -123,8 +123,8 @@
                 });
                 this.panels[0].total = resultList[0].data.count;
                 this.panels[0].data = resultList[0].data.results;
-                this.panels[1].total = resultList[1].data.length;
                 this.panels[1].data = resultList[1].data;
+                this.panels[1].total = resultList[1].data.length;
                 this.tabKey = +new Date();
             },
             // async fetchPageData () {
