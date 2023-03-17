@@ -29,15 +29,12 @@
             </bk-button>
             <bk-button
                 v-if="enableTemporaryPolicy.toLowerCase() === 'true'"
-                :disabled="!teporarySystemList.length"
                 data-test-id="myPerm_btn_temporaryPerm"
                 type="button"
                 style="margin-bottom: 16px;"
                 @click="handleGoApplyProvisionPerm">
                 {{ $t(`m.nav['临时权限申请']`) }}
             </bk-button>
-            <div v-if="!systemList.length && !teporarySystemList.length" class="info-sys" style="background: #000"
-                v-bk-tooltips="'您还没有权限，无需交接'"></div>
         </div>
         <div class="redCircle" v-if="!isNoRenewal"></div>
         <template v-if="isEmpty">
