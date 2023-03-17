@@ -236,6 +236,17 @@ if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
     });
 }
 
+if (window.ENABLE_TEMPORARY_POLICY.toLowerCase() === 'true') {
+    currentNav[0].children.push({
+        icon: 'perm-apply',
+        name: il8n('nav', '临时权限申请'),
+        id: 'provisionPermApplyNav',
+        rkey: 'applyProvisionPerm',
+        path: `${SITE_URL}apply-provision-perm`,
+        disabled: false
+    });
+}
+
 const store = new Vuex.Store({
     modules: {
         system,

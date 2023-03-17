@@ -27,6 +27,15 @@
                 @click="handleGoPermTransfer">
                 {{ $t(`m.permTransfer['权限交接']`) }}
             </bk-button>
+            <bk-button
+                v-if="enableTemporaryPolicy.toLowerCase() === 'true'"
+                :disabled="!teporarySystemList.length"
+                data-test-id="myPerm_btn_temporaryPerm"
+                type="button"
+                style="margin-bottom: 16px;"
+                @click="handleGoApplyProvisionPerm">
+                {{ $t(`m.nav['临时权限申请']`) }}
+            </bk-button>
             <div v-if="!systemList.length && !teporarySystemList.length" class="info-sys" style="background: #000"
                 v-bk-tooltips="'您还没有权限，无需交接'"></div>
         </div>
@@ -105,13 +114,20 @@
                 systemList: [],
                 teporarySystemList: [],
                 departmentGroupList: [],
-                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER
+                enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
+                enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY
             };
         },
         created () {
             const query = this.$route.query;
             if (query.tab) {
                 this.active = query.tab;
+            }
+            if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
+                this.panels.push({
+                    name: 'TeporaryCustomPerm',
+                    label: this.$t(`m.myApply['临时权限']`)
+                });
             }
         },
         methods: {
@@ -224,6 +240,11 @@
             handleGoPermTransfer () {
                 this.$router.push({
                     name: 'permTransfer'
+                });
+            },
+            handleGoApplyProvisionPerm () {
+                this.$router.push({
+                    name: 'applyProvisionPerm'
                 });
             }
         }

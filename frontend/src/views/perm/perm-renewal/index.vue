@@ -281,7 +281,6 @@
         }
 
         .reason-wrapper {
-            margin-top: 16px;
             .renewal-reason-error {
                 .bk-textarea-wrapper {
                     border-color: #ea3636;
