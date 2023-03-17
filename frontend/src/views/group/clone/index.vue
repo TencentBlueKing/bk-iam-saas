@@ -50,6 +50,7 @@
                         :authorization="curAuthorizationData"
                         :original-list="tableListBackup"
                         :is-all-expanded="isAllExpanded"
+                        :group-id="groupId"
                         @handleAggregateAction="handleAggregateAction"
                         @on-select="handleAttrValueSelected"
                         @on-resource-select="handleResSelect" />

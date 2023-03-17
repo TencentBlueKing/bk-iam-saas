@@ -1051,6 +1051,7 @@
                     groupId: this.groupId,
                     policy_id: this.tableList[this.curIndex].policy_id,
                     isTemplate: this.tableList[this.curIndex].isTemplate,
+                    resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
                     isNotLimit: conditionData.length === 0
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${this.tableList[this.curIndex].name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
@@ -1093,6 +1094,7 @@
                     reverse: true,
                     groupId: this.groupId,
                     policy_id: payload.policy_id,
+                    resource_group_id: payload.resource_groups[this.curGroupIndex].id,
                     isTemplate: payload.isTemplate
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
