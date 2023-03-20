@@ -114,7 +114,7 @@ export const beforeEach = async (to, from, next) => {
     }
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
-        if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
+        if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
             getExternalRole();
         } else {
             if (currentRoleId) {
@@ -325,7 +325,9 @@ export const afterEach = async (to, from) => {
     if (to.query.role_id && !existValue('externalApp')) {
         await store.dispatch('role/updateCurrentRole', { id: Number(to.query.role_id) });
     }
-    await preload();
+    if(!existValue('externalApp')) {
+        await preload();
+    }
     preloading = false;
     const pageDataMethods = [];
     const routerList = to.matched;
