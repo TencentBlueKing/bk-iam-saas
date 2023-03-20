@@ -165,7 +165,7 @@
                 return this.currentSelectList.length > 0 && this.tableList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             curType () {
                 return this.curData.type || 'department';

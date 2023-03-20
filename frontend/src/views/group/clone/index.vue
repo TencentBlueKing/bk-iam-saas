@@ -270,7 +270,7 @@
                 return this.tableList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             isSuperManager () {
                 return this.user.role.type === 'super_manager';
@@ -284,7 +284,7 @@
             }
         },
         mounted () {
-            this.formData.name = `${this.$route.query.name}_克隆`;
+            this.formData.name = `${this.$route.query.name}_${this.$t(`m.grading['克隆']`)}`;
             this.formData.description = this.$route.query.description;
             this.groupId = this.$route.query.id;
             console.log(this.groupId, this.groupId);
