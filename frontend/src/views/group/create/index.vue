@@ -262,7 +262,7 @@
                 return this.tableList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             isSuperManager () {
                 return this.user.role.type === 'super_manager';
@@ -772,10 +772,10 @@
                         templates
                     };
                     try {
-                        await this.$store.dispatch('userGroup/addUserGroup', params);
+                        const { data } = await this.$store.dispatch('userGroup/addUserGroup', params);
                         this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
                         if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
-                            window.parent.postMessage({ type: 'IAM', code: 'create_user_group_submit' }, '*');
+                            window.parent.postMessage({ type: 'IAM', data, code: 'create_user_group_submit' }, '*');
                         } else {
                             bus.$emit('show-guide', 'process');
                             this.$router.push({

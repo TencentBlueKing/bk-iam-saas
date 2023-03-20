@@ -40,7 +40,7 @@
                                     <span>{{ row.name }}({{ row.id }})</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.common['到期时间']`)">
+                            <bk-table-column :label="$t(`m.common['有效期']`)">
                                 <template slot-scope="{ row }">
                                     <render-expire-display
                                         :selected="currentSelectList.map((v) => v.$id).includes(row.$id)"

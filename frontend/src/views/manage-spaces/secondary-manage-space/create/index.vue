@@ -187,7 +187,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    syncPerm: false
+                    sync_perm: false
                 },
                 isShowAddMemberDialog: false,
                 isShowMemberAdd: false,
@@ -298,7 +298,7 @@
                 return this.policyList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             isSuperManager () {
                 return this.user.role.type === 'super_manager';
@@ -374,7 +374,7 @@
                     name: `${name}_克隆`,
                     members,
                     description,
-                    syncPerm: sync_perm
+                    sync_perm: sync_perm
                 });
                 this.isAll = subject_scopes.some(item => item.type === '*' && item.id === '*');
                 this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
@@ -1060,14 +1060,14 @@
                         });
                     });
                 }
-                const { name, description, members, syncPerm } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    sync_perm: syncPerm,
+                    sync_perm: sync_perm,
                     inherit_subject_scope: this.inheritSubjectScope
                 };
                 // 如果是动态继承上级空间 组织架构可为空

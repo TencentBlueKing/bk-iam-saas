@@ -183,7 +183,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    sync_perm: false
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.levelSpace['二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间']`),
@@ -622,14 +623,16 @@
 
             handleDetailData (payload) {
                 console.log('payload', payload);
-                const { name, description, members } = payload;
+                const departments = [];
+                const users = [];
+                const { name, description, members, sync_perm } = payload;
+                this.$store.commit('setHeaderTitle', name);
                 this.formData = Object.assign({}, {
                     name,
                     description,
-                    members
+                    members,
+                    sync_perm
                 });
-                const departments = [];
-                const users = [];
                 payload.subject_scopes.forEach(item => {
                     if (item.type === 'department') {
                         departments.push({
@@ -804,7 +807,7 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
@@ -812,7 +815,8 @@
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     reason: this.reason,
-                    id: this.$route.params.id
+                    id: this.$route.params.id,
+                    sync_perm
                 };
                 console.log('params', params);
                 try {
@@ -887,11 +891,12 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
+                    sync_perm,
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     id: this.$route.params.id

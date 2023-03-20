@@ -24,7 +24,7 @@
                         :true-value="true"
                         :false-value="false"
                         class="select-wrap-checkbox"
-                        v-model="formData.syncPerm"
+                        v-model="formData.sync_perm"
                         @change="handleCheckboxChange">
                         {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
                     </bk-checkbox>
@@ -45,7 +45,7 @@
         name: '',
         description: '',
         members: [],
-        syncPerm: false
+        sync_perm: false
     });
 
     export default {
@@ -76,14 +76,14 @@
             data: {
                 handler (value) {
                     if (Object.keys(value).length) {
-                        const { name, description, syncPerm } = value;
+                        const { name, description, sync_perm } = value;
                         this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
                         const members = value.members.filter(e => !e.readonly).map(e => e.username);
                         this.formData = Object.assign({}, {
                             name,
                             description,
                             members,
-                            syncPerm
+                            sync_perm
                         });
                     }
                 },
@@ -183,7 +183,7 @@
             },
 
             handleCheckboxChange () {
-                this.$emit('on-change', 'syncPerm', this.formData.syncPerm);
+                this.$emit('on-change', 'sync_perm', this.formData.sync_perm);
             }
         }
     };

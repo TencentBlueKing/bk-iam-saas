@@ -300,7 +300,7 @@
                 return this.currentSelectList.length > 0;
             },
             isRatingManager () {
-                return this.curRole === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.curRole);
             },
             isSuperManager () {
                 return this.curRole === 'super_manager';

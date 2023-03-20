@@ -181,7 +181,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    syncPerm: false
+                    sync_perm: false
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
@@ -623,7 +623,7 @@
                     name,
                     description,
                     members,
-                    syncPerm: sync_perm
+                    sync_perm: sync_perm
                 });
                 const departments = [];
                 const users = [];
@@ -801,7 +801,7 @@
                         });
                     });
                 }
-                const { name, description, members, syncPerm } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
@@ -810,7 +810,7 @@
                     authorization_scopes: data,
                     reason: this.reason,
                     id: this.$route.params.id,
-                    sync_perm: syncPerm
+                    sync_perm: sync_perm
                 };
                 console.log('params', params);
                 try {
@@ -884,7 +884,7 @@
                         });
                     });
                 }
-                const { name, description, members, syncPerm } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
@@ -892,7 +892,7 @@
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     id: this.$route.params.id,
-                    sync_perm: syncPerm
+                    sync_perm: sync_perm
                 };
                 this.submitLoading = true;
                 window.changeDialog = false;

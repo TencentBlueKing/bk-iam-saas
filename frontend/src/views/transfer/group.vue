@@ -55,7 +55,7 @@
                                     </span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.common['到期时间']`)" width="220">
+                            <bk-table-column :label="$t(`m.common['有效期']`)" width="220">
                                 <template slot-scope="{ row }">
                                     <span>{{row.expired_at_display}}</span>
                                 </template>

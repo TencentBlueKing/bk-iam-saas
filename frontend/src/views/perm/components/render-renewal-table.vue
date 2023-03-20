@@ -242,13 +242,13 @@
                 if (payload === 'group') {
                     return [
                         { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-                        { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
+                        { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
                     ];
                 }
                 return [
                     { label: this.$t(`m.common['操作']`), prop: 'action' },
                     { label: this.$t(`m.common['所属系统']`), prop: 'system' },
-                    { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
+                    { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
                 ];
             },
 

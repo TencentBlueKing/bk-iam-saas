@@ -64,7 +64,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    sync_perm: false
                 }
             };
         },
@@ -73,6 +74,7 @@
                 handler (value) {
                     if (Object.keys(value).length) {
                         this.formData = Object.assign({}, value);
+                        this.$store.commit('setHeaderTitle', this.formData.name);
                     }
                 },
                 immediate: true
@@ -103,20 +105,28 @@
         },
         methods: {
             handleUpdateRatingManager (payload) {
-                const { name, members, description } = this.formData;
+                const { name, members, description, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
+                    sync_perm,
                     ...payload,
                     id: this.id
                 };
                 return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
                     .then(async () => {
                         this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
-                        this.formData.name = params.name;
-                        this.formData.description = params.description;
-                        this.formData.members = [...params.members];
+                        const { name, description, members } = params;
+                        // this.formData.name = params.name;
+                        // this.formData.description = params.description;
+                        // this.formData.members = [...params.members];
+                        this.formData = Object.assign(this.formData, {
+                            name,
+                            description,
+                            members,
+                            sync_perm
+                        });
                         const headerTitle = params.name;
                         this.$store.commit('setHeaderTitle', headerTitle);
                         await this.$store.dispatch('roleList');

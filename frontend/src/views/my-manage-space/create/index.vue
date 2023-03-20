@@ -163,7 +163,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    syncPerm: true
+                    sync_perm: true
                 },
                 users: [],
                 departments: [],
@@ -746,7 +746,7 @@
                         });
                     });
                 }
-                const { name, description, members, syncPerm } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
@@ -754,7 +754,7 @@
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     reason: this.reason,
-                    sync_perm: syncPerm
+                    sync_perm: sync_perm
                 };
                 try {
                     await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
@@ -832,14 +832,14 @@
                         });
                     });
                 }
-                const { name, description, members, syncPerm } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    sync_perm: syncPerm
+                    sync_perm: sync_perm
                 };
                 window.changeDialog = false;
                 this.submitLoading = true;
