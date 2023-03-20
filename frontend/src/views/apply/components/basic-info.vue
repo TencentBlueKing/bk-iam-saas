@@ -19,7 +19,7 @@
             <label class="label">{{ $t(`m.myApply['申请人']`) }}：</label>
             <div class="content">{{ data.applicant }}</div>
         </div>
-        <div class="item">
+        <div class="item" v-if="!['create_rating_manager', 'update_rating_manager'].includes(data.type)">
             <label class="label">{{ $t(`m.myApply['权限获得者']`) }}：</label>
             <div class="content">
                 {{
