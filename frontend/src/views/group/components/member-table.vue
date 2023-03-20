@@ -37,7 +37,7 @@
                     <span :title="row.created_time.replace(/T/, ' ')">{{ row.created_time.replace(/T/, ' ') }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+            <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="180">
                 <template slot-scope="{ row }">
                     <div>

@@ -44,8 +44,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 到期时间 -->
-            <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+            <!-- 有效期 -->
+            <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
             <!-- 操作 -->
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="props">

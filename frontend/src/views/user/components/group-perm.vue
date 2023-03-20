@@ -25,7 +25,7 @@
                         <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+                <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
                 <bk-table-column :label="$t(`m.perm['加入用户组的时间']`)">
                     <template slot-scope="{ row }">
                         <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
