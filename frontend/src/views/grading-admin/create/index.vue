@@ -209,7 +209,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    syncPerm: true
+                    sync_perm: true
                 },
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
                 addMemberTips: this.$t(`m.grading['添加成员提示']`),
@@ -794,7 +794,7 @@
                         });
                     });
                 }
-                const { name, description, members, syncPerm } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
@@ -802,7 +802,7 @@
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     reason: this.reason,
-                    sync_perm: syncPerm
+                    sync_perm: sync_perm
                 };
                 try {
                     await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
