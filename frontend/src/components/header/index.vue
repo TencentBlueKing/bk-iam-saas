@@ -3,7 +3,7 @@
     <header :class="[
         'header-layout',
         { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs && !externalRouter.includes($route.name) },
-        { 'external-nav-sticked': externalRouter.includes($route.name) }
+        { 'external-nav-sticked': externalRouter.includes($route.name) && externalSystemsLayout.hideIamBreadCrumbs }
     ]">
         <iam-guide
             v-if="showGuide"
@@ -252,7 +252,7 @@
                 isShowHeader: false,
                 placeholderValue: '',
                 userGroupName: '',
-                externalRouter: ['permTransfer'] // 开放内嵌页面需要面包屑的页面
+                externalRouter: ['permTransfer', 'permRenewal'] // 开放内嵌页面需要面包屑的页面
             };
         },
         computed: {
