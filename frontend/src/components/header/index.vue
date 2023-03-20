@@ -3,7 +3,7 @@
     <header :class="[
         'header-layout',
         { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs && !externalRouter.includes($route.name) },
-        { 'external-nav-sticked': externalRouter.includes($route.name) && externalSystemsLayout.hideIamBreadCrumbs }
+        { 'external-nav-sticked': isShowExternal }
     ]">
         <iam-guide
             v-if="showGuide"
@@ -14,7 +14,7 @@
             :content="$t(`m.guide['切换一级管理空间']`)" />
         <div class="breadcrumbs fl"
             :class="backRouter ? 'has-cursor' : ''"
-            v-show="externalRouter.includes($route.name) || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
+            v-show="isShowExternal || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
             @click="back">
             <div v-if="!isHide">
                 <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
@@ -278,6 +278,9 @@
             },
             isShowSearch () {
                 return this.searchValue === '';
+            },
+            isShowExternal () {
+               return this.externalRouter.includes(this.$route.name) && this.externalSystemsLayout.hideIamBreadCrumbs;
             }
         },
         watch: {
