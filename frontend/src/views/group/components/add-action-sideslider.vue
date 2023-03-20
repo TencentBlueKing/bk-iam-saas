@@ -17,7 +17,7 @@
                         <bk-input
                             clearable
                             right-icon="bk-icon icon-search"
-                            style="width: 190px;"
+                            style="max-width: calc(100% - 48px)"
                             v-model="keyword"
                             @input="handleInput"
                             @enter="handleSearch">
