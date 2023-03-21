@@ -26,10 +26,11 @@ from backend.api.management.v2.serializers import (
 from backend.apps.role.audit import RoleCreateAuditProvider, RoleDeleteAuditProvider, RoleUpdateAuditProvider
 from backend.apps.role.models import Role, RoleRelation, RoleSource
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleDeleteHelper
 from backend.biz.role import RoleBiz, RoleCheckBiz
-from backend.service.constants import RoleSourceType, RoleType
+from backend.service.constants import GroupSaaSAttributeEnum, RoleSourceType, RoleType
 from backend.trans.open_management import GradeManagerTrans
 
 
@@ -102,7 +103,13 @@ class ManagementSubsetManagerCreateViewSet(GenericViewSet):
             # 创建同步权限用户组
             if info.sync_perm:
                 self.group_biz.create_sync_perm_group_by_role(
-                    role, request.user.username, group_name=data["group_name"]
+                    role,
+                    request.user.username,
+                    group_name=data["group_name"],
+                    attrs={
+                        GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
+                        GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                    },
                 )
 
         audit_context_setter(role=role)

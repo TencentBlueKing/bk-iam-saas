@@ -172,7 +172,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
             self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"])
 
             group = self.group_biz.create_and_add_members(
-                request.role.id, data["name"], data["description"], user_id, members, data["expired_at"]
+                request.role, data["name"], data["description"], user_id, members, data["expired_at"]
             )
 
         # 使用长时任务触发多个模板同时授权
