@@ -892,7 +892,7 @@
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     id: this.$route.params.id,
-                    sync_perm: sync_perm
+                    sync_perm
                 };
                 this.submitLoading = true;
                 window.changeDialog = false;

@@ -880,13 +880,14 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
-                    authorization_scopes: data
+                    authorization_scopes: data,
+                    sync_perm
                 };
                 window.changeDialog = false;
                 this.submitLoading = true;
