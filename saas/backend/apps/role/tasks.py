@@ -520,7 +520,7 @@ class InitBizGradeManagerTask(Task):
             members = maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers
             users = User.objects.filter(username__in=members)  # 筛选出已同步存在的用户
             group = self.group_biz.create_and_add_members(
-                role.id,
+                role,
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,

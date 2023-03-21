@@ -20,7 +20,7 @@ from pydantic import BaseModel, parse_obj_as
 
 from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.apps.policy.models import Policy as PolicyModel
-from backend.apps.role.models import Role, RoleRelatedObject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
@@ -134,8 +134,6 @@ class GroupBiz:
     template_check_biz = TemplateCheckBiz()
 
     # 直通的方法
-    add_members = GroupService.__dict__["add_members"]
-    remove_members = GroupService.__dict__["remove_members"]
     check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
     check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
     update = GroupService.__dict__["update"]
@@ -147,31 +145,69 @@ class GroupBiz:
     list_rbac_group_by_resource = GroupService.__dict__["list_rbac_group_by_resource"]
 
     def create_and_add_members(
-        self, role_id: int, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int
+        self, role: Role, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int
     ) -> Group:
         """
         创建用户组
         """
         with transaction.atomic():
-            group = self.group_svc.create(GroupCreation(name=name, description=description), creator)
-            RoleRelatedObject.objects.create_group_relation(role_id, group.id)
+            group = self.group_svc.create(
+                GroupCreation(
+                    name=name, description=description, source_system_id=role.source_system_id, hidden=role.hidden
+                ),
+                creator,
+            )
+            RoleRelatedObject.objects.create_group_relation(role.id, group.id)
             if subjects:
                 self.group_svc.add_members(group.id, subjects, expired_at)
 
         return group
 
-    def batch_create(self, role_id: int, infos: List[GroupCreationBean], creator: str) -> List[Group]:
+    def batch_create(
+        self, role_id: int, infos: List[GroupCreationBean], creator: str, attrs: Optional[Dict] = None
+    ) -> List[Group]:
         """
         批量创建用户组
         用于管理api
         """
         with transaction.atomic():
             groups = self.group_svc.batch_create(parse_obj_as(List[GroupCreation], infos), creator)
-            # group_attrs = {group.id: {"readonly": info.readonly} for group, info in zip(groups, infos)}
-            # self.group_attribute_svc.batch_set_attributes(group_attrs)
+            if attrs:
+                group_attrs = {group.id: attrs for group in groups}
+                self.group_attribute_svc.batch_set_attributes(group_attrs)
             RoleRelatedObject.objects.batch_create_group_relation(role_id, [group.id for group in groups])
 
         return groups
+
+    def add_members(self, group_id: int, members: List[Subject], expired_at: int):
+        """
+        添加用户组成员
+        """
+        self.group_svc.add_members(group_id, members, expired_at)
+
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
+        ).first()
+        if relation:
+            # 如果用户组是role的同步用户组, 需要同步添加成员到role
+            usernames = [m.id for m in members if m.type == SubjectType.USER.value]
+            if usernames:
+                self.role_svc.add_grade_manager_members(relation.role_id, usernames)
+
+    def remove_members(self, group_id: str, subjects: List[Subject]):
+        """
+        移除用户组成员
+        """
+        self.group_svc.remove_members(group_id, subjects)
+
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
+        ).first()
+        if relation:
+            # 如果用户组是role的同步用户组, 需要同步删除成员到role
+            usernames = [m.id for m in subjects if m.type == SubjectType.USER.value]
+            if usernames:
+                RoleUser.objects.delete_grade_manager_member(relation.role_id, usernames)
 
     def list_system_counter(self, group_id: int) -> List[GroupSystemCounterBean]:
         """
@@ -547,6 +583,11 @@ class GroupBiz:
         uuid = gen_uuid()
         subject = Subject.from_group_id(group.id)
 
+        if len(templates) == 1:
+            # 如果授权只有一个模版, 直接同步授权
+            self._grant_one_template(group, templates[0])
+            return
+
         for template in templates:
             # 生成授权数据锁
             lock = self._gen_grant_lock(subject, template, uuid)
@@ -558,6 +599,16 @@ class GroupBiz:
 
         # 执行授权流程
         TaskFactory().run(task.id)
+
+    def _grant_one_template(self, group: Group, template: GroupTemplateGrantBean):
+        """
+        用户组授权一个模版
+        """
+        subject = Subject.from_group_id(group.id)
+        if template.template_id != 0:
+            self.template_biz.grant_subject(template.system_id, template.template_id, subject, template.policies)
+        else:
+            self.policy_operation_biz.alter(template.system_id, subject, template.policies)
 
     def get_group_role_dict_by_ids(self, group_ids: List[int]) -> GroupRoleDict:
         """
@@ -590,7 +641,9 @@ class GroupBiz:
 
         return hit_members
 
-    def create_sync_perm_group_by_role(self, role: Role, creator: str, group_name: str = ""):
+    def create_sync_perm_group_by_role(
+        self, role: Role, creator: str, group_name: str = "", attrs: Optional[Dict] = None
+    ):
         """
         创建与分级管理员授权范围同步的用户组
 
@@ -605,12 +658,15 @@ class GroupBiz:
                 GroupCreation(
                     name=group_name or role.name,
                     description=role.description,
-                    readonly=True,
                     source_system_id=role.source_system_id,
                     hidden=role.hidden,
                 ),
                 creator,
             )
+
+            if attrs:
+                self.group_attribute_svc.batch_set_attributes({group.id: attrs})
+
             RoleRelatedObject.objects.create(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True
             )
