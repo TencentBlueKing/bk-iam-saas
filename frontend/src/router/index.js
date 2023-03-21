@@ -325,9 +325,7 @@ export const afterEach = async (to, from) => {
     if (to.query.role_id && !existValue('externalApp')) {
         await store.dispatch('role/updateCurrentRole', { id: Number(to.query.role_id) });
     }
-    if(!existValue('externalApp')) {
-        await preload();
-    }
+    await preload();
     preloading = false;
     const pageDataMethods = [];
     const routerList = to.matched;
