@@ -42,7 +42,7 @@
                 <div class="node-radio" v-if="item.showRadio">
                     <span class="node-checkbox"
                         :class="{
-                            'is-disabled': item.disabled || isDisabled,
+                            'is-disabled': item.disabled || isDisabled || (getGroupAttributes().source_from_role && item.type === 'depart'),
                             'is-checked': item.is_selected,
                             'is-indeterminate': item.indeterminate
                         }"
@@ -68,6 +68,7 @@
 
     export default {
         name: 'infinite-tree',
+        inject: ['getGroupAttributes'],
         props: {
             // 所有数据
             allData: {
@@ -232,7 +233,7 @@
              * @param {Object} node 当前节点
              */
             nodeClick (node) {
-                if (this.isDisabled) {
+                if (this.isDisabled || (this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
                 if ((node.level === 0 || (node.async && node.disabled)) && !this.isRatingManager) {
@@ -324,14 +325,14 @@
             },
 
             handleNodeClick (node) {
-                if (node.disabled || this.isDisabled) {
-                    return;
+                const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes().source_from_role && node.type === 'depart');
+                if (!isDisabled) {
+                    node.is_selected = !node.is_selected;
+                    if (node.type === 'user') {
+                        this.handleBanUser(node, node.is_selected);
+                    }
+                    this.$emit('on-select', node.is_selected, node);
                 }
-                node.is_selected = !node.is_selected;
-                if (node.type === 'user') {
-                    this.handleBanUser(node, node.is_selected);
-                }
-                this.$emit('on-select', node.is_selected, node);
             },
 
             /**

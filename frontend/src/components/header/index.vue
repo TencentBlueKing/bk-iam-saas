@@ -99,7 +99,7 @@
                 </section>
             </transition>
         </div> -->
-        <div class="page-tab-wrapper" :style="{ top: externalSystemsLayout.hideIamBreadCrumbs ? '0' : '54px' }" v-if="hasPageTab">
+        <div class="page-tab-wrapper" :style="{ top: externalSystemsLayout.hideIamBreadCrumbs ? '0' : '51px' }" v-if="hasPageTab">
             <bk-tab
                 :active.sync="active"
                 type="unborder-card"
