@@ -94,6 +94,9 @@ class PathNodeList(ListModel):
         # 所以这里可以直接认为只能是RBAC策略，暂时不进行实例视图匹配的分析
         return True
 
+    def __hash__(self):
+        return hash((hash(one) for one in self.__root__))
+
 
 class Instance(BaseModel):
     type: str

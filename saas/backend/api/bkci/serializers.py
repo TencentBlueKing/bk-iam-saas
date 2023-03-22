@@ -8,11 +8,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf.urls import include, url
+import json
 
-urlpatterns = [
-    # 管理类API - 对于V2 API，所有管理类API都默认在系统下
-    url(r"^management/systems/(?P<system_id>[\w|-]+)/", include("backend.api.management.v2.urls")),
-    # NOTE 临时api, 用于bkci迁移数据
-    url(r"^migration/bkci/", include("backend.api.bkci.urls")),
-]
+from rest_framework import serializers
+
+
+class MigrateDataSLZ(serializers.Serializer):
+    """
+    迁移数据
+    """
+
+    def to_representation(self, instance):
+        return json.loads(instance.data)

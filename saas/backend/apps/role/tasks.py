@@ -637,3 +637,6 @@ class InitBizGradeManagerTask(Task):
             templates.append(template)
 
         return templates
+
+
+current_app.tasks.register(InitBizGradeManagerTask())
