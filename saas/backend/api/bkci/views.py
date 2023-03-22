@@ -8,22 +8,31 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework import mixins
+import secrets
+
+from rest_framework import exceptions, mixins
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.api.authentication import ESBAuthentication
 from backend.api.bkci.filters import MigrateDataFilter
 from backend.api.bkci.models import MigrateData, MigrateTask
 from backend.api.bkci.serializers import MigrateDataSLZ
 from backend.api.bkci.tasks import BKCIMigrateTask
 
 
+class BKCIMigrateAutherization(BaseAuthentication):
+    def authenticate(self, request):
+        token = request.GET.get("token", "")
+        if not secrets.compare_digest(token, "9sBQj!M0"):
+            raise exceptions.AuthenticationFailed("token error")
+
+
 class MigateTaskView(GenericViewSet):
     """迁移任务"""
 
-    authentication_classes = [ESBAuthentication]
+    authentication_classes = [BKCIMigrateAutherization]
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
@@ -47,7 +56,7 @@ class MigateTaskView(GenericViewSet):
 class MigrateDataView(GenericViewSet, mixins.ListModelMixin):
     """迁移数据"""
 
-    authentication_classes = [ESBAuthentication]
+    authentication_classes = [BKCIMigrateAutherization]
     permission_classes = [AllowAny]
 
     queryset = MigrateData.objects.all().order_by("-id")
