@@ -905,7 +905,7 @@
             if (window.changeDialog) {
                 cancelHandler = leavePageConfirm();
                 cancelHandler.then(() => {
-                    next({ path: to.fullPath });
+                    next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
                 }, _ => _);
             } else {
                 next();
