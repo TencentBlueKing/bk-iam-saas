@@ -100,7 +100,7 @@
                 },
                 groupAttributes: {
                     source_type: '',
-                    source_from_role: true
+                    source_from_role: false
                 },
                 memberList: [],
                 groupId: '',
