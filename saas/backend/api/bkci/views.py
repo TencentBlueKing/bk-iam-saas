@@ -30,6 +30,13 @@ class BKCIMigrateAutherization(BaseAuthentication):
             raise exceptions.AuthenticationFailed("token error")
 
 
+class BKCIMigrateAutherization(BaseAuthentication):
+    def authenticate(self, request):
+        token = request.GET.get("token", "")
+        if not secrets.compare_digest(token, "9sBQj!M0"):
+            raise exceptions.AuthenticationFailed("token error")
+
+
 class MigateTaskView(GenericViewSet):
     """迁移任务"""
 
