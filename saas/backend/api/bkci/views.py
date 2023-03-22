@@ -10,7 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import secrets
 
-from rest_framework import exceptions, mixins
+from rest_framework import exceptions, mixins, serializers
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -20,6 +20,7 @@ from backend.api.bkci.filters import MigrateDataFilter
 from backend.api.bkci.models import MigrateData, MigrateTask
 from backend.api.bkci.serializers import MigrateDataSLZ
 from backend.api.bkci.tasks import BKCIMigrateTask
+from backend.util.json import json_dumps
 
 
 class BKCIMigrateAutherization(BaseAuthentication):
@@ -36,12 +37,15 @@ class MigateTaskView(GenericViewSet):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
+        serializers.ListField(child=serializers.IntegerField()).run_validation(request.data)
+
         task = MigrateTask.objects.first()
         if not task or task.status in ("SUCCESS", "FAILURE"):
             MigrateTask.objects.all().delete()
-            t = BKCIMigrateTask().delay()
-            task = MigrateTask(celery_id=t.task_id, status="PENDING")
+            task = MigrateTask(role_ids=json_dumps(request.data), status="PENDING")
             task.save(force_insert=True)
+
+            BKCIMigrateTask().delay()
 
         return Response({})
 

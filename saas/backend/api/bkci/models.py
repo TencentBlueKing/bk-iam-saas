@@ -17,7 +17,7 @@ class MigrateTask(models.Model):
     """
 
     status = models.CharField("任务状态", default="", max_length=36)
-    celery_id = models.CharField("celery任务id", max_length=36, default="")
+    role_ids = models.TextField("role_ids", default="")
 
     class Meta:
         verbose_name = "迁移任务"
