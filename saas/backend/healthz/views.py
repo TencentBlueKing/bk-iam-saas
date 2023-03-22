@@ -59,14 +59,14 @@ class HealthChecker:
 
         try:
             for name in connections:
-                cursor = connections[name].cursor()
-                cursor.execute("SELECT 1;")
-                row = cursor.fetchone()
-                if row is None:
-                    return False, "mysql `Select 1` Not Return Row"
+                with connections[name].cursor() as cursor:
+                    cursor.execute("SELECT 1;")
+                    row = cursor.fetchone()
+                    if row is None:
+                        return False, f"mysql connection {name} `Select 1` Not Return Row"
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("mysql query fail")
-            return False, f"mysql query fail, error: {str(e)}"
+            return False, f"mysql connection {name} query fail, error: {str(e)}"
 
         return True, "ok"
 
