@@ -8,11 +8,31 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf.urls import include, url
+from django.db import models
 
-urlpatterns = [
-    # 管理类API - 对于V2 API，所有管理类API都默认在系统下
-    url(r"^management/systems/(?P<system_id>[\w|-]+)/", include("backend.api.management.v2.urls")),
-    # NOTE 临时api, 用于bkci迁移数据
-    url(r"^migration/bkci/", include("backend.api.bkci.urls")),
-]
+
+class MigrateTask(models.Model):
+    """
+    迁移任务
+    """
+
+    status = models.CharField("任务状态", default="", max_length=36)
+    celery_id = models.CharField("celery任务id", max_length=36, default="")
+
+    class Meta:
+        verbose_name = "迁移任务"
+        verbose_name_plural = "迁移任务"
+
+
+class MigrateData(models.Model):
+    """
+    迁移数据
+    """
+
+    project_id = models.CharField("项目ID", max_length=64)
+    type = models.CharField("数据类型", max_length=32, default="")
+    data = models.TextField("数据")
+
+    class Meta:
+        verbose_name = "迁移数据"
+        verbose_name_plural = "迁移数据"
