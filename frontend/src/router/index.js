@@ -114,7 +114,7 @@ export const beforeEach = async (to, from, next) => {
     }
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
-        if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
+        if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
             getExternalRole();
         } else {
             if (currentRoleId) {

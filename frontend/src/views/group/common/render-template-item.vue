@@ -20,8 +20,13 @@
                         ({{ count }})
                     </template>
                 </span>
-                <template v-if="(isExpanded || ShowEditFill) && !isUser && !externalEdit">
-                    <section class="edit-action" @click.stop="handleEdit">
+                <template v-if="(isExpanded || ShowEditFill) && !isUser">
+                    <section
+                        class="edit-action"
+                        @click.stop="handleEdit"
+                        v-if="
+                            (externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle && !externalEdit) ||
+                                !externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
                         <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isDetail ? false : true" />
                     </section>
                 </template>
@@ -31,9 +36,19 @@
                     @confirm="handleDelete"
                     v-if="isStaff || isPermTemplateDetail || isUser || isDetail ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
-                        <section class="delete-action" @click.stop="toDeletePolicyCount" v-if="!externalDelete">
+                        <template
+                            v-if="
+                                (externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle &&
+                                    !externalDelete) ||
+                                    !externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle"
+                        >
+                            <section class="delete-action" @click.stop="toDeletePolicyCount">
+                                <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
+                            </section>
+                        </template>
+                        <!-- <section class="delete-action" @click.stop="toDeletePolicyCount">
                             <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
-                        </section>
+                        </section> -->
                     </template>
                 </bk-popconfirm>
             </section>
@@ -208,11 +223,8 @@
                 font-size: 14px;
             }
         }
-        .external-header {
-            height: 0;
-        }
         .edit-action,
-        .delete-action{
+        .delete-action {
             display: inline-block;
             width: 40px;
             text-align: center;
@@ -226,6 +238,22 @@
             position: relative;
             .slot-content {
                 padding: 0 30px 0 30px;
+            }
+        }
+
+        .external-header {
+            height: 0;
+            .edit-action,
+            .delete-action {
+                display: inline-block;
+                width: 40px;
+                text-align: center;
+                transform: translate(40px, -40px);
+                &:hover {
+                    i {
+                        color: #3a84ff;
+                    }
+                }
             }
         }
     }

@@ -7,7 +7,9 @@
         :quick-close="true"
         @animation-end="handleAnimationEnd">
         <div slot="header">
-            <p>{{ $t(`m.userGroup['用户组']`) }}【{{ name }}】{{ $t(`m.common['的详情']`) }}</p>
+            <p class="single-hide" :title="`${$t(`m.userGroup['用户组']`)}【${name}】${$t(`m.common['的详情']`)}`">
+                {{ $t(`m.userGroup['用户组']`) }}【{{ name }}】{{ $t(`m.common['的详情']`) }}
+            </p>
             <p class="group-id">ID: {{ groupId }}</p>
         </div>
         <div slot="content" class="content-wrapper" data-test-id="myPerm_sideslider_groupPermContentWrapper"

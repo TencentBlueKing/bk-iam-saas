@@ -14,11 +14,11 @@
             v-if="!isHasPermTemplate"
             data-test-id="group_btn_showAddGroupPerm"
             @on-click="handleAddPerm">
-            <iam-guide
+            <!-- <iam-guide
                 type="add_group_perm_template"
                 direction="left"
                 :style="{ top: '-10px', left: '125px' }"
-                :content="$t(`m.guide['添加组权限']`)" />
+                :content="$t(`m.guide['添加组权限']`)" /> -->
         </render-action>
         <render-horizontal-block
             :label="$t(`m.grading['操作和资源范围']`)"
@@ -62,11 +62,11 @@
             style="margin-bottom: 16px;"
             data-test-id="group_btn_showAddGroupMember"
             @on-click="handleAddMember">
-            <iam-guide
+            <!-- <iam-guide
                 type="add_group_member"
                 direction="left"
                 :style="{ top: '-20px', left: '180px' }"
-                :content="$t(`m.guide['添加组成员']`)" />
+                :content="$t(`m.guide['添加组成员']`)" /> -->
         </render-action>
         <section v-else ref="memberRef">
             <render-member
@@ -126,7 +126,7 @@
     import { bus } from '@/common/bus';
     import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
-    import IamGuide from '@/components/iam-guide/index.vue';
+    // import IamGuide from '@/components/iam-guide/index.vue';
     import AddMemberDialog from '../components/iam-add-member';
     import RenderMember from '../components/render-member';
     import basicInfo from '../components/basic-info';
@@ -147,7 +147,7 @@
             basicInfo,
             renderAction,
             RenderMember,
-            IamGuide,
+            // IamGuide,
             AddPermSideslider,
             AddActionSideslider,
             ResourceInstanceTable,
@@ -732,6 +732,23 @@
                 this.originalList = _.cloneDeep(payload);
                 this.aggregationDataByCustom = _.cloneDeep(aggregation);
                 this.authorizationDataByCustom = _.cloneDeep(authorization);
+                if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    if (this.originalList.length) {
+                        this.curActionValue = this.originalList.map(item => item.$id);
+                        this.handleSubmitPerm(
+                            [],
+                            this.aggregationDataByCustom,
+                            this.authorizationDataByCustom
+                        );
+                    } else {
+                        this.curActionValue = [];
+                        this.handleSubmitPerm(
+                            [],
+                            this.aggregationDataByCustom,
+                            this.authorizationDataByCustom
+                        );
+                    }
+                }
             },
 
             /**
@@ -859,7 +876,8 @@
              * handleAddPerm
              */
             handleAddPerm () {
-                this.isShowAddSideslider = true;
+                this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn
+                    ? this.isShowAddActionSideslider = true : this.isShowAddSideslider = true;
             },
 
             /**
@@ -887,7 +905,7 @@
             if (window.changeDialog) {
                 cancelHandler = leavePageConfirm();
                 cancelHandler.then(() => {
-                    next({ path: to.fullPath });
+                    next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
                 }, _ => _);
             } else {
                 next();

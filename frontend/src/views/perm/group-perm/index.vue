@@ -87,9 +87,9 @@
         <bk-sideslider
             :is-show.sync="isShowGradeSlider"
             :width="640"
-            :title="gradeSliderTitle"
             :quick-close="true"
             @animation-end="gradeSliderTitle === ''">
+            <div slot="header" class="single-hide" :title="gradeSliderTitle">{{ gradeSliderTitle }}</div>
             <div slot="content" class="grade-memebers-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
                 data-test-id="myPerm_sideslider_gradeMemebersContent">
                 <template v-if="!sliderLoading">
