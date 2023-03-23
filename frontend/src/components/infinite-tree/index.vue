@@ -42,7 +42,7 @@
                 <div class="node-radio" v-if="item.showRadio">
                     <span class="node-checkbox"
                         :class="{
-                            'is-disabled': item.disabled || isDisabled || (getGroupAttributes().source_from_role && item.type === 'depart'),
+                            'is-disabled': disabledNode(item),
                             'is-checked': item.is_selected,
                             'is-indeterminate': item.indeterminate
                         }"
@@ -170,6 +170,12 @@
                         'maxWidth': `calc(100% - ${otherOffset}px)`
                     };
                 };
+            },
+            disabledNode () {
+                return (payload) => {
+                    const isDisabled = payload.disabled || this.isDisabled;
+                    return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+                };
             }
         },
         watch: {
@@ -233,7 +239,7 @@
              * @param {Object} node 当前节点
              */
             nodeClick (node) {
-                if (this.isDisabled || (this.getGroupAttributes().source_from_role && node.type === 'depart')) {
+                if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
                 if ((node.level === 0 || (node.async && node.disabled)) && !this.isRatingManager) {
@@ -325,7 +331,7 @@
             },
 
             handleNodeClick (node) {
-                const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes().source_from_role && node.type === 'depart');
+                const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
                 if (!isDisabled) {
                     node.is_selected = !node.is_selected;
                     if (node.type === 'user') {
