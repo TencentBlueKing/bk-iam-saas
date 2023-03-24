@@ -1,0 +1,56 @@
+### Create user group
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| system_id | string | path | Yes | Access to system unique identifier |
+| grade_manager_id | int or "-" | path | Yes | The grade administrator ID, `for which grade_manager_id is not provided in the URL (the value is a horizontal bar "-"), it means that the user group is created under the system administrator corresponding to {system_id}` |
+| groups | array | body | yes | list of user groups to be created |
+
+groups
+
+| field | type | whether required | location | description |
+| --------|--------|--------|--------|--------|--------|--------|
+| name | string | yes | body | User group name, at least 5 characters, unique under the same hierarchical administrator |
+| description | string | yes | body | User group description, at least 10 characters |
+| readonly | bool | no | body | Optional parameter, default is false, user group is read-only |
+
+Description.
+
+The user group created with readonly: True can only be managed through the admin api, the user group can only be viewed on the permission center SaaS, but cannot be managed, such as: add permission/add member/delete
+
+#### Request
+
+```json
+{
+  "groups": [
+    {
+      "name": "test1".
+      "description": "test1test1"
+    }.
+    {
+      "name": "test2".
+      "description": "test1test2".
+      "readonly": true
+    }.
+  ]
+}
+```
+
+#### Response
+
+| Field | Type | Description |
+| -----------|-----------|-----------|
+| data | array[int] | list of user group IDs |
+
+
+```json
+{
+  "code": 0.
+  "message": "ok".
+  "data": [1, 2]
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

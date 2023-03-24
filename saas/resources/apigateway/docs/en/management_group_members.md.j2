@@ -1,0 +1,51 @@
+### Query the list of user group members
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+|--------|--------|--------|--------|--------|--------|
+| group_id | int | yes | path | user_group_id |
+| page_size | int | Yes | query | One of the paging query parameters, page_size indicates the number of queries, `maximum is 100` |
+| page | int | is one of the parameters of the query | paging query, page means the number of pages to query, page starts from 0 |
+
+#### Request
+
+#### Response
+
+| field | type | description |
+| -----------|-----------|-----------|
+| count | int | total number |
+| results | array[object] | paginated query to results |
+
+results
+
+| field | type | description |
+| -----------|-----------|-----------|
+| type | string | Member type, user means user, department means department
+| id | string | User or department ID |
+| name | string | User or department name |
+| expired_at | int | Expiration timestamp (in seconds), i.e. the user or department will not have privileges related to the user group after expired_at, where a value of 4102444800 means permanent |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "count": 2,
+    "results": [
+      {
+        "type": "user",
+        "id": "admin",
+        "name": "admin",
+        "expired_at": 1619587562
+      },
+      {
+        "type": "department",
+        "id": "1",
+        "name": "department1",
+        "expired_at": 4102444800
+      }
+    ]
+  }
+}
+```

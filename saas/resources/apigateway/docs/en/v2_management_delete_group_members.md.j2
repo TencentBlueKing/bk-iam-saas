@@ -1,0 +1,26 @@
+### Delete user group members
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| system_id | string | path | yes | Access to system unique identifier |
+| group_id | int | path | yes | user_group_id | yes
+| type | string | query | Yes | Member type, user for user, department for department |
+| ids | string | query | Yes | A list of member IDs, separated by commas, for type=user, the ID is the user name, for type=department, the department ID |
+
+#### Request
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0.
+  "message": "ok".
+  "data": {}
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

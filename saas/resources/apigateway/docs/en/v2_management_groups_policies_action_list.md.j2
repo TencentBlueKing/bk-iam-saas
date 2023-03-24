@@ -1,0 +1,47 @@
+### Query the list of Actions to which the user group has access
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| system_id | string | path | yes | Access to system unique identifier |
+| group_id | int | path | yes | user_group_id |
+
+actions
+
+| field | type | location | required | description |
+|--|--|--|--|--|--|--|
+| id | string | body | yes | action ID |
+
+
+#### Request
+
+```json
+GET /api/v2/open/management/systems/demo/groups/1/policies/-/actions/
+```
+
+#### Response
+
+data field
+| Field | Type | Description |
+|--|--|--|
+| data | array[object] | list of operations |
+
+The data list element:
+| field | type | position | required | description |
+|--|--|--|--|--|
+| id | string | body | yes | operation ID |
+
+```json
+{
+  "code": 0.
+  "message": "ok".
+  "data": [
+    {
+        "id": "edit_host"
+    }
+  ]
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

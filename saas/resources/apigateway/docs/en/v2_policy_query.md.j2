@@ -1,0 +1,97 @@
+### Pull permission policy
+
+sdk access, need to implement
+
+1. authentication: pull permission policy
+2. get the list of resources with permissions
+
+Both will use the same interface, pulling the policy list from the server
+
+The returned result contains conditional expressions
+
+#### Parameters
+
+| field | type | required | description |
+|:---|:---|:---|:---|
+| subject | subject | yes | authentication entity |
+| action | action | yes | action |
+| resources | Array(resource_node) | Yes | Resource instance, the order of the resource types must be the same as the order in which the actions are registered; can be an empty list |
+
+action
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | yes | action ID |
+
+subject
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| type | string | yes | Authorize object type, currently only user | is supported
+| id | string | yes | authorization_id |
+
+resource_node
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system | string | yes | resource_system_id |
+| type | string | yes | resource type ID |
+| id | string | yes | resource instance ID |
+| attribute | object | yes | resource attribute |
+
+#### Request
+
+##### No cmdb dependency
+
+```json
+# 1.
+{
+    "subject".
+    {
+        "type": "user".
+        "id": "admin"
+    }.
+    "action": {
+        "id": "edit"
+    }.
+    "resources": []
+}
+```
+
+##### has a cmdb dependency
+
+```json
+{
+    "subject".
+    {
+        "type": "user".
+        "id": "admin"
+    }.
+    "action": {
+        "id": "execute"
+    }.
+    "resources": [
+    {
+        "system": "bk_cmdb".
+        "type": "host".
+        "id": "192.168.1.1"
+    }]
+}
+```
+
+
+#### Response
+
+```json
+{
+    "code": 0.
+    "message": "ok".
+    "data": { // conditional expression
+        "field": "host.id".
+        "op": "any".
+        "value": []
+    }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

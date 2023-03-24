@@ -1,0 +1,40 @@
+#### Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | Yes | Operation id, unique under the system, only lowercase letters, lowercase letters, numbers, underscores (_) and ligatures (-) are allowed. The maximum length is 32 characters. |name
+| name |string | is the name of the operation, unique in the system.
+| name_en | string | Yes | The English name of the operation, switch to the English version when internationalizing|
+| description |string | No | The description of the operation.
+| description_en | string | No | The description of the operation in English, switch to the English version when internationalizing |
+| auth_type | string | No | The authorization type of the operation, including `abac\rbac`.
+| type | string | No | The type of the operation, the enumerated values include `create\delete\view\edit\list\manage\execute\use` For example, the create class operation needs to be identified as `create`, can't be classified as empty string |
+| related_resource_types | Array(Object) | No | The object of the operation, the list of resource types, the order of the list and the order of `product display` and `identification verification` must be consistent. If the operation does not need to be associated with a resource instance, it can be empty here. ` **Note that this is an ordered list! **: |
+| related_actions | Array(string) | No | Dependent actions of the action, a string list of action IDs, used to create dependent permissions when requesting permissions.
+| version | int | No | Version number, allowed to be empty, just as an update reminder for New on IAM (Identity and Access Management).
+
+Elements in related_resource_types
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system_id | string | Yes | The source system of the resource type, either its own system or another system |
+| id | string | Yes | The resource type ID, the id cannot be duplicated in the same related_resource_types when the operation is associated with multiple resource types.
+| name_alias | string | No | The alias of the resource type name, the same resource type can have its own display name for different Action
+| name_alias_en | string | No | Alias of the resource type name in English |
+| selection_mode | string | No | The selection type, i.e. the scope of the resource when configuring permissions on the IAM (Identity and Access Management) product, optional: `instance`/`attribute`/`all`, if not set, the default is `instance ` |
+| related_instance_selections | Array(Object) | No | The associated instance view, i.e. the way the resource is selected when configuring permissions on the IAM (Identity and Access Management) product; you can configure the instance view of this system, or the instance view of other systems (if `selection_mode=attribute` then this field is not configured; if `selection_mode` or `selection_mode=instance/all` is not set, then this field cannot be empty) |
+
+Elements in related_instance_selections
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system_id | string | Yes | The source system ID of the instance view |
+| id |string | Yes | The ID of the instance view |
+| ignore_iam_path | bool | no | Whether to ignore paths for configured permissions, `default to false` |
+
+After registration, the IAM (Identity and Access Management) logic for pulling resources when configuring permissions
+
+**Important Note:**
+- The resource type associated with the Action must be registered in the IAM (Identity and Access Management), otherwise the Action will fail to register.
+- If the associated resource type is from your own system, you need to register the resource type first
+- If the associated resource type is dependent on another system, you need to wait for the dependent system to register the resource type before you can register the Action

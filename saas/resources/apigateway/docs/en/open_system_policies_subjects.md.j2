@@ -1,0 +1,63 @@
+# Pull the user information corresponding to the policy according to the policy ID
+
+Based on the LBAC scheme, each resource will eventually be labeled with a batch of labels, which correspond to a batch of Policy IDs
+
+When querying the list of users with certain privileges for this resource, you can use the Policy IDs as the parameter of this interface to query the `User List`.
+
+Note:
+- You can only query the `User List` of your own system's policy list.
+- If the policyID is from another system, it will be "filtered out" and the interface will work, but the corresponding policyId will not appear in the result list
+
+#### Parameters
+
+|fields |type |required |location |description
+|:--|:--|:--|:--|:--|
+| system_id | string | yes | path | system ID |
+|ids |string |is |query |strategy id, multiple comma-separated |
+
+Example: `ids=2,3,4,7,9`
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [
+        {
+            "id": 2,
+            "subject": {
+                "type": "user",
+                "id": "admin",
+                "name": "admin"
+            }
+        },
+        {
+            "id": 3,
+            "subject": {
+                "type": "user",
+                "id": "test2",
+                "name": "test2"
+            }
+        },
+        {
+            "id": 4,
+            "subject": {
+                "type": "user",
+                "id": "test1",
+                "name": "test1"
+            }
+        },
+        {
+            "id": 7,
+            "subject": {
+                "type": "user",
+                "id": "admin",
+                "name": "admin"
+            }
+        }
+    ]
+}
+```

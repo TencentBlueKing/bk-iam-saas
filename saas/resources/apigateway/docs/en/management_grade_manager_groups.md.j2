@@ -1,0 +1,71 @@
+### Query the list of user groups under a hierarchical administrator
+
+> You can only query the list of user groups under a hierarchical administrator
+
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| --------|--------|--------|--------|--------|--------|--------|
+| grade_manager_id | int | yes | path | grade_manager_id |
+| page_size | int | Yes | query | One of the paging query parameters, page_size indicates the number of queries, `maximum is 100` |
+| page | int | is | query | one of the paging query parameters, page means the number of pages to be queried, page starts from 0 |
+
+#### Request
+
+#### Response
+
+| field | type | description |
+| -----------|-----------|-----------|
+| count | int | total number |
+| results | array[object] | paginated query to results |
+
+results
+| field | type | description |
+| -----------|-----------|-----------|
+| id | int | User group ID |
+| name | string | User group name |
+| description | string | User group description |
+| attributes | array[object] | User group attributes |
+
+attributes
+| field | type | description |
+| -----------|-----------|-----------|
+| readonly | bool | The user group is read-only. If true, the user group cannot be deleted on the IAM (Identity and Access Management) product |
+
+
+```json
+{
+ "code": 0,
+ "message": "ok",
+ "data": {
+   "count": 3,
+   "results": [
+     {
+       "id": 1,
+       "name": "test1",
+       "description": "test1",
+       "attributes": {
+         "readonly": true
+       }
+     },
+     {
+       "id": 2,
+       "name": "test2",
+       "description": "test2",
+       "attributes": {
+         "readonly": false
+       }
+     },
+     {
+       "id": 2,
+       "name": "test2",
+       "description": "test",
+       "attributes": {
+         "readonly": true
+       }
+     },
+   ]
+ }
+}
+```

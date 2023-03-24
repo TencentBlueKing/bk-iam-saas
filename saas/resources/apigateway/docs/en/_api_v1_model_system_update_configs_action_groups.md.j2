@@ -1,0 +1,51 @@
+### Update operation group
+
+The entire list is completely overwritten with the update
+
+{% include '__api_v1_model_config_action_groups.md.j2' %}
+
+#### Request
+
+```json
+[
+	{
+		"name": "admin_permissions",
+		"name_en": "Admin Permissions",
+		"actions": [
+			{
+				"id": "create_biz"
+			},
+			{
+				"id": "delete_biz"
+			}
+		]
+	},
+	{
+		"name": "Ops",
+		"name_en": "Devops Permissions",
+		"sub_groups": [
+			{
+				"name": "host_permissions",
+				"name_en": "Host Permissions",
+				"actions": [
+					{
+						"id": "view_host"
+					},
+					{
+						"id": "create_host"
+					}
+				]
+			}
+		]
+	}
+]
+```
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

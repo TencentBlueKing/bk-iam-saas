@@ -1,0 +1,57 @@
+#### Preceding descriptions
+
+Description of `resources.path`/`resources.paths[i]`
+
+Example 1: Topology hierarchy authorization to resource instance, *Business Name 1-Set 2-Host 1*
+
+```json
+{
+  "system": "bk_cmdb",
+  "type": "host",
+  "path": [
+    {
+      "type": "biz",
+      "id": "1",
+      "name": "biz1"
+    },
+    {
+      "type": "set",
+      "id": "2",
+      "name": "set2"
+    },
+    {
+      "type": "host",
+      "id": "1",
+      "name": "host1"
+    }
+  ]
+}
+```
+
+Example 2: Topology level prefix, *Business Name 1-any Set*, only hosts under the Set of Business Name 1 will have access in this case
+
+``Note``:
+
+- Hosts under Business Name 1 are defined differently than hosts in any Set under Business Name 1
+  1. `Hosts under Business Name1' includes all hosts under `all topologies' possible under Business Name 1
+  2. `All hosts of Set under Business Name1`, only contains all hosts under a specific topology `Business Name-Set`.
+- To avoid privilege amplification, you need to pass ``Business Name1-Any Set`` to the next level of the selected topology when authorizing.
+
+```json
+{
+  "system": "bk_cmdb",
+  "type": "host",
+  "path": [
+    {
+      "type": "biz",
+      "id": "1",
+      "name": "biz1"
+    },
+    {
+      "type": "set",
+      "id": "*",
+      "name": ""
+    }
+  ]
+}
+```

@@ -1,0 +1,22 @@
+| field | type | whether required | description |
+|:---|:---|:---|:---|
+| system |string | yes | system unique identifier |
+| subject_type | string | yes | user/group/all |
+| action | object | yes | action |
+| resources | Array(resource_node) | Yes | Resource instances, the order of the resource types must be the same as the order in which the actions are registered |
+| limit | int | Yes | Maximum number of returned objects |
+
+action
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | yes | action ID |
+
+resource_node
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system | string | yes | resource_system_id |
+| type | string | yes | resource type ID |
+| id | string | yes | resource instance ID |
+| attribute | object | yes | resource attribute |

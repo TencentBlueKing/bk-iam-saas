@@ -1,0 +1,36 @@
+### Check if a department is a valid member of a user group
+
+* Supports bulk user groups, with a limit on the number of batches
+* A valid member means that the relationship between the user group and the member has not expired.
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| system_id | string | path | Yes | Access to system unique identifier |
+| department_id | string | Department ID |
+| group_ids | string | body | Yes | List of user group IDs, multiple separated by commas |
+
+
+#### Request
+
+```json
+GET /api/v2/open/management/systems/demo/departments/1/groups/belong/?groups=1,2,3,4
+```
+
+#### Response
+
+```json
+{
+  "code": 0.
+  "message": "ok".
+  "data": {
+    1: true.
+    2: false.
+    3: false.
+    4: true
+  }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

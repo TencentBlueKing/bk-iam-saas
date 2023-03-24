@@ -1,0 +1,114 @@
+### New Associated Properties Authorization Interface
+
+#### Preface Description
+
+* Background.
+    - When a batch resource instance is created on the access system, the corresponding creator should need to grant the associated permissions for an attribute that depends on this batch instance
+        - For example, when a batch job is created, the creator needs to have edit, delete and view permissions for the job with the attribute creator=xxx
+
+* Process:
+    - 1. **user** generates resource instances on **access system**
+    - 2. **Access System** requests API, **IAM (Identity and Access Management)** authorizes the corresponding creator according to the new association configuration
+
+* Interface description.
+    - The access system authorizes the creator with the relevant attributes based on the creation of the resource instance
+
+* `Special Note on the Interface
+    - Newly created Actions must have a selection_mode of all or attribute (except for Action without associated instances) and can only have one dependent resource, otherwise the new association authorization will be `automatically ignored`.
+
+#### Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system | string | yes | system unique identifier |
+| type | string | Yes | Unique identifier for the resource type |
+| creator | string | Yes | The creator of the resource instance |
+| attributes | array(object) | yes | A list of resource attributes, ``the permission logic between multiple attributes is AND`'' |
+
+Description of the elements of the attributes list
+
+| field | type | whether required | description |
+|:---|:---|:---|:---|
+| id | string | Yes | Unique identifier for the resource attribute |
+| name | string | Yes | The name of the resource attribute |
+| values | array(object) | Yes | The values of the resource attribute, multiple values are supported, and the permission logic between `multiple values is OR` |
+
+Description of the elements of the values list
+
+| field | type | whether required | description |
+|:---|:---|:---|:---|
+| id | string | Yes | The unique identifier of the resource attribute value |
+| name | string | Yes | The name of the resource attribute value |
+
+
+#### Request
+
+```json
+{
+    "system": "bk_sops",
+    "type": "task",
+    "creator": "admin",
+    "attributes": [
+        {
+            "id": "owner",
+            "name": "task-owner",
+            "values": [
+                {
+                    "id": "admin",
+                    "name": "admin(admin)"
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### Response
+
+data array element
+
+| field | type | description |
+|:---|:---|:---|
+|action|object| creator is authorized for the corresponding Action |
+|policy_id|int| creator's authorized policy ID |
+
+action
+
+|field |type |description |
+|policy_id|int| creator is authorized to the policy ID | action | field | type | description |:---|:--|:---|
+|id|string| action ID |
+
+
+```json
+{
+  "data": [ // A list of Action and Policy IDs corresponding to the creator being authorized
+    {
+        "action": {
+            "id": "edit"
+        },
+        "policy_id": 1
+    },
+    {
+        "action": {
+            "id": "list"
+        },
+        "policy_id": 2
+    },
+    {
+        "action": {
+            "id": "delete"
+        },
+        "policy_id": 3
+    },
+    {
+        "action": {
+            "id": "view"
+        },
+        "policy_id": 4
+    }
+  ],
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```

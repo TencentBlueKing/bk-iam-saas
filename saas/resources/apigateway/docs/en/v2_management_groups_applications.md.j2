@@ -1,0 +1,45 @@
+### Create a user group request form
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| system_id | string | path | Yes | Access to system unique identifier |
+| group_ids | array[int] | body | yes | list of user group IDs |
+| expired_at | int | body | Yes | Expiration timestamp (in seconds), i.e. the user will not have access to the requested user group after expired_at |
+| applicant | string | body | Yes | The applicant, i.e. username |
+| reason | string | body | Yes |Reason for request |
+
+
+#### Request
+
+```json
+{
+  "group_ids": [
+    1.
+    2.
+    3
+  ].
+  "expired_at": 1653481167.
+  "reason": "development required".
+  "applicant": "blueking"
+}
+```
+
+#### Response
+
+| Field | Type | Description |
+|--|--|--|
+| ids | array[int] | list of application document IDs, splitting out different application documents because the approval process is different for different user groups |
+
+```json
+{
+  "code": 0.
+  "message": "ok".
+  "data": {
+    "ids": [1, 2, 3]
+  }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

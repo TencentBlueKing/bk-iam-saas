@@ -1,0 +1,23 @@
+### Delete user group members
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| --------|--------|--------|--------|--------|--------|
+| group_id | int | yes | path | user_group_id |
+| type | string | yes | query | member type, user for user, department for department |
+| ids | string | yes | query | List of member IDs, separated by commas, for type=user, the ID is the user name, for type=department, the department ID |
+
+#### Request
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

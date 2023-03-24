@@ -1,0 +1,19 @@
+#### Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | Yes | System id, globally unique, only lowercase letters, lowercase letters, numbers, underscores (_) and ligatures (-) are allowed, maximum 32 characters. |Name
+| name |string | Yes | System name, globally unique.
+| name_en | string | Yes | The English name of the system, switch to the English version when internationalizing |
+| description |string | No | System description, globally unique |
+| description_en | string | No | The system description in English, switch to the English version when internationalizing |
+| clients | string | Yes | The list of clients with permission to call, i.e. the list of app_codes with permission to call, separated by commas.
+| provider_config | Object | Yes | IAM (Identity and Access Management) callback to the configuration file of the access system |
+
+The element inside the provider_config parameter.
+
+| Field | Type | Required | Description |
+|:---|:---|:---|:---|
+| host | string | Yes | HOST of the IAM (Identity and Access Management) call query resource instance interface, format: scheme://netloc, used in conjunction with resource_type.provider_config.path |
+| auth | string | Yes | IAM (Identity and Access Management) call to query the authentication method of the resource instance interface, currently available: `none`/`basic`|
+| healthz | string | no | IAM (Identity and Access Management) calls the healthz of the access system to check the health of the system; used in conjunction with provider_config.host, `e.g. system.provider_config.host= http://cmdb.consul, provider_config.healthz=/healthz/`, then `http://cmdb.consul/healthz/` will be called to check the health of the system.   |
