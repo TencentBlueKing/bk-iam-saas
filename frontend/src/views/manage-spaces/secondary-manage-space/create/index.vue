@@ -98,6 +98,25 @@
                 @on-delete="handleMemberDelete"
                 @on-change="handleChange" />
         </section>
+        <template v-if="isStaff">
+            <render-horizontal-block
+                ext-cls="reason-wrapper"
+                :label="$t(`m.common['理由']`)"
+                :required="true">
+                <section class="content-wrapper" ref="reasonRef">
+                    <bk-input
+                        type="textarea"
+                        :rows="5"
+                        :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
+                        v-model="reason"
+                        @input="handleReasonInput"
+                        @blur="handleReasonBlur"
+                        style="margin-bottom: 15px;">
+                    </bk-input>
+                </section>
+            </render-horizontal-block>
+            <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        </template>
         <div slot="action">
             <bk-button theme="primary" type="button" :loading="submitLoading"
                 data-test-id="group_btn_createSubmit"
@@ -332,7 +351,7 @@
         methods: {
             async fetchPageData () {
                 const propsId = Number(this.id);
-                const headerTitle = propsId ? '二级管理空间克隆' : '新建二级管理空间';
+                const headerTitle = propsId ? '克隆二级管理空间' : '新建二级管理空间';
                 this.$store.commit('setHeaderTitle', headerTitle);
                 if (propsId) {
                     await this.fetchDetail();
@@ -371,7 +390,7 @@
                 } = payload;
                 this.inheritSubjectScope = inheritSubjectScope;
                 this.formData = Object.assign({}, {
-                    name: `${name}_克隆`,
+                    name: `${name}_${this.$t(`m.grading['克隆']`)}`,
                     members,
                     description,
                     sync_perm: sync_perm
@@ -1081,7 +1100,7 @@
                 try {
                     await this.$store.dispatch('spaceManage/addSecondManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建二级管理空间成功']`), 1000);
+                    this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆二级管理空间成功']` : `m.info['新建二级管理空间成功']`), 1000);
                     this.$router.go(-1);
                 } catch (e) {
                     console.error(e);

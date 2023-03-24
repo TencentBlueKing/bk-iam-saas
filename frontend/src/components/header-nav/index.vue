@@ -460,6 +460,12 @@
                         name: 'userGroup'
                     });
                 }
+                // 处理刷新管理空间二级管理空间点击不刷新问题
+                if (['staff'].includes(this.curRole) && ['secondaryManageSpaceCreate'].includes(this.routeName)) {
+                    this.$router.push({
+                        name: this.defaultRouteList[index]
+                    });
+                }
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
                 await this.$store.dispatch('role/updateCurrentRole', { id: roleData.id });

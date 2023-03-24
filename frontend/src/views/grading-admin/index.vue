@@ -37,7 +37,9 @@
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column :label="$t(`m.levelSpace['空间名称']`)">
                 <template slot-scope="{ row }">
-                    <span class="grading-admin-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                    <span class="grading-admin-name" :title="row.name" @click="handleView(row, 'detail')">
+                        {{ row.name }}
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
@@ -50,15 +52,15 @@
                     </span>
                 </template>
             </bk-table-column>
+            <bk-table-column :label="$t(`m.common['描述']`)">
+                <template slot-scope="{ row }">
+                    <span :title="row.description || ''">{{ row.description || '--' }}</span>
+                </template>
+            </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新时间']`)">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)">
-                <template slot-scope="{ row }">
-                    <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="150">
@@ -71,7 +73,7 @@
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
                     </section> -->
-                    <bk-button theme="primary" text @click="handleView(row)">
+                    <bk-button theme="primary" text @click="handleView(row, 'role')">
                         {{ $t(`m.levelSpace['进入']`) }}
                     </bk-button>
                     <bk-button
@@ -83,7 +85,6 @@
             </bk-table-column>
             <template slot="empty">
                 <ExceptionEmpty
-                    style="background: #f5f6fa"
                     :type="emptyData.type"
                     :empty-text="emptyData.text"
                     :tip-text="emptyData.tip"
@@ -393,14 +394,37 @@
                 this.isShowConfirmDialog = false;
             },
 
-            handleView (payload) {
-                window.localStorage.setItem('iam-header-name-cache', payload.name);
-                this.$router.push({
-                    name: 'gradingAdminDetail',
-                    params: {
-                        id: payload.id
+            async handleView ({ id, name }, type) {
+                window.localStorage.setItem('iam-header-name-cache', name);
+                const navRoute = {
+                    detail: () => {
+                        this.$router.push({
+                            name: 'gradingAdminDetail',
+                            params: {
+                                id
+                            }
+                        });
+                    },
+                    role: async () => {
+                        await this.$store.dispatch('role/updateCurrentRole', { id });
+                        await this.$store.dispatch('userInfo');
+                        const { role } = this.user;
+                        if (role) {
+                            this.$store.commit('updateCurRoleId', id);
+                            this.$store.commit('updateIdentity', { id, type: role.type, name });
+                            this.$store.commit('updateNavId', id);
+                            this.$store.commit('updateIndex', 1);
+                            window.localStorage.setItem('index', 1);
+                            this.$router.push({
+                                name: 'userGroup',
+                                params: {
+                                    id
+                                }
+                            });
+                        }
                     }
-                });
+                };
+                navRoute[type]();
             },
 
             handlePageChange (page) {
