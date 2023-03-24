@@ -217,19 +217,18 @@
             handleAddPerm () {
                 window.changeAlert = false;
                 if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                    const { source, role_id, system_id } = this.$route.query;
                     this.$router.push({
                         name: 'addGroupPerm',
                         params: {
                             id: this.id
                         },
                         query: {
-                            source: 'externalApp'
+                            source,
+                            role_id,
+                            system_id
                         }
                     });
-                    const params = {
-                        id: this.id
-                    };
-                    window.parent.postMessage({ type: 'IAM', data: params, code: 'add_group_perm' }, '*');
                 } else {
                     this.$router.push({
                         name: 'addGroupPerm',

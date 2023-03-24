@@ -1,7 +1,8 @@
 <template>
     <smart-action class="iam-add-group-perm-wrapper">
         <render-horizontal-block
-            :label="$t(`m.userGroup['组权限']`)">
+            :label="$t(`m.userGroup['组权限']`)"
+            :required="true">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
@@ -667,35 +668,51 @@
             },
 
             setBackRouter () {
-                if (!existValue('externalApp')) {
-                    if (window.FROM_ROUTER_NAME === 'userGroupDetail') {
+                if (window.FROM_ROUTER_NAME === 'userGroupDetail') {
+                    if (existValue('externalApp')) {
+                        const { source, role_id, system_id } = this.$route.query;
                         this.$router.push({
                             name: 'userGroupDetail',
                             params: {
                                 id: this.$route.params.id
+                            },
+                            query: {
+                                source,
+                                role_id,
+                                system_id,
+                                tab: 'group_perm'
                             }
                         });
                     } else {
                         this.$router.push({
-                            name: 'userGroup'
+                            name: 'userGroupDetail',
+                            params: {
+                                id: this.$route.params.id
+                            },
+                            query: {
+                                tab: 'group_perm'
+                            }
                         });
                     }
-                    delete window.FROM_ROUTER_NAME;
+                } else {
+                    this.$router.push({
+                        name: 'userGroup'
+                    });
                 }
+                delete window.FROM_ROUTER_NAME;
             },
 
             handleCancel () {
                 if (this.externalSystemId) { // 用户组取消也需要发送一个postmessage给外部页面
                     window.parent.postMessage({ type: 'IAM', code: 'cancel_add_group_perm' }, '*');
-                } else {
-                    let cancelHandler = Promise.resolve();
-                    if (window.changeDialog) {
-                        cancelHandler = leavePageConfirm();
-                    }
-                    cancelHandler.then(() => {
-                        this.setBackRouter();
-                    }, _ => _);
                 }
+                let cancelHandler = Promise.resolve();
+                if (window.changeDialog) {
+                    cancelHandler = leavePageConfirm();
+                }
+                cancelHandler.then(() => {
+                    this.setBackRouter();
+                }, _ => _);
             },
 
             handleAddPerm () {
