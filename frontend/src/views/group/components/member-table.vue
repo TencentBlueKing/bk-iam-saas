@@ -69,7 +69,7 @@
             :sub-title="deleteDialog.subTitle"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSumbitDelete" />
+            @on-sumbit="handleSubmitDelete" />
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
@@ -79,7 +79,7 @@
             show-expired-at
             :is-rating-manager="isRatingManager"
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd"
+            @on-sumbit="handleSubmitAdd"
             @on-after-leave="handleAddAfterClose" />
 
         <render-renewal-dialog
@@ -91,6 +91,7 @@
     </div>
 </template>
 <script>
+    import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import { formatCodeData } from '@/common/util';
@@ -247,7 +248,8 @@
             handleAddAfterClose () {
             },
 
-            async handleSumbitAdd (payload) {
+            async handleSubmitAdd (payload) {
+                const externalPayload = _.cloneDeep(payload);
                 this.loading = true;
                 const { users, departments, expiredAt } = payload;
                 let expired = payload.policy_expired_at;
@@ -283,6 +285,7 @@
                 };
                 try {
                     await this.$store.dispatch('userGroup/addUserGroupMember', params);
+                    window.parent.postMessage({ type: 'IAM', data: externalPayload, code: 'add_user_confirm' }, '*');
                     this.isShowAddMemberDialog = false;
                     this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
                     this.fetchMemberList();
@@ -350,7 +353,7 @@
                 this.deleteDialog.visible = false;
             },
 
-            async handleSumbitDelete () {
+            async handleSubmitDelete () {
                 this.deleteDialog.loading = true;
                 try {
                     const params = {
@@ -361,6 +364,11 @@
                     };
                     await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
                     this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+                    const externalParams = {
+                        ...params,
+                        count: params.members.length
+                    };
+                    window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
                     this.currentSelectList = [];
                     this.pagination.current = 1;
                     this.fetchMemberList();
