@@ -273,7 +273,7 @@
                 if (departments.length > 0) {
                     arr.push(...departments.map(item => {
                         return {
-                            ids: item.id,
+                            id: item.id,
                             type: 'department'
                         };
                     }));
@@ -281,7 +281,7 @@
                 if (users.length > 0) {
                     arr.push(...users.map(item => {
                         return {
-                            ids: item.username,
+                            id: item.username,
                             type: 'user'
                         };
                     }));
@@ -374,12 +374,12 @@
                     };
                     const { code, data } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
                     if (code === 0 && data) {
-                        this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
                         const externalParams = {
                             ...params,
                             count: params.members.length
                         };
                         window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
+                        this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
                         this.currentSelectList = [];
                         this.pagination.current = 1;
                         this.fetchMemberList();
