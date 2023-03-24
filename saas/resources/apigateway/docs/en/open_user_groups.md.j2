@@ -1,0 +1,40 @@
+### Querying the list of groups a user has joined
+
+A user group can contain: users and departments, and users belong to certain departments, so the list of groups that a user has joined is divided into two categories
+
+1. directly joined
+2. indirect join, the department they belong to joined a group
+
+-----
+
+#### Parameters
+
+| field | type | required | location | description |
+| :--- | :--- | :--- |:---|:--- |
+| user_id | string | yes | path | user_id |
+| inherit | bool | no | query | Whether to query for inherited groups, if false, return only directly joined groups, if true, return directly joined + indirectly inherited groups |
+
+Example: `inherit=true`
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [
+        {
+            "type": "group",
+            "id": "143",
+            "name": "Test User Group A"
+        },
+        {
+            "type": "group",
+            "id": "176",
+            "name": "Test User Group B"
+        }
+    ]
+}
+```

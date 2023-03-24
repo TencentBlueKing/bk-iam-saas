@@ -1,0 +1,49 @@
+### Create user group
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+|--------|--------|--------|--------|--------|--------|
+| grade_manager_id | int | yes | path | grade_manager_id |
+| groups | array[object] | yes | body | list of user groups |
+
+groups
+
+| field | type | mandatory | location | description |
+| --------|--------|--------|--------|--------|--------|--------|
+| name | string | yes | body | User group name, at least 2 characters, unique under the same hierarchical administrator |
+| description | string | yes | body | User group description, at least 10 characters |
+| readonly | bool | no | body | Optional parameter, default is false, user group is only readable, if true, then user group will not be able to be deleted on the permission center product |
+
+#### Request
+
+```json
+{
+  "groups": [
+    {
+      "name": "test1",
+      "description": "test1test1"
+    },
+    {
+      "name": "test2",
+      "description": "test1test2",
+      "readonly": true
+    },
+  ]
+}
+```
+
+#### Response
+
+| Field | Type | Description |
+| -----------|-----------|-----------|
+| data | array[int] | list of user group IDs |
+
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": [1, 2]
+}
+```

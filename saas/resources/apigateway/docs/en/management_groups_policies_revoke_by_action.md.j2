@@ -1,0 +1,39 @@
+### User group remove Action permission
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| group_id | int | path | yes | user_group_id |
+| system | string | body | Yes | Access to system unique identifier |
+| actions | array[object] | yes | body | actions |
+
+actions
+
+| field | type | location | required | description |
+|--|--|--|--|--|--|--|
+| id | string | body | yes | action ID |
+
+
+#### Request
+
+```json
+{
+  "system": "bk_cmdb",
+  "actions": [
+    {
+      "id": "edit_host"
+    }
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

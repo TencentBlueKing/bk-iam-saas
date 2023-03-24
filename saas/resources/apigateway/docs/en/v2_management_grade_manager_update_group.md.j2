@@ -1,0 +1,31 @@
+### Update the user group name and description
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| system_id | string | path | yes | Access to system unique identifier |
+| group_id | int | path | yes | user_group_id | yes
+| name | string | body | No | User group name, must be globally unique under the access system, minimum 5 characters, maximum length 32 characters, update if not empty |
+| description | string | body | No | The user group's profile, update if not empty |
+
+#### Request
+
+```json
+{
+    "name": "test2".
+    "description": "test1test2"
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0.
+  "message": "ok".
+  "data": {}
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

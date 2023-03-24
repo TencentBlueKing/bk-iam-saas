@@ -1,0 +1,25 @@
+#### Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | Yes | Resource type id, unique under the system, only lowercase letters, lowercase letters, numbers, underscores (_) and ligatures (-) are allowed, maximum 32 characters. |Name
+| name |string | Yes | The name of the resource type, unique in the system.
+| name_en | string | Yes | The English name of the resource type, switch to the English version when internationalizing |
+| description |string | No | The name of the resource type, unique to the system.
+| description_en | string | No | The English name of the resource type, switch to the English version when internationalizing |
+| parents | Array[Object] | no | The direct parent of the resource type, can be multiple direct parents, can be the resource type of its own system or the resource type of other systems, can be an empty list, no duplicates allowed, data only for IAM (Identity and Access Management) products display |
+| provider_config | Object | Yes | The configuration file for the IAM (Identity and Access Management) call query resource instance interface, used in conjunction with system.provider_config.host |
+| version | int | No | Version number, allowed to be empty, used only as an update reminder for New on IAM (Identity and Access Management) |
+
+parents element parameter description
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system_id | string | Yes | The source system ID of the direct parent resource type |
+| id |string | Yes | The ID of the direct parent resource type |
+
+provider_config inner element Parameters.
+
+| field | type | whether required | description |
+|:---|:---|:---|:---|
+| path | string | Yes | The PATH of the URL of the IAM (Identity and Access Management) call query resource instance interface, used in conjunction with system.provider_config.host |

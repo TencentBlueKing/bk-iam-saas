@@ -1,0 +1,30 @@
+### Adding a grading administrator member
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+|-----------|------------|--------|------------|------------|
+| grade_manager_id | int | yes | path | grade_manager_id |
+| members | array[string] | yes | body | list of user names |
+
+#### Request
+
+```json
+{
+  "members": [
+    "admin",
+    "test1",
+    "test2"
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

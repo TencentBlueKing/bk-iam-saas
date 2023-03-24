@@ -1,0 +1,40 @@
+### Update system
+
+` system_id is the unique identifier in the path; only the fields to be updated need to be passed in the body, which for provider_config is a full coverage update, not just update a field in provider_config`
+
+Note:
+
+- If you do not add yourself to clients when updating the system, the app_code of the current `update system` will be added to `clients` automatically (i.e., the update initiator cannot remove itself from `clients`)
+
+-------
+
+{% include '_api_v1_model_system.md.j2' %}
+
+#### Parameters
+
+|field |type |required |location |description |
+|:--|:--|:--|:--|:--|
+|system_id |string |yes |path |system_id |
+
+#### Request
+
+```json
+{
+    "name": "CMDB",
+    "name_en": "CMDB",
+    "clients": "bk_cmdb,cmdb",
+    "provider_config": {
+        "host": "http://cmdb_new.service.consul"
+    }
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```
