@@ -664,7 +664,7 @@ class GroupBiz:
                 creator,
             )
 
-            if attrs:
+            if attrs is not None:
                 self.group_attribute_svc.batch_set_attributes({group.id: attrs})
 
             RoleRelatedObject.objects.create(

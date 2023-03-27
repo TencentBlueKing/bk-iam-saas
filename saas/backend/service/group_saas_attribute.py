@@ -69,7 +69,7 @@ class GroupAttributeService:
             # 遍历每个属性是否配置了，若配置了则使用配置的值
             for attr_enum in GroupSaaSAttributeEnum:  # type: ignore[attr-defined]
                 attr = attr_enum.value
-                value_str = group_attr_values[attr]
+                value_str = group_attr_values[(group_id, attr)]
                 # 若value为空字符串，则说明没有配置
                 if value_str == "":
                     continue
