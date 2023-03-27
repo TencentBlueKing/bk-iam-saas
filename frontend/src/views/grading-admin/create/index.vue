@@ -134,7 +134,7 @@
             :all-checked="isAll"
             show-limit
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd" />
+            @on-sumbit="handleSubmitAdd" />
 
         <add-action-sideslider
             :is-show.sync="isShowAddActionSideslider"
@@ -248,7 +248,8 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-                isAll: true
+                isAll: true,
+                operate: ''
             };
         },
         computed: {
@@ -772,10 +773,9 @@
                 this.isShowMemberAdd = true;
             },
 
-            handleSumbitAdd (payload) {
-                window.changeDialog = true;
-                const { users, departments } = payload;
-                this.isAll = payload.isAll;
+            handleSubmitAdd (payload) {
+                const { users, departments, isAll } = payload;
+                this.isAll = isAll;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
                 this.isShowMemberAdd = false;
@@ -928,14 +928,14 @@
             },
 
             handleCancel () {
-                console.log(55);
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
-                }
-                cancelHandler.then(() => {
-                    this.$router.go(-1);
-                }, _ => _);
+                // let cancelHandler = Promise.resolve();
+                // if (window.changeDialog) {
+                //     cancelHandler = leavePageConfirm();
+                // }
+                // cancelHandler.then(() => {
+                // }, _ => _);
+                this.operate = 'cancel';
+                this.$router.go(-1);
             },
             handleReasonInput () {
                 this.isShowReasonError = false;
@@ -950,6 +950,17 @@
         beforeRouteEnter (to, from, next) {
             store.commit('setHeaderTitle', '');
             next();
+        },
+        beforeRouteLeave (to, from, next) {
+            if ((window.changeDialog && this.operate !== 'cancel') || (this.users.length || this.departments.length)) {
+                let cancelHandler = Promise.resolve();
+                cancelHandler = leavePageConfirm();
+                cancelHandler.then(() => {
+                    next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
+                }, _ => _);
+            } else {
+                next();
+            }
         }
     };
 </script>
