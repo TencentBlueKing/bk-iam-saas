@@ -455,13 +455,14 @@
                 roleData.active = true;
                 this.$store.commit('updateIndex', index);
                 window.localStorage.setItem('index', index);
-                if (this.routeName === 'addGroupPerm') {
-                    this.$router.push({
-                        name: 'userGroup'
-                    });
-                }
-                // 处理刷新管理空间二级管理空间点击不刷新问题
-                if (['staff'].includes(this.curRole) && ['secondaryManageSpaceCreate'].includes(this.routeName)) {
+                // 修复当前是添加组权限页面点击其他角色菜单会再次跳到权限管理
+                // if (this.routeName === 'addGroupPerm') {
+                //     this.$router.push({
+                //         name: 'userGroup'
+                //     });
+                // }
+                // 处理二级管理空间点击staff菜单不刷新路由问题
+                if (['secondaryManageSpaceCreate', 'secondaryManageSpaceDetail', 'addGroupPerm'].includes(this.routeName)) {
                     this.$router.push({
                         name: this.defaultRouteList[index]
                     });
