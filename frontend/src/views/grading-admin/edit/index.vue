@@ -635,6 +635,7 @@
                     members,
                     sync_perm: sync_perm
                 });
+                this.$store.commit('setHeaderTitle', name);
                 const departments = [];
                 const users = [];
                 payload.subject_scopes.forEach(item => {
