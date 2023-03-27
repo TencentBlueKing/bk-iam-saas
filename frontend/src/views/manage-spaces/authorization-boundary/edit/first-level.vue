@@ -17,7 +17,7 @@
                     <div class="action">
                         <section class="action-wrapper" @click.stop="handleAddAction">
                             <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
+                            <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                         </section>
                         <Icon
                             type="info-fill"

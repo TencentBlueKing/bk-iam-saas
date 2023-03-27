@@ -7,13 +7,14 @@
         </render-horizontal-block>
         <render-horizontal-block
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-            v-if="isSelectSystem || isSelectSystemShow">
+            v-if="isSelectSystem || isSelectSystemShow"
+            :required="true">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddAction"
                         data-test-id="grading_btn_showAddAction">
                         <Icon bk type="plus-circle-shape" />
-                        <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
+                        <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                     </section>
                     <Icon
                         type="info-fill"
@@ -61,7 +62,7 @@
                 </div>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
@@ -86,18 +87,23 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
-        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
-            <section class="content-wrapper">
+        <render-horizontal-block
+            v-if="isStaff"
+            ext-cls="reason-wrapper"
+            :label="$t(`m.common['理由']`)"
+            :required="true">
+            <section class="content-wrapper" ref="reasonRef">
                 <bk-input
                     type="textarea"
                     :rows="5"
+                    :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
                     v-model="reason"
                     @input="checkReason"
                     style="margin-bottom: 15px;">
                 </bk-input>
             </section>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit"
                 data-test-id="grading_btn_createSubmit"
@@ -184,7 +190,7 @@
                 isShowMemberAdd: false,
                 isShowAddActionSideSlider: false,
                 isShowActionEmptyError: false,
-                reasonEmptyError: false,
+                isShowReasonError: false,
                 isExpanded: false,
                 isShowMemberEmptyError: false,
                 isShowReasonDialog: false,
@@ -789,14 +795,13 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isStaff && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
                 if (validatorFlag || flag || this.isShowActionEmptyError
-                    || this.isShowMemberEmptyError || this.reasonEmptyError) {
+                    || this.isShowMemberEmptyError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -807,6 +812,11 @@
                     return;
                 }
                 if (this.isStaff) {
+                    if (!this.reason) {
+                        this.isShowReasonError = true;
+                        this.scrollToLocation(this.$refs.reasonRef);
+                        return;
+                    }
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -873,7 +883,7 @@
             },
 
             checkReason () {
-                this.reasonEmptyError = this.reason === '';
+                this.isShowReasonError = this.reason === '';
             }
         }
     };
@@ -958,6 +968,14 @@
                 span {
                     color: #ea3636;
                 }
+            }
+        }
+    }
+    .reason-wrapper {
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
             }
         }
     }

@@ -16,7 +16,7 @@
                     <section class="action-wrapper" @click.stop="handleAddPerm"
                         data-test-id="grading_btn_showAddAction">
                         <Icon bk type="plus-circle-shape" />
-                        <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
+                        <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                     </section>
                     <Icon
                         type="info-fill"
@@ -72,7 +72,7 @@
                 </section>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"

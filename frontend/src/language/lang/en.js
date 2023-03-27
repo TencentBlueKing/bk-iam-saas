@@ -292,8 +292,9 @@ export const m = {
         '空间名称必填': 'Space name is required',
         '空间名称最长不超过32个字符': 'The space name cannot exceed 32 characters',
         '空间名称不允许空格': 'Space name does not allow spaces',
-        '操作和资源边界范围不可为空': 'Operation and resource boundary range cannot be empty',
+        '操作和资源边界不可为空': 'Operation and resource boundaries cannot be empty',
         '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
+        '用户名输入格式错误': 'User name input format error'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -746,6 +747,7 @@ export const m = {
         '当前空间': 'Current Space',
         '实例值': 'Instance Value',
         '最大可授权操作和资源边界': 'Maximum authorized operations and resource boundaries',
+        '选择操作和资源边界': 'Select operations and resource boundaries',
         '选择操作和资源边界范围': 'Select operation and resource boundary range',
         '最大可授权人员边界': 'Maximum authorized personnel boundary',
         '选择可授权人员边界': 'Select authorized personnel boundary',
@@ -870,6 +872,7 @@ export const m = {
         '权限模板成员增加': 'Permission template increase members',
         '权限模板成员删除': 'Permission template delete members',
         '权限模板更新成员': 'Permission template update members',
+        '权限模板成员更新': 'Permission template update members',
         '权限模板预更新创建': 'Permission template pre-update creation',
         '权限模板预更新删除': 'Permission template pre-update delete',
         '创建一级管理空间': 'Create hierarchical administrator',

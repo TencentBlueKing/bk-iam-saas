@@ -7,17 +7,17 @@
         </render-horizontal-block>
         <render-action
             style="margin-bottom: 16px;"
-            :title="$t(`m.grading['选择操作和资源实例范围']`)"
+            :title="$t(`m.levelSpace['选择操作和资源实例']`)"
             :tips="addActionTips"
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.grading['最大可授权资源范围']`)" v-if="isSelectSystem">
+        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)" v-if="isSelectSystem">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
                         <section class="action-wrapper" @click.stop="handleAddAction">
                             <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
+                            <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                         </section>
                         <Icon
                             type="info-fill"

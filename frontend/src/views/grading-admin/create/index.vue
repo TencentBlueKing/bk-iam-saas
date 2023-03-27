@@ -25,7 +25,7 @@
                     <section class="action-wrapper" @click.stop="handleAddAction"
                         data-test-id="grading_btn_showAddAction">
                         <Icon bk type="plus-circle-shape" />
-                        <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
+                        <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                     </section>
                     <Icon
                         type="info-fill"
@@ -1037,11 +1037,11 @@
         }
     }
     .reason-wrapper {
-            margin-top: 16px;
-            .join-reason-error {
-                .bk-textarea-wrapper {
-                    border-color: #ff5656;
-                }
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
             }
         }
+    }
 </style>
