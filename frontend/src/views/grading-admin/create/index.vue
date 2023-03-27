@@ -952,8 +952,8 @@
             next();
         },
         beforeRouteLeave (to, from, next) {
+            let cancelHandler = Promise.resolve();
             if ((window.changeDialog && this.operate !== 'cancel') || (this.users.length || this.departments.length)) {
-                let cancelHandler = Promise.resolve();
                 cancelHandler = leavePageConfirm();
                 cancelHandler.then(() => {
                     next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
