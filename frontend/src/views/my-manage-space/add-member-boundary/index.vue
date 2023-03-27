@@ -899,9 +899,11 @@
                                 child.parentNodeId = item.id;
 
                                 if (this.hasSelectedDepartments.length > 0) {
-                                    const selectedDepart = this.hasSelectedDepartments.map(item => item.id);
-                                    child.is_selected = selectedDepart.includes(child.id)
-                                        || selectedDepart.includes(child.id.toString());
+                                    child.is_selected = this.hasSelectedDepartments.map(
+                                        item => item.id
+                                    ).includes(child.id);
+                                } else {
+                                    child.is_selected = false;
                                 }
 
                                 if (this.defaultDepartments.length > 0
@@ -1304,7 +1306,7 @@
                 const subject_scopes = list.map(item => {
                     if (item.type === 'depart') {
                         return {
-                            id: Number(item.id),
+                            id: item.id,
                             type: 'depart',
                             name: item.name,
                             full_name: item.full_name,
