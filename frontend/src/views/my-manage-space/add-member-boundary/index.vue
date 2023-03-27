@@ -601,6 +601,13 @@
                 if (subjectScopes && subjectScopes.length) {
                     this.users = subjectScopes.filter(item => item.type === 'user');
                     this.departments = subjectScopes.filter(item => item.type === 'depart');
+                    if (this.departments.length) {
+                        this.departments.forEach((item) => {
+                            item.id = isNaN(Number(item.id)) ? item.id : Number(item.id);
+                        });
+                    }
+                    this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
+                    this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
                 }
                 this.isAll = isAll || false;
                 this.showLimit = showLimit || false;
@@ -690,7 +697,7 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '用户名输入格式错误'
+                        message: this.$t(`m.verify['用户名输入格式错误]`)
                     });
                 } finally {
                     this.manualAddLoading = false;
@@ -892,11 +899,9 @@
                                 child.parentNodeId = item.id;
 
                                 if (this.hasSelectedDepartments.length > 0) {
-                                    child.is_selected = this.hasSelectedDepartments.map(
-                                        item => item.id
-                                    ).includes(child.id);
-                                } else {
-                                    child.is_selected = false;
+                                    const selectedDepart = this.hasSelectedDepartments.map(item => item.id);
+                                    child.is_selected = selectedDepart.includes(child.id)
+                                        || selectedDepart.includes(child.id.toString());
                                 }
 
                                 if (this.defaultDepartments.length > 0
