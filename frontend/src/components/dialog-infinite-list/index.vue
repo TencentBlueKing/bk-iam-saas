@@ -20,7 +20,7 @@
                     <div class="organization-checkbox" v-if="item.showRadio">
                         <span class="node-checkbox"
                             :class="{
-                                'is-disabled': item.disabled || isDisabled,
+                                'is-disabled': disabledNode(item),
                                 'is-checked': item.is_selected,
                                 'is-indeterminate': item.indeterminate
                             }"
@@ -49,7 +49,7 @@
                     <div class="user-checkbox" v-if="item.showRadio">
                         <span class="node-checkbox"
                             :class="{
-                                'is-disabled': item.disabled || isDisabled,
+                                'is-disabled': disabledNode(item),
                                 'is-checked': item.is_selected,
                                 'is-indeterminate': item.indeterminate
                             }"
@@ -117,6 +117,12 @@
             },
             renderUserList () {
                 return this.renderData.filter(item => item.type === 'user');
+            },
+            disabledNode () {
+                return (payload) => {
+                    const isDisabled = payload.disabled || this.isDisabled;
+                    return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+                };
             }
         },
         watch: {
@@ -212,7 +218,7 @@
              * @param {Object} node 当前节点
              */
             nodeClick (node) {
-                if (this.isDisabled) {
+                if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
                 this.$emit('on-click', node);
@@ -223,11 +229,11 @@
             },
 
             handleNodeClick (node) {
-                if (this.isDisabled) {
-                    return;
+                const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+                if (!isDisabled) {
+                    node.is_selected = !node.is_selected;
+                    this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
                 }
-                node.is_selected = !node.is_selected;
-                this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
             }
         }
     };
