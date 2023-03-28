@@ -84,10 +84,15 @@
             },
             canScrollLoad () {
                 return this.pagination.totalPage > this.currentBackup;
+            },
+            listHeight () {
+                // 可视化高度减去面包屑和导航栏高度，再减去固定标题的两个边框像素
+                return window.innerHeight - 51 - 51 - 2;
             }
         },
         created () {
             this.comMap = COM_MAP;
+            this.pagination.limit = Math.ceil(this.listHeight / 79);
         },
         methods: {
             async fetchPageData () {
@@ -96,31 +101,32 @@
 
             async fetchApplyList (isLoading = false, isScrollLoad = false) {
                 this.isApplyLoading = isLoading;
+                const { current, limit } = this.pagination;
                 const params = {
                     ...this.searchParams,
                     period: this.currentActive,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+                    limit,
+                    offset: limit * (current - 1)
                 };
                 if (!isScrollLoad) {
                     this.applyList.splice(0, this.applyList.length, ...[]);
                 }
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyList', params);
+                    const { data } = await this.$store.dispatch('myApply/getApplyList', params);
                     if (!isScrollLoad) {
-                        this.applyList = [...res.data.results];
+                        this.applyList = [...data.results];
                         if (this.applyList.length < 1) {
                             this.currentApplyData = {};
                         } else {
                             this.currentApplyData = this.applyList[0];
                         }
-                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+                        this.pagination.totalPage = Math.ceil(data.count / limit);
                     } else {
                         this.currentBackup++;
-                        (res.data.results || []).forEach(item => {
+                        (data.results || []).forEach(item => {
                             item.is_read = false;
                         });
-                        this.applyList.push(...res.data.results);
+                        this.applyList.push(...data.results);
                     }
                 } catch (e) {
                     console.error(e);
