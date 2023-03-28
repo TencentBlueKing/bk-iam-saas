@@ -601,6 +601,13 @@
                 if (subjectScopes && subjectScopes.length) {
                     this.users = subjectScopes.filter(item => item.type === 'user');
                     this.departments = subjectScopes.filter(item => item.type === 'depart');
+                    if (this.departments.length) {
+                        this.departments.forEach((item) => {
+                            item.id = isNaN(Number(item.id)) ? item.id : Number(item.id);
+                        });
+                    }
+                    this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
+                    this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
                 }
                 this.isAll = isAll || false;
                 this.showLimit = showLimit || false;
@@ -690,7 +697,7 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '用户名输入格式错误'
+                        message: this.$t(`m.verify['用户名输入格式错误]`)
                     });
                 } finally {
                     this.manualAddLoading = false;
@@ -1007,7 +1014,8 @@
                         departments.forEach(depart => {
                             depart.showRadio = true;
                             depart.type = 'depart';
-                            if (departIds.length && departIds.includes(depart.id)) {
+                            if ((departIds.length && departIds.includes(depart.id))
+                                || departIds.includes(String(depart.id))) {
                                 this.$set(depart, 'is_selected', true);
                             } else {
                                 this.$set(depart, 'is_selected', false);
@@ -1161,8 +1169,11 @@
                             // parentNodeId + username 组合成id
                             child.id = `${child.parentNodeId}${child.username}`;
 
-                            if (this.hasSelectedUsers.length > 0) {
-                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                            if (this.hasSelectedUsers.length > 0 && (
+                                this.hasSelectedUsers.map(item => item.id).includes(child.id)
+                                || this.hasSelectedUsers.map(item => item.username).includes(child.username))
+                            ) {
+                                child.is_selected = true;
                             } else {
                                 child.is_selected = false;
                             }
@@ -1299,10 +1310,11 @@
                 const subject_scopes = list.map(item => {
                     if (item.type === 'depart') {
                         return {
-                            id: Number(item.id),
+                            id: item.id,
                             type: 'depart',
                             name: item.name,
                             full_name: item.full_name,
+                            username: item.name,
                             count: item.count
                         };
                     }
@@ -1580,7 +1592,7 @@
 
         .right {
             width: calc(100% - 400px);
-            margin-left: 20px;
+            margin: 0 20px;
 
             .header {
                 display: flex;

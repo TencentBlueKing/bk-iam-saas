@@ -252,7 +252,7 @@
                 isShowHeader: false,
                 placeholderValue: '',
                 userGroupName: '',
-                externalRouter: ['permTransfer', 'permRenewal'] // 开放内嵌页面需要面包屑的页面
+                externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'] // 开放内嵌页面需要面包屑的页面
             };
         },
         computed: {

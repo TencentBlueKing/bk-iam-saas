@@ -192,8 +192,16 @@
         created () {
             this.PERMANENT_TIMESTAMP = PERMANENT_TIMESTAMP;
             this.fetchMemberList();
+            window.addEventListener('message', this.fetchReceiveData);
         },
         methods: {
+            
+            // 接收iframe父页面传递的message
+            fetchReceiveData (payload) {
+                const { data } = payload;
+                console.log(data, '接受传递过来的数据');
+                // this.fetchResetData(data);
+            },
             async fetchMemberList () {
                 this.tableLoading = true;
                 try {
@@ -284,11 +292,13 @@
                     id: this.id
                 };
                 try {
-                    await this.$store.dispatch('userGroup/addUserGroupMember', params);
-                    window.parent.postMessage({ type: 'IAM', data: externalPayload, code: 'add_user_confirm' }, '*');
-                    this.isShowAddMemberDialog = false;
-                    this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
-                    this.fetchMemberList();
+                    const { code, data } = await this.$store.dispatch('userGroup/addUserGroupMember', params);
+                    if (code === 0 && data) {
+                        window.parent.postMessage({ type: 'IAM', data: externalPayload, code: 'add_user_confirm' }, '*');
+                        this.isShowAddMemberDialog = false;
+                        this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
+                        this.fetchMemberList();
+                    }
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -362,16 +372,18 @@
                             ? [this.curMember]
                             : this.currentSelectList.map(({ id, type }) => ({ id, type }))
                     };
-                    await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
-                    this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
-                    const externalParams = {
-                        ...params,
-                        count: params.members.length
-                    };
-                    window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
-                    this.currentSelectList = [];
-                    this.pagination.current = 1;
-                    this.fetchMemberList();
+                    const { code, data } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
+                    if (code === 0 && data) {
+                        const externalParams = {
+                            ...params,
+                            count: params.members.length
+                        };
+                        window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
+                        this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+                        this.currentSelectList = [];
+                        this.pagination.current = 1;
+                        this.fetchMemberList();
+                    }
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
