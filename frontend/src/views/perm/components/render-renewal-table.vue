@@ -113,8 +113,14 @@
                 this.currentBackup = value;
             },
             type: {
-                handler (value) {
-                    this.tableProps = this.getTableProps(value);
+                handler (newValue, oldValue) {
+                    this.tableProps = this.getTableProps(newValue);
+                    if (oldValue && oldValue !== newValue) {
+                        this.pagination = Object.assign(this.pagination, {
+                            current: 1,
+                            limit: 10
+                        });
+                    }
                 },
                 immediate: true
             },
@@ -161,6 +167,7 @@
             data: {
                 handler (value) {
                     this.allData = value;
+                    this.pagination = Object.assign(this.pagination, { count: value.length });
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
                     const getDays = payload => {
@@ -188,12 +195,14 @@
                             }
                         });
                     });
-                }
+                },
+                immediate: true
             },
             count: {
                 handler (value) {
                     this.pagination.count = value;
-                }
+                },
+                immediate: true
             }
         },
         methods: {
@@ -226,8 +235,13 @@
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit;
-                this.pagination.current = 1;
+                this.pagination = Object.assign(
+                    this.pagination,
+                    {
+                        current: 1,
+                        limit: currentLimit
+                    }
+                );
                 this.pageChange();
             },
 
@@ -254,11 +268,22 @@
             async fetchTableData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                        page_size: this.pagination.limit,
-                        page: this.pagination.current
-                    });
-                    this.tableList = res.data || [];
+                    const { current, limit } = this.pagination;
+                    const tabItem = {
+                        group: async () => {
+                            const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                                page_size: limit,
+                                page: current
+                            });
+                            this.tableList = data.results || [];
+                            this.pagination.count = data.count;
+                        },
+                        custom: () => {
+                            this.tableList = this.getCurPageData(current);
+                            console.log(this.tableList);
+                        }
+                    };
+                    return tabItem[this.type]();
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
