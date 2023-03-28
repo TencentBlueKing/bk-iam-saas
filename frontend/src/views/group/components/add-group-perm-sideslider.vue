@@ -16,7 +16,7 @@
                             {{ $t(`m.common['条']`) }}
                         </div>
                         <div slot="right">
-                            <div class="add-button" v-if="!externalTemplate">
+                            <div class="add-button" v-if="!externalTemplate && !isSubset">
                                 <bk-button
                                     size="small"
                                     text
@@ -134,6 +134,7 @@
     import { leaveConfirm } from '@/common/leave-confirm';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -209,6 +210,10 @@
             };
         },
         computed: {
+            ...mapGetters(['user']),
+            isSubset () {
+                return this.user.role.type === 'subset_manager';
+            },
             isDisabled () {
                 return this.requestQueueBySys.length > 0 || this.requestQueueByTemplate.length > 0;
             }
