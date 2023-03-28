@@ -116,7 +116,7 @@ class TemplateBiz:
         删除权限模板
         """
         if PermTemplatePolicyAuthorized.objects.count_by_template(template_id) != 0:
-            raise error_codes.VALIDATE_ERROR.format(_("权限模板存在授权的用户组, 不能删除!"))
+            raise error_codes.VALIDATE_ERROR.format(_("该权限模板已被用户组关联, 不能删除!"))
 
         with transaction.atomic():
             PermTemplate.objects.filter(id=template_id).delete()
@@ -214,15 +214,15 @@ class TemplateBiz:
         创建模板更新锁
         """
         if GroupAuthorizeLock.objects.filter(template_id=template.id).exists():
-            raise error_codes.VALIDATE_ERROR.format(_("有用户组正在授权, 禁止提交新的更新任务!"))
+            raise error_codes.VALIDATE_ERROR.format(_("正在授权中, 请稍后!"))
 
         if set(template.action_ids) == set(action_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("模板操作未变更, 无需更新!"))
+            raise error_codes.VALIDATE_ERROR.format(_("权限模板未变更, 无需更新!"))
 
         template_id = template.id
         lock = PermTemplatePreUpdateLock.objects.acquire_lock_not_running_or_raise(template_id=template_id)
         if lock and set(lock.action_ids) != set(action_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("有其它的模板更新任务存在, 禁止提交新的更新任务!"))
+            raise error_codes.VALIDATE_ERROR.format(_("任务正在运行中，请稍后!"))
 
         if not lock:
             lock = PermTemplatePreUpdateLock(template_id=template_id)
@@ -252,7 +252,7 @@ class TemplateCheckBiz:
         if template_id in role_template_ids:
             role_template_ids.remove(template_id)
         if PermTemplate.objects.filter(id__in=role_template_ids, name=name).exists():
-            raise error_codes.VALIDATE_ERROR.format(_("权限模板名称已存在"))
+            raise error_codes.VALIDATE_ERROR.format(_("存在同名权限模板"))
 
     def check_add_member(self, template_id: int, subject: Subject, action_ids: List[str]):
         """
@@ -270,7 +270,7 @@ class TemplateCheckBiz:
             pass
 
         if set(template.action_ids) != set(action_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("模板: {} 的操作列表与授权信息不一致").format(template.name))
+            raise error_codes.VALIDATE_ERROR.format(_("提交的操作列表与模板: {} 实际的不一致").format(template.name))
 
     def check_group_update_pre_commit(
         self, template_id: int, pre_commits: List[TemplateGroupPreCommitBean], add_action_ids: List[str]

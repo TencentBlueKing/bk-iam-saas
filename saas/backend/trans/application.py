@@ -77,7 +77,7 @@ class ApplicationDataTrans:
 
         # 6. 数据完全没有变更
         if len(application_policies) == 0:
-            raise error_codes.INVALID_ARGS.format(message=_("无权限变更申请，无需提交"), replace=True)
+            raise error_codes.INVALID_ARGS.format(message=_("无新的权限申请，无需提交"), replace=True)
 
         return PolicyBeanList(system_id, application_policies)
 
