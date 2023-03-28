@@ -23,7 +23,7 @@
                             @enter="handleSearch">
                         </bk-input>
                         <div
-                            v-if="user.role.type === 'rating_manager'"
+                            v-if="['rating_manager', 'subset_manager'].includes(user.role.type)"
                             class="icon-iamcenter-wrapper"
                             @click.stop="refreshList">
                             <i class="iam-icon iamcenter-refresh"></i>
@@ -293,10 +293,11 @@
                     this.curSystemList.splice(0, this.curSystemList.length, ...this.systemList);
                 }
             },
-            defaultValue (value) {
-                if (value.length > 0) {
+            defaultValue: {
+                handler (value) {
                     this.curSelectValue = [...value];
-                }
+                },
+                immediate: true
             }
         },
         created () {

@@ -114,7 +114,7 @@ export const beforeEach = async (to, from, next) => {
     }
     if (to.name === 'userGroupDetail') {
         store.dispatch('versionLogInfo');
-        if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
+        if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
             getExternalRole();
         } else {
             if (currentRoleId) {
@@ -133,7 +133,7 @@ export const beforeEach = async (to, from, next) => {
                 const noFrom = !from.name;
                 // 说明是刷新页面
                 if (noFrom) {
-                    if (to.query.source === 'externalApp') {
+                    if (existValue('externalApp')) {
                         next();
                     } else {
                         console.log('userGroupDetail-noForm', navIndex);
@@ -162,11 +162,18 @@ export const beforeEach = async (to, from, next) => {
                 next({ path: `${SITE_URL}user-group` });
             }
         } else {
-            if (to.query.source === 'externalApp') { // 外部嵌入页面
+            if (existValue('externalApp')) { // 外部嵌入页面
                 next();
             } else {
                 if (curRole === 'staff') {
-                    next({ path: `${SITE_URL}my-perm` });
+                    // 单独处理返回个人staff不需要重定向我的权限的路由
+                    const routeNavMap = [
+                        [(name) => ['myManageSpace'].includes(name), () => next()],
+                        [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
+                    ];
+                    const getRouteNav = routeNavMap.find((item) => item[0](to.name));
+                    getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
+                    // next({ path: `${SITE_URL}my-perm` });
                 } else {
                     next();
                 }
@@ -186,7 +193,7 @@ export const beforeEach = async (to, from, next) => {
             curRole = 'staff';
         }
 
-        if (to.name === 'applyCustomPerm') {
+        if (['applyCustomPerm', 'myManageSpace'].includes(to.name)) {
             await store.dispatch('role/updateCurrentRole', { id: 0 });
             await store.dispatch('userInfo');
             curRole = 'staff';
@@ -197,7 +204,9 @@ export const beforeEach = async (to, from, next) => {
             window.localStorage.setItem('index', 0);
         }
 
-        if (to.query.source === 'externalApp' && to.query.hasOwnProperty('role_id')) {
+        console.log(to, curRole, navIndex, 555);
+
+        if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
             console.log('内嵌页面', navIndex);
             if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
                 store.commit('updateIndex', 1);
@@ -225,6 +234,7 @@ export const beforeEach = async (to, from, next) => {
             console.log('走了导航索引', curRole);
             difference = getNavRouterDiff(navIndex);
         }
+        console.log(difference, '路由');
         if (difference.length) {
             store.dispatch('versionLogInfo');
             if (difference.includes(to.name)) {
@@ -232,10 +242,16 @@ export const beforeEach = async (to, from, next) => {
                 window.localStorage.removeItem('iam-header-title-cache');
                 window.localStorage.removeItem('iam-header-name-cache');
                 if (curRole === 'staff' || curRole === '') {
-                    if (to.query.source === 'externalApp') { // 外部嵌入页面
+                    if (existValue('externalApp')) { // 外部嵌入页面
                         next();
                     } else {
-                        next({ path: `${SITE_URL}my-perm` });
+                        // 单独处理返回个人staff不需要重定向我的权限的路由
+                        const routeNavMap = [
+                            [(name) => ['myManageSpace'].includes(name), () => next()],
+                            [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
+                        ];
+                        const getRouteNav = routeNavMap.find((item) => item[0](to.name));
+                        getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
                     }
                 } else {
                     if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
@@ -284,9 +300,14 @@ export const beforeEach = async (to, from, next) => {
                     // } else {
                     //     next({ path: `${SITE_URL}user-group` });
                     // }
-                } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && noFrom) {
-                    next({ path: `${SITE_URL}rating-manager` });
-                } else if (['gradingAdminEdit'].includes(to.name) && noFrom) {
+                    // 这里刷新staff菜单会跳转分级管理员列表，所以单独处理
+                } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && !['', 'staff'].includes(curRole)) {
+                    if (noFrom) {
+                        next({ path: `${SITE_URL}rating-manager` });
+                    } else {
+                        next();
+                    }
+                } else if (['gradingAdminEdit'].includes(to.name)) {
                     next();
                 } else {
                     next();
@@ -319,7 +340,7 @@ export const beforeEach = async (to, from, next) => {
 
 export const afterEach = async (to, from) => {
     // permTemplateDetail 和 permTransfer 不需要统一处理 mainContentLoading
-    store.commit('setMainContentLoading', true && to.name !== 'permTemplateDetail' && to.name !== 'permTransfer');
+    store.commit('setMainContentLoading', true && !['permTemplateDetail', 'permTransfer'].includes(to.name));
     store.commit('setBackRouter', '');
     preloading = true;
     if (to.query.role_id && !existValue('externalApp')) {

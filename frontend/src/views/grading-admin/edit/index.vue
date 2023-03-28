@@ -7,17 +7,17 @@
         </render-horizontal-block>
         <render-action
             style="margin-bottom: 16px;"
-            :title="$t(`m.grading['选择操作和资源实例范围']`)"
+            :title="$t(`m.levelSpace['选择操作和资源实例']`)"
             :tips="addActionTips"
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.grading['最大可授权资源范围']`)" v-if="isSelectSystem">
+        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)" v-if="isSelectSystem">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
                         <section class="action-wrapper" @click.stop="handleAddAction">
                             <Icon bk type="plus-circle-shape" />
-                            <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
+                            <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                         </section>
                         <Icon
                             type="info-fill"
@@ -77,18 +77,25 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
-        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
-            <section class="content-wrapper">
-                <bk-input
-                    type="textarea"
-                    :rows="5"
-                    v-model="reason"
-                    @input="checkReason"
-                    style="margin-bottom: 15px;">
-                </bk-input>
-            </section>
-        </render-horizontal-block>
-        <p class="reason-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        <template v-if="isStaff">
+            <render-horizontal-block
+                :label="$t(`m.common['理由']`)"
+                ext-cls="reason-wrapper"
+                :required="true">
+                <section class="content-wrapper" ref="reasonRef">
+                    <bk-input
+                        type="textarea"
+                        :rows="5"
+                        :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
+                        v-model="reason"
+                        @input="handleReasonInput"
+                        @blur="handleReasonBlur"
+                        style="margin-bottom: 15px;">
+                    </bk-input>
+                </section>
+            </render-horizontal-block>
+            <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        </template>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
                 {{ $t(`m.common['确定']`) }}
@@ -214,7 +221,7 @@
                 dialogLoading: false,
                 isAll: false,
                 isShowTable: false,
-                reasonEmptyError: false
+                isShowReasonError: false
                 
             };
         },
@@ -252,10 +259,13 @@
                     || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
             },
             isStaff () {
-                return this.user.role.type === 'staff';
+                return this.user.role.type === 'staff' || this.$route.params.role_type === 'staff';
             }
         },
         watch: {
+            reason () {
+                this.isShowReasonError = false;
+            },
             originalList: {
                 handler (value) {
                     this.setPolicyList(value);
@@ -625,6 +635,7 @@
                     members,
                     sync_perm: sync_perm
                 });
+                this.$store.commit('setHeaderTitle', name);
                 const departments = [];
                 const users = [];
                 payload.subject_scopes.forEach(item => {
@@ -840,15 +851,14 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isStaff && this.reason === '';
+                // this.isShowReasonError = this.isStaff && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
-
                 if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError
-                    || this.reasonEmptyError) {
+                    || this.isShowReasonError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -859,6 +869,10 @@
                     return;
                 }
                 if (this.isStaff) {
+                    if (!this.reason) {
+                        this.isShowReasonError = true;
+                        this.scrollToLocation(this.$refs.reasonRef);
+                    }
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -892,7 +906,7 @@
                     subject_scopes: subjects,
                     authorization_scopes: data,
                     id: this.$route.params.id,
-                    sync_perm: sync_perm
+                    sync_perm
                 };
                 this.submitLoading = true;
                 window.changeDialog = false;
@@ -929,17 +943,25 @@
                     cancelHandler = leavePageConfirm();
                 }
                 cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'gradingAdminDetail',
-                        params: {
-                            id: this.$route.params.id
-                        }
-                    });
+                    // if(this.$route.params.role_type )
+                    // this.$router.push({
+                    //     name: 'gradingAdminDetail',
+                    //     params: {
+                    //         id: this.$route.params.id
+                    //     }
+                    // });
+                    this.$router.go(-1);
                 }, _ => _);
             },
 
-            checkReason () {
-                this.reasonEmptyError = this.reason === '';
+            handleReasonInput () {
+                this.isShowReasonError = false;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
             }
         }
     };
@@ -1033,6 +1055,14 @@
                 span {
                     color: #ea3636;
                 }
+            }
+        }
+    }
+    .reason-wrapper {
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
             }
         }
     }

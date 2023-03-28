@@ -5,8 +5,8 @@
             <component
                 :is="componentName"
                 :id="id"
-                @on-init="handleComInit">
-            </component>
+                @on-init="handleComInit"
+            />
         </div>
     </div>
 </template>
@@ -65,6 +65,10 @@
              */
             handleComInit (isLoading) {
                 this.comIsLoading = isLoading;
+            },
+
+            fetchDetail (payload) {
+                return this.$store.dispatch('userGroup/getUserGroupDetail', { id: payload });
             }
         }
     };

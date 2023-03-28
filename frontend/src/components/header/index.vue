@@ -99,7 +99,7 @@
                 </section>
             </transition>
         </div> -->
-        <div class="page-tab-wrapper" :style="{ top: externalSystemsLayout.hideIamBreadCrumbs ? '0' : '54px' }" v-if="hasPageTab">
+        <div class="page-tab-wrapper" :style="{ top: externalSystemsLayout.hideIamBreadCrumbs ? '0' : '51px' }" v-if="hasPageTab">
             <bk-tab
                 :active.sync="active"
                 type="unborder-card"
@@ -252,7 +252,7 @@
                 isShowHeader: false,
                 placeholderValue: '',
                 userGroupName: '',
-                externalRouter: ['permTransfer', 'permRenewal'] // 开放内嵌页面需要面包屑的页面
+                externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'] // 开放内嵌页面需要面包屑的页面
             };
         },
         computed: {

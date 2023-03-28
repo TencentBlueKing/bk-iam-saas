@@ -571,7 +571,7 @@ export const routes = [
                 name: 'gradingAdminCreate',
                 meta: {
                     headerTitle: il8n('nav', '新建一级管理空间'),
-                    backRouter: 'ratingManager'
+                    backRouter: -1
                 },
                 props: true,
                 component: GradingAdminCreate

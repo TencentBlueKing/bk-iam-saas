@@ -1,7 +1,8 @@
 <template>
     <smart-action class="iam-add-group-perm-wrapper">
         <render-horizontal-block
-            :label="$t(`m.userGroup['组权限']`)">
+            :label="$t(`m.userGroup['组权限']`)"
+            :required="true">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
@@ -32,6 +33,7 @@
                     @on-select="handleAttrValueSelected"
                     @on-resource-select="handleResSelect" />
             </div>
+            <p class="error-tips" style="margin: 10px 0" v-if="isShowErrorTips">{{ $t(`m.info['请选择组权限']`) }}</p>
         </render-horizontal-block>
         <div slot="action">
             <bk-button theme="primary" type="button" :loading="submitLoading" @click="handleSubmit">
@@ -70,7 +72,7 @@
 </template>
 <script>
     import _ from 'lodash';
-    import { guid } from '@/common/util';
+    import { guid, existValue } from '@/common/util';
     import { CUSTOM_PERM_TEMPLATE_ID } from '@/common/constants';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import AddPermSideslider from '../components/add-group-perm-sideslider';
@@ -119,7 +121,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemsLayout']),
+            ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
             isAggregateDisabled () {
                 const aggregationIds = this.tableList.reduce((counter, item) => {
                     return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
@@ -590,7 +592,7 @@
                 // debugger
                 this.isShowErrorTips = false;
                 const hasAddCustomList = [];
-                hasAddCustomList.splice(0, 0, ...this.hasAddCustomList);
+                // hasAddCustomList.splice(0, 0, ...this.hasAddCustomList);
                 if (this.originalList.length > 0) {
                     const intersection = payload.filter(
                         item => this.originalList.map(sub => sub.$id).includes(item.$id)
@@ -610,6 +612,24 @@
                 this.originalList = _.cloneDeep(payload);
                 this.aggregationDataByCustom = _.cloneDeep(aggregation);
                 this.authorizationDataByCustom = _.cloneDeep(authorization);
+                console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, '当前数据');
+                if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    if (this.originalList.length) {
+                        this.curActionValue = this.originalList.map(item => item.$id);
+                        this.handleSubmitPerm(
+                            [],
+                            this.aggregationDataByCustom,
+                            this.authorizationDataByCustom
+                        );
+                    } else {
+                        this.curActionValue = [];
+                        this.handleSubmitPerm(
+                            [],
+                            this.aggregationDataByCustom,
+                            this.authorizationDataByCustom
+                        );
+                    }
+                }
             },
 
             async handleSubmit () {
@@ -631,6 +651,7 @@
                 try {
                     await this.$store.dispatch('userGroup/addUserGroupPolicy', params);
                     this.messageSuccess(this.$t(`m.info['用户组添加权限成功']`), 1000);
+                    window.parent.postMessage({ type: 'IAM', data: params, code: 'submit_add_group_perm' }, '*');
                     this.setBackRouter();
                 } catch (e) {
                     console.error(e);
@@ -648,12 +669,31 @@
 
             setBackRouter () {
                 if (window.FROM_ROUTER_NAME === 'userGroupDetail') {
-                    this.$router.push({
-                        name: 'userGroupDetail',
-                        params: {
-                            id: this.$route.params.id
-                        }
-                    });
+                    if (existValue('externalApp')) {
+                        const { source, role_id, system_id } = this.$route.query;
+                        this.$router.push({
+                            name: 'userGroupDetail',
+                            params: {
+                                id: this.$route.params.id
+                            },
+                            query: {
+                                source,
+                                role_id,
+                                system_id,
+                                tab: 'group_perm'
+                            }
+                        });
+                    } else {
+                        this.$router.push({
+                            name: 'userGroupDetail',
+                            params: {
+                                id: this.$route.params.id
+                            },
+                            query: {
+                                tab: 'group_perm'
+                            }
+                        });
+                    }
                 } else {
                     this.$router.push({
                         name: 'userGroup'
@@ -663,6 +703,9 @@
             },
 
             handleCancel () {
+                if (this.externalSystemId) { // 用户组取消也需要发送一个postmessage给外部页面
+                    window.parent.postMessage({ type: 'IAM', code: 'cancel_add_group_perm' }, '*');
+                }
                 let cancelHandler = Promise.resolve();
                 if (window.changeDialog) {
                     cancelHandler = leavePageConfirm();
@@ -673,7 +716,8 @@
             },
 
             handleAddPerm () {
-                this.isShowAddSideslider = true;
+                this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn
+                    ? this.isShowAddActionSideslider = true : this.isShowAddSideslider = true;
             }
         }
     };

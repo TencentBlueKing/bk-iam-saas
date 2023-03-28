@@ -1,12 +1,23 @@
 <template>
     <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <bk-button
-            v-if="!isLoading && isEditMode && (!externalSystemsLayout.userGroup.groupDetail.hideAddBtn || canEditGroup)"
-            theme="primary"
-            style="margin-bottom: 16px"
-            @click="handleAddPerm">
-            {{ $t(`m.common['添加权限']`) }}
-        </bk-button>
+        <template v-if="
+            !groupAttributes.source_type && externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn">
+            <bk-button
+                theme="primary"
+                style="margin-bottom: 16px"
+                @click="handleAddPerm">
+                {{ $t(`m.common['添加权限']`) }}
+            </bk-button>
+        </template>
+        <template v-if="!externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn">
+            <bk-button
+                v-if="!isLoading && isEditMode"
+                theme="primary"
+                style="margin-bottom: 16px"
+                @click="handleAddPerm">
+                {{ $t(`m.common['添加权限']`) }}
+            </bk-button>
+        </template>
         <template v-if="!isLoading && !isEmpty">
             <render-perm-item
                 data-test-id="myPerm_list_permItem"
@@ -19,7 +30,6 @@
                 :policy-count="item.custom_policy_count"
                 :template-count="item.template_count"
                 :group-system-list-length="groupSystemListLength"
-                :external-custom="externalSystemsLayout.userGroup.groupDetail.hideCustomPerm"
                 @on-expanded="handleExpanded(...arguments, item)">
                 <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
                     <div v-if="!item.loading">
@@ -30,9 +40,8 @@
                             :key="subIndex"
                             :title="subItem.name"
                             :count="subItem.count"
-                            :external-edit="externalSystemsLayout.userGroup.groupDetail.hideAddBtn && !canEditGroup"
-                            :external-delete="externalSystemsLayout.userGroup.groupDetail.hideDeleteBtn
-                                && !canEditGroup"
+                            :external-edit="!!groupAttributes.source_type"
+                            :external-delete="!!groupAttributes.source_type"
                             :is-edit="subItem.isEdit"
                             :loading="subItem.editLoading"
                             :expanded.sync="subItem.expanded"
@@ -57,7 +66,7 @@
                                     :group-id="groupId"
                                     :template-id="subItem.id"
                                     :is-edit="subItem.isEdit"
-                                    :external-delete="externalSystemsLayout.userGroup.groupDetail.hideDeleteBtn"
+                                    :external-delete="!!groupAttributes.source_type"
                                     @on-delete="handleSingleDelete(...arguments, item)" />
                             </div>
                         </render-template-item>
@@ -119,6 +128,12 @@
                 removingSingle: false,
                 isPermTemplateDetail: false,
                 role: '',
+                // source_type == openapi, 那就是接口创建的, 在蓝盾上面不能修改权限, 如果是空就可以用户编辑权限
+                // source_from_role如果是true, 添加成员只能添加用户不能添加部门
+                groupAttributes: {
+                    source_type: '',
+                    source_from_role: false
+                },
                 emptyData: {
                     type: '',
                     text: '',
@@ -147,6 +162,7 @@
                 handler (value) {
                     this.groupId = value;
                     this.handleInit();
+                    this.fetchDetail(value);
                 },
                 immediate: true
             },
@@ -188,14 +204,39 @@
                 }
             },
 
+            async fetchDetail (payload) {
+                if (this.$parent.fetchDetail) {
+                    const { data } = await this.$parent.fetchDetail(payload);
+                    const { attributes } = data;
+                    if (Object.keys(attributes).length) {
+                        this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+                    }
+                }
+            },
+
             handleAddPerm () {
                 window.changeAlert = false;
-                this.$router.push({
-                    name: 'addGroupPerm',
-                    params: {
-                        id: this.id
-                    }
-                });
+                if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                    const { source, role_id, system_id } = this.$route.query;
+                    this.$router.push({
+                        name: 'addGroupPerm',
+                        params: {
+                            id: this.id
+                        },
+                        query: {
+                            source,
+                            role_id,
+                            system_id
+                        }
+                    });
+                } else {
+                    this.$router.push({
+                        name: 'addGroupPerm',
+                        params: {
+                            id: this.id
+                        }
+                    });
+                }
             },
 
             handleEdit (paylaod) {

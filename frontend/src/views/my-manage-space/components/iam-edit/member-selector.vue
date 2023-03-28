@@ -171,9 +171,11 @@
             },
 
             handleRtxBlur () {
-                this.$emit('on-change', {
-                    [this.field]: this.displayValue
-                }, this.index);
+                if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+                    this.$emit('on-change', {
+                        [this.field]: this.displayValue
+                    }, this.index);
+                }
             }
         }
     };

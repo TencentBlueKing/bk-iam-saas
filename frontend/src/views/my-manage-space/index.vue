@@ -48,7 +48,7 @@
                         <bk-table-column width="30" />
                         <bk-table-column prop="name" width="240">
                             <template slot-scope="child">
-                                <div class="child_space_name">
+                                <div class="flex_space_name">
                                     <Icon type="level-two" :style="{ color: iconColor[1] }" />
                                     <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
                                         :value="child.row.name" style="width: 100%;margin-left: 5px;"
@@ -91,18 +91,18 @@
                                     <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'detail')">
                                         {{ $t(`m.levelSpace['进入']`) }}
                                     </bk-button>
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'edit')">
+                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'auth')">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
+                                    <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
                                         {{ $t(`m.levelSpace['克隆']`) }}
-                                    </bk-button>
+                                    </bk-button> -->
                                 </div>
                             </template>
                         </bk-table-column>
                         <template slot="empty">
                             <ExceptionEmpty
-                                style="background: #f5f6fa"
+                                style="background: #ffffff"
                                 :type="emptyData.type"
                                 :empty-text="emptyData.text"
                                 :tip-text="emptyData.tip"
@@ -115,12 +115,16 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['空间名称']`)" prop="name" width="240">
-                <template slot-scope="{ row }">
-                    <div>
+                <template slot-scope="{ row, $index }">
+                    <div class="flex_space_name">
                         <Icon type="level-one" :style="{ color: iconColor[0] }" />
-                        <span :title="row.name" class="right-start">
+                        <!-- <span :title="row.name" class="right-start">
                             {{ row.name }}
-                        </span>
+                        </span> -->
+                        <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
+                            :value="row.name" style="width: 100%;margin-left: 5px;"
+                            :index="$index"
+                            :remote-hander="handleUpdateManageSpace" />
                     </div>
                 </template>
             </bk-table-column>
@@ -163,7 +167,7 @@
                     <div class="operate_btn">
                         <bk-button theme="primary" text
                             @click="handleView(row, 'detail')">{{ $t(`m.levelSpace['进入']`) }}</bk-button>
-                        <bk-button theme="primary" text @click.stop="handleView(row, 'edit')">
+                        <bk-button theme="primary" text @click.stop="handleView(row, 'auth')">
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button theme="primary" text @click="handleView(row, 'clone')">
@@ -174,7 +178,7 @@
             </bk-table-column>
             <template slot="empty">
                 <ExceptionEmpty
-                    style="background: #f5f6fa"
+                    style="background: #fffffff"
                     :type="emptyData.type"
                     :empty-text="emptyData.text"
                     :tip-text="emptyData.tip"
@@ -194,6 +198,8 @@
     import IamEditMemberSelector from './components/iam-edit/member-selector';
     import IamEditTextarea from './components/iam-edit/textarea';
     import { buildURLParams } from '@/common/url';
+    // import { bus } from '@/common/bus';
+    // import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 
     export default {
         name: 'myManageSpace',
@@ -240,7 +246,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'roleList']),
             tableHeight () {
                 return getWindowHeight() - 185;
             }
@@ -425,52 +431,94 @@
             },
             
             // 一级管理空间
-            handleView ({ id, name }, type) {
+            async handleView ({ id, name }, mode) {
                 window.localStorage.setItem('iam-header-name-cache', name);
-                let routerName = 'gradingAdminDetail';
-                switch (type) {
-                    case 'detail':
-                        routerName = 'gradingAdminDetail';
-                        break;
-                    case 'edit':
-                        routerName = 'gradingAdminEdit';
-                        break;
-                    case 'clone':
+                let routerName = 'userGroup';
+                const routerNav = {
+                    detail: () => {
+                        routerName = 'userGroup';
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                    },
+                    auth: () => {
+                        routerName = 'authorBoundary';
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                    },
+                    clone: () => {
                         routerName = 'gradingAdminCreate';
-                        break;
-                    default:
-                        routerName = 'gradingAdminDetail';
-                        break;
+                        this.$store.commit('updateIndex', 0);
+                        window.localStorage.setItem('index', 0);
+                    }
+                };
+                routerNav[mode]();
+                if (!['clone'].includes(mode)) {
+                    await this.$store.dispatch('role/updateCurrentRole', { id });
+                    await this.$store.dispatch('userInfo');
+                    const { role } = this.user;
+                    this.$store.commit('updateCurRoleId', id);
+                    this.$store.commit('updateIdentity', { id, type: role.type, name });
+                    this.$store.commit('updateNavId', id);
                 }
                 this.$router.push({
                     name: routerName,
                     params: {
-                        id
+                        id,
+                        role_type: 'staff'
                     }
                 });
             },
 
             // 二级管理空间
-            handleSubView ({ id, name }, type) {
+            async handleSubView ({ id, name }, mode) {
+                // let routerName = 'myManageSpaceSubDetail';
+                // switch (type) {
+                //     case 'detail':
+                //         routerName = 'myManageSpaceSubDetail';
+                //         break;
+                //     case 'edit':
+                //         routerName = 'myManageSpaceSubDetail';
+                //         break;
+                //     case 'clone':
+                //         routerName = 'secondaryManageSpaceCreate';
+                //         break;
+                //     default:
+                //         break;
+                // }
+                // const currentRole = getTreeNode(id, this.roleList);
                 window.localStorage.setItem('iam-header-name-cache', name);
-                let routerName = 'myManageSpaceSubDetail';
-                switch (type) {
-                    case 'detail':
-                        routerName = 'myManageSpaceSubDetail';
-                        break;
-                    case 'edit':
-                        routerName = 'myManageSpaceSubDetail';
-                        break;
-                    case 'clone':
+                let routerName = 'userGroup';
+                const routerNav = {
+                    detail: () => {
+                        routerName = 'userGroup';
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                    },
+                    auth: () => {
+                        routerName = 'authorBoundary';
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                    },
+                    clone: () => {
                         routerName = 'secondaryManageSpaceCreate';
-                        break;
-                    default:
-                        break;
+                        this.$store.commit('updateIndex', 0);
+                        window.localStorage.setItem('index', 0);
+                    }
+                };
+                routerNav[mode]();
+                if (!['clone'].includes(mode)) {
+                    await this.$store.dispatch('role/updateCurrentRole', { id });
+                    await this.$store.dispatch('userInfo');
+                    const { role } = this.user;
+                    this.$store.commit('updateCurRoleId', id);
+                    this.$store.commit('updateIdentity', { id, type: role.type, name });
+                    this.$store.commit('updateNavId', id);
                 }
                 this.$router.push({
                     name: routerName,
                     params: {
-                        id
+                        id,
+                        role_type: 'staff'
                     }
                 });
             },
@@ -582,7 +630,7 @@
         display: flex;
     }
 
-    .child_space_name {
+    .flex_space_name {
         display: flex;
         align-items: center;
     }
