@@ -60,10 +60,10 @@
                 </div>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源实例范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
-                :title="$t(`m.grading['选择可授权人员范围']`)"
+                :title="$t(`m.levelSpace['选择可授权人员边界']`)"
                 :tips="addMemberTips"
                 style="margin-bottom: 16px;"
                 @on-click="handleAddMember" />
@@ -76,7 +76,7 @@
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <template v-if="isStaff">
             <render-horizontal-block
                 :label="$t(`m.common['理由']`)"
@@ -202,7 +202,7 @@
                 isExpanded: false,
                 curSystem: '',
                 curActionValue: [],
-                addMemberTitle: this.$t(`m.grading['选择可授权人员范围']`),
+                addMemberTitle: this.$t(`m.levelSpace['选择可授权人员边界']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
 
@@ -872,6 +872,7 @@
                     if (!this.reason) {
                         this.isShowReasonError = true;
                         this.scrollToLocation(this.$refs.reasonRef);
+                        return;
                     }
                     this.submitLoading = true;
                     this.handleSubmitWithReason();

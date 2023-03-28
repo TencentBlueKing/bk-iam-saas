@@ -15,7 +15,7 @@
             </bk-link>
             <div slot="right">
                 <bk-input
-                    :placeholder="$t(`m.levelSpace['请输入空间名称']`)"
+                    :placeholder="$t(`m.levelSpace['请输入名称']`)"
                     clearable
                     style="width: 420px;"
                     right-icon="bk-icon icon-search"
@@ -35,7 +35,7 @@
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.levelSpace['空间名称']`)">
+            <bk-table-column :label="$t(`m.levelSpace['名称']`)">
                 <template slot-scope="{ row }">
                     <span class="grading-admin-name" :title="row.name" @click="handleView(row, 'detail')">
                         {{ row.name }}

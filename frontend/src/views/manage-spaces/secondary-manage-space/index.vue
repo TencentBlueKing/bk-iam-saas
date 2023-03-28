@@ -6,7 +6,7 @@
             </bk-button>
             <div slot="right">
                 <bk-input
-                    :placeholder="$t(`m.levelSpace['请输入空间名称']`)"
+                    :placeholder="$t(`m.levelSpace['请输入名称']`)"
                     clearable
                     style="width: 420px;"
                     right-icon="bk-icon icon-search"
@@ -18,7 +18,7 @@
         <bk-table size="small" :max-height="tableHeight" :data="tableList" :class="{ 'set-border': tableLoading }"
             ext-cls="level-manage-table" :pagination="pagination" @page-change="handlePageChange"
             @page-limit-change="handleLimitChange" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.levelSpace['空间名称']`)">
+            <bk-table-column :label="$t(`m.levelSpace['名称']`)">
                 <template slot-scope="{ row }">
                     <span class="level-manage-name" :title="row.name" @click="handleNavAuthBoundary(row)">
                         {{ row.name }}

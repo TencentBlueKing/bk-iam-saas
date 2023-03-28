@@ -16,7 +16,7 @@
                     </bk-radio-group> -->
                     <bk-input
                         v-model="searchValue"
-                        :placeholder="$t(`m.levelSpace['请输入空间名称']`)"
+                        :placeholder="$t(`m.levelSpace['请输入名称']`)"
                         clearable
                         style="width: 420px"
                         right-icon="bk-icon icon-search"
@@ -114,7 +114,7 @@
                     </bk-table>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['空间名称']`)" prop="name" width="240">
+            <bk-table-column :label="$t(`m.levelSpace['名称']`)" prop="name" width="240">
                 <template slot-scope="{ row, $index }">
                     <div class="flex_space_name">
                         <Icon type="level-one" :style="{ color: iconColor[0] }" />
