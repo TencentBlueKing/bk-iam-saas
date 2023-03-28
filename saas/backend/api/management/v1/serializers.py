@@ -189,7 +189,7 @@ class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
         names = set()
         for g in groups_data:
             if g["name"] in names:
-                raise serializers.ValidationError({"groups": [_("用户组名称{}不能重复").format(g["name"])]})
+                raise serializers.ValidationError({"groups": [_("存在同名的用户组:{}").format(g["name"])]})
             names.add(g["name"])
         return data
 

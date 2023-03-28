@@ -504,7 +504,7 @@ class GroupBiz:
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板正在更新, 不能授权!"))
         # 判断该用户组在长时任务里是否正在添加涉及到的权限模板和自定义权限
         if GroupAuthorizeLock.objects.is_authorizing(group.id, template_ids, custom_action_system_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("部分权限模板或自定义权限已经在授权中, 不能重复授权!"))
+            raise error_codes.VALIDATE_ERROR.format(_("正在授权中, 请稍后!"))
 
     def check_before_grant(
         self,
@@ -832,9 +832,7 @@ class GroupCheckBiz:
         member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT.get("group_member_limit", 1000)
         if exists_count + new_member_count > member_limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("用户组({})已有{}个成员，不可再添加{}个成员，否则超出用户组最大成员数量{}的限制").format(
-                    group.name, exists_count, new_member_count, member_limit
-                ),
+                _("超过用户组最大可添加成员数{}").format(member_limit),
                 True,
             )
 
@@ -846,7 +844,7 @@ class GroupCheckBiz:
         if group_id in role_group_ids:
             role_group_ids.remove(group_id)
         if Group.objects.filter(name=name, id__in=role_group_ids).exists():
-            raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
+            raise error_codes.CONFLICT_ERROR.format(_("存在同名用户组"))
 
     def check_role_group_limit(self, role: Role, new_group_count: int):
         """
@@ -860,9 +858,7 @@ class GroupCheckBiz:
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role.id, RoleRelatedObjectType.GROUP.value)
         if len(role_group_ids) + new_group_count > limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("分级管理员({})已有{}个用户组，不可再添加{}个用户组，否则超出分级管理员最大用户组数量{}的限制").format(
-                    role.id, len(role_group_ids), new_group_count, limit
-                ),
+                _("超过分级管理员最大可创建用户组数{}").format(limit),
                 True,
             )
 
@@ -874,7 +870,7 @@ class GroupCheckBiz:
         #  性能问题如何解决？？
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
         if Group.objects.filter(name__in=names, id__in=role_group_ids).exists():
-            raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
+            raise error_codes.CONFLICT_ERROR.format(_("存在同名用户组"))
 
     def check_role_subject_scope(self, role, subjects: List[Subject]):
         """

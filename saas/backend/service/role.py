@@ -669,7 +669,7 @@ class RoleService:
                 # 存在权限模板关联了其它用户组的情况
                 names = PermTemplate.objects.filter(id__in=over_template_ids).values_list("name", flat=True)
                 raise error_codes.GROUP_TRANSFER_ERROR.format(
-                    _("权限模板 [{}] 关联了其它用户组, 请移除关系后再转移.").format("|".join(names)), True
+                    _("权限模板 [{}] 已被用户组关联, 请解除关联后再转移.").format("|".join(names)), True
                 )
 
         # 转移用户组, 权限模板的角色归属

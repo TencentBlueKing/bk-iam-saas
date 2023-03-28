@@ -23,7 +23,7 @@ class ApplicationPolicyListCache:
         """获取缓存里申请的策略"""
         data = self.cache.get(cache_id)
         if data is None:
-            raise error_codes.INVALID_ARGS.format(_("申请数据已过期或不存在"))
+            raise error_codes.INVALID_ARGS.format(_("该申请链接已失效，请重新发起申请。"))
 
         system_id, policies = data["system_id"], data["policies"]
 
