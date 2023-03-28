@@ -939,6 +939,7 @@
             },
             handleReasonInput () {
                 this.isShowReasonError = false;
+                window.changeDialog = true;
             },
 
             handleReasonBlur (payload) {

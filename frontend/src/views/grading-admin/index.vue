@@ -40,16 +40,24 @@
                     <span class="grading-admin-name" :title="row.name" @click="handleView(row, 'detail')">
                         {{ row.name }}
                     </span>
+           
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
                 <template slot-scope="{ row }">
-                    <span
+                    <!-- <span
                         :title="row.members && row.members.length ? row.members.map(tag => tag.username) : ''">
                         <bk-tag v-for="(tag, index) of row.members" :key="index">
                             {{tag.username}}
                         </bk-tag>
-                    </span>
+                    </span> -->
+                    <iam-edit-member-selector
+                        field="members"
+                        width="200"
+                        :placeholder="$t(`m.verify['请输入']`)"
+                        :value="row.members"
+                        :index="$index"
+                        @on-change="handleUpdateMembers" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['描述']`)">
@@ -73,7 +81,7 @@
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
                     </section> -->
-                    <bk-button theme="primary" text @click="handleView(row, 'role')">
+                    <bk-button theme="primary" text @click="handleView(row, 'role')" :disabled="disabledPerm(row)">
                         {{ $t(`m.levelSpace['进入']`) }}
                     </bk-button>
                     <bk-button
@@ -135,12 +143,14 @@
     import { getWindowHeight, formatCodeData } from '@/common/util';
     import ConfirmDialog from '@/components/iam-confirm-dialog/index';
     import ApplyDialog from './components/apply-join-dialog';
+    import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
     export default {
         name: '',
         components: {
             ConfirmDialog,
-            ApplyDialog
+            ApplyDialog,
+            IamEditMemberSelector
         },
         data () {
             return {
@@ -181,6 +191,12 @@
             },
             tableHeight () {
                 return getWindowHeight() - 185;
+            },
+            disabledPerm () {
+                return (payload) => {
+                    const result = payload.members.map(item => item.username).includes(this.user.username);
+                    return !result;
+                };
             }
         },
         watch: {
@@ -287,6 +303,28 @@
                     });
                 } finally {
                     this.tableLoading = false;
+                }
+            },
+
+            async handleUpdateMembers (payload) {
+                const { id, name, description, members } = payload;
+                const params = {
+                    id,
+                    name,
+                    description,
+                    members
+                };
+                try {
+                    await this.$store.dispatch('role/updateRatingManager', params);
+                    this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisCopy: true
+                    });
                 }
             },
 
