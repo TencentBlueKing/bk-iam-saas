@@ -180,6 +180,8 @@ export const getRouterDiff = (payload) => {
             'systemAccessComplete',
             'resourcePermiss',
             'secondaryManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail',
             'firstManageSpace',
             'myManageSpace',
             'permTemplate'
