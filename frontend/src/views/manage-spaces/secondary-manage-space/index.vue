@@ -1,7 +1,9 @@
 <template>
     <div class="iam-level-manage-space-wrapper">
         <render-search>
-            <bk-button theme="primary" @click="handleView()" data-test-id="level-manage_space_btn_create">
+            <bk-button
+                theme="primary"
+                @click="handleView({ id: 0 }, 'create')" data-test-id="level-manage_space_btn_create">
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
             <div slot="right">
@@ -20,7 +22,7 @@
             @page-limit-change="handleLimitChange" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column :label="$t(`m.levelSpace['名称']`)">
                 <template slot-scope="{ row }">
-                    <span class="level-manage-name" :title="row.name" @click="handleNavAuthBoundary(row)">
+                    <span class="level-manage-name" :title="row.name" @click="handleView(row, 'detail')">
                         {{ row.name }}
                     </span>
                 </template>
@@ -39,10 +41,10 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="300">
                 <template slot-scope="{ row }">
                     <section>
-                        <bk-button theme="primary" text @click="handleNavAuthBoundary(row)">
+                        <bk-button theme="primary" text @click="handleView(row, 'role')">
                             {{ $t(`m.levelSpace['进入']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleView(row)">
+                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleView(row, 'create')">
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
                     </section>
@@ -173,15 +175,6 @@
                 await this.fetchGradingAdmin();
             },
 
-            handleView (payload) {
-                this.$router.push({
-                    name: 'secondaryManageSpaceCreate',
-                    params: {
-                        id: payload ? payload.id : 0
-                    }
-                });
-            },
-
             handleNavAuthBoundary (payload) {
                 window.localStorage.setItem('iam-header-name-cache', payload.name);
                 this.$store.commit('updateIndex', 1);
@@ -191,6 +184,48 @@
                         id: payload.id
                     }
                 });
+            },
+            
+            async handleView ({ id, name }, type) {
+                const navRoute = {
+                    detail: () => {
+                        window.localStorage.setItem('iam-header-name-cache', name);
+                        this.$store.commit('updateIndex', 1);
+                        this.$router.push({
+                            name: 'secondaryManageSpaceDetail',
+                            params: {
+                                id
+                            }
+                        });
+                    },
+                    role: async () => {
+                        await this.$store.dispatch('role/updateCurrentRole', { id });
+                        await this.$store.dispatch('userInfo');
+                        const { role } = this.user;
+                        if (role) {
+                            this.$store.commit('updateCurRoleId', id);
+                            this.$store.commit('updateIdentity', { id, type: role.type, name });
+                            this.$store.commit('updateNavId', id);
+                            this.$store.commit('updateIndex', 1);
+                            window.localStorage.setItem('index', 1);
+                            this.$router.push({
+                                name: 'userGroup',
+                                params: {
+                                    id
+                                }
+                            });
+                        }
+                    },
+                    create: () => {
+                        this.$router.push({
+                            name: 'secondaryManageSpaceCreate',
+                            params: {
+                                id
+                            }
+                        });
+                    }
+                };
+                navRoute[type]();
             },
 
             refreshCurrentQuery () {
