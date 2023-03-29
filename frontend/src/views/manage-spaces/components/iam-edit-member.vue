@@ -140,7 +140,7 @@
                     this.$refs.input.focus();
                     const disabledValue = [...this.disabledValue].map(item => item.username);
                     const selectedTag = this.$refs.input.$refs.selected;
-                    if (selectedTag.length) {
+                    if (selectedTag && selectedTag.length) {
                         selectedTag.forEach(item => {
                             if (disabledValue.includes(item.innerText)) {
                                 item.className = 'user-selector-selected user-selector-selected-readonly';
