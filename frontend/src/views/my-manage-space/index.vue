@@ -31,7 +31,7 @@
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
             <bk-table-column type="expand" width="30">
                 <template slot-scope="{ row }">
-                    <bk-table
+                    <!-- <bk-table
                         size="small"
                         ext-cls="children-expand-cls"
                         :data="row.children"
@@ -43,6 +43,18 @@
                         :pagination="subPagination"
                         @page-change="handleSubPageChange"
                         @page-limit-change="handleSubLimitChange"
+                        @row-click="handleRowClick"
+                    > -->
+                    <bk-table
+                        size="small"
+                        ext-cls="children-expand-cls"
+                        :data="row.children"
+                        :row-key="row.id"
+                        :show-header="false"
+                        :border="false"
+                        :cell-class-name="getSubCellClass"
+                        :max-height="500"
+                        v-bkloading="{ isLoading: subLoading, opacity: 1 }"
                         @row-click="handleRowClick"
                     >
                         <bk-table-column width="30" />
@@ -112,6 +124,17 @@
                             />
                         </template>
                     </bk-table>
+                    <div style="text-align: center">
+                        <bk-button
+                            v-if="subPagination.count !== row.children.length"
+                            text
+                            theme="primary"
+                            size="small"
+                            style="margin: 10px auto"
+                            @click="handleLoadMore(row.children.length)">
+                            {{ $t(`m.common['查看更多']`) }}
+                        </bk-button>
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['名称']`)" prop="name" width="240">
@@ -395,6 +418,40 @@
                 });
             },
 
+            async fetchGradingAdmin (isTableLoading = false) {
+                this.tableLoading = isTableLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
+                try {
+                    const { code, data } = await this.$store.dispatch('role/getRatingManagerList', {
+                        limit: this.pagination.limit,
+                        offset: (this.pagination.current - 1) * this.pagination.limit,
+                        name: this.searchValue
+                    });
+                    this.pagination.count = data.count;
+                    data.results = data.results.map(e => {
+                        e.children = [];
+                        return e;
+                    });
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    if (this.isStaff) {
+                        this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
+                    }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+                } catch (e) {
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: message || data.msg || statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.tableLoading = false;
+                }
+            },
+
             async fetchSubManagerList (row) {
                 this.subLoading = true;
                 try {
@@ -404,12 +461,13 @@
                         id: row.id
                     });
                     this.subPagination.count = data.count;
-                    this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
-                    row.children = this.subTableList;
+                    // this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
+                    row.children = [...row.children, ...data.results];
                     this.emptyData = formatCodeData(code, this.emptyData, this.subTableList.length === 0);
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
+                    row.children = [];
                     this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -422,12 +480,6 @@
                     this.curData = row;
                     this.subLoading = false;
                 }
-            },
-
-            handleCreate () {
-                this.$router.push({
-                    name: 'myManageSpaceCreate'
-                });
             },
             
             // 一级管理空间
@@ -523,57 +575,18 @@
                 });
             },
 
-            setCurrentQueryCache (payload) {
-                window.localStorage.setItem('gradeManagerList', JSON.stringify(payload));
-            },
-
-            refreshCurrentQuery () {
-                const { limit, current } = this.pagination;
-                const queryParams = {
-                    limit,
-                    current
-                };
-                if (this.searchValue !== '') {
-                    queryParams.name = this.searchValue;
-                }
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
-                return queryParams;
-            },
-
-            async fetchGradingAdmin (isTableLoading = false) {
-                this.tableLoading = isTableLoading;
-                this.setCurrentQueryCache(this.refreshCurrentQuery());
-                try {
-                    const { code, data } = await this.$store.dispatch('role/getRatingManagerList', {
-                        limit: this.pagination.limit,
-                        offset: (this.pagination.current - 1) * this.pagination.limit,
-                        name: this.searchValue
-                    });
-                    this.pagination.count = data.count;
-                    data.results = data.results.map(e => {
-                        e.children = [];
-                        return e;
-                    });
-                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
-                    if (this.isStaff) {
-                        this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
-                    }
-                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
-                } catch (e) {
-                    const { code, data, message, statusText } = e;
-                    this.emptyData = formatCodeData(code, this.emptyData);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: message || data.msg || statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.tableLoading = false;
+            async handleLoadMore (payload) {
+                if (payload !== this.subPagination.count) {
+                    const params = {
+                        current: ++this.subPagination.current,
+                        limit: 10
+                    };
+                    console.log(params, 555);
+                    this.subPagination = Object.assign(this.subPagination, params);
+                    this.fetchSubManagerList(this.curData);
                 }
             },
-
+            
             handleSubPageChange (page) {
                 this.subPagination.current = page;
                 this.fetchSubManagerList(this.curData);
@@ -595,6 +608,29 @@
             handleLimitChange (limit) {
                 this.pagination = Object.assign(this.pagination, { limit, current: 1 });
                 this.fetchGradingAdmin(true);
+            },
+            
+            handleCreate () {
+                this.$router.push({
+                    name: 'myManageSpaceCreate'
+                });
+            },
+
+            setCurrentQueryCache (payload) {
+                window.localStorage.setItem('gradeManagerList', JSON.stringify(payload));
+            },
+
+            refreshCurrentQuery () {
+                const { limit, current } = this.pagination;
+                const queryParams = {
+                    limit,
+                    current
+                };
+                if (this.searchValue !== '') {
+                    queryParams.name = this.searchValue;
+                }
+                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                return queryParams;
             },
 
             handleEmptyClear () {
