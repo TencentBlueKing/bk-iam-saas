@@ -948,4 +948,4 @@ class RoleSubjectScopCheckView(views.APIView):
             parse_obj_as(List[Subject], serializer.validated_data["subjects"]), raise_exception=False
         )
 
-        return Response(exist_subjects)
+        return Response([one.dict() for one in exist_subjects])
