@@ -59,6 +59,7 @@ from backend.apps.role.serializers import (
     RoleGroupMembersRenewSLZ,
     RoleIdSLZ,
     RoleScopeSubjectSLZ,
+    RoleSubjectCheckSLZ,
     SubsetMangerCreateSLZ,
     SubsetMangerDetailSLZ,
     SuperManagerMemberDeleteSLZ,
@@ -926,3 +927,25 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+class RoleSubjectScopCheckView(views.APIView):
+    @swagger_auto_schema(
+        operation_description="检查角色成员范围是否满足条件",
+        request_body=RoleSubjectCheckSLZ(label="授权对象"),
+        responses={status.HTTP_200_OK: serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"))},
+        tags=["role"],
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        检查角色成员范围是否满足条件
+        """
+        serializer = RoleSubjectCheckSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        scope_checker = RoleSubjectScopeChecker(request.role)
+        exist_subjects = scope_checker.check(
+            parse_obj_as(List[Subject], serializer.validated_data["subjects"]), raise_exception=False
+        )
+
+        return Response(exist_subjects)
