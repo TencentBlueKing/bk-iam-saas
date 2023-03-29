@@ -933,7 +933,7 @@ class RoleSubjectScopCheckView(views.APIView):
     @swagger_auto_schema(
         operation_description="检查角色成员范围是否满足条件",
         request_body=RoleSubjectCheckSLZ(label="授权对象"),
-        responses={status.HTTP_200_OK: serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"))},
+        responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["role"],
     )
     def post(self, request, *args, **kwargs):
