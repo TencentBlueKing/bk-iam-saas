@@ -21,7 +21,7 @@
 
             <!-- <p class="tips">{{ infoText }}</p> -->
             <render-perm
-                :title="$t(`m.grading['最大可授权资源范围']`)"
+                :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
                 :perm-length="policyList.length"
                 :expanded.sync="curExpanded"
                 ext-cls="iam-grade-detail-panel-cls">
@@ -29,7 +29,7 @@
             </render-perm>
 
             <render-horizontal-block
-                :label="$t(`m.grading['最大可授权人员范围']`)">
+                :label="$t(`m.levelSpace['最大可授权人员边界']`)">
                 <template v-if="isAll">
                     <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
                 </template>

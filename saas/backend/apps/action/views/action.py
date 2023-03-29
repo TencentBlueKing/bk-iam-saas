@@ -62,7 +62,7 @@ class ActionViewSet(GenericViewSet):
                 system_id, request.role, request.user.username, [p.action_id for p in policy_list.policies]
             )
         # 4. 查询所有的操作
-        if all:
+        elif all:
             actions = self.biz.list(system_id).actions
         else:
             actions = self.biz.list_by_role(system_id, request.role)

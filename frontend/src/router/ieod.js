@@ -580,7 +580,7 @@ export const routes = [
                 path: ':id/rating-manager-detail',
                 name: 'gradingAdminDetail',
                 meta: {
-                    backRouter: -1
+                    backRouter: 'ratingManager'
                 },
                 component: GradingAdminDetail
             },

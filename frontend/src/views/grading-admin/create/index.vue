@@ -25,7 +25,7 @@
                     <section class="action-wrapper" @click.stop="handleAddAction"
                         data-test-id="grading_btn_showAddAction">
                         <Icon bk type="plus-circle-shape" />
-                        <span>{{ $t(`m.grading['选择操作和资源实例范围']`) }}</span>
+                        <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                     </section>
                     <Icon
                         type="info-fill"
@@ -98,18 +98,25 @@
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
-        <render-horizontal-block v-if="isStaff" :label="$t(`m.common['理由']`)" :required="true">
-            <section class="content-wrapper">
-                <bk-input
-                    type="textarea"
-                    :rows="5"
-                    v-model="reason"
-                    @input="checkReason"
-                    style="margin-bottom: 15px;">
-                </bk-input>
-            </section>
-        </render-horizontal-block>
-        <p class="action-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        <template v-if="isStaff">
+            <render-horizontal-block
+                ext-cls="reason-wrapper"
+                :label="$t(`m.common['理由']`)"
+                :required="true">
+                <section class="content-wrapper" ref="reasonRef">
+                    <bk-input
+                        type="textarea"
+                        :rows="5"
+                        :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
+                        v-model="reason"
+                        @input="handleReasonInput"
+                        @blur="handleReasonBlur"
+                        style="margin-bottom: 15px;">
+                    </bk-input>
+                </section>
+            </render-horizontal-block>
+            <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        </template>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit"
                 data-test-id="grading_btn_createSubmit"
@@ -127,7 +134,7 @@
             :all-checked="isAll"
             show-limit
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd" />
+            @on-sumbit="handleSubmitAdd" />
 
         <add-action-sideslider
             :is-show.sync="isShowAddActionSideslider"
@@ -142,7 +149,7 @@
             :width="480"
             :mask-close="false"
             ext-cls="iam-create-rate-manager-reason-dialog"
-            @after-leave="reason = ''">
+        >
             <section class="content-wrapper">
                 <label>
                     {{ $t(`m.common['理由']`) }}
@@ -173,6 +180,7 @@
 </template>
 <script>
     import _ from 'lodash';
+    import store from '@/store';
     import { mapGetters } from 'vuex';
     import { guid } from '@/common/util';
     import IamGuide from '@/components/iam-guide/index.vue';
@@ -220,7 +228,7 @@
                 isShowAddMemberDialog: false,
                 isShowAddActionSideslider: false,
                 isShowActionEmptyError: false,
-                reasonEmptyError: false,
+                isShowReasonError: false,
                 isExpanded: false,
                 curActionValue: [],
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
@@ -240,7 +248,8 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-                isAll: true
+                isAll: true,
+                operate: ''
             };
         },
         computed: {
@@ -280,10 +289,13 @@
                     || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
             },
             isStaff () {
-                return this.user.role.type === 'staff';
+                return this.user.role.type === 'staff' || this.$route.params.role_type === 'staff';
             }
         },
         watch: {
+            reason () {
+                this.isShowReasonError = false;
+            },
             originalList: {
                 handler (value) {
                     this.setPolicyList(value);
@@ -309,8 +321,9 @@
                 if (Number(this.id) > 0) {
                     await this.fetchDetail();
                 } else {
-                    this.formData.members = [{ username: this.user.username, readonly: true }];
+                    this.formData.members = [{ username: this.user.username, readonly: false }];
                 }
+                this.$store.commit('setHeaderTitle', +this.id > 0 ? this.$t(`m.nav['克隆一级管理空间']`) : this.$t(`m.nav['新建一级管理空间']`));
             },
 
             async fetchDetail () {
@@ -760,10 +773,9 @@
                 this.isShowMemberAdd = true;
             },
 
-            handleSumbitAdd (payload) {
-                window.changeDialog = true;
-                const { users, departments } = payload;
-                this.isAll = payload.isAll;
+            handleSubmitAdd (payload) {
+                const { users, departments, isAll } = payload;
+                this.isAll = isAll;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
                 this.isShowMemberAdd = false;
@@ -837,14 +849,14 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isStaff && this.reason === '';
+                this.isShowReasonError = this.isStaff && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
                 if (validatorFlag || flag || this.isShowActionEmptyError
-                    || this.isShowMemberEmptyError || this.reasonEmptyError) {
+                    || this.isShowMemberEmptyError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -855,6 +867,11 @@
                     return;
                 }
                 if (this.isStaff) {
+                    if (!this.reason) {
+                        this.isShowReasonError = true;
+                        this.scrollToLocation(this.$refs.reasonRef);
+                        return;
+                    }
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -880,23 +897,22 @@
                         });
                     });
                 }
-                const { name, description, members } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
-                    authorization_scopes: data
+                    authorization_scopes: data,
+                    sync_perm
                 };
                 window.changeDialog = false;
                 this.submitLoading = true;
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建一级管理空间成功']`), 1000);
-                    this.$router.push({
-                        name: 'ratingManager'
-                    });
+                    this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆一级管理空间成功']` : `m.info['新建一级管理空间成功']`), 1000);
+                    this.$router.go(-1);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -912,17 +928,38 @@
             },
 
             handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
-                }
-                cancelHandler.then(() => {
-                    this.$router.go(-1);
-                }, _ => _);
+                // let cancelHandler = Promise.resolve();
+                // if (window.changeDialog) {
+                //     cancelHandler = leavePageConfirm();
+                // }
+                // cancelHandler.then(() => {
+                // }, _ => _);
+                this.operate = 'cancel';
+                this.$router.go(-1);
+            },
+            handleReasonInput () {
+                this.isShowReasonError = false;
             },
 
-            checkReason () {
-                this.reasonEmptyError = this.reason === '';
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
+            }
+        },
+        beforeRouteEnter (to, from, next) {
+            store.commit('setHeaderTitle', '');
+            next();
+        },
+        beforeRouteLeave (to, from, next) {
+            let cancelHandler = Promise.resolve();
+            if ((window.changeDialog && this.operate !== 'cancel') || (this.users.length || this.departments.length)) {
+                cancelHandler = leavePageConfirm();
+                cancelHandler.then(() => {
+                    next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
+                }, _ => _);
+            } else {
+                next();
             }
         }
     };
@@ -1007,6 +1044,14 @@
                 span {
                     color: #ea3636;
                 }
+            }
+        }
+    }
+    .reason-wrapper {
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
             }
         }
     }

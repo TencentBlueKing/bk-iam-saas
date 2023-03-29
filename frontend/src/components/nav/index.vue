@@ -82,7 +82,7 @@
                                 :data-test-id="`nav_menu_switchNav_${child.id}`">
                                 <Icon :type="child.icon" class="iam-menu-icon" />
                                 <span class="iam-menu-text"
-                                    v-if="child.name === '管理员' && curRole === 'system_manager'">系统{{ child.name
+                                    v-if="child.name === $t(`m.common['管理员']`) && curRole === 'system_manager'">系统{{ child.name
                                 }}</span>
                                 <span class="iam-menu-text" v-else>{{ child.name }}</span>
                             </div>
@@ -94,7 +94,7 @@
                             @click.stop="handleSwitchNav(item.id, item)"
                             :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
-                            <span class="iam-menu-text" v-if="item.name === '一级管理空间' && curRole === 'staff'">我的{{
+                            <span class="iam-menu-text" v-if="item.name === $t(`m.grading['一级管理空间']`) && curRole === 'staff'">{{
                                 item.name }}</span>
                             <span class="iam-menu-text" v-else>{{ item.name }}</span>
                         </div>
@@ -167,7 +167,7 @@
         // 一级管理空间
         [['firstManageSpace', 'firstManageSpaceCreate'], 'firstManageSpaceNav'],
         // 二级管理空间
-        [['secondaryManageSpace'], 'secondaryManageSpaceNav'],
+        [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
         // 授权边界
         [['authorBoundary', 'authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel'], 'authorBoundaryNav'],
         // 最大可授权人员边界
@@ -308,6 +308,21 @@
                         // if (this.openedItem === 'myManageSpaceNav' && this.curRole === 'super_manager') {
                         //     this.openedItem = 'gradingAdminNav';
                         // }
+                        // 如果是从我的管理空间页面过来的，激活menu选中状态
+                        if (this.openedItem === 'myManageSpaceNav') {
+                            const menuActive = {
+                                rating_manager: () => {
+                                    this.openedItem = 'gradingAdminNav';
+                                },
+                                subset_manager: () => {
+                                    this.openedItem = 'secondaryManageSpaceNav';
+                                },
+                                super_manager: () => {
+                                    this.openedItem = 'gradingAdminNav';
+                                }
+                            };
+                            return menuActive[this.curRole] ? menuActive[this.curRole]() : 'myManageSpaceNav';
+                        }
                         break;
                     }
                 }

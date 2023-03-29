@@ -57,6 +57,7 @@
     import theHeader from '@/components/header/index.vue';
     import theNav from '@/components/nav/index.vue';
     import IamGuide from '@/components/iam-guide/index.vue';
+    import { existValue } from '@/common/util';
     import { bus } from '@/common/bus';
     import { mapGetters } from 'vuex';
     import { afterEach } from '@/router';
@@ -124,8 +125,10 @@
             if (platform.indexOf('win') === 0) {
                 this.systemCls = 'win';
             }
-            this.fetchVersionLog();
-            this.fetchNoviceGuide();
+            if (!existValue('externalApp')) {
+                this.fetchVersionLog();
+                this.fetchNoviceGuide();
+            }
 
             const isPoll = window.localStorage.getItem('isPoll');
             if (isPoll) {

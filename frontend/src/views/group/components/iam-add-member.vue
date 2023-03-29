@@ -617,7 +617,7 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '用户名输入格式错误'
+                        message: this.$t(`m.verify['用户名输入格式错误]`)
                     });
                 } finally {
                     this.manualAddLoading = false;
@@ -1235,7 +1235,6 @@
                         params.policy_expired_at = this.expiredAt;
                     }
                 }
-                window.parent.postMessage({ type: 'IAM', data: params, code: 'add_user_confirm' }, '*');
                 this.$emit('on-sumbit', params);
             },
 

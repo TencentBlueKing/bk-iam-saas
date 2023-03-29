@@ -1,0 +1,66 @@
+# Pull the user information for the group policy based on the policy ID
+
+Deprecated, please use `/api/v1/open/systems/{system_id}/policies/-/subjects`
+
+Based on the LBAC scheme, each resource will eventually be labeled with a set of labels, which correspond to a set of Policy IDs
+
+When querying the list of users with certain privileges for this resource, you can use the Policy IDs as the interface parameter to query the `user list`.
+
+Note:
+- You can only query the `User List` corresponding to your own system's policy list
+- If the policyID is from another system, it will be "filtered out" and the interface will work, but the corresponding policyId will not appear in the result list
+
+#### Parameters
+
+|fields |type |required |location |description
+|:--|:--|:--|:--|:--|
+| system_id | string | yes | path | system ID |
+|ids |string |yes |query |strategy id, multiple comma-separated |
+| type | string | no |query |Authorization type, enumerated values include `abac\rbac` Default is `abac` if not filled |
+
+Example: `ids=2,3,4,7,9`
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [
+        {
+            "id": 2,
+            "subject": {
+                "type": "user",
+                "id": "admin",
+                "name": "admin"
+            }
+        },
+        {
+            "id": 3,
+            "subject": {
+                "type": "user",
+                "id": "test2",
+                "name": "test2"
+            }
+        },
+        {
+            "id": 4,
+            "subject": {
+                "type": "user",
+                "id": "test1",
+                "name": "test1"
+            }
+        },
+        {
+            "id": 7,
+            "subject": {
+                "type": "user",
+                "id": "admin",
+                "name": "admin"
+            }
+        }
+    ]
+}
+```

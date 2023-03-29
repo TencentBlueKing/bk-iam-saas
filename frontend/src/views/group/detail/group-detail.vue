@@ -43,6 +43,7 @@
                     :id="groupId"
                     :name="basicInfo.name"
                     :read-only="readOnly"
+                    :group-attributes="groupAttributes"
                     :data="memberList"
                     :count="pagination.count" />
             </render-horizontal-block>
@@ -60,6 +61,11 @@
     
     export default {
         name: '',
+        provide: function () {
+            return {
+                getGroupAttributes: () => this.groupAttributes
+            };
+        },
         components: {
             DetailLayout,
             DetailItem,
@@ -91,6 +97,10 @@
                     current: 1,
                     count: 0,
                     limit: 10
+                },
+                groupAttributes: {
+                    source_type: '',
+                    source_from_role: false
                 },
                 memberList: [],
                 groupId: '',
@@ -158,40 +168,39 @@
             async handleInit (payload) {
                 this.isLoading = true;
                 this.$emit('on-init', true);
-                try {
-                    const { data } = await this.fetchDetail(payload);
-                    const { id, name, created_time, description, readonly } = data;
-                    this.basicInfo = Object.assign({}, {
-                        id,
-                        name,
-                        created_time,
-                        description
-                    });
-                    this.readOnly = readonly;
-                    // this.pagination.count = data.count || 0;
-                    // this.memberList.splice(0, this.memberList.length, ...(data.results || []));
-                    window.localStorage.setItem('iam-header-title-cache', name);
-                    window.localStorage.setItem('iam-header-name-cache', name);
-                    this.$store.commit('setHeaderTitle', name);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.isLoading = false;
-                    this.$emit('on-init', false);
+                if (this.$parent.fetchDetail) {
+                    try {
+                        const { data } = await this.$parent.fetchDetail(payload);
+                        const { id, name, created_time, description, readonly, attributes } = data;
+                        this.basicInfo = Object.assign({}, {
+                            id,
+                            name,
+                            created_time,
+                            description
+                        });
+                        this.readOnly = readonly;
+                        this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+                        // this.pagination.count = data.count || 0;
+                        // this.memberList.splice(0, this.memberList.length, ...(data.results || []));
+                        window.localStorage.setItem('iam-header-title-cache', name);
+                        window.localStorage.setItem('iam-header-name-cache', name);
+                        this.$store.commit('setHeaderTitle', name);
+                    } catch (e) {
+                        console.error(e);
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    } finally {
+                        this.isLoading = false;
+                        this.$emit('on-init', false);
+                    }
                 }
             },
-
-            fetchDetail (payload) {
-                return this.$store.dispatch('userGroup/getUserGroupDetail', { id: payload });
-            },
-
+            
             fetchMemberList (payload) {
                 const params = {
                     id: payload,

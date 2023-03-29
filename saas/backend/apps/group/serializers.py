@@ -78,6 +78,8 @@ class GroupSLZ(serializers.ModelSerializer):
 
             # 查询涉及到的用户组的属性
             self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
+        elif isinstance(self.instance, Group):
+            self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
 
     def get_role(self, obj):
         if not self.group_role_dict:

@@ -10,6 +10,10 @@
             -webkit-box-orient: vertical;
         }
 
+        .bk-table-empty-block {
+            background-color: #ffffff;
+        }
+
         .tippy-content {
             padding: 0 !important;
         }

@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "backend.api.authorization",
     "backend.api.admin",
     "backend.api.management",
+    "backend.api.bkci",
 ]
 
 # 登录中间件
@@ -203,6 +204,7 @@ CELERY_IMPORTS = (
     "backend.audit.tasks",
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
+    "backend.api.bkci.tasks",
 )
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {

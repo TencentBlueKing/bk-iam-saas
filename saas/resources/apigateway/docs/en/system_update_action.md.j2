@@ -1,0 +1,60 @@
+### 2. modify action
+
+----------
+{% include '_api_v1_model_actions.md.j2' %}
+----------
+
+**Highlights:**
+- can update the values of the 5 keys name\name_en\type\version\related_resource_types, if the corresponding `key` is passed and `null` is given, then the `null operation` is performed; if no `key` is passed, it means that the field is not updated;
+- `Special: for related_resource_types is a full override operation, you cannot update the value of a key in related_resource_types alone.
+
+#### Parameters
+
+| field | type | mandatory | location | description |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | yes | path | system ID |
+| action_id | string | yes | path | action_id |
+
+#### Request
+
+```json
+{
+   "name": "host_edit_new".
+   "name_en": "host_edit".
+   "description": "Host edit New is..." .
+   "description_en": "host_edit is..." .
+   "related_resource_types":[
+      {
+         "system_id": "bk_cmdb".
+         "id": "host".
+         "name_alias":"".
+         "name_alias_en":"".
+         "selection_mode": "instance".
+         "related_instance_selections":[
+                    {
+                        "system_id": "bk_cmdb".
+                        "id": "free_host".
+                        "ignore_iam_path": false.
+                    }. 
+                    {
+                        "system_id": "bk_cmdb".
+                        "id": "biz_topology".
+                        "ignore_iam_path": false.
+                    }
+         ]
+      }
+   ].
+   "related_actions": ["view", "delete"].
+   "version":2
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0.
+    "message": "".
+    "data": {}
+}
+```

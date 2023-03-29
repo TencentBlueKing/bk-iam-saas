@@ -1,0 +1,196 @@
+### Query the system registration information
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | yes | path | system_id |
+| fields |string |no |query | Type of information to be queried, enumerated values: base_info (base information), resource_types (resource types), actions (actions), action_groups (action groups), instance_selections (instance views) , resource_creator_actions(new association configuration), common_actions(common actions) Multiple comma-separated, query all registered information when empty |
+
+#### Request
+
+```json
+fields=base_info,resource_types,actions,action_groups,instance_selections,resource_creator_actions
+```
+#### Response
+
+Description.
+- The data structure of the returned information is the same as the data structure of the registration
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {
+        // base information
+        "base_info": {
+            "id": "bk_cmdb",
+            "name": "CMDB",
+            "name_en": "CMDB",
+            "description": "CMDB is..." ,
+            "description_en": "CMDB is..." ,
+            "clients": "bk_cmdb,cmdb",
+            "provider_config": {
+                "host": "http://cmdb.service.consul",
+                "auth": "basic"
+            }
+        },
+        // Resource type
+        "resource_types": [
+            {
+                "id": "host",
+                "name": "host",
+                "name_en": "host",
+                "description": "The host is..." ,
+                "description_en": "host is..." ,
+                "parents": [
+                    { "system_id": "bk_cmdb", "id": "module"}
+                ],
+                "provider_config": {
+                    "path": "/api/v1/resources/host/query"
+                }
+                "version": 1
+           },
+           {
+                "id": "biz",
+                "name": "Business Name",
+                "name_en": "biz",
+                "description": "Business Name is...",
+                "description_en": "biz is..." ,
+                "parents": [
+                    { "system_id": "bk_cmdb", "id": "biz_set"}
+                ],
+                "provider_config": {
+                    "path": "/api/v1/resources/biz_set/query"
+                }
+                "version": 1
+            }
+        ],
+        // Actions
+        "actions": [
+            {
+                "id": "host_edit",
+                "name": "host_editNew",
+                "name_en": "host_edit",
+                "description": "Host Edit New is..." ,
+                "description_en": "host_edit is..." ,
+                "type": "",
+                "related_resource_types": [
+                    {
+                        "system_id": "bk_cmdb",
+                        "id": "host",
+                        "name_alias": "server",
+                        "name_alias_en": "server",
+                        "instance_selections": [
+                            {
+                                "name": "resource_pool_host",
+                                "name_en": "free host",
+                                "resource_type_chain": [{ "system_id": "bk_cmdb", "id": "host"}]
+                            },
+                            {
+                                "name": "Business Name topology",
+                                "name_en": "biz topology",
+                                "resource_type_chain": [{"system_id": "bk_cmdb", "id": "biz"}, {"system_id": "bk_cmdb", "id": "set"}, {"system_id": "bk_cmdb", "id": "module"} , {"system_id": "bk_cmdb", "id": "host"}]
+                            },
+                            {
+                                "name": "Business Name set topology",
+                                "name_en": "biz set topology"
+                                "resource_type_chain": [{"system_id": "bk_cmdb", "id": "biz_set"}, {"system_id": "bk_cmdb", "id": "set"}, {"system_id": "bk_cmdb", "id": " module"}, {"system_id": "bk_cmdb", "id": "host"}]
+                            }
+                        ]
+                    }
+                ],
+                "version": 1,
+            }
+        ],
+        // Instance view
+        "instance_selections": [
+            {
+                "id": "view1",
+                "name": "instance_selections11",
+                "name_en": "view11",
+                "resource_type_chain": [
+                    {
+                        "id": "bbbdd",
+                        "system_id": "aaacc"
+                    }
+                ]
+            }
+        ],
+        "resource_creator_actions": {
+            "config":[
+                {
+                    "id":"biz",
+                    "actions":[
+                        {
+                            "id":"biz_edit",
+                            "required":false
+                        },
+                        {
+                            "id":"biz_view",
+                            "required":true
+                        },
+                        {
+                            "id":"set_create",
+                            "required":false
+                        }
+                    ],
+                    "sub_resource_types":[
+                        {
+                            "id":"set",
+                            "actions":[
+                                {
+                                    "id":"set_edit",
+                                    "required":false
+                                },
+                                {
+                                    "id":"set_view",
+                                    "required":false
+                                },
+                                {
+                                    "id":"module_create",
+                                    "required":false
+                                }
+                            ],
+                            "sub_resource_types":[
+                                {
+                                    "id":"module",
+                                    "actions":[
+                                        {
+                                            "id":"module_edit",
+                                            "required":false
+                                        },
+                                        {
+                                            "id":"module_view",
+                                            "required":false
+                                        },
+                                        {
+                                            "id":"host_create",
+                                            "required":false
+                                        }
+                                    ],
+                                    "sub_resource_types":[
+                                        {
+                                            "id":"host",
+                                            "actions":[
+                                                {
+                                                    "id":"host_edit",
+                                                    "required":false
+                                                },
+                                                {
+                                                    "id":"host_view",
+                                                    "required":false
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
+```

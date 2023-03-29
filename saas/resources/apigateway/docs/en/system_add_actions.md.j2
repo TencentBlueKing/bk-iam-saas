@@ -1,0 +1,77 @@
+### Add action
+
+Limitations:
+- A system can only create up to 100 actions, so if there will be more than 100 actions, think about the correctness/reasonableness of the model (e.g. abstracting the instance to the action causes the action to increase as the number of instances increases)
+
+----------
+{% include '_api_v1_model_actions.md.j2' %}
+----------
+
+#### Parameters
+
+| field | type | required | location | description |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | yes | path | system_id |
+
+#### Request
+
+```json
+[
+    {
+        "id": "biz_create",
+        "name": "Business Name Created",
+        "name_en": "biz_create",
+        "description": "Business Name created is..." ,
+        "description_en": "biz_create is..." ,
+        "auth_type": "abac",
+        "type": "create",
+        "related_resource_types": [],
+        "version": 1
+    },
+    {
+        "id": "host_edit",
+        "name": "host_edit",
+        "name_en": "host_edit",
+        "auth_type": "abac",
+        "type": "",
+        "related_resource_types": [
+            {
+                "system_id": "bk_cmdb",
+                "id": "host",
+                "name_alias": "",
+                "name_alias_en": "",
+                "selection_mode": "instance",
+                "related_instance_selections": [
+                    {
+                        "system_id": "bk_cmdb",
+                        "id": "free_host",
+                        "ignore_iam_path": false,
+                    },
+                    {
+                        "system_id": "bk_cmdb",
+                        "id": "biz_topology",
+                        "ignore_iam_path": false,
+                    },
+                    {
+                        "system_id": "bk_cmdb",
+                        "id": "biz_set_topology",
+                        "ignore_iam_path": false,
+                    }
+                ]
+            }
+        ],
+        "related_actions": ["view", "delete"],
+        "version": 1
+    }
+]
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

@@ -38,7 +38,7 @@ from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleTyp
 from backend.service.models import Action, PathResourceType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
-from backend.service.role import AuthScopeAction, AuthScopeSystem
+from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleMember
 from backend.util.url import url_join
 from backend.util.uuid import gen_uuid
 
@@ -544,7 +544,7 @@ class InitBizGradeManagerTask(Task):
         role_info = RoleInfoBean(
             name=data["name"],
             description="管理员可授予他人{}业务的权限".format(data["name"]),
-            members=maintainers or [ADMIN_USER],
+            members=[RoleMember(username=username) for username in maintainers or [ADMIN_USER]],
             subject_scopes=[Subject(type="*", id="*")],
             authorization_scopes=[],
         )
@@ -637,3 +637,6 @@ class InitBizGradeManagerTask(Task):
             templates.append(template)
 
         return templates
+
+
+current_app.tasks.register(InitBizGradeManagerTask())

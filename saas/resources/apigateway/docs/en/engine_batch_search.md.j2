@@ -1,0 +1,66 @@
+### Batch retrieve the list of privileged subjects
+
+#### Parameters
+
+The request json is a list, and the structure of the list is described
+
+{% include '_api_v1_engine_search.md.j2' %}
+
+
+#### Request
+
+
+```json
+[ // Single request object is the same as the search interface, batches use arrays to pass multiple request objects
+    {
+        "system": "bk_job",
+        "subject_type": "all", // all queries both user and group
+        "action": {
+            "id": "execute"
+        },
+        "resources": [{ // The order of the resource types must be the same as the order of the operation registration, otherwise it will cause authentication failure!
+            "system": "bk_job",
+            "type": "job",
+            "id": "ping",
+            "attribute": { // There may be multiple attribute values for the resource, currently string/int/boolean, and path stringList are supported
+                "os": "linux",
+                "_bk_iam_path_": ["/biz,1/set,2/"],
+                "is_ready": true,
+                "area_id": 200
+            }
+        }, {
+            "system": "bk_cmdb",
+            "type": "host",
+            "id": "192.168.1.1",
+            "attribute": {} // The attribute of the external resource is the responsibility of iam to look up the attribute, the accessing party does not need to pass it in
+        }],
+        "limit": 1000 // the maximum number of returned subjects
+    }
+]
+```
+
+#### Response
+
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": {
+        "results": [ // data returned in batches, one array per request object, in the same order as the request object
+            [ // Array of returned subjects
+                {
+                    "type": "user",
+                    "id": "admin",
+                    "name": "admin"
+                },
+                    {
+                    "type": "group",
+                    "id": "1001",
+                    "name": "test-user-group"
+                }
+            ]
+        ]
+    }
+}
+```
