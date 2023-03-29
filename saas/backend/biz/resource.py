@@ -111,10 +111,12 @@ class ResourceBiz:
         ancestors: List[Dict[str, str]],
         limit: int = 10,
         offset: int = 0,
+        action_system_id: str = "",
+        action_id: str = "",
     ) -> Tuple[int, List[ResourceInstanceBaseInfoBean]]:
         """拓扑树的场景下，根据上级资源获取某个资源实例列表"""
         rp = self.new_resource_provider(system_id, resource_type_id)
-        count, results = rp.list_instance(ancestors, limit, offset)
+        count, results = rp.list_instance(ancestors, limit, offset, action_system_id, action_id)
         return count, parse_obj_as(List[ResourceInstanceBaseInfoBean], results)
 
     def search_instance_for_topology(
@@ -126,10 +128,14 @@ class ResourceBiz:
         parent_id: str = "",
         limit: int = 10,
         offset: int = 0,
+        action_system_id: str = "",
+        action_id: str = "",
     ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
         """拓扑树的场景下，根据上级资源和Keyword搜索某个资源实例列表"""
         rp = self.new_resource_provider(system_id, resource_type_id)
-        count, results = rp.search_instance(keyword, parent_type, parent_id, limit, offset)
+        count, results = rp.search_instance(
+            keyword, parent_type, parent_id, limit, offset, action_system_id, action_id
+        )
         return count, parse_obj_as(List[ResourceInstanceBaseInfoBean], results)
 
     def fetch_resource_name(
