@@ -55,6 +55,7 @@
     import RenderProcess from '../common/render-process';
     import RenderMemberItem from '../common/render-member-display';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         components: {
@@ -96,6 +97,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -136,8 +138,14 @@
         },
         methods: {
             async fetchData (id) {
+                const params = {
+                    id
+                };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', params);
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url

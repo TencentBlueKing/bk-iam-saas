@@ -73,7 +73,7 @@
                 </div>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源实例范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
@@ -97,7 +97,7 @@
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <template v-if="isStaff">
             <render-horizontal-block
                 ext-cls="reason-wrapper"
@@ -939,6 +939,7 @@
             },
             handleReasonInput () {
                 this.isShowReasonError = false;
+                window.changeDialog = true;
             },
 
             handleReasonBlur (payload) {

@@ -13,7 +13,7 @@
             <bk-button
                 data-test-id="myPerm_btn_batchRenewal"
                 style="margin: 0 6px 16px 6px;"
-                :disabled="isEmpty || isNoRenewal"
+                :disabled="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
                 @click="handleBatchRenewal">
                 {{ $t(`m.renewal['权限续期']`) }}
             </bk-button>
@@ -23,7 +23,7 @@
                  ]"
                 style="background: #000"
                 v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
-                v-if="isEmpty || isNoRenewal">
+                v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)">
             </div>
             <bk-button
                 v-if="enablePermissionHandover.toLowerCase() === 'true'"
@@ -45,7 +45,7 @@
             </div>
         </div>
         <div
-            v-if="!isNoRenewal"
+            v-if="externalSystemsLayout.myPerm.hideApplyBtn ? !isNoExternalRenewal : !isNoRenewal"
             :class="[
                 'redCircle',
                 { 'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn }
@@ -132,6 +132,7 @@
                 active: 'GroupPerm',
                 isEmpty: false,
                 isNoRenewal: false,
+                isNoExternalRenewal: false,
                 soonGroupLength: 0,
                 soonPermLength: 0,
                 personalGroupList: [],
@@ -256,6 +257,8 @@
                     this.soonGroupLength = data3.results.length;
                     this.soonPermLength = data4.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
+                    this.isNoExternalRenewal = this.soonGroupLength < 1
+                        || (personalGroupList.length < 1 && systemList.length < 1 && departmentGroupList.length < 1);
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;

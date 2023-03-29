@@ -98,7 +98,8 @@
                     :rows="5"
                     :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
                     v-model="reason"
-                    @input="checkReason"
+                    @input="handleReasonInput"
+                    @blur="handleReasonBlur"
                     style="margin-bottom: 15px;">
                 </bk-input>
             </section>
@@ -181,6 +182,7 @@
                 aggregationsTableData: [],
                 curSystemId: [],
                 reason: '',
+                operate: '',
                 tips: this.$t(`m.grading['添加操作提示']`),
                 infoText: this.$t(`m.grading['选择提示']`),
                 addMemberTips: this.$t(`m.levelSpace['一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
@@ -241,6 +243,9 @@
             }
         },
         watch: {
+            reason () {
+                this.isShowReasonError = false;
+            },
             originalList: {
                 handler (value) {
                     this.setPolicyList(value);
@@ -873,19 +878,33 @@
             },
 
             handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
-                }
-                cancelHandler.then(() => {
-                    this.$router.go(-1);
-                }, _ => _);
+                this.operate = 'cancel';
+                this.$router.go(-1);
             },
 
-            checkReason () {
-                this.isShowReasonError = this.reason === '';
+            handleReasonInput () {
+                this.isShowReasonError = false;
+                window.changeDialog = true;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
+            }
+        },
+        beforeRouteLeave (to, from, next) {
+            let cancelHandler = Promise.resolve();
+            if ((window.changeDialog && this.operate !== 'cancel')) {
+                cancelHandler = leavePageConfirm();
+                cancelHandler.then(() => {
+                    next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
+                }, _ => _);
+            } else {
+                next();
             }
         }
+        
     };
 </script>
 <style lang="postcss">

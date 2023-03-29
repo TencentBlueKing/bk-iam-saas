@@ -180,8 +180,11 @@ export const getRouterDiff = (payload) => {
             'systemAccessComplete',
             'resourcePermiss',
             'secondaryManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail',
             'firstManageSpace',
-            'myManageSpace'
+            'myManageSpace',
+            'permTemplate'
         ];
     }
     // payload其它取值默认返回全部菜单

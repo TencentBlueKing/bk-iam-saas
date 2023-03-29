@@ -180,8 +180,13 @@
                                         {{ $t(`m.common['已选择']`) }}
                                     </template>
                                 </div>
-                                <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll"
-                                    @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
+                                <bk-button
+                                    theme="primary" text
+                                    :disabled="!isShowSelectedText || isAll"
+                                    @click="handleDeleteAll"
+                                    style="padding-right: 40px;">
+                                    {{ $t(`m.common['清空']`) }}
+                                </bk-button>
                             </div>
                             <div class="content" :style="{ height: `${contentHeight}px` }">
                                 <div class="organization-content" v-if="isDepartSelectedEmpty">
@@ -1314,8 +1319,8 @@
                             type: 'depart',
                             name: item.name,
                             full_name: item.full_name,
-                            username: item.name,
-                            count: item.count
+                            username: item.name
+                            // count: item.count
                         };
                     }
                     if (item.type === 'user') {
@@ -1324,8 +1329,8 @@
                             type: 'user',
                             name: item.name,
                             username: item.username || item.id,
-                            full_name: item.username,
-                            count: item.count
+                            full_name: item.username
+                            // count: item.count
                         };
                     }
                 });
@@ -1615,6 +1620,7 @@
                 position: relative;
                 margin-top: 15px;
                 overflow: auto;
+                padding-right: 40px;
 
                 &::-webkit-scrollbar {
                     width: 4px;

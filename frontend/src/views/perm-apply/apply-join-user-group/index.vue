@@ -103,7 +103,7 @@
             />
             <!-- </template> -->
         </section>
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
             <section ref="expiredAtRef">
                 <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />

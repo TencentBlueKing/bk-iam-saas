@@ -185,9 +185,11 @@
             },
 
             handleRtxBlur () {
-                this.$emit('on-change', {
-                    [this.field]: this.displayValue
-                });
+                if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+                    this.$emit('on-change', {
+                        [this.field]: this.displayValue
+                    });
+                }
             }
         }
     };
