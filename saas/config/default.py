@@ -413,7 +413,7 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 )
 
 # disable display systems
-HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=[])
+HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_iam", "bk_ci_rbac"])
 
 
 # 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置
