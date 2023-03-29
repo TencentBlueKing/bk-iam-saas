@@ -5,6 +5,7 @@
                 <detail-item :label="`${$t(`m.levelSpace['名称']`)}：`">
                     <iam-edit-input
                         field="name"
+                        :mode="mode"
                         :placeholder="$t(`m.verify['请填写名称']`)"
                         :rules="rules"
                         :value="formData.name"
@@ -13,6 +14,7 @@
                 <detail-item :label="`${$t(`m.levelSpace['管理员']`)}：`">
                     <iam-edit-member
                         field="members"
+                        :mode="mode"
                         :value="formData.members"
                         @on-change="handleUpdateMembers"
                         :remote-hander="handleUpdateRatingManager" />
@@ -20,6 +22,7 @@
                 <detail-item :label="`${$t(`m.common['描述']`)}：`">
                     <iam-edit-textarea
                         field="description"
+                        :mode="mode"
                         width="600px"
                         :max-length="100"
                         :value="formData.description"
@@ -57,6 +60,10 @@
             id: {
                 type: [String, Number],
                 default: ''
+            },
+            mode: {
+                type: String,
+                default: 'detail'
             }
         },
         data () {

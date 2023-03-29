@@ -822,6 +822,7 @@ export const m = {
         '续期': 'Renewal',
         '申请续期': 'Apply for renewal',
         '权限续期': 'Permission renewal',
+        '用户组续期': 'UserGroup renewal',
         '批量续期': 'Batch Renewal',
         '选择权限': 'Select permission',
         '续期时长': 'Renewal of time',
