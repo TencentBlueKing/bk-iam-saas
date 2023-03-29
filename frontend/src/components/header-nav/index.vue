@@ -19,7 +19,7 @@
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
-                    :style="{ top: '60px', left: '45px' }"
+                    :style="{ top: '10px', left: '240px' }"
                     :content="$t(`m.guide['一级管理空间导航']`)" />
             </div>
         </div>
