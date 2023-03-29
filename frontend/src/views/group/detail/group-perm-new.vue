@@ -169,6 +169,7 @@
             mode: {
                 handler (value) {
                     console.log('value', value);
+                    window.parent.postMessage({ type: 'IAM', data: { tab: 'group_perm' }, code: 'change_group_detail_tab' }, '*');
                 },
                 immediate: true
             }
