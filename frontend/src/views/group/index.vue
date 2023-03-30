@@ -4,28 +4,50 @@
             <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
                 data-test-id="group_btn_transferOut" @click="handleTransferOut">
                 {{ $t(`m.userGroup['转出']`) }}
-            </bk-button> -->
-            <!-- <bk-button
+            </bk-button>
+            <bk-button
                 :disabled="currentSelectList.length < 1"
                 theme="primary"
                 @click="handleBatchAddMember"
                 data-test-id="group_btn_create"
             >
                 {{ $t(`m.common['批量添加成员']`) }}
-            </bk-button> -->
-            <!-- <bk-button
+            </bk-button>
+            <bk-button
                 v-if="isRatingManager"
                 :disabled="currentSelectList.length < 1"
                 style="margin-left: 6px"
                 data-test-id="group_btn_distribute"
                 @click="handleDistribute"
-            >{{ $t(`m.userGroup['分配']`) }}</bk-button
-            > -->
+            >
+                {{ $t(`m.userGroup['分配']`) }}
+            </bk-button> -->
             <div class="search_left">
                 <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
                     {{ $t(`m.common['新建']`) }}
                 </bk-button>
-                <bk-select
+                <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1"
+                    data-test-id="group_btn_transferOut" @click="handleTransferOut">
+                    {{ $t(`m.userGroup['转出']`) }}
+                </bk-button>
+                <bk-button
+                    :disabled="currentSelectList.length < 1"
+                    @click="handleBatchAddMember"
+                    data-test-id="group_btn_create"
+                >
+                    {{ $t(`m.common['批量添加成员']`) }}
+                </bk-button>
+                <!-- <bk-button
+                    v-if="isRatingManager"
+                    :disabled="currentSelectList.length < 1"
+                    style="margin-left: 6px"
+                    data-test-id="group_btn_distribute"
+                    @click="handleDistribute"
+                >
+                    {{ $t(`m.userGroup['分配']`) }}
+                </bk-button> -->
+                <!-- 注释掉下拉选择，采取button -->
+                <!-- <bk-select
                     ref="userGroupSelect"
                     v-model="selectKeyword"
                     :searchable="true"
@@ -45,7 +67,7 @@
                             {{option.name}}
                         </div>
                     </bk-option>
-                </bk-select>
+                </bk-select> -->
             </div>
             <!-- 先屏蔽 -->
             <div slot="right">
@@ -286,6 +308,7 @@
                     }
                 ],
                 distributeDetail: null,
+                queryParams: {},
                 emptyData: {
                     type: '',
                     text: '',
@@ -333,7 +356,7 @@
                 deep: true
             }
         },
-        created () {
+        async created () {
             this.curRole = this.user.role.type || 'staff';
             this.searchData = [
                 {
@@ -379,11 +402,15 @@
             const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
-            const currentQueryCache = this.getCurrentQueryCache();
+            const currentQueryCache = await this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit;
-                    this.pagination.current = currentQueryCache.current;
+                    this.pagination = Object.assign(
+                        this.pagination,
+                        { current: Number(currentQueryCache.current), limit: Number(currentQueryCache.limit) }
+                    );
+                    // this.pagination.limit = currentQueryCache.limit;
+                    // this.pagination.current = currentQueryCache.current;
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
@@ -432,14 +459,12 @@
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination;
                 const params = {};
-                const queryParams = {
-                    limit,
-                    current,
+                const queryParams = Object.assign({}, {
                     ...this.searchParams,
-                    ...this.$route.query
-                };
+                    ...this.$route.query,
+                    ...this.queryParams
+                });
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find((item) => key === item.id);
@@ -456,9 +481,7 @@
                 }
                 this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
-                    ...params,
-                    limit,
-                    current
+                    ...queryParams
                 };
             },
 
@@ -702,12 +725,13 @@
                     return;
                 }
                 this.pagination.current = page;
+                this.queryParams = Object.assign(this.queryParams, { current: page });
                 this.fetchUserGroupList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit;
-                this.pagination.current = 1;
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
+                this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
                 this.fetchUserGroupList(true);
             },
 
@@ -899,5 +923,11 @@
 
 .bk-table-pagination-wrapper {
     background-color: #ffffff;
+}
+
+.search_left {
+    .bk-button {
+        margin-right: 6px;
+    }
 }
 </style>

@@ -291,7 +291,8 @@ export const m = {
         '名称不允许空格': 'Name does not allow spaces',
         '操作和资源边界不可为空': 'Operation and resource boundaries cannot be empty',
         '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
-        '用户名输入格式错误': 'User name input format error'
+        '用户名输入格式错误': 'User name input format error',
+        '当前选择项不在授权范围内': 'The current selection is not within the scope of authorization',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -822,6 +823,7 @@ export const m = {
         '续期': 'Renewal',
         '申请续期': 'Apply for renewal',
         '权限续期': 'Permission renewal',
+        '用户组续期': 'UserGroup renewal',
         '批量续期': 'Batch Renewal',
         '选择权限': 'Select permission',
         '续期时长': 'Renewal of time',

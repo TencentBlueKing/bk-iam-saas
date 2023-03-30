@@ -42,7 +42,7 @@
                                 :class="[
                                     'search-input',
                                     { 'active': isSearchFocus },
-                                    { 'disabled': (isRatingManager || isAll) && !isAllFlag }
+                                    { 'disabled': isAll && !isAllFlag }
                                 ]"
                             >
                                 <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
@@ -65,7 +65,7 @@
                                     </ul>
                                 </bk-dropdown-menu>
                                 <bk-input v-model="keyword" :placeholder="$t(`m.common['搜索提示1']`)" maxlength="64"
-                                    clearable :disabled="(isRatingManager || isAll) && !isAllFlag"
+                                    clearable :disabled="isAll && !isAllFlag"
                                     ext-cls="iam-add-member-search-input-cls" @focus="handleSearchInput"
                                     @blur="handleSearchBlur" @keyup.enter.native="handleSearch"
                                     @keyup.up.native="handleKeyup" @keyup.down.native="handleKeydown">

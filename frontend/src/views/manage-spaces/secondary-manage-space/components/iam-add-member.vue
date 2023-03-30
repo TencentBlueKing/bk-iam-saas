@@ -45,11 +45,20 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <div
+                        <!-- <div
                             :class="[
                                 'search-input',
                                 { 'active': isSearchFocus },
                                 { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
+                            ]"
+                            v-if="isOrganization"
+                        > -->
+                        <!-- 所有平台都开放搜索，通过选中做校验 -->
+                        <div
+                            :class="[
+                                'search-input',
+                                { 'active': isSearchFocus },
+                                { 'disabled': isAll && !isAllFlag }
                             ]"
                             v-if="isOrganization"
                         >
@@ -77,7 +86,7 @@
                                 :placeholder="$t(`m.common['搜索提示1']`)"
                                 maxlength="64"
                                 clearable
-                                :disabled="externalSource ? false : (isRatingManager || isAll) && !isAllFlag"
+                                :disabled="isAll && !isAllFlag"
                                 ext-cls="iam-add-member-search-input-cls"
                                 @focus="handleSearchInput"
                                 @blur="handleSearchBlur"

@@ -11,6 +11,7 @@
             <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
                 <div class="select-wrap">
                     <bk-user-selector
+                        ref="userSelector"
                         :value="displayMembers"
                         :api="userApi"
                         :placeholder="$t(`m.verify['请填写管理员']`)"
@@ -77,7 +78,8 @@
                 handler (value) {
                     if (Object.keys(value).length) {
                         const { name, description, sync_perm } = value;
-                        this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
+                        // this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
+                        this.displayMembers = value.members.map(e => e.username);
                         const members = value.members.filter(e => !e.readonly).map(e => e.username);
                         this.formData = Object.assign({}, {
                             name,
@@ -85,6 +87,15 @@
                             members,
                             sync_perm
                         });
+                        // 这里用nextTick放在下一个队列无效果，需改变他所调用的函数的优先级
+                        setTimeout(() => {
+                            const selectedTag = this.$refs.userSelector.$refs.selected;
+                            if (selectedTag && selectedTag.length) {
+                                selectedTag.forEach(item => {
+                                    item.className = !members.includes(item.innerText) ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
+                                });
+                            }
+                        }, 0);
                     }
                 },
                 deep: true,
@@ -219,4 +230,17 @@
         }
     }
 }
+</style>
+
+<style lang="postcss" scoped>
+
+  /deep/ .user-selector-selected-readonly {
+        background: #FFF1DB;
+        .user-selector-selected-value {
+            color: #FE9C00;
+        }
+        .user-selector-selected-clear {
+            display: none;
+        }
+    }
 </style>

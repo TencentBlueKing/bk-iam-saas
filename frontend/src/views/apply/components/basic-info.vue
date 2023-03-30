@@ -100,13 +100,13 @@
                         str = this.$t(`m.myApply['自定义临时权限申请']`);
                         break;
                     case 'renew_action':
-                        str = this.$t(`m.myApply['自定义权限申请']`);
+                        str = this.$t(`m.renewal['权限续期']`);
                         break;
                     case 'join_group':
                         str = this.$t(`m.myApply['加入用户组']`);
                         break;
                     case 'renew_group':
-                        str = this.$t(`m.myApply['加入用户组']`);
+                        str = this.$t(`m.myApply['用户组续期']`);
                         break;
                     case 'create_rating_manager':
                         str = this.$t(source && source === 'externalApp' ? `m.myApply['创建项目']` : `m.myApply['创建一级管理空间']`);

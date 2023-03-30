@@ -16,6 +16,7 @@
                     :data="formData"
                     ref="basicInfoRef"
                     :id="curRoleId"
+                    :mode="['rating_manager'].includes(user.role.type) ? 'edit' : 'detail'"
                     @on-change="handleBasicInfoChange" />
             </render-horizontal-block>
 

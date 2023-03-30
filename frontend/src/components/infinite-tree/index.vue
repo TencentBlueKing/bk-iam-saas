@@ -238,7 +238,7 @@
              *
              * @param {Object} node 当前节点
              */
-            nodeClick (node) {
+            async nodeClick (node) {
                 if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
@@ -246,7 +246,14 @@
                     this.expandNode(node);
                     return;
                 }
-                if (!node.disabled) {
+                if (['all', 'only-click'].includes(this.clickTriggerTypeBat)) {
+                    if (node.level === 0 && !this.isRatingManager) {
+                        this.expandNode(node);
+                    }
+                    this.$emit('on-click', node);
+                }
+                const result = await this.fetchSubjectScopeCheck(node);
+                if (!node.disabled && result) {
                     if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
                         node.is_selected = !node.is_selected;
                         // type为user时需校验不用组织下的相同用户让其禁选
@@ -255,12 +262,8 @@
                         }
                         this.$emit('on-select', node.is_selected, node);
                     }
-                }
-                if (['all', 'only-click'].includes(this.clickTriggerTypeBat)) {
-                    if (node.level === 0 && !this.isRatingManager) {
-                        this.expandNode(node);
-                    }
-                    this.$emit('on-click', node);
+                } else {
+                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
                 }
             },
 
@@ -330,22 +333,30 @@
                 });
             },
 
-            handleNodeClick (node) {
+            async handleNodeClick (node) {
                 const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
-                if (!isDisabled) {
+                const result = await this.fetchSubjectScopeCheck(node);
+                if (!isDisabled && result) {
                     node.is_selected = !node.is_selected;
                     if (node.type === 'user') {
                         this.handleBanUser(node, node.is_selected);
                     }
                     this.$emit('on-select', node.is_selected, node);
+                } else {
+                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
                 }
             },
 
             /**
              * radio 选择回调
              */
-            nodeChange (newVal, oldVal, localVal, node) {
-                this.$emit('on-select', newVal, node);
+            async nodeChange (newVal, oldVal, localVal, node) {
+                const result = await this.fetchSubjectScopeCheck(node);
+                if (result) {
+                    this.$emit('on-select', newVal, node);
+                } else {
+                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                }
             },
 
             /**
@@ -372,6 +383,26 @@
                         item.is_selected = isSelected;
                     }
                 });
+            },
+
+            // 校验组织架构选择器部门/用户范围是否满足条件
+            async fetchSubjectScopeCheck ({ type, id }) {
+                const params = {
+                    subjects: [{
+                        type: ['depart'].includes(type) ? 'department' : type,
+                        id
+                    }]
+                };
+                const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', params);
+                if (code === 0) {
+                    const nodeData = {
+                        type: params.subjects[0].type,
+                        id: ['depart'].includes(type) ? String(id) : id
+                    };
+                    const result = data && data.length
+                        && data.find(item => item.type === nodeData.type && item.id === nodeData.id);
+                    return result;
+                }
             },
 
             handleEmptyRefresh () {

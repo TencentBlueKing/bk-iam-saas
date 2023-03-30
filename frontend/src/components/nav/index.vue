@@ -519,9 +519,10 @@
         .node-options {
             .node-folder-icon {
                 font-size: 14px;
-                margin: 0 2px 0 -16px;
+                margin: 0 0 0 -20px;
             }
         }
+        
     }
     &-empty {
         color: #fff !important;
