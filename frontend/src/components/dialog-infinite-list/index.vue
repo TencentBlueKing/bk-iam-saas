@@ -218,22 +218,48 @@
              *
              * @param {Object} node 当前节点
              */
-            nodeClick (node) {
+            async nodeClick (node) {
                 if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
                 this.$emit('on-click', node);
-                if (!node.disabled) {
+                const result = await this.fetchSubjectScopeCheck(node);
+                if (!node.disabled && result) {
                     node.is_selected = !node.is_selected;
                     this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+                } else {
+                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
                 }
             },
 
-            handleNodeClick (node) {
+            async handleNodeClick (node) {
                 const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
-                if (!isDisabled) {
+                const result = await this.fetchSubjectScopeCheck(node);
+                if (!isDisabled && result) {
                     node.is_selected = !node.is_selected;
                     this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+                } else {
+                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                }
+            },
+
+            // 校验组织架构选择器部门/用户范围是否满足条件
+            async fetchSubjectScopeCheck ({ type, id }) {
+                const params = {
+                    subjects: [{
+                        type: ['depart'].includes(type) ? 'department' : type,
+                        id
+                    }]
+                };
+                const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', params);
+                if (code === 0) {
+                    const nodeData = {
+                        type: params.subjects[0].type,
+                        id: ['depart'].includes(type) ? String(id) : id
+                    };
+                    const result = data && data.length
+                        && data.find(item => item.type === nodeData.type && item.id === nodeData.id);
+                    return result;
                 }
             }
         }

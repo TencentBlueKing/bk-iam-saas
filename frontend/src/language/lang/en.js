@@ -291,7 +291,8 @@ export const m = {
         '名称不允许空格': 'Name does not allow spaces',
         '操作和资源边界不可为空': 'Operation and resource boundaries cannot be empty',
         '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
-        '用户名输入格式错误': 'User name input format error'
+        '用户名输入格式错误': 'User name input format error',
+        '当前选择项不在授权范围内': 'The current selection is not within the scope of authorization',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
