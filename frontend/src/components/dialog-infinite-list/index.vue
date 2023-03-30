@@ -223,23 +223,27 @@
                     return;
                 }
                 this.$emit('on-click', node);
-                const result = await this.fetchSubjectScopeCheck(node);
-                if (!node.disabled && result) {
-                    node.is_selected = !node.is_selected;
-                    this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
-                } else {
-                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                if (!node.disabled) {
+                    const result = await this.fetchSubjectScopeCheck(node);
+                    if (result) {
+                        node.is_selected = !node.is_selected;
+                        this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+                    } else {
+                        this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                    }
                 }
             },
 
             async handleNodeClick (node) {
                 const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
-                const result = await this.fetchSubjectScopeCheck(node);
-                if (!isDisabled && result) {
-                    node.is_selected = !node.is_selected;
-                    this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
-                } else {
-                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                if (!isDisabled) {
+                    const result = await this.fetchSubjectScopeCheck(node);
+                    if (result) {
+                        node.is_selected = !node.is_selected;
+                        this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+                    } else {
+                        this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                    }
                 }
             },
 
