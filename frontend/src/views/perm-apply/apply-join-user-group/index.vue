@@ -245,6 +245,7 @@
                 addMemberTitle: this.$t(`m.myApply['权限获得者']`),
                 addMemberText: this.$t(`m.permApply['选择权限获得者']`),
                 addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`),
+                queryParams: {},
                 emptyData: {
                     type: '',
                     text: '',
@@ -264,10 +265,10 @@
                 this.currentBackup = value;
             }
         },
-        created () {
+        async created () {
             this.searchParams = this.$route.query;
-            delete this.searchParams.limit;
-            delete this.searchParams.current;
+            // delete this.searchParams.limit;
+            // delete this.searchParams.current;
             this.curRole = this.user.role.type;
             this.searchData = [
                 {
@@ -305,11 +306,13 @@
             const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
-            const currentQueryCache = this.getCurrentQueryCache();
+            const currentQueryCache = await this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    const { current, limit } = currentQueryCache;
-                    this.pagination = Object.assign(this.pagination, { current, limit });
+                    this.pagination = Object.assign(
+                        this.pagination,
+                        { current: Number(currentQueryCache.current), limit: Number(currentQueryCache.limit) }
+                    );
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
@@ -374,14 +377,15 @@
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination;
                 const params = {};
                 const queryParams = {
-                    limit,
-                    current,
-                    ...this.searchParams
+                    ...this.searchParams,
+                    ...this.$route.query,
+                    ...this.queryParams
                 };
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                if (Object.keys(queryParams).length) {
+                    window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                }
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find((item) => key === item.id);
                     if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
@@ -397,9 +401,7 @@
                 }
                 this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
-                    ...params,
-                    limit,
-                    current
+                    ...queryParams
                 };
             },
 
@@ -578,12 +580,14 @@
                     return;
                 }
                 this.pagination.current = page;
+                this.queryParams = Object.assign(this.queryParams, { current: page });
                 this.currentSelectList = [];
                 this.fetchUserGroupList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
                 this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
+                this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
                 this.fetchUserGroupList(true);
             },
 
