@@ -102,7 +102,6 @@ export const beforeEach = async (to, from, next) => {
             await store.dispatch('userInfo');
             next();
         } catch (error) {
-            await store.dispatch('userInfo');
             const { data, message, statusText } = error;
             messageError(message || data.msg || statusText);
         }
