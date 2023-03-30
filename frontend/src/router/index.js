@@ -29,7 +29,7 @@ import VueRouter from 'vue-router';
 
 import store from '@/store';
 import http from '@/api';
-import il8n from '@/language';
+// import il8n from '@/language';
 import preload from '@/common/preload';
 import { bus } from '@/common/bus';
 import { existValue, getParamsValue, getTreeNode } from '@/common/util';
@@ -96,15 +96,26 @@ export const beforeEach = async (to, from, next) => {
     async function getExternalRole () {
         const { role_id: externalRoleId } = to.query;
         // const currentRole = roleList.find((item) => String(item.id) === externalRoleId);
-        const currentRole = getTreeNode(+externalRoleId, roleList);
-        if (currentRole) {
+        // console.log(currentRole);
+        try {
             await store.dispatch('role/updateCurrentRole', { id: +externalRoleId });
             await store.dispatch('userInfo');
-            curRole = currentRole.type;
             next();
-        } else {
-            messageError(il8n('common', '您没有该角色权限，无法切换到该角色'));
+        } catch (error) {
+            await store.dispatch('userInfo');
+            const { data, message, statusText } = error;
+            messageError(message || data.msg || statusText);
         }
+        // const currentRole = await getTreeNode(+externalRoleId, roleList);
+        // 内嵌页面会直接屏蔽
+        // if (currentRole) {
+        //     await store.dispatch('role/updateCurrentRole', { id: +externalRoleId });
+        //     await store.dispatch('userInfo');
+        //     curRole = currentRole.type;
+        //     next();
+        // } else {
+        //     messageError(il8n('common', '您没有该角色权限，无法切换到该角色'));
+        // }
     }
 
     if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
@@ -255,6 +266,7 @@ export const beforeEach = async (to, from, next) => {
                     }
                 } else {
                     if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
+                        console.log(5555);
                         store.commit('updateIndex', 1);
                         window.localStorage.setItem('index', 1);
                         next();
