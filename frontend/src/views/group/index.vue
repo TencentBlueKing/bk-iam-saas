@@ -398,6 +398,7 @@
                     disabled: true
                 }
             ];
+            this.searchParams = this.$route.query;
             this.setCurrentQueryCache(this.refreshCurrentQuery());
             const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
