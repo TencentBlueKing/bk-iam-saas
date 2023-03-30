@@ -64,6 +64,7 @@
 </template>
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'dialog-infinite-list',
@@ -103,6 +104,7 @@
             };
         },
         computed: {
+            ...mapGetters(['user']),
             ghostStyle () {
                 return {
                     height: this.allData.length * this.itemHeight + 'px'
@@ -124,6 +126,9 @@
                     const isDisabled = payload.disabled || this.isDisabled;
                     return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
                 };
+            },
+            isStaff () {
+                return this.user.role.type === 'staff';
             }
         },
         watch: {
@@ -224,12 +229,17 @@
                 }
                 this.$emit('on-click', node);
                 if (!node.disabled) {
-                    const result = await this.fetchSubjectScopeCheck(node);
-                    if (result) {
+                    if (this.isStaff) {
                         node.is_selected = !node.is_selected;
                         this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
                     } else {
-                        this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        const result = await this.fetchSubjectScopeCheck(node);
+                        if (result) {
+                            node.is_selected = !node.is_selected;
+                            this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+                        } else {
+                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        }
                     }
                 }
             },
@@ -237,12 +247,17 @@
             async handleNodeClick (node) {
                 const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
                 if (!isDisabled) {
-                    const result = await this.fetchSubjectScopeCheck(node);
-                    if (result) {
+                    if (this.isStaff) {
                         node.is_selected = !node.is_selected;
                         this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
                     } else {
-                        this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        const result = await this.fetchSubjectScopeCheck(node);
+                        if (result) {
+                            node.is_selected = !node.is_selected;
+                            this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+                        } else {
+                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        }
                     }
                 }
             },
