@@ -263,7 +263,8 @@
                 'user',
                 'mainContentLoading',
                 'roleList',
-                'externalSystemsLayout'
+                'externalSystemsLayout',
+                'externalSystemId'
             ]),
             style () {
                 return {
@@ -353,6 +354,9 @@
                 const params = {
                     id: this.userGroupId
                 };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
                     this.$nextTick(() => {

@@ -61,8 +61,12 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserGroupDetail ({ commit, state, dispatch }, params, config) {
-            const { id } = params;
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/`, config);
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            // return http.get(`${AJAX_URL_PREFIX}/groups/${id}/`, config);
+            const queryParams = Object.keys(requestParams).length ? `${id}/?${json2Query(requestParams)}` : `${id}/`;
+            return http.get(`${AJAX_URL_PREFIX}/groups/${queryParams}`, {}, config);
         },
 
         /**

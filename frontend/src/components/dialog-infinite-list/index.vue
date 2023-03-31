@@ -13,10 +13,13 @@
                     <Icon type="file-close" class="folder-icon" />
                     <span
                         class="organization-name"
-                        :class="item.disabled ? 'is-disabled' : ''">
+                        :class="item.disabled ? 'is-disabled' : ''"
+                        :title="item.full_name">
                         {{ item.name }}
                     </span>
-                    <span class="user-count" v-if="item.showCount">{{ '(' + item.count + ')' }}</span>
+                    <span class="user-count" v-if="item.showCount">
+                        {{ '(' + item.count + ')' }}
+                    </span>
                     <div class="organization-checkbox" v-if="item.showRadio">
                         <span class="node-checkbox"
                             :class="{
@@ -263,21 +266,32 @@
             },
 
             // 校验组织架构选择器部门/用户范围是否满足条件
-            async fetchSubjectScopeCheck ({ type, id }) {
-                const params = {
-                    subjects: [{
-                        type: ['depart'].includes(type) ? 'department' : type,
-                        id
-                    }]
+            async fetchSubjectScopeCheck ({ type, id, username }) {
+                const subjectItem = {
+                    depart: () => {
+                        return {
+                            subjects: [{
+                                type: 'department',
+                                id
+                     
+                            }]
+                        };
+                    },
+                    user: () => {
+                        return {
+                            subjects: [{
+                                type: 'user',
+                                id: username
+                            }]
+                        };
+                    }
                 };
+                const params = subjectItem[type]();
                 const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', params);
                 if (code === 0) {
-                    const nodeData = {
-                        type: params.subjects[0].type,
-                        id: ['depart'].includes(type) ? String(id) : id
-                    };
+                    const { id: subjectId, type: subjectType } = params.subjects[0];
                     const result = data && data.length
-                        && data.find(item => item.type === nodeData.type && item.id === nodeData.id);
+                        && data.find(item => item.type === subjectType && item.id === String(subjectId));
                     return result;
                 }
             }

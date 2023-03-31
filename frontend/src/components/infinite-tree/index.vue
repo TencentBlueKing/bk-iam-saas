@@ -132,7 +132,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemsLayout', 'user']),
+            ...mapGetters(['externalSystemsLayout']),
             ghostStyle () {
                 return {
                     height: this.visiableData.length * this.itemHeight + 'px'
@@ -176,9 +176,6 @@
                     const isDisabled = payload.disabled || this.isDisabled;
                     return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
                 };
-            },
-            isStaff () {
-                return this.user.role.type === 'staff';
             }
         },
         watch: {
@@ -247,37 +244,21 @@
                     this.expandNode(node);
                     return;
                 }
+                if (!node.disabled) {
+                    if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
+                        node.is_selected = !node.is_selected;
+                        // type为user时需校验不用组织下的相同用户让其禁选
+                        if (node.type === 'user') {
+                            this.handleBanUser(node, node.is_selected);
+                        }
+                        this.$emit('on-select', node.is_selected, node);
+                    }
+                }
                 if (['all', 'only-click'].includes(this.clickTriggerTypeBat)) {
                     if (node.level === 0 && !this.isRatingManager) {
                         this.expandNode(node);
                     }
                     this.$emit('on-click', node);
-                }
-                if (!node.disabled) {
-                    if (this.isStaff) {
-                        if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
-                            node.is_selected = !node.is_selected;
-                            // type为user时需校验不用组织下的相同用户让其禁选
-                            if (node.type === 'user') {
-                                this.handleBanUser(node, node.is_selected);
-                            }
-                            this.$emit('on-select', node.is_selected, node);
-                        }
-                    } else {
-                        const result = await this.fetchSubjectScopeCheck(node);
-                        if (result) {
-                            if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
-                                node.is_selected = !node.is_selected;
-                                // type为user时需校验不用组织下的相同用户让其禁选
-                                if (node.type === 'user') {
-                                    this.handleBanUser(node, node.is_selected);
-                                }
-                                this.$emit('on-select', node.is_selected, node);
-                            }
-                        } else {
-                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
-                        }
-                    }
                 }
             },
 
@@ -350,24 +331,11 @@
             async handleNodeClick (node) {
                 const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
                 if (!isDisabled) {
-                    if (this.isStaff) {
-                        node.is_selected = !node.is_selected;
-                        if (node.type === 'user') {
-                            this.handleBanUser(node, node.is_selected);
-                        }
-                        this.$emit('on-select', node.is_selected, node);
-                    } else {
-                        const result = await this.fetchSubjectScopeCheck(node);
-                        if (result) {
-                            node.is_selected = !node.is_selected;
-                            if (node.type === 'user') {
-                                this.handleBanUser(node, node.is_selected);
-                            }
-                            this.$emit('on-select', node.is_selected, node);
-                        } else {
-                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
-                        }
+                    node.is_selected = !node.is_selected;
+                    if (node.type === 'user') {
+                        this.handleBanUser(node, node.is_selected);
                     }
+                    this.$emit('on-select', node.is_selected, node);
                 }
             },
 
@@ -375,16 +343,7 @@
              * radio 选择回调
              */
             async nodeChange (newVal, oldVal, localVal, node) {
-                if (this.isStaff) {
-                    this.$emit('on-select', newVal, node);
-                } else {
-                    const result = await this.fetchSubjectScopeCheck(node);
-                    if (result) {
-                        this.$emit('on-select', newVal, node);
-                    } else {
-                        this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
-                    }
-                }
+                this.$emit('on-select', newVal, node);
             },
 
             /**
@@ -411,26 +370,6 @@
                         item.is_selected = isSelected;
                     }
                 });
-            },
-
-            // 校验组织架构选择器部门/用户范围是否满足条件
-            async fetchSubjectScopeCheck ({ type, id }) {
-                const params = {
-                    subjects: [{
-                        type: ['depart'].includes(type) ? 'department' : type,
-                        id
-                    }]
-                };
-                const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', params);
-                if (code === 0) {
-                    const nodeData = {
-                        type: params.subjects[0].type,
-                        id: ['depart'].includes(type) ? String(id) : id
-                    };
-                    const result = data && data.length
-                        && data.find(item => item.type === nodeData.type && item.id === nodeData.id);
-                    return result;
-                }
             },
 
             handleEmptyRefresh () {

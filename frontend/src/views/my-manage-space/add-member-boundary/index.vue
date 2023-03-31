@@ -195,7 +195,7 @@
                                         <div class="organization-info">
                                             <Icon type="file-close" class="folder-icon" />
                                             <span class="organization-name"
-                                                :title="item.full_name || item.name"
+                                                :title="item.fullName || item.full_name"
                                             >
                                                 {{ item.name }}
                                             </span>

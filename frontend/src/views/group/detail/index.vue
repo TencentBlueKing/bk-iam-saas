@@ -13,6 +13,7 @@
 <script>
     import store from '@/store';
     import { bus } from '@/common/bus';
+    import { mapGetters } from 'vuex';
 
     const GroupDetail = () => import(
         /* webpackChunkName: 'user-group' */'./group-detail'
@@ -36,6 +37,9 @@
                 id: '',
                 comIsLoading: true
             };
+        },
+        computed: {
+            ...mapGetters(['externalSystemId'])
         },
         beforeRouteEnter (to, from, next) {
             store.commit('setHeaderTitle', '');
@@ -67,8 +71,14 @@
                 this.comIsLoading = isLoading;
             },
 
-            fetchDetail (payload) {
-                return this.$store.dispatch('userGroup/getUserGroupDetail', { id: payload });
+            fetchDetail (id) {
+                const params = {
+                    id
+                };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('userGroup/getUserGroupDetail', params);
             }
         }
     };
