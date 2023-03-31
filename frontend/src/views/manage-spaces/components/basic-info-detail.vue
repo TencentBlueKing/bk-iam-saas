@@ -14,7 +14,6 @@
                 <detail-item :label="`${$t(`m.levelSpace['管理员']`)}：`">
                     <iam-edit-member
                         field="members"
-                        :mode="mode"
                         :value="formData.members"
                         @on-change="handleUpdateMembers"
                         :remote-hander="handleUpdateRatingManager" />

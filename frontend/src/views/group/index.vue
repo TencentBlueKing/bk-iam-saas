@@ -398,6 +398,7 @@
                     disabled: true
                 }
             ];
+            this.searchParams = this.$route.query;
             this.setCurrentQueryCache(this.refreshCurrentQuery());
             const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
@@ -460,12 +461,14 @@
 
             refreshCurrentQuery () {
                 const params = {};
-                const queryParams = Object.assign({}, {
+                const queryParams = {
                     ...this.searchParams,
                     ...this.$route.query,
                     ...this.queryParams
-                });
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                };
+                if (Object.keys(queryParams).length) {
+                    window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                }
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find((item) => key === item.id);
                     if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
@@ -614,6 +617,7 @@
             },
 
             handleEmptyClear () {
+                this.queryParams = {};
                 this.searchParams = {};
                 this.searchValue = [];
                 this.emptyData.tipType = '';

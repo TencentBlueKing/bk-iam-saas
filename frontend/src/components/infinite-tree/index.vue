@@ -132,7 +132,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemsLayout']),
+            ...mapGetters(['externalSystemsLayout', 'user']),
             ghostStyle () {
                 return {
                     height: this.visiableData.length * this.itemHeight + 'px'
@@ -176,6 +176,9 @@
                     const isDisabled = payload.disabled || this.isDisabled;
                     return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
                 };
+            },
+            isStaff () {
+                return this.user.role.type === 'staff';
             }
         },
         watch: {
@@ -185,8 +188,6 @@
                 }
                 this.clickTriggerTypeBat = val;
             }
-        },
-        created () {
         },
         mounted () {
             const height = this.$el.clientHeight === 0
@@ -252,18 +253,31 @@
                     }
                     this.$emit('on-click', node);
                 }
-                const result = await this.fetchSubjectScopeCheck(node);
-                if (!node.disabled && result) {
-                    if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
-                        node.is_selected = !node.is_selected;
-                        // type为user时需校验不用组织下的相同用户让其禁选
-                        if (node.type === 'user') {
-                            this.handleBanUser(node, node.is_selected);
+                if (!node.disabled) {
+                    if (this.isStaff) {
+                        if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
+                            node.is_selected = !node.is_selected;
+                            // type为user时需校验不用组织下的相同用户让其禁选
+                            if (node.type === 'user') {
+                                this.handleBanUser(node, node.is_selected);
+                            }
+                            this.$emit('on-select', node.is_selected, node);
                         }
-                        this.$emit('on-select', node.is_selected, node);
+                    } else {
+                        const result = await this.fetchSubjectScopeCheck(node);
+                        if (result) {
+                            if (['all', 'only-radio'].includes(this.clickTriggerTypeBat)) {
+                                node.is_selected = !node.is_selected;
+                                // type为user时需校验不用组织下的相同用户让其禁选
+                                if (node.type === 'user') {
+                                    this.handleBanUser(node, node.is_selected);
+                                }
+                                this.$emit('on-select', node.is_selected, node);
+                            }
+                        } else {
+                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        }
                     }
-                } else {
-                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
                 }
             },
 
@@ -335,15 +349,25 @@
 
             async handleNodeClick (node) {
                 const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
-                const result = await this.fetchSubjectScopeCheck(node);
-                if (!isDisabled && result) {
-                    node.is_selected = !node.is_selected;
-                    if (node.type === 'user') {
-                        this.handleBanUser(node, node.is_selected);
+                if (!isDisabled) {
+                    if (this.isStaff) {
+                        node.is_selected = !node.is_selected;
+                        if (node.type === 'user') {
+                            this.handleBanUser(node, node.is_selected);
+                        }
+                        this.$emit('on-select', node.is_selected, node);
+                    } else {
+                        const result = await this.fetchSubjectScopeCheck(node);
+                        if (result) {
+                            node.is_selected = !node.is_selected;
+                            if (node.type === 'user') {
+                                this.handleBanUser(node, node.is_selected);
+                            }
+                            this.$emit('on-select', node.is_selected, node);
+                        } else {
+                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        }
                     }
-                    this.$emit('on-select', node.is_selected, node);
-                } else {
-                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
                 }
             },
 
@@ -351,11 +375,15 @@
              * radio 选择回调
              */
             async nodeChange (newVal, oldVal, localVal, node) {
-                const result = await this.fetchSubjectScopeCheck(node);
-                if (result) {
+                if (this.isStaff) {
                     this.$emit('on-select', newVal, node);
                 } else {
-                    this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                    const result = await this.fetchSubjectScopeCheck(node);
+                    if (result) {
+                        this.$emit('on-select', newVal, node);
+                    } else {
+                        this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                    }
                 }
             },
 
