@@ -3,6 +3,7 @@
         <template v-if="
             !groupAttributes.source_type && externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn">
             <bk-button
+                v-if="!isLoading && isEditMode"
                 theme="primary"
                 style="margin-bottom: 16px"
                 @click="handleAddPerm">
