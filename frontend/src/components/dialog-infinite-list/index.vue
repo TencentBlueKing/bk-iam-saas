@@ -13,7 +13,8 @@
                     <Icon type="file-close" class="folder-icon" />
                     <span
                         class="organization-name"
-                        :class="item.disabled ? 'is-disabled' : ''">
+                        :class="item.disabled ? 'is-disabled' : ''"
+                        :title="item.full_name">
                         {{ item.name }}
                     </span>
                     <span class="user-count" v-if="item.showCount">{{ '(' + item.count + ')' }}</span>

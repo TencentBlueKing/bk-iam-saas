@@ -187,7 +187,8 @@
                                 <template v-if="curLanguageIsCn">
                                     {{ $t(`m.common['已选择']`) }}
                                     <template v-if="isShowSelectedText">
-                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
+                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                                        {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
                                         <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
                                     </template>
                                     <template v-else>
@@ -211,7 +212,8 @@
                             <div class="organization-content" v-if="isDepartSelectedEmpty">
                                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                                     <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" :title="item.fullName">{{ item.name }}</span><span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                                    <span class="organization-name" :title="item.fullName || item.full_name">{{ item.name }}</span>
+                                    <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
                                     <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                                 </div>
                             </div>
