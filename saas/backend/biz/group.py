@@ -209,13 +209,13 @@ class GroupBiz:
             if usernames:
                 RoleUser.objects.delete_grade_manager_member(relation.role_id, usernames)
 
-    def list_system_counter(self, group_id: int) -> List[GroupSystemCounterBean]:
+    def list_system_counter(self, group_id: int, hidden: bool = True) -> List[GroupSystemCounterBean]:
         """
         查询用户组授权的系统信息, 返回自定义权限/模板的数量
         """
         subject = Subject.from_group_id(group_id)
-        policy_systems_count = self.policy_query_svc.list_system_counter_by_subject(subject)
-        template_system_count = self.template_svc.list_system_counter_by_subject(subject)
+        policy_systems_count = self.policy_query_svc.list_system_counter_by_subject(subject, hidden=hidden)
+        template_system_count = self.template_svc.list_system_counter_by_subject(subject, hidden=hidden)
         policy_system_count_dict = {system.id: system.count for system in policy_systems_count}
         template_system_count_dict = {system.id: system.count for system in template_system_count}
 
