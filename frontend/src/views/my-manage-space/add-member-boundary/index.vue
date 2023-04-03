@@ -194,8 +194,9 @@
                                         :key="item.id">
                                         <div class="organization-info">
                                             <Icon type="file-close" class="folder-icon" />
-                                            <span class="organization-name"
-                                                :title="item.fullName || item.full_name"
+                                            <span
+                                                class="organization-name"
+                                                :title="item.full_name"
                                             >
                                                 {{ item.name }}
                                             </span>
@@ -902,6 +903,7 @@
                                 child.async = child.child_count > 0 || child.member_count > 0;
                                 child.isNewMember = false;
                                 child.parentNodeId = item.id;
+                                child.full_name = `${item.name}：${child.name}`;
 
                                 if (this.hasSelectedDepartments.length > 0) {
                                     child.is_selected = this.hasSelectedDepartments.map(
@@ -1139,6 +1141,7 @@
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            child.full_name = `${payload.full_name}/${child.name}`;
 
                             if (this.hasSelectedDepartments.length > 0) {
                                 child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);

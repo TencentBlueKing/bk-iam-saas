@@ -212,7 +212,7 @@
                             <div class="organization-content" v-if="isDepartSelectedEmpty">
                                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                                     <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" :title="item.fullName || item.full_name">{{ item.name }}</span>
+                                    <span class="organization-name" :title="item.full_name || item.fullName">{{ item.name }}</span>
                                     <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
                                     <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                                 </div>
@@ -829,6 +829,7 @@
                                 child.async = child.child_count > 0 || child.member_count > 0;
                                 child.isNewMember = false;
                                 child.parentNodeId = item.id;
+                                child.full_name = `${item.name}：${child.name}`;
 
                                 if (this.hasSelectedDepartments.length > 0) {
                                     child.is_selected = this.hasSelectedDepartments.map(
@@ -1065,6 +1066,7 @@
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            child.full_name = `${payload.full_name}/${child.name}`;
 
                             if (this.hasSelectedDepartments.length > 0) {
                                 child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);

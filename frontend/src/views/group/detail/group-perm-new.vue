@@ -144,7 +144,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user', 'externalSystemsLayout']),
+            ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId']),
             isEmpty () {
                 return this.groupSystemList.length < 1;
             },
@@ -180,7 +180,13 @@
                 this.isLoading = true;
                 this.$emit('on-init', true);
                 try {
-                    const { code, data } = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    const params = {
+                        id: this.groupId
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { code, data } = await this.$store.dispatch('userGroup/getGroupSystems', params);
                     (data || []).forEach(item => {
                         item.expanded = false; // 此处会在子组件更新为true
                         item.loading = false;

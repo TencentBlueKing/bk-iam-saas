@@ -263,8 +263,12 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getGroupSystems ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/systems/`, config);
+        getGroupSystems ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            const { id } = requestParams;
+            delete requestParams.id;
+            const queryParams = Object.keys(requestParams).length ? `${id}/systems/?${json2Query(requestParams)}` : `${id}/systems/`;
+            return http.get(`${AJAX_URL_PREFIX}/groups/${queryParams}`, {}, config);
         },
 
         /**

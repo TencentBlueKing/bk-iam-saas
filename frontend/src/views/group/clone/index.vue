@@ -199,7 +199,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user', 'externalSystemsLayout']),
+            ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId']),
             /**
              * isAggregateDisabled
              */
@@ -295,7 +295,13 @@
             async handleInit () {
                 this.tableList = [];
                 try {
-                    const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    const params = {
+                        id: this.groupId
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('userGroup/getGroupSystems', params);
                     this.groupSystemList = res.data || []; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
                     this.groupSystemListLength = res.data.length;
                     console.log('this.groupSystemList', this.groupSystemList);
