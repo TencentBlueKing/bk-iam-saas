@@ -114,6 +114,7 @@
             id: {
                 handler (value) {
                     this.groupId = value;
+                    window.parent.postMessage({ type: 'IAM', data: { tab: 'group_detail' }, code: 'change_group_detail_tab' }, '*');
                     this.handleInit(value);
                 },
                 immediate: true

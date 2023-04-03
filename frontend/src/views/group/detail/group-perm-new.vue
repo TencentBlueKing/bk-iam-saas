@@ -3,6 +3,7 @@
         <template v-if="
             !groupAttributes.source_type && externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn">
             <bk-button
+                v-if="!isLoading && isEditMode"
                 theme="primary"
                 style="margin-bottom: 16px"
                 @click="handleAddPerm">
@@ -169,6 +170,7 @@
             mode: {
                 handler (value) {
                     console.log('value', value);
+                    window.parent.postMessage({ type: 'IAM', data: { tab: 'group_perm' }, code: 'change_group_detail_tab' }, '*');
                 },
                 immediate: true
             }

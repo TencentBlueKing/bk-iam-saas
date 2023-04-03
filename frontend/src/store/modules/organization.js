@@ -197,6 +197,18 @@ export default {
          */
         getRecordsLog ({ commit, state, dispatch }, id, config) {
             return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/${id}/logs/`, config);
+        },
+        /**
+         * 校验组织架构选择器部门/用户范围是否满足条件
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @return {Promise} promise 对象
+         */
+        getSubjectScopeCheck ({ commit, state, dispatch }, config) {
+            return http.post(`${AJAX_URL_PREFIX}/roles/subject_scope_check/`, config);
         }
     }
 };

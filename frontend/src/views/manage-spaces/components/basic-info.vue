@@ -1,19 +1,20 @@
 <template>
     <div class="iam-space-basic-info-wrapper">
         <bk-form :model="formData" form-type="vertical" ref="basicInfoForm">
-            <iam-form-item :label="$t(`m.levelSpace['空间名称']`)" required>
+            <iam-form-item :label="$t(`m.levelSpace['名称']`)" required>
                 <bk-input :value="formData.name" style="width: 450px;" clearable
-                    :placeholder="$t(`m.levelSpace['请输入空间名称']`)" :ext-cls="isShowNameError ? 'group-name-error' : ''"
+                    :placeholder="$t(`m.verify['请填写名称']`)" :ext-cls="isShowNameError ? 'group-name-error' : ''"
                     data-test-id="space_input_name" @input="handleNameInput" @blur="handleNameBlur"
                     @change="handleNameChange" />
                 <p class="name-empty-error" v-if="isShowNameError">{{ nameValidateText }}</p>
             </iam-form-item>
-            <iam-form-item :label="$t(`m.levelSpace['空间管理员']`)" required>
+            <iam-form-item :label="$t(`m.levelSpace['管理员']`)" required>
                 <div class="select-wrap">
                     <bk-user-selector
+                        ref="userSelector"
                         :value="displayMembers"
                         :api="userApi"
-                        :placeholder="$t(`m.verify['请输入']`)"
+                        :placeholder="$t(`m.verify['请填写管理员']`)"
                         :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
                         :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                         data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
@@ -29,7 +30,7 @@
                         {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
                     </bk-checkbox>
                 </div>
-                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择空间管理员']`) }}</p>
+                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请填写管理员']`) }}</p>
             </iam-form-item>
             <iam-form-item :label="$t(`m.common['描述']`)">
                 <bk-input type="textarea" maxlength="255" :value="formData.description"
@@ -77,7 +78,8 @@
                 handler (value) {
                     if (Object.keys(value).length) {
                         const { name, description, sync_perm } = value;
-                        this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
+                        // this.displayMembers = value.members.filter(e => !e.readonly).map(e => e.username);
+                        this.displayMembers = value.members.map(e => e.username);
                         const members = value.members.filter(e => !e.readonly).map(e => e.username);
                         this.formData = Object.assign({}, {
                             name,
@@ -85,6 +87,15 @@
                             members,
                             sync_perm
                         });
+                        // 这里用nextTick放在下一个队列无效果，需改变他所调用的函数的优先级
+                        setTimeout(() => {
+                            const selectedTag = this.$refs.userSelector.$refs.selected;
+                            if (selectedTag && selectedTag.length) {
+                                selectedTag.forEach(item => {
+                                    item.className = !members.includes(item.innerText) ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
+                                });
+                            }
+                        }, 0);
                     }
                 },
                 deep: true,
@@ -108,16 +119,16 @@
             handleNameBlur (payload) {
                 const maxLength = 32;
                 if (payload === '') {
-                    this.nameValidateText = this.$t(`m.verify['空间名称必填']`);
+                    this.nameValidateText = this.$t(`m.verify['请填写名称']`);
                     this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {
                     if (payload.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['空间名称最长不超过32个字符']`);
+                        this.nameValidateText = this.$t(`m.verify['名称最长不超过32个字符']`);
                         this.isShowNameError = true;
                     }
                     if (!/^[^\s]*$/g.test(payload)) {
-                        this.nameValidateText = this.$t(`m.verify['一级管理空间名称不允许空格']`);
+                        this.nameValidateText = this.$t(`m.verify['一级管理名称不允许空格']`);
                         this.isShowNameError = true;
                     }
                 }
@@ -157,16 +168,16 @@
                 const maxLength = 32;
                 const { name, members } = this.formData;
                 if (name === '') {
-                    this.nameValidateText = this.$t(`m.verify['空间名称必填']`);
+                    this.nameValidateText = this.$t(`m.verify['请填写名称']`);
                     this.isShowNameError = true;
                 }
                 if (!this.isShowNameError) {
                     if (name.trim().length > maxLength) {
-                        this.nameValidateText = this.$t(`m.verify['空间名称最长不超过32个字符']`);
+                        this.nameValidateText = this.$t(`m.verify['名称最长不超过32个字符']`);
                         this.isShowNameError = true;
                     }
                     if (!/^[^\s]*$/g.test(name)) {
-                        this.nameValidateText = this.$t(`m.verify['一级管理空间名称不允许空格']`);
+                        this.nameValidateText = this.$t(`m.verify['一级管理名称不允许空格']`);
                         this.isShowNameError = true;
                     }
                 }
@@ -219,4 +230,17 @@
         }
     }
 }
+</style>
+
+<style lang="postcss" scoped>
+
+  /deep/ .user-selector-selected-readonly {
+        background: #FFF1DB;
+        .user-selector-selected-value {
+            color: #FE9C00;
+        }
+        .user-selector-selected-clear {
+            display: none;
+        }
+    }
 </style>

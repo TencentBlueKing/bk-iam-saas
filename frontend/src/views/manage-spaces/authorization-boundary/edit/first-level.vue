@@ -7,11 +7,14 @@
         </render-horizontal-block>
         <render-action
             style="margin-bottom: 16px;"
-            :title="$t(`m.levelSpace['选择操作和资源边界范围']`)"
+            :title="$t(`m.levelSpace['选择操作和资源边界']`)"
             :tips="addActionTips"
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)" v-if="isSelectSystem">
+        <render-horizontal-block
+            v-if="isSelectSystem"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :required="true">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
@@ -61,7 +64,7 @@
                 </div>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源实例范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 :title="$t(`m.levelSpace['选择可授权人员边界']`)"
@@ -78,19 +81,24 @@
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
-        <render-horizontal-block v-if="isRatingManager" :label="$t(`m.common['理由']`)" :required="true">
-            <section class="content-wrapper">
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
+        <render-horizontal-block
+            v-if="isRatingManager"
+            ext-cls="reason-wrapper"
+            :label="$t(`m.common['理由']`)"
+            :required="true">
+            <section class="content-wrapper" ref="reasonRef">
                 <bk-input
                     type="textarea"
                     :rows="5"
+                    :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
                     v-model="reason"
                     @input="checkReason"
                     style="margin-bottom: 15px;">
                 </bk-input>
             </section>
         </render-horizontal-block>
-        <p class="reason-empty-error" v-if="reasonEmptyError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
                 {{ $t(`m.common['确定']`) }}
@@ -135,6 +143,8 @@
                     type="textarea"
                     :rows="5"
                     v-model="reason"
+                    @input="handleReasonInput"
+                    @blur="handleReasonBlur"
                     style="margin-bottom: 15px;">
                 </bk-input>
             </section>
@@ -198,7 +208,7 @@
                 isExpanded: false,
                 curSystem: '',
                 curActionValue: [],
-                addMemberTitle: this.$t(`m.grading['选择可授权人员范围']`),
+                addMemberTitle: this.$t(`m.levelSpace['选择可授权人员边界']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
                 infoText: this.$t(`m.grading['选择提示']`),
@@ -215,7 +225,7 @@
                 dialogLoading: false,
                 isAll: false,
                 isShowTable: false,
-                reasonEmptyError: false,
+                isShowReasonError: false,
                 allSystem: true
                 
             };
@@ -261,6 +271,9 @@
             }
         },
         watch: {
+            reason () {
+                this.isShowReasonError = false;
+            },
             originalList: {
                 handler (value) {
                     this.setPolicyList(value);
@@ -847,15 +860,13 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.reasonEmptyError = this.isRatingManager && this.reason === '';
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                     flag = this.$refs.resourceInstanceRef.handleGetValue().flag;
                 }
 
-                if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError
-                    || this.reasonEmptyError) {
+                if (validatorFlag || flag || this.isShowActionEmptyError || this.isShowMemberEmptyError) {
                     if (validatorFlag) {
                         this.scrollToLocation(this.$refs.basicInfoContentRef);
                     } else if (flag) {
@@ -866,6 +877,11 @@
                     return;
                 }
                 if (this.isRatingManager) {
+                    if (!this.reason) {
+                        this.isShowReasonError = true;
+                        this.scrollToLocation(this.$refs.reasonRef);
+                        return;
+                    }
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -945,8 +961,14 @@
                 }, _ => _);
             },
 
-            checkReason () {
-                this.reasonEmptyError = this.reason === '';
+            handleReasonInput () {
+                this.isShowReasonError = false;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
             }
         }
     };
@@ -958,8 +980,8 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
-            left: 150px;
+            top: -55px;
+            left: 230px;
             font-size: 12px;
             color: #ff4d4d;
         }
@@ -1040,6 +1062,14 @@
                 span {
                     color: #ea3636;
                 }
+            }
+        }
+    }
+    .reason-wrapper {
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
             }
         }
     }

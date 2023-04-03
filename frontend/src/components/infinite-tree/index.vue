@@ -186,8 +186,6 @@
                 this.clickTriggerTypeBat = val;
             }
         },
-        created () {
-        },
         mounted () {
             const height = this.$el.clientHeight === 0
                 ? parseInt(window.getComputedStyle(this.$el).height, 10)
@@ -238,7 +236,7 @@
              *
              * @param {Object} node 当前节点
              */
-            nodeClick (node) {
+            async nodeClick (node) {
                 if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
@@ -330,7 +328,7 @@
                 });
             },
 
-            handleNodeClick (node) {
+            async handleNodeClick (node) {
                 const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
                 if (!isDisabled) {
                     node.is_selected = !node.is_selected;
@@ -344,7 +342,7 @@
             /**
              * radio 选择回调
              */
-            nodeChange (newVal, oldVal, localVal, node) {
+            async nodeChange (newVal, oldVal, localVal, node) {
                 this.$emit('on-select', newVal, node);
             },
 

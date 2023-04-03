@@ -19,7 +19,7 @@
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
-                    :style="{ top: '60px', left: '45px' }"
+                    :style="{ top: '10px', left: '240px' }"
                     :content="$t(`m.guide['一级管理空间导航']`)" />
             </div>
         </div>
@@ -229,7 +229,8 @@
                 'mainContentLoading',
                 'roleList',
                 'index',
-                'navCurRoleId'
+                'navCurRoleId',
+                'externalSystemId'
             ]),
             style () {
                 return {
@@ -337,6 +338,9 @@
                 const params = {
                     id: this.userGroupId
                 };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
                     this.$nextTick(() => {
@@ -435,13 +439,22 @@
                             name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex]
                         });
                     } else {
-                        if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
+                        // if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
+                        //     this.$router.push({
+                        //         name: 'myPerm'
+                        //     });
+                        // } else if (navIndex === 3 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'myManageSpaceSubDetail'].includes(curRouterName)) {
+                        //     this.$router.push({
+                        //         name: 'user'
+                        //     });
+                        // }
+                        // 修复当前是添加组权限页面点击其他角色菜单会再次跳到权限管理
+                        // 处理二级管理空间点击staff菜单不刷新路由问题
+                        // 处理超级管理员账号下头部导航没选择默认路由问题
+                        const OtherRoute = ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail', 'addGroupPerm'];
+                        if (OtherRoute.includes(curRouterName)) {
                             this.$router.push({
-                                name: 'myPerm'
-                            });
-                        } else if (navIndex === 3 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'myManageSpaceSubDetail'].includes(curRouterName)) {
-                            this.$router.push({
-                                name: 'user'
+                                name: this.defaultRouteList[navIndex]
                             });
                         }
                     }
@@ -455,18 +468,11 @@
                 roleData.active = true;
                 this.$store.commit('updateIndex', index);
                 window.localStorage.setItem('index', index);
-                // 修复当前是添加组权限页面点击其他角色菜单会再次跳到权限管理
                 // if (this.routeName === 'addGroupPerm') {
                 //     this.$router.push({
                 //         name: 'userGroup'
                 //     });
                 // }
-                // 处理二级管理空间点击staff菜单不刷新路由问题
-                if (['secondaryManageSpaceCreate', 'secondaryManageSpaceDetail', 'addGroupPerm'].includes(this.routeName)) {
-                    this.$router.push({
-                        name: this.defaultRouteList[index]
-                    });
-                }
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
                 await this.$store.dispatch('role/updateCurrentRole', { id: roleData.id });

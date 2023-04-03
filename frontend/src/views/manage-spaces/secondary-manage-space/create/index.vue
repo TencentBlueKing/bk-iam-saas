@@ -351,7 +351,7 @@
         methods: {
             async fetchPageData () {
                 const propsId = Number(this.id);
-                const headerTitle = propsId ? '克隆二级管理空间' : '新建二级管理空间';
+                const headerTitle = this.$t(propsId ? `m.nav['克隆二级管理空间']` : `m.nav['新建二级管理空间']`);
                 this.$store.commit('setHeaderTitle', headerTitle);
                 if (propsId) {
                     await this.fetchDetail();

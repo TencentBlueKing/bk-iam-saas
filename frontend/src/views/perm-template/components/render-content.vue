@@ -286,7 +286,7 @@
                 const params = {
                     id: this.id,
                     types: 'group',
-                    limit: 0,
+                    limit: 10,
                     offset: 0
                 };
                 try {

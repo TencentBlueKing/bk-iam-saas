@@ -61,8 +61,12 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getApplyDetail ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/applications/${id}/`, {}, config);
+        getApplyDetail ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            const queryParams = Object.keys(requestParams).length ? `${id}/?${json2Query(requestParams)}` : `${id}/`;
+            return http.get(`${AJAX_URL_PREFIX}/applications/${queryParams}`, {}, config);
         },
 
         /**

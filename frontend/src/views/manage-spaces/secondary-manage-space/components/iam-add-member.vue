@@ -45,11 +45,20 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <div
+                        <!-- <div
                             :class="[
                                 'search-input',
                                 { 'active': isSearchFocus },
                                 { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
+                            ]"
+                            v-if="isOrganization"
+                        > -->
+                        <!-- 所有平台都开放搜索，通过选中做校验 -->
+                        <div
+                            :class="[
+                                'search-input',
+                                { 'active': isSearchFocus },
+                                { 'disabled': isAll && !isAllFlag }
                             ]"
                             v-if="isOrganization"
                         >
@@ -77,7 +86,7 @@
                                 :placeholder="$t(`m.common['搜索提示1']`)"
                                 maxlength="64"
                                 clearable
-                                :disabled="externalSource ? false : (isRatingManager || isAll) && !isAllFlag"
+                                :disabled="isAll && !isAllFlag"
                                 ext-cls="iam-add-member-search-input-cls"
                                 @focus="handleSearchInput"
                                 @blur="handleSearchBlur"
@@ -201,7 +210,8 @@
                             <div class="organization-content" v-if="isDepartSelectedEmpty">
                                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                                     <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" :title="item.fullName">{{ item.name }}</span><span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                                    <span class="organization-name" ::title="item.fullName || item.full_name">{{ item.name }}</span>
+                                    <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
                                     <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                                 </div>
                             </div>
