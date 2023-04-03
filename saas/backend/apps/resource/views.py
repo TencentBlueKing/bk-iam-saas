@@ -75,7 +75,7 @@ class ResourceViewSet(ViewSet):
 
         attrs = self.biz.list_attr(system_id, resource_type_id)
 
-        count, results = len(attrs), attrs[offset : offset + limit]
+        count, results = len(attrs), attrs[offset: offset + limit]
 
         return Response({"count": count, "results": [i.dict() for i in results]})
 

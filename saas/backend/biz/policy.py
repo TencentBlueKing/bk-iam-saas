@@ -1391,7 +1391,7 @@ class PolicyQueryBiz:
 
     def list_expired(self, subject: Subject, expired_at: int) -> List[ExpiredPolicy]:
         """
-        查询以过期的权限列表
+        查询已过期的权限列表
         """
         backend_policies = self.svc.list_backend_policy_before_expired_at(expired_at, subject)
 

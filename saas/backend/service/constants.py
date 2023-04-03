@@ -156,6 +156,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     VIEW_AUTHORIZED_SUBJECTS = auto()
     MANAGE_API_WHITE_LIST = auto()
     MANAGE_LONG_TASK = auto()
+    MGMT_TEMPLATE = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
