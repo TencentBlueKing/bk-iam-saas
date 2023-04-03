@@ -30,7 +30,7 @@
                 <span
                     :style="nameStyle(item)"
                     :class="['node-title', { 'node-selected': item.selected }]"
-                    :title="item.type === 'user' ? item.name !== '' ? `${item.username}(${item.name})` : item.username : item.name">
+                    :title="nameType(item)">
                     {{ item.type === 'user' ? item.username : item.name }}
                     <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
                 </span>
@@ -169,6 +169,21 @@
                     return {
                         'maxWidth': `calc(100% - ${otherOffset}px)`
                     };
+                };
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name } = payload;
+                    const typeMap = {
+                        user: () => {
+                           return name ? `${username}(${name})` : username;
+                        },
+                        depart: () => {
+                            // eslint-disable-next-line camelcase
+                            return full_name || name;
+                        }
+                    };
+                    return typeMap[type]();
                 };
             },
             disabledNode () {
