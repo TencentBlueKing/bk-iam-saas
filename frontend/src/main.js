@@ -50,7 +50,7 @@ import './common/bkmagic';
 // 全量引入自定义图标
 import './assets/iconfont/style.css';
 
-import { lang, locale } from 'bk-magic-vue';
+import magicbox from 'bk-magic-vue';
 
 import '@icon-cool/bk-icon-bk-iam';
 
@@ -73,12 +73,17 @@ Vue.prototype.scrollToLocation = function ($ref) {
 };
 
 Vue.use(VueI18n);
+Vue.use(magicbox, {
+    i18n: (key, args) => i18n.t(key, args)
+});
 
 console.log('start');
 
 const cn = require('./language/lang/zh');
 
 const en = require('./language/lang/en');
+
+const { lang, locale } = magicbox;
 
 const messages = {
     'zh-cn': Object.assign(lang.zhCN, cn),
@@ -93,14 +98,19 @@ const i18n = new VueI18n({
     locale: language,
     fallbackLocale: 'zh-cn',
     // this.$i18n.locale 通过切换locale的值来实现语言切换
-    messages: messages
+    messages: messages,
+    missing (locale, path) {
+        const parsedPath = i18n._path.parsePath(path);
+        return parsedPath[parsedPath.length - 1];
+    }
 });
 
-if (language === 'zh-cn') {
-    locale.use(lang.zhCN);
-} else {
-    locale.use(lang.enUS);
-}
+// if (language === 'zh-cn') {
+//     locale.use(lang.zhCN);
+// } else {
+//     console.log(lang.enUS, 6555);
+// }
+locale.use(language === 'zh-cn' ? lang.zhCN : lang.enUS);
 
 locale.i18n((key, value) => i18n.t(key, value));
 

@@ -655,7 +655,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             // 是否无权限申请
             isNoPermApplay () {
                 return this.routerQuery.system_id;
@@ -2053,7 +2053,11 @@
                     this.systemValue = this.routerQuery.system_id;
                 }
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
                     (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
