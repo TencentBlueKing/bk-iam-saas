@@ -206,6 +206,7 @@
     import { leaveConfirm } from '@/common/leave-confirm';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
     // import iamCascade from '@/components/cascade'
 
     // 单次申请的最大实例数
@@ -270,6 +271,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             condition () {
                 if (this.curResIndex === -1 || this.groupIndex === -1) {
                     return [];
@@ -322,7 +324,11 @@
         methods: {
             async fetchSystemList () {
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
                     this.systemList = res.data;
                 } catch (e) {
                     console.error(e);

@@ -497,13 +497,15 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const { code, data } = await this.$store.dispatch('system/getSystems');
-                    this.systemList = _.cloneDeep(data);
-                    this.curSystemList = _.cloneDeep(data);
                     this.curSystem = this.defaultSystem;
+                    const params = {};
                     if (this.externalSystemId) {
+                        params.hidden = false;
                         this.curSystem = this.externalSystemId;
                     }
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
+                    this.systemList = _.cloneDeep(data);
+                    this.curSystemList = _.cloneDeep(data);
                     this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                     if (this.systemList.length) {
                         if (!this.curSystem) {

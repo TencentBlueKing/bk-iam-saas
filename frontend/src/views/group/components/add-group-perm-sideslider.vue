@@ -210,7 +210,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isSubset () {
                 return this.user.role.type === 'subset_manager';
             },
@@ -426,7 +426,11 @@
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });

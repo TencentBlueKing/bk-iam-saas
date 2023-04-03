@@ -63,6 +63,7 @@
     import _ from 'lodash';
     import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider';
     import RenderDetail from '../../perm/components/render-detail';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -106,6 +107,9 @@
                 isShowSideslider: false,
                 renderDetailCom: 'RenderDetail'
             };
+        },
+        computed: {
+            ...mapGetters(['externalSystemId'])
         },
         watch: {
             'pagination.current' (value) {
@@ -181,7 +185,11 @@
             },
 
             handleRemoteSystem () {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name }));
                     });
