@@ -70,6 +70,95 @@ urlpatterns = [
                     name="mgmt.long_task",
                 ),
             ]
-        ),
+        )
     ),
+    path(
+        "group/",
+        include(
+            [
+                path("", views.MgmtGroupViewSet.as_view({"get": "list"}), name="mgmt.group"),
+                path("transfer/", views.MgmtGroupTransferView.as_view(), name="mgmt.group.transfer"),
+                # 用户组详情
+                path(
+                    "<str:id>/",
+                    views.MgmtGroupViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),
+                    name="mgmt.group.detail",
+                ),
+                path(
+                    "<str:id>/members/",
+                    views.MgmtGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
+                    name="mgmt.group.members",
+                ),
+                path(
+                    "<str:id>/members_renew/",
+                    views.MgmtGroupMemberUpdateExpiredAtViewSet.as_view({"post": "create"}),
+                    name="mgmt.group.members.renew",
+                ),
+                path("<str:id>/templates/", views.MgmtGroupTemplateViewSet.as_view({"get": "list"}),
+                     name="mgmt.group.templates"),
+                path(
+                    "<str:id>/templates/<int:template_id>/",
+                    views.MgmtGroupTemplateViewSet.as_view({"get": "retrieve"}),
+                    name="mgmt.group.template_detail",
+                ),
+                # 用户组有权限的系统
+                path("<str:id>/systems/",
+                     views.GroupSystemViewSet.as_view({"get": "list"}),
+                     name="mgmt.group.list_policy_system"),
+                # 权限模板和自定义权限
+                path(
+                    "<str:id>/policies/",
+                    views.MgmtGroupPolicyViewSet.as_view(
+                        {"get": "list", "post": "create", "delete": "destroy", "put": "update"}),
+                    name="mgmt.group.list_policy",
+                ),
+
+            ]
+        )
+    ),
+    path(
+        "role/",
+        include(
+            [
+                path(
+                    "subject_scope/",
+                    views.MgmtRoleSubjectScopeView.as_view(),
+                    name="mgmt.role.subject_scope"),
+                path(
+                    "authorization_scope_actions/",
+                    views.MgmtRoleAuthorizationScopeView.as_view(),
+                    name="mgmt.role.authorization_scope_actions",
+                ),
+            ]
+        )
+    ),
+    path(
+        "system/",
+        include(
+            [
+                path(
+                    "",
+                    views.MgmtSystemViewSet.as_view({"get": "list"}),
+                    name="mgmt.role.subject_scope"),
+            ]
+        )
+    ),
+    path(
+        "action/",
+        include(
+            [
+                path("", views.MgmtActionViewSet.as_view({"get": "list"}), name="mgmt.action.list_action"),
+
+            ]
+        )
+    ),
+    path(
+        "template/",
+        include(
+            [
+                path("", views.MgmtTemplateViewSet.as_view({"get": "list"}), name="mgmt.action.list_action"),
+
+            ]
+        )
+    )
 ]

@@ -177,3 +177,16 @@ class SubTaskSLZ(serializers.Serializer):
 
     def get_status(self, obj):
         return TaskStatus.get_choice_label(obj.status)
+
+
+class QueryRoleSubjectScopeSLZ(serializers.Serializer):
+    group_id = serializers.IntegerField(label="用户组ID")
+
+
+class QueryRoleAuthorizationScopeSLZ(serializers.Serializer):
+    system_id = serializers.CharField(required=True)
+    group_id = serializers.IntegerField(label="用户组ID")
+
+
+class QuerySystemSLZ(serializers.Serializer):
+    group_id = serializers.IntegerField(label="用户组ID")
