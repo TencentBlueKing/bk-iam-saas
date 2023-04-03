@@ -253,7 +253,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -501,6 +501,9 @@
                     this.systemList = _.cloneDeep(data);
                     this.curSystemList = _.cloneDeep(data);
                     this.curSystem = this.defaultSystem;
+                    if (this.externalSystemId) {
+                        this.curSystem = this.externalSystemId;
+                    }
                     this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                     if (this.systemList.length) {
                         if (!this.curSystem) {
