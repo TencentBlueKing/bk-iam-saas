@@ -43,9 +43,14 @@ class SystemViewSet(GenericViewSet):
             systems = self.biz.list()
         else:
             systems = RoleListQuery(request.role).list_system()
-        data = [
-            i.dict(include={"id", "name", "name_en"}) for i in systems if i.id not in settings.HIDDEN_SYSTEM_LIST
-        ]  # NOTE: 屏蔽掉需要隐藏的系统
+
+        hidden = slz.validated_data["hidden"]
+        if hidden:
+            data = [
+                i.dict(include={"id", "name", "name_en"}) for i in systems if i.id not in settings.HIDDEN_SYSTEM_LIST
+            ]  # NOTE: 屏蔽掉需要隐藏的系统
+        else:
+            data = [i.dict(include={"id", "name", "name_en"}) for i in systems]
         return Response(data)
 
 

@@ -40,7 +40,7 @@ from backend.biz.template import TemplateBiz
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
-from backend.common.serializers import SystemQuerySLZ
+from backend.common.serializers import HiddenSLZ, SystemQuerySLZ
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
@@ -683,15 +683,14 @@ class GroupSystemViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组有权限的所有系统列表",
+        query_serializer=HiddenSLZ,
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
-        hidden = request.query_params.get("hidden", None)
-        if hidden == "false":
-            hidden = False
-        else:
-            hidden = True
+        slz = HiddenSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        hidden = slz.validated_data["hidden"]
 
         group = self.get_object()
         data = self.biz.list_system_counter(group.id, hidden=hidden)
