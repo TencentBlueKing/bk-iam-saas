@@ -687,8 +687,14 @@ class GroupSystemViewSet(GenericViewSet):
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
+        hidden = request.query_params.get("hidden", None)
+        if hidden == "false":
+            hidden = False
+        else:
+            hidden = True
+
         group = self.get_object()
-        data = self.biz.list_system_counter(group.id)
+        data = self.biz.list_system_counter(group.id, hidden=hidden)
         return Response([one.dict() for one in data])
 
 

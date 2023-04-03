@@ -128,7 +128,7 @@ class PolicyQueryService:
         )
         return [Policy.from_db_model(one, one.expired_at) for one in qs]
 
-    def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
+    def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounter]:
         """
         查询subject有权限的系统-policy数量信息
         """
@@ -138,11 +138,14 @@ class PolicyQueryService:
             .annotate(count=Count("system_id"))
         )
 
-        return [
-            SystemCounter(id=one["system_id"], count=one["count"])
-            for one in qs
-            if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
-        ]  # NOTE: 屏蔽掉需要隐藏的系统
+        if hidden:
+            return [
+                SystemCounter(id=one["system_id"], count=one["count"])
+                for one in qs
+                if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
+            ]  # NOTE: 屏蔽掉需要隐藏的系统
+
+        return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
 
     def list_temporary_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
         """
