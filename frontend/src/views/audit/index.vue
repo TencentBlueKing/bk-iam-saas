@@ -142,7 +142,7 @@
                             </template>
                         </template>
                         <template v-if="onlyRoleType.includes(row.detail.type)">
-                            <p>{{ $t(`m.audit['一级管理空间']`) }}：{{ row.detail.role_name }}</p>
+                            <p>{{ $t(`m.audit['管理空间']`) }}：{{ row.detail.role_name }}</p>
                         </template>
                     </section>
                 </template>

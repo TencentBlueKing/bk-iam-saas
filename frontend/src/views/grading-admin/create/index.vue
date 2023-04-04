@@ -323,7 +323,7 @@
                 } else {
                     this.formData.members = [{ username: this.user.username, readonly: false }];
                 }
-                this.$store.commit('setHeaderTitle', +this.id > 0 ? this.$t(`m.nav['克隆一级管理空间']`) : this.$t(`m.nav['新建一级管理空间']`));
+                this.$store.commit('setHeaderTitle', +this.id > 0 ? this.$t(`m.nav['克隆管理空间']`) : this.$t(`m.nav['新建管理空间']`));
             },
 
             async fetchDetail () {
@@ -911,7 +911,7 @@
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆一级管理空间成功']` : `m.info['新建一级管理空间成功']`), 1000);
+                    this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆管理空间成功']` : `m.info['新建管理空间成功']`), 1000);
                     this.$router.go(-1);
                 } catch (e) {
                     console.error(e);

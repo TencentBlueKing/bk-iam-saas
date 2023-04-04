@@ -96,7 +96,7 @@
                             @click.stop="handleSwitchNav(item.id, item)"
                             :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
-                            <span class="iam-menu-text single-hide" v-if="item.name === $t(`m.grading['一级管理空间']`) && curRole === 'staff'">{{
+                            <span class="iam-menu-text single-hide" v-if="item.name === $t(`m.grading['管理空间']`) && curRole === 'staff'">{{
                                 item.name }}</span>
                             <span class="iam-menu-text single-hide" v-else>{{ item.name }}</span>
                         </div>
@@ -166,7 +166,7 @@
         [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
-        // 一级管理空间
+        // 管理空间
         [['firstManageSpace', 'firstManageSpaceCreate'], 'firstManageSpaceNav'],
         // 二级管理空间
         [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],

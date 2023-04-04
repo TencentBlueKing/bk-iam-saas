@@ -21,8 +21,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 所属一级管理空间 -->
-            <bk-table-column :label="$t(`m.audit['所属一级管理空间']`)">
+            <!-- 所属管理空间 -->
+            <bk-table-column :label="$t(`m.audit['所属管理空间']`)">
                 <template slot-scope="{ row }">
                     <span :class="row.role && row.role.name ? 'can-view' : ''"
                         :title="row.role && row.role.name ? row.role.name : ''"
@@ -83,7 +83,7 @@
             :group-id="curGroupId"
             @animation-end="handleAnimationEnd" />
 
-        <!-- 一级管理空间 成员 侧边弹出框 -->
+        <!-- 管理空间 成员 侧边弹出框 -->
         <bk-sideslider
             :is-show.sync="isShowGradeSlider"
             :width="640"
@@ -98,7 +98,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
                 <div v-if="gradeMembers.length === 0">
                     <ExceptionEmpty
@@ -352,7 +352,7 @@
             },
 
             /**
-             * 调用接口获取一级管理空间各项数据
+             * 调用接口获取管理空间各项数据
              */
             async fetchRoles (id) {
                 this.sliderLoading = true;
@@ -376,13 +376,13 @@
                 }
             },
             /**
-            * 点击一级管理空间中的项弹出侧边框且显示数据
+            * 点击管理空间中的项弹出侧边框且显示数据
             */
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     const { name, id } = payload.role;
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.curRoleId = id;
                     this.fetchRoles(id);
                 }

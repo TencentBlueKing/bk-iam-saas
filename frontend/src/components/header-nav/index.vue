@@ -20,7 +20,7 @@
                     direction="top"
                     :flag="showGuide"
                     :style="{ top: '10px', left: '240px' }"
-                    :content="$t(`m.guide['一级管理空间导航']`)" />
+                    :content="$t(`m.guide['管理空间导航']`)" />
             </div>
         </div>
         <div class="user fr">
@@ -43,12 +43,12 @@
                     v-show="isShowGradingWrapper"
                     v-bk-clickoutside="handleClickOutSide">
                     <template>
-                        <div class="operation auth-manager" v-if="roleList.length">
-                            <div class="user-dropdown-item " :title="$t(`m.nav['切换一级管理空间']`)" @click="handleManager">
+                        <!-- <div class="operation auth-manager" v-if="roleList.length">
+                            <div class="user-dropdown-item " :title="$t(`m.nav['切换管理空间']`)" @click="handleManager">
                                 <Icon type="grade-admin" class="iam-manager-icon" />
-                                {{ $t(`m.nav['切换一级管理空间']`) }}
+                                {{ $t(`m.nav['切换管理空间']`) }}
                             </div>
-                        </div>
+                        </div> -->
                         <div class="operation">
                             <div class="user-dropdown-item " :title="$t(`m.nav['退出登录']`)" @click="handleLogout">
                                 <Icon type="logout" />
@@ -134,7 +134,7 @@
         [['applyCustomPerm', 'applyJoinUserGroup'], NORMAL_DOCU_LINK],
         // 我的权限
         [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal'], NORMAL_DOCU_LINK],
-        // 一级管理空间
+        // 管理空间
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], GRADE_DOCU_LINK],
         // 管理员
         [['administrator'], NORMAL_DOCU_LINK],
@@ -184,11 +184,11 @@
                     'staff': 'personal-user'
                 },
                 identityIconMap: getIdentityIcon(),
-                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 一级管理空间
+                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
                 roleDisplayMap: {
                     'super_manager': this.$t(`m.myApproval['超级管理员']`),
                     'system_manager': this.$t(`m.nav['系统管理员']`),
-                    'rating_manager': this.$t(`m.grading['一级管理空间']`),
+                    'rating_manager': this.$t(`m.grading['管理空间']`),
                     'staff': this.$t(`m.nav['普通用户']`)
                 },
                 // curHeight: 500,
@@ -234,7 +234,8 @@
             ]),
             style () {
                 return {
-                    height: `${this.roleList.length ? this.curHeight : 46}px`
+                    // height: `${this.roleList.length ? this.curHeight : 46}px`
+                    height: `46px`
                 };
             },
             curAccountLogo () {
@@ -361,7 +362,7 @@
                 this.isShowGradingWrapper = false;
             },
 
-            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 一级管理空间
+            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
             isShowSuperManager (value) {
                 if (value.type === 'super_manager') {
                     return true;

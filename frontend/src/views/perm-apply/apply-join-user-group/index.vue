@@ -51,7 +51,7 @@
                             </span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t(`m.common['所属一级管理空间']`)">
+                    <bk-table-column :label="$t(`m.common['所属管理空间']`)">
                         <template slot-scope="{ row }">
                             <span
                                 :class="row.role && row.role.name ? 'can-view' : ''"
@@ -172,7 +172,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -295,10 +295,10 @@
                     name: this.$t(`m.common['系统包含']`),
                     remoteMethod: this.handleRemoteSystem
                 },
-                // 一级管理空间
+                // 管理空间
                 {
                     id: 'role_id',
-                    name: this.$t(`m.grading['一级管理空间']`),
+                    name: this.$t(`m.grading['管理空间']`),
                     remoteMethod: this.handleGradeAdmin
                 }
             ];
@@ -539,7 +539,7 @@
                 });
             },
 
-            // 一级管理空间数据
+            // 管理空间数据
             handleGradeAdmin (value) {
                 return this.$store.dispatch('role/getScopeHasUser').then(({ data }) => {
                     const val = value.toLowerCase();
@@ -568,7 +568,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },

@@ -36,7 +36,7 @@
                                         {{$t(`m.nav['系统管理员']`)}}
                                     </template>
                                     <template v-else-if="row.type === 'rating_manager'">
-                                        {{$t(`m.userGroup['一级管理空间']`)}}
+                                        {{$t(`m.userGroup['管理空间']`)}}
                                     </template>
                                     <template v-else>--</template>
                                 </template>
