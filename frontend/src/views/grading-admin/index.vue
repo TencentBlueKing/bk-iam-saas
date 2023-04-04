@@ -91,9 +91,9 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
-                        <bk-table-column prop="updated_time">
+                        <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time">
                             <template slot-scope="child">
-                                <span :title="row.updated_time">{{ child.row.updated_time }}</span>
+                                <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
                         <bk-table-column width="200">
@@ -184,7 +184,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
-            <bk-table-column :label="$t(`m.grading['更新时间']`)">
+            <bk-table-column :label="$t(`m.grading['更新时间']`)" prop="updated_time">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>

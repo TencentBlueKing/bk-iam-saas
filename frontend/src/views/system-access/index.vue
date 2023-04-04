@@ -81,7 +81,6 @@
             </bk-table-column>
             <template slot="empty">
                 <ExceptionEmpty
-                    style="background: #f5f6fa"
                     :type="emptyData.type"
                     :empty-text="emptyData.text"
                     :tip-text="emptyData.tip"
