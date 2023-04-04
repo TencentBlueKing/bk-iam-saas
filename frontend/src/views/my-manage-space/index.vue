@@ -100,10 +100,18 @@
                         <bk-table-column width="200">
                             <template slot-scope="child">
                                 <div class="operate_btn">
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'detail')">
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        @click.stop="handleSubView(child.row, 'detail')"
+                                        :disabled="disabledPerm(child.row)">
                                         {{ $t(`m.levelSpace['进入']`) }}
                                     </bk-button>
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'auth')">
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        @click.stop="handleSubView(child.row, 'auth')"
+                                        :disabled="disabledPerm(child.row)">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
                                     <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
@@ -144,8 +152,11 @@
                         <!-- <span :title="row.name" class="right-start">
                             {{ row.name }}
                         </span> -->
-                        <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
-                            :value="row.name" style="width: 100%;margin-left: 5px;"
+                        <iam-edit-input
+                            field="name"
+                            style="width: 100%;margin-left: 5px;"
+                            :placeholder="$t(`m.verify['请输入']`)"
+                            :value="row.name"
                             :index="$index"
                             :remote-hander="handleUpdateManageSpace" />
                     </div>
@@ -188,9 +199,18 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="{ row }">
                     <div class="operate_btn">
-                        <bk-button theme="primary" text
-                            @click="handleView(row, 'detail')">{{ $t(`m.levelSpace['进入']`) }}</bk-button>
-                        <bk-button theme="primary" text @click.stop="handleView(row, 'auth')">
+                        <bk-button
+                            theme="primary"
+                            text
+                            @click="handleView(row, 'detail')"
+                            :disabled="disabledPerm(row)">
+                            {{ $t(`m.levelSpace['进入']`) }}
+                        </bk-button>
+                        <bk-button
+                            theme="primary"
+                            text
+                            @click.stop="handleView(row, 'auth')"
+                            :disabled="disabledPerm(row)">
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button theme="primary" text @click="handleView(row, 'clone')">
@@ -272,6 +292,12 @@
             ...mapGetters(['user', 'roleList']),
             tableHeight () {
                 return getWindowHeight() - 185;
+            },
+            disabledPerm () {
+                return (payload) => {
+                    const result = payload.members.map(item => item.username).includes(this.user.username);
+                    return !result;
+                };
             }
         },
         watch: {
@@ -482,7 +508,7 @@
                 }
             },
             
-            // 一级管理空间
+            // 管理空间
             async handleView ({ id, name }, mode) {
                 window.localStorage.setItem('iam-header-name-cache', name);
                 let routerName = 'userGroup';
