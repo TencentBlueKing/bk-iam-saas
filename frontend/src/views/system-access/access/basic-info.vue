@@ -36,7 +36,7 @@
                     type="textarea"
                     v-model="formData.description"
                     :maxlength="100"
-                    :placeholder="$t(`m.access['请输入系统中文描述']`)">
+                    :placeholder="$t(`m.verify['请输入系统中文描述']`)">
                 </bk-input>
             </iam-form-item>
             <iam-form-item :label="$t(`m.access['系统英文描述']`)" :property="'description_en'" required
@@ -46,7 +46,7 @@
                     type="textarea"
                     v-model="formData.description_en"
                     :maxlength="100"
-                    :placeholder="$t(`m.access['请输入系统英文描述']`)">
+                    :placeholder="$t(`m.verify['请输入系统英文描述']`)">
                 </bk-input>
             </iam-form-item>
         </bk-form>
