@@ -2447,7 +2447,7 @@
                 this.$router.push({
                     name: 'permRenewal',
                     query: {
-                        tab: 'custom'
+                        tab: 'group'
                     }
                 });
             },
