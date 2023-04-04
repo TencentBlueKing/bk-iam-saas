@@ -12,13 +12,29 @@
                         :searchable="true"
                         :search-with-pinyin="true"
                         :clearable="false"
-                        @selected="handleSysSelected">
-                        <bk-option v-for="option in systemList"
+                        @selected="handleSysSelected"
+                        @toggle="handleToggle">
+                        <bk-option
+                            v-for="option in systemList"
+                            v-bind="option"
                             :key="option.id"
                             :id="option.id"
                             :name="option.displayName">
-                            <span>{{ option.name }}</span>
-                            <span style="color: #c4c6cc;">({{ option.id }})</span>
+                            <div class="select-collection"
+                                @mouseenter="handleSystemEnter(option.id)"
+                                @mouseleave="handleSystemLeave(option.id)"
+                            >
+                                <div>
+                                    <span>{{ option.name }}</span>
+                                    <span style="color: #c4c6cc;">({{ option.id }})</span>
+                                </div>
+                                <bk-star
+                                    v-if="(hoverId === option.id || option.collection)"
+                                    :rate="option.collection"
+                                    :max-stars="1"
+                                    @click.native.stop="handleCollection(option)">
+                                </bk-star>
+                            </div>
                         </bk-option>
                     </bk-select>
                     <div slot="right">
@@ -33,7 +49,13 @@
                 </render-search>
                 <form class="bk-form bk-form-vertical inner-content">
                     <div class="bk-form-item">
-                        <div :class="['custom-tmpl-list-content-wrapper', { 'is-loading': customLoading }]" v-bkloading="{ isLoading: customLoading, opacity: 1 }">
+                        <div
+                            v-bkloading="{ isLoading: customLoading, opacity: 1 }"
+                            :class="[
+                                'custom-tmpl-list-content-wrapper',
+                                { 'is-loading': customLoading }
+                            ]"
+                        >
                             <render-action-tag
                                 ref="commonActionRef"
                                 :system-id="systemValue"
@@ -640,6 +662,7 @@
                     { title: this.$t(`m.permApply['细粒度权限']`), desc: this.$t(`m.permApply['只包含当前需要的最小范围权限']`), key: 'independent' }
                 ],
                 tabIndex: 0,
+                hoverId: -1,
                 hoverActionData: {
                     actions: []
                 },
@@ -2060,6 +2083,7 @@
                     const res = await this.$store.dispatch('system/getSystems', params);
                     (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
+                        item.collection = item.collection ? 1 : 0;
                     });
                     this.systemList = res.data || [];
                     if (!this.systemValue) {
@@ -2315,6 +2339,26 @@
                     this.buttonLoading = false;
                 }
             },
+
+            handleSystemEnter (id) {
+                this.hoverId = id;
+            },
+
+            handleSystemLeave () {
+                this.hoverId = -1;
+            },
+
+            handleCollection (option) {
+                option.collection = option.collection > 0 ? 0 : 1;
+            },
+
+            // 收藏置顶
+            handleToggle () {
+                this.systemList = this.systemList.sort((pre, next) => {
+                    return next.collection - pre.collection;
+                });
+            },
+            
             // 申请期限逻辑
             handleDeadlineChange (payload) {
                 if (payload) {
@@ -2460,5 +2504,11 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+}
+
+.select-collection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

@@ -67,9 +67,9 @@
 </template>
 <script>
     import { mapGetters } from 'vuex';
+    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import { formatCodeData } from '@/common/util';
-    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
 
     // 过期时间的天数区间
     const EXPIRED_DISTRICT = 15;
@@ -142,8 +142,14 @@
                 this.currentBackup = value;
             },
             type: {
-                handler (value) {
-                    this.tableProps = this.getTableProps(value);
+                handler (newValue, oldValue) {
+                    this.tableProps = this.getTableProps(newValue);
+                    if (oldValue && oldValue !== newValue) {
+                        this.pagination = Object.assign(this.pagination, {
+                            current: 1,
+                            limit: 10
+                        });
+                    }
                 },
                 immediate: true
             },
@@ -218,7 +224,8 @@
                             }
                         });
                     });
-                }
+                },
+                immediate: true
             },
             count: {
                 handler (value) {
@@ -263,8 +270,13 @@
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit;
-                this.pagination.current = 1;
+                this.pagination = Object.assign(
+                    this.pagination,
+                    {
+                        current: 1,
+                        limit: currentLimit
+                    }
+                );
                 this.pageChange();
             },
 
@@ -292,13 +304,23 @@
                 this.isLoading = true;
                 try {
                     const { current, limit } = this.pagination;
-                    const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                        page_size: limit,
-                        page: current
-                    });
-                    this.tableList = data.results || [];
-                    this.pagination.count = data.count;
-                    this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
+                    const tabItem = {
+                        group: async () => {
+                            const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                                page_size: limit,
+                                page: current
+                            });
+                            this.tableList = data.results || [];
+                            this.pagination.count = data.count;
+                            this.emptyRenewalData
+                                = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
+                        },
+                        custom: () => {
+                            this.tableList = this.getCurPageData(current);
+                            console.log(this.tableList);
+                        }
+                    };
+                    return tabItem[this.type]();
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
@@ -319,10 +341,10 @@
                 this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
                 this.fetchTableData();
             }
-
         }
     };
 </script>
+
 <style lang="postcss">
     .iam-perm-renewal-table-wrapper {
         min-height: 200px;

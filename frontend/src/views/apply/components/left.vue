@@ -19,7 +19,8 @@
                     @on-change="handleChange"></apply-item>
                 <div class="load-more-wrapper"
                     v-bkloading="{ isLoading: isScrollLoading, opacity: 1, color: '#fff' }"
-                    v-if="isScrollLoading"></div>
+                    v-if="isScrollLoading"
+                />
                 <div class="no-data-tips" v-show="isShowNoDataTips">{{ $t(`m.common['没有更多内容了']`) }}</div>
             </template>
             <template v-else>
@@ -58,17 +59,6 @@
                     return {
                         'all': il8n('common', '全部'),
                         'wait': il8n('myApproval', '待审批')
-                    };
-                }
-            },
-            emptyData: {
-                type: Object,
-                default: () => {
-                    return {
-                        type: '',
-                        text: '',
-                        tip: '',
-                        tipType: ''
                     };
                 }
             },
@@ -203,9 +193,11 @@
                 border-right: 1px solid #dcdee5;
             }
             .no-data-tips {
-                padding: 10px 0;
+                height: 70px;
+                line-height: 35px;
                 font-size: 12px;
                 color: #979ba5;
+                padding-bottom: 15px;
                 border-right: 1px solid #dcdee5;
                 text-align: center;
             }

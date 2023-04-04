@@ -43,7 +43,20 @@
                 style="background: #000"
                 v-bk-tooltips="$t(`m.permTransfer['您还没有权限，无需交接']`)">
             </div>
-        </div>
+            <bk-button
+                v-if="enableTemporaryPolicy.toLowerCase() === 'true'"
+                data-test-id="myPerm_btn_temporaryPerm"
+                type="button"
+                style="margin-bottom: 16px;"
+                @click="handleGoApplyProvisionPerm">
+                {{ $t(`m.nav['临时权限申请']`) }}
+            </bk-button>
+            <template v-if="isEmpty">
+                <div class="empty-wrapper">
+                    <ExceptionEmpty />
+                    <div class="empty-tips">{{ $t(`m.common['您还没有任何权限']`) }}</div>
+                </div>
+            </template></div>
         <div
             v-if="externalSystemsLayout.myPerm.hideApplyBtn ? !isNoExternalRenewal : !isNoRenewal"
             :class="[
@@ -151,7 +164,8 @@
                     text: '暂无数据',
                     tip: '',
                     tipType: ''
-                }
+                },
+                enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY
             };
         },
         computed: {
@@ -185,6 +199,12 @@
             const query = this.$route.query;
             if (query.tab) {
                 this.active = query.tab;
+            }
+            if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
+                this.panels.push({
+                    name: 'TeporaryCustomPerm',
+                    label: this.$t(`m.myApply['临时权限']`)
+                });
             }
         },
         methods: {
@@ -348,6 +368,11 @@
             handleGoPermTransfer () {
                 this.$router.push({
                     name: 'permTransfer'
+                });
+            },
+            handleGoApplyProvisionPerm () {
+                this.$router.push({
+                    name: 'applyProvisionPerm'
                 });
             }
         }

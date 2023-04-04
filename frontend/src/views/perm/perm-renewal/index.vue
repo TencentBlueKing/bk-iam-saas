@@ -34,6 +34,23 @@
         <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
         </render-horizontal-block>
+        <render-horizontal-block
+            ext-cls="reason-wrapper"
+            :label="$t(`m.common['理由']`)"
+            :required="true">
+            <section ref="reasonRef">
+                <bk-input
+                    type="textarea"
+                    v-model="reason"
+                    :maxlength="255"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :ext-cls="isShowReasonError ? 'renewal-reason-error' : ''"
+                    @input="handleReasonInput"
+                    @blur="handleReasonBlur">
+                </bk-input>
+                <p class="error-tips reason-error-tips" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
+            </section>
+        </render-horizontal-block>
         <div slot="action">
             <bk-button theme="primary" disabled v-if="isEmpty">
                 <span v-bk-tooltips="{ content: $t(`m.renewal['暂无将过期的权限']`), extCls: 'iam-tooltips-cls' }">
@@ -94,18 +111,20 @@
                 ],
                 active: 'group',
                 expiredAt: SIX_MONTH_TIMESTAMP,
-                submitLoading: false,
                 tableList: [],
+                tabKey: 'tab-key',
+                reason: '权限续期',
+                submitLoading: false,
                 tableLoading: false,
                 isShowErrorTips: false,
-                tabKey: 'tab-key',
                 isEmpty: false,
                 curEmptyData: {
                     type: '',
                     text: '',
                     tip: '',
                     tipType: ''
-                }
+                },
+                isShowReasonError: false
             };
         },
         computed: {
@@ -195,7 +214,7 @@
                 }
             },
 
-            fetchActiveTabData (payload) {
+            async fetchActiveTabData (payload) {
                 const activeItem = {
                     group: () => {
                         return !(payload[0].total > 0);
@@ -205,6 +224,18 @@
                     }
                 };
                 this.isEmpty = activeItem[this.active]();
+                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                    page_size: 10,
+                    page: 1
+                }), this.$store.dispatch('renewal/getExpireSoonPerm')];
+                const resultList = await Promise.all(promiseList).finally(() => {
+                    this.tableLoading = false;
+                });
+                this.panels[0].total = resultList[0].data.count;
+                this.panels[0].data = resultList[0].data.results;
+                this.panels[1].data = resultList[1].data;
+                this.panels[1].total = resultList[1].data.length;
+                this.tabKey = +new Date();
             },
             // async fetchPageData () {
             //     await this.fetchData()
@@ -237,6 +268,16 @@
                 window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
             },
 
+            handleReasonInput () {
+                this.isShowReasonError = false;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
+            },
+
             handleDeadlineChange (payload) {
                 this.expiredAt = payload || ONE_DAY_TIMESTAMP;
             },
@@ -264,10 +305,14 @@
                     this.isShowErrorTips = true;
                     return;
                 }
+                if (!this.reason) {
+                    this.isShowReasonError = true;
+                    return;
+                }
                 this.submitLoading = true;
                 const isGroup = this.active === 'group';
                 const params = {
-                    reason: '续期'
+                    reason: this.reason
                 };
                 if (isGroup) {
                     params.groups = this.curSelectedList.map(
@@ -325,6 +370,18 @@
             top: -10px;
             font-size: 12px;
             color: #ea3636;
+        }
+        
+        .reason-error-tips {
+            top: 0;
+        }
+
+        .reason-wrapper {
+            .renewal-reason-error {
+                .bk-textarea-wrapper {
+                    border-color: #ea3636;
+                }
+            }
         }
     }
 </style>
