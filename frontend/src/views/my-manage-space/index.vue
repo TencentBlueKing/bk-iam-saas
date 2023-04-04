@@ -103,15 +103,15 @@
                                     <bk-button
                                         theme="primary"
                                         text
-                                        @click.stop="handleSubView(child.row, 'detail')"
-                                        :disabled="disabledPerm(child.row)">
+                                        :disabled="disabledPerm(child.row)"
+                                        @click.stop="handleSubView(child.row, 'detail')">
                                         {{ $t(`m.levelSpace['进入']`) }}
                                     </bk-button>
                                     <bk-button
                                         theme="primary"
                                         text
-                                        @click.stop="handleSubView(child.row, 'auth')"
-                                        :disabled="disabledPerm(child.row)">
+                                        :disabled="disabledPerm(child.row)"
+                                        @click.stop="handleSubView(child.row, 'auth')">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
                                     <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
@@ -152,11 +152,8 @@
                         <!-- <span :title="row.name" class="right-start">
                             {{ row.name }}
                         </span> -->
-                        <iam-edit-input
-                            field="name"
-                            style="width: 100%;margin-left: 5px;"
-                            :placeholder="$t(`m.verify['请输入']`)"
-                            :value="row.name"
+                        <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
+                            :value="row.name" style="width: 100%;margin-left: 5px;"
                             :index="$index"
                             :remote-hander="handleUpdateManageSpace" />
                     </div>
@@ -202,15 +199,15 @@
                         <bk-button
                             theme="primary"
                             text
-                            @click="handleView(row, 'detail')"
-                            :disabled="disabledPerm(row)">
+                            :disabled="disabledPerm(row)"
+                            @click="handleView(row, 'detail')">
                             {{ $t(`m.levelSpace['进入']`) }}
                         </bk-button>
                         <bk-button
                             theme="primary"
                             text
-                            @click.stop="handleView(row, 'auth')"
-                            :disabled="disabledPerm(row)">
+                            :disabled="disabledPerm(row)"
+                            @click.stop="handleView(row, 'auth')">
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button theme="primary" text @click="handleView(row, 'clone')">
@@ -438,6 +435,7 @@
                 this.tableList.forEach(e => {
                     if (e.id !== expandedRows[0].id) {
                         this.$refs.spaceTable.toggleRowExpansion(e, false);
+                        row.children = [];
                     } else {
                         this.fetchSubManagerList(row);
                     }
@@ -701,7 +699,6 @@
         .bk-button-text {
             &:nth-child(n + 2) {
                 margin-left: 10px;
-                ;
             }
         }
     }
