@@ -190,6 +190,7 @@
     import { leaveConfirm } from '@/common/leave-confirm';
     import { guid, formatCodeData } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -240,6 +241,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -501,6 +503,10 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
                     const { code, data } = await this.$store.dispatch('system/getSystems');
                     this.systemList = _.cloneDeep(data);
                     this.curSystemList = _.cloneDeep(data);

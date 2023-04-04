@@ -186,6 +186,7 @@
     import { leaveConfirm } from '@/common/leave-confirm';
     import { guid, formatCodeData } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -242,6 +243,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -502,7 +504,13 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const { code, data } = await this.$store.dispatch('system/getSystems', { all: this.all });
+                    const params = {
+                        all: this.all
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
                     this.systemList = _.cloneDeep(data);
                     this.curSystemList = _.cloneDeep(data);
                     this.curSystem = this.defaultSystem;
@@ -1008,7 +1016,7 @@
             }
             .right-wrapper {
                 position: relative;
-                flex: 0 0 calc(100% - 220px);
+                flex: 0 0 calc(100% - 240px);
                 padding: 12px 20px;
                 background: #f5f6fa;
                 .custom-tmpl-wrapper {

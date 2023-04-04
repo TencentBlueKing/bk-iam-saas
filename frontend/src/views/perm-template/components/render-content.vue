@@ -200,7 +200,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isShowGroupAction () {
                 return (item) => {
                     const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
@@ -458,8 +458,12 @@
 
             async fetchSystems () {
                 try {
-                    const res = await this.$store.dispatch('system/getSystems')
-                    ;(res.data || []).forEach(item => {
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
+                    (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
                     this.systemList = res.data || [];
