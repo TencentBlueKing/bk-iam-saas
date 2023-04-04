@@ -270,6 +270,14 @@
             // delete this.searchParams.limit;
             // delete this.searchParams.current;
             this.curRole = this.user.role.type;
+            this.users = [
+                {
+                    'username': this.user.username,
+                    'name': this.user.username,
+                    'showRadio': true,
+                    'type': 'user',
+                    'is_selected': true
+                }];
             this.searchData = [
                 {
                     id: 'id',
