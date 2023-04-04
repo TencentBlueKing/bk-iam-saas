@@ -8,6 +8,7 @@
             ext-cls="perm-renewal-table"
             :outer-border="false"
             :header-border="false"
+            :max-height="500"
             :pagination="pagination"
             @page-change="pageChange"
             @page-limit-change="limitChange"
@@ -66,6 +67,7 @@
     </div>
 </template>
 <script>
+    import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import renderExpireDisplay from '@/components/render-renewal-dialog/display';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
@@ -195,34 +197,52 @@
             },
             data: {
                 handler (value) {
-                    this.allData = value;
+                    this.allData = _.cloneDeep(value);
                     this.pagination = Object.assign(this.pagination, { count: value.length });
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
-                    const getDays = payload => {
-                        const dif = payload - this.user.timestamp;
-                        if (dif < 1) {
-                            return 0;
-                        }
-                        return Math.ceil(dif / (24 * 3600));
-                    };
-                    this.currentSelectList = this.tableList.filter(item => getDays(item.expired_at) < EXPIRED_DISTRICT);
-                    if (this.type === 'custom') {
-                        this.tableList.forEach(item => {
-                            if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
-                                this.systemFilter.push({
-                                    text: item.system.name,
-                                    value: item.system.id
+                    // this.currentSelectList = this.tableList.filter(item =>
+                    //     this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                    // if (this.type === 'custom') {
+                    //     this.tableList.forEach(item => {
+                    //         if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
+                    //             this.systemFilter.push({
+                    //                 text: item.system.name,
+                    //                 value: item.system.id
+                    //             });
+                    //         }
+                    //     });
+                    // }
+                    this.$nextTick(() => {
+                        const tableItem = {
+                            group: () => {
+                                this.currentSelectList = this.tableList.filter(item =>
+                                    this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                                this.tableList.forEach(item => {
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
+                                });
+                            },
+                            custom: () => {
+                                this.currentSelectList = this.allData.filter(item =>
+                                    this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                                this.allData.forEach(item => {
+                                    if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
+                                        this.systemFilter.push({
+                                            text: item.system.name,
+                                            value: item.system.id
+                                        });
+                                    }
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
                                 });
                             }
-                        });
-                    }
-                    this.$nextTick(() => {
-                        this.tableList.forEach(item => {
-                            if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
-                                this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
-                            }
-                        });
+                        };
+                        return tableItem[this.type] ? tableItem[this.type]() : tableItem['group']();
                     });
                 },
                 immediate: true
@@ -241,6 +261,14 @@
             }
         },
         methods: {
+            getDays (payload) {
+                const dif = payload - this.user.timestamp;
+                if (dif < 1) {
+                    return 0;
+                }
+                return Math.ceil(dif / (24 * 3600));
+            },
+
             getIsSelect () {
                 return this.tableList.length > 0;
             },
@@ -281,7 +309,25 @@
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection];
+                const tabItem = {
+                    group: () => {
+                        this.currentSelectList = [...selection];
+                    },
+                    custom: () => {
+                        // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
+                        if (selection.length === this.tableList.length || selection.length === this.allData.length) {
+                            this.currentSelectList = [...this.allData];
+                            this.currentSelectList.forEach(item => {
+                                this.$refs.permTableRef
+                                    && this.$refs.permTableRef.toggleRowSelection(item, true);
+                            });
+                        } else {
+                            this.currentSelectList = [];
+                            this.$refs.permTableRef.clearSelection();
+                        }
+                    }
+                };
+                return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
             },
 
             handlerChange (selection, row) {
@@ -317,7 +363,14 @@
                         },
                         custom: () => {
                             this.tableList = this.getCurPageData(current);
-                            console.log(this.tableList);
+                            this.$nextTick(() => {
+                                this.allData.forEach(item => {
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
+                                });
+                            });
                         }
                     };
                     return tabItem[this.type]();

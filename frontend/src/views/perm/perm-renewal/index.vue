@@ -189,15 +189,15 @@
                         this.tableLoading = false;
                     });
                     const { code, data } = resultList[0];
-                    const { code: code2, data: data2 } = resultList[1];
+                    const { code: customCode, data: customList } = resultList[1];
                     this.panels[0].emptyData
                         = formatCodeData(code, this.panels[0].emptyData, data.results.length === 0);
                     this.panels[0] = Object.assign(this.panels[0], { data: data.results, total: data.count });
                     if (this.panels[1]) {
                         this.panels[1] = Object.assign(this.panels[1], {
-                            data: data2,
-                            total: data2.length,
-                            emptyData: formatCodeData(code2, this.panels[1].emptyData, data2.length === 0)
+                            data: customList,
+                            total: customList.length,
+                            emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
                         });
                     }
                     this.tabKey = +new Date();
@@ -224,17 +224,6 @@
                     }
                 };
                 this.isEmpty = activeItem[this.active]();
-                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                    page_size: 10,
-                    page: 1
-                }), this.$store.dispatch('renewal/getExpireSoonPerm')];
-                const resultList = await Promise.all(promiseList).finally(() => {
-                    this.tableLoading = false;
-                });
-                this.panels[0].total = resultList[0].data.count;
-                this.panels[0].data = resultList[0].data.results;
-                this.panels[1].data = resultList[1].data;
-                this.panels[1].total = resultList[1].data.length;
                 this.tabKey = +new Date();
             },
             // async fetchPageData () {
@@ -307,6 +296,7 @@
                 }
                 if (!this.reason) {
                     this.isShowReasonError = true;
+                    this.scrollToLocation(this.$refs.reasonRef);
                     return;
                 }
                 this.submitLoading = true;
