@@ -250,14 +250,18 @@
             ext-cls="showImage">
             <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是管理空间"]') }}</h2>
             <p>{{ $t('m.common["管理空间概念"]') }}</p>
-            <img src="../../images/boot-page/one2x2.png" alt="" style="width:765px;height:263px">
+            <!-- <img src="@/images/boot-page/space@2x.png" alt="" style="width:765px; height: 263px"> -->
+            <img src="@/images/boot-page/space@2x.png" alt="" style="width:765px;">
             <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用管理空间"]') }}</h2>
             <p>1. {{ $t('m.common["我的管理空间 > 申请新建（已有管理空间忽略）"]') }}</p>
-            <img src="@/images/boot-page/two2x2.png" alt="" style="width:765px; height:300px">
+            <!-- <img src="@/images/boot-page/space2@2x.png" alt="" style="width:765px; height:300px"> -->
+            <img src="@/images/boot-page/space2@2x.png" alt="" style="width:765px;">
             <p>2. {{ $t('m.common["切换顶部导航至“权限管理” ，在左上角切换“管理空间”"]') }}</p>
-            <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px">
+            <!-- <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px"> -->
+            <img src="@/images/boot-page/space3@2x.png" alt="" style="width:765px;">
             <p>3. {{ $t('m.common["在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员"]') }}</p>
-            <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px">
+            <!-- <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px"> -->
+            <img src="@/images/boot-page/space4@2x.png" alt="" style="width:765px;">
         </bk-dialog>
     </div>
 </template>
