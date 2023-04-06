@@ -218,7 +218,6 @@
             </bk-table-column>
             <template slot="empty">
                 <ExceptionEmpty
-                    style="background: #fffffff"
                     :type="emptyData.type"
                     :empty-text="emptyData.text"
                     :tip-text="emptyData.tip"
@@ -641,7 +640,7 @@
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('gradeManagerList', JSON.stringify(payload));
+                window.localStorage.setItem('myManagerList', JSON.stringify(payload));
             },
 
             refreshCurrentQuery () {

@@ -415,7 +415,14 @@ export const m = {
         '每周四': 'Every Thursday',
         '每周五': 'Every Friday',
         '每周六': 'Every Saturday',
-        '每周日': 'Every Sunday'
+        '每周日': 'Every Sunday',
+        '功能升级!': 'Function upgrade!',
+        '原来的': 'Customary',
+        '分级管理员': 'rating manager',
+        '升级为': 'upgrade to',
+        '管理空间': 'manage space',
+        '支持一级、两级管理空间，更加精细化管理。': 'Supports primary and secondary management of space, with more refined management.',
+        '知道了': 'Got it'
     },
     // 二次确认弹窗相关
     dialog: {

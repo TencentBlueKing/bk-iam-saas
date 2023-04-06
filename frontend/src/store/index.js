@@ -332,7 +332,6 @@ const store = new Vuex.Store({
         isSync: false,
         routerDiff: [],
         currentNav: currentNav,
-
         roleList: [],
         noviceGuide: {
             rating_manager_authorization_scope: true,
@@ -343,7 +342,8 @@ const store = new Vuex.Store({
             create_group: true,
             set_group_approval_process: true,
             add_group_member: true,
-            add_group_perm_template: true
+            add_group_perm_template: true,
+            grade_manager_upgrade: true
         },
         loadingConf: {
             speed: 2,
