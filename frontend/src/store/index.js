@@ -55,7 +55,7 @@ import myApply from './modules/myApply';
 // 用户组 模块
 import userGroup from './modules/userGroup';
 
-// 管理空间模块
+// 一级管理空间模块
 import role from './modules/role';
 
 // 审批流程设置
@@ -213,7 +213,7 @@ const currentNav = [
     //     icon: 'grade-admin',
     //     id: 'firstManageSpaceNav',
     //     rkey: 'firstManageSpace',
-    //     name: il8n('nav', '管理空间'),
+    //     name: il8n('nav', '一级管理空间'),
     //     path: `${SITE_URL}first-manage-space`,
     //     disabled: false
     // },
