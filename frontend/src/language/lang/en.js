@@ -496,6 +496,7 @@ export const m = {
         '申请加入用户组': 'Apply to join the  group',
         '申请模板权限': 'Apply for template permissions',
         '申请自定义权限': 'Apply for custom permissions',
+        '申请临时权限': 'Apply for temporary permission',
         '申请加入用户组标题': 'If you need multiple system permissions, it is recommended to reduce the application of permissions by applying to join the group',
         '申请加入用户组场景1': 'The permissions of multiple systems is required at the same time',
         '申请加入用户组场景2': 'Permission for enterprises to assign fixed roles',

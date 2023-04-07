@@ -19,11 +19,15 @@
             </bk-button>
             <div :class="[
                      'info-renewal',
-                     { 'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn }
+                     {
+                         'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
+                         'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+                     }
                  ]"
                 style="background: #000"
                 v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
-                v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)">
+                v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
+            >
             </div>
             <bk-button
                 v-if="enablePermissionHandover.toLowerCase() === 'true'"
@@ -38,7 +42,10 @@
                 v-if="!systemList.length && !teporarySystemList.length"
                 :class="[
                     'info-sys',
-                    { 'external-info-sys': externalSystemsLayout.myPerm.hideApplyBtn }
+                    {
+                        'external-info-sys': externalSystemsLayout.myPerm.hideApplyBtn,
+                        'info-sys-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+                    }
                 ]"
                 style="background: #000"
                 v-bk-tooltips="$t(`m.permTransfer['您还没有权限，无需交接']`)">
@@ -433,35 +440,46 @@
     .iam-my-perm-tab-cls {
         background: #fff;
     }
-    .icon-info-renewal{
+    .icon-info-renewal {
         position: absolute;
         top: -5px;
         left: 176px;
     }
-    .info-renewal{
+    .info-renewal {
         top: -5px;
         left: 100px;
         position: absolute;
         width: 90px;
         height: 40px;
         opacity: 0;
-        cursor:no-drop;
+        cursor: no-drop;
+        &.info-renewal-lang {
+            left: 200px;
+        }
+        &.external-info-renewal {
+            left: 0;
+            &.info-renewal-lang {
+                left: 50px;
+            }
+        }
     }
-    .info-sys{
+    .info-sys {
         top: -5px;
         left: 198px;
         position: absolute;
         width: 90px;
         height: 40px;
         opacity: 0;
-        cursor:no-drop;
-    }
-
-    .external-info-renewal {
-        left: 0;
+        cursor: no-drop;
+        &.info-sys-lang {
+            left: 360px;
+        }
     }
 
     .external-info-sys {
         left: 100px;
+        &.info-sys-lang {
+            left: 200px;
+        }
     }
 </style>
