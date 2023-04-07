@@ -14,7 +14,6 @@
                 @on-search="handleSearch" />
             <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
                 <template v-if="treeData.length > 0 && !isLoading">
-                    455
                     <topology-tree
                         ref="topologyRef"
                         :all-data="treeData"
