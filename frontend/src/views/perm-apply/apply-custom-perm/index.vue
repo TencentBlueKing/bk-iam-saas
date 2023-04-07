@@ -339,6 +339,9 @@
                                                     @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
                                             </template>
                                         </bk-table-column>
+                                        <template slot="empty">
+                                            <ExceptionEmpty />
+                                        </template>
                                     </bk-table>
                                     <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
                                 </div>
