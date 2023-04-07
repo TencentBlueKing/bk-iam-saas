@@ -1,5 +1,6 @@
 <template>
     <div id="app"
+        v-if="isRouterAlive"
         :class="[
             systemCls,
             { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
@@ -28,14 +29,13 @@
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
-            v-if="isRouterAlive">
-        </the-header>
+        />
         <the-nav class="nav-layout"
             @reload-page="reloadCurPage"
-            v-if="!externalSystemsLayout.hideIamSlider">
-        </the-nav>
-        <main class="main-layout"
+            v-if="!externalSystemsLayout.hideIamSlider" />
+        <main
             :class="[
+                'main-layout',
                 layoutCls,
                 { 'external-main-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
             ]"
