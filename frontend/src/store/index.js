@@ -138,7 +138,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'grade-admin',
+                icon: 'my-manage-space',
                 id: 'myManageSpaceNav',
                 rkey: 'myManageSpace',
                 name: il8n('nav', '我的管理空间'),
@@ -169,7 +169,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'user-fill',
+                icon: 'personal-user',
                 id: 'userNav',
                 rkey: 'user',
                 name: il8n('nav', '用户'),
@@ -184,7 +184,7 @@ const currentNav = [
         rkey: 'manageSpaces',
         children: [
             {
-                icon: 'user-group',
+                icon: 'auth-scope',
                 id: 'authorBoundaryNav',
                 rkey: 'authorBoundary',
                 name: il8n('nav', '授权边界'),
@@ -192,7 +192,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'perm-template',
+                icon: 'level-two-manage-space',
                 id: 'secondaryManageSpaceNav',
                 rkey: 'secondaryManageSpace',
                 name: il8n('nav', '二级管理空间'),
@@ -202,7 +202,7 @@ const currentNav = [
         ]
     },
     {
-        icon: 'grade-admin',
+        icon: 'level-one-manage-space',
         id: 'gradingAdminNav',
         rkey: 'ratingManager',
         name: il8n('nav', '管理空间'),
@@ -218,7 +218,7 @@ const currentNav = [
     //     disabled: false
     // },
     {
-        icon: 'grade-admin',
+        icon: 'resource-perm-manage',
         id: 'resourcePermissNav',
         rkey: 'resourcePermiss',
         name: il8n('nav', '资源权限管理'),
@@ -231,7 +231,7 @@ const currentNav = [
         rkey: 'set',
         children: [
             {
-                icon: 'perm-apply',
+                icon: 'super-admin',
                 name: il8n('common', '管理员'),
                 id: 'settingNav',
                 rkey: 'administrator',
@@ -278,7 +278,7 @@ if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
 
 if (window.ENABLE_TEMPORARY_POLICY.toLowerCase() === 'true') {
     currentNav[0].children.push({
-        icon: 'perm-apply',
+        icon: 'tempora-perm-apply',
         name: il8n('nav', '临时权限申请'),
         id: 'provisionPermApplyNav',
         rkey: 'applyProvisionPerm',

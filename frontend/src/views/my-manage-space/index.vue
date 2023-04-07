@@ -61,7 +61,7 @@
                         <bk-table-column prop="name" width="240">
                             <template slot-scope="child">
                                 <div class="flex_space_name">
-                                    <Icon type="level-two" :style="{ color: iconColor[1] }" />
+                                    <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
                                     <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
                                         :value="child.row.name" style="width: 100%;margin-left: 5px;"
                                         :index="child.$index"
@@ -148,7 +148,7 @@
             <bk-table-column :label="$t(`m.levelSpace['名称']`)" prop="name" width="240">
                 <template slot-scope="{ row, $index }">
                     <div class="flex_space_name">
-                        <Icon type="level-one" :style="{ color: iconColor[0] }" />
+                        <Icon type="level-one-manage-space" :style="{ color: iconColor[0] }" />
                         <!-- <span :title="row.name" class="right-start">
                             {{ row.name }}
                         </span> -->

@@ -56,7 +56,7 @@
                         <bk-table-column prop="name" width="240">
                             <template slot-scope="child">
                                 <div class="flex_space_name">
-                                    <Icon type="level-two" :style="{ color: iconColor[1] }" />
+                                    <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
                                     <!-- {{ child.row }} -->
                                     <iam-edit-input
                                         field="name"
@@ -146,7 +146,7 @@
             <bk-table-column :label="$t(`m.levelSpace['名称']`)" width="240">
                 <template slot-scope="{ row }">
                     <div class="flex_space_name">
-                        <Icon type="level-one" :style="{ color: iconColor[0] }" />
+                        <Icon type="level-one-manage-space" :style="{ color: iconColor[0] }" />
                         <span
                             class="grading-admin-name single-hide"
                             :title="row.name" @click="handleView(row, 'detail')">

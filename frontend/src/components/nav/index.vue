@@ -32,7 +32,8 @@
                 :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
-                :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ? 'icon iam-icon iamcenter-level-two' : 'icon iam-icon iamcenter-level-one'"
+                :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
+                    'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
                 :remote-method="handleRemoteTree"
                 :ext-popover-cls="selectCls"
                 ext-cls="iam-nav-select-cls"
@@ -51,7 +52,7 @@
                     @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
-                            <Icon :type="node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
+                            <Icon :type="node.level === 0 ? 'level-one-manage-space' : 'level-two-manage-space'" :style="{ color: formatColor(node) }" />
                             <span>{{data.name}}</span>
                         </div>
                         <!-- <bk-star
@@ -520,16 +521,16 @@
             },
 
             formatColor (node) {
-                if (node.id === this.curRoleId) {
-                    switch (node.level) {
-                        case 0: {
-                            return '#FF9C01';
-                        }
-                        case 1: {
-                            return '#9B80FE';
-                        }
+                // if (node.id === this.curRoleId) {
+                switch (node.level) {
+                    case 0: {
+                        return '#FF9C01';
+                    }
+                    case 1: {
+                        return '#9B80FE';
                     }
                 }
+                // }
             }
         }
     };
@@ -542,14 +543,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-
-.iamcenter-level-one {
-    color: #FF9C01;
-}
-
-.iamcenter-level-two {
-    color: #9B80FE;
 }
 
 .iam-nav-select-dropdown-content .bk-big-tree {
@@ -591,4 +584,16 @@
         box-shadow: 0 0 2px 0 #dcdee5;
     }
  }
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .iam-nav-select-cls {
+    .iamcenter-level-one-manage-space {
+        color: #FF9C01;
+    }
+
+    .iamcenter-level-two-manage-space {
+        color: #9B80FE;
+    }
+}
 </style>
