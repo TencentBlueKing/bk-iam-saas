@@ -1,6 +1,5 @@
 <template>
     <div id="app"
-        v-if="isRouterAlive"
         :class="[
             systemCls,
             { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
