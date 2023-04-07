@@ -56,12 +56,18 @@
                     <ExceptionEmpty />
                     <div class="empty-tips">{{ $t(`m.common['您还没有任何权限']`) }}</div>
                 </div>
-            </template></div>
+            </template>
+        </div>
         <div
             v-if="externalSystemsLayout.myPerm.hideApplyBtn ? !isNoExternalRenewal : !isNoRenewal"
             :class="[
                 'redCircle',
-                { 'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn }
+                {
+                    'redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE),
+                    'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn,
+                    'external-redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+                        && externalSystemsLayout.myPerm.hideApplyBtn
+                }
             ]"
         />
         <template>
@@ -165,7 +171,8 @@
                     tip: '',
                     tipType: ''
                 },
-                enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY
+                enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY,
+                CUR_LANGUAGE: window.CUR_LANGUAGE
             };
         },
         computed: {
@@ -408,12 +415,18 @@
             position: relative;
             top: -50px;
             right: -180px;
-            width:10px;
-            height:10px;
+            width: 10px;
+            height: 10px;
             background-color: red;
             border-radius: 50%;
+            &-lang {
+                right: -312px;
+            }
             &.external-redCircle {
                 right: -90px;
+                &-lang {
+                  right: -160px;
+                }
             }
         }
     }
