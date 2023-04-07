@@ -2132,9 +2132,15 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params);
                     const data = res.data.map(item => {
-                        const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
-                        // eslint-disable-next-line max-len
-                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
+                        let relatedActions = [];
+                        const findLinerActions = this.linearActionList.find(sub => sub.id === item.id);
+                        if (findLinerActions) {
+                            const { related_actions, related_environments } = findLinerActions;
+                            // eslint-disable-next-line camelcase
+                            relatedActions = [...related_actions];
+                            // eslint-disable-next-line camelcase
+                            item.related_environments = related_environments;
+                        }
                         // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
