@@ -14,7 +14,7 @@
                     v-for="(item, index) in data"
                     :key="item.id"
                     :data="item"
-                    :has-bottom-border="index !== data.length - 1"
+                    :has-bottom-border="index !== (canScrollLoad ? data.length : data.length - 1)"
                     :active="selectActive"
                     @on-change="handleChange"></apply-item>
                 <div class="load-more-wrapper"

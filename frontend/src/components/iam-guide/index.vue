@@ -83,11 +83,16 @@
                 const types = [
                     'rating_manager_subject_scope',
                     'rating_manager_merge_action',
-                    'rating_manager_authorization_scope',
+                    'rating_manager_authorization_scope'
+                ];
+                const staffTypes = [
                     'grade_manager_upgrade'
                 ];
                 if (types.includes(this.type)) {
                     return ['super_manager', 'staff'].includes(this.user.role.type);
+                }
+                if (staffTypes.includes(this.type)) {
+                    return ['staff'].includes(this.user.role.type);
                 }
                 return true;
             }
