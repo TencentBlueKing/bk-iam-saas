@@ -730,6 +730,11 @@
                 this.handleActionLinearData(true);
             },
 
+            handleEmptyClear () {
+                this.actionSearchValue = '';
+                this.emptyData.tipType = '';
+            },
+
             /**
              * 获取系统对应的常用操作
              *
