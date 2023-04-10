@@ -105,7 +105,7 @@
                 handler (value) {
                     this.isShowDialog = !!value;
                     if (this.isShowDialog) {
-                        this.fetchData(true);
+                        this.fetchInit();
                     }
                 },
                 immediate: true
@@ -121,7 +121,6 @@
                 };
                 try {
                     const { data } = await this.$store.dispatch('spaceManage/getSecondManager', params);
-                    this.curGradeManager = data.results.length ? data.results[0].id : '';
                     if (isScrollRemote) {
                         const len = this.gradeManagerList.length;
                         this.gradeManagerList.splice(len - 1, 0, ...data.results);
@@ -141,6 +140,11 @@
                 } finally {
                     this.selectLoading = false;
                 }
+            },
+
+            async fetchInit () {
+                await this.fetchData(true);
+                this.curGradeManager = this.gradeManagerList.length ? this.gradeManagerList[0].id : '';
             },
 
             handleToggle (val, index, payload) {
