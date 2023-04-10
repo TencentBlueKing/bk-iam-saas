@@ -910,9 +910,10 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         subset_manager = Role.objects.get(id=subset_manager_id)
 
         # 1. 转移用户组关系
-        RoleRelatedObject.objects.filter(object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id).update(
-            role_id=subset_manager_id
-        )
+        if not RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=False
+        ).update(role_id=subset_manager_id):
+            return Response({})
 
         # 2. 查询用户组所有授权信息, 并扩张子集管理员的授权范围
         auth_scope_systems = self._query_group_auth_scope(group)
