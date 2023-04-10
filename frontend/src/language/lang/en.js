@@ -618,7 +618,7 @@ export const m = {
         '直接加入': 'Joined Directly',
         '通过组织加入': 'Joined By Organization',
         '组权限': 'Permissions',
-        '所属部门用户组权限': 'Department User Group Permissions'
+        '所属组织用户组权限': 'Organization User Group Permissions'
     },
     permTemplate: {
         '模板名': 'Template Name',
