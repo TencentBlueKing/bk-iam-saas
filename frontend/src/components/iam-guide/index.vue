@@ -141,9 +141,7 @@
             },
 
             handleShowGuide () {
-                this.$nextTick(() => {
-                    this.$refs.popconfirmCom && this.$refs.popconfirmCom.$refs.popover.showHandler();
-                });
+                this.$parent.fetchSpaceUpdateGuide && this.$parent.fetchSpaceUpdateGuide();
             },
 
             handleHideGuide () {

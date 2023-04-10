@@ -98,7 +98,6 @@
                                         ext-cls="space-popconfirm"
                                         cancel-text=""
                                         :confirm-text="$t(`m.info['知道了']`)"
-                                        @on-hide="handleHideGuide"
                                     >
                                         <div slot="popconfirm-header">
                                             <div class="content-header">
@@ -297,6 +296,14 @@
                     this.curRoleList.splice(0, this.curRoleList.length, ...value);
                 },
                 immediate: true
+            },
+            curRole: {
+                handler (value) {
+                    if (['staff'].includes(value) && this.index === 0) {
+                        this.fetchSpaceUpdateGuide();
+                    }
+                },
+                immediate: true
             }
         },
         created () {
@@ -321,6 +328,13 @@
             });
         },
         methods: {
+            fetchSpaceUpdateGuide () {
+                this.$nextTick(() => {
+                    this.$refs.popconfirm
+                        && this.$refs.popconfirm[0].$refs.popconfirmCom
+                        && this.$refs.popconfirm[0].$refs.popconfirmCom.$refs.popover.showHandler();
+                });
+            },
             initTree (parentId, list) {
                 if (!parentId) {
                     return list.filter(item => !item.parentId).map(item => {
