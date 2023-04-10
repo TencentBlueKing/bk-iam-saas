@@ -562,10 +562,6 @@
     }
 }
 
-.bk-select-search-wrapper .left-icon {
-    left: 18px !important;
-}
-
 .space-popconfirm {
     .content-header {
         display: flex;
