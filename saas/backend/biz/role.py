@@ -385,7 +385,9 @@ class RoleBiz:
 
         # 1. 对比超出管理员范围的部分subjects
         checker = RoleSubjectScopeChecker(role)
-        incr_subjects = checker.check(subjects, raise_exception=False)
+        exists_subjects = set(checker.check(subjects, raise_exception=False))
+
+        incr_subjects = [subject for subject in subjects if subject not in exists_subjects]
         if not incr_subjects:
             return
 
