@@ -13,6 +13,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("task/", views.MigateTaskView.as_view({"get": "list", "post": "create"}), name="bkci.migrate_task"),
+    path("task/", views.MigrateTaskView.as_view({"get": "list", "post": "create"}), name="bkci.migrate_task"),
     path("data/", views.MigrateDataView.as_view({"get": "list"}), name="bkci.migrate_data"),
 ]
