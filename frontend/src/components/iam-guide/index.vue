@@ -1,16 +1,35 @@
 <template>
-    <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]"
-        :style="style" v-if="!noviceGuide[type] && !loading && flag && isShow">
-        <div class="content-wrapper">
-            <section class="content-shade">
-                <div class="text">{{ content }}</div>
-                <div class="knowed-action"
-                    @click.stop="handleKnowed">
-                    {{ $t(`m.guide['我知道了']`) }}
+    <div>
+        <template v-if="['custom'].includes(popoverType)">
+            <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]"
+                :style="style"
+                v-if="!noviceGuide[type] && !loading && flag && isShow">
+                <div class="content-wrapper">
+                    <section class="content-shade">
+                        <div class="text">{{ content }}</div>
+                        <div class="knowed-action"
+                            @click.stop="handleKnow">
+                            {{ $t(`m.guide['我知道了']`) }}
+                        </div>
+                    </section>
+                    <div :class="['triangle', direction]"></div>
                 </div>
-            </section>
-            <div :class="['triangle', direction]"></div>
-        </div>
+            </div>
+        </template>
+        <template v-if="['component'].includes(popoverType) && (!noviceGuide[type] && isShow)">
+            <bk-popconfirm
+                ref="popconfirmCom"
+                v-bind="$attrs"
+                v-on="$listeners"
+                @confirm="handleKnow"
+                width="288">
+                <div slot="content">
+                    <slot name="popconfirm-header" />
+                    <slot name="popconfirm-content" />
+                </div>
+                <slot name="popconfirm-show" />
+            </bk-popconfirm>
+        </template>
     </div>
 </template>
 <script>
@@ -47,6 +66,10 @@
             flag: {
                 type: Boolean,
                 default: true
+            },
+            popoverType: {
+                type: String,
+                default: 'custom'
             }
         },
         data () {
@@ -62,29 +85,69 @@
                     'rating_manager_merge_action',
                     'rating_manager_authorization_scope'
                 ];
+                const staffTypes = [
+                    'grade_manager_upgrade'
+                ];
                 if (types.includes(this.type)) {
                     return ['super_manager', 'staff'].includes(this.user.role.type);
+                }
+                if (staffTypes.includes(this.type)) {
+                    return ['staff'].includes(this.user.role.type);
                 }
                 return true;
             }
         },
         created () {
-            // 动画显示5秒后关闭
-            this.timer = setTimeout(() => {
-                this.hasAnimation = false;
-                clearTimeout(this.timer);
-            }, 5000);
+            this.handleInit();
         },
         methods: {
-            async handleKnowed () {
-                this.$store.commit('updateNoviceGuide', this.type);
+            async handleInit () {
+                // 动画显示5秒后关闭
+                const popoverItem = {
+                    custom: () => {
+                        this.timer = setTimeout(() => {
+                            this.hasAnimation = false;
+                            clearTimeout(this.timer);
+                        }, 5000);
+                    },
+                    component: () => {
+                        this.handleShowGuide();
+                    }
+                };
+                return popoverItem[this.popoverType]();
+            },
+
+            async handleKnow () {
                 try {
                     await this.$store.dispatch('editNoviceGuide', {
                         scene: this.type
                     });
+                    const popoverItem = {
+                        custom: () => {
+                            this.$store.commit('updateNoviceGuide', this.type);
+                        },
+                        component: () => {
+                            this.handleHideGuide();
+                            this.showTimer = setTimeout(() => {
+                                this.$store.commit('updateNoviceGuide', this.type);
+                                clearTimeout(this.showTimer);
+                            }, 5 * 1000);
+                        }
+                    };
+                    popoverItem[this.popoverType]();
                 } catch (e) {
                     console.error(e);
                 }
+            },
+
+            handleShowGuide () {
+                this.$nextTick(() => {
+                    this.$refs.popconfirmCom && this.$refs.popconfirmCom.$refs.popover.showHandler();
+                });
+            },
+
+            handleHideGuide () {
+                this.$refs.popconfirmCom && this.$refs.popconfirmCom.$refs.popover.hideHandler();
             }
         }
     };

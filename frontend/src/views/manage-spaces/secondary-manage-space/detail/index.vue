@@ -1,7 +1,7 @@
 <template>
     <div class="iam-grading-admin-detail-wrapper">
         <!-- <p class="edit-action">
-            {{ $t(`m.grading['如需编辑一级管理空间的内容请点击']`) }}
+            {{ $t(`m.grading['如需编辑管理空间的内容请点击']`) }}
             <bk-button
                 theme="primary"
                 text

@@ -23,41 +23,54 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
 */
-
 import en from './lang/en';
 import cn from './lang/zh';
+import magicbox from 'bk-magic-vue';
+import Cookie from 'js-cookie';
 
-const language = window.CUR_LANGUAGE || 'zh-cn';
+const { locale } = magicbox;
 
-const local = language === 'zh-cn' ? cn.language : en.language;
+const messages = {
+    'zh-cn': {
+        ...locale.zhCN,
+        ...cn
+    },
+    en: {
+        ...locale.enUS,
+        ...en
+    }
+};
+
+const language = Cookie.get('blueking_language') || 'zh-cn';
 
 // 检测漏掉的翻译
-// const cnLan = cn.language
-// const cnLen = Object.keys(cnLan).length
-// const enLan = en.language
-// const enLen = Object.keys(enLan).length
+// const cnLan = cn.language;
+// const cnLen = Object.keys(cnLan).length;
+// const enLan = en.language;
+// const enLen = Object.keys(enLan).length;
 
 // for (let i = 0; i < cnLen; i++) {
-//     const key = Object.keys(cnLan)[i]
+//     const key = Object.keys(cnLan)[i];
 //     for (const label in cnLan[key]) {
 //         if (enLan[key][label] === null || enLan[key][label] === undefined) {
-//             console.log(key)
-//             console.log(label)
+//             console.log(key);
+//             console.log(label);
 //         }
 //     }
 // }
 
 // for (let i = 0; i < enLen; i++) {
-//     const key = Object.keys(enLan)[i]
+//     const key = Object.keys(enLan)[i];
 //     for (const label in enLan[key]) {
 //         if (cnLan[key][label] === null || cnLan[key][label] === undefined) {
-//             console.log(key)
-//             console.log(label)
+//             console.log(key);
+//             console.log(label);
 //         }
 //     }
 // }
 
 const il8n = (key, subKey) => {
+    const local = messages[language]['language'];
     if (!local[key] || !local[key][subKey]) {
         return subKey;
     }

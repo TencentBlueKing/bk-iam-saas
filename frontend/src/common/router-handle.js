@@ -27,7 +27,7 @@
 /**
  * 获取不同身份的router差异
  *
- * @param {String} payload 身份类型(staff: 普通用户，super_manager: 超级用户，system_manager: 系统管理员，rating_manager: 一级管理空间)
+ * @param {String} payload 身份类型(staff: 普通用户，super_manager: 超级用户，system_manager: 系统管理员，rating_manager: 管理空间)
  *
  * @return {Array}
  */

@@ -71,7 +71,7 @@
                         type: 'join_group'
                     },
                     {
-                        title: this.$t(`m.approvalProcess['创建一级管理空间']`),
+                        title: this.$t(`m.approvalProcess['创建管理空间']`),
                         isOpen: false,
                         value: '3',
                         type: 'create_rating_manager'

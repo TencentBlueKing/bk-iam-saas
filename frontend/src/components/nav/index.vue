@@ -32,7 +32,8 @@
                 :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
-                :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ? 'icon iam-icon iamcenter-level-two' : 'icon iam-icon iamcenter-level-one'"
+                :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
+                    'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
                 :remote-method="handleRemoteTree"
                 :ext-popover-cls="selectCls"
                 ext-cls="iam-nav-select-cls"
@@ -51,7 +52,7 @@
                     @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
                         <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
-                            <Icon :type="node.level === 0 ? 'level-one' : 'level-two'" :style="{ color: formatColor(node) }" />
+                            <Icon :type="node.level === 0 ? 'level-one-manage-space' : 'level-two-manage-space'" :style="{ color: formatColor(node) }" />
                             <span>{{data.name}}</span>
                         </div>
                         <!-- <bk-star
@@ -87,6 +88,40 @@
                                     <span>{{child.name}}</span>
                                 </span>
                                 <span class="iam-menu-text single-hide" v-else>{{ child.name }}</span>
+                                <span v-if="['myManageSpace'].includes(child.rkey)" @click.stop>
+                                    <iam-guide
+                                        ref="popconfirm"
+                                        type="grade_manager_upgrade"
+                                        placement="left-end"
+                                        popover-type="component"
+                                        trigger="click"
+                                        ext-cls="space-popconfirm"
+                                        cancel-text=""
+                                        :confirm-text="$t(`m.info['知道了']`)"
+                                        @on-hide="handleHideGuide"
+                                    >
+                                        <div slot="popconfirm-header">
+                                            <div class="content-header">
+                                                <span class="content-title">{{ $t(`m.info['功能升级!']`) }}</span>
+                                                <img src="@/images/boot-page/Upgrade@2x.png" width="50px" alt="">
+                                            </div>
+                                        </div>
+                                        <div slot="popconfirm-content">
+                                            <div class="content-desc">
+                                                <span>{{ $t(`m.info['原来的']`) }}</span>
+                                                <strong>{{ $t(`m.info['分级管理员']`) }}</strong>
+                                                <span>{{ $t(`m.info['升级为']`) }}</span>
+                                                <strong>{{ $t(`m.info['管理空间']`) }},</strong>
+                                            </div>
+                                            <div class="content-desc">
+                                                {{ $t(`m.info['支持一级、两级管理空间，更加精细化管理。']`) }}
+                                            </div>
+                                        </div>
+                                        <div slot="popconfirm-show">
+                                            <img src="@/images/boot-page/Upgrade@2x.png" width="50px" style="vertical-align: middle;" alt="">
+                                        </div>
+                                    </iam-guide>
+                                </span>
                             </div>
                         </template>
                     </template>
@@ -96,8 +131,9 @@
                             @click.stop="handleSwitchNav(item.id, item)"
                             :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
-                            <span class="iam-menu-text single-hide" v-if="item.name === $t(`m.grading['一级管理空间']`) && curRole === 'staff'">{{
-                                item.name }}</span>
+                            <span class="iam-menu-text single-hide" v-if="item.name === $t(`m.grading['管理空间']`) && curRole === 'staff'">
+                                {{item.name }}
+                            </span>
                             <span class="iam-menu-text single-hide" v-else>{{ item.name }}</span>
                         </div>
                     </template>
@@ -116,6 +152,7 @@
     import { bus } from '@/common/bus';
     import { getTreeNode } from '@/common/util';
     import { getRouterDiff } from '@/common/router-handle';
+    import IamGuide from '@/components/iam-guide/index.vue';
 
     const routerMap = new Map([
         // 权限模板
@@ -166,7 +203,7 @@
         [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
         // 分级管理员
         [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
-        // 一级管理空间
+        // 管理空间
         [['firstManageSpace', 'firstManageSpaceCreate'], 'firstManageSpaceNav'],
         // 二级管理空间
         [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
@@ -189,6 +226,9 @@
     export default {
         inject: ['reload'],
         name: '',
+        components: {
+            IamGuide
+        },
         data () {
             return {
                 selectCls: 'iam-nav-select-dropdown-content',
@@ -481,16 +521,16 @@
             },
 
             formatColor (node) {
-                if (node.id === this.curRoleId) {
-                    switch (node.level) {
-                        case 0: {
-                            return '#FF9C01';
-                        }
-                        case 1: {
-                            return '#9B80FE';
-                        }
+                // if (node.id === this.curRoleId) {
+                switch (node.level) {
+                    case 0: {
+                        return '#FF9C01';
+                    }
+                    case 1: {
+                        return '#9B80FE';
                     }
                 }
+                // }
             }
         }
     };
@@ -503,14 +543,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-
-.iamcenter-level-one {
-    color: #FF9C01;
-}
-
-.iamcenter-level-two {
-    color: #9B80FE;
 }
 
 .iam-nav-select-dropdown-content .bk-big-tree {
@@ -532,5 +564,36 @@
 
 .bk-select-search-wrapper .left-icon {
     left: 18px !important;
+}
+
+.space-popconfirm {
+    .content-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        .content-title {
+            font-size: 15px;
+            margin-right: 5px;
+        }
+    }
+    .content-desc {
+        margin-bottom: 10px;
+        word-break: break-all;
+    }
+    .tippy-tooltip.light-border-theme {
+        box-shadow: 0 0 2px 0 #dcdee5;
+    }
+ }
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .iam-nav-select-cls {
+    .iamcenter-level-one-manage-space {
+        color: #FF9C01;
+    }
+
+    .iamcenter-level-two-manage-space {
+        color: #9B80FE;
+    }
 }
 </style>
