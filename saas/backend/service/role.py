@@ -649,6 +649,13 @@ class RoleService:
         # 排除只读用户组
         group_ids = list(Group.objects.filter(id__in=group_ids, readonly=False).values_list("id", flat=True))
 
+        # 排除默认跟随角色权限的用户组
+        group_ids = list(
+            RoleRelatedObject.objects.filter(
+                object_type=RoleRelatedObjectType.GROUP.value, object_id__in=group_ids, sync_perm=False
+            ).values_list("object_id", flat=True)
+        )
+
         # 查询所有用户组的权限模板, 检查查询的模板是否关联了除了选中的用户组的其它用户组
         template_ids = list(
             PermTemplatePolicyAuthorized.objects.filter(

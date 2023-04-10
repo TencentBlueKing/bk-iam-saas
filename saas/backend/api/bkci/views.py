@@ -30,7 +30,7 @@ class BKCIMigrateAutherization(BaseAuthentication):
             raise exceptions.AuthenticationFailed("token error")
 
 
-class MigateTaskView(GenericViewSet):
+class MigrateTaskView(GenericViewSet):
     """迁移任务"""
 
     authentication_classes = [BKCIMigrateAutherization]
