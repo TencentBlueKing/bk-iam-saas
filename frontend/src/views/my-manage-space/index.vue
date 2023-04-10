@@ -361,6 +361,7 @@
                 this.isFilter = true;
                 this.emptyData.tipType = 'search';
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin(true);
             },
 
@@ -435,6 +436,7 @@
                     if (e.id !== expandedRows[0].id) {
                         this.$refs.spaceTable.toggleRowExpansion(e, false);
                         row.children = [];
+                        this.resetSubPagination();
                     } else {
                         this.fetchSubManagerList(row);
                     }
@@ -660,16 +662,26 @@
                 this.searchValue = '';
                 this.emptyData.tipType = '';
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin();
             },
 
             handleEmptyRefresh () {
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin();
             },
             
             resetPagination () {
                 this.pagination = Object.assign({}, {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                });
+            },
+
+            resetSubPagination () {
+                this.subPagination = Object.assign({}, {
                     current: 1,
                     count: 0,
                     limit: 10
