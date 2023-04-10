@@ -304,6 +304,7 @@ class EventDetailExtra:
         # department/user
         AuditType.USER_POLICY_UPDATE.value: SubjectPoliciesProvider,
         AuditType.USER_POLICY_CREATE.value: SubjectPoliciesProvider,
+        AuditType.USER_POLICY_DELETE.value: SubjectPoliciesProvider,
         AuditType.USER_TEMPORARY_POLICY_CREATE.value: SubjectPoliciesProvider,
         AuditType.USER_TEMPORARY_POLICY_DELETE.value: SubjectPoliciesProvider,
         # template
