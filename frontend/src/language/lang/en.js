@@ -320,6 +320,7 @@ export const m = {
         '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
         '用户名输入格式错误': 'User name input format error',
         '当前选择项不在授权范围内': 'The current selection is not within the scope of authorization',
+        '请选择管理空间': 'Please select management space',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
