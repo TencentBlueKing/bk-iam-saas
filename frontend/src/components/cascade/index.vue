@@ -90,7 +90,7 @@
                                 </div>
                             </li>
                             <li class="bk-option-none" v-if="!searchList.length">
-                                <span>{{ emptyText || '无匹配数据' }}</span>
+                                <span>{{ emptyText || $t(`m.access['无匹配数据']`) }}</span>
                             </li>
                         </ul>
                     </div>

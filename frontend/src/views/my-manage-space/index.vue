@@ -61,7 +61,7 @@
                         <bk-table-column prop="name" width="240">
                             <template slot-scope="child">
                                 <div class="flex_space_name">
-                                    <Icon type="level-two" :style="{ color: iconColor[1] }" />
+                                    <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
                                     <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
                                         :value="child.row.name" style="width: 100%;margin-left: 5px;"
                                         :index="child.$index"
@@ -92,18 +92,26 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
-                        <bk-table-column prop="updated_time">
+                        <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time">
                             <template slot-scope="child">
-                                <span :title="row.updated_time">{{ child.row.updated_time }}</span>
+                                <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
                         <bk-table-column width="200">
                             <template slot-scope="child">
                                 <div class="operate_btn">
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'detail')">
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        :disabled="disabledPerm(child.row)"
+                                        @click.stop="handleSubView(child.row, 'detail')">
                                         {{ $t(`m.levelSpace['进入']`) }}
                                     </bk-button>
-                                    <bk-button theme="primary" text @click.stop="handleSubView(child.row, 'auth')">
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        :disabled="disabledPerm(child.row)"
+                                        @click.stop="handleSubView(child.row, 'auth')">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
                                     <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
@@ -140,7 +148,7 @@
             <bk-table-column :label="$t(`m.levelSpace['名称']`)" prop="name" width="240">
                 <template slot-scope="{ row, $index }">
                     <div class="flex_space_name">
-                        <Icon type="level-one" :style="{ color: iconColor[0] }" />
+                        <Icon type="level-one-manage-space" :style="{ color: iconColor[0] }" />
                         <!-- <span :title="row.name" class="right-start">
                             {{ row.name }}
                         </span> -->
@@ -180,7 +188,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
-            <bk-table-column :label="$t(`m.levelSpace['更新时间']`)">
+            <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
@@ -188,9 +196,18 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="{ row }">
                     <div class="operate_btn">
-                        <bk-button theme="primary" text
-                            @click="handleView(row, 'detail')">{{ $t(`m.levelSpace['进入']`) }}</bk-button>
-                        <bk-button theme="primary" text @click.stop="handleView(row, 'auth')">
+                        <bk-button
+                            theme="primary"
+                            text
+                            :disabled="disabledPerm(row)"
+                            @click="handleView(row, 'detail')">
+                            {{ $t(`m.levelSpace['进入']`) }}
+                        </bk-button>
+                        <bk-button
+                            theme="primary"
+                            text
+                            :disabled="disabledPerm(row)"
+                            @click.stop="handleView(row, 'auth')">
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button theme="primary" text @click="handleView(row, 'clone')">
@@ -201,7 +218,6 @@
             </bk-table-column>
             <template slot="empty">
                 <ExceptionEmpty
-                    style="background: #fffffff"
                     :type="emptyData.type"
                     :empty-text="emptyData.text"
                     :tip-text="emptyData.tip"
@@ -272,6 +288,12 @@
             ...mapGetters(['user', 'roleList']),
             tableHeight () {
                 return getWindowHeight() - 185;
+            },
+            disabledPerm () {
+                return (payload) => {
+                    const result = payload.members.map(item => item.username).includes(this.user.username);
+                    return !result;
+                };
             }
         },
         watch: {
@@ -412,6 +434,7 @@
                 this.tableList.forEach(e => {
                     if (e.id !== expandedRows[0].id) {
                         this.$refs.spaceTable.toggleRowExpansion(e, false);
+                        row.children = [];
                     } else {
                         this.fetchSubManagerList(row);
                     }
@@ -482,7 +505,7 @@
                 }
             },
             
-            // 一级管理空间
+            // 管理空间
             async handleView ({ id, name }, mode) {
                 window.localStorage.setItem('iam-header-name-cache', name);
                 let routerName = 'userGroup';
@@ -617,7 +640,7 @@
             },
 
             setCurrentQueryCache (payload) {
-                window.localStorage.setItem('gradeManagerList', JSON.stringify(payload));
+                window.localStorage.setItem('myManagerList', JSON.stringify(payload));
             },
 
             refreshCurrentQuery () {
@@ -675,7 +698,6 @@
         .bk-button-text {
             &:nth-child(n + 2) {
                 margin-left: 10px;
-                ;
             }
         }
     }

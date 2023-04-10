@@ -252,7 +252,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -505,7 +505,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },

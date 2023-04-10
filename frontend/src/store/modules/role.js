@@ -35,7 +35,7 @@ export default {
     mutations: {},
     actions: {
         /**
-         * 获取一级管理空间列表
+         * 获取管理空间列表
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -50,7 +50,7 @@ export default {
         },
 
         /**
-         * 创建一级管理空间
+         * 创建管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -65,7 +65,7 @@ export default {
         },
 
         /**
-         * 获取一级管理空间详情
+         * 获取管理空间详情
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -267,7 +267,7 @@ export default {
         },
 
         /**
-         * 编辑一级管理空间
+         * 编辑管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -285,7 +285,7 @@ export default {
         },
 
         /**
-         * 普通身份创建一级管理空间
+         * 普通身份创建管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -300,7 +300,7 @@ export default {
         },
 
         /**
-         * 更新一级管理空间
+         * 更新管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state
@@ -318,7 +318,7 @@ export default {
         },
 
         /**
-         * 普通用户编辑一级管理空间
+         * 普通用户编辑管理空间
          *
          * @param {Function} commit store commit mutation handler
          * @param {Object} state store state

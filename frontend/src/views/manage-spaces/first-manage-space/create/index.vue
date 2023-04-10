@@ -164,7 +164,7 @@
                 reason: '',
                 tips: this.$t(`m.grading['添加操作提示']`),
                 infoText: this.$t(`m.grading['选择提示']`),
-                addMemberTips: this.$t(`m.levelSpace['一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
+                addMemberTips: this.$t(`m.levelSpace['管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 submitLoading: false,
                 isShowAddMemberDialog: false,
@@ -833,7 +833,7 @@
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建一级管理空间成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['新建管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'ratingManager'
                     });

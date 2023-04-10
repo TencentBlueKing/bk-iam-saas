@@ -198,7 +198,7 @@
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.levelSpace['二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间']`),
-                addMemberTips: this.$t(`m.levelSpace['一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
+                addMemberTips: this.$t(`m.levelSpace['管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
                 isShowAddMemberDialog: false,
                 users: [],
                 departments: [],
@@ -925,7 +925,7 @@
                 try {
                     await this.$store.dispatch(`role/${dispatchMethod}`, params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['编辑一级管理空间成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['编辑管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'gradingAdminDetail',
                         params: {

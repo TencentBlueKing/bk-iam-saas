@@ -427,13 +427,13 @@
                 const hasSelectedLen = this.currentSelectList.length;
                 let deleteTitle = '';
                 if (hasSelectedLen === 1) {
-                    deleteTitle = `确认删除？`;
+                    deleteTitle = `${this.$t(`m.dialog['确认删除']`)}`;
                 } else {
-                    deleteTitle = `确认删除${hasSelectedLen}个模板？`;
+                    deleteTitle = `${this.$t(`m.common['确认删除']`)}${hasSelectedLen}${this.$t(`m.permTemplate['个模板']`)}？`;
                 }
                 this.$bkInfo({
                     title: deleteTitle,
-                    subTitle: '删除权限模版不会影响已授权用户，可以放心删除。',
+                    subTitle: this.$t(`m.permTemplate['删除权限模版不会影响已授权用户，可以放心删除。']`),
                     maskClose: true,
                     confirmFn: async () => {
                         console.warn('');

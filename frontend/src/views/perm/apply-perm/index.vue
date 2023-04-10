@@ -143,7 +143,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>

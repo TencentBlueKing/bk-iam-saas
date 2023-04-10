@@ -42,7 +42,7 @@
             :footer-position="footerPosition"
             @confirm="dropOut">
             <h2>{{ $t(`m.common['退出将不在具备相应的管理权限']`) }}</h2>
-            <p>{{ $t(`m.common['确定退出一级管理空间']`) }}</p>
+            <p>{{ $t(`m.common['确定退出管理空间']`) }}</p>
         </bk-dialog>
     </div>
 </template>

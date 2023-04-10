@@ -45,13 +45,11 @@ import RenderVerticalBlock from './components/render-block/vertical.vue';
 import RenderSearch from './components/render-search/index.vue';
 import Icon from './components/icon';
 import VueI18n from 'vue-i18n';
+import magicbox from 'bk-magic-vue';
 import { language, il8n as il8nNew } from './language';
 import './common/bkmagic';
 // 全量引入自定义图标
 import './assets/iconfont/style.css';
-
-import magicbox from 'bk-magic-vue';
-
 import '@icon-cool/bk-icon-bk-iam';
 
 Vue.component('app-exception', Exception);
@@ -86,8 +84,14 @@ const en = require('./language/lang/en');
 const { lang, locale } = magicbox;
 
 const messages = {
-    'zh-cn': Object.assign(lang.zhCN, cn),
-    en: Object.assign(lang.enUS, en)
+    'zh-cn': {
+        ...locale.zhCN,
+        ...cn
+    },
+    en: {
+        ...locale.enUS,
+        ...en
+    }
 };
 
 window.changeAlert = false;
@@ -96,9 +100,10 @@ window.changeDialog = false;
 const i18n = new VueI18n({
     // 语言标识
     locale: language,
-    fallbackLocale: 'zh-cn',
+    fallbackLocale: language,
     // this.$i18n.locale 通过切换locale的值来实现语言切换
-    messages: messages,
+    messages,
+    silentTranslationWarn: true,
     missing (locale, path) {
         const parsedPath = i18n._path.parsePath(path);
         return parsedPath[parsedPath.length - 1];

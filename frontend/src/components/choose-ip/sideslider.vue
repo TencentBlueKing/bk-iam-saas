@@ -196,6 +196,8 @@
                     offset: this.pagination.limit * (this.pagination.current - 1),
                     ancestors: [],
                     system_id: this.params.system_id,
+                    action_system_id: this.params.system_id,
+                    action_id: '',
                     type: this.params.id
                 };
                 try {
@@ -239,6 +241,8 @@
                             offset: this.pagination.limit * (this.pagination.current - 1),
                             ancestors: [],
                             system_id: this.params.system_id,
+                            action_system_id: this.params.system_id,
+                            action_id: '',
                             type: this.params.id
                         };
                         try {

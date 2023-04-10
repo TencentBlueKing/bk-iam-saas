@@ -138,7 +138,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'grade-admin',
+                icon: 'my-manage-space',
                 id: 'myManageSpaceNav',
                 rkey: 'myManageSpace',
                 name: il8n('nav', '我的管理空间'),
@@ -169,7 +169,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'user-fill',
+                icon: 'personal-user',
                 id: 'userNav',
                 rkey: 'user',
                 name: il8n('nav', '用户'),
@@ -184,7 +184,7 @@ const currentNav = [
         rkey: 'manageSpaces',
         children: [
             {
-                icon: 'user-group',
+                icon: 'auth-scope',
                 id: 'authorBoundaryNav',
                 rkey: 'authorBoundary',
                 name: il8n('nav', '授权边界'),
@@ -192,7 +192,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'perm-template',
+                icon: 'level-two-manage-space',
                 id: 'secondaryManageSpaceNav',
                 rkey: 'secondaryManageSpace',
                 name: il8n('nav', '二级管理空间'),
@@ -202,10 +202,10 @@ const currentNav = [
         ]
     },
     {
-        icon: 'grade-admin',
+        icon: 'level-one-manage-space',
         id: 'gradingAdminNav',
         rkey: 'ratingManager',
-        name: il8n('nav', '一级管理空间'),
+        name: il8n('nav', '管理空间'),
         path: `${SITE_URL}rating-manager`,
         disabled: false
     },
@@ -218,7 +218,7 @@ const currentNav = [
     //     disabled: false
     // },
     {
-        icon: 'grade-admin',
+        icon: 'resource-perm-manage',
         id: 'resourcePermissNav',
         rkey: 'resourcePermiss',
         name: il8n('nav', '资源权限管理'),
@@ -231,7 +231,7 @@ const currentNav = [
         rkey: 'set',
         children: [
             {
-                icon: 'perm-apply',
+                icon: 'super-admin',
                 name: il8n('common', '管理员'),
                 id: 'settingNav',
                 rkey: 'administrator',
@@ -273,6 +273,17 @@ if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
                 disabled: true
             }
         ]
+    });
+}
+
+if (window.ENABLE_TEMPORARY_POLICY.toLowerCase() === 'true') {
+    currentNav[0].children.push({
+        icon: 'tempora-perm-apply',
+        name: il8n('nav', '临时权限申请'),
+        id: 'provisionPermApplyNav',
+        rkey: 'applyProvisionPerm',
+        path: `${SITE_URL}apply-provision-perm`,
+        disabled: false
     });
 }
 
@@ -321,7 +332,6 @@ const store = new Vuex.Store({
         isSync: false,
         routerDiff: [],
         currentNav: currentNav,
-
         roleList: [],
         noviceGuide: {
             rating_manager_authorization_scope: true,
@@ -332,7 +342,8 @@ const store = new Vuex.Store({
             create_group: true,
             set_group_approval_process: true,
             add_group_member: true,
-            add_group_perm_template: true
+            add_group_perm_template: true,
+            grade_manager_upgrade: true
         },
         loadingConf: {
             speed: 2,

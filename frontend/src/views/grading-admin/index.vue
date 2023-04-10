@@ -11,7 +11,7 @@
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
             <bk-link class="AdminLink" theme="primary" @click="showImgDialog">
-                <span class="linkText">{{ $t('m.common["什么是一级管理空间"]') }}</span>
+                <span class="linkText">{{ $t('m.common["什么是管理空间"]') }}</span>
             </bk-link>
             <div slot="right">
                 <bk-input
@@ -25,22 +25,134 @@
             </div>
         </render-search>
         <bk-table
-            :data="tableList"
+            ref="spaceTable"
             size="small"
             ext-cls="grading-admin-table"
+            :data="tableList"
             :max-height="tableHeight"
             :class="{ 'set-border': tableLoading }"
             :cell-class-name="getCellClass"
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
-            v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.levelSpace['名称']`)">
+            @expand-change="handleExpandChange"
+            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
+            <bk-table-column type="expand" width="30">
                 <template slot-scope="{ row }">
-                    <span class="grading-admin-name" :title="row.name" @click="handleView(row, 'detail')">
-                        {{ row.name }}
-                    </span>
-           
+                    <bk-table
+                        size="small"
+                        ext-cls="children-expand-cls"
+                        :data="row.children"
+                        :row-key="row.id"
+                        :show-header="false"
+                        :border="false"
+                        :cell-class-name="getSubCellClass"
+                        :max-height="500"
+                        v-bkloading="{ isLoading: subLoading, opacity: 1 }"
+                        @row-click="handleRowClick"
+                    >
+                        <bk-table-column width="30" />
+                        <bk-table-column prop="name" width="240">
+                            <template slot-scope="child">
+                                <div class="flex_space_name">
+                                    <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
+                                    <!-- {{ child.row }} -->
+                                    <iam-edit-input
+                                        field="name"
+                                        style="width: 100%;margin-left: 5px;"
+                                        :placeholder="$t(`m.verify['请输入']`)"
+                                        :value="child.row.name"
+                                        :index="child.$index"
+                                        :remote-hander="handleUpdateSubManageSpace" />
+                                </div>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column prop="members" width="300">
+                            <template slot-scope="child">
+                                <iam-edit-member-selector
+                                    field="members"
+                                    width="200"
+                                    :placeholder="$t(`m.verify['请输入']`)"
+                                    :value="child.row.members"
+                                    :index="child.$index"
+                                    @on-change="handleUpdateSubMembers" />
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column prop="description" width="200">
+                            <template slot-scope="child">
+                                <iam-edit-textarea
+                                    field="description"
+                                    width="200"
+                                    :placeholder="$t(`m.verify['用户组描述提示']`)"
+                                    :value="child.row.description"
+                                    :index="child.$index"
+                                    :remote-hander="handleUpdateSubManageSpace" />
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
+                        <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time">
+                            <template slot-scope="child">
+                                <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column width="200">
+                            <template slot-scope="child">
+                                <div class="operate_btn">
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        @click.stop="handleSubView(child.row, 'detail')"
+                                        :disabled="disabledPerm(child.row)">
+                                        {{ $t(`m.levelSpace['进入']`) }}
+                                    </bk-button>
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        @click.stop="handleSubView(child.row, 'auth')"
+                                        :disabled="disabledPerm(child.row)">
+                                        {{ $t(`m.nav['授权边界']`) }}
+                                    </bk-button>
+                                    <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
+                                        {{ $t(`m.levelSpace['克隆']`) }}
+                                    </bk-button> -->
+                                </div>
+                            </template>
+                        </bk-table-column>
+                        <template slot="empty">
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                                @on-refresh="handleEmptyRefresh"
+                            />
+                        </template>
+                    </bk-table>
+                    <div style="text-align: center">
+                        <bk-button
+                            v-if="subPagination.count !== row.children.length"
+                            text
+                            theme="primary"
+                            size="small"
+                            style="margin: 10px auto"
+                            @click="handleLoadMore(row.children.length)">
+                            {{ $t(`m.common['查看更多']`) }}
+                        </bk-button>
+                    </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t(`m.levelSpace['名称']`)" width="240">
+                <template slot-scope="{ row }">
+                    <div class="flex_space_name">
+                        <Icon type="level-one-manage-space" :style="{ color: iconColor[0] }" />
+                        <span
+                            class="grading-admin-name single-hide"
+                            :title="row.name" @click="handleView(row, 'detail')">
+                            {{ row.name }}
+                        </span>
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
@@ -60,18 +172,24 @@
                         @on-change="handleUpdateMembers" />
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)">
+            <bk-table-column :label="$t(`m.common['描述']`)" width="200">
                 <template slot-scope="{ row }">
-                    <span :title="row.description || ''">{{ row.description || '--' }}</span>
+                    <iam-edit-textarea
+                        field="description"
+                        width="200"
+                        :placeholder="$t(`m.verify['用户组描述提示']`)"
+                        :value="row.description"
+                        :index="$index"
+                        :remote-hander="handleUpdateManageSpace" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
-            <bk-table-column :label="$t(`m.grading['更新时间']`)">
+            <bk-table-column :label="$t(`m.grading['更新时间']`)" prop="updated_time">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="150">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="{ row }">
                     <!-- <section>
                         <bk-button theme="primary" text @click="handleDropOut(row)">
@@ -81,14 +199,20 @@
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
                     </section> -->
-                    <bk-button theme="primary" text @click="handleView(row, 'role')" :disabled="disabledPerm(row)">
-                        {{ $t(`m.levelSpace['进入']`) }}
-                    </bk-button>
-                    <bk-button
-                        theme="primary"
-                        text
-                        style="margin-left: 10px;"
-                        @click="handleCopy(row)">{{ $t(`m.grading['克隆']`) }}</bk-button>
+                    <div class="operate_btn">
+                        <bk-button theme="primary"
+                            text @click="handleView(row, 'role')"
+                            :disabled="disabledPerm(row)">
+                            {{ $t(`m.levelSpace['进入']`) }}
+                        </bk-button>
+                        <bk-button
+                            theme="primary"
+                            text
+                            :disabled="disabledPerm(row)"
+                            @click="handleCopy(row)">
+                            {{ $t(`m.grading['克隆']`) }}
+                        </bk-button>
+                    </div>
                 </template>
             </bk-table-column>
             <template slot="empty">
@@ -124,16 +248,20 @@
             width="820"
             :position="{ top: 50 }"
             ext-cls="showImage">
-            <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是一级管理空间"]') }}</h2>
-            <p>{{ $t('m.common["一级管理空间概念"]') }}</p>
-            <img src="../../images/boot-page/one2x2.png" alt="" style="width:765px;height:263px">
-            <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用一级管理空间"]') }}</h2>
+            <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是管理空间"]') }}</h2>
+            <p>{{ $t('m.common["管理空间概念"]') }}</p>
+            <!-- <img src="@/images/boot-page/space@2x.png" alt="" style="width:765px; height: 263px"> -->
+            <img src="@/images/boot-page/space@2x.png" alt="" style="width:765px;">
+            <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用管理空间"]') }}</h2>
             <p>1. {{ $t('m.common["我的管理空间 > 申请新建（已有管理空间忽略）"]') }}</p>
-            <img src="@/images/boot-page/two2x2.png" alt="" style="width:765px; height:300px">
-            <p>2. {{ $t('m.common["切换顶部导航至“权限管理” ，在左上角切换“一级管理空间”"]') }}</p>
-            <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px">
+            <!-- <img src="@/images/boot-page/space2@2x.png" alt="" style="width:765px; height:300px"> -->
+            <img src="@/images/boot-page/space2@2x.png" alt="" style="width:765px;">
+            <p>2. {{ $t('m.common["切换顶部导航至“权限管理” ，在左上角切换“管理空间”"]') }}</p>
+            <!-- <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px"> -->
+            <img src="@/images/boot-page/space3@2x.png" alt="" style="width:765px;">
             <p>3. {{ $t('m.common["在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员"]') }}</p>
-            <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px">
+            <!-- <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px"> -->
+            <img src="@/images/boot-page/space4@2x.png" alt="" style="width:765px;">
         </bk-dialog>
     </div>
 </template>
@@ -143,14 +271,18 @@
     import { getWindowHeight, formatCodeData } from '@/common/util';
     import ConfirmDialog from '@/components/iam-confirm-dialog/index';
     import ApplyDialog from './components/apply-join-dialog';
+    import IamEditInput from '@/views/my-manage-space/components/iam-edit/input';
     import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+    import IamEditTextarea from '@/views/my-manage-space/components/iam-edit/textarea';
 
     export default {
         name: '',
         components: {
             ConfirmDialog,
             ApplyDialog,
-            IamEditMemberSelector
+            IamEditInput,
+            IamEditMemberSelector,
+            IamEditTextarea
         },
         data () {
             return {
@@ -162,6 +294,16 @@
                     count: 0,
                     limit: 10
                 },
+                subPagination: {
+                    current: 1,
+                    count: 1,
+                    limit: 10
+                },
+                formData: {
+                    name: '',
+                    description: '',
+                    members: []
+                },
                 currentBackup: 1,
                 tableLoading: false,
                 confirmLoading: false,
@@ -170,12 +312,16 @@
                 isShowConfirmDialog: false,
                 curOperateType: '',
                 curId: -1,
-
                 isShowApplyDialog: false,
                 applyLoading: false,
                 curName: '',
                 showImageDialog: false,
                 noFooter: false,
+                subLoading: false,
+                gradingAdminId: 0,
+                iconColor: ['#FF9C01', '#9B80FE'],
+                expandRowList: [], // 所有展开折叠项
+                subTableList: [],
                 emptyData: {
                     type: '',
                     text: '',
@@ -228,13 +374,51 @@
         },
         methods: {
             getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1) {
+                if (!row.is_member) {
+                    return 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls';
+                }
+                if (!row.has_subset_manager) {
+                    return 'iam-tag-table-cell-cls iam-tag-table-cell-subset-cls';
+                }
+                if (columnIndex === 1 || column.type === 'default') {
+                    return 'iam-table-cell-1-cls';
+                }
+                if (columnIndex === 2) {
                     return 'iam-tag-table-cell-cls';
                 }
+                return '';
+            },
+
+            getSubCellClass ({ row, column, rowIndex, columnIndex }) {
+                return 'iam-table-cell-1-cls';
             },
 
             showImgDialog () {
                 this.showImageDialog = true;
+            },
+            
+            handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
+                const allNodeId = this.findParentNode(row.id, this.expandRowList);
+                if (allNodeId.length) {
+                    const rowData = this.expandRowList.find(item => item.id === allNodeId[0]);
+                    this.$refs.spaceTable.toggleRowExpansion(rowData, false);
+                }
+            },
+
+            handleExpandChange (row, expandedRows) {
+                // if (row.id !== this.gradingAdminId) return;
+                this.gradingAdminId = row.id;
+                expandedRows = expandedRows.filter(e => e.id === this.gradingAdminId);
+                if (!expandedRows.length) return;
+                console.log('expandedRows', row, expandedRows);
+                this.tableList.forEach(e => {
+                    if (e.id !== expandedRows[0].id) {
+                        this.$refs.spaceTable.toggleRowExpansion(e, false);
+                        row.children = [];
+                    } else {
+                        this.fetchSubManagerList(row);
+                    }
+                });
             },
 
             async fetchPageData () {
@@ -285,6 +469,10 @@
                         name: this.searchValue
                     });
                     this.pagination.count = data.count || 0;
+                    data.results = data.results.map(e => {
+                        e.children = [];
+                        return e;
+                    });
                     this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     if (this.isStaff) {
                         this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
@@ -306,17 +494,52 @@
                 }
             },
 
-            async handleUpdateMembers (payload) {
-                const { id, name, description, members } = payload;
+            async fetchSubManagerList (row) {
+                this.subLoading = true;
+                try {
+                    const { code, data } = await this.$store.dispatch('spaceManage/getStaffSubManagerList', {
+                        limit: this.subPagination.limit,
+                        offset: (this.subPagination.current - 1) * this.subPagination.limit,
+                        id: row.id
+                    });
+                    this.subPagination.count = data.count;
+                    // this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
+                    row.children = [...row.children, ...data.results];
+                    this.emptyData = formatCodeData(code, this.emptyData, this.subTableList.length === 0);
+                } catch (e) {
+                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    row.children = [];
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: message || data.msg || statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.curData = row;
+                    this.subLoading = false;
+                }
+            },
+            
+            async fetchManageTable (payload, url) {
+                const { name, description, members } = payload;
                 const params = {
-                    id,
-                    name,
-                    description,
-                    members
+                    name: name || this.formData.name,
+                    description: description || this.formData.description,
+                    members: members || this.formData.members,
+                    id: this.formData.id
                 };
                 try {
-                    await this.$store.dispatch('role/updateRatingManager', params);
+                    await this.$store.dispatch(url, params);
                     this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                    this.formData = Object.assign(this.formData, {
+                        name: params.name,
+                        description: params.description,
+                        members: [...params.members]
+                    });
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -325,6 +548,35 @@
                         message: e.message || e.data.msg || e.statusText,
                         ellipsisCopy: true
                     });
+                }
+            },
+            
+            handleUpdateMembers (payload, index) {
+                this.handleUpdateManageSpace(payload, index);
+            },
+
+            handleUpdateSubMembers (payload, index) {
+                this.handleUpdateSubManageSpace(payload, index);
+            },
+
+            async handleUpdateManageSpace (payload, index) {
+                this.formData = this.tableList.find((e, i) => i === index);
+                await this.fetchManageTable(payload, 'role/updateRatingManager');
+            },
+
+            async handleUpdateSubManageSpace (payload, index) {
+                this.formData = this.subTableList.find((e, i) => i === index);
+                await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager');
+            },
+
+            async handleLoadMore (payload) {
+                if (payload !== this.subPagination.count) {
+                    const params = {
+                        current: ++this.subPagination.current,
+                        limit: 10
+                    };
+                    this.subPagination = Object.assign(this.subPagination, params);
+                    this.fetchSubManagerList(this.curData);
                 }
             },
 
@@ -465,6 +717,44 @@
                 navRoute[type]();
             },
 
+            // 二级管理空间
+            async handleSubView ({ id, name }, mode) {
+                window.localStorage.setItem('iam-header-name-cache', name);
+                let routerName = 'userGroup';
+                const routerNav = {
+                    detail: () => {
+                        routerName = 'userGroup';
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                    },
+                    auth: () => {
+                        routerName = 'authorBoundary';
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                    },
+                    clone: () => {
+                        routerName = 'secondaryManageSpaceCreate';
+                        this.$store.commit('updateIndex', 0);
+                        window.localStorage.setItem('index', 0);
+                    }
+                };
+                routerNav[mode]();
+                if (!['clone'].includes(mode)) {
+                    await this.$store.dispatch('role/updateCurrentRole', { id });
+                    await this.$store.dispatch('userInfo');
+                    const { role } = this.user;
+                    this.$store.commit('updateCurRoleId', id);
+                    this.$store.commit('updateIdentity', { id, type: role.type, name });
+                    this.$store.commit('updateNavId', id);
+                }
+                this.$router.push({
+                    name: routerName,
+                    params: {
+                        id
+                    }
+                });
+            },
+
             handlePageChange (page) {
                 if (this.currentBackup === page) {
                     return;
@@ -500,6 +790,7 @@
             }
             .grading-admin-name {
                 color: #3a84ff;
+                margin-left: 5px;
                 cursor: pointer;
                 &:hover {
                     color: #699df4;
@@ -545,3 +836,74 @@
         }
     }
 </style>
+
+<style lang="postcss" scoped>
+
+.operate_btn {
+    .bk-button-text {
+        &:nth-child(n + 2) {
+            margin-left: 10px;
+        }
+    }
+}
+
+.flex_space_name {
+    display: flex;
+    align-items: center;
+}
+
+/deep/ .bk-table-expanded-cell {
+        padding: 0 !important;
+
+        &:hover {
+            cursor: pointer;
+        }
+
+        .bk-table {
+            border: 0;
+        }
+    }
+
+    /deep/ .iam-tag-table-cell-cls {
+        .cell {
+            .bk-tag {
+                &:first-of-type {
+                    margin-left: 0;
+                }
+
+                &:hover {
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+
+    /deep/ .iam-tag-table-cell-opacity-cls {
+        opacity: 0.4;
+        .cell {
+            padding-left: 0;
+            color:#575961;
+        }
+    }
+
+     /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
+        .cell {
+            padding-left: 2px;
+        }
+    }
+
+    /deep/ .iam-tag-table-cell-subset-cls {
+        .cell {
+            padding-left: 2px;
+            .bk-table-expand-icon  {
+                display: none;
+            }
+        }
+    }
+
+    /deep/ .bk-table-header-wrapper {
+        .cell {
+            padding-left: 2px;
+        }
+    }
+</style>>

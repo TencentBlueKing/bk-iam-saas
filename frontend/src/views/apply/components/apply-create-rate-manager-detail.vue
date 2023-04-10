@@ -4,7 +4,7 @@
             <basic-info :data="basicInfo" />
             <p class="rate-manager-info">
                 <span class="name">{{ name }}</span>
-                <span class="text">({{ $t(`m.nav['一级管理空间']`) }})</span>
+                <span class="text">({{ $t(`m.nav['管理空间']`) }})</span>
             </p>
             <render-perm
                 v-for="(item, index) in authorizationScopes"

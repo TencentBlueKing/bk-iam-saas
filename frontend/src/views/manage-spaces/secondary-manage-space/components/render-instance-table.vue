@@ -1909,7 +1909,8 @@
                 }
                 td:first-child .cell,
                 th:first-child .cell {
-                    padding-left: 15px;
+                    /* padding-left: 15px; */
+                    padding-left: 10px;
                 }
                 .iam-new-action {
                     display: inline-block;

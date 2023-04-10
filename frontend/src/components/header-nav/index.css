@@ -91,7 +91,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 }
             }
         }
-        .help-flag {
+        .help-flag, .lang-flag {
             position: absolute;
             top: 11px;
             left: -30px;
@@ -114,7 +114,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             position: absolute;
             top: 36px;
             width: 90px;
-            padding: 6px 0;
+            /* padding: 6px 0; */
             font-size: 14px;
             border-radius: 2px;
             border: 1px solid #dcdee5;
@@ -145,6 +145,24 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     background-color: #eaf3ff;
                     color: #3a84ff;
                 }
+            }
+        }
+        .lang-flag {
+            left: -60px;
+            display: inline-flex;
+            align-items: center;
+            &:hover {
+                .dropdown-panel {
+                    opacity: 1;
+                    visibility: visible;
+                    z-index: 9999;
+                    transform: translateY(0);
+                }
+         
+            }
+            .item-active {
+                background-color: #eaf3ff;
+                color: #3a84ff;
             }
         }
         .user-name {

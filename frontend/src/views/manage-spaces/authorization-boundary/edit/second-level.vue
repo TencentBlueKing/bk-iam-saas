@@ -141,7 +141,7 @@
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
-                addMemberTips: this.$t(`m.levelSpace['二级管理空间扩大自己的授权边界，需要走一级管理管理员审批']`),
+                addMemberTips: this.$t(`m.levelSpace['二级管理空间扩大自己的授权边界，需要走一级管理员审批']`),
                 isShowAddMemberDialog: false,
                 users: [],
                 departments: [],

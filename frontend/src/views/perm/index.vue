@@ -19,11 +19,15 @@
             </bk-button>
             <div :class="[
                      'info-renewal',
-                     { 'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn }
+                     {
+                         'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
+                         'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+                     }
                  ]"
                 style="background: #000"
                 v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
-                v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)">
+                v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
+            >
             </div>
             <bk-button
                 v-if="enablePermissionHandover.toLowerCase() === 'true'"
@@ -38,17 +42,39 @@
                 v-if="!systemList.length && !teporarySystemList.length"
                 :class="[
                     'info-sys',
-                    { 'external-info-sys': externalSystemsLayout.myPerm.hideApplyBtn }
+                    {
+                        'external-info-sys': externalSystemsLayout.myPerm.hideApplyBtn,
+                        'info-sys-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+                    }
                 ]"
                 style="background: #000"
                 v-bk-tooltips="$t(`m.permTransfer['您还没有权限，无需交接']`)">
             </div>
+            <bk-button
+                v-if="enableTemporaryPolicy.toLowerCase() === 'true'"
+                data-test-id="myPerm_btn_temporaryPerm"
+                type="button"
+                style="margin-bottom: 16px;"
+                @click="handleGoApplyProvisionPerm">
+                {{ $t(`m.nav['临时权限申请']`) }}
+            </bk-button>
+            <template v-if="isEmpty">
+                <div class="empty-wrapper">
+                    <ExceptionEmpty />
+                    <div class="empty-tips">{{ $t(`m.common['您还没有任何权限']`) }}</div>
+                </div>
+            </template>
         </div>
         <div
             v-if="externalSystemsLayout.myPerm.hideApplyBtn ? !isNoExternalRenewal : !isNoRenewal"
             :class="[
                 'redCircle',
-                { 'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn }
+                {
+                    'redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE),
+                    'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn,
+                    'external-redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+                        && externalSystemsLayout.myPerm.hideApplyBtn
+                }
             ]"
         />
         <template>
@@ -151,7 +177,9 @@
                     text: '暂无数据',
                     tip: '',
                     tipType: ''
-                }
+                },
+                enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY,
+                CUR_LANGUAGE: window.CUR_LANGUAGE
             };
         },
         computed: {
@@ -185,6 +213,12 @@
             const query = this.$route.query;
             if (query.tab) {
                 this.active = query.tab;
+            }
+            if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
+                this.panels.push({
+                    name: 'TeporaryCustomPerm',
+                    label: this.$t(`m.myApply['临时权限']`)
+                });
             }
         },
         methods: {
@@ -349,6 +383,11 @@
                 this.$router.push({
                     name: 'permTransfer'
                 });
+            },
+            handleGoApplyProvisionPerm () {
+                this.$router.push({
+                    name: 'applyProvisionPerm'
+                });
             }
         }
     };
@@ -383,47 +422,64 @@
             position: relative;
             top: -50px;
             right: -180px;
-            width:10px;
-            height:10px;
+            width: 10px;
+            height: 10px;
             background-color: red;
             border-radius: 50%;
+            &-lang {
+                right: -312px;
+            }
             &.external-redCircle {
                 right: -90px;
+                &-lang {
+                  right: -160px;
+                }
             }
         }
     }
     .iam-my-perm-tab-cls {
         background: #fff;
     }
-    .icon-info-renewal{
+    .icon-info-renewal {
         position: absolute;
         top: -5px;
         left: 176px;
     }
-    .info-renewal{
+    .info-renewal {
         top: -5px;
         left: 100px;
         position: absolute;
         width: 90px;
         height: 40px;
         opacity: 0;
-        cursor:no-drop;
+        cursor: no-drop;
+        &.info-renewal-lang {
+            left: 200px;
+        }
+        &.external-info-renewal {
+            left: 0;
+            &.info-renewal-lang {
+                left: 50px;
+            }
+        }
     }
-    .info-sys{
+    .info-sys {
         top: -5px;
         left: 198px;
         position: absolute;
         width: 90px;
         height: 40px;
         opacity: 0;
-        cursor:no-drop;
-    }
-
-    .external-info-renewal {
-        left: 0;
+        cursor: no-drop;
+        &.info-sys-lang {
+            left: 360px;
+        }
     }
 
     .external-info-sys {
         left: 100px;
+        &.info-sys-lang {
+            left: 200px;
+        }
     }
 </style>
