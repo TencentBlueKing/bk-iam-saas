@@ -378,8 +378,6 @@
             this.curRole = type;
             this.curIdentity = name;
             this.curRoleId = id;
-            window.CUR_LANGUAGE = Cookie.get('blueking_language') || 'zh-cn';
-            this.$i18n.locale = window.CUR_LANGUAGE;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('reload-page');
                 bus.$off('refresh-role');

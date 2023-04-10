@@ -52,6 +52,7 @@
     </div>
 </template>
 <script>
+    import Cookie from 'js-cookie';
     import HeaderNav from '@/components/header-nav/index.vue';
     import theHeader from '@/components/header/index.vue';
     import theNav from '@/components/nav/index.vue';
@@ -61,6 +62,7 @@
     import { mapGetters } from 'vuex';
     import { afterEach } from '@/router';
     import { kebabCase } from 'lodash';
+    
     export default {
         name: 'app',
         provide () {
@@ -121,6 +123,8 @@
         },
         created () {
             const platform = window.navigator.platform.toLowerCase();
+            window.CUR_LANGUAGE = Cookie.get('blueking_language') || 'zh-cn';
+            this.$i18n.locale = window.CUR_LANGUAGE;
             if (platform.indexOf('win') === 0) {
                 this.systemCls = 'win';
             }
