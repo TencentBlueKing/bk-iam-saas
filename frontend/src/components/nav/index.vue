@@ -26,7 +26,8 @@
             </bk-select> -->
             <bk-select
                 ref="select"
-                v-if="unfold && index === 1" :value="navCurRoleId || curRoleId"
+                v-if="unfold && index === 1"
+                :value="navCurRoleId || curRoleId"
                 :clearable="false"
                 :multiple="false"
                 :placeholder="$t(`m.common['选择管理空间']`)"
@@ -357,7 +358,9 @@
              * @param {Object} from from route
              */
             routeChangeHandler (to, from) {
-                const pathName = to.name;
+                const { params, name } = to;
+                const pathName = name;
+                this.handleSwitchPerm(params);
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
                         this.openedItem = value;
@@ -377,10 +380,19 @@
                                     this.openedItem = 'gradingAdminNav';
                                 }
                             };
-                            return menuActive[this.curRole] ? menuActive[this.curRole]() : 'myManageSpaceNav';
+                            return menuActive[this.curRole]
+                                ? menuActive[this.curRole]()
+                                : 'myManageSpaceNav';
                         }
                         break;
                     }
+                }
+            },
+
+            // 从其他菜单进入权限管理选择角色
+            handleSwitchPerm ({ id, entry }) {
+                if (entry) {
+                    this.$refs.selectTree.selected = id;
                 }
             },
 

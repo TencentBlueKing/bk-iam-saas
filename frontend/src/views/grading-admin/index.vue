@@ -720,7 +720,8 @@
                             this.$router.push({
                                 name: 'userGroup',
                                 params: {
-                                    id
+                                    id,
+                                    entry: 'super_manager'
                                 }
                             });
                         }
@@ -762,7 +763,8 @@
                 this.$router.push({
                     name: routerName,
                     params: {
-                        id
+                        id,
+                        entry: 'super_manager'
                     }
                 });
             },

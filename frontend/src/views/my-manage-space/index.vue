@@ -541,7 +541,8 @@
                     name: routerName,
                     params: {
                         id,
-                        role_type: 'staff'
+                        role_type: 'staff',
+                        entry: 'personal'
                     }
                 });
             },
@@ -595,7 +596,8 @@
                     name: routerName,
                     params: {
                         id,
-                        role_type: 'staff'
+                        role_type: 'staff',
+                        entry: 'personal'
                     }
                 });
             },
