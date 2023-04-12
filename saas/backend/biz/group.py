@@ -141,6 +141,7 @@ class GroupBiz:
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
     list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
     batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
+    convert_attr_value = GroupAttributeService.__dict__["convert_attr_value"]
     list_all_group_member = GroupService.__dict__["list_all_group_member"]
     list_rbac_group_by_resource = GroupService.__dict__["list_rbac_group_by_resource"]
 
