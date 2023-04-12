@@ -205,7 +205,6 @@
                     if (this.externalSystemId) {
                         params.hidden = false;
                     }
-                    params.hidden = false;
                     await this.$store.dispatch('myApply/applyCancel', params);
                     this.pagination.current = 1;
                     this.currentBackup = 1;
