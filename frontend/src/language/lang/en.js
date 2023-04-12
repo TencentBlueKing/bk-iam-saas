@@ -974,7 +974,8 @@ export const m = {
         '完成': 'Done',
         '错误': 'Error',
         '任务': 'task',
-        '审计事件': 'event'
+        '审计事件': 'event',
+        '对象实例': 'Object instance'
     },
     access: {
         '接入系统': 'Access System',
