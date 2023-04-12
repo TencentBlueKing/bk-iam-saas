@@ -432,11 +432,11 @@
                 expandedRows = expandedRows.filter(e => e.id === this.gradingAdminId);
                 if (!expandedRows.length) return;
                 console.log('expandedRows', row, expandedRows);
+                row.children = [];
+                this.resetSubPagination();
                 this.tableList.forEach(e => {
                     if (e.id !== expandedRows[0].id) {
                         this.$refs.spaceTable.toggleRowExpansion(e, false);
-                        row.children = [];
-                        this.resetSubPagination();
                     } else {
                         this.fetchSubManagerList(row);
                     }
