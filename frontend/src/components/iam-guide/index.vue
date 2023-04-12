@@ -1,9 +1,7 @@
 <template>
-    <div>
-        <template v-if="['custom'].includes(popoverType)">
-            <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]"
-                :style="style"
-                v-if="!noviceGuide[type] && !loading && flag && isShow">
+    <div :style="styles">
+        <div v-if="['custom'].includes(popoverType) && (!noviceGuide[type] && !loading && flag && isShow)">
+            <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]">
                 <div class="content-wrapper">
                     <section class="content-shade">
                         <div class="text">{{ content }}</div>
@@ -15,7 +13,7 @@
                     <div :class="['triangle', direction]"></div>
                 </div>
             </div>
-        </template>
+        </div>
         <template v-if="['component'].includes(popoverType) && (!noviceGuide[type] && isShow)">
             <bk-popconfirm
                 ref="popconfirmCom"
@@ -95,6 +93,15 @@
                     return ['staff'].includes(this.user.role.type);
                 }
                 return true;
+            },
+            styles () {
+                if (!['component'].includes(this.popoverType)) {
+                    return {
+                    ...this.style,
+                    'position': 'relative'
+                };
+                }
+                return '';
             }
         },
         created () {
