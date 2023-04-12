@@ -97,9 +97,9 @@
             styles () {
                 if (!['component'].includes(this.popoverType)) {
                     return {
-                    ...this.style,
-                    'position': 'relative'
-                };
+                        ...this.style,
+                        'position': 'relative'
+                    };
                 }
                 return '';
             }

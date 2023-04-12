@@ -472,7 +472,7 @@ export const m = {
         '普通成员': 'rank and file',
         '退出登录': 'log out',
         '我的管理空间': 'My grading administrator',
-        '资源权限管理': 'Resource rights management',
+        '资源权限管理': 'Resource Perm Management',
         '发起需求': 'Initiate demand',
         '工作台': 'Workbench',
         '开发者': 'Developers',
@@ -738,7 +738,10 @@ export const m = {
         '定时同步': 'timing sync',
         '手动同步': 'Manual sync',
         '选择日期范围': 'Select date range',
-        '同步失败排查指引': 'Sync Failure Troubleshooting Guide'
+        '同步失败排查指引': 'Sync Failure Troubleshooting Guide',
+        '今天': 'Today',
+        '最近7天': 'Last 7 days',
+        '最近30天': 'Last 30 days'
     },
     grading: {
         '管理空间': 'Grading Manager',
