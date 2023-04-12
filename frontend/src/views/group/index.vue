@@ -150,7 +150,7 @@
                     <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="300">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="320">
                 <template slot-scope="{ row }">
                     <div>
                         <bk-button theme="primary" text @click="handleAddMember(row)">
