@@ -18,6 +18,7 @@ from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicyPartDeleteSLZ, PolicySLZ, PolicySystemSLZ
+from backend.apps.user.serializers import GroupSLZ
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
@@ -49,7 +50,8 @@ class SubjectGroupViewSet(GenericViewSet):
         # 分页参数
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
-        return Response({"count": count, "results": [one.dict() for one in relations]})
+        slz = GroupSLZ(instance=relations, many=True)
+        return Response({"count": count, "results": slz.data})
 
     @swagger_auto_schema(
         operation_description="我的权限-退出用户组",
@@ -93,7 +95,8 @@ class SubjectDepartmentGroupViewSet(GenericViewSet):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
         # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
         relations = self.biz.list_all_user_department_group(subject)
-        return Response([one.dict() for one in relations])
+        slz = GroupSLZ(instance=relations, many=True)
+        return Response(slz.data)
 
 
 class SubjectSystemViewSet(GenericViewSet):
