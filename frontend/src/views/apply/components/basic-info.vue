@@ -25,8 +25,8 @@
                 {{
                     data.applicants && data.applicants.length > 0
                         ? data.applicants.map((item) => ['user'].includes(item.type) ?
-                         `${item.display_name}(${item.id})`
-                        : item.display_name).join(';')
+                            `${item.display_name}(${item.id})`
+                            : item.display_name).join(';') : ''
                 }}
             </div>
         </div>
