@@ -51,22 +51,19 @@
                     <span :title="row.system.name">{{ row.system.name }}</span>
                 </template>
             </bk-table-column>
-            <template v-if="['rating_manager'].includes(curRole)">
+            <!-- <template v-if="['rating_manager'].includes(curRole)">
                 <bk-table-column
                     :label="$t(`m.nav['管理空间']`)"
-                    :filters="spaceFiltersList"
-                    :filter-method="handleSpaceFilter"
-                    :filter-multiple="true"
                 >
-                    <!-- <template slot-scope="{ row }">
+                    <template slot-scope="{ row }">
                         <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
                             {{ row.role.name || '--' }}
                         </span>
                         <span>{{ user.role && user.role.name === row.role.name
                             ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
-                    </template> -->
+                    </template>
                 </bk-table-column>
-            </template>
+            </template> -->
             <bk-table-column :label="$t(`m.permTemplate['关联的组']`)">
                 <template slot-scope="{ row }">
                     <template v-if="!!row.subject_count">
