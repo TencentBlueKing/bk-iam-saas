@@ -83,15 +83,16 @@
                     <div class="link-btn">
                         <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
                     </div>
-                    <div class="msg-content">
-                        <div v-if="exceptionMsg || tracebackMsg">
+                    <div v-if="exceptionMsg || tracebackMsg"
+                        class="msg-content">
+                        <div>
                             <div v-html="exceptionMsg"></div>
                             <div v-html="tracebackMsg"></div>
                         </div>
                         <!-- <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div> -->
-                        <div v-else>
-                            <ExceptionEmpty />
-                        </div>
+                    </div>
+                    <div v-else>
+                        <ExceptionEmpty style="background: #ffffff" />
                     </div>
                 </section>
             </div>
