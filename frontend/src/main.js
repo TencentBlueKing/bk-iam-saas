@@ -85,11 +85,11 @@ const { lang, locale } = magicbox;
 
 const messages = {
     'zh-cn': {
-        ...locale.zhCN,
+        ...lang.zhCN,
         ...cn
     },
     en: {
-        ...locale.enUS,
+        ...lang.enUS,
         ...en
     }
 };

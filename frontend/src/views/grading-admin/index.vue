@@ -96,7 +96,7 @@
                                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column width="200">
+                        <bk-table-column width="300">
                             <template slot-scope="child">
                                 <div class="operate_btn">
                                     <bk-button
@@ -189,7 +189,7 @@
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="200">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="300">
                 <template slot-scope="{ row }">
                     <!-- <section>
                         <bk-button theme="primary" text @click="handleDropOut(row)">
@@ -374,9 +374,9 @@
         },
         methods: {
             getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (!row.is_member) {
-                    return 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls';
-                }
+                // if (!row.is_member) {
+                //     return 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls';
+                // }
                 if (!row.has_subset_manager) {
                     return 'iam-tag-table-cell-cls iam-tag-table-cell-subset-cls';
                 }
@@ -411,10 +411,11 @@
                 expandedRows = expandedRows.filter(e => e.id === this.gradingAdminId);
                 if (!expandedRows.length) return;
                 console.log('expandedRows', row, expandedRows);
+                row.children = [];
+                this.resetSubPagination();
                 this.tableList.forEach(e => {
                     if (e.id !== expandedRows[0].id) {
                         this.$refs.spaceTable.toggleRowExpansion(e, false);
-                        row.children = [];
                     } else {
                         this.fetchSubManagerList(row);
                     }
@@ -597,6 +598,14 @@
                 });
             },
 
+            resetSubPagination () {
+                this.subPagination = Object.assign({}, {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                });
+            },
+
             handleSearch () {
                 if (!this.searchValue) {
                     return;
@@ -604,11 +613,13 @@
                 this.isFilter = true;
                 this.emptyData.tipType = 'search';
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin(true);
             },
             
             handleEmptyRefresh () {
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin(true);
             },
 
@@ -616,6 +627,7 @@
                 this.emptyData.tipType = '';
                 this.searchValue = '';
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin(true);
             },
 
@@ -708,7 +720,8 @@
                             this.$router.push({
                                 name: 'userGroup',
                                 params: {
-                                    id
+                                    id,
+                                    entry: 'super_manager'
                                 }
                             });
                         }
@@ -750,7 +763,8 @@
                 this.$router.push({
                     name: routerName,
                     params: {
-                        id
+                        id,
+                        entry: 'super_manager'
                     }
                 });
             },

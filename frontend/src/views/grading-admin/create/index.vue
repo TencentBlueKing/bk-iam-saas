@@ -957,7 +957,7 @@
             if ((window.changeDialog && this.operate !== 'cancel') || (this.users.length || this.departments.length)) {
                 cancelHandler = leavePageConfirm();
                 cancelHandler.then(() => {
-                    next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
+                    next();
                 }, _ => _);
             } else {
                 next();

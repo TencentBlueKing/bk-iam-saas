@@ -26,7 +26,8 @@
             </bk-select> -->
             <bk-select
                 ref="select"
-                v-if="unfold && index === 1" :value="navCurRoleId || curRoleId"
+                v-if="unfold && index === 1"
+                :value="navCurRoleId || curRoleId"
                 :clearable="false"
                 :multiple="false"
                 :placeholder="$t(`m.common['选择管理空间']`)"
@@ -98,7 +99,6 @@
                                         ext-cls="space-popconfirm"
                                         cancel-text=""
                                         :confirm-text="$t(`m.info['知道了']`)"
-                                        @on-hide="handleHideGuide"
                                     >
                                         <div slot="popconfirm-header">
                                             <div class="content-header">
@@ -297,6 +297,14 @@
                     this.curRoleList.splice(0, this.curRoleList.length, ...value);
                 },
                 immediate: true
+            },
+            curRole: {
+                handler (value) {
+                    if (['staff'].includes(value) && this.index === 0) {
+                        this.fetchSpaceUpdateGuide();
+                    }
+                },
+                immediate: true
             }
         },
         created () {
@@ -321,6 +329,13 @@
             });
         },
         methods: {
+            fetchSpaceUpdateGuide () {
+                this.$nextTick(() => {
+                    this.$refs.popconfirm
+                        && this.$refs.popconfirm[0].$refs.popconfirmCom
+                        && this.$refs.popconfirm[0].$refs.popconfirmCom.$refs.popover.showHandler();
+                });
+            },
             initTree (parentId, list) {
                 if (!parentId) {
                     return list.filter(item => !item.parentId).map(item => {
@@ -343,7 +358,9 @@
              * @param {Object} from from route
              */
             routeChangeHandler (to, from) {
-                const pathName = to.name;
+                const { params, name } = to;
+                const pathName = name;
+                this.handleSwitchPerm(params);
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
                         this.openedItem = value;
@@ -363,10 +380,19 @@
                                     this.openedItem = 'gradingAdminNav';
                                 }
                             };
-                            return menuActive[this.curRole] ? menuActive[this.curRole]() : 'myManageSpaceNav';
+                            return menuActive[this.curRole]
+                                ? menuActive[this.curRole]()
+                                : 'myManageSpaceNav';
                         }
                         break;
                     }
+                }
+            },
+
+            // 从其他菜单进入权限管理选择角色
+            handleSwitchPerm ({ id, entry }) {
+                if (entry) {
+                    this.$refs.selectTree.selected = id;
                 }
             },
 
@@ -560,10 +586,6 @@
         color: #fff !important;
         opacity: .6;
     }
-}
-
-.bk-select-search-wrapper .left-icon {
-    left: 18px !important;
 }
 
 .space-popconfirm {

@@ -455,7 +455,8 @@
                                 child.disabled = false;
                                 child.type = 'depart';
                                 child.count = child.recursive_member_count;
-                                child.showCount = true;
+                                // child.showCount = true;
+                                child.showCount = false;
                                 child.async = child.child_count > 0 || child.member_count > 0;
                                 child.isNewMember = false;
                                 child.parentNodeId = item.id;
@@ -535,7 +536,8 @@
                                 this.$set(depart, 'selected', false);
                             }
                             depart.count = depart.recursive_member_count;
-                            depart.showCount = true;
+                            // depart.showCount = true;
+                            depart.showCount = false;
                         });
                         this.searchedDepartment.splice(0, this.searchedDepartment.length, ...departments);
                     }
@@ -710,7 +712,8 @@
                             child.disabled = this.disabled;
                             child.type = 'depart';
                             child.count = child.recursive_member_count;
-                            child.showCount = true;
+                            // child.showCount = true;
+                            child.showCount = false;
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;

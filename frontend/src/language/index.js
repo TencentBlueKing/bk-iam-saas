@@ -28,15 +28,14 @@ import cn from './lang/zh';
 import magicbox from 'bk-magic-vue';
 import Cookie from 'js-cookie';
 
-const { locale } = magicbox;
-
+const { lang } = magicbox;
 const messages = {
     'zh-cn': {
-        ...locale.zhCN,
+        ...lang.zhCN,
         ...cn
     },
     en: {
-        ...locale.enUS,
+        ...lang.enUS,
         ...en
     }
 };

@@ -212,10 +212,10 @@ export const m = {
         '二': 'two',
         '如何使用管理空间': 'How to use the management space',
         '我的管理空间 > 申请新建（已有管理空间忽略）': 'My management space>Apply to create a new one (ignoring the existing management space)',
-        '切换顶部导航至“权限管理” ，在左上角切换“管理空间”': 'Switch the top to navigate to "Permission Management", and switch to "Primary Management Space" in the upper left corner',
+        '切换顶部导航至“权限管理” ，在左上角切换“管理空间”': 'Switch the top to navigate to "Permission Management", and switch to "Management Space" in the upper left corner',
         '在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员': 'In the left navigation, click User Groups >; New to create a user group, set permissions and members.',
         '退出将不在具备相应的管理权限': 'Quitting will no longer have the appropriate administrative rights',
-        '确定退出管理空间': 'Confirm to exit the primary management space',
+        '确定退出管理空间': 'Confirm to exit management space',
         '用户组': 'user group',
         '是否删除该自定义权限': 'Whether to delete the custom permission',
         '类型': 'Type',
@@ -320,6 +320,7 @@ export const m = {
         '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
         '用户名输入格式错误': 'User name input format error',
         '当前选择项不在授权范围内': 'The current selection is not within the scope of authorization',
+        '请选择管理空间': 'Please select management space',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -421,8 +422,9 @@ export const m = {
         '分级管理员': 'rating manager',
         '升级为': 'upgrade to',
         '管理空间': 'manage space',
-        '支持一级、两级管理空间，更加精细化管理。': 'Supports primary and secondary management of space, with more refined management.',
-        '知道了': 'Got it'
+        '支持一级、两级管理空间，更加精细化管理。': 'Supports one-level and secondary management of space, with more refined management.',
+        '知道了': 'Got it',
+        '搜索关键字': 'Search Keywords'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -470,12 +472,12 @@ export const m = {
         '普通成员': 'rank and file',
         '退出登录': 'log out',
         '我的管理空间': 'My grading administrator',
-        '资源权限管理': 'Resource rights management',
+        '资源权限管理': 'Resource Perm Management',
         '发起需求': 'Initiate demand',
         '工作台': 'Workbench',
         '开发者': 'Developers',
         '切换管理空间': 'switch rating manager management space',
-        '【管理空间】 功能，全面升级为【权限管理空间】啦！': 'The function of [Primary Management Space] has been comprehensively upgraded to [Permission Management Space]!',
+        '【管理空间】 功能，全面升级为【权限管理空间】啦！': 'The function of [Management Space] has been comprehensively upgraded to [Permission Management Space]!',
         '个人工作台': 'Personal workbench',
         '权限管理': 'Permission management',
         '统计分析': 'Statistical analysis',
@@ -618,7 +620,7 @@ export const m = {
         '直接加入': 'Joined Directly',
         '通过组织加入': 'Joined By Organization',
         '组权限': 'Permissions',
-        '所属部门用户组权限': 'Department User Group Permissions'
+        '所属组织用户组权限': 'Organization User Group Permissions'
     },
     permTemplate: {
         '模板名': 'Template Name',
@@ -648,7 +650,7 @@ export const m = {
         '编辑中': 'Edit',
         '个模板': 'templates',
         '删除权限模版不会影响已授权用户，可以放心删除。': 'Deleting the permission template will not affect authorized users and can be safely deleted.',
-        '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason why this template cannot be selected is that the primary management space reduces the scope of authorization, but does not synchronously delete the operations in the template. If you need to select, please edit the template again or create a new template.'
+        '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason why this template cannot be selected is that the management space reduces the scope of authorization, but does not synchronously delete the operations in the template. If you need to select, please edit the template again or create a new template.'
     },
     permTemplateDetail: {
         '模板名称': 'Template Name：',
@@ -725,7 +727,7 @@ export const m = {
         '组织的权限': 'Organization Permissions',
         '正在同步中': 'Updating',
         '开始时间': 'Starting time',
-        '耗时': 'time consuming',
+        '耗时': 'Time consuming',
         '操作人': 'Operator',
         '触发类型': 'Trigger type',
         '日志详情': 'Log details',
@@ -736,7 +738,10 @@ export const m = {
         '定时同步': 'timing sync',
         '手动同步': 'Manual sync',
         '选择日期范围': 'Select date range',
-        '同步失败排查指引': 'Sync Failure Troubleshooting Guide'
+        '同步失败排查指引': 'Sync Failure Troubleshooting Guide',
+        '今天': 'Today',
+        '最近7天': 'Last 7 days',
+        '最近30天': 'Last 30 days'
     },
     grading: {
         '管理空间': 'Grading Manager',
@@ -803,16 +808,16 @@ export const m = {
         '全部空间': 'All spaces',
         '如需编辑授权边界的内容请点击': 'edit the content of the authorization boundary, click',
         '释放': 'Release',
-        '管理空间可以编辑、管理二级管理空间的权限': 'The primary management space can edit and manage the permissions of the secondary management space',
+        '管理空间可以编辑、管理二级管理空间的权限': 'The management space can edit and manage the permissions of the secondary management space',
         '提交审批': 'Submit for approval',
         '新建我的管理空间': 'New My Management Space',
         '动态继承上级空间': 'Dynamically inherit the parent space',
         '指定组织架构和人员': 'Specify organizational structure and personnel',
         '管理空间只能给该范围内的人员授权': 'The management space can only be authorized for personnel within the scope',
-        '管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界': 'When the primary management space shrinks/modifies the authorization boundary, synchronously modify the authorization boundary of the related secondary management space',
-        '二级管理空间扩大自己的授权边界，需要走一级管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the primary management space administrator',
-        '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the primary administrator space',
-        '管理员': 'Space administrator'
+        '管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界': 'When the management space shrinks/modifies the authorization boundary, synchronously modify the authorization boundary of the related secondary management space',
+        '二级管理空间扩大自己的授权边界，需要走一级管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the first level administrator',
+        '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the first level management space',
+        '管理员': 'Administrator'
     },
     gradingDetail: {
         '管理空间名称': 'Grading  Manager Name：',
@@ -858,8 +863,8 @@ export const m = {
         '操作和资源实例': 'This range indicates which resource permissions you can assign',
         '授权人员范围': 'This range indicates who you can assign permissions to, and only they can apply for the user group you created',
         '聚合操作': 'You can select instances in batches by combining selections',
-        '切换管理空间': 'Congratulations on becoming a first-class space administrator! You can switch identities here',
-        '管理空间导航': 'The original [Level 1 Management Space] function has been adjusted here!',
+        '切换管理空间': 'Congratulations on becoming a member of the management space! You can switch identities here',
+        '管理空间导航': 'The original [Management Space] function has been adjusted here!',
         '创建模板': `Let's create a permission template first`,
         '创建用户组': `Let's create a group first`,
         '创建审批流程': 'You can also bind the required approval process to the user group',
@@ -895,7 +900,7 @@ export const m = {
         '操作类型': 'Operation type',
         '操作来源': 'Operation source',
         '操作状态': 'Operation status',
-        '状态': 'status',
+        '状态': 'Status',
         '成功': 'Success',
         '失败': 'Failure',
         '版本号': 'Version',
@@ -931,7 +936,7 @@ export const m = {
         '管理空间修改成员': 'rating management space update members',
         '成员创建默认权限': 'Members create default permissions',
         '成员删除默认权限': 'Members delete default permissions',
-        '更新管理空间': 'Update the primary management space',
+        '更新管理空间': 'Update management space',
         '管理员成员增加': 'Admin member increase',
         '管理员成员删除': 'Admin member delete',
         '管理员成员修改': 'Admin member modification',
@@ -969,7 +974,8 @@ export const m = {
         '完成': 'Done',
         '错误': 'Error',
         '任务': 'task',
-        '审计事件': 'event'
+        '审计事件': 'event',
+        '对象实例': 'Object instance'
     },
     access: {
         '接入系统': 'Access System',

@@ -199,7 +199,13 @@
             async handleCancel () {
                 this.cancelLoading = true;
                 try {
-                    await this.$store.dispatch('myApply/applyCancel', { id: this.currentApplyData.id });
+                    const params = {
+                        id: this.currentApplyData.id
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    await this.$store.dispatch('myApply/applyCancel', params);
                     this.pagination.current = 1;
                     this.currentBackup = 1;
                     this.applyList.splice(0, this.applyList.length, ...[]);

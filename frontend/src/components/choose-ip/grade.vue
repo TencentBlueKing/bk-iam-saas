@@ -289,9 +289,13 @@
                 if (node.level > chainLen - 1) {
                     params.system_id = this.curChain[chainLen - 1].system_id;
                     params.type = this.curChain[chainLen - 1].id;
+                    params.action_system_id = this.curChain[chainLen - 1].system_id;
+                    params.action_id = '';
                 } else {
                     params.system_id = this.curChain[node.level].system_id;
                     params.type = this.curChain[node.level].id;
+                    params.action_system_id = this.curChain[node.level].system_id;
+                    params.action_id = '';
                 }
                 if (node.parentChain.length) {
                     const parentData = node.parentChain.reduce((p, e) => {

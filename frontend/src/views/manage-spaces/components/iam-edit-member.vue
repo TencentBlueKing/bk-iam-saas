@@ -239,7 +239,7 @@
 
         .edit-content {
             flex: 0 0 auto;
-            max-width: calc(100% - 25px);
+            max-width: calc(100vh - 25px);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;

@@ -211,7 +211,8 @@
                             this.$router.push({
                                 name: 'userGroup',
                                 params: {
-                                    id
+                                    id,
+                                    entry: 'all_manager'
                                 }
                             });
                         }

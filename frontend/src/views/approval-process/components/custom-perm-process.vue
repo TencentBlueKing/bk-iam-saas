@@ -170,7 +170,7 @@
                             return this.list.find(item => item.id === payload.process_id).name;
                         }
                     }
-                    return '默认审批流程';
+                    return this.$t(`m.approvalProcess['默认审批流程']`);
                 };
             },
             curTitle () {
