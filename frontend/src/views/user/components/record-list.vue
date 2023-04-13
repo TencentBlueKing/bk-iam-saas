@@ -143,7 +143,7 @@
                 triggerType: { 'periodic_task': this.$t(`m.user['定时同步']`), 'manual_sync': this.$t(`m.user['手动同步']`) },
                 shortcuts: [
                     {
-                        text: '今天',
+                        text: this.$t(`m.user['今天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();
@@ -151,7 +151,7 @@
                         }
                     },
                     {
-                        text: '最近7天',
+                        text: this.$t(`m.user['最近7天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();
@@ -160,7 +160,7 @@
                         }
                     },
                     {
-                        text: '最近30天',
+                        text: this.$t(`m.user['最近30天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();

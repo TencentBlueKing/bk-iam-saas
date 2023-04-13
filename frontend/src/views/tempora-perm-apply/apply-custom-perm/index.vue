@@ -8,7 +8,9 @@
                         v-model="systemValue"
                         style="width: 480px;"
                         :popover-min-width="480"
-                        searchable
+                        :empty-text="$t(`m.common['暂无数据']`)"
+                        :search-placeholder="$t(`m.info['搜索关键字']`)"
+                        :searchable="true"
                         :clearable="false"
                         @selected="handleSysSelected">
                         <bk-option v-for="option in systemList"
@@ -726,6 +728,11 @@
                 tempList = tempList.filter(item => item.actions.length > 0 || item.sub_groups.length > 0);
                 this.originalCustomTmplList = _.cloneDeep(tempList);
                 this.handleActionLinearData(true);
+            },
+
+            handleEmptyClear () {
+                this.actionSearchValue = '';
+                this.emptyData.tipType = '';
             },
 
             /**

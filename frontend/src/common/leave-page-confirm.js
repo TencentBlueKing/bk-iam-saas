@@ -25,7 +25,7 @@
 */
 
 import Vue from 'vue';
-import il8n from '@/language';
+import { il8n, language } from '@/language';
 
 export const leavePageConfirm = () => {
     if (!window.changeDialog) {
@@ -36,6 +36,7 @@ export const leavePageConfirm = () => {
     return new Promise((resolve, reject) => {
         vm.$bkInfo({
             title: il8n('info', '离开将会导致未保存信息丢失'),
+            width: language === 'zh-cn' ? 400 : 600,
             subHeader: h('p', {
                 style: {
                     color: '#63656e',

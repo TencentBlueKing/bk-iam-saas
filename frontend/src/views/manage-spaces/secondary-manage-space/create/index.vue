@@ -356,7 +356,11 @@
                 if (propsId) {
                     await this.fetchDetail();
                 } else {
-                    this.formData.members = [{ username: this.user.username, readonly: true }];
+                    const { role, username } = this.user;
+                    this.formData.members = [
+                        { username, readonly: true },
+                        { username: role.name, readonly: true }
+                    ];
                 }
             },
 

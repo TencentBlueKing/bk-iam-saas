@@ -143,7 +143,7 @@
                     },
                     {
                         name: 'DepartmentGroupPerm',
-                        label: this.$t(`m.perm['所属部门用户组权限']`),
+                        label: this.$t(`m.perm['所属组织用户组权限']`),
                         empty: 'emptyData6'
                     },
                     {

@@ -14,6 +14,8 @@
                 v-model="curGradeManager"
                 ref="gradeManagerSelectRef"
                 style="width: 430px"
+                :placeholder="$t(`m.verify['请选择管理空间']`)"
+                :search-placeholder="$t(`m.info['搜索关键字']`)"
                 :popover-min-width="430"
                 :multiple="false"
                 :loading="selectLoading"
@@ -103,7 +105,7 @@
                 handler (value) {
                     this.isShowDialog = !!value;
                     if (this.isShowDialog) {
-                        this.fetchData(true);
+                        this.fetchInit();
                     }
                 },
                 immediate: true
@@ -118,18 +120,17 @@
                     name: this.searchValue
                 };
                 try {
-                    const res = await this.$store.dispatch('spaceManage/getSecondManager', params);
+                    const { data } = await this.$store.dispatch('spaceManage/getSecondManager', params);
                     if (isScrollRemote) {
                         const len = this.gradeManagerList.length;
-                        this.gradeManagerList.splice(len - 1, 0, ...res.data.results);
+                        this.gradeManagerList.splice(len - 1, 0, ...data.results);
                     } else {
-                        this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
+                        this.pagination.totalPage = Math.ceil(data.count / this.pagination.limit);
                         if (this.pagination.totalPage > 1) {
-                            res.data.results.push(LOADING_ITEM);
+                            data.results.push(LOADING_ITEM);
                         }
-                        this.gradeManagerList.splice(0, this.gradeManagerList.length, ...(res.data.results || []));
+                        this.gradeManagerList.splice(0, this.gradeManagerList.length, ...(data.results || []));
                     }
-                    this.curGradeManager = this.distributeDetail.role.id;
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -139,6 +140,11 @@
                 } finally {
                     this.selectLoading = false;
                 }
+            },
+
+            async fetchInit () {
+                await this.fetchData(true);
+                this.curGradeManager = this.gradeManagerList.length ? this.gradeManagerList[0].id : '';
             },
 
             handleToggle (val, index, payload) {

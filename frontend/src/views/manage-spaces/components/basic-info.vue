@@ -17,7 +17,8 @@
                         :placeholder="$t(`m.verify['请填写管理员']`)"
                         :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
                         :class="isShowMemberError ? 'is-member-empty-cls' : ''"
-                        data-test-id="space_userSelector_member" @focus="handleRtxFocus" @blur="handleRtxBlur"
+                        data-test-id="space_userSelector_member" @focus="handleRtxFocus"
+                        @blur="handleRtxBlur"
                         @change="handleRtxChange">
                     </bk-user-selector>
                   
@@ -42,6 +43,7 @@
 <script>
     import { language } from '@/language';
     import BkUserSelector from '@blueking/user-selector';
+    
     const getDefaultData = () => ({
         name: '',
         description: '',
@@ -84,7 +86,7 @@
                         this.formData = Object.assign({}, {
                             name,
                             description,
-                            members,
+                            members: this.displayMembers,
                             sync_perm
                         });
                         // 这里用nextTick放在下一个队列无效果，需改变他所调用的函数的优先级

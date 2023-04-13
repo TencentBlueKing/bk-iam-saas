@@ -97,7 +97,7 @@
                                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column width="200">
+                        <bk-table-column width="300">
                             <template slot-scope="child">
                                 <div class="operate_btn">
                                     <bk-button
@@ -193,7 +193,7 @@
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="200">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="300">
                 <template slot-scope="{ row }">
                     <div class="operate_btn">
                         <bk-button
@@ -361,6 +361,7 @@
                 this.isFilter = true;
                 this.emptyData.tipType = 'search';
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin(true);
             },
 
@@ -431,10 +432,11 @@
                 expandedRows = expandedRows.filter(e => e.id === this.gradingAdminId);
                 if (!expandedRows.length) return;
                 console.log('expandedRows', row, expandedRows);
+                row.children = [];
+                this.resetSubPagination();
                 this.tableList.forEach(e => {
                     if (e.id !== expandedRows[0].id) {
                         this.$refs.spaceTable.toggleRowExpansion(e, false);
-                        row.children = [];
                     } else {
                         this.fetchSubManagerList(row);
                     }
@@ -539,7 +541,8 @@
                     name: routerName,
                     params: {
                         id,
-                        role_type: 'staff'
+                        role_type: 'staff',
+                        entry: 'personal'
                     }
                 });
             },
@@ -593,7 +596,8 @@
                     name: routerName,
                     params: {
                         id,
-                        role_type: 'staff'
+                        role_type: 'staff',
+                        entry: 'personal'
                     }
                 });
             },
@@ -660,16 +664,26 @@
                 this.searchValue = '';
                 this.emptyData.tipType = '';
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin();
             },
 
             handleEmptyRefresh () {
                 this.resetPagination();
+                this.resetSubPagination();
                 this.fetchGradingAdmin();
             },
             
             resetPagination () {
                 this.pagination = Object.assign({}, {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                });
+            },
+
+            resetSubPagination () {
+                this.subPagination = Object.assign({}, {
                     current: 1,
                     count: 0,
                     limit: 10
