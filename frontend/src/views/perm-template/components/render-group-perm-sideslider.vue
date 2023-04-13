@@ -250,7 +250,7 @@
                     //         related_resource_types: element.related_resource_types
                     //     }]
                     // })
-                    const tableData = res.data.actions.map(item => new Policy({ ...item, policy_id: 1 }, 'detail'));
+                    const tableData = res.data.actions.map(item => new Policy({ ...item, policy_id: 1, mode: 'template' }, 'detail'));
                     this.$set(item, 'tableData', tableData);
                 } catch (e) {
                     console.error(e);
@@ -280,7 +280,7 @@
                     //         related_resource_types: element.related_resource_types
                     //     }]
                     // })
-                    const tableData = res.data.map(item => new Policy(item, 'detail'));
+                    const tableData = res.data.map(item => new Policy({ ...item, mode: 'custom' }, 'detail'));
                     this.$set(item, 'tableData', tableData);
                 } catch (e) {
                     console.error(e);
