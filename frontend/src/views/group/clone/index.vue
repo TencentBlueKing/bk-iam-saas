@@ -283,16 +283,48 @@
                 return data;
             }
         },
-        mounted () {
-            this.formData.name = `${this.$route.query.name}_${this.$t(`m.grading['克隆']`)}`;
-            this.formData.description = this.$route.query.description;
+        async mounted () {
+            // this.formData.name = `${this.$route.query.name}_${this.$t(`m.grading['克隆']`)}`;
+            // this.formData.description = this.$route.query.description;
             this.groupId = this.$route.query.id;
-            console.log(this.groupId, this.groupId);
-            this.handleInit();
+            await this.handleInit();
         },
         methods: {
-            // 先请求最外层数据（系统）
             async handleInit () {
+                if (this.groupId) {
+                    this.fetchDetail();
+                    this.fetchGroupSystem();
+                }
+            },
+
+            async fetchDetail () {
+                try {
+                    const params = {
+                        id: this.groupId
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { data } = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
+                    const { name, description } = data;
+                    this.formData = Object.assign(this.formData, {
+                        name: `${name}_${this.$t(`m.grading['克隆']`)}`,
+                        description
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+            
+            // 先请求最外层数据（系统）
+            async fetchGroupSystem () {
                 this.tableList = [];
                 try {
                     const params = {
@@ -1132,6 +1164,10 @@
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
             }
+        },
+        beforeRouteLeave (to, from, next) {
+            delete to.query.id;
+            next();
         }
     };
 </script>

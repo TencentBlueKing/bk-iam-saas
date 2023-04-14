@@ -563,12 +563,10 @@
             },
 
             handleClone (payload) {
-                const { name, description, id } = payload;
+                const { id } = payload;
                 this.$router.push({
                     name: 'cloneUserGroup',
                     query: {
-                        name,
-                        description,
                         id
                     }
                 });

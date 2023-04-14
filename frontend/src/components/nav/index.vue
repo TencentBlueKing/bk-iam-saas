@@ -85,8 +85,7 @@
                                 <Icon :type="child.icon" class="iam-menu-icon" />
                                 <span class="iam-menu-text single-hide"
                                     v-if="child.name === $t(`m.common['管理员']`) && curRole === 'system_manager'">
-                                    {{$t(`m.common['系统']`)}}
-                                    <span>{{child.name}}</span>
+                                    <span>{{$t(`m.common['系统']`)}}{{child.name}}</span>
                                 </span>
                                 <span class="iam-menu-text single-hide" v-else>{{ child.name }}</span>
                                 <span v-if="['myManageSpace'].includes(child.rkey)" @click.stop>
