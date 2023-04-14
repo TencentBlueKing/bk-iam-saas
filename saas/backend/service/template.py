@@ -255,7 +255,7 @@ class TemplateService:
                 )
                 authorized_template.data = {"actions": [p.dict() for p in saas_policies]}
                 authorized_template.auth_types = action_auth_types
-                authorized_template.save(update_fields=["_data"])
+                authorized_template.save(update_fields=["_data", "_auth_types"])
 
                 # 后端策略变更
                 self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
