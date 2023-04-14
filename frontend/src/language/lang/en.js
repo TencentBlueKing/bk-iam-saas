@@ -64,7 +64,7 @@ export const m = {
         '申请模板权限': 'Apply for template permissions',
         '关键字': 'Keyword',
         '包含': 'Include',
-        '系统': 'System',
+        '系统': 'System ',
         '的相关权限': 'Related Permissions',
         '的关联权限': 'Associated Permissions',
         '个': '',
@@ -1164,6 +1164,7 @@ export const m = {
         '管理员交接': 'Admin handover',
         '将以上权限交接给': 'hand permissions to',
         '交接人': 'transfer person',
+        '管理空间权限交接': 'Manage Space Permission Handover',
         '您还没有权限，无需交接': "You don't have permission and don't need to hand over"
     },
 

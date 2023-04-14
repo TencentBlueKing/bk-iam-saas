@@ -407,6 +407,11 @@
                         description: params.description,
                         members: [...params.members]
                     });
+                    if (name || members) {
+                        this.formData.children = [];
+                        this.resetSubPagination();
+                        await this.fetchSubManagerList(this.formData);
+                    }
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({

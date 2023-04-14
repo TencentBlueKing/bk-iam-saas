@@ -305,6 +305,9 @@
                     reason: this.reason
                 };
                 if (isGroup) {
+                    if (this.externalSystemId) {
+                        params.source_system_id = this.externalSystemId;
+                    }
                     params.groups = this.curSelectedList.map(
                         ({ id, name, description, expired_at }) => ({ id, name, description, expired_at })
                     );

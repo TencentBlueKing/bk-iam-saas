@@ -15,13 +15,13 @@
                         :value="displayMembers"
                         :api="userApi"
                         :placeholder="$t(`m.verify['请填写管理员']`)"
+                        :title="displayMembers.length ? displayMembers.join() : ''"
                         :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
                         :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                         data-test-id="space_userSelector_member" @focus="handleRtxFocus"
                         @blur="handleRtxBlur"
                         @change="handleRtxChange">
                     </bk-user-selector>
-                  
                     <bk-checkbox
                         :true-value="true"
                         :false-value="false"
