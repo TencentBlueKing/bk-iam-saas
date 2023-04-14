@@ -280,7 +280,21 @@ export const beforeEach = async (to, from, next) => {
                             console.log('走了difference');
                             next();
                         } else {
-                            next({ path: `${SITE_URL}user-group` });
+                            const initRoute = {
+                                0: () => {
+                                    next({ path: `${SITE_URL}my-perm` });
+                                },
+                                1: () => {
+                                    next({ path: `${SITE_URL}user-group` });
+                                },
+                                2: () => {
+                                    next({ path: `${SITE_URL}audit` });
+                                },
+                                3: () => {
+                                    next({ path: `${SITE_URL}user` });
+                                }
+                            };
+                            initRoute[navIndex]();
                         }
                         // next({ path: `${SITE_URL}user-group` });
                     }
