@@ -744,32 +744,61 @@
                         child.async = child.child_count > 0 || child.member_count > 0;
                         child.isNewMember = false;
                         child.parentNodeId = '';
+                        // if (child.type === 'user') {
+                        //     child.username = child.id;
+                        // }
+
+                        // if (this.hasSelectedDepartments.length > 0) {
+                        //     child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                        // } else {
+                        //     child.is_selected = false;
+                        // }
+
+                        // if (this.hasSelectedUsers.length > 0) {
+                        //     child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                        // } else {
+                        //     child.is_selected = false;
+                        // }
+
+                        // if (this.defaultDepartments.length > 0
+                        //     && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                        // ) {
+                        //     child.is_selected = true;
+                        //     child.disabled = true;
+                        // }
+
+                        // if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                        //     child.is_selected = true;
+                        //     child.disabled = true;
+                        // }
+
                         if (child.type === 'user') {
                             child.username = child.id;
-                        }
+                            if (this.hasSelectedUsers.length > 0) {
+                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
 
-                        if (this.hasSelectedDepartments.length > 0) {
-                            child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
+                            if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
-
-                        if (this.hasSelectedUsers.length > 0) {
-                            child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
-                        }
-
-                        if (this.defaultDepartments.length > 0
-                            && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-                        ) {
-                            child.is_selected = true;
-                            child.disabled = true;
-                        }
-
-                        if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
-                            child.is_selected = true;
-                            child.disabled = true;
+                        
+                        if (child.type === 'depart') {
+                            if (this.hasSelectedDepartments.length > 0) {
+                                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
+    
+                            if (this.defaultDepartments.length > 0
+                                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                            ) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
                     });
                     this.treeList = _.cloneDeep(departments);

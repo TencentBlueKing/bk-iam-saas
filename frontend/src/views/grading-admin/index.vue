@@ -536,6 +536,11 @@
                 try {
                     await this.$store.dispatch(url, params);
                     this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                    if (name || members) {
+                        this.formData.children = [];
+                        this.resetSubPagination();
+                        await this.fetchSubManagerList(this.formData);
+                    }
                     this.formData = Object.assign(this.formData, {
                         name: params.name,
                         description: params.description,
