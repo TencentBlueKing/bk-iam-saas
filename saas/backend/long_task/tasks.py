@@ -234,12 +234,15 @@ def register_handler(_type: str):
 @shared_task(ignore_result=True)
 def retry_long_task():
     """
-    重试一天以前一直 PENDING/RUNNING 的任务
+    重试30分钟以前一直 PENDING/RUNNING 的任务
     """
-    day_before = timezone.now() - timedelta(days=1)
+    day_before = timezone.now() - timedelta(minutes=30)
 
     qs = TaskDetail.objects.filter(
         status__in=[TaskStatus.PENDING.value, TaskStatus.RUNNING.value], created_time__lt=day_before
     )
     for t in qs:
-        TaskFactory().run(t.id)
+        if t.status == TaskStatus.RUNNING.value:
+            StepTask().delay(t.id)
+        else:
+            TaskFactory().run(t.id)

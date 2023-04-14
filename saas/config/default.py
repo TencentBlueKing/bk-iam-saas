@@ -257,7 +257,7 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_retry_long_task": {
         "task": "backend.long_task.tasks.retry_long_task",
-        "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
+        "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
     },
     "periodic_delete_unreferenced_expressions": {
         "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
