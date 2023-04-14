@@ -294,7 +294,7 @@ class TemplateCheckBiz:
         for pre_commit in pre_commits:
             if set(pre_commit.action_ids) != action_id_set:
                 raise error_codes.VALIDATE_ERROR.format(
-                    _("提交操作数据{}与模板预更新的数据{}不一致!").format(action_id_set, add_action_ids)
+                    _("提交操作数据{}与模板预更新的数据{}不一致!").format(pre_commit.action_ids, add_action_ids)
                 )
 
     def check_group_pre_commit_complete(self, template_id: int):
