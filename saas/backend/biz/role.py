@@ -238,15 +238,11 @@ class RoleBiz:
         """
         self.svc.add_grade_manager_members(role_id, usernames)
 
-        self.svc.sync_subset_manager_members(role_id)
-
     def delete_grade_manager_member(self, role_id: int, usernames: List[str]):
         """
         批量删除分级管理员成员
         """
         RoleUser.objects.delete_grade_manager_member(role_id, usernames)
-
-        self.svc.sync_subset_manager_members(role_id)
 
     def delete_member(self, role_id: int, username: str):
         """
