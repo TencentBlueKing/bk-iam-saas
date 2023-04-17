@@ -736,6 +736,7 @@
 
             async handleSubmitWithReason () {
                 this.dialogLoading = true;
+                window.changeDialog = false;
                 const data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                 const subjects = [];
                 if (this.isAll) {
@@ -914,8 +915,8 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
-            left: 150px;
+            top: -40px;
+            left: 160px;
             font-size: 12px;
             color: #ff4d4d;
         }

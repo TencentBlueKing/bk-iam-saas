@@ -185,8 +185,8 @@
                 curPlaceholder: '',
                 // 空数据或异常数据配置项
                 emptyData: {
-                    type: '',
-                    text: '',
+                    type: 'empty',
+                    text: '暂无数据',
                     tip: '',
                     tipType: ''
                 }
