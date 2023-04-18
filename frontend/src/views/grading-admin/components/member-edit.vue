@@ -87,7 +87,7 @@
                 userApi: window.BK_USER_API,
                 userInfo: '',
                 isShowRole: false,
-                isShowDialog: true,
+                isShowDialog: false,
                 showIcon: false,
                 footerPosition: 'center',
                 newPayload: '',

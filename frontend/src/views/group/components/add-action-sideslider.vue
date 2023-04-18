@@ -611,6 +611,7 @@
 
             handleDefaultData (payload, data) {
                 if (this.systemData[payload]) {
+                    this.systemData[payload].count = 0;
                     this.systemData[payload].list = _.cloneDeep(data);
                     this.systemData[payload].list.forEach(item => {
                         if (!item.actions) {
