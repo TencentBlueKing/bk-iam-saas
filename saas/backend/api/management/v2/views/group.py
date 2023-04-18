@@ -110,6 +110,12 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             one.source_system_id = role.source_system_id
             one.hidden = role.hidden
 
+        attrs = None
+        if serializer.validated_data["create_attributes"]:
+            attrs = {
+                GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
+            }
+
         with gen_group_upsert_lock(role.id):
             # 用户组名称在角色内唯一
             group_names = [g["name"] for g in groups_data]
@@ -119,9 +125,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
                 role.id,
                 infos,
                 request.user.username,
-                attrs={
-                    GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
-                },
+                attrs=attrs,
             )
 
         # 添加审计信息
