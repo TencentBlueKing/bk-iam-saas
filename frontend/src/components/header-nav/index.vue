@@ -17,14 +17,14 @@
                         {{ item.text }}
                     </h2>
                 </span>
-                <iam-guide
+                <!-- <iam-guide
                     v-if="haveManager"
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
                     :style="{ top: '10px', left: '240px' }"
                     :content="$t(`m.guide['管理空间导航']`)"
-                />
+                /> -->
             </div>
         </div>
         <div class="user fr">
@@ -111,7 +111,7 @@
 
 <script>
     import { mapGetters } from 'vuex';
-    import IamGuide from '@/components/iam-guide/index.vue';
+    // import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import { il8n, language } from '@/language';
     import { bus } from '@/common/bus';
@@ -206,8 +206,8 @@
     export default {
         name: '',
         components: {
-            SystemLog,
-            IamGuide
+            SystemLog
+            // IamGuide
         },
         props: {
             routeName: {

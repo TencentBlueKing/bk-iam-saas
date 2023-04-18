@@ -790,6 +790,7 @@
             },
 
             async handleSubmitWithReason () {
+                window.changeDialog = false;
                 this.dialogLoading = true;
                 const data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                 const subjects = [];

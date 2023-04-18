@@ -1121,7 +1121,7 @@
                     this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '无资源ID，无法预览'
+                        message: this.$t(`m.info['无资源ID，无法预览']`)
                     });
                     return;
                 }

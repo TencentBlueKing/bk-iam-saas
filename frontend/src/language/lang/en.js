@@ -424,7 +424,9 @@ export const m = {
         '管理空间': 'manage space',
         '支持一级、两级管理空间，更加精细化管理。': 'Supports one-level and secondary management of space, with more refined management.',
         '知道了': 'Got it',
-        '搜索关键字': 'Search Keywords'
+        '搜索关键字': 'Search Keywords',
+        '无资源ID，无法预览': 'No resource ID, unable to preview',
+        '暂无可批量复制包含有属性条件的资源实例': 'There are currently no resource instances that can be batch copied with attribute conditions'
     },
     // 二次确认弹窗相关
     dialog: {

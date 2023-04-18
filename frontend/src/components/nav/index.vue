@@ -83,11 +83,14 @@
                                 @click.stop="handleSwitchNav(child.id, child)"
                                 :data-test-id="`nav_menu_switchNav_${child.id}`">
                                 <Icon :type="child.icon" class="iam-menu-icon" />
-                                <span class="iam-menu-text single-hide"
-                                    v-if="child.name === $t(`m.common['管理员']`) && curRole === 'system_manager'">
+                                <span
+                                    v-if="child.name === $t(`m.common['管理员']`) && curRole === 'system_manager'"
+                                    class="iam-menu-text single-hide"
+                                    :title="`${t(`m.common['系统']`)}${child.name}`"
+                                >
                                     <span>{{$t(`m.common['系统']`)}}{{child.name}}</span>
                                 </span>
-                                <span class="iam-menu-text single-hide" v-else>{{ child.name }}</span>
+                                <span v-else class="iam-menu-text single-hide" :title="child.name">{{ child.name }}</span>
                                 <span v-if="['myManageSpace'].includes(child.rkey)" @click.stop>
                                     <iam-guide
                                         ref="popconfirm"
@@ -130,10 +133,10 @@
                             @click.stop="handleSwitchNav(item.id, item)"
                             :data-test-id="`nav_menu_switchNav_${item.id}`">
                             <Icon :type="item.icon" class="iam-menu-icon" />
-                            <span class="iam-menu-text single-hide" v-if="item.name === $t(`m.grading['管理空间']`) && curRole === 'staff'">
+                            <span :title="item.name" class="iam-menu-text single-hide" v-if="item.name === $t(`m.grading['管理空间']`) && curRole === 'staff'">
                                 {{item.name }}
                             </span>
-                            <span class="iam-menu-text single-hide" v-else>{{ item.name }}</span>
+                            <span :title="item.name" class="iam-menu-text single-hide" v-else>{{ item.name }}</span>
                         </div>
                     </template>
                 </div>
