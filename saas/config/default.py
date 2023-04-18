@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "backend.api.authorization",
     "backend.api.admin",
     "backend.api.management",
+    "backend.api.bkci",
 ]
 
 # 登录中间件
@@ -203,6 +204,7 @@ CELERY_IMPORTS = (
     "backend.audit.tasks",
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
+    "backend.api.bkci.tasks",
 )
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
@@ -255,7 +257,7 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_retry_long_task": {
         "task": "backend.long_task.tasks.retry_long_task",
-        "schedule": crontab(minute=0, hour=3),  # 每天凌晨3时执行
+        "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
     },
     "periodic_delete_unreferenced_expressions": {
         "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
@@ -364,7 +366,9 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     # 默认每个系统可创建的分级管理数量
     "default_grade_manager_of_system_limit": env.int("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", default=500),
     # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
-    "grade_manager_of_specified_systems_limit": env.str("BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", default=""),
+    "grade_manager_of_specified_systems_limit": env.str(
+        "BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", default="bk_ci_rbac:30000"
+    ),
 }
 # 授权的实例最大数量限制
 AUTHORIZATION_INSTANCE_LIMIT = env.int("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", default=200)
@@ -411,7 +415,7 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 )
 
 # disable display systems
-HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=[])
+HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_iam", "bk_ci_rbac"])
 
 
 # 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置

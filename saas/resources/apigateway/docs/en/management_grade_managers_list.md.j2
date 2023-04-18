@@ -1,0 +1,35 @@
+### Query the list of hierarchical administrators
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| --------|--------|--------|--------|--------|--------|--------|
+| system | int | yes | path | Access to system unique identifier |
+
+#### Request
+
+```json
+GET /api/v1/open/management/grade_managers/?system=bk_cmdb
+```
+
+#### Response
+
+| field | type | description |
+| -----------|-----------|-----------|
+| count | int | total number |
+| results | array[object] | paginated query to results |
+
+results
+| field | type | description |
+| -----------|-----------|-----------|
+| id | int | hierarchy_administrator_id |
+| name | string | Name of the administrator |
+| description | string | Description of the administrator |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

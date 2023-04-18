@@ -22,3 +22,7 @@ class ActionQuerySLZ(SystemQuerySLZ):
 class BaseAction(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     id = serializers.CharField(label="操作id")
+
+
+class HiddenSLZ(serializers.Serializer):
+    hidden = serializers.BooleanField(label="操作id", required=False, default=True)

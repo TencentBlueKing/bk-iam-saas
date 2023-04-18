@@ -238,15 +238,11 @@ class RoleBiz:
         """
         self.svc.add_grade_manager_members(role_id, usernames)
 
-        self.svc.sync_subset_manager_members(role_id)
-
     def delete_grade_manager_member(self, role_id: int, usernames: List[str]):
         """
         批量删除分级管理员成员
         """
         RoleUser.objects.delete_grade_manager_member(role_id, usernames)
-
-        self.svc.sync_subset_manager_members(role_id)
 
     def delete_member(self, role_id: int, username: str):
         """
@@ -385,7 +381,9 @@ class RoleBiz:
 
         # 1. 对比超出管理员范围的部分subjects
         checker = RoleSubjectScopeChecker(role)
-        incr_subjects = checker.check(subjects, raise_exception=False)
+        exists_subjects = set(checker.check(subjects, raise_exception=False))
+
+        incr_subjects = [subject for subject in subjects if subject not in exists_subjects]
         if not incr_subjects:
             return
 
@@ -489,7 +487,7 @@ class RoleCheckBiz:
         )
         names = {i.data.get("name") for i in applications}
         if new_name in names:
-            raise error_codes.CONFLICT_ERROR.format(_("正在申请的单据中名称[{}]已存在，请修改为其他名称，或等单据被处理后再提交").format(new_name), True)
+            raise error_codes.CONFLICT_ERROR.format(_("存在同名分级管理员[{}]或者在处理中的单据，请修改后再提交").format(new_name), True)
 
     def check_subset_manager_unique_name(self, grade_manager: Role, new_name: str, old_name: str = ""):
         """
@@ -541,9 +539,7 @@ class RoleCheckBiz:
         member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"]
         if exists_count + new_member_count > member_limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("分级管理员或子集管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
-                    role_id, exists_count, new_member_count, member_limit
-                ),
+                _("超过分级管理员最大可添加成员数{}").format(member_limit),
                 True,
             )
 
@@ -556,7 +552,7 @@ class RoleCheckBiz:
         role_ids = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).values_list("id", flat=True)
         exists_count = RoleUser.objects.filter(username=subject.id, role_id__in=role_ids).count()
         if exists_count >= limit:
-            raise serializers.ValidationError(_("成员({}): 加入的分级管理员数量已超过最大值 {}").format(subject.id, limit))
+            raise serializers.ValidationError(_("成员({}): 可加入的分级管理员数量已超限 {}").format(subject.id))
 
     def check_grade_manager_of_system_limit(self, system_id: str):
         """
@@ -584,7 +580,7 @@ class RoleCheckBiz:
             source_type=RoleSourceType.API.value, source_system_id=system_id
         ).count()
         if exists_count >= limit:
-            raise serializers.ValidationError(_("系统({}): 创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
+            raise serializers.ValidationError(_("系统({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
 
 
 class RoleListQuery:
@@ -857,7 +853,9 @@ class RoleAuthorizationScopeChecker:
     def _check_system_in_scope(self, system_id):
         system_action_scope = self.system_action_scope
         if system_id not in system_action_scope and SYSTEM_ALL not in system_action_scope:
-            raise error_codes.FORBIDDEN.format(message=_("{} 系统不在角色的授权范围中").format(system_id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("{} 系统不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(system_id), replace=True
+            )
 
     def _check_action_in_scope(self, system_id, action_id):
         system_action_scope = self.system_action_scope
@@ -867,7 +865,7 @@ class RoleAuthorizationScopeChecker:
         action_scope = system_action_scope[system_id]
         if action_id not in action_scope:
             raise error_codes.FORBIDDEN.format(
-                message=_("{} 操作不在角色的授权范围内").format(action_id), replace=True
+                message=_("{} 操作不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(action_id), replace=True
             )  # 操作不在授权范围内
 
         return ""
@@ -957,7 +955,7 @@ class RoleAuthorizationScopeChecker:
         differ = ActionScopeDiffer(policy, PolicyBean.parse_obj(policy_scope))
         if not differ.diff():
             raise error_codes.FORBIDDEN.format(
-                message=_("{} 操作配置的资源范围不满足角色的授权范围").format(policy.action_id), replace=True
+                message=_("{} 操作选择的资源实例不在分级管理员的授权范围内，请编辑分级管理员授权范围").format(policy.action_id), replace=True
             )  # 操作的资源选择范围不满足分级管理员的资源选择范围
 
     def check_systems(self, system_ids: List[str]):
@@ -1056,7 +1054,9 @@ class RoleSubjectScopeChecker:
             if s.type == SubjectType.DEPARTMENT.value:
                 if len(department_ancestors[int(s.id)] & department_scopes) == 0:
                     if raise_exception:
-                        raise error_codes.FORBIDDEN.format(message=_("部门({})不满足角色的授权范围").format(s.id), replace=True)
+                        raise error_codes.FORBIDDEN.format(
+                            message=_("部门({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id), replace=True
+                        )
 
                     need_delete_set.add((s.type, s.id))
 
@@ -1067,7 +1067,9 @@ class RoleSubjectScopeChecker:
                     department_set.update(department_ancestors[d])
                 if len(department_set & department_scopes) == 0:
                     if raise_exception:
-                        raise error_codes.FORBIDDEN.format(message=_("用户({})不满足角色的授权范围").format(s.id), replace=True)
+                        raise error_codes.FORBIDDEN.format(
+                            message=_("用户({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id), replace=True
+                        )
 
                     need_delete_set.add((s.type, s.id))
 

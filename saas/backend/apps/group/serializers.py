@@ -78,6 +78,8 @@ class GroupSLZ(serializers.ModelSerializer):
 
             # 查询涉及到的用户组的属性
             self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
+        elif isinstance(self.instance, Group):
+            self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
 
     def get_role(self, obj):
         if not self.group_role_dict:
@@ -137,7 +139,7 @@ class GroupUpdateSLZ(serializers.Serializer):
         """
         if self.instance:
             if Group.objects.exclude(id=self.instance.id).filter(name=data["name"]).exists():
-                raise serializers.ValidationError({"name": [_("用户组名称不能与已有的重复")]})
+                raise serializers.ValidationError({"name": [_("存在同名用户组")]})
 
         return data
 

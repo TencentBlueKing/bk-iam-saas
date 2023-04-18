@@ -40,7 +40,7 @@ from backend.biz.template import TemplateBiz
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
-from backend.common.serializers import SystemQuerySLZ
+from backend.common.serializers import HiddenSLZ, SystemQuerySLZ
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
@@ -172,7 +172,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
             self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"])
 
             group = self.group_biz.create_and_add_members(
-                request.role.id, data["name"], data["description"], user_id, members, data["expired_at"]
+                request.role, data["name"], data["description"], user_id, members, data["expired_at"]
             )
 
         # 使用长时任务触发多个模板同时授权
@@ -683,12 +683,17 @@ class GroupSystemViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户组有权限的所有系统列表",
+        query_serializer=HiddenSLZ,
         responses={status.HTTP_200_OK: PolicySystemSLZ(label="系统", many=True)},
         tags=["group"],
     )
     def list(self, request, *args, **kwargs):
+        slz = HiddenSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        hidden = slz.validated_data["hidden"]
+
         group = self.get_object()
-        data = self.biz.list_system_counter(group.id)
+        data = self.biz.list_system_counter(group.id, hidden=hidden)
         return Response([one.dict() for one in data])
 
 
@@ -905,9 +910,10 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
         subset_manager = Role.objects.get(id=subset_manager_id)
 
         # 1. 转移用户组关系
-        RoleRelatedObject.objects.filter(object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id).update(
-            role_id=subset_manager_id
-        )
+        if not RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=False
+        ).update(role_id=subset_manager_id):
+            return Response({})
 
         # 2. 查询用户组所有授权信息, 并扩张子集管理员的授权范围
         auth_scope_systems = self._query_group_auth_scope(group)

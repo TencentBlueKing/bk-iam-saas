@@ -224,16 +224,9 @@ class RoleService:
         """
         创建子集管理员
         """
-        # 创建子集管理员的同时加入分级管理员的人员名单
-        grade_manager_members = self.list_members_by_role_id(grade_manager.id)
-
         with transaction.atomic():
-            role = self.create(info, creator, add_member=False)
+            role = self.create(info, creator, add_member=True)
             RoleRelation.objects.create(parent_id=grade_manager.id, role_id=role.id)
-
-            role_users = self._gen_subset_manager_role_user(role.id, grade_manager_members, info.member_usernames)
-            if role_users:
-                RoleUser.objects.bulk_create(role_users, batch_size=100)
 
         return role
 
@@ -295,8 +288,6 @@ class RoleService:
             # 分级管理员成员
             if "members" in update_fields:
                 self._update_members(role, info.member_usernames)
-                if role.type == RoleType.GRADE_MANAGER.value:
-                    self.sync_subset_manager_members(role.id)
 
             # 可授权的权限范围
             if "authorization_scopes" in update_fields:
@@ -340,49 +331,6 @@ class RoleService:
             # 向IAM后台同步
             self._create_backend_role_member(role, list(created_members))
             self._delete_backend_role_member(role, list(deleted_members))
-
-    def sync_subset_manager_members(self, parent_id: int):
-        """
-        同步子集管理员成员
-        """
-        grade_manager_members = self.list_members_by_role_id(parent_id)
-        for relation in RoleRelation.objects.filter(parent_id=parent_id):
-            subset_manager_id = relation.role_id
-            subset_manager_members = list(
-                RoleUser.objects.filter(role_id=subset_manager_id, readonly=False).values_list("username", flat=True)
-            )
-
-            role_users = self._gen_subset_manager_role_user(
-                subset_manager_id, grade_manager_members, subset_manager_members
-            )
-
-            # 全删除
-            RoleUser.objects.filter(role_id=subset_manager_id).delete()
-            # 重新全部添加
-            if role_users:
-                RoleUser.objects.bulk_create(role_users, batch_size=100)
-
-    def _gen_subset_manager_role_user(
-        self, subset_manager_id: int, grade_manager_members: List[str], subset_manager_members: List[str]
-    ):
-        """
-        生成子集管理员的成员关系
-
-        1. 分级管理员的成员readonly=True
-        2. 子集管理员子集的成员readonly=False
-        """
-        role_users = [  # 从上级分级管理员继承的成员是readonly的
-            RoleUser(role_id=subset_manager_id, username=username, readonly=True) for username in grade_manager_members
-        ]
-        role_users.extend(
-            [
-                RoleUser(role_id=subset_manager_id, username=username, readonly=False)
-                for username in subset_manager_members
-                if username not in grade_manager_members
-            ]
-        )
-
-        return role_users
 
     def _create_backend_role_member(self, role: Role, created_members: List[str]):
         """创建后端role成员"""
@@ -649,6 +597,13 @@ class RoleService:
         # 排除只读用户组
         group_ids = list(Group.objects.filter(id__in=group_ids, readonly=False).values_list("id", flat=True))
 
+        # 排除默认跟随角色权限的用户组
+        group_ids = list(
+            RoleRelatedObject.objects.filter(
+                object_type=RoleRelatedObjectType.GROUP.value, object_id__in=group_ids, sync_perm=False
+            ).values_list("object_id", flat=True)
+        )
+
         # 查询所有用户组的权限模板, 检查查询的模板是否关联了除了选中的用户组的其它用户组
         template_ids = list(
             PermTemplatePolicyAuthorized.objects.filter(
@@ -669,7 +624,7 @@ class RoleService:
                 # 存在权限模板关联了其它用户组的情况
                 names = PermTemplate.objects.filter(id__in=over_template_ids).values_list("name", flat=True)
                 raise error_codes.GROUP_TRANSFER_ERROR.format(
-                    _("权限模板 [{}] 关联了其它用户组, 请移除关系后再转移.").format("|".join(names)), True
+                    _("权限模板 [{}] 已被用户组关联, 请解除关联后再转移.").format("|".join(names)), True
                 )
 
         # 转移用户组, 权限模板的角色归属

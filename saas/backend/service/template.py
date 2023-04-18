@@ -255,7 +255,7 @@ class TemplateService:
                 )
                 authorized_template.data = {"actions": [p.dict() for p in saas_policies]}
                 authorized_template.auth_types = action_auth_types
-                authorized_template.save(update_fields=["_data"])
+                authorized_template.save(update_fields=["_data", "_auth_types"])
 
                 # 后端策略变更
                 self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
@@ -291,7 +291,7 @@ class TemplateService:
             policies.append(Policy.parse_obj(action))
         return PolicyList(policies)
 
-    def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
+    def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounter]:
         """
         查询subject有权限的系统-模板数量信息
         """
@@ -302,11 +302,14 @@ class TemplateService:
             .order_by()
         )
 
-        return [
-            SystemCounter(id=one["system_id"], count=one["count"])
-            for one in qs
-            if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
-        ]  # NOTE: 屏蔽掉需要隐藏的系统
+        if hidden:
+            return [
+                SystemCounter(id=one["system_id"], count=one["count"])
+                for one in qs
+                if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
+            ]  # NOTE: 屏蔽掉需要隐藏的系统
+
+        return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
 
     def create_or_update_group_pre_commit(self, template_id: int, pre_commits: List[TemplateGroupPreCommit]):
         """

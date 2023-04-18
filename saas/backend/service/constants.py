@@ -59,9 +59,15 @@ class GroupMemberType(ChoicesEnum, LowerStrEnum):
 class GroupSaaSAttributeEnum(ChoicesEnum, LowerStrEnum):
     """用户组SaaS属性枚举"""
 
-    READONLY = auto()
+    SOURCE_TYPE = auto()
+    SOURCE_FROM_ROLE = auto()
 
-    _choices_labels = skip(((READONLY, "只读"),))
+    _choices_labels = skip(
+        (
+            (SOURCE_TYPE, "来源类型"),
+            (SOURCE_FROM_ROLE, "是否来源于ROLE"),
+        )
+    )
 
 
 class GroupAttributeValueType(ChoicesEnum, LowerStrEnum):
@@ -73,9 +79,15 @@ class GroupAttributeValueType(ChoicesEnum, LowerStrEnum):
 
 
 # 每个属性的值类型
-GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP = {GroupSaaSAttributeEnum.READONLY.value: GroupAttributeValueType.Boolean.value}
+GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP = {
+    GroupSaaSAttributeEnum.SOURCE_TYPE.value: GroupAttributeValueType.String.value,
+    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: GroupAttributeValueType.Boolean.value,
+}
 # 每个属性的默认值
-GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP = {GroupSaaSAttributeEnum.READONLY.value: False}
+GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP = {
+    GroupSaaSAttributeEnum.SOURCE_TYPE.value: "",
+    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: False,
+}
 
 
 # ---------------------------------------------------------------------------------------------- #

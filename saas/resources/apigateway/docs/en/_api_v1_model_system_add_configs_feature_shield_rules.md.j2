@@ -1,0 +1,36 @@
+### Register feature switch rules
+
+{% include '__api_v1_model_config_feature_shield_rules.md.j2' %}
+
+#### Request
+
+```json
+[
+    // For custom requests, block all Actions for the entire access system, i.e. the access system does not support custom requests
+    {
+        "effect": "deny",
+        "feature": "application.custom_permission.grant",
+        "action": {
+            "id": "*"
+        }
+    },
+    // For personal permissions, custom permissions for an Aciton in the access system are not allowed to be deleted
+    {
+        "effect": "deny",
+        "feature": "user_permission.custom_permission.delete",
+        "action": {
+            "id": "access_business"
+        }
+    }
+]
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```
