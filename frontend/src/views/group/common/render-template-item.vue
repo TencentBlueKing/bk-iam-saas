@@ -3,7 +3,9 @@
         <div
             :class="[
                 'header',
-                { 'external-header': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle }
+                { 'external-header': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle },
+                { 'external-header-lang': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle
+                    && !['zh-cn'].includes(language) }
             ]"
             @click="handleExpanded"
             @mousemove="isShowEditFill"
@@ -128,7 +130,8 @@
                 role: '',
                 isShowDeleteDialog: false,
                 showIcon: false,
-                footerPosition: 'center'
+                footerPosition: 'center',
+                language: window.CUR_LANGUAGE
             };
         },
         computed: {
@@ -253,6 +256,12 @@
                     i {
                         color: #3a84ff;
                     }
+                }
+            }
+            &-lang {
+                .edit-action,
+                .delete-action {
+                    transform: translate(80px, -40px);
                 }
             }
         }

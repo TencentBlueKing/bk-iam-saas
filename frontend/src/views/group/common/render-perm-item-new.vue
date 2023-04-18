@@ -21,7 +21,12 @@
             <template v-else>
                 <label class="title">{{ templateCount + policyCount }}</label>
                 <span>{{ $t(`m.common['个']`) }}</span>
-                <span> {{ $t(`m.common['权限']`) }}</span>
+                <span :class="
+                    [
+                        { 'external-perm-text': !['zh-cn'].includes(language) }
+                    ]">
+                    {{ $t(`m.common['权限']`) }}
+                </span>
             </template>
         </div>
         <div class="content" v-if="isExpanded">
@@ -72,7 +77,8 @@
         data () {
             return {
                 isExpanded: this.expanded,
-                role: ''
+                role: '',
+                language: window.CUR_LANGUAGE
             };
         },
         computed: {
@@ -153,6 +159,9 @@
                 .number {
                     font-weight: 600;
                 }
+            }
+            .external-perm-text {
+                padding-left: 5px;
             }
         }
         .content {
