@@ -669,12 +669,12 @@
                             return getUsername(item);
                         })
                     });
-                    const temps = res.data.filter(
-                        item => !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username)
-                    );
-                    this.hasSelectedUsers.push(...temps);
                     if (res.data.length > 0) {
                         const usernameList = res.data.map(item => item.username);
+                        const temps = res.data.filter(
+                            item => !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username)
+                        );
+                        this.hasSelectedUsers.push(...temps);
                         // 分号拼接
                         // const templateArr = [];
                         // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
@@ -1313,30 +1313,55 @@
             },
 
             handleSave () {
-                const list = [...this.hasSelectedUsers, ...this.hasSelectedDepartments];
-                // eslint-disable-next-line camelcase
-                const subject_scopes = list.map(item => {
-                    if (item.type === 'depart') {
+                let users = [];
+                let departments = [];
+                if (this.hasSelectedUsers.length) {
+                    users = this.hasSelectedUsers.map(item => {
                         return {
-                            id: item.id,
-                            type: 'depart',
-                            name: item.name,
-                            full_name: item.full_name,
-                            username: item.name
-                            // count: item.count
-                        };
-                    }
-                    if (item.type === 'user') {
-                        return {
-                            id: item.id,
+                            id: item.id || '',
                             type: 'user',
                             name: item.name,
                             username: item.username || item.id,
                             full_name: item.username
                             // count: item.count
                         };
-                    }
-                });
+                    });
+                }
+                if (this.hasSelectedDepartments.length) {
+                    departments = this.hasSelectedDepartments.map(item => {
+                        return {
+                            id: item.id,
+                            type: 'depart',
+                            name: item.name,
+                            full_name: item.full_name,
+                            username: item.name
+                        };
+                    });
+                }
+                // eslint-disable-next-line camelcase
+                const subject_scopes = [...users, ...departments];
+                // const subject_scopes = list.map(item => {
+                //     if (item.type === 'depart') {
+                //         return {
+                //             id: item.id,
+                //             type: 'depart',
+                //             name: item.name,
+                //             full_name: item.full_name,
+                //             username: item.name
+                //             // count: item.count
+                //         };
+                //     }
+                //     if (item.type === 'user') {
+                //         return {
+                //             id: item.id,
+                //             type: 'user',
+                //             name: item.name,
+                //             username: item.username || item.id,
+                //             full_name: item.username
+                //             // count: item.count
+                //         };
+                //     }
+                // });
                 const params = {
                     subject_scopes
                     // expiredAt: this.expiredAt,
