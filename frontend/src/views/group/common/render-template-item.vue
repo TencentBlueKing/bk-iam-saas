@@ -174,7 +174,8 @@
             fetchDynamicStyle () {
                 if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
                     const len = String(this.count).length;
-                    const distance = len > 2 ? (len - 1) * this.initDistance : 80;
+                    const langLen = !['zh-cn'].includes(this.language) ? 80 : this.initDistance;
+                    const distance = len > 2 ? (len - 1) * this.initDistance : langLen;
                     const root = document.querySelector(':root');
                     root.style.setProperty('--translate-icon', `translate(${distance}px, -40px)`);
                 }
@@ -275,7 +276,7 @@
                     display: inline-block;
                     width: 40px;
                     text-align: center;
-                    transform: translate(40px, -40px);
+                    transform: var(--translate-icon);
                     &:hover {
                         i {
                             color: #3a84ff;
