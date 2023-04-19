@@ -51,6 +51,12 @@ class BKCIMigrateTask(Task):
         task.save(update_fields=["status"])
 
     def _handle_policy(self, policy: Policy, subject: Subject, project_subject_path_action):
+        if not policy.resource_groups.__root__:
+            return
+
+        if not policy.resource_groups[0].related_resource_types:
+            return
+
         if not policy.resource_groups[0].related_resource_types[0].condition:
             return
 
