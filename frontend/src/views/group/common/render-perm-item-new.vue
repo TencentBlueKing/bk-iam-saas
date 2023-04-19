@@ -14,8 +14,7 @@
                 <div :class="['sub-title', { 'no-margin': templateCount }, { 'set-margin': !templateCount }]"
                     v-if="policyCount > 0 && !externalCustom">
                     <span class="number">{{ policyCount }}</span>
-                    {{ $t(`m.common['个']`) }}
-                    {{ $t(`m.perm['自定义权限']`) }}
+                    <span>{{ $t(`m.common['个']`) }}{{ $t(`m.perm['自定义权限']`) }}</span>
                 </div>
             </template>
             <template v-else>
