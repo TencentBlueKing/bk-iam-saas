@@ -176,7 +176,7 @@
                     </span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['操作状态']`)" width="100">
+            <bk-table-column :label="$t(`m.audit['操作状态']`)" width="150">
                 <template slot-scope="{ row }">
                     <render-status :status="row.status" />
                 </template>
