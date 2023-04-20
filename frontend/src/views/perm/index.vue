@@ -58,12 +58,6 @@
                 @click="handleGoApplyProvisionPerm">
                 {{ $t(`m.nav['临时权限申请']`) }}
             </bk-button>
-            <template v-if="isEmpty">
-                <div class="empty-wrapper">
-                    <ExceptionEmpty />
-                    <div class="empty-tips">{{ $t(`m.common['您还没有任何权限']`) }}</div>
-                </div>
-            </template>
         </div>
         <div
             v-if="externalSystemsLayout.myPerm.hideApplyBtn ? !isNoExternalRenewal : !isNoRenewal"
@@ -82,6 +76,7 @@
                 <div class="empty-wrapper">
                     <ExceptionEmpty
                         style="background: #f5f6fa"
+                        empty-text="您还没有任何权限"
                     />
                 </div>
             </template>
