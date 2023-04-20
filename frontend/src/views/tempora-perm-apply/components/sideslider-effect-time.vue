@@ -32,6 +32,7 @@
                 <bk-select
                     v-model="environmentsItem.TimeZone"
                     :clearable="false"
+                    disabled
                     ext-cls="effect-select-condition"
                     :placeholder="$t(`m.verify['请选择时区']`)">
                     <bk-option v-for="option in effectWeekTimeZone"
