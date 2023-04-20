@@ -15,4 +15,10 @@ from . import views
 urlpatterns = [
     path("task/", views.MigrateTaskView.as_view({"get": "list", "post": "create"}), name="bkci.migrate_task"),
     path("data/", views.MigrateDataView.as_view({"get": "list"}), name="bkci.migrate_data"),
+    path("legacy_task/", views.MigrateLegacyTaskView.as_view({"post": "create"}), name="bkci.migrate_legacy_task"),
+    path(
+        "legacy_task/<int:id>/",
+        views.MigrateLegacyTaskView.as_view({"get": "retrieve"}),
+        name="bkci.migrate_legacy_task_detail",
+    ),
 ]

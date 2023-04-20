@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import secrets
 
+from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, mixins, serializers
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.permissions import AllowAny
@@ -17,9 +18,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.bkci.filters import MigrateDataFilter
-from backend.api.bkci.models import MigrateData, MigrateTask
+from backend.api.bkci.models import MigrateData, MigrateLegacyTask, MigrateTask
 from backend.api.bkci.serializers import MigrateDataSLZ
-from backend.api.bkci.tasks import BKCIMigrateTask
+from backend.api.bkci.tasks import BKCILegacyMigrateTask, BKCIMigrateTask
 from backend.util.json import json_dumps
 
 
@@ -66,3 +67,25 @@ class MigrateDataView(GenericViewSet, mixins.ListModelMixin):
     queryset = MigrateData.objects.all().order_by("-id")
     serializer_class = MigrateDataSLZ
     filterset_class = MigrateDataFilter
+
+
+class MigrateLegacyTaskView(GenericViewSet):
+    """迁移v0任务"""
+
+    authentication_classes = [BKCIMigrateAutherization]
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializers.ListField(child=serializers.CharField()).run_validation(request.data)
+
+        task = MigrateLegacyTask(project_ids=json_dumps(request.data), status="PENDING")
+        task.save(force_insert=True)
+
+        BKCILegacyMigrateTask().delay(task.id)
+
+        return Response({"id": task.id})
+
+    def retrieve(self, request, *args, **kwargs):
+        task = get_object_or_404(MigrateLegacyTask.objects.all(), pk=kwargs["id"])
+
+        return Response({"status": task.status})

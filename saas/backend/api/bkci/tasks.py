@@ -11,14 +11,30 @@ specific language governing permissions and limitations under the License.
 
 import json
 from collections import defaultdict
+from datetime import datetime
 from typing import List
 
 from celery import Task, current_app
 from django.core.paginator import Paginator
+from django.db.models import Q
 from pydantic import parse_obj_as
 
-from backend.api.bkci.models import MigrateData, MigrateTask
+from backend.api.bkci.models import (
+    MigrateData,
+    MigrateLegacyTask,
+    MigrateTask,
+    Permissions,
+    Policies,
+    PolicyGroups,
+    Projects,
+    Resources,
+    ResourceTypes,
+    Roles,
+    Services,
+    UserRoles,
+)
 from backend.apps.group.models import Group
+from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.role.models import RoleRelatedObject
 from backend.apps.template.models import PermTemplatePolicyAuthorized
@@ -33,7 +49,7 @@ class BKCIMigrateTask(Task):
 
     def run(self):
         # delete all old migrate data
-        MigrateData.objects.all().delete()
+        MigrateData.objects.filter(version="v3").delete()
 
         task = MigrateTask.objects.first()
         if not task:
@@ -211,3 +227,342 @@ class BKCIMigrateTask(Task):
 
 
 current_app.tasks.register(BKCIMigrateTask())
+
+
+class BKCILegacyMigrateTask(Task):
+    name = "backend.api.bkci.tasks.BKCILegacyMigrateTask"
+
+    def run(self, id: int):
+        task = MigrateLegacyTask.objects.filter(id=id).first()
+        if not task or task.status != "PENDING":
+            return
+
+        project_ids = json.loads(task.project_ids)
+        user_set = self.get_user_set()
+        for project_id in project_ids:
+            self.handle_project(project_id, user_set)
+
+        # update status
+        task.status = "SUCCESS"
+        task.save(update_fields=["status"])
+
+    def get_user_set(self):
+        user_set = set()
+
+        queryset = User.objects.filter(staff_status="IN").only("username").order_by("id")
+        paginator = Paginator(queryset, 1000)
+
+        for i in paginator.page_range:
+            for u in paginator.page(i):
+                user_set.add(u.username)
+
+        return user_set
+
+    def handle_project(self, project_id: str, user_set):
+        MigrateData.objects.filter(version="v0", project_id=project_id).delete()
+
+        # 1. 从project表查询项目id
+        project = (
+            Projects.objects.using("bkci").filter(project_code=project_id, deleted_at__isnull=True).only("id").first()
+        )
+        if not project:
+            return
+
+        project_uuid = project.id
+
+        # 2. 从services表查询出需要排除的service_id
+        exclude_service_ids = list(
+            Services.objects.using("bkci")
+            .filter(
+                service_code__in=["codecc", "bcs", "gs-apk", "job", "vs", "wetest", "xinghai"], deleted_at__isnull=True
+            )
+            .values_list("id", flat=True)
+        )
+
+        # 3. 从policies表中查询出所有的操作id与操作名生成map
+        policies = (
+            Policies.objects.using("bkci")
+            .exclude(service_id__in=exclude_service_ids)
+            .filter(deleted_at__isnull=True)
+            .only("id", "policy_code")
+            .all()
+        )
+        policy_map = {one.id: one.policy_code for one in policies}
+
+        # 4. 从policies_groups表中查询出所有的操作group_id与操作的关系, 生成map
+        policy_groups = (
+            PolicyGroups.objects.using("bkci").filter(deleted_at__isnull=True).only("group_id", "policy_id").all()
+        )
+
+        policy_group_map = defaultdict(list)
+        for one in policy_groups:
+            if one.policy_id in policy_map:
+                policy_group_map[one.group_id].append(policy_map[one.policy_id])
+
+        # 5. 从resource_type表中查询出所有的资源id与资源名生成map
+        resource_types = (
+            ResourceTypes.objects.using("bkci")
+            .exclude(service_id__in=exclude_service_ids)
+            .filter(deleted_at__isnull=True)
+            .only("id", "resource_type_code", "resource_type_name")
+            .all()
+        )
+        resource_type_map = {}
+        for one in resource_types:
+            resource_type_map[one.id] = {"id": one.resource_type_code, "name": one.resource_type_name}
+
+        # 6. 从resources表中查询出所有的资源id与资源名生成map
+        resources = (
+            Resources.objects.using("bkci")
+            .exclude(service_id__in=exclude_service_ids)
+            .filter(deleted_at__isnull=True, project_id=project_uuid)
+            .only("id", "resource_code", "resource_name")
+            .all()
+        )
+        resource_map = {}
+        for one in resources:
+            resource_map[one.id] = {"id": one.resource_code, "name": one.resource_name}
+
+        # 7. 从roles表中查询出所有的用户组id与用户组名生成map
+        roles = (
+            Roles.objects.using("bkci")
+            .filter(deleted_at__isnull=True)
+            .filter(Q(project_id=project_uuid) | Q(project_id=""))
+            .only("id", "display_name")
+            .all()
+        )
+        role_map = {}
+        for one in roles:
+            role_map[one.id] = {"id": one.id, "name": one.display_name, "members": []}
+
+        # 8. 从user_roles表中查询出role_id与user_id填充role_map
+        user_roles = (
+            UserRoles.objects.using("bkci")
+            .filter(deleted_at__isnull=True, project_id=project_uuid)
+            .only("role_id", "user_id")
+            .all()
+        )
+        role_user_map = defaultdict(list)
+        for one in user_roles:
+            if one.user_id not in user_set:
+                continue
+            role_user_map[one.role_id].append(one.user_id)
+
+        for role_id, users in role_user_map.items():
+            if role_id not in role_map:
+                continue
+            role_map[role_id]["members"] = users
+
+        # 9. 执行转换
+        self.handle_user_custom_policy(
+            project_id,
+            project_uuid,
+            exclude_service_ids,
+            policy_group_map,
+            policy_map,
+            resource_type_map,
+            resource_map,
+            user_set,
+        )
+
+        self.handle_group_web_policy(
+            project_id,
+            project_uuid,
+            exclude_service_ids,
+            policy_group_map,
+            policy_map,
+            resource_type_map,
+            resource_map,
+            role_map,
+        )
+
+    def handle_user_custom_policy(
+        self,
+        project_id,
+        project_uuid,
+        exclude_service_ids,
+        policy_group_map,
+        policy_map,
+        resource_type_map,
+        resource_map,
+        user_set,
+    ):
+        user_resource_action = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
+
+        queryset = (
+            Permissions.objects.using("bkci")
+            .filter(deleted_at__isnull=True, project_id=project_uuid, expire_at__gt=datetime.now())
+            .exclude(service_id__in=exclude_service_ids)
+            .exclude(Q(user_id__isnull=True) | Q(user_id=""))
+            .order_by("id")
+        )
+
+        paginator = Paginator(queryset, 100)
+
+        for i in paginator.page_range:
+            for p in paginator.page(i):
+                if p.user_id not in user_set:
+                    continue
+
+                if p.group_id and p.group_id in policy_group_map:
+                    action_ids = policy_group_map[p.group_id]
+                elif p.policy_id and p.policy_id in policy_map:
+                    action_ids = [policy_map[p.policy_id]]
+                else:
+                    continue
+
+                if not (p.resource_type_id and p.resource_type_id in resource_type_map):
+                    continue
+
+                if p.resource_id and p.resource_id in resource_map:
+                    resource_id = p.resource_id
+                elif p.resource_id == 0:
+                    resource_id = "*"
+                else:
+                    continue
+
+                for action_id in action_ids:
+                    user_resource_action[p.user_id][p.resource_type_id][resource_id].add(action_id)
+
+        for user_id, resource_type_action in user_resource_action.items():
+            for resource_type_id, resource_action in resource_type_action.items():
+                permissions = []
+                for resource_id, action_ids in resource_action.items():
+                    if resource_id == "*":
+                        paths = []
+                    else:
+                        paths = [
+                            [
+                                {
+                                    "id": resource_map[resource_id]["id"],
+                                    "name": resource_map[resource_id]["name"],
+                                    "system_id": "bk_ci",
+                                    "type": resource_type_map[resource_type_id]["id"],
+                                }
+                            ]
+                        ]
+
+                    permissions.append(
+                        {
+                            "actions": [
+                                {"id": resource_type_map[resource_type_id]["id"] + "_" + _id}
+                                for _id in list(action_ids)
+                            ],
+                            "resources": [{"type": resource_type_map[resource_type_id]["id"], "paths": paths}],
+                        }
+                    )
+
+            data = {
+                "type": "user_custom_policy",
+                "project_id": project_id,
+                "subject": {"type": "user", "id": user_id},
+                "permissions": permissions,
+            }
+
+            migrate_data = MigrateData(
+                project_id=project_id,
+                type="user_custom_policy",
+                data=json_dumps(data),
+                version="v0",
+            )
+            migrate_data.save(force_insert=True)
+
+    def handle_group_web_policy(
+        self,
+        project_id,
+        project_uuid,
+        exclude_service_ids,
+        policy_group_map,
+        policy_map,
+        resource_type_map,
+        resource_map,
+        role_map,
+    ):
+        group_resource_action = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
+
+        queryset = (
+            Permissions.objects.using("bkci")
+            .filter(deleted_at__isnull=True, project_id=project_uuid, expire_at__gt=datetime.now())
+            .exclude(service_id__in=exclude_service_ids)
+            .exclude(Q(role_id__isnull=True) | Q(role_id=0))
+            .order_by("id")
+        )
+
+        paginator = Paginator(queryset, 100)
+
+        for i in paginator.page_range:
+            for p in paginator.page(i):
+                if p.role_id not in role_map or not role_map[p.role_id]["members"]:
+                    continue
+
+                if p.group_id and p.group_id in policy_group_map:
+                    action_ids = policy_group_map[p.group_id]
+                elif p.policy_id and p.policy_id in policy_map:
+                    action_ids = [policy_map[p.policy_id]]
+                else:
+                    continue
+
+                if not (p.resource_type_id and p.resource_type_id in resource_type_map):
+                    continue
+
+                if p.resource_id and p.resource_id in resource_map:
+                    resource_id = p.resource_id
+                elif p.resource_id == 0:
+                    resource_id = "*"
+                else:
+                    continue
+
+                for action_id in action_ids:
+                    group_resource_action[p.role_id][p.resource_type_id][resource_id].add(action_id)
+
+        for role_id, resource_type_action in group_resource_action.items():
+
+            for resource_type_id, resource_action in resource_type_action.items():
+                permissions = []
+                for resource_id, action_ids in resource_action.items():
+                    if resource_id == "*":
+                        paths = []
+                    else:
+                        paths = [
+                            [
+                                {
+                                    "id": resource_map[resource_id]["id"],
+                                    "name": resource_map[resource_id]["name"],
+                                    "system_id": "bk_ci",
+                                    "type": resource_type_map[resource_type_id]["id"],
+                                }
+                            ]
+                        ]
+
+                    permissions.append(
+                        {
+                            "actions": [
+                                {"id": resource_type_map[resource_type_id]["id"] + "_" + _id}
+                                for _id in list(action_ids)
+                            ],
+                            "resources": [{"type": resource_type_map[resource_type_id]["id"], "paths": paths}],
+                        }
+                    )
+
+            data = {
+                "type": "group_web_policy",
+                "project_id": project_id,
+                "subject": {
+                    "type": "group",
+                    "id": role_map[role_id]["id"],
+                    "name": role_map[role_id]["name"],
+                },
+                "permissions": permissions,
+                "members": [{"type": "user", "id": user_id} for user_id in role_map[role_id]["members"]],
+            }
+
+            migrate_data = MigrateData(
+                project_id=project_id,
+                type="group_web_policy",
+                data=json_dumps(data),
+                version="v0",
+            )
+            migrate_data.save(force_insert=True)
+
+
+current_app.tasks.register(BKCILegacyMigrateTask())
