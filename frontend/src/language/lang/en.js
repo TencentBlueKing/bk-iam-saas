@@ -518,6 +518,7 @@ export const m = {
         '管理空间': 'Manage Spaces',
         '我的管理空间': "My Management Space",
         '管理空间': 'Management space',
+        '一级管理空间': 'First level management space',
         '二级管理空间': 'Secondary management space',
         '新建管理空间': 'Create management space',
         '新建二级管理空间': 'New secondary management space',
@@ -849,7 +850,8 @@ export const m = {
         '管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界': 'When the management space shrinks/modifies the authorization boundary, synchronously modify the authorization boundary of the related secondary management space',
         '二级管理空间扩大自己的授权边界，需要走一级管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the first level administrator',
         '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the first level management space',
-        '管理员': 'Administrator'
+        '管理员': 'Administrator',
+        '输入一级管理空间、二级管理空间、管理员名称进行搜索': 'Enter the first level management space, second level management space, and administrator name for search'
     },
     gradingDetail: {
         '管理空间名称': 'Grading  Manager Name：',

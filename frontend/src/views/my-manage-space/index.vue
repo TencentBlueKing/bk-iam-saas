@@ -14,13 +14,20 @@
                             {{ $t(`m.levelSpace['全部空间']`) }}
                         </bk-radio-button>
                     </bk-radio-group> -->
-                    <bk-input
+                    <!-- <bk-input
                         v-model="searchValue"
                         :placeholder="$t(`m.levelSpace['请输入名称']`)"
                         clearable
                         style="width: 420px"
                         right-icon="bk-icon icon-search"
-                        @enter="handleSearch" />
+                        @enter="handleSearch" /> -->
+                    <iam-search-select
+                        @on-change="handleSelectSearch"
+                        :data="searchData"
+                        :value="searchValues"
+                        :placeholder="$t(`m.levelSpace['输入一级管理空间、二级管理空间、管理员名称进行搜索']`)"
+                        style="width: 500px"
+                        :quick-search-method="quickSearchMethod" />
                 </div>
             </div>
         </render-search>
@@ -236,6 +243,7 @@
     import IamEditInput from './components/iam-edit/input';
     import IamEditMemberSelector from './components/iam-edit/member-selector';
     import IamEditTextarea from './components/iam-edit/textarea';
+    import IamSearchSelect from '@/components/iam-search-select';
     import { buildURLParams } from '@/common/url';
     // import { bus } from '@/common/bus';
     // import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
@@ -245,7 +253,8 @@
         components: {
             IamEditInput,
             IamEditMemberSelector,
-            IamEditTextarea
+            IamEditTextarea,
+            IamSearchSelect
         },
         data () {
             return {
@@ -264,6 +273,7 @@
                 },
                 currentBackup: 1,
                 searchValue: '',
+                searchValues: [],
                 radioValue: 'haveRole',
                 iconColor: ['#FF9C01', '#9B80FE'],
                 expandRowList: [], // 所有展开折叠项
@@ -281,7 +291,25 @@
                     text: '',
                     tip: '',
                     tipType: ''
-                }
+                },
+                searchData: [
+                    {
+                        id: 'rating_manager',
+                        name: this.$t(`m.nav['一级管理空间']`),
+                        default: true
+                    },
+                    {
+                        id: 'subject_manager',
+                        name: this.$t(`m.nav['二级管理空间']`),
+                        default: true
+                    },
+                    // 管理空间
+                    {
+                        id: 'members',
+                        name: this.$t(`m.grading['管理员']`),
+                        remoteMethod: this.handleGradeAdmin
+                    }
+                ]
             };
         },
         computed: {
@@ -363,6 +391,22 @@
                 this.resetPagination();
                 this.resetSubPagination();
                 this.fetchGradingAdmin(true);
+            },
+
+            handleSelectSearch (payload, result) {
+                const { rating_manager: ratingManager, subset_manager: subSetManager, members } = payload;
+                console.log(payload, result, members);
+                this.isFilter = true;
+                this.emptyData.tipType = 'search';
+                this.resetPagination();
+                this.resetSubPagination();
+                if (ratingManager) {
+                    this.fetchGradingAdmin(true);
+                }
+
+                if (subSetManager) {
+                    this.fetchSubSetList(true);
+                }
             },
 
             handleClear () {
@@ -520,6 +564,39 @@
                     this.subLoading = false;
                 }
             },
+
+            async fetchSubSetList (isTableLoading = false) {
+                this.subLoading = isTableLoading;
+                this.setCurrentQueryCache(this.refreshCurrentQuery());
+                const { current, limit } = this.pagination;
+                try {
+                    const { code, data } = await this.$store.dispatch('spaceManage/getSecondManager', {
+                        limit,
+                        offset: (current - 1) * limit,
+                        name: this.searchValue
+                    });
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    if (this.isStaff) {
+                        this.$store.commit('setGuideShowByField', { field: 'role', flag: this.tableList.length > 0 });
+                    }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+                } catch (e) {
+                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.tableList = [];
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: message || data.msg || statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.tableLoading = false;
+                }
+            },
             
             // 管理空间
             async handleView ({ id, name }, mode) {
@@ -674,6 +751,14 @@
                 return queryParams;
             },
 
+            quickSearchMethod (value) {
+                return {
+                    name: this.$t(`m.common['关键字']`),
+                    id: 'keyword',
+                    values: [value]
+                };
+            },
+
             handleEmptyClear () {
                 this.searchValue = '';
                 this.emptyData.tipType = '';
@@ -764,7 +849,7 @@
     }
 
     /deep/ .iam-tag-table-cell-opacity-cls {
-        opacity: 0.4;
+        opacity: 0.6;
         .cell {
             padding-left: 0;
         }

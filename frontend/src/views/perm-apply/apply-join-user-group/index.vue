@@ -280,6 +280,11 @@
                 }];
             this.searchData = [
                 {
+                    id: 'name',
+                    name: this.$t(`m.userGroup['用户组名']`),
+                    default: true
+                },
+                {
                     id: 'id',
                     name: 'ID',
                     default: true
@@ -287,11 +292,6 @@
                     //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
                     //     return !validate ? '' : true
                     // }
-                },
-                {
-                    id: 'name',
-                    name: this.$t(`m.userGroup['用户组名']`),
-                    default: true
                 },
                 {
                     id: 'description',
