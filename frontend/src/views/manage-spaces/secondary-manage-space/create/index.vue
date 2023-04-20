@@ -10,6 +10,7 @@
         </render-horizontal-block>
         <render-horizontal-block
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label-width="renderLabelWidth('resource')"
             v-if="!isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -27,6 +28,7 @@
         </render-horizontal-block>
         <render-horizontal-block
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label-width="renderLabelWidth('resource')"
             v-if="isHasPermTemplate">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -77,6 +79,7 @@
             <render-action
                 ref="memberRef"
                 :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :label-width="renderLabelWidth('resource')"
                 :tips="addMemberTips"
                 @on-click="handleAddMember"
             >
@@ -94,6 +97,7 @@
                 :departments="departments"
                 :expired-at-error="isShowExpiredError"
                 :inherit-subject-scope="inheritSubjectScope"
+                :label-width="renderLabelWidth('member')"
                 @on-add="handleAddMember"
                 @on-delete="handleMemberDelete"
                 @on-change="handleChange" />
@@ -164,7 +168,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    import { guid } from '@/common/util';
+    import { guid, renderLabelWidth } from '@/common/util';
     import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import IamGuide from '@/components/iam-guide/index.vue';
@@ -244,7 +248,8 @@
                 addMemberTips: this.$t(`m.levelSpace['管理空间可以编辑、管理二级管理空间的权限']`),
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 inheritSubjectScope: true,
-                curSystemId: []
+                curSystemId: [],
+                renderLabelWidth
             };
         },
         computed: {

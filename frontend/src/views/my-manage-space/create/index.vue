@@ -6,8 +6,9 @@
             </section>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="isSelectSystem || isSelectSystemShow"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label-width="renderLabelWidth('resource')"
             :required="true">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -81,6 +82,7 @@
             v-else
             :tip="addMemberTips"
             :is-all="isAll"
+            :label-width="renderLabelWidth('member')"
             :users="users"
             :departments="departments"
             @on-add="handleAddMember"
@@ -135,7 +137,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    import { guid } from '@/common/util';
+    import { guid, renderLabelWidth } from '@/common/util';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import IamGuide from '@/components/iam-guide/index';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
@@ -166,6 +168,7 @@
         },
         data () {
             return {
+                renderLabelWidth,
                 formData: {
                     name: '',
                     description: '',

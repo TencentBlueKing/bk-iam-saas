@@ -580,8 +580,8 @@ export const m = {
         '清空选择': 'Clear Selection',
         '选择系统': 'Select System',
         '选择操作': 'Select Action',
-        '选择权限获得者': 'Select a permission recipient',
-        '请选择权限获得者': 'Please select a permission recipient',
+        '选择权限获得者': 'Select permission recipient',
+        '请选择权限获得者': 'Please select permission recipient',
         '请输入权限获得者': 'Please enter the authority recipient',
         '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others'
     },
