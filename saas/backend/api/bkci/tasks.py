@@ -91,18 +91,20 @@ class BKCIMigrateTask(Task):
     def handle_group_web_policy(self, role_ids):
         project_subject_path_action = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(set))))
 
-        exists_group_ids = list(
-            RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type="group").values_list(
-                "object_id", flat=True
+        if role_ids:
+            exists_group_ids = list(
+                RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type="group").values_list(
+                    "object_id", flat=True
+                )
             )
-        )
+        else:
+            exists_group_ids = []
 
         # 1. 遍历策略分析出所有实例
-        qs = (
-            PolicyModel.objects.filter(system_id="bk_ci", subject_type="group")
-            .exclude(subject_id__in=[str(_id) for _id in exists_group_ids])
-            .order_by("id")
-        )
+        qs = PolicyModel.objects.filter(system_id="bk_ci", subject_type="group").order_by("id")
+        if exists_group_ids:
+            qs = qs.exclude(subject_id__in=[str(_id) for _id in exists_group_ids])
+
         paginator = Paginator(qs, 100)
 
         for i in paginator.page_range:
@@ -113,11 +115,10 @@ class BKCIMigrateTask(Task):
                 self._handle_policy(pb, subject, project_subject_path_action)
 
         # 2. 遍历用户组授权模板权限
-        qs = (
-            PermTemplatePolicyAuthorized.objects.filter(system_id="bk_ci")
-            .exclude(subject_id__in=[str(_id) for _id in exists_group_ids])
-            .order_by("id")
-        )
+        qs = PermTemplatePolicyAuthorized.objects.filter(system_id="bk_ci").order_by("id")
+        if exists_group_ids:
+            qs = qs.exclude(subject_id__in=[str(_id) for _id in exists_group_ids])
+
         for pa in qs:
             policies = parse_obj_as(List[Policy], pa.data["actions"])
             subject = Subject(type=pa.subject_type, id=pa.subject_id)
@@ -127,6 +128,9 @@ class BKCIMigrateTask(Task):
         self.batch_create_migrate_data(project_subject_path_action, "group_web_policy")
 
     def handle_group_api_policy(self, role_ids):
+        if not role_ids:
+            return
+
         project_subject_path_action = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(set))))
 
         exists_group_ids = list(
@@ -134,6 +138,9 @@ class BKCIMigrateTask(Task):
                 "object_id", flat=True
             )
         )
+
+        if not exists_group_ids:
+            return
 
         # 1. 遍历策略分析出所有实例
         qs = (
