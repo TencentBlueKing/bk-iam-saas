@@ -785,6 +785,8 @@ class RoleListQuery:
             assert self.user
             role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=role_ids)
+        elif self.role.type == RoleType.SUPER_MANAGER.value:
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
 
         return Role.objects.none()
 
