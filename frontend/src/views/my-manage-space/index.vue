@@ -383,15 +383,15 @@
 
             async handleUpdateManageSpace (payload, index) {
                 this.formData = this.tableList.find((e, i) => i === index);
-                await this.fetchManageTable(payload, 'role/updateRatingManager');
+                await this.fetchManageTable(payload, 'role/updateRatingManager', 'rating_manager');
             },
 
             async handleUpdateSubManageSpace (payload, index) {
                 this.formData = this.subTableList.find((e, i) => i === index);
-                await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager');
+                await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
             },
 
-            async fetchManageTable (payload, url) {
+            async fetchManageTable (payload, url, type) {
                 const { name, description, members } = payload;
                 const params = {
                     name: name || this.formData.name,
@@ -408,9 +408,18 @@
                         members: [...params.members]
                     });
                     if (name || members) {
-                        this.formData.children = [];
-                        this.resetSubPagination();
-                        await this.fetchSubManagerList(this.formData);
+                        const typeMap = {
+                            'rating_manager': async () => {
+                                this.resetPagination();
+                                await this.fetchGradingAdmin();
+                            },
+                            'subset_manager': async () => {
+                                this.formData.children = [];
+                                this.resetSubPagination();
+                                await this.fetchSubManagerList(this.formData);
+                            }
+                        };
+                        typeMap[type]();
                     }
                 } catch (e) {
                     console.error(e);

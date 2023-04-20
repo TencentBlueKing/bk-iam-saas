@@ -136,11 +136,26 @@
                     });
                 }
             },
+            // 设置只读
+            handleReadOnly () {
+                this.$nextTick(() => {
+                    if (this.isEditable) {
+                        const selectedTag = this.$refs.input.$refs.selected;
+                        if (selectedTag && selectedTag.length === 1) {
+                            selectedTag.forEach(item => {
+                                item.className = this.newVal.includes(item.innerText)
+                                    ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
+                            });
+                        }
+                    }
+                });
+            },
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
                     this.$refs.input.focus();
+                    this.handleReadOnly();
                 });
             },
             handleBlur () {
@@ -351,4 +366,11 @@
         background-color: #479ad0;
         border-color:#479ad0;
     } */
+
+    /deep/ .user-selector-selected-readonly {
+        cursor: not-allowed;
+        .bk-biz-icon-close {
+            display: none;
+        }
+    }
 </style>

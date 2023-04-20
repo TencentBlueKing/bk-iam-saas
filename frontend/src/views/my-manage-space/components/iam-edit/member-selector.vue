@@ -104,6 +104,12 @@
                     this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
                 },
                 immediate: true
+            },
+            editValue: {
+                handler () {
+                    this.handleReadOnly();
+                },
+                immediate: true
             }
         },
         mounted () {
@@ -113,11 +119,28 @@
             });
         },
         methods: {
+            // 设置只读
+            handleReadOnly () {
+                this.$nextTick(() => {
+                    if (this.isEditable) {
+                        const selectedTag = this.$refs.selector.$refs.selected;
+                        console.log(selectedTag, this.displayValue, 444);
+                        if (selectedTag && selectedTag.length === 1) {
+                            selectedTag.forEach(item => {
+                                item.className = this.displayValue.map(item => item.username).includes(item.innerText)
+                                    ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
+                            });
+                        }
+                    }
+                });
+            },
+
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.selector.focus();
+                    this.$refs.selector && this.$refs.selector.focus();
+                    this.handleReadOnly();
                 });
             },
 
@@ -129,6 +152,7 @@
             },
 
             hideEdit (event) {
+                this.isEditable = false;
                 if (this.displayValue.length < 1) {
                     return;
                 }
@@ -139,8 +163,8 @@
                             return;
                         }
                     }
+                    // this.triggerChange();
                 }
-                this.triggerChange();
             },
             
             triggerChange () {
@@ -160,6 +184,9 @@
             },
 
             handleChange () {
+                if (this.displayValue.length < 1) {
+                    return;
+                }
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
                         username: v,
@@ -172,9 +199,11 @@
 
             handleRtxBlur () {
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                    this.$emit('on-change', {
-                        [this.field]: this.displayValue
-                    }, this.index);
+                    this.isEditable = false;
+                    if (this.displayValue.length < 1) {
+                        return;
+                    }
+                    this.triggerChange();
                 }
             }
         }
@@ -262,5 +291,12 @@
             border-color: #ff4d4d;
         }
     }
+    }
+
+    /deep/ .user-selector-selected-readonly {
+        cursor: not-allowed;
+        .bk-biz-icon-close {
+            display: none;
+        }
     }
 </style>
