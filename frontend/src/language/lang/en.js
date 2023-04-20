@@ -246,7 +246,8 @@ export const m = {
         '您没有该角色权限，无法切换到该角色': 'You do not have permission to switch to this role',
         '确认删除': 'Confirm delete',
         '只允许输入英文': 'Only English is allowed',
-        '生效时间': 'Effective time'
+        '生效时间': 'Effective time',
+        '无匹配人员': 'No matching personnel'
     },
     // 校验
     verify: {

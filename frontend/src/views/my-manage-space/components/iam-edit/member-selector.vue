@@ -38,6 +38,7 @@
                 ref="selector"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
+                :empty-text="$t(`m.common['无匹配人员']`)"
                 @keydown="handleEnter(...arguments)"
                 @blur="handleRtxBlur"
                 @change="handleChange">
