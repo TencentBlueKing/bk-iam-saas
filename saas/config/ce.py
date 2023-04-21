@@ -203,7 +203,7 @@ CORS_ORIGIN_WHITELIST = (
 # 站点URL
 SITE_URL = env.str("BKPAAS_SUB_PATH", default="/")
 FORCE_SCRIPT_NAME = SITE_URL
-STATIC_URL = SITE_URL + "staticfiles/"
+STATIC_URL = env.str("BKPAAS_STATIC_URL", default=SITE_URL + "staticfiles/")
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 # 只对正式环境日志级别进行配置，可以在这里修改
