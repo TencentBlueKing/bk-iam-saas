@@ -581,3 +581,13 @@ export function renderLabelWidth (payload) {
     };
     return typeMap[payload]();
 }
+
+// 获取cookie
+export function getCookie (name) {
+    const data = document.cookie.split(';');
+    const params = {};
+    for (let i = 0; i < data.length; i++) {
+        params[data[i].split('=')[0].replace(/\s/, '')] = data[i].split('=')[1];
+    }
+    return params[name];
+}
