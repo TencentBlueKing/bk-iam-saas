@@ -491,6 +491,8 @@ export const m = {
         '返回': 'Back to',
         '切换身份': 'Switch Identity',
         '系统管理员': 'System Administrator',
+        '一级空间管理员': 'First Level Space Administrator',
+        '二级空间管理员': 'Secondary Space Administrator',
         '普通用户': 'General User',
         '系统接入': 'System Access',
         '组织权限续期': 'Organization permission renewal',
@@ -1009,7 +1011,8 @@ export const m = {
         '错误': 'Error',
         '任务': 'task',
         '审计事件': 'event',
-        '对象实例': 'Object instance'
+        '对象实例': 'Object instance',
+        '用户组权限交接': 'User group permission handover'
     },
     access: {
         '接入系统': 'Access System',

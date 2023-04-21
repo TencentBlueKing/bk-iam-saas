@@ -125,10 +125,10 @@
                 this.$nextTick(() => {
                     if (this.isEditable) {
                         const selectedTag = this.$refs.selector.$refs.selected;
-                        console.log(selectedTag, this.displayValue, 444);
                         if (selectedTag && selectedTag.length === 1) {
                             selectedTag.forEach(item => {
-                                item.className = this.displayValue.map(item => item.username).includes(item.innerText)
+                                item.className = this.displayValue.length === 1
+                                    && this.displayValue.map(item => item.username).includes(item.innerText)
                                     ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
                             });
                         }
