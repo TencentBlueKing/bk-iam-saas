@@ -41,8 +41,8 @@ class RoleSearchFilter(GradeMangerFilter):
 
     class Meta:
         model = Role
-        fields = ["name", "hidden"]
+        fields = ["name", "hidden", "member"]
 
-    def hidden_filter(self, queryset, name, value):
+    def member_filter(self, queryset, name, value):
         role_ids = list(RoleUser.objects.filter(username=value).values_list("role_id", flat=True))
         return queryset.filter(id__in=role_ids)
