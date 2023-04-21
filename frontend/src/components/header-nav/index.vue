@@ -569,11 +569,17 @@
             },
         
             handleChangeLocale (payload) {
+                this.setCookie('blueking_language', payload);
                 Cookie.set('blueking_language', payload, {
-                    expires: 365,
                     domain: window.location.hostname.split('.').slice(-3).join('.')
                 });
                 this.setMagicBoxLocale(payload);
+            },
+
+            setCookie (name, value) {
+                const date = new Date();
+                date.setTime(date.getTime() - 10000);
+                document.cookie = name + '=' + value + ';' + 'expire=' + date.toGMTString() + '; path=/';
             },
 
             handleSwitchIdentity () {
