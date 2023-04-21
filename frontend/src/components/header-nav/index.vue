@@ -567,11 +567,11 @@
                 this.$i18n.locale = targetLocale;
                 window.location.reload();
             },
-
+        
             handleChangeLocale (payload) {
                 Cookie.set('blueking_language', payload, {
                     expires: 365,
-                    domain: window.location.hostname.split('.').slice(-2).join('.')
+                    domain: window.location.hostname.split('.').slice(-3).join('.')
                 });
                 this.setMagicBoxLocale(payload);
             },
